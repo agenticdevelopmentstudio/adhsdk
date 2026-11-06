@@ -1220,9 +1220,11 @@ export const HUB_ROUTE_SEGMENTS = new Set<string>([
   'details',
   'home',
   'integrations',
-  'privacy',
-  'terms',
   'tour',
+  // The family's legal text, bare at the app's root (sites/legal.ts). The old `/privacy` and
+  // `/terms` redirect here, so — like the feature redirects below — they are not listed.
+  'privacy-policy',
+  'terms-of-use',
   // app/(auth)/ — the sign-in group. A route group contributes no segment of its own, so
   // its children sit at the top level.
   'join',

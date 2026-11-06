@@ -312,12 +312,7 @@ function MarketingFrameHeader({
 }
 
 // src/marketing/LandingFooter.tsx
-import {
-  FamilyFooter,
-  PrivacyModal,
-  SitesPopover,
-  TermsModal
-} from "@adh-sdk/adh/footer";
+import { FamilyFooter, SitesPopover } from "@adh-sdk/adh/footer";
 
 // src/footer/identity.tsx
 import {
@@ -368,9 +363,7 @@ import { Fragment as Fragment5, jsx as jsx8, jsxs as jsxs5 } from "react/jsx-run
 function LandingFooter({ contact = ADH_CONTACT } = {}) {
   return /* @__PURE__ */ jsxs5(Fragment5, { children: [
     /* @__PURE__ */ jsx8(FamilyFooter, { version: buildVersionLabel(), anchored: true, contact }),
-    /* @__PURE__ */ jsx8(SitesPopover, {}),
-    /* @__PURE__ */ jsx8(TermsModal, {}),
-    /* @__PURE__ */ jsx8(PrivacyModal, {})
+    /* @__PURE__ */ jsx8(SitesPopover, {})
   ] });
 }
 export {

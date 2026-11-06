@@ -31,10 +31,24 @@ describe('adh SiteFooter', () => {
   it('renders each dialog the family footer opens once, beside it rather than inside it', () => {
     render(<SiteFooter />)
     const family = document.getElementById('adh-family-footer')!
-    for (const id of ['adh-sites-overview', 'adh-terms-dialog', 'adh-privacy-dialog']) {
+    for (const id of ['adh-sites-overview']) {
       expect(document.querySelectorAll(`#${id}`)).toHaveLength(1)
       expect(family.contains(document.getElementById(id))).toBe(false)
     }
+  })
+
+  it("links Terms and Privacy to the hub's permanent pages, from every site, opening no dialog", () => {
+    // One address for the family's legal text: the hub's bare /terms-of-use and
+    // /privacy-policy (adh-registry's sites/legal.ts), never a site's own /terms or /privacy.
+    render(<SiteFooter />)
+    const legal = document.querySelector('#adh-family-footer nav[aria-label="Legal"]')!
+    const links = Array.from(legal.querySelectorAll('a')).map((a) => [a.textContent, a.getAttribute('href')])
+    expect(links).toEqual([
+      ['Terms of Use', 'https://agenticdeveloperhub.com/terms-of-use'],
+      ['Privacy Policy', 'https://agenticdeveloperhub.com/privacy-policy'],
+    ])
+    expect(document.getElementById('adh-terms-dialog')).toBeNull()
+    expect(document.getElementById('adh-privacy-dialog')).toBeNull()
   })
 
   it('ends the directory with a Contact column of the hub\'s address, or a site\'s own', () => {

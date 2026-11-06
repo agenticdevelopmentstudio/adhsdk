@@ -9,6 +9,16 @@
  * whole of what it receives. See the package-root sources.css. */
 @import "../../sources.css";
 
+/* A legal page with no site chrome around it (the hub's /privacy-policy and /terms-of-use):
+   the column `.adh-legal` grows into, so its surface reaches the foot of the window when
+   the text is shorter than the window. Inside a site's shell the shell is that column. */
+.adh-legal-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .adh-legal {
   flex: 1;
   padding: 2rem;
@@ -115,6 +125,10 @@
 .adh-legal-doc ul {
   margin: 0 0 1rem;
   padding-left: 1.25rem;
+  /* A host's reset (Tailwind's preflight) strips list markers; legal lists keep theirs. The
+     footer's legal dialog used to carry this rule; the pages are now the only place the text
+     is shown, so it lives here. */
+  list-style: disc;
 }
 
 .adh-legal-doc li {

@@ -23,15 +23,9 @@ vi.mock('../FooterChat', () => ({
 
 import { SiteFooter } from '../SiteFooter'
 import { FAMILY_FOOTER_DIALOG_ID, SITES_OVERVIEW_POPOVER_ID } from '../identity'
-import { PRIVACY_DIALOG_ID, TERMS_DIALOG_ID } from '../LegalModals'
 
 /** The dialogs the footer opens, one per page. */
-const PAGE_DIALOGS = [
-  FAMILY_FOOTER_DIALOG_ID,
-  SITES_OVERVIEW_POPOVER_ID,
-  TERMS_DIALOG_ID,
-  PRIVACY_DIALOG_ID,
-]
+const PAGE_DIALOGS = [FAMILY_FOOTER_DIALOG_ID, SITES_OVERVIEW_POPOVER_ID]
 
 const present = () => PAGE_DIALOGS.filter((id) => document.getElementById(id) !== null)
 

@@ -314,12 +314,7 @@ import { liveBuildIdentity } from "@adh-sdk/adh/live-build-identity";
 import { DEV_BUILD } from "@adh-sdk/adh-registry/deployment-env";
 
 // src/marketing/LandingFooter.tsx
-import {
-  FamilyFooter,
-  PrivacyModal,
-  SitesPopover,
-  TermsModal
-} from "@adh-sdk/adh/footer";
+import { FamilyFooter, SitesPopover } from "@adh-sdk/adh/footer";
 
 // src/footer/identity.tsx
 import {
@@ -369,9 +364,7 @@ import { Fragment as Fragment3, jsx as jsx10, jsxs as jsxs6 } from "react/jsx-ru
 function LandingFooter({ contact = ADH_CONTACT } = {}) {
   return /* @__PURE__ */ jsxs6(Fragment3, { children: [
     /* @__PURE__ */ jsx10(FamilyFooter, { version: buildVersionLabel(), anchored: true, contact }),
-    /* @__PURE__ */ jsx10(SitesPopover, {}),
-    /* @__PURE__ */ jsx10(TermsModal, {}),
-    /* @__PURE__ */ jsx10(PrivacyModal, {})
+    /* @__PURE__ */ jsx10(SitesPopover, {})
   ] });
 }
 

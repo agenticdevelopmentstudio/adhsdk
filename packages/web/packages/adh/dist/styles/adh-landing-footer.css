@@ -1,7 +1,6 @@
 /* The family footer (footer/FamilyFooter, in flow on `/` through marketing/LandingFooter and in a
- * dialog everywhere else through SiteFooter) and the dialogs it opens: the sites overview
- * (SitesPopover), Terms and Privacy (LegalModals), all on the shared
- * modal frame (AdhModalPopover). Exported alone as
+ * dialog everywhere else through SiteFooter) and the dialog it opens: the sites overview
+ * (SitesPopover), on the shared modal frame (AdhModalPopover). Exported alone as
  * `@adh-sdk/adh/landing-footer.css` so a site can carry the footer without the rest of
  * adh's sheet, whose themes, primitives and Tailwind sources would restyle a page that is not
  * on the adh theme. adh-site.css @imports it, so `styles.css` still delivers it, from here.
@@ -340,80 +339,6 @@
   .adh-modal--wide .adh-landing-footer__badge {
     white-space: nowrap;
   }
-}
-
-/* ---- Terms and Privacy in their dialogs (footer/LegalModals) ----
-   The standalone /terms and /privacy pages are a landing-style document (adh-legal.css: serif
-   at 1.05rem, italic serif headings, mono eyebrows), and inside a dialog that read as a second
-   site pasted into this one. Here the prose follows the site's own `--font-sans`, one size
-   down, and the headings keep their hierarchy by size and weight instead of by switching
-   faces. Self-contained, because a site carrying only this sheet has no adh-legal.css: every
-   rule the dialog's prose needs is here, one class stronger than that sheet's. */
-.adh-modal__body--legal .adh-legal-doc {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--adh-legal-prose, var(--color-text-secondary, var(--color-text-primary)));
-}
-
-.adh-modal__body--legal .adh-legal-doc h2 {
-  font-family: inherit;
-  font-style: normal;
-  font-weight: 600;
-  font-size: 1.05rem;
-  line-height: 1.3;
-  letter-spacing: 0;
-  color: var(--color-accent);
-  margin: 1.5rem 0 0.5rem;
-}
-
-.adh-modal__body--legal .adh-legal-doc h3 {
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-text-primary);
-  margin: 1.1rem 0 0.4rem;
-}
-
-.adh-modal__body--legal .adh-legal-doc__meta {
-  font-family: inherit;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-dim);
-  margin: 0 0 1.5rem;
-}
-
-.adh-modal__body--legal .adh-legal-doc p,
-.adh-modal__body--legal .adh-legal-doc ul {
-  margin: 0 0 1rem;
-}
-
-.adh-modal__body--legal .adh-legal-doc ul {
-  padding-left: 1.25rem;
-  /* A host's reset (Tailwind's preflight) strips list markers; legal lists keep theirs. */
-  list-style: disc;
-}
-
-.adh-modal__body--legal .adh-legal-doc li {
-  margin: 0.25rem 0;
-}
-
-.adh-modal__body--legal .adh-legal-doc a {
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
-  text-underline-offset: 3px;
-}
-
-.adh-modal__body--legal .adh-legal-doc strong {
-  color: var(--color-text-primary);
-  font-weight: 600;
 }
 
 /* ---- the family footer's head: the preview badge (header/PreviewNotice, variant "badge") ----

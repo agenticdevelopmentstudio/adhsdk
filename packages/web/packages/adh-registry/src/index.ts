@@ -1,4 +1,5 @@
 export * from './sites/registry'
 export * from './sites/story'
 export { DIRECTORY_SITES, MARKETING_FLEET_SITE_IDS, PLACEHOLDER_FLEET_SITE_IDS } from './sites/fleets'
+export { PRIVACY_POLICY_PATH, PRIVACY_POLICY_URL, TERMS_OF_USE_PATH, TERMS_OF_USE_URL } from './sites/legal'
 export { RESERVED_SLUGS, isReservedSlug, isReservedSlugAnywhere } from './sites/reserved-slugs'

@@ -29,6 +29,9 @@ const UNIVERSAL = [
   'home',
   'privacy',
   'terms',
+  // The hub's permanent legal pages (sites/legal.ts).
+  'privacy-policy',
+  'terms-of-use',
   'tour',
   'search',
   // The static prefixes the public profile routes live under. `registry` is registries'

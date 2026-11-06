@@ -1,4 +1,4 @@
-import type { MouseEvent, ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { type SiteContact } from './identity';
 /** A plain link: the directory's entries, and the "This site" column a site passes. */
 export type SiteLink = {
@@ -8,10 +8,12 @@ export type SiteLink = {
 type Entry = SiteLink & {
     /** A small pill after the label: the platform of a native tool. */
     badge?: string;
-    onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
 };
-/** Terms and Privacy open in a scrolling dialog over the page (LegalModals); the hrefs stay,
- *  so a modified click, or a browser without the Popover API, still reaches the pages. */
+/** Terms and Privacy are plain links to the hub's permanent legal pages (adh-registry's
+ *  sites/legal.ts), the same absolute URL from every site: the text lives in one place, on a
+ *  page that shows only the text. They used to open a dialog over the page and fall back to
+ *  each site's own `/terms` and `/privacy`, which gave the family one policy at forty
+ *  addresses. */
 export declare const LEGAL_ENTRIES: Entry[];
 export type FamilyFooterProps = {
     /** The build identity ({@link buildVersionLabel}); null when none was baked, and then the
@@ -35,10 +37,9 @@ export type FamilyFooterProps = {
  * other page, what the floating `i` opens in a dialog (SiteFooter). Every link is in
  * the server HTML either way, so it is also the page's crawlable interlink set.
  *
- * Terms, Privacy and All sites open dialogs, and those dialogs are the CALLER's to
- * render, once per page: a dialog inside this footer would be inside SiteFooter's closed
- * dialog, which is `display: none`, and the header's site switcher opens the same sites
- * overview by id.
+ * All sites opens a dialog, and that dialog is the CALLER's to render, once per page: a
+ * dialog inside this footer would be inside SiteFooter's closed dialog, which is
+ * `display: none`, and the header's site switcher opens the same sites overview by id.
  */
 export declare function FamilyFooter({ version, links, anchored, contact, }: FamilyFooterProps): ReactElement;
 export {};

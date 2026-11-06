@@ -5,7 +5,6 @@ import { FamilyFooter, LEGAL_ENTRIES, type SiteLink } from './FamilyFooter'
 import { ADH_CONTACT, BRAND_HREF, BRAND_LABEL, FAMILY_FOOTER_DIALOG_ID, buildVersionLabel, type SiteContact } from './identity'
 import { FooterChat } from './FooterChat'
 import { SitesPopover } from './SitesOverview'
-import { TermsModal, PrivacyModal } from './LegalModals'
 
 export type SiteFooterProps = {
   /** A site's own links: the family footer's "This site" column. */
@@ -17,7 +16,7 @@ export type SiteFooterProps = {
    *  (theme-editor/areas.tsx). The footer carries things a page must have exactly one of,
    *  and a specimen renders none of them:
    *
-   *  - No family-footer, Sites, Terms or Privacy dialog. Those are found by id
+   *  - No family-footer or Sites dialog. Those are found by id
    *    (`popovertarget` looks across the whole document), so the specimen's copyright opens
    *    the page footer's own. On a page with no SiteFooter it opens nothing, which a
    *    specimen can afford: it is there to show what the footer looks like, not to be one.
@@ -78,7 +77,6 @@ export function SiteFooter({ links = [], chat = true, live, specimen = false, co
               {BRAND_LABEL}
             </a>
             {version && <span className="adh-footer__copyright-version"> · {version}</span>}
-            {/* Plain hrefs: the legal dialogs are as dead here as the family footer's. */}
             {LEGAL_ENTRIES.map((e) => (
               <span key={e.href}>
                 {' · '}
@@ -102,8 +100,6 @@ export function SiteFooter({ links = [], chat = true, live, specimen = false, co
             <FamilyFooter version={version} links={links} contact={contact} />
           </AdhModalPopover>
           <SitesPopover />
-          <TermsModal />
-          <PrivacyModal />
         </>
       )}
     </>

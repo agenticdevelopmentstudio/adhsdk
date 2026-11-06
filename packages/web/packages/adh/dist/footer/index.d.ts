@@ -6,7 +6,6 @@ export { SITES_OVERVIEW_POPOVER_ID, FAMILY_FOOTER_DIALOG_ID } from './identity';
 export type { SiteContact } from './identity';
 export { FamilyFooter } from './FamilyFooter';
 export type { FamilyFooterProps, SiteLink } from './FamilyFooter';
-export { TermsModal, PrivacyModal } from './LegalModals';
 export { FamilyDrawerRow, MoreInfoDrawerFoot } from './FamilyDrawer';
 export { SitesPopover } from './SitesOverview';
 export { FooterForRoute } from './FooterForRoute';

@@ -8,7 +8,7 @@ export type LandingFooterProps = {
 };
 /**
  * The landing page's footer: the family footer (FamilyFooter) in flow at the foot of `/`, with
- * the dialogs its entries open, one each.
+ * the sites overview its All sites button opens.
  *
  * For the `/` of a templated site, through the template's `footer` slot. It is a server
  * component and draws no floating copyright: the routes under `MarketingShell` keep

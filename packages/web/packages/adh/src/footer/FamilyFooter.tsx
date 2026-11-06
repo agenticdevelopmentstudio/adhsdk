@@ -1,12 +1,18 @@
 'use client'
 
-// The family footer's body. A client module because two of its entries are behaviour: the
-// legal links open their dialogs rather than load a route, and the preview badge is a
-// disclosure. Everything else is plain links in the server HTML. The server-rendered
+// The family footer's body. A client module because one of its entries is behaviour: the
+// preview badge is a disclosure. Everything else is plain links in the server HTML. The server-rendered
 // LandingFooter (marketing/) reaches it by package path, and the floating SiteFooter opens
 // it in a dialog. It renders none of the dialogs its entries open — see FamilyFooter's doc.
-import type { MouseEvent, ReactElement, ReactNode } from 'react'
-import { getSite, groupSitesByCategory, siteProdUrl, type SiteDef } from '@adh-sdk/adh-registry'
+import type { ReactElement, ReactNode } from 'react'
+import {
+  getSite,
+  groupSitesByCategory,
+  PRIVACY_POLICY_URL,
+  siteProdUrl,
+  TERMS_OF_USE_URL,
+  type SiteDef,
+} from '@adh-sdk/adh-registry'
 // Relative on purpose: PreviewNotice holds only per-instance state, so the copy this inlines
 // into the footer entry forks nothing, and the header barrel is not this entry's to load.
 import { PreviewNotice } from '../header/PreviewNotice'
@@ -20,7 +26,6 @@ import {
   SITES_OVERVIEW_POPOVER_ID,
   type SiteContact,
 } from './identity'
-import { openLegalModal, PRIVACY_DIALOG_ID, TERMS_DIALOG_ID } from './LegalModals'
 
 /** A plain link: the directory's entries, and the "This site" column a site passes. */
 export type SiteLink = { label: string; href: string }
@@ -28,7 +33,6 @@ export type SiteLink = { label: string; href: string }
 type Entry = SiteLink & {
   /** A small pill after the label: the platform of a native tool. */
   badge?: string
-  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
 type ColumnDef = { title: string; entries: Entry[] }
@@ -72,11 +76,14 @@ function aboutEntries(): Entry[] {
   ]
 }
 
-/** Terms and Privacy open in a scrolling dialog over the page (LegalModals); the hrefs stay,
- *  so a modified click, or a browser without the Popover API, still reaches the pages. */
+/** Terms and Privacy are plain links to the hub's permanent legal pages (adh-registry's
+ *  sites/legal.ts), the same absolute URL from every site: the text lives in one place, on a
+ *  page that shows only the text. They used to open a dialog over the page and fall back to
+ *  each site's own `/terms` and `/privacy`, which gave the family one policy at forty
+ *  addresses. */
 export const LEGAL_ENTRIES: Entry[] = [
-  { label: 'Terms of Use', href: '/terms', onClick: openLegalModal(TERMS_DIALOG_ID) },
-  { label: 'Privacy Policy', href: '/privacy', onClick: openLegalModal(PRIVACY_DIALOG_ID) },
+  { label: 'Terms of Use', href: TERMS_OF_USE_URL },
+  { label: 'Privacy Policy', href: PRIVACY_POLICY_URL },
 ]
 
 /** A column's title is an h2 in flow, where an h3 would skip a level after a short page's h1,
@@ -90,7 +97,7 @@ function Column({ title, entries, heading: Heading }: ColumnDef & { heading: Col
       <ul className="adh-landing-footer__list">
         {entries.map((e) => (
           <li key={e.label} className="adh-landing-footer__item">
-            <a className="adh-landing-footer__link" href={e.href} onClick={e.onClick}>
+            <a className="adh-landing-footer__link" href={e.href}>
               {e.label}
             </a>
             {e.badge && <span className="adh-landing-footer__badge">{e.badge}</span>}
@@ -124,10 +131,9 @@ export type FamilyFooterProps = {
  * other page, what the floating `i` opens in a dialog (SiteFooter). Every link is in
  * the server HTML either way, so it is also the page's crawlable interlink set.
  *
- * Terms, Privacy and All sites open dialogs, and those dialogs are the CALLER's to
- * render, once per page: a dialog inside this footer would be inside SiteFooter's closed
- * dialog, which is `display: none`, and the header's site switcher opens the same sites
- * overview by id.
+ * All sites opens a dialog, and that dialog is the CALLER's to render, once per page: a
+ * dialog inside this footer would be inside SiteFooter's closed dialog, which is
+ * `display: none`, and the header's site switcher opens the same sites overview by id.
  */
 export function FamilyFooter({
   version,

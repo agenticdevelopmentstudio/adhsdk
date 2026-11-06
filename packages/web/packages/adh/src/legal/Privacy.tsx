@@ -3,8 +3,9 @@ import { LegalPageShell } from '@adh-sdk/adh/legal'
 import { LEGAL_CONTACT_EMAIL, LEGAL_EFFECTIVE_DATE } from './constants'
 
 /** The Privacy Policy body (headings + paragraphs only), with no page chrome —
- *  so it can render inside the full /privacy page (via LegalPageShell) AND inside
- *  the footer's Privacy modal (whose own header carries the title). */
+ *  {@link Privacy} wraps it in LegalPageShell for a page; a host that titles the text itself
+ *  can take the body alone. The family's one copy is the hub's `/privacy-policy`
+ *  (adh-registry's sites/legal.ts). */
 export function PrivacyBody(): ReactElement {
   return (
     <>

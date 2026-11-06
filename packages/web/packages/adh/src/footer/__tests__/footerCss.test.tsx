@@ -136,8 +136,8 @@ describe('a browser without the Popover API', () => {
     const { copyright } = renderFooter()
     expect(reachable(copyright, 'no popovers')).toEqual([
       'Agentic Development Studio → https://agenticdevelopmentstudio.com/',
-      'Terms of Use → /terms',
-      'Privacy Policy → /privacy',
+      'Terms of Use → https://agenticdeveloperhub.com/terms-of-use',
+      'Privacy Policy → https://agenticdeveloperhub.com/privacy-policy',
       'Contact → mailto:hello@agenticdeveloperhub.com',
     ])
     expect(visibleText(copyright, 'no popovers')).toBe(
@@ -181,15 +181,6 @@ describe('the preview badge', () => {
     const panel = rules.filter((r) => r.selectors.includes('.adh-preview-badge .adh-header__preview-panel'))
     expect(panel.map((r) => r.get('left'))).toContain('50%')
     expect(panel.map((r) => r.get('transform'))).toContain('translateX(-50%)')
-  })
-})
-
-describe('the legal dialogs', () => {
-  it("keep their lists' markers against a host reset", () => {
-    const lists = styleRules(adhStylesheet('adh-landing-footer.css')).filter(
-      (r) => r.at.length === 0 && r.selectors.includes('.adh-modal__body--legal .adh-legal-doc ul'),
-    )
-    expect(lists.map((r) => r.get('list-style'))).toContain('disc')
   })
 })
 

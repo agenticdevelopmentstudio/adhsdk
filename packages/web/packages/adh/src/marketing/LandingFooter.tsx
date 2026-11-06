@@ -1,12 +1,7 @@
 import type { ReactElement } from "react";
 // The client pieces by package path: each is 'use client', and a relative specifier would
 // inline it and hoist its directive over this server entry (see MarketingFrameHeader).
-import {
-  FamilyFooter,
-  PrivacyModal,
-  SitesPopover,
-  TermsModal,
-} from "@adh-sdk/adh/footer";
+import { FamilyFooter, SitesPopover } from "@adh-sdk/adh/footer";
 // Relative, deliberately: identity holds constants and one pure function, no state and no
 // directive, so the copy inlined here forks nothing.
 import { ADH_CONTACT, buildVersionLabel, type SiteContact } from "../footer/identity";
@@ -21,7 +16,7 @@ export type LandingFooterProps = {
 
 /**
  * The landing page's footer: the family footer (FamilyFooter) in flow at the foot of `/`, with
- * the dialogs its entries open, one each.
+ * the sites overview its All sites button opens.
  *
  * For the `/` of a templated site, through the template's `footer` slot. It is a server
  * component and draws no floating copyright: the routes under `MarketingShell` keep
@@ -36,8 +31,6 @@ export function LandingFooter({ contact = ADH_CONTACT }: LandingFooterProps = {}
     <>
       <FamilyFooter version={buildVersionLabel()} anchored contact={contact} />
       <SitesPopover />
-      <TermsModal />
-      <PrivacyModal />
     </>
   );
 }

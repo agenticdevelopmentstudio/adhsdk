@@ -117,10 +117,10 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/login',
     '/oidc/login',
     '/old-landing',
-    '/privacy',
+    '/privacy-policy',
     '/settings/[[...topic]]',
     '/signup',
-    '/terms',
+    '/terms-of-use',
     '/tour',
   ],
   'hub-help': [
@@ -133,7 +133,6 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/rest-api',
     '/rest-api/[...slug]',
     '/terms',
-    '/tutorials/[[...path]]',
   ],
   'hub-sdk': [
     '/',
