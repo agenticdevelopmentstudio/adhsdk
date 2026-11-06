@@ -1,6 +1,7 @@
 import AIPluginKit
 import AppKit
 import Foundation
+import os
 @preconcurrency import AppAuth
 
 /// Tokens for one connected Google account.
@@ -29,15 +30,35 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
     static let scopes = ["openid", "email", "https://www.googleapis.com/auth/gmail.modify"]
 
     private let timeout: Duration
+    private let now: @Sendable () -> Date
 
-    public init(timeout: Duration = .seconds(300)) { self.timeout = timeout }
+    public init(timeout: Duration = .seconds(300), now: @escaping @Sendable () -> Date = Date.init) {
+        self.timeout = timeout
+        self.now = now
+    }
 
     public func signIn(config: GoogleOAuthClientConfig) async throws -> GoogleCredential {
         let box = SessionBox()
+        let now = self.now
         return try await withSignInDeadline(
             timeout: timeout,
             cancel: { await box.cancel() },
-            operation: { try await Self.run(config: config, box: box) })
+            operation: { try await Self.run(config: config, box: box, now: now) })
+    }
+
+    /// The credential a finished sign-in yields. Google normally reports the access token's
+    /// expiry; without one it is taken as an hour from `now`.
+    static func credential(
+        accessToken: String?, refreshToken: String?, expiresAt: Date?, now: Date
+    ) throws -> GoogleCredential {
+        guard let accessToken, !accessToken.isEmpty else {
+            throw IntegrationError.signInFailed("Google returned no access token")
+        }
+        guard let refreshToken, !refreshToken.isEmpty else {
+            throw IntegrationError.signInFailed("Google returned no refresh token")
+        }
+        return GoogleCredential(accessToken: accessToken, refreshToken: refreshToken,
+                                expiresAt: expiresAt ?? now.addingTimeInterval(3600))
     }
 
     /// Main-actor handle on the live AppAuth flow so a timeout or cancellation can tear it down.
@@ -56,7 +77,9 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
     }
 
     @MainActor
-    private static func run(config: GoogleOAuthClientConfig, box: SessionBox) async throws -> GoogleCredential {
+    private static func run(
+        config: GoogleOAuthClientConfig, box: SessionBox, now: @Sendable () -> Date
+    ) async throws -> GoogleCredential {
         guard let authURL = URL(string: authorizationEndpoint), let tokenURL = URL(string: tokenEndpoint) else {
             throw IntegrationError.signInFailed("invalid Google endpoints")
         }
@@ -91,17 +114,10 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
                 }
             }
             handler.currentAuthorizationFlow = box.flow
-            if box.cancelled { box.cancel() }
         }
         let tokens = state.lastTokenResponse
-        guard let access = tokens?.accessToken else {
-            throw IntegrationError.signInFailed("Google returned no access token")
-        }
-        guard let refresh = tokens?.refreshToken, !refresh.isEmpty else {
-            throw IntegrationError.signInFailed("Google returned no refresh token")
-        }
-        return GoogleCredential(accessToken: access, refreshToken: refresh,
-                                expiresAt: tokens?.accessTokenExpirationDate ?? Date().addingTimeInterval(3600))
+        return try credential(accessToken: tokens?.accessToken, refreshToken: tokens?.refreshToken,
+                              expiresAt: tokens?.accessTokenExpirationDate, now: now())
     }
 
     private static func map(_ error: (any Error)?) -> IntegrationError {
@@ -118,43 +134,42 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
 /// Runs `operation` under a deadline. `cancel` must make a suspended `operation` finish (for
 /// AppAuth: cancel the flow, which fires its callback). Deadline expiry throws
 /// `signInFailed("Sign-in timed out")`; cancelling the calling task throws `signInCancelled`.
+/// Either returns promptly even if `operation` ignores cancellation: the work, the timer and the
+/// caller's cancellation race to settle one result, and the first wins.
 func withSignInDeadline<T: Sendable>(
     timeout: Duration,
     cancel: @escaping @Sendable () async -> Void,
     operation: @escaping @Sendable () async throws -> T
 ) async throws -> T {
-    let timedOut = OneShotFlag()
-    do {
-        return try await withTaskCancellationHandler {
-            try await withThrowingTaskGroup(of: T?.self) { group in
-                group.addTask { try await operation() }
-                group.addTask {
-                    try await Task.sleep(for: timeout)
-                    timedOut.set()
-                    await cancel()
-                    return nil
-                }
-                defer { group.cancelAll() }
-                while let result = try await group.next() {
-                    if let result { return result }
-                }
-                throw IntegrationError.signInCancelled
-            }
-        } onCancel: {
+    let box = RaceBox<T>()
+    let work = Task {
+        do {
+            box.finish(.success(try await operation()))
+        } catch is CancellationError {
+            box.finish(.failure(IntegrationError.signInCancelled))
+        } catch {
+            box.finish(.failure(error))
+        }
+    }
+    let timer = Task {
+        try await Task.sleep(for: timeout)
+        if box.finish(.failure(IntegrationError.signInFailed("Sign-in timed out"))) {
+            await cancel()
+            work.cancel()
+        }
+    }
+    defer {
+        timer.cancel()
+        work.cancel()
+    }
+    return try await withTaskCancellationHandler {
+        try await box.value()
+    } onCancel: {
+        if box.finish(.failure(IntegrationError.signInCancelled)) {
             Task { await cancel() }
         }
-    } catch {
-        if timedOut.isSet { throw IntegrationError.signInFailed("Sign-in timed out") }
-        if error is CancellationError || Task.isCancelled { throw IntegrationError.signInCancelled }
-        throw error
+        work.cancel()
     }
-}
-
-private final class OneShotFlag: @unchecked Sendable {
-    private let lock = NSLock()
-    private var value = false
-    func set() { lock.withLock { value = true } }
-    var isSet: Bool { lock.withLock { value } }
 }
 
 /// Opens the authorization URL in the default browser. AppAuth's own macOS agent only does this
@@ -167,50 +182,76 @@ private final class DefaultBrowserUserAgent: NSObject, OIDExternalUserAgent {
     func dismiss(animated: Bool, completion: @escaping () -> Void) { completion() }
 }
 
-/// Exchanges a refresh token for a new access token.
+/// Exchanges a refresh token for a new access token, and revokes one.
 public protocol GoogleTokenEndpoint: Sendable {
     /// `invalid_grant` (the user revoked access) throws `IntegrationError.revoked`.
     func refresh(refreshToken: String, config: GoogleOAuthClientConfig) async throws
         -> (accessToken: String, expiresIn: TimeInterval)
+
+    /// Revokes `token` (and, for a refresh token, the grant behind it) at Google.
+    func revoke(token: String) async throws
 }
 
 /// `GoogleTokenEndpoint` over URLSession. Other non-2xx replies throw
-/// `IntegrationError.signInFailed("token refresh failed: <status> <error>")`.
+/// `IntegrationError.tokenRefresh("<status> <error>")`.
 public struct URLSessionGoogleTokenEndpoint: GoogleTokenEndpoint {
+    static let revokeEndpoint = "https://oauth2.googleapis.com/revoke"
+
     private let session: URLSession
 
     public init(session: URLSession = .shared) { self.session = session }
 
     public func refresh(refreshToken: String, config: GoogleOAuthClientConfig) async throws
         -> (accessToken: String, expiresIn: TimeInterval) {
-        guard let url = URL(string: AppAuthGoogleSignIn.tokenEndpoint) else {
-            throw IntegrationError.signInFailed("invalid token endpoint")
-        }
-        var form = URLComponents()
-        form.queryItems = [
-            URLQueryItem(name: "grant_type", value: "refresh_token"),
-            URLQueryItem(name: "refresh_token", value: refreshToken),
-            URLQueryItem(name: "client_id", value: config.clientId),
-            URLQueryItem(name: "client_secret", value: config.clientSecret)
-        ]
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.httpBody = Data((form.percentEncodedQuery ?? "").utf8)
-
-        let (data, response) = try await session.data(for: request)
-        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let (status, object) = try await post(to: AppAuthGoogleSignIn.tokenEndpoint, form: [
+            ("grant_type", "refresh_token"),
+            ("refresh_token", refreshToken),
+            ("client_id", config.clientId),
+            ("client_secret", config.clientSecret)
+        ])
         guard (200..<300).contains(status) else {
             let code = object?["error"] as? String ?? "unknown"
             if code == "invalid_grant" { throw IntegrationError.revoked }
-            throw IntegrationError.signInFailed("token refresh failed: \(status) \(code)")
+            throw IntegrationError.tokenRefresh("\(status) \(code)")
         }
         guard let access = object?["access_token"] as? String else {
-            throw IntegrationError.signInFailed("token refresh failed: no access_token in reply")
+            throw IntegrationError.tokenRefresh("no access_token in reply")
         }
         let expires = (object?["expires_in"] as? NSNumber)?.doubleValue ?? 3600
         return (access, expires)
+    }
+
+    public func revoke(token: String) async throws {
+        let (status, object) = try await post(to: Self.revokeEndpoint, form: [("token", token)])
+        guard (200..<300).contains(status) else {
+            let code = object?["error"] as? String ?? "unknown"
+            throw IntegrationError.tokenRefresh("revoke failed: \(status) \(code)")
+        }
+    }
+
+    private func post(to endpoint: String, form: [(String, String)]) async throws -> (Int, [String: Any]?) {
+        guard let url = URL(string: endpoint) else {
+            throw IntegrationError.tokenRefresh("invalid endpoint \(endpoint)")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Data(Self.formEncode(form).utf8)
+        let (data, response) = try await session.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        return (status, (try? JSONSerialization.jsonObject(with: data)) as? [String: Any])
+    }
+
+    /// `application/x-www-form-urlencoded`, escaping everything but RFC 3986 unreserved
+    /// characters. `URLComponents` leaves `+`, `/` and `=` alone, and a server decodes a raw
+    /// `+` as a space, which corrupts tokens and secrets that contain one.
+    static func formEncode(_ pairs: [(String, String)]) -> String {
+        var unreserved = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+        unreserved.insert(charactersIn: "-._~")
+        func escape(_ text: String) -> String {
+            text.addingPercentEncoding(withAllowedCharacters: unreserved) ?? text
+        }
+        return pairs.map { "\(escape($0.0))=\(escape($0.1))" }.joined(separator: "&")
     }
 }
 
@@ -219,6 +260,7 @@ public struct URLSessionGoogleTokenEndpoint: GoogleTokenEndpoint {
 public actor GoogleTokenProvider {
     public static let clientSecretKey = "integrations.gmail.oauth-client-secret"
     private static let refreshMargin: TimeInterval = 60
+    private static let logger = Logger(subsystem: "com.agenticdeveloperhub.integrations", category: "GoogleTokens")
 
     public static func key(connectionId: String) -> String {
         "integrations.gmail.\(connectionId).credential"
@@ -236,6 +278,10 @@ public actor GoogleTokenProvider {
 
     private var inFlight: [String: Refresh] = [:]
     private var generations: [String: Int] = [:]
+    /// Refreshed credentials the Keychain refused to save. They are still valid, so later calls
+    /// use them rather than re-refreshing (and hammering Google) on every request; a later
+    /// successful save, a new sign-in or `forget` clears them.
+    private var unsaved: [String: GoogleCredential] = [:]
 
     public init(secrets: any SecretStoring, endpoint: any GoogleTokenEndpoint,
                 now: @escaping @Sendable () -> Date = Date.init) {
@@ -252,14 +298,39 @@ public actor GoogleTokenProvider {
     }
 
     /// Removes the credential. A refresh in progress is superseded and its result discarded.
-    public func forget(connectionId: String) {
+    /// Throws `keychain` if the Keychain would not remove it, so the caller does not report an
+    /// account as removed while its refresh token is still stored.
+    public func forget(connectionId: String) throws {
         supersede(connectionId: connectionId)
-        secrets.delete(forKey: Self.key(connectionId: connectionId))
+        guard secrets.delete(forKey: Self.key(connectionId: connectionId)) else {
+            throw IntegrationError.keychain("Could not remove the Google credential")
+        }
+    }
+
+    /// Best effort: asks Google to revoke the connection's refresh token, so removing an account
+    /// also ends the grant. A missing credential or a failed request is logged and ignored;
+    /// the local removal goes ahead regardless.
+    public func revoke(connectionId: String) async {
+        let credential: GoogleCredential?
+        do {
+            credential = try load(connectionId: connectionId)
+        } catch {
+            Self.logger.error("Not revoking \(connectionId, privacy: .public): \(error.localizedDescription)")
+            return
+        }
+        guard let credential else { return }
+        do {
+            try await endpoint.revoke(token: credential.refreshToken)
+        } catch {
+            Self.logger.error(
+                "Revoking \(connectionId, privacy: .public) at Google failed: \(error.localizedDescription)")
+        }
     }
 
     /// A valid access token; a missing credential means the user must sign in again (`revoked`).
+    /// A Keychain that cannot be read throws `keychain`, which is not a revocation.
     public func accessToken(connectionId: String, config: GoogleOAuthClientConfig) async throws -> String {
-        guard let credential = load(connectionId: connectionId) else { throw IntegrationError.revoked }
+        guard let credential = try load(connectionId: connectionId) else { throw IntegrationError.revoked }
         if credential.expiresAt.timeIntervalSince(now()) >= Self.refreshMargin {
             return credential.accessToken
         }
@@ -281,13 +352,15 @@ public actor GoogleTokenProvider {
 
     private func supersede(connectionId: String) {
         inFlight[connectionId] = nil
+        unsaved[connectionId] = nil
         generations[connectionId, default: 0] += 1
     }
 
     /// Awaits a refresh. A refresh superseded by a `store` or `forget` that ran meanwhile, whether
     /// it succeeded or failed, is discarded and the current credential re-read: a stale
     /// `invalid_grant` must not report `revoked` after a fresh sign-in. Otherwise the first
-    /// caller to settle persists the result and every waiter gets the same outcome.
+    /// caller to settle persists the result and every waiter gets the same outcome. A failed
+    /// refresh is dropped from `inFlight` so the next call tries again rather than reusing it.
     private func settle(_ refresh: Refresh, connectionId: String,
                         config: GoogleOAuthClientConfig) async throws -> String {
         let outcome = await refresh.task.result
@@ -297,7 +370,14 @@ public actor GoogleTokenProvider {
         let owner = inFlight[connectionId]?.id == refresh.id
         if owner { inFlight[connectionId] = nil }
         let refreshed = try outcome.get()
-        if owner { try persist(refreshed, connectionId: connectionId) }
+        if owner {
+            do {
+                try persist(refreshed, connectionId: connectionId)
+            } catch {
+                unsaved[connectionId] = refreshed
+                throw error
+            }
+        }
         return refreshed.accessToken
     }
 
@@ -307,10 +387,20 @@ public actor GoogleTokenProvider {
               secrets.set(text, forKey: Self.key(connectionId: connectionId)) else {
             throw IntegrationError.signInFailed("Could not save the Google credential to the Keychain")
         }
+        unsaved[connectionId] = nil
     }
 
-    private func load(connectionId: String) -> GoogleCredential? {
-        guard let text = secrets.get(forKey: Self.key(connectionId: connectionId)) else { return nil }
+    /// The stored credential. Absent, or stored but unreadable as a credential, is nil (sign in
+    /// again); a Keychain that could not be read throws.
+    private func load(connectionId: String) throws -> GoogleCredential? {
+        if let pending = unsaved[connectionId] { return pending }
+        let text: String?
+        do {
+            text = try secrets.read(forKey: Self.key(connectionId: connectionId))
+        } catch {
+            throw IntegrationError.keychain("Could not read the Google credential: \(error.localizedDescription)")
+        }
+        guard let text else { return nil }
         return try? JSONDecoder().decode(GoogleCredential.self, from: Data(text.utf8))
     }
 }

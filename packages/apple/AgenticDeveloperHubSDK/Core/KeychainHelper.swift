@@ -154,6 +154,27 @@ public enum KeychainHelper {
         return nil
     }
 
+    /// Like ``get(forKey:service:)``, but a Keychain failure other than "not found" (a locked
+    /// keychain, a denied access prompt) throws instead of reading as an absent secret.
+    /// An item that is not found falls through to `get`'s migration paths.
+    public static func read(forKey key: String, service: String = KeychainHelper.service) throws -> String? {
+        var query = makeQuery(account: key, accessGroup: accessGroup, service: service)
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        switch status {
+        case errSecSuccess:
+            guard let data = result as? Data else { return nil }
+            return String(data: data, encoding: .utf8)
+        case errSecItemNotFound:
+            return get(forKey: key, service: service)
+        default:
+            logger.error("Keychain read failed for '\(key, privacy: .public)': \(status)")
+            throw KeychainReadError(status: status)
+        }
+    }
+
     /// Copies the stored string for an account, scoped to the given access group.
     private static func copyValue(
         forKey key: String,
@@ -239,4 +260,16 @@ public enum KeychainHelper {
 
 extension KeychainHelper: Loggable {
     public static nonisolated let logger = makeLogger()
+}
+
+/// A Keychain read that failed for a reason other than the item being absent.
+public struct KeychainReadError: Error, LocalizedError, Equatable {
+    public let status: OSStatus
+
+    public init(status: OSStatus) { self.status = status }
+
+    public var errorDescription: String? {
+        let message = SecCopyErrorMessageString(status, nil) as String?
+        return message ?? "Keychain error \(status)"
+    }
 }

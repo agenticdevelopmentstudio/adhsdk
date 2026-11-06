@@ -6,6 +6,9 @@ import AgenticDeveloperHubSDKCore
 /// separate concern from key naming — hosts bring their own key convention.
 public protocol SecretStoring: Sendable {
     func get(forKey key: String) -> String?
+    /// Like `get`, but a store failure (a locked Keychain) throws rather than reading as an
+    /// absent secret, so a caller can tell "no secret" from "could not look".
+    func read(forKey key: String) throws -> String?
     @discardableResult func set(_ value: String, forKey key: String) -> Bool
     /// Removes a stored secret. The removal path: when the host clears a credential
     /// field it pushes an empty value, and the daemon deletes the entry rather than
@@ -19,6 +22,11 @@ public protocol SecretStoring: Sendable {
     /// pre-upgrade credentials never lived, so without this the real old key would
     /// linger. Idempotent.
     @discardableResult func deleteLegacy(forKey key: String) -> Bool
+}
+
+extension SecretStoring {
+    /// Stores that cannot fail to read report through `get`.
+    public func read(forKey key: String) throws -> String? { get(forKey: key) }
 }
 
 /// Production `SecretStoring` backed by `KeychainHelper`.
@@ -44,6 +52,10 @@ public struct KeychainSecretStore: SecretStoring {
     private var resolvedService: String { service ?? KeychainHelper.service }
 
     public func get(forKey key: String) -> String? { KeychainHelper.get(forKey: key, service: resolvedService) }
+
+    public func read(forKey key: String) throws -> String? {
+        try KeychainHelper.read(forKey: key, service: resolvedService)
+    }
 
     @discardableResult
     public func set(_ value: String, forKey key: String) -> Bool {
