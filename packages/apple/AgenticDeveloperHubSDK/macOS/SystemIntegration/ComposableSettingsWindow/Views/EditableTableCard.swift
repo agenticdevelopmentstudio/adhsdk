@@ -311,8 +311,10 @@ extension ComposableSettings {
             fittedWidth = width
             tableView.sizeToFit()
         }
-        /// Shown over the table while it has no rows.
+        /// Shown over the table while it has no rows — when the card was given
+        /// an `emptyMessage`. Without one an empty table is simply empty.
         public let emptyLabel = ThemedLabel(role: .secondaryText, textRole: .body)
+        private let hasEmptyMessage: Bool
 
         /// The footer's `+` button.
         public var addButton: NSButton { footer.addButton }
@@ -368,14 +370,15 @@ extension ComposableSettings {
         public init(
             title: String,
             columns: [EditableTableColumn],
-            emptyMessage: String,
+            emptyMessage: String? = nil,
             visibleRows: Int = 6,
             accessibilityPrefix: String
         ) {
             self.columns = columns
             self.footer = AddRemoveFooterView(accessibilityPrefix: accessibilityPrefix)
+            self.hasEmptyMessage = emptyMessage != nil
             super.init(withHeaderView: HeaderView(title: title))
-            emptyLabel.stringValue = emptyMessage
+            emptyLabel.stringValue = emptyMessage ?? ""
             footer.onAdd = { [weak self] in self?.onAdd?() }
             footer.onRemove = { [weak self] in
                 guard let self, let id = self.selectedRowID else { return }
@@ -409,7 +412,7 @@ extension ComposableSettings {
             } else if previous != nil {
                 tableView.deselectAll(nil)
             }
-            emptyLabel.isHidden = !rows.isEmpty
+            emptyLabel.isHidden = !hasEmptyMessage || !rows.isEmpty
             tableView.headerView?.isHidden = rows.isEmpty
             updateFooterVisibility()
             fitHeightToRows()
@@ -598,8 +601,9 @@ extension ComposableSettings {
 
         /// A footer with nothing in it would still hold its line under the table.
         private func updateFooterVisibility() {
+            // An empty table keeps its footer only to show the empty message.
             footer.isHidden = !showsAddRemove && footerActions.isEmpty
-                && footerMenuSources.isEmpty && !rows.isEmpty
+                && footerMenuSources.isEmpty && (!rows.isEmpty || !hasEmptyMessage)
         }
 
         @objc private func footerButtonPressed(_ sender: NSButton) {
@@ -716,7 +720,7 @@ extension ComposableSettings {
             scrollView.hasVerticalScroller = true
             scrollView.translatesAutoresizingMaskIntoConstraints = false
 
-            emptyLabel.isHidden = false
+            emptyLabel.isHidden = !hasEmptyMessage
 
             let stack = NSStackView(views: [scrollView, footer])
             stack.orientation = .vertical

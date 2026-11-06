@@ -38,7 +38,6 @@ public final class ExcludedFilesSettingsPanelViewController: ComposableSettings.
         columns: [
             .init(id: Column.pattern, title: "Pattern", width: 320, kind: .text(editable: true))
         ],
-        emptyMessage: "Nothing is excluded — add a pattern with +.",
         accessibilityPrefix: "fileBrowser.excluded")
 
     /// The view is a table that fills the panel and scrolls itself; the detail
