@@ -29,6 +29,7 @@ import { reconcileBoardLedger } from '../board';
 import { siteLinks } from '../lib/links';
 import { collectTelemetry } from '../telemetry/server';
 import { assembleFleet } from '../peers/fleet';
+import { gatherReport, parseReportParams, type ReportSources } from '../report/report-gather';
 
 // ---------------------------------------------------------------------------
 // The MCP tool surface: thin wrappers over the SAME store/service functions the
@@ -58,7 +59,8 @@ export interface McpTool {
    *  platform config, peer topology). Writes are admin-gated by `!readOnly` already. */
   adminOnly?: boolean;
   inputSchema: z.ZodRawShape;
-  execute(storage: Storage, args: Record<string, unknown>, config: StatusConfig): Promise<unknown>;
+  /** `report` is the app's report sources (shared dashboards, scheduler) — injected, never global. */
+  execute(storage: Storage, args: Record<string, unknown>, config: StatusConfig, report?: ReportSources): Promise<unknown>;
 }
 
 /** A tool the view tier may NOT use: any write, or a read whose REST route is admin-only.
@@ -82,6 +84,28 @@ const userUpdateArgs = z.object({ id: z.string(), ...roleBody.shape });
 const idArgs = z.object({ id: z.string() });
 
 const READ_TOOLS: McpTool[] = [
+  {
+    name: 'get_report',
+    description:
+      'One-call health digest of the whole fleet (the GET /report payload): a verdict, severity-sorted findings with links and issue keys, per-source coverage (complete=false when any source could not be read) and per-source sections. range = analytics window (24h|7d|30d, default 24h); days = uptime window (1-365, default 7); wait = seconds to let cold dashboards fill in (0-60, default 20); logs = attach the build-log tail of failing deploys.',
+    readOnly: true,
+    inputSchema: {
+      range: z.enum(['24h', '7d', '30d']).optional(),
+      days: z.number().int().optional(),
+      wait: z.number().int().optional(),
+      logs: z.boolean().optional(),
+    },
+    execute: async (_storage, args, _config, report) => {
+      if (!report) throw new Error('the report is not available on this server');
+      const params = parseReportParams({
+        range: args.range as string | undefined,
+        days: args.days as number | undefined,
+        wait: args.wait as number | undefined,
+        logs: args.logs as boolean | undefined,
+      });
+      return gatherReport(report, params);
+    },
+  },
   {
     name: 'get_status_summary',
     description: 'Overall status rollup plus per-service statuses and the open-issue list (the /snapshot payload).',

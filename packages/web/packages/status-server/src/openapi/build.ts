@@ -18,6 +18,7 @@ import { activityPaths } from './paths/activity';
 import { configPaths, configSchemas } from './paths/config';
 import { telemetryPaths, telemetrySchemas } from './paths/telemetry';
 import { dashboardPaths, dashboardSchemas } from './paths/telemetry-dashboards';
+import { reportPaths, reportSchemas } from './paths/fleet-report';
 import { fleetPaths, fleetSchemas } from './paths/fleet';
 import { usersPaths } from './paths/users';
 import { authPaths, authSchemas } from './paths/auth';
@@ -37,6 +38,7 @@ const MODULES: { paths: Paths; schemas?: Schemas }[] = [
   { paths: configPaths, schemas: configSchemas },
   { paths: telemetryPaths, schemas: telemetrySchemas },
   { paths: dashboardPaths, schemas: dashboardSchemas },
+  { paths: reportPaths, schemas: reportSchemas },
   { paths: fleetPaths, schemas: fleetSchemas },
   { paths: usersPaths },
   { paths: authPaths, schemas: authSchemas },

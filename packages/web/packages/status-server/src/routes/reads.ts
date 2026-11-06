@@ -36,6 +36,7 @@ import type {
   DeploymentDTO,
   UptimeResponse,
   UptimeService,
+  IntegrationsResponse,
 } from '../monitor/types';
 
 // ---------------------------------------------------------------------------
@@ -576,7 +577,16 @@ export async function refreshAndEnumerateDeployProjects(
   return { vercel, enumerated: projects, verifiedPlatforms: vercel.ok ? [...verifiedPlatforms, 'vercel'] : verifiedPlatforms };
 }
 
-export function readsRoutes(storage: Storage, config: StatusConfig): Hono<{ Variables: { tier: Tier } }> {
+/** The integrations check behind a short cache — what `GET /integrations` and `/report` share. */
+export function cachedIntegrationsCheck(storage: Storage, config: StatusConfig): (fresh?: boolean) => Promise<IntegrationsResponse> {
+  return cachedSingleFlight(PROVIDER_READ_CACHE_MS, () => runIntegrationsCheck(storage, config));
+}
+
+export function readsRoutes(
+  storage: Storage,
+  config: StatusConfig,
+  cachedIntegrations: (fresh?: boolean) => Promise<IntegrationsResponse> = cachedIntegrationsCheck(storage, config),
+): Hono<{ Variables: { tier: Tier } }> {
   const app = new Hono<{ Variables: { tier: Tier } }>();
   // Only the PROVIDER-facing halves are cached; the DB reads (wired/ignored
   // flags) stay live so a config edit shows immediately.
@@ -584,7 +594,6 @@ export function readsRoutes(storage: Storage, config: StatusConfig): Hono<{ Vari
   // several tabs) coalesces onto ONE account scan — and so `fresh=1` on either route
   // means fresh all the way down, refresh included.
   const cachedEnumerate = cachedSingleFlight(PROVIDER_READ_CACHE_MS, () => refreshAndEnumerateDeployProjects(storage, config));
-  const cachedIntegrations = cachedSingleFlight(PROVIDER_READ_CACHE_MS, () => runIntegrationsCheck(storage, config));
   const platformMeta = platformMetaFromConfig(config);
 
   app.get('/live', async (c) => c.json(await buildLiveSnapshot(storage, config)));

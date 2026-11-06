@@ -94,12 +94,13 @@ describe('status /mcp over Streamable HTTP', () => {
       expect(adminTools.length).toBe(ALL_TOOLS.length);
       expect(new Set(adminTools)).toEqual(new Set(ALL_TOOLS.map((t) => t.name)));
 
-      // 18 read tools minus the 6 admin-only reads = 12 viewer-visible tools.
-      expect(viewTools.length).toBe(12);
+      // 19 read tools minus the 6 admin-only reads = 13 viewer-visible tools.
+      expect(viewTools.length).toBe(13);
       expect(viewTools.length).toBe(selectTools('view').length);
       // Viewer-visible reads — every field is reachable through a NON-admin REST route
       // (/status, /snapshot, /live, /uptime, /history, /telemetry, /fleet, /deploy-projects).
       for (const name of [
+        'get_report',
         'get_status_summary',
         'get_problems',
         'get_uptime',
@@ -190,6 +191,46 @@ describe('status /mcp over Streamable HTTP', () => {
       // the view tool set. The SDK surfaces the "tool not found" as an isError result: a
       // viewer can never read the roster over MCP, matching the REST access gate.
       const result = await view.callTool({ name: 'list_users', arguments: {} });
+      expect(result.isError).toBe(true);
+    } finally {
+      await view.close();
+    }
+  });
+
+  it('get_report answers a view-tier token with the same payload as GET /report', async () => {
+    const view = await connect(viewToken);
+    try {
+      const result = await view.callTool({ name: 'get_report', arguments: { wait: 0, days: 3, range: '7d' } });
+      expect(result.isError).toBeFalsy();
+      const env = envelope(result);
+      expect(env.ok).toBe(true);
+      const report = env.data as {
+        schema: string;
+        verdict: string;
+        coverage: Record<string, { ok: boolean }>;
+        sections: { uptime: { days: number } | null; analytics: { range: string } | null };
+      };
+      expect(report.schema).toBe('status.report/1');
+      expect(Object.keys(report.coverage)).toEqual([
+        'monitor',
+        'deploys',
+        'integrations',
+        'errors',
+        'runtimeErrors',
+        'analytics',
+        'uptime',
+      ]);
+      expect(report.sections.uptime?.days).toBe(3);
+      expect(report.sections.analytics?.range).toBe('7d');
+    } finally {
+      await view.close();
+    }
+  });
+
+  it('get_report rejects an out-of-range param as a tool error', async () => {
+    const view = await connect(viewToken);
+    try {
+      const result = await view.callTool({ name: 'get_report', arguments: { wait: 0, days: 400 } });
       expect(result.isError).toBe(true);
     } finally {
       await view.close();
