@@ -212,12 +212,12 @@ export function filterTopicItems(
 ): TopicDetailItem[] {
   const q = query.trim().toLowerCase()
   if (!q) return items
-  return items.filter(
-    (it) =>
-      it.id === selectedId ||
-      it.label.toLowerCase().includes(q) ||
-      (it.sublabel?.toLowerCase().includes(q) ?? false),
-  )
+  return items.filter((it) => it.id === selectedId || topicMatches(it, q))
+}
+
+/** Whether a row's label or sublabel contains `q`, which is already trimmed and case-folded. */
+function topicMatches(it: TopicDetailItem, q: string): boolean {
+  return it.label.toLowerCase().includes(q) || (it.sublabel?.toLowerCase().includes(q) ?? false)
 }
 
 /** `label` with the first case-folded occurrence of `query` underlined — the letters an
@@ -1185,11 +1185,18 @@ export function TopicRail({
   // THE AUTOCOMPLETE: the topics matching what is typed, in list order. A controlled host has
   // already narrowed `items` to its own idea of a match; otherwise the rail matches label and
   // sublabel itself — without the selected row's free pass, which is for keeping a filtered rail
-  // honest, not for offering a row that does not match. A disabled row cannot be chosen, so it is
-  // not offered.
+  // honest, not for offering a row that does not match. A controlled host may grant that pass
+  // too (the resource explorer keeps its open entity in its rows), so the SELECTED row is offered
+  // only when the rail's own match admits it: offered regardless, it came first and took the
+  // highlight, and Return chose the topic already open instead of the one typed. A disabled row
+  // cannot be chosen, so it is not offered.
+  const typed = query.trim().toLowerCase()
   const suggestions =
-    !listSearch.live && query.trim() !== ""
-      ? (controlledQuery ? items : filterTopicItems(items, query, null)).filter((it) => !it.disabled)
+    !listSearch.live && typed !== ""
+      ? (controlledQuery
+          ? items.filter((it) => it.id !== selectedId || topicMatches(it, typed))
+          : filterTopicItems(items, query, null)
+        ).filter((it) => !it.disabled)
       : []
   const highlighted = Math.min(activeSuggestion, Math.max(0, suggestions.length - 1))
   const suggestionsId = useId()

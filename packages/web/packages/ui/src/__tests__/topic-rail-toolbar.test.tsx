@@ -404,6 +404,24 @@ describe('topic list filter', () => {
     expect(onQueryChange).toHaveBeenLastCalledWith('')
   })
 
+  it('does not offer the open topic a controlled host keeps in its rows unless it matches', () => {
+    const onSelect = vi.fn()
+    // The resource explorer keeps its open entity among the rows whatever the query.
+    const host = (query: string, items: typeof props.items) => (
+      <TopicRail {...props} items={items} selectedId="a" onSelect={onSelect} search={{ query, onQueryChange: () => {} }} />
+    )
+    const { rerender } = render(host('', props.items))
+    fireEvent.click(filterButton())
+    rerender(host('gam', [props.items[0]!, props.items[2]!]))
+    expect(suggestions()).toEqual(['Gamma'])
+    key('Enter')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('c')
+    // It is still offered when it does match.
+    fireEvent.click(filterButton())
+    rerender(host('alp', [props.items[0]!]))
+    expect(suggestions()).toEqual(['Alpha'])
+  })
+
   it('leaves the empty label to the host when the query is controlled', () => {
     // The host's list is empty while a new query's read is in flight, and only the host knows
     // that — the notebook's "Loading…" used to be replaced by "Nothing matches".
