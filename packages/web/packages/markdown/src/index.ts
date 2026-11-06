@@ -34,6 +34,11 @@ export type {
   MarkdownEditorTab,
 } from './components/MarkdownDocumentEditor'
 
+// A whole detail pane for one document: the Cancel/Save bar flush at the top, the editing
+// view in the padded body below it.
+export { MarkdownDocumentPane, MarkdownDocumentPaneBody } from './components/MarkdownDocumentPane'
+export type { MarkdownDocumentPaneProps } from './components/MarkdownDocumentPane'
+
 // The reading-palette wrapper (data-mdv-theme + data-mdv-shiki-variant + the --mdv-* palette)
 // applied around markdown content. NO "use client" — a plain server-safe wrapper, same as
 // MarkdownContent, so an async RSC can render it. This is the package's own knowledge about
