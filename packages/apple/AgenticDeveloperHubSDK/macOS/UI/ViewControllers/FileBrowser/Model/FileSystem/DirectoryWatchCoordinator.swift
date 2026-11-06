@@ -158,6 +158,12 @@ public final class DirectoryWatchCoordinator: ObservableObject {
 
             DispatchQueue.main.async {
                 guard let self = self else { return }
+                // The exclusions changed while this read was in flight, so it
+                // read with the old ones. Dropped, not merged: the change ran
+                // `applyExclusions`, which re-reads every read directory —
+                // these included — with the new filter, after this change had
+                // already happened on disk.
+                guard filter == self.filter else { return }
 
                 // Apply the updates on main thread (just pointer swaps).
                 // Merged, not replaced: a fresh read hands back unread child

@@ -142,7 +142,15 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
             // have nothing in it: the outline reads an empty array as
             // "expandable, not yet read", so keeping it would leave a
             // disclosure triangle that opens onto nothing.
-            DispatchQueue.main.async { self?.children = loaded.isEmpty ? nil : loaded }
+            //
+            // A read that started before the exclusions changed is dropped:
+            // the filter on a node only changes through `applyExclusions`,
+            // which re-reads this directory — `childrenLoaded` is already set —
+            // with the new one.
+            DispatchQueue.main.async {
+                guard let self, self.filter == filter else { return }
+                self.children = loaded.isEmpty ? nil : loaded
+            }
         }
     }
 
