@@ -1,7 +1,7 @@
 'use client'
 
 import { asEndpoint, authApiBaseOrEnv } from './asBase'
-import { AuthHttpError, extractErrorMessage, extractErrorCode } from './client'
+import { responseError } from './client'
 import {
   assertPasswordlessPasskey,
   assertSecondFactor,
@@ -722,13 +722,7 @@ async function centralLoginStep(
   // Before res.ok: 202 IS ok, and it carries a challenge rather than a redirect.
   if (res.status === 202) return (await res.json()) as MfaChallenge
   if (!res.ok) {
-    const failure = await res.json().catch(() => null)
-    const fallback = res.status >= 500 ? `Server error (${res.status})` : 'Login failed'
-    throw new AuthHttpError(
-      res.status,
-      extractErrorMessage(failure, fallback),
-      extractErrorCode(failure),
-    )
+    throw await responseError(res, 'Login failed')
   }
   const { redirectUrl } = (await res.json()) as { redirectUrl: string }
   window.location.href = redirectUrl
@@ -773,12 +767,7 @@ export async function centralSendMfaSms(
     body: JSON.stringify({ token }),
   })
   if (!res.ok) {
-    const failure = await res.json().catch(() => null)
-    throw new AuthHttpError(
-      res.status,
-      extractErrorMessage(failure, 'Could not send a code.'),
-      extractErrorCode(failure),
-    )
+    throw await responseError(res, 'Could not send a code.')
   }
 }
 

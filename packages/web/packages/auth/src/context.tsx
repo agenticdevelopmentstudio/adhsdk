@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { reportAuthError, reportUnexpectedAuthError } from './report'
 import { configureAuth } from './config'
 import { hasCapability, type AuthTokens, type AuthUser } from './types'
-import { authedJson, exchangeSsoCode, extractErrorMessage, extractErrorCode, AuthHttpError, DEFAULT_EXCHANGE_PATH } from './client'
+import { authedJson, exchangeSsoCode, responseError, AuthHttpError, DEFAULT_EXCHANGE_PATH } from './client'
 import { tokensFromResponse, type BackendTokenFields } from './tokens'
 import { clearTokens, readTokens, readUser, writeTokens, writeUser } from './tokens'
 import {
@@ -365,13 +365,10 @@ export function AuthProvider<U extends AuthUser = AuthUser>({
         body: JSON.stringify(body),
       })
       if (!res.ok) {
-        // Surface server (5xx) failures WITH the status (AuthHttpError) so callers
-        // can tell them from a 4xx user error (wrong password / email taken) and
-        // report only the former. Still prefers a JSON error/message/title from the
-        // body. AuthHttpError extends Error, so existing `.message` consumers work.
-        const errBody = await res.json().catch(() => null)
-        const fallback = res.status >= 500 ? `Server error (${res.status})` : failMsg
-        throw new AuthHttpError(res.status, extractErrorMessage(errBody, fallback), extractErrorCode(errBody))
+        // The status rides on the AuthHttpError, so callers can tell a server (5xx)
+        // failure from a 4xx user error (wrong password / email taken) and report
+        // only the former. AuthHttpError extends Error, so `.message` consumers work.
+        throw await responseError(res, failMsg)
       }
       const data = (await res.json()) as BackendAuthResponse & Partial<MfaChallenge>
       // A 202 with `mfaRequired` is NOT a session — the account owes a second factor.

@@ -12,6 +12,7 @@ import {
   requestLoginSms,
 } from '../mfa'
 import { reportUnexpectedAuthError, setAuthErrorReporter } from '../report'
+import { centralSendMfaSms } from '../sso'
 
 function respond(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -98,5 +99,30 @@ describe('MFA login steps throw AuthHttpError carrying the HTTP status', () => {
     stubFetch(respond(503, {}))
     reportUnexpectedAuthError(await rejection(passwordlessPasskeyLogin('b@example.com')))
     expect(sink).toHaveBeenCalledTimes(1)
+  })
+})
+
+// Every auth error is built by client.ts responseError, so each one carries the
+// parsed body, and a bodiless 5xx reads as a server error wherever it comes from.
+describe('central login steps build their errors the same way', () => {
+  const target = { clientId: 'c', returnUrl: 'https://site.example/auth/callback', authApiBase: 'https://auth.example' }
+
+  it('a 4xx carries status, code and body', async () => {
+    const body = { error: { code: 'rate_limited', message: 'slow down' } }
+    stubFetch(respond(429, body))
+    expect(await rejection(centralSendMfaSms(target, 't'))).toMatchObject({
+      status: 429,
+      code: 'rate_limited',
+      message: 'slow down',
+      body,
+    })
+  })
+
+  it('a bodiless 5xx is a server error', async () => {
+    stubFetch(new Response('Bad Gateway', { status: 502 }))
+    expect(await rejection(centralSendMfaSms(target, 't'))).toMatchObject({
+      status: 502,
+      message: 'Server error (502)',
+    })
   })
 })

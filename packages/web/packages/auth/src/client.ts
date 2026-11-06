@@ -102,9 +102,7 @@ export async function exchangeSsoCode(
     res = await attempt(true)
   }
   if (!res.ok) {
-    // Read the body once for both the message and the machine code (see authedFetch).
-    const body = await res.json().catch(() => null)
-    throw new AuthHttpError(res.status, extractErrorMessage(body, 'Sign-in failed'), extractErrorCode(body), body)
+    throw await responseError(res, 'Sign-in failed')
   }
   const data = (await res.json()) as BackendTokenFields & { user: AuthUser }
   return { tokens: tokensFromResponse(data), user: data.user }
@@ -222,15 +220,7 @@ export async function authedFetch(url: string, init: RequestInit = {}): Promise<
   }
 
   if (!res.ok) {
-    // Read the body once so the message AND the machine code come from the same
-    // parse (a Response body can only be consumed once).
-    const body = await res.json().catch(() => null)
-    throw new AuthHttpError(
-      res.status,
-      extractErrorMessage(body, `HTTP ${res.status}`),
-      extractErrorCode(body),
-      body,
-    )
+    throw await responseError(res, `HTTP ${res.status}`)
   }
   return res
 }
