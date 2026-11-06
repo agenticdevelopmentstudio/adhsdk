@@ -1402,6 +1402,9 @@ export function TopicRail({
           // it, so no column clips it sideways. Same `pl-2.5` + `w-4` + `gap-2` row geometry as
           // the rail, so each suggestion's icon and label sit where its row's do.
           className="absolute top-full right-0 left-0 z-20 max-h-72 overflow-y-auto border-y border-apt-border bg-apt-surface py-1 shadow-lg"
+          // Focus stays in the field through ANY press on the list — an option, and its padding and
+          // border too. A press there used to blur the field, dismissing the panel and its query.
+          onMouseDown={(e) => e.preventDefault()}
         >
           {suggestions.map((item, i) => (
             <li
@@ -1410,10 +1413,10 @@ export function TopicRail({
               data-index={i}
               role="option"
               aria-selected={i === highlighted}
-              // Focus stays in the field through the click, or its blur would dismiss the panel
-              // (and unmount this list) before the click landed.
-              onMouseDown={(e) => e.preventDefault()}
-              onMouseEnter={() => setActiveSuggestionId(item.id)}
+              // The pointer highlights only when it MOVES. `mouseenter` also fires when the arrows
+              // scroll an option under a resting pointer, which snatched the highlight from the
+              // keyboard: Return then chose the row under the pointer, not the one arrowed to.
+              onMouseMove={() => setActiveSuggestionId(item.id)}
               onClick={() => chooseSuggestion(item)}
               className={cn(
                 "flex cursor-pointer items-center gap-2 py-1.5 pr-2 pl-2.5 text-[0.8rem]",
