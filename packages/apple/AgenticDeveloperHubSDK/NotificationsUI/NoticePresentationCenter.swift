@@ -279,6 +279,16 @@ public final class NoticePresentationCenter {
         perform(action, of: id, text: text)
     }
 
+    /// The host refused a change the user made on a card: the notice was
+    /// already finished, the id was unknown, or the host was unreachable.
+    /// The id stops being suppressed, and a pending "until I'm back" wake is
+    /// dropped, so the next `reconcile(active:)` shows whatever the host still
+    /// calls active instead of hiding it until the host's list changes.
+    public func actionNotApplied(id: String) {
+        actedIDs.remove(id)
+        forgetUntilBack(id)
+    }
+
     public func archive(id: String) {
         guard let entry = entries[id] else { return }
         if entry.isSummary {

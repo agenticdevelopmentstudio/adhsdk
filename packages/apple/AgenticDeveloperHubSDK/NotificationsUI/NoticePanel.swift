@@ -46,6 +46,16 @@ public final class NoticePanel: NSPanel {
         isMovable = false
     }
 
+    /// Applies the "hide from screen sharing" setting to the notice panels
+    /// already on screen, so changing it takes effect without waiting for the
+    /// next notice. New panels read it from the rules when they are built.
+    /// Windows that are not notice panels are left alone.
+    public static func applyHideFromSharing(_ hide: Bool, to windows: [NSWindow] = NSApp.windows) {
+        for case let panel as NoticePanel in windows {
+            panel.sharingType = hide ? .none : .readOnly
+        }
+    }
+
     public override var canBecomeKey: Bool { takesFocus || allowKeyForReply }
 
     public override var canBecomeMain: Bool { takesFocus }
