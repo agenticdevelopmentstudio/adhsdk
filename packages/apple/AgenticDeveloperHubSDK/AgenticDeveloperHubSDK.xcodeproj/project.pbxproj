@@ -1775,6 +1775,7 @@
 		7856F3849E81EDD28F038EAC /* HostMCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1ABA13046BB7B62A8DD025 /* HostMCPServer.swift */; };
 		7860056D630C02A6FBB42CF4 /* WorkspaceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672D27BB1F1D087994E8D9B9 /* WorkspaceResolver.swift */; };
 		787A111CE0470E259F0716BD /* PopupMenuChoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB350E27557CCAE428EE874 /* PopupMenuChoiceView.swift */; };
+		78BBC3012D09CF440C2AC8BE /* GmailSyncWorkerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ED3F72B943BB4881515640C /* GmailSyncWorkerTests.swift */; };
 		78CEE7109C59F9410764E2BA /* AIChatViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FF8396F6622A0528842B3D /* AIChatViewModelTests.swift */; };
 		78F92894744B730D11259606 /* ContextCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65E1E6FC3D4D0638EEA54095 /* ContextCollector.swift */; };
 		792BF93D6EB54B4356F5C208 /* ExtensionsBrowsePanelSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC21B47C7DB00F29D6B18FC /* ExtensionsBrowsePanelSummaryTests.swift */; };
@@ -2989,6 +2990,7 @@
 		D6B989C4F8FFA2EC63977518 /* AppendOnlyFileCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47297673548D8ECF2DC6314 /* AppendOnlyFileCursor.swift */; };
 		D6C528DEC974FBA8D21F3502 /* JSONLImportPassTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04759D8BD54C00E114AF720C /* JSONLImportPassTests.swift */; };
 		D6CF08AFB7010470E5C8DCB6 /* ApplicationsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580B599BDC0D85AF14801C21 /* ApplicationsAdapter.swift */; };
+		D6DB5496E10C92A54E5CE734 /* FakeGmailAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E77F8AFE091BD85478DCDE /* FakeGmailAPI.swift */; };
 		D6EBCF9E717BC106534EE4E5 /* TerminalAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06DA998535D6AA4C14C15E5 /* TerminalAppearance.swift */; };
 		D6EF29FE6076508259CA55D7 /* CommandResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9FE614BF8D8CCA801830E61 /* CommandResult.swift */; };
 		D6FD8C722F09B65EB541B97D /* ExtensionTreeDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47EE76FCFE99D28F0FAF4617 /* ExtensionTreeDataSource.swift */; };
@@ -3399,6 +3401,7 @@
 		F8D901123032C17FD0CD694D /* AgenticDeveloperHubSDKPermissions.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DAE9D06DBA7E410231438FBD /* AgenticDeveloperHubSDKPermissions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8DA3D4FD599C2E10AF9A3C9 /* SessionRoutes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854BFFDDF87E133FC5B5E826 /* SessionRoutes.swift */; };
 		F8E047911ABFAD3E29BD5342 /* WindowRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 584EF9C5899F2CF9D551D1CF /* WindowRegistry.swift */; };
+		F8E43000CFB976764561F7D5 /* GmailSyncWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D47EDD231822570BDB4A43C /* GmailSyncWorker.swift */; };
 		F8F81A0D110F05B56C36528A /* GitStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F37D339293F13A32D97A213 /* GitStatus.swift */; };
 		F910D90E73A1BF7F4859DCA4 /* ViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F790518919AEC591546C251 /* ViewLayout.swift */; };
 		F91696EABDE39C0B9C2F5900 /* FormValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B9C458F0D55723A3F6CADB /* FormValue.swift */; };
@@ -6425,6 +6428,7 @@
 		0CE45A9FF706C76E937A65ED /* AgenticDeveloperHubSDKActivityTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AgenticDeveloperHubSDKActivityTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CFF08920917DBE55349BE69 /* PartnerMCPConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerMCPConfig.swift; sourceTree = "<group>"; };
 		0D21A0737B3BF0F7FF13DD11 /* FormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormViewController.swift; sourceTree = "<group>"; };
+		0D47EDD231822570BDB4A43C /* GmailSyncWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailSyncWorker.swift; sourceTree = "<group>"; };
 		0D5F257D01148328760E70F8 /* TabPaneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPaneDelegate.swift; sourceTree = "<group>"; };
 		0D6E07C482469E349A398190 /* LayeredSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayeredSettingsStore.swift; sourceTree = "<group>"; };
 		0D73ADDF4D4646DE277E64F4 /* GitStatusProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitStatusProvider.swift; sourceTree = "<group>"; };
@@ -7111,6 +7115,7 @@
 		5387D0069383A6C88480682B /* ReviewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewService.swift; sourceTree = "<group>"; };
 		53CBBD2E5B7821008580012B /* DiagnosticTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticTypes.swift; sourceTree = "<group>"; };
 		53D33429FA79D997C4732CE3 /* MCPServerRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerRegistry.swift; sourceTree = "<group>"; };
+		53E77F8AFE091BD85478DCDE /* FakeGmailAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeGmailAPI.swift; sourceTree = "<group>"; };
 		53EC5F2E9D1AC7CE3ADC68D6 /* PersonasModuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonasModuleTests.swift; sourceTree = "<group>"; };
 		54114966557751A479158212 /* PermissionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRowView.swift; sourceTree = "<group>"; };
 		543541A89C378A196A26FD2E /* TerminalTextInjectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTextInjectorTests.swift; sourceTree = "<group>"; };
@@ -7869,6 +7874,7 @@
 		9EB4AA8E7187010DC5EF4DB6 /* NSImageSymbolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImageSymbolTests.swift; sourceTree = "<group>"; };
 		9EBCA27A60E63D3CDC9CBBC9 /* SystemWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowManager.swift; sourceTree = "<group>"; };
 		9ED0F2867584C040498E3EDE /* PinnedEndsLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedEndsLine.swift; sourceTree = "<group>"; };
+		9ED3F72B943BB4881515640C /* GmailSyncWorkerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailSyncWorkerTests.swift; sourceTree = "<group>"; };
 		9EDC82EE7AEE50F2B9E5D4C1 /* ExtensionIdentityComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionIdentityComponentTests.swift; sourceTree = "<group>"; };
 		9EE33B9833A422A81DA38583 /* SafariBrowserPaneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariBrowserPaneViewController.swift; sourceTree = "<group>"; };
 		9EE79ED930443CD276B03BA7 /* UTCDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UTCDay.swift; sourceTree = "<group>"; };
@@ -12200,6 +12206,7 @@
 				ECC4458926D29CE7271D66B4 /* GmailAPI.swift */,
 				AAED6EACE1697166326E33B6 /* GmailMessageParser.swift */,
 				90AB9E4B48B1FD028E456A8F /* GmailRESTClient.swift */,
+				0D47EDD231822570BDB4A43C /* GmailSyncWorker.swift */,
 			);
 			path = Gmail;
 			sourceTree = "<group>";
@@ -13024,6 +13031,7 @@
 		98DC4AE94FAAE0A693798BC0 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				53E77F8AFE091BD85478DCDE /* FakeGmailAPI.swift */,
 				51A1EEF03C088DF99AB0AE6B /* InMemorySecretStore.swift */,
 			);
 			path = Support;
@@ -14888,6 +14896,7 @@
 				98DC4AE94FAAE0A693798BC0 /* Support */,
 				08C72F604E87C879D2553DD8 /* GmailMessageParserTests.swift */,
 				BF7123F36F6CDB3739CAC4FF /* GmailRESTClientTests.swift */,
+				9ED3F72B943BB4881515640C /* GmailSyncWorkerTests.swift */,
 				DD2BA4BA782774BEB33B74DC /* GoogleOAuthTests.swift */,
 				BE2E916039D2EE3FC916C510 /* IntegrationRecordsTests.swift */,
 				1D84E214DDB1E74EB1D25D72 /* IntegrationsStoreTests.swift */,
@@ -19307,6 +19316,7 @@
 				63CB5A143C7ED64DF78DF438 /* GmailAPI.swift in Sources */,
 				5C3977F2AC509A892E6CABE8 /* GmailMessageParser.swift in Sources */,
 				5B35011D4DE2588CBCC600B0 /* GmailRESTClient.swift in Sources */,
+				F8E43000CFB976764561F7D5 /* GmailSyncWorker.swift in Sources */,
 				8F2E27662643D7EFACF034F5 /* GoogleAuthorizer.swift in Sources */,
 				C88EA246AC75B938C650232D /* GoogleOAuthClientConfig.swift in Sources */,
 				99A22DA70F24AAB3D2339E23 /* IntegrationError.swift in Sources */,
@@ -20964,8 +20974,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D6DB5496E10C92A54E5CE734 /* FakeGmailAPI.swift in Sources */,
 				E1441B391D0E3B0CFCEB4842 /* GmailMessageParserTests.swift in Sources */,
 				ECB58B1083AE05557E98B1DE /* GmailRESTClientTests.swift in Sources */,
+				78BBC3012D09CF440C2AC8BE /* GmailSyncWorkerTests.swift in Sources */,
 				53BBFC7F982ACA71D552C666 /* GoogleOAuthTests.swift in Sources */,
 				F62A55183C521987DCC31823 /* InMemorySecretStore.swift in Sources */,
 				77DA13253F8B3E5633F6B9EE /* IntegrationRecordsTests.swift in Sources */,
