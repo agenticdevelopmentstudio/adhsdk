@@ -70,17 +70,17 @@ public struct MailToolSource: ChatToolSource {
     private func run(_ name: String, _ arguments: [String: Any]) async throws -> String {
         switch name {
         case "mail_list_accounts":
-            return MailJSON.encode(try await client.accounts())
+            return try MailJSON.encode(try await client.accounts())
         case "mail_list_labels":
-            return MailJSON.encode(try await client.labels(account: try string("account", arguments)))
+            return try MailJSON.encode(try await client.labels(account: try string("account", arguments)))
         case "mail_list_messages":
-            return MailJSON.encode(try await client.messages(try filter(arguments)))
+            return try MailJSON.encode(try await client.messages(try filter(arguments)))
         case "mail_get_message":
             let message = try await client.message(
                 account: try string("account", arguments), id: try string("id", arguments))
-            return MailJSON.encode(message)
+            return try MailJSON.encode(message)
         case "mail_modify_labels":
-            return MailJSON.encode(try await modify(arguments))
+            return try MailJSON.encode(try await modify(arguments))
         default:
             throw ArgumentError(message: "unknown tool \(name)")
         }
@@ -92,13 +92,18 @@ public struct MailToolSource: ChatToolSource {
         filter.until = try bound("until", arguments, edge: .end)
         filter.labels = try strings("labels", arguments)
         if let limit = arguments["limit"] {
-            guard let value = limit as? Int, value > 0 else {
+            guard let value = Self.integer(limit), value > 0 else {
                 throw ArgumentError(message: "limit must be a positive integer")
             }
             filter.limit = value
         }
-        filter.cursor = optionalString("cursor", arguments)
-        filter.includeBodies = arguments["include_bodies"] as? Bool ?? false
+        filter.cursor = try optionalString("cursor", arguments)
+        if let bodies = arguments["include_bodies"] {
+            guard let value = Self.boolean(bodies) else {
+                throw ArgumentError(message: "include_bodies must be a boolean")
+            }
+            filter.includeBodies = value
+        }
         return filter
     }
 
@@ -119,14 +124,29 @@ public struct MailToolSource: ChatToolSource {
     private struct ArgumentError: Error { let message: String }
 
     private func string(_ key: String, _ arguments: [String: Any]) throws -> String {
-        guard let value = optionalString(key, arguments), !value.isEmpty else {
+        guard let value = try optionalString(key, arguments), !value.isEmpty else {
             throw ArgumentError(message: "missing required argument: \(key)")
         }
         return value
     }
 
-    private func optionalString(_ key: String, _ arguments: [String: Any]) -> String? {
-        arguments[key] as? String
+    /// `nil` when absent; an error when present but not a string.
+    private func optionalString(_ key: String, _ arguments: [String: Any]) throws -> String? {
+        guard let raw = arguments[key] else { return nil }
+        guard let value = raw as? String else { throw ArgumentError(message: "\(key) must be a string") }
+        return value
+    }
+
+    /// JSON booleans and numbers both bridge to `NSNumber`; only a real boolean is one here.
+    private static func boolean(_ raw: Any) -> Bool? {
+        guard let number = raw as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() else { return nil }
+        return number.boolValue
+    }
+
+    /// A JSON number with no fractional part; never a boolean.
+    private static func integer(_ raw: Any) -> Int? {
+        guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID() else { return nil }
+        return Int(exactly: number.doubleValue)
     }
 
     private func strings(_ key: String, _ arguments: [String: Any]) throws -> [String] {
@@ -138,7 +158,7 @@ public struct MailToolSource: ChatToolSource {
     }
 
     private func bound(_ key: String, _ arguments: [String: Any], edge: MailDateBound.Edge) throws -> String? {
-        guard let text = optionalString(key, arguments) else { return nil }
+        guard let text = try optionalString(key, arguments) else { return nil }
         guard let value = MailDateBound.normalize(text, edge: edge) else {
             throw ArgumentError(message: "\(key) must be YYYY-MM-DD or an ISO-8601 timestamp")
         }

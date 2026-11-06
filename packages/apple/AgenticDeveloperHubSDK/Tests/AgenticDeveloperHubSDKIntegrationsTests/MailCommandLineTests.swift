@@ -94,8 +94,92 @@ struct MailCommandLineTests {
     @Test func jsonFlagEmitsJSON() async throws {
         let (code, out) = await run(["accounts", "--json"], ScriptedMail(.accounts([account()])))
         #expect(code == 0)
-        let decoded = try JSONDecoder().decode([MailAccount].self, from: Data(out.stdout[0].utf8))
-        #expect(decoded == [account()])
-        #expect(out.stdout[0].contains("\n"))
+        #expect(out.stdout == [try expectedJSON([account()])])
+        // `email` is declared after `id`, so only sorting puts it first.
+        let text = out.stdout[0]
+        let email = try #require(text.range(of: "\"email\""))
+        let id = try #require(text.range(of: "\"id\""))
+        #expect(email.lowerBound < id.lowerBound)
+    }
+
+    @Test func listJSONIncludesNextCursor() async throws {
+        let page = MailMessagePage(messages: [ScriptedMail.message()], nextCursor: "50")
+        let (code, out) = await run(["list", "a", "--json"], ScriptedMail(.messages(page)))
+        #expect(code == 0)
+        #expect(out.stdout == [try expectedJSON(page)])
+        #expect(out.stdout[0].contains("\"nextCursor\" : \"50\""))
+    }
+
+    @Test func emptyResultsPrintNothing() async {
+        let (accounts, accountsOut) = await run(["accounts"], ScriptedMail(.accounts([])))
+        let (labels, labelsOut) = await run(["labels", "a"], ScriptedMail(.labels([])))
+        let empty = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil)))
+        let (list, listOut) = await run(["list", "a"], empty)
+        #expect([accounts, labels, list] == [0, 0, 0])
+        #expect(accountsOut.stdout.isEmpty && labelsOut.stdout.isEmpty && listOut.stdout.isEmpty)
+    }
+
+    @Test func emptyPageWithCursorPrintsOnlyCursor() async {
+        let page = MailMessagePage(messages: [], nextCursor: "50")
+        let (_, out) = await run(["list", "a"], ScriptedMail(.messages(page)))
+        #expect(out.stdout == ["next cursor: 50"])
+    }
+
+    @Test func timestampsAreConvertedToUTC() async {
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil)))
+        _ = await run(["list", "a", "--since", "2026-01-02T03:00:00+02:00", "--until", "2026-01-02T03:00:00.250Z"],
+                      mail)
+        #expect(mail.requests == [.listMessages(MailMessageFilter(
+            account: "a", since: "2026-01-02T01:00:00.000Z", until: "2026-01-02T03:00:00.250Z"))])
+    }
+
+    @Test func impossibleDateIsUsageError() async {
+        let (code, _) = await run(["list", "a", "--since", "2026-02-30"], ScriptedMail(.ok))
+        #expect(code == 64)
+    }
+
+    @Test func labelsTextOutput() async {
+        let labels = [
+            MailLabel(id: "Label_1", name: "Work", type: "user", parentName: nil, messagesTotal: 3,
+                      messagesUnread: 1),
+            MailLabel(id: "INBOX", name: "INBOX", type: "system", parentName: nil, messagesTotal: nil,
+                      messagesUnread: nil)
+        ]
+        let (code, out) = await run(["labels", "a"], ScriptedMail(.labels(labels)))
+        #expect(code == 0)
+        #expect(out.stdout == ["Work  Label_1  user\nINBOX  INBOX  system"])
+    }
+
+    @Test func getTextOutput() async {
+        let (code, out) = await run(["get", "a", "m1"], ScriptedMail(.message(ScriptedMail.message())))
+        #expect(code == 0)
+        #expect(out.stdout == [
+            "From: a@example.com\nTo: me@example.com\nDate: 2026-01-02T03:04:05.000Z\nSubject: Hello\n"
+                + "Labels: Inbox, Work\n\nbody"
+        ])
+    }
+
+    @Test func getTextFallsBackToSnippet() async {
+        var message = ScriptedMail.message()
+        message.bodyText = nil
+        let (_, out) = await run(["get", "a", "m1"], ScriptedMail(.message(message)))
+        #expect(out.stdout[0].hasSuffix("\n\nsnip"))
+    }
+
+    @Test func unknownOptionIsUsageError() async {
+        let mail = ScriptedMail(.ok)
+        let (code, out) = await run(["list", "a", "--bogus"], mail)
+        #expect(code == 64)
+        #expect(out.stderr == [MailCommandLine.usage])
+        let (accounts, _) = await run(["accounts", "--limit", "5"], mail)
+        #expect(accounts == 64)
+        #expect(mail.requests.isEmpty)
+    }
+
+    @Test func optionMissingValueIsUsageError() async {
+        for option in ["--since", "--until", "--label", "--limit", "--cursor"] {
+            let (code, _) = await run(["list", "a", option], ScriptedMail(.ok))
+            #expect(code == 64, "\(option)")
+        }
     }
 }
