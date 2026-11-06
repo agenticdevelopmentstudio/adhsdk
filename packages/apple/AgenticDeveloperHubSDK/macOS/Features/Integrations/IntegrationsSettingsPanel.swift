@@ -115,9 +115,11 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
 
         let confirmed: () -> Void = { [weak self] in
             guard let self else { return }
-            let wasConfigured = self.model.provider?.configured == true
+            // Unknown (not loaded yet, or the load failed) counts as configured: removing an
+            // integration that is not there is harmless, skipping one that is leaks its secrets.
+            let mayBeConfigured = self.model.provider?.configured != false
             self.gmailPicked = false
-            if wasConfigured {
+            if mayBeConfigured {
                 Task { await self.model.removeIntegration() }
             } else {
                 // Picked from + but never imported: nothing to remove on the service.

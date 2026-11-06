@@ -185,6 +185,55 @@ struct GmailSettingsModelTests {
         await call.value
     }
 
+    @Test func rapidUpdatesCoalesceToTheLatestSettings() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        func window(_ days: Int) -> MailSyncSettings {
+            var settings = MailSyncSettings.default
+            settings.windowDays = days
+            return settings
+        }
+        service.gate {
+            if case .updateSettings = $0 { return true }
+            return false
+        }
+        let before = service.requests.count
+        let first = Task { await model.update(accountId: "a1", window(7)) }
+        await service.waitForRequests(before + 1)
+        // Sent while the first is in flight: only the last of these should reach the service.
+        await model.update(accountId: "a1", window(14))
+        await model.update(accountId: "a1", window(30))
+        #expect(model.accounts.first?.settings == window(30), "applied locally at once")
+        service.release()
+        await first.value
+
+        let sent = service.requests.compactMap { request -> Int? in
+            if case .updateSettings(_, let settings) = request { return settings.windowDays }
+            return nil
+        }
+        #expect(sent == [7, 30])
+        #expect(model.accounts.first?.settings == window(30))
+        #expect(model.busy == false)
+    }
+
+    @Test func cancelSignInSendsCancelWhileSigningIn() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        #expect(model.signingIn == false)
+        service.gate { $0 == .signIn }
+        let before = service.requests.count
+        let call = Task { await model.addAccount() }
+        await service.waitForRequests(before + 1)
+        #expect(model.signingIn == true)
+        await model.cancelSignIn()
+        #expect(service.requests.contains(.cancelSignIn))
+        service.release()
+        await call.value
+        #expect(model.signingIn == false)
+    }
+
     @Test func importFromURLSendsTheFileBytes() async throws {
         let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientIdHint: nil))
         let model = GmailSettingsModel(client: service.client)

@@ -11,12 +11,19 @@ public final class GmailSettingsModel: ObservableObject {
     @Published public var selectedAccountId: String?
     @Published public private(set) var busy = false
     @Published public private(set) var errorMessage: String?
+    /// True while a browser sign-in (Add Account or Reconnect) is waiting for the user.
+    @Published public private(set) var signingIn = false
 
     private let client: MailClient
     /// Calls in flight; `busy` is true while any is.
     private var inFlight = 0 {
         didSet { busy = inFlight > 0 }
     }
+    /// Settings changed but not yet sent, per account. A stepper or toggle can change faster than
+    /// the service answers; only the latest value is sent once the previous send finishes.
+    private var pendingSettings: [String: MailSyncSettings] = [:]
+    /// Accounts with a settings send in flight.
+    private var sendingSettings: Set<String> = []
 
     public init(client: MailClient) {
         self.client = client
@@ -29,10 +36,6 @@ public final class GmailSettingsModel: ObservableObject {
 
     public func reload() async {
         await perform { }
-    }
-
-    public func importClientJSON(_ data: Data) async {
-        await perform { _ = try await self.client.send(.importOAuthClient(json: data)) }
     }
 
     /// Reads the file inside the call, so a read failure becomes `errorMessage`.
@@ -50,21 +53,44 @@ public final class GmailSettingsModel: ObservableObject {
 
     /// Also the "Reconnect" flow: the service matches the account by email and reuses it.
     public func addAccount() async {
+        signingIn = true
+        defer { signingIn = false }
         await perform { _ = try await self.client.send(.signIn) }
+    }
+
+    /// Ends a pending sign-in; the sign-in call then fails with "Sign-in was cancelled".
+    public func cancelSignIn() async {
+        do {
+            _ = try await client.send(.cancelSignIn)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     public func remove(accountId: String) async {
         await perform { _ = try await self.client.send(.removeAccount(account: accountId)) }
     }
 
-    /// Applies `settings` locally at once so the UI doesn't snap back, then sends them.
-    /// A failure reloads, which restores the server's state.
+    /// Applies `settings` locally at once so the UI doesn't snap back, then sends them. While a
+    /// send for the account is in flight, a new value only replaces the pending one; the running
+    /// send delivers the latest when it finishes, so each change does not restart a sync.
+    /// A failure drops what is pending and reloads, which restores the server's state.
     public func update(accountId: String, _ settings: MailSyncSettings) async {
         if let index = accounts.firstIndex(where: { $0.id == accountId }) {
             accounts[index].settings = settings
         }
+        pendingSettings[accountId] = settings
+        guard sendingSettings.insert(accountId).inserted else { return }
         await perform {
-            _ = try await self.client.send(.updateSettings(account: accountId, settings: settings))
+            defer { self.sendingSettings.remove(accountId) }
+            do {
+                while let next = self.pendingSettings.removeValue(forKey: accountId) {
+                    _ = try await self.client.send(.updateSettings(account: accountId, settings: next))
+                }
+            } catch {
+                self.pendingSettings[accountId] = nil
+                throw error
+            }
         }
     }
 
@@ -87,7 +113,12 @@ public final class GmailSettingsModel: ObservableObject {
         }
     }
 
-    public static func lastSyncedText(_ lastSyncAt: String?, now: Date = Date(), locale: Locale = .current) -> String {
+    public static func lastSyncedText(_ lastSyncAt: String?) -> String {
+        lastSyncedText(lastSyncAt, now: Date(), locale: .current)
+    }
+
+    /// The clock and locale are fixed by tests.
+    static func lastSyncedText(_ lastSyncAt: String?, now: Date, locale: Locale) -> String {
         guard let lastSyncAt, let date = parse(lastSyncAt) else { return "Never synced" }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
@@ -116,7 +147,12 @@ public final class GmailSettingsModel: ObservableObject {
         do {
             let status = try await client.providerStatus()
             provider = status
-            accounts = status.configured ? try await client.accounts() : []
+            var loaded = status.configured ? try await client.accounts() : []
+            // A change made while reloading has not reached the service yet; keep showing it.
+            for (id, settings) in pendingSettings {
+                if let index = loaded.firstIndex(where: { $0.id == id }) { loaded[index].settings = settings }
+            }
+            accounts = loaded
         } catch {
             if errorMessage == nil { errorMessage = error.localizedDescription }
         }
