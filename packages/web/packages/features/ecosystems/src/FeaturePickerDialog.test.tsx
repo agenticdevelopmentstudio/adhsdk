@@ -74,11 +74,14 @@ describe('FeaturePickerDialog', () => {
     expect(screen.getByText('Personas does things.')).toBeInTheDocument()
   })
 
-  it('gives the filter field the whole header row', () => {
+  it("filters with the rail's own filter, open and focused from the start, and no second one", () => {
     renderPicker()
-    const field = screen.getByRole('searchbox', { name: 'Filter features' }).parentElement!
-    expect(field.className).toContain('flex-1')
-    expect(field.className).not.toContain('max-w-xs')
+    const field = screen.getByRole('searchbox', { name: 'Filter features' })
+    expect(screen.getAllByRole('searchbox')).toHaveLength(1)
+    expect(field.closest('[data-htd-toolbar]')).not.toBeNull()
+    expect(field).toHaveFocus()
+    fireEvent.change(field, { target: { value: 'resea' } })
+    expect(screen.getAllByRole('checkbox').map((b) => b.getAttribute('aria-label'))).toEqual(['Research'])
   })
 
   it('lists coming-soon features last, under a "Coming soon" divider, with their checkboxes DISABLED', () => {

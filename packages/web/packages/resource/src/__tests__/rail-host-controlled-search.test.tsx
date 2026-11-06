@@ -9,7 +9,9 @@
 // the notebook, and a space could never be typed into the ResourceExplorer filter at all.
 //
 // Each keystroke appends to what the field shows NOW, as a user's does, and the value is checked
-// after every key: a revert in the middle is otherwise papered over by the next `change`.
+// after every key: a revert in the middle is otherwise papered over by the next `change`. The rail
+// hands the host every keystroke and offers the rows it narrows to as an autocomplete (Mike,
+// 2026-11-06); closing the panel hands it back an empty query.
 import { useState } from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
@@ -62,17 +64,19 @@ function HookPublisher() {
 }
 
 /** Open the rail's pop-over search from its toolbar, then type `text` into it one key at a time,
- *  asserting what the field shows after every key. */
-function typeIntoRailSearch(name: string, text: string) {
+ *  asserting what the field shows after every key. Returns what the autocomplete offers for the
+ *  whole phrase. */
+function typeIntoRailSearch(name: string, text: string): (string | null)[] {
   const toolbar = document.querySelector("[data-htd-toolbar]") as HTMLElement;
   fireEvent.click(within(toolbar).getByRole("button", { name }));
   let typed = "";
   for (const key of text) {
     typed += key;
-    const field = screen.getByRole("searchbox", { name }) as HTMLInputElement;
+    const field = screen.getByRole("combobox", { name }) as HTMLInputElement;
     fireEvent.change(field, { target: { value: field.value + key } });
-    expect(screen.getByRole("searchbox", { name }), `after typing "${typed}"`).toHaveValue(typed);
+    expect(screen.getByRole("combobox", { name }), `after typing "${typed}"`).toHaveValue(typed);
   }
+  return screen.queryAllByRole("option").map((o) => o.textContent);
 }
 
 describe("a rail's controlled search, typed through the host", () => {
@@ -83,6 +87,11 @@ describe("a rail's controlled search, typed through the host", () => {
       </StandaloneRailHost>,
     );
     typeIntoRailSearch("Search notes", "abc de");
+    // Dismissed, the query goes back to the host empty: the next open starts clean.
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Search notes" }), { key: "Escape" });
+    const toolbar = document.querySelector("[data-htd-toolbar]") as HTMLElement;
+    fireEvent.click(within(toolbar).getByRole("button", { name: "Search notes" }));
+    expect(screen.getByRole("combobox", { name: "Search notes" })).toHaveValue("");
   });
 
   it("keeps every keystroke, spaces included, from a useStackLevel publisher", () => {
@@ -115,8 +124,7 @@ describe("a rail's controlled search, typed through the host", () => {
         rail={{ title: "All", help: "help", emptyLabel: "None yet." }}
       />,
     );
-    typeIntoRailSearch("Filter all", "alpha t");
-    expect(screen.getByText("Alpha Two")).toBeInTheDocument();
+    expect(typeIntoRailSearch("Filter all", "alpha t")).toEqual(["Alpha Two"]);
     expect(screen.queryByText("Alpha One")).toBeNull();
   });
 });

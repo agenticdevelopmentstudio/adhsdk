@@ -64,24 +64,22 @@ describe("ResourceExplorer's rail toolbar", () => {
 
   // An empty list is precisely when a first create matters most — a brand-new tenant lands on
   // `/home` with nothing — so the `+` is gated on `canCreate`, never on there being rows. The
-  // search is: there is nothing to narrow yet.
-  it("keeps the + on a loaded but EMPTY list, with no search", () => {
-    renderExplorer({ items: [], newLabel: "New Project…" });
-    const bar = toolbar()!;
-    expect(within(bar).getByRole("button", { name: "New Project" })).toBeInTheDocument();
-    expect(within(bar).queryByRole("button", { name: "Filter all" })).toBeNull();
+  // filter is on every titled rail, rows or not (Mike, 2026-11-06), and always comes first.
+  it.each([
+    ["a loaded but EMPTY list", []],
+    ["a list still LOADING", null],
+  ] as const)("keeps the filter, then the +, on %s", (_, items) => {
+    renderExplorer({ items: items === null ? null : [...items], newLabel: "New Project…" });
+    const [first, second] = within(toolbar()!).getAllByRole("button");
+    expect(first).toHaveAccessibleName("Filter all");
+    expect(second).toHaveAccessibleName("New Project");
   });
 
-  it("keeps the + while the list is still LOADING, with no search", () => {
-    renderExplorer({ items: null, newLabel: "New Project…" });
-    const bar = toolbar()!;
-    expect(within(bar).getByRole("button", { name: "New Project" })).toBeInTheDocument();
-    expect(within(bar).queryByRole("button", { name: "Filter all" })).toBeNull();
-  });
-
-  it("draws no toolbar with nothing to create and nothing to filter", () => {
+  it("draws the toolbar, with its filter, even with nothing to create", () => {
     renderExplorer({ items: [] });
-    expect(toolbar()).toBeNull();
+    expect(within(toolbar()!).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual([
+      "Filter all",
+    ]);
   });
 
   // promoteTopics has no resource rail at all, so no `+` anywhere — EcosystemsFeature's own
@@ -100,8 +98,10 @@ describe("ResourceExplorer's rail toolbar", () => {
       ],
     });
     fireEvent.click(within(toolbar()!).getByRole("button", { name: "Filter all" }));
-    fireEvent.change(screen.getByRole("searchbox", { name: "Filter all" }), { target: { value: "Alph" } });
-    expect(screen.getByText("Alpha")).toBeInTheDocument();
+    const field = screen.getByRole("combobox", { name: "Filter all" });
+    fireEvent.change(field, { target: { value: "Alph" } });
+    // Live: the explorer narrows on every keystroke, and its rows are what the field offers.
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Alpha"]);
     expect(screen.queryByText("Beta")).toBeNull();
   });
 });

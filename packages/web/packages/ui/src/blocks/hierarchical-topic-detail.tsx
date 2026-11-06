@@ -38,7 +38,6 @@ import {
   type TopicDetailItem,
   type RailSlot,
   type TopicListSearch,
-  hasListTools,
   rowExitEl,
 } from "./topic-detail"
 import { TopicSelectHint } from "./topic-select-hint"
@@ -206,11 +205,12 @@ export interface TopicLevel {
   /** Tint the `+` gold to signal an in-progress create (nothing selected in the list). */
   newActive?: boolean
   /** Operations on this level's list (e.g. the Sites list's Auto Configure), right-justified in
-   *  its list toolbar, after the `+` and the magnifier. Named for the title row they used to
+   *  its list toolbar, after the filter and the `+`. Named for the title row they used to
    *  ride. Keep them compact — the toolbar is one line. */
   titleActions?: ReactNode
-  /** Make this level's list searchable: a magnifier in its toolbar pops a query field over the
-   *  rows. `{}` lets the rail filter on label + sublabel; pass `query` to own the filtering. */
+  /** Customise this level's filter. Every titled rail has one, leftmost in its toolbar, popping a
+   *  query field over the rows; left out, the rail filters on label + sublabel. Pass `query` to
+   *  own the filtering, `placeholder` to name it. */
   search?: TopicListSearch
   /** Fixed rail width in px for THIS level. Leave it unset: the rail then AUTO-FITS to its rows
    *  and header (`useRailFit`). Setting it turns auto-fit OFF for this level, for a rail whose
@@ -1852,7 +1852,6 @@ function MinimizedStack({
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
               search={level.search}
-              reserveToolbar={rendered.some(hasListTools)}
               hideItemIcons={level.hideItemIcons}
               checkable={level.checkable}
               checkedIds={level.checkedIds}
@@ -2444,7 +2443,6 @@ function CoveredStack({
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
               search={level.search}
-              reserveToolbar={rendered.some(hasListTools)}
               hideItemIcons={level.hideItemIcons}
               checkable={level.checkable}
               checkedIds={level.checkedIds}
@@ -2797,7 +2795,6 @@ function NarrowStack({
             railSlot={level.railSlot}
             headerSlot={level.headerSlot}
             search={level.search}
-            reserveToolbar={levels.some(hasListTools)}
             hideItemIcons={level.hideItemIcons}
             checkable={level.checkable}
             checkedIds={level.checkedIds}

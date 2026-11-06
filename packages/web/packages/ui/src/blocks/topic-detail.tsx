@@ -126,34 +126,35 @@ export interface TopicDetailItem {
 export type RailSlot = ReactNode | ((collapsed: boolean) => ReactNode)
 
 /**
- * SEARCH for one topic list: a magnifier in the list's toolbar that pops a query field up OVER the
- * list. Popped rather than pinned because most rails are far too narrow to hold a filter field
- * beside anything else (Mike, 2026-09-24: the old page-wide filter strip was "clunky", and a field
- * squeezed into a 180px rail is worse) — so the field floats at a readable width and gets out of
- * the way when dismissed.
+ * The FILTER for one topic list: the leftmost tool in the list's toolbar, a magnifying glass that
+ * opens a query panel OVER the toolbar, its own glass exactly where the button was, as wide as the
+ * rail. It is an AUTOCOMPLETE (Mike, 2026-11-06): typing drops a list of the matching topics under
+ * the field, Up and Down move through it, and Return selects the highlighted topic and dismisses
+ * the filter, leaving the rail's own rows whole. Escape (or leaving the field, or ✕) dismisses it
+ * and selects nothing. Popped rather than pinned because most rails are far too narrow to hold a
+ * filter field beside anything else (Mike, 2026-09-24: the old page-wide filter strip was
+ * "clunky", and a field squeezed into a 180px rail is worse).
  *
- * Pass `{}` and the rail filters its own rows on label + sublabel. Pass `query` (with
- * `onQueryChange`) and the HOST owns the query and the filtering — for a list whose rows are
- * matched on more than what they show, or whose query is also read elsewhere.
+ * Every titled rail has one (Mike, 2026-11-06: "always show the filter button"); this only
+ * customises it. Leave it out, or pass `{}`, and the rail filters its own rows on label +
+ * sublabel. Pass `query` (with `onQueryChange`) and the HOST owns the query and the filtering — for
+ * a list whose rows are matched on more than what they show, or whose query is also read elsewhere.
  */
 export interface TopicListSearch {
   /** Controlled query. Omit to let the rail hold it and filter its own rows. */
   query?: string
-  /** Every keystroke, controlled or not. */
+  /** Every keystroke in the field, controlled or not, and `""` when the panel closes (except with
+   *  `live`, whose query outlives the panel until ✕ clears it). */
   onQueryChange?: (query: string) => void
-  /** Placeholder and accessible name for the field. Defaults to "Search". */
+  /** Placeholder and accessible name for the field. Defaults to "Filter". */
   placeholder?: string
-}
-
-/** Whether a list has anything for its toolbar. The hierarchical stacks ask it of every visible
- *  level, and once one does, every titled rail reserves the row — so first rows stay aligned
- *  across the rails instead of stepping down under whichever one has tools. */
-export function hasListTools(level: {
-  onNew?: unknown
-  search?: unknown
-  titleActions?: unknown
-}): boolean {
-  return !!(level.onNew || level.search || level.titleActions)
+  /** Open the field, focused, when the rail mounts — for a surface whose first act is filtering
+   *  (a picker dialog). */
+  autoOpen?: boolean
+  /** Filter the RAIL'S OWN ROWS on every keystroke instead of offering the autocomplete — for a
+   *  surface whose keys go on driving the list from the field (a picker dialog's arrows, Space and
+   *  Return). The query stays when the panel closes; Escape just closes. */
+  live?: boolean
 }
 
 /** A plain `<button>`'s props, less the accessible name, which `label` gives. */
@@ -168,7 +169,7 @@ export type ListToolButtonProps = Omit<ComponentProps<"button">, "aria-label"> &
 
 /**
  * One tool on a list's toolbar: the icon it is handed as `children`, muted gray, with no button
- * chrome. The rail draws its own `+`, magnifier and ✕ with it; a host's `titleActions` should
+ * chrome. The rail draws its own filter, `+` and ✕ with it; a host's `titleActions` should
  * too, so a tool it adds sits beside the rail's as one of a set. (A gear that opens a MENU is
  * `GearMenuTrigger`'s job; this is a tool that acts on one click, or opens a dialog.)
  *
@@ -219,24 +220,22 @@ export function filterTopicItems(
   )
 }
 
-/** The nearest ancestor of `el` that CLIPS it sideways — computed `overflow-x` anything but
- *  `visible` — or null when nothing above it does.
- *
- *  The search pop-over asks how far it may spill. In the hub's covered stack every rail sits in
- *  an `overflow-hidden` column wrapper with an inline z-index, no wider than the rail, so on a
- *  rail narrower than 16rem the wrapper cut off the pop-over's ✕ and the end of the typed query
- *  (and `z-30` could not lift it: the clip is on an ancestor). The pop-over is capped at this
- *  box's right edge instead. A portal would escape the clip, but the covered stack closes an
- *  open hover branch on any `pointerover` outside `[data-htd-col]`, so a pop-over portalled out
- *  of its column would collapse the rail under the pointer that reached for it. */
-function horizontalClipOf(el: HTMLElement): HTMLElement | null {
-  for (let node = el.parentElement; node; node = node.parentElement) {
-    const overflowX = getComputedStyle(node).overflowX
-    // EMPTY is a style engine with nothing to say (jsdom resolves only what a sheet or an inline
-    // style declared), not a clip.
-    if (overflowX && overflowX !== "visible") return node
-  }
-  return null
+/** `label` with the first case-folded occurrence of `query` underlined — the letters an
+ *  autocomplete suggestion matched on. A label that matched elsewhere (its sublabel, or a host's
+ *  own idea of a match) comes back as it is. */
+export function underlineMatch(label: string, query: string): ReactNode {
+  const q = query.trim().toLowerCase()
+  const at = q ? label.toLowerCase().indexOf(q) : -1
+  if (at < 0) return label
+  return (
+    <>
+      {label.slice(0, at)}
+      <span data-htd-match className="underline decoration-apt-gold underline-offset-2">
+        {label.slice(at, at + q.length)}
+      </span>
+      {label.slice(at + q.length)}
+    </>
+  )
 }
 
 // One shared element reference for icon-less rows — stable across renders so
@@ -836,7 +835,6 @@ export function TopicRail({
   onToggleChecked,
   onFit,
   search,
-  reserveToolbar = false,
 }: {
   items: TopicDetailItem[]
   selectedId: string | null
@@ -857,12 +855,9 @@ export function TopicRail({
    *  in the list toolbar. Only rendered with a `title`d, un-collapsed header. Named for where
    *  they used to ride — the title row — which every consumer across the fleet still spells. */
   titleActions?: ReactNode
-  /** Make this list searchable — see {@link TopicListSearch}. Titled, un-collapsed rails only. */
+  /** Customise this list's filter — see {@link TopicListSearch}. Every titled, un-collapsed rail
+   *  has the filter; omit this and it filters its own rows. */
   search?: TopicListSearch
-  /** Render the (possibly empty) list toolbar even with no tools in it, so this rail's rows line
-   *  up with a sibling rail that has one. The hierarchical stacks set it on every level once any
-   *  visible level has a toolbar. */
-  reserveToolbar?: boolean
   collapsed: boolean
   /** The click event is forwarded so the hierarchical stack can read its modifier keys (⌘/Ctrl-click
    *  = toggle every list). Callers that don't need it take no argument. */
@@ -985,13 +980,20 @@ export function TopicRail({
 
   // The list's SEARCH state; its pop-over lives in the toolbar, below. Declared ahead of the
   // auto-fit, which has to know when the rows on screen are a subset the rail filtered itself.
+  // EVERY list can be filtered (Mike, 2026-11-06: "always show the filter button"). A host's
+  // `search` only customises it — its placeholder, or a query it owns; without one the rail holds
+  // the query and filters its own rows on label + sublabel.
+  const listSearch: TopicListSearch = search ?? {}
   const [ownQuery, setOwnQuery] = useState("")
-  const [searchOpen, setSearchOpen] = useState(false)
-  const controlledQuery = search?.query !== undefined
-  const query = search ? (controlledQuery ? (search.query ?? "") : ownQuery) : ""
+  const [searchOpen, setSearchOpen] = useState(listSearch.autoOpen === true)
+  // The autocomplete's highlighted suggestion, an index into `suggestions` (below).
+  const [activeSuggestion, setActiveSuggestion] = useState(0)
+  const controlledQuery = listSearch.query !== undefined
+  const query = controlledQuery ? (listSearch.query ?? "") : ownQuery
   // A controlled host filters before it passes `items`, so as far as this rail can tell its rows
-  // are always the whole list; only an uncontrolled query hides rows the rail was given.
-  const selfFiltering = !!search && !controlledQuery && query.trim() !== ""
+  // are always the whole list. An uncontrolled query hides rows only in `live` mode: otherwise
+  // its matches go to the autocomplete and the rail keeps every row.
+  const selfFiltering = !controlledQuery && listSearch.live === true && query.trim() !== ""
 
   /**
    * MEASURE THE ROWS, before paint.
@@ -1150,69 +1152,88 @@ export function TopicRail({
   ) : null
 
   // ── The list toolbar ──────────────────────────────────────────────────────────────────────
-  // Operations on THIS list, on a row of their own under the titled header: `+` first (sitting in
-  // the icon column, like the header's control slot), then search, then the list's own tools
-  // right-justified. They used to crowd the title row, where a narrow rail truncated its title to
+  // Operations on THIS list, on a row of their own under EVERY titled header: the filter first
+  // (sitting in the icon column, like the header's control slot), then `+`, then the list's own
+  // tools right-justified. They used to crowd the title row, where a narrow rail truncated its title to
   // make room for them, and the list's filter lived in a page-wide strip above every rail — far
   // from the list it filtered. The search state they read is declared above, with the auto-fit.
   const searchTriggerRef = useRef<HTMLButtonElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const setQuery = (q: string) => {
     if (!controlledQuery) setOwnQuery(q)
-    search?.onQueryChange?.(q)
+    listSearch.onQueryChange?.(q)
   }
-  // Escape, Enter and ✕ all close through here, and each hands focus BACK to the magnifier:
+  // The query belongs to the open panel: closing it, however it closes, clears it and puts every
+  // row back. Only `live` keeps a query past the panel, and only ✕ clears that one.
+  const dismissSearch = () => {
+    if (!listSearch.live && query !== "") setQuery("")
+    setSearchOpen(false)
+  }
+  // Escape, Enter and ✕ all close through here, and each hands focus BACK to the filter button:
   // closing unmounts the field that has focus, and focus used to fall to <body>, dropping a
   // keyboard user out of the rail altogether.
-  const closeSearch = (clear: boolean) => {
+  const closeSearch = (clear = false) => {
     if (clear) setQuery("")
-    setSearchOpen(false)
+    dismissSearch()
     searchTriggerRef.current?.focus()
   }
-  const shownItems =
-    search && !controlledQuery ? filterTopicItems(items, query, selectedId) : items
-  const titled = title !== undefined && !collapsed
-  // The same question the stacks ask of every level before they set `reserveToolbar`, asked here
-  // through the same function: two spellings of it could drift, and a rail that answered it
-  // differently would step its rows down out of line with its siblings'.
-  const hasTools = hasListTools({ onNew, search, titleActions })
-  const showToolbar = titled && (hasTools || reserveToolbar)
+  const openSearch = () => {
+    setActiveSuggestion(0)
+    setSearchOpen(true)
+  }
+  const shownItems = selfFiltering ? filterTopicItems(items, query, selectedId) : items
+  // THE AUTOCOMPLETE: the topics matching what is typed, in list order. A controlled host has
+  // already narrowed `items` to its own idea of a match; otherwise the rail matches label and
+  // sublabel itself — without the selected row's free pass, which is for keeping a filtered rail
+  // honest, not for offering a row that does not match. A disabled row cannot be chosen, so it is
+  // not offered.
+  const suggestions =
+    !listSearch.live && query.trim() !== ""
+      ? (controlledQuery ? items : filterTopicItems(items, query, null)).filter((it) => !it.disabled)
+      : []
+  const highlighted = Math.min(activeSuggestion, Math.max(0, suggestions.length - 1))
+  const suggestionsId = useId()
+  const suggestionId = (i: number) => `${suggestionsId}-${i}`
+  const suggestionsRef = useRef<HTMLUListElement>(null)
+  // Keep the highlighted suggestion in view as the arrows walk past the list's edge.
+  useLayoutEffect(() => {
+    suggestionsRef.current
+      ?.querySelector<HTMLElement>(`[data-index="${highlighted}"]`)
+      ?.scrollIntoView?.({ block: "nearest" })
+  }, [highlighted, suggestions.length])
+  // Choosing a suggestion selects its topic exactly as clicking its row would — a link row runs
+  // its link through the owner's `onSelect` — and dismisses the filter. The topic already
+  // selected is left as it is: re-selecting a row in an uncovered list TOGGLES it off.
+  const chooseSuggestion = (item: TopicDetailItem) => {
+    if (!item.onLink) revealChosen.current = item.id
+    closeSearch(true)
+    if (item.id !== selectedId || item.onLink) onSelect(item.id)
+  }
+  // The topic a suggestion chose, until the list shows it selected: it may be far down a long
+  // list, scrolled out of sight behind the suggestions. Keyed on `selectedId` as well, because a
+  // host may select it a render (or a route change) later. A link row selects nothing, so it is
+  // never waited for.
+  const revealChosen = useRef<string | null>(null)
+  // EVERY titled rail has the toolbar, because every list has its filter — so every rail's rows
+  // start at the same height without the stacks having to agree on it.
+  const showToolbar = title !== undefined && !collapsed
   // The pop-over is on screen exactly when this holds. The effect below keys on it, not on
   // `searchOpen`: a collapse takes the toolbar away with the field still open, and the toolbar
   // that comes back is a new element to measure and observe.
-  const searchShown = showToolbar && !!search && searchOpen
-  // How far the pop-over may reach before an ancestor clips it; null = nothing clips it. See
-  // `horizontalClipOf`. Measured before paint on every open, and again whenever the toolbar or
-  // the clipping box resizes — the covered stack's reveal WIPES a column's box open around a
-  // rail whose own width never moves, so watching the toolbar alone would keep the cap it had
-  // when the field opened mid-wipe.
-  const [searchRoom, setSearchRoom] = useState<number | null>(null)
-  useLayoutEffect(() => {
-    const bar = toolbarRef.current
-    if (!searchShown || !bar) return
-    const clip = horizontalClipOf(bar)
-    if (!clip) {
-      setSearchRoom(null)
-      return
-    }
-    const measure = () => {
-      const room = clip.getBoundingClientRect().right - bar.getBoundingClientRect().left
-      // A box with no layout (a `display:none` ancestor, jsdom) measures nothing, not zero room.
-      const next = room > 0 ? room : null
-      setSearchRoom((prev) => (prev === next ? prev : next))
-    }
-    measure()
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null
-    ro?.observe(bar)
-    ro?.observe(clip)
-    window.addEventListener("resize", measure)
-    return () => {
-      ro?.disconnect()
-      window.removeEventListener("resize", measure)
-    }
-  }, [searchShown])
+  const searchShown = showToolbar && searchOpen
   const queryActive = query.trim() !== ""
-  const searchLabel = search?.placeholder ?? "Search"
+  // The autocomplete is on screen exactly when this holds.
+  const suggestionsShown = searchShown && suggestions.length > 0
+  // Reveal the topic a suggestion chose (see `revealChosen`).
+  useLayoutEffect(() => {
+    const chosen = revealChosen.current
+    if (chosen === null || suggestionsShown || selectedId !== chosen) return
+    revealChosen.current = null
+    listRef.current
+      ?.querySelector<HTMLElement>('[data-htd-row][aria-current="true"]')
+      ?.scrollIntoView?.({ block: "nearest" })
+  }, [selectedId, suggestionsShown])
+  const searchLabel = listSearch.placeholder ?? "Filter"
   const toolbar = showToolbar ? (
     <div
       ref={toolbarRef}
@@ -1223,67 +1244,91 @@ export function TopicRail({
       // icons and the rails' first rows still line up.
       className="relative flex min-h-[2rem] shrink-0 items-center gap-2 border-b border-apt-border pr-2 pl-2.5"
     >
-      <div className="flex w-4 shrink-0 items-center justify-center">{newButton}</div>
-      {search && (
+      {/* The filter is ALWAYS first, in the slot over the row icons: the one tool every list
+          has, so it never moves between rails or as a host adds tools of its own. */}
+      <div className="flex w-4 shrink-0 items-center justify-center">
         <ListToolButton
           ref={searchTriggerRef}
           label={searchLabel}
           title={queryActive ? `${searchLabel}: “${query}”` : searchLabel}
           aria-expanded={searchOpen}
-          onClick={() => setSearchOpen((o) => !o)}
+          onClick={() => (searchOpen ? dismissSearch() : openSearch())}
           // Gold while a query is narrowing the list with the field closed — otherwise a short
           // list would look like all there is.
           active={queryActive}
         >
           <Search size={15} aria-hidden />
         </ListToolButton>
-      )}
+      </div>
+      {newButton}
       <div className="min-w-0 flex-1" />
       {titleActions && <span className="flex shrink-0 items-center gap-1">{titleActions}</span>}
-      {search && searchOpen && (
+      {searchOpen && (
         <div
           data-htd-search
-          // Pops OVER the list at a readable width, spilling past a narrow rail wherever the layout
-          // lets it (`z-30` lifts it above the neighbouring rail it then overlaps), but never past
-          // the nearest box that clips it: `searchRoom` caps it there (see `horizontalClipOf`), so
-          // the ✕ and the end of the query are never cut off.
-          className="absolute top-0 left-0 z-30 flex h-full w-[max(100%,16rem)] items-center gap-1.5 border border-apt-border bg-apt-surface pr-1.5 pl-2.5 shadow-lg"
-          style={searchRoom === null ? undefined : { maxWidth: searchRoom }}
-          // Closes when focus LEAVES the pop-over, not when it moves inside it: the field's own
-          // blur used to close it on Tab onto ✕, unmounting ✕ in the instant it took focus, so
-          // Clear was unreachable from the keyboard. Leaving keeps the query (the icon stays gold);
-          // only Escape or ✕ clears it.
+          // Exactly over the toolbar, as wide as the rail and no wider (Mike, 2026-11-06: "only as
+          // wide as the topic list"). The rail is fitted to its topic names (`onFit`), and that is
+          // room enough to type one. Nothing spills past the rail, so no column clips it, scrolls
+          // to it or has to be lifted over its neighbours for it. Same `pl-2.5` + `w-4` slot +
+          // `gap-2` as the toolbar, so its glass sits exactly where the button was.
+          className="absolute inset-0 z-10 flex items-center gap-2 bg-apt-surface pr-1.5 pl-2.5"
+          // Leaving the panel dismisses it, as Escape does; moving focus inside it (Tab onto ✕)
+          // does not, or ✕ would unmount in the instant it took focus.
           onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget)) setSearchOpen(false)
+            if (!e.currentTarget.contains(e.relatedTarget)) dismissSearch()
           }}
         >
-          <Search size={14} aria-hidden className="shrink-0 text-apt-text-muted" />
+          <span className="flex w-4 shrink-0 items-center justify-center text-apt-text-muted">
+            <Search size={15} aria-hidden />
+          </span>
           <input
             // The field exists only because the user just asked to type into it.
             autoFocus
             type="search"
+            // A combobox over the suggestion list, so a screen reader follows the highlight
+            // while focus stays in the field. `live` has no list to point at.
+            role={listSearch.live ? undefined : "combobox"}
+            aria-autocomplete={listSearch.live ? undefined : "list"}
+            aria-expanded={listSearch.live ? undefined : suggestions.length > 0}
+            aria-controls={listSearch.live || suggestions.length === 0 ? undefined : suggestionsId}
+            aria-activedescendant={
+              listSearch.live || suggestions.length === 0 ? undefined : suggestionId(highlighted)
+            }
             value={query}
             placeholder={searchLabel}
             aria-label={searchLabel}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setActiveSuggestion(0)
+              setQuery(e.target.value)
+            }}
             onKeyDown={(e) => {
               if (e.key === "Escape") {
                 e.stopPropagation()
-                closeSearch(true)
-              } else if (e.key === "Enter") {
-                // Closing hands focus to the magnifier BEFORE this keystroke's `keypress`, which
-                // goes to whatever holds focus by then — and a button takes Enter's keypress as a
-                // click, reopening the field it just closed. A cancelled keydown sends no keypress.
+                closeSearch()
+              } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && suggestions.length > 0) {
+                // The caret stays put; the highlight moves, wrapping at either end.
                 e.preventDefault()
-                closeSearch(false)
+                const step = e.key === "ArrowDown" ? 1 : -1
+                setActiveSuggestion((highlighted + step + suggestions.length) % suggestions.length)
+              } else if (e.key === "Enter") {
+                // An IME commits its candidate on Return; that keystroke is the typing, not the filter.
+                if (e.nativeEvent.isComposing || e.keyCode === 229) return
+                // Closing hands focus to the filter button BEFORE this keystroke's `keypress`, which
+                // goes to whatever holds focus by then — and a button takes Return's keypress as a
+                // click, reopening the panel it just closed. A cancelled keydown sends no keypress.
+                e.preventDefault()
+                if (listSearch.live) closeSearch()
+                else if (suggestions[highlighted]) chooseSuggestion(suggestions[highlighted])
+                // Nothing matches: nothing to choose, and the field stays open to be corrected.
               }
             }}
-            className="min-w-0 flex-1 bg-transparent font-mono text-[0.8rem] text-apt-text outline-none placeholder:text-apt-text-dim"
+            // `type="search"` draws the browser's own ✕ beside the panel's: hide it.
+            className="min-w-0 flex-1 bg-transparent font-mono text-[0.8rem] text-apt-text outline-none placeholder:text-apt-text-dim [&::-webkit-search-cancel-button]:appearance-none"
           />
           <ListToolButton
-            label="Clear search"
+            label="Clear filter"
             // Keep focus in the field through the click. Safari never focuses a clicked button, so
-            // the field's blur would carry a null `relatedTarget` — focus leaving the pop-over, as
+            // the field's blur would carry a null `relatedTarget` — focus leaving the panel, as
             // far as the check above can tell — and close it before this click lands.
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => closeSearch(true)}
@@ -1291,6 +1336,43 @@ export function TopicRail({
             <X size={14} aria-hidden />
           </ListToolButton>
         </div>
+      )}
+      {suggestionsShown && (
+        <ul
+          ref={suggestionsRef}
+          id={suggestionsId}
+          role="listbox"
+          aria-label={`${searchLabel} suggestions`}
+          data-htd-suggestions
+          // Hangs from the toolbar over the rail's rows, as wide as the rail like the field above
+          // it, so no column clips it sideways. Same `pl-2.5` + `w-4` + `gap-2` row geometry as
+          // the rail, so each suggestion's icon and label sit where its row's do.
+          className="absolute top-full right-0 left-0 z-20 max-h-72 overflow-y-auto border-y border-apt-border bg-apt-surface py-1 shadow-lg"
+        >
+          {suggestions.map((item, i) => (
+            <li
+              key={item.id}
+              id={suggestionId(i)}
+              data-index={i}
+              role="option"
+              aria-selected={i === highlighted}
+              // Focus stays in the field through the click, or its blur would dismiss the panel
+              // (and unmount this list) before the click landed.
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => setActiveSuggestion(i)}
+              onClick={() => chooseSuggestion(item)}
+              className={cn(
+                "flex cursor-pointer items-center gap-2 py-1.5 pr-2 pl-2.5 text-[0.8rem]",
+                i === highlighted ? "bg-apt-gold/15 text-apt-text" : "text-apt-text-muted",
+              )}
+            >
+              <span className="flex w-4 shrink-0 items-center justify-center" aria-hidden>
+                {item.icon || (item.onLink ? LINK_ICON : FALLBACK_ICON)}
+              </span>
+              <span className="min-w-0 truncate">{underlineMatch(item.label, query)}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   ) : null
@@ -1451,8 +1533,14 @@ export function TopicRail({
       <div
         id={listId}
         ref={listRef}
+        // HIDDEN while the autocomplete is over it (Mike, 2026-11-06: "just hide it under the
+        // autocomplete list"), and back, with the chosen topic selected, once it closes.
+        // `invisible`, not unmounted: the rows keep their layout, their scroll position and the
+        // rail's fitted width, and leave the accessibility tree while the suggestions stand in.
+        data-htd-hidden={suggestionsShown || undefined}
         className={cn(
           "min-h-0 flex-1 overflow-y-auto",
+          suggestionsShown && "invisible",
           denseBottom ? "pb-2" : "pb-8",
           collapsed ? "pl-0 pr-1 pt-2" : "pl-0 pr-4 pt-2",
         )}
