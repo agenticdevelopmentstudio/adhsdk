@@ -1790,6 +1790,7 @@
 		83331F3EBA57FD12B8E64250 /* OpenVSXCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A37FBB2BE8C814AC92803710 /* OpenVSXCatalog.swift */; };
 		833BCDACDAB2AC4DA108A13C /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CB5D9EF0940BC9BAD22EB0F /* AIPluginKit.framework */; };
 		833EE4A6F35B4C7494CA65FE /* PartnerToolSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DED5ED21854C2CA68F3A4D7A /* PartnerToolSourceTests.swift */; };
+		834AE76EAB6A008DB913A100 /* FileBrowserExclusionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29431E105471205E30C7D496 /* FileBrowserExclusionState.swift */; };
 		834B3ADA9079D893E91B9967 /* DisplayConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B8F58D6AD1C5150B5006E5 /* DisplayConfig.swift */; };
 		834BBB757D4105B553152475 /* AgenticDeveloperHubSDKCoreMacOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 458065B2D1A15C048C8DC044 /* AgenticDeveloperHubSDKCoreMacOS.framework */; };
 		834DA8FE354D09F7E00AFBAD /* ChatFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1946E5250B268CFC00E31FF4 /* ChatFixtures.swift */; };
@@ -2380,7 +2381,6 @@
 		B2140D74859344FE11DA2DB8 /* MarkdownProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5442FC025797B4600EB47554 /* MarkdownProjectionTests.swift */; };
 		B221C9EA04DBCE4301EB0C7D /* AgenticDeveloperHubSDKCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 99B0EDCF642AA70D3B9E629F /* AgenticDeveloperHubSDKCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B2395F388C37F5C748A103A1 /* AgenticDeveloperHubAuth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AB5ADC411A6E4F89369D8BB /* AgenticDeveloperHubAuth.framework */; };
-		B248A5F2443CC1F4321C4078 /* CommandPaletteShortcutSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E94058F26EEBF7AF9B7BC896 /* CommandPaletteShortcutSettings.swift */; };
 		B25D0BA81961AB529E3AC1BF /* AgenticDeveloperHubSDKMarkdown-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68E7562A3D616D46F1B35DAC /* AgenticDeveloperHubSDKMarkdown-macOS.framework */; };
 		B26207321D5F137452942E30 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = B8144C759E04385984B67A8A /* OpenAPIRuntime */; };
 		B27EC87685E8EB49BDA44BEE /* ModelFitPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477BD6673BB7DE98EB35B166 /* ModelFitPolicyTests.swift */; };
@@ -6036,6 +6036,7 @@
 		292097E7772044B3DA12B8F3 /* ComposableTabsPaneChromeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsPaneChromeTests.swift; sourceTree = "<group>"; };
 		292D7C20BAA75DC36DA2904D /* GitConfigEntryParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitConfigEntryParserTests.swift; sourceTree = "<group>"; };
 		29377F3EC348467EFDE612B6 /* ChatWindowAppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatWindowAppearanceController.swift; sourceTree = "<group>"; };
+		29431E105471205E30C7D496 /* FileBrowserExclusionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserExclusionState.swift; sourceTree = "<group>"; };
 		295B521D18FDF7A3D7E4BC2A /* ContextEventSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEventSummary.swift; sourceTree = "<group>"; };
 		29632C48AA6047C826485DFA /* UserSettings+Editor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserSettings+Editor.swift"; sourceTree = "<group>"; };
 		296B208822FE435A640541E2 /* Conversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation.swift; sourceTree = "<group>"; };
@@ -7796,7 +7797,6 @@
 		E8DB03C241AECFD5B23C1606 /* HookCaptureCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookCaptureCommand.swift; sourceTree = "<group>"; };
 		E8ECE8662EA237236EE39911 /* InputActivityTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputActivityTrigger.swift; sourceTree = "<group>"; };
 		E904291106FB8BE145111B77 /* ThemeScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeScope.swift; sourceTree = "<group>"; };
-		E94058F26EEBF7AF9B7BC896 /* CommandPaletteShortcutSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteShortcutSettings.swift; sourceTree = "<group>"; };
 		E95DD68D513022F44BC48CEE /* PartnerGitFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerGitFixture.swift; sourceTree = "<group>"; };
 		E97D208892B1325C4795F300 /* UTCDayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UTCDayTests.swift; sourceTree = "<group>"; };
 		E98200516DC0DBB4F32B9CD6 /* TerminalSessionSplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionSplitViewController.swift; sourceTree = "<group>"; };
@@ -9010,6 +9010,7 @@
 				6E836F3B2ECB9983F92C96EE /* Settings */,
 				AABF239CC516825D6855406D /* Views */,
 				5DA14950D43F870A1F1073A2 /* DocumentDestination.swift */,
+				29431E105471205E30C7D496 /* FileBrowserExclusionState.swift */,
 				A5EB7EE2DDD63B05BCE85C2E /* FileBrowserSelection.swift */,
 				EDB213598C9813707BB514D6 /* FileBrowserViewController.swift */,
 			);
@@ -10509,7 +10510,6 @@
 			children = (
 				153042935DA3BD98F4C29EED /* CommandPaletteCoordinator.swift */,
 				1D122B81384538ED52A95BBE /* CommandPaletteModel.swift */,
-				E94058F26EEBF7AF9B7BC896 /* CommandPaletteShortcutSettings.swift */,
 				AE004B9C4C122C226DB9358B /* CommandPaletteViewController.swift */,
 				A53B5D4DEED8BD698D63D940 /* CommandPaletteWindowController.swift */,
 			);
@@ -18689,7 +18689,6 @@
 				35924BBAD401DA4AF3C1BC3F /* CommandLineToolFeature.swift in Sources */,
 				D129389508AAD24C8F3C7B3C /* CommandPaletteCoordinator.swift in Sources */,
 				5F416A40D1E9F0EAD4374AE0 /* CommandPaletteModel.swift in Sources */,
-				B248A5F2443CC1F4321C4078 /* CommandPaletteShortcutSettings.swift in Sources */,
 				DF90E93BB43A242BA6DFCF47 /* CommandPaletteViewController.swift in Sources */,
 				08A4722BF4103740AA4AA10E /* CommandPaletteWindowController.swift in Sources */,
 				8DA3A2144068412CE02D46E0 /* CommitCrawler.swift in Sources */,
@@ -18774,6 +18773,7 @@
 				7C86723213AE60340670EBB6 /* ExtensionsSettingsPanelViewController.swift in Sources */,
 				FAD45C970780900D62BC6873 /* FieldSync.swift in Sources */,
 				55326B656EC3EEAB8FA606EE /* FileBrowserDirectories.swift in Sources */,
+				834AE76EAB6A008DB913A100 /* FileBrowserExclusionState.swift in Sources */,
 				204D0B2715E3D9B8570D3788 /* FileBrowserRestorationState.swift in Sources */,
 				A684EBF57F2B0CFF8644A93F /* FileBrowserSelection.swift in Sources */,
 				D15DAB36E9FD15597BF96232 /* FileBrowserViewController.swift in Sources */,

@@ -425,6 +425,23 @@ public final class ProjectWorkspace {
         fileBrowserDirectories(primary: directoryURL)
     }
 
+    /// The project setting behind `fileBrowserExclusionState`. Stored only
+    /// while off: on is the default, and `setSetting(_:to: nil)` deletes the row.
+    static let hidesExcludedContentKey = "fileBrowser.hidesExcludedContent"
+
+    /// Whether this project's file browsers apply the Excluded patterns — one
+    /// object for every browser pane in the project, so switching it in one
+    /// pane's gear menu switches all of them, and saved with the project.
+    public private(set) lazy var fileBrowserExclusionState: FileBrowserExclusionState = {
+        let state = FileBrowserExclusionState(
+            hidesExcludedContent: setting(Self.hidesExcludedContentKey) != "false"
+        )
+        state.onChange = { [weak self] hides in
+            self?.setSetting(Self.hidesExcludedContentKey, to: hides ? nil : "false")
+        }
+        return state
+    }()
+
     /// One pane's `+`/`−`, applied to the whole project.
     ///
     /// The added-roots list is stored once per *repository*, and

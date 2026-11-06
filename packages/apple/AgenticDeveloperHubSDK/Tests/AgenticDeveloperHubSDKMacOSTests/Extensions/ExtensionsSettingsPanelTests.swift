@@ -133,10 +133,11 @@ struct ExtensionsSettingsPanelTests {
                 try #require(coordinator.registry.extensions.count == 2)
                 let identifiers = Set(panel.extensionPanels.map(\.extensionIdentifier))
                 #expect(identifiers == ["test.alpha", "test.beta"])
-                // No failures and no empty state, so the sidebar is the two
-                // extensions and the Browse & Install panel appended after
-                // them.
-                #expect(panel.panels.count == 3)
+                // No failures, so the list is the two extensions; Browse &
+                // Install is a button under the detail, never a row.
+                #expect(panel.panels.count == 2)
+                #expect(panel.showsSidebar)
+                #expect(panel.detailFooterView != nil)
             }
         }
     }
@@ -225,9 +226,11 @@ struct ExtensionsSettingsPanelTests {
 
             try withPanel(searchPaths: [root]) { _, panel in
                 #expect(panel.extensionPanels.isEmpty)
-                // Only real rows: with nothing installed that is Browse & Install.
+                // With nothing installed the browser is the whole panel: no
+                // list to pick it from, and no button pointing at itself.
                 #expect(panel.panels.map(\.descriptor.title) == ["Browse & Install"])
-                #expect(panel.panels.count == 1)
+                #expect(!panel.showsSidebar)
+                #expect(panel.detailFooterView == nil)
 
                 // Where to put an extension is reference prose, so it is in the
                 // help drawer, with the path verbatim.

@@ -75,8 +75,19 @@ public final class FileBrowserViewController: NSViewController {
     /// Settings re-filters every root of this browser as it is made.
     private let exclusionsObserver: UserSettingObserver<[String]>
 
+    /// Whether the patterns apply at all — the gear menu's Hide Excluded
+    /// Content. Shared with the project's other browsers.
+    public let exclusionState: FileBrowserExclusionState
+
+    /// The matcher every root filters by: the patterns, or none of them while
+    /// the reader has set them aside.
     private var exclusions: GitIgnoreMatcher {
-        GitIgnoreMatcher(patterns: exclusionsObserver.value)
+        GitIgnoreMatcher(patterns: exclusionState.hidesExcludedContent ? exclusionsObserver.value : [])
+    }
+
+    private func applyExclusions() {
+        let matcher = exclusions
+        managersByRoot.values.forEach { $0.exclusions = matcher }
     }
 
     /// The app-wide open-document registry, threaded down to the tree so it
@@ -122,6 +133,8 @@ public final class FileBrowserViewController: NSViewController {
     ///   - exclusions: The setting holding the `.gitignore`-style patterns to
     ///     leave out of the tree, anchored at each root. Watched: a change
     ///     re-filters the tree on screen at once.
+    ///   - exclusionState: Whether `exclusions` applies. A project passes the
+    ///     one all its browsers share; the default is a browser's own, on.
     ///   - selection: The selection this tree drives. Defaults to one of its
     ///     own, so a browser used alone needs to know nothing about it.
     ///   - documentStore: The app-wide open-document registry, threaded down
@@ -134,12 +147,14 @@ public final class FileBrowserViewController: NSViewController {
         excludedURL: URL,
         config: FileTreeConfig = .default,
         exclusions: UserSetting<[String]> = UserSettings.fileBrowserExcludedPatterns,
+        exclusionState: FileBrowserExclusionState = FileBrowserExclusionState(),
         selection: FileBrowserSelection = FileBrowserSelection(),
         restoration: FileBrowserRestorationState = FileBrowserRestorationState(),
         documentStore: TextDocumentStore,
         gitStatusProvider: GitStatusProvider? = nil
     ) {
         self.directories = directories
+        self.exclusionState = exclusionState
         self.excludedURL = excludedURL
         self.config = config
         self.exclusionsObserver = UserSettingObserver(exclusions)
@@ -149,10 +164,15 @@ public final class FileBrowserViewController: NSViewController {
         self.injectedGitStatusProvider = gitStatusProvider
         super.init(nibName: nil, bundle: nil)
 
-        exclusionsObserver.onChange = { [weak self] patterns in
-            let matcher = GitIgnoreMatcher(patterns: patterns)
-            self?.managersByRoot.values.forEach { $0.exclusions = matcher }
-        }
+        exclusionsObserver.onChange = { [weak self] _ in self?.applyExclusions() }
+        // `@Published` publishes from `willSet`; the hop lets the new value land
+        // before `exclusions` reads it back.
+        exclusionState.$hidesExcludedContent
+            .removeDuplicates()
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.applyExclusions() }
+            .store(in: &cancellables)
 
         rebuildManagers()
         directories.$additional
@@ -435,6 +455,27 @@ extension FileBrowserViewController: PaneContentTeardown {
     /// work, whether or not the view ever got a `viewDidDisappear`.
     public func paneContentWillBeDiscarded() {
         stopWatching()
+    }
+}
+
+extension FileBrowserViewController: PaneMenuProviding {
+    /// Hide Excluded Content: on, the Settings > File Browser > Excluded
+    /// patterns apply; off, the tree shows everything they hide, for as long
+    /// as the reader needs to see it. Per project, and remembered.
+    public func makePaneMenuItems() -> [NSMenuItem] {
+        let item = NSMenuItem(
+            title: "Hide Excluded Content",
+            action: #selector(toggleHidesExcludedContent),
+            keyEquivalent: ""
+        )
+        item.target = self
+        item.state = exclusionState.hidesExcludedContent ? .on : .off
+        item.accessibilityID("pane.options.hide-excluded")
+        return [item]
+    }
+
+    @objc private func toggleHidesExcludedContent() {
+        exclusionState.hidesExcludedContent.toggle()
     }
 }
 

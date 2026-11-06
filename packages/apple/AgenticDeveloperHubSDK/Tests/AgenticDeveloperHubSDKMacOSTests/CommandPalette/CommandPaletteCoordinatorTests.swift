@@ -43,7 +43,8 @@ struct CommandPaletteCoordinatorTests {
     @Test("Constructing the coordinator claims no system-global hotkey")
     func constructionClaimsNoGlobalHotkey() {
         let registry = CommandRegistry()
-        let coordinator = CommandPaletteCoordinator(commandRegistry: registry)
+        let coordinator = CommandPaletteCoordinator(
+            commandRegistry: registry, keyCommands: KeyCommandRegistry())
         defer { coordinator.unregister() }
 
         // Construction is inert; `start()` is where the machine-wide ⌃⌥C is

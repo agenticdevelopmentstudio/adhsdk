@@ -2,13 +2,13 @@ import AppKit
 
 /// What a pane's *content* contributes to the chrome around it.
 ///
-/// Six protocols, each opted into on its own and probed with `as?` — the idiom
+/// Seven protocols, each opted into on its own and probed with `as?` — the idiom
 /// `ComposableTabsPaneViewController` already uses for `PaneContentTeardown`
 /// and `PaneContentRemovalConfirmation`. A pane whose content implements none
 /// of them still works; every surface below has a fallback, and
 /// `PaneViewController` is the one place those fallbacks live.
 ///
-/// All six are class-bound. Two carry a settable change callback, and a pane
+/// All seven are class-bound. Two carry a settable change callback, and a pane
 /// installs its own closure into it through the existential — an assignment
 /// that does not compile through a struct-capable protocol.
 
@@ -51,6 +51,14 @@ public protocol PaneOptionsProviding: AnyObject {
 
 public extension PaneOptionsProviding {
     var hasPaneOptionRows: Bool { true }
+}
+
+/// Content that adds items to the pane's gear menu, after the pane's own
+/// (`Move`) and above `Settings…`. Asked on every click, so an item's state —
+/// a checkmark — is always the content's current answer.
+@MainActor
+public protocol PaneMenuProviding: AnyObject {
+    func makePaneMenuItems() -> [NSMenuItem]
 }
 
 /// Content that draws itself as a glyph when the pane is minimized to a strip.

@@ -29,6 +29,10 @@ public final class CommandPaletteCoordinator: AppFeature {
 
     private let registry: CommandRegistry
 
+    /// Where the global shortcut lives: an ordinary system-wide key command,
+    /// so Settings lists, records and switches it like every other one.
+    private let keyCommands: KeyCommandRegistry
+
     /// Built on first `showPalette()`, not in `init`. A menu-bar app launches
     /// on every login and most launches never open the palette, so its panel,
     /// table and search field are work worth not doing until they are asked
@@ -44,8 +48,9 @@ public final class CommandPaletteCoordinator: AppFeature {
 
     /// - Parameter commandRegistry: The registry to list and to dispatch
     ///   through — the same instance every other coordinator registered into.
-    public init(commandRegistry registry: CommandRegistry) {
+    public init(commandRegistry registry: CommandRegistry, keyCommands: KeyCommandRegistry = .shared) {
         self.registry = registry
+        self.keyCommands = keyCommands
         super.init()
 
         registry.register(AppCommand(
@@ -69,39 +74,40 @@ public final class CommandPaletteCoordinator: AppFeature {
 
     // MARK: - AppFeature
 
-    /// Claim the system-global shortcut.
+    /// Claim the system-global shortcut, by declaring it as a global key
+    /// command.
     ///
-    /// Here and not in `init` because `KeyboardShortcuts.onKeyDown` registers a
-    /// real, machine-wide Carbon hotkey: constructing a coordinator must not
-    /// take ⌃⌥C away from every other app, which is exactly what a test bundle
-    /// that builds one would otherwise do for the length of its run. `start()`
-    /// is the lifecycle hook for a long-running service, and the host calls it
+    /// Here and not in `init` because a global key command registers a real,
+    /// machine-wide Carbon hotkey: constructing a coordinator must not take
+    /// ⌃⌥C away from every other app, which is exactly what a test bundle that
+    /// builds one would otherwise do for the length of its run. `start()` is
+    /// the lifecycle hook for a long-running service, and the host calls it
     /// once per launch on every registered feature.
     ///
-    /// Guarded, because `onKeyDown` *appends*: the Carbon registration dedupes
-    /// but the handler list does not, so a second unguarded call would leave
-    /// two handlers on one hotkey and open the palette twice per keypress.
-    /// Nothing in this app starts a feature twice — but `AppFeatureRegistry`
-    /// is shared framework surface and `startAll()` is public, so the
-    /// invariant belongs here rather than in the callers (`idempotency`).
+    /// Guarded so that `start()` and `stop()` pair up: installing a section
+    /// twice only replaces it, but a second `start()` must not leave `stop()`
+    /// thinking there is something left to give back (`idempotency`).
     public override func start() {
         guard !hasClaimedGlobalShortcut else { return }
         hasClaimedGlobalShortcut = true
-        KeyboardShortcuts.onKeyDown(for: .showCommandPalette) { [weak self] in
-            self?.showPalette()
-        }
-        // So Settings › Key Commands refuses this chord instead of letting a
-        // second command fire on it too.
-        KeyCommandRegistry.shared.reserveExternal([.showCommandPalette], owner: "the command palette")
+        adoptLegacyShortcut()
+        keyCommands.install(KeyCommandSection(
+            title: Self.shortcutSectionTitle,
+            caption: Self.shortcutCaption,
+            scope: .global,
+            commands: [KeyCommandDescriptor(
+                id: Self.shortcutCommandID,
+                title: "Command Palette",
+                defaultShortcut: KeyboardShortcuts.Name.showCommandPalette.defaultShortcut,
+                run: { [weak self] in self?.showPalette() })]))
     }
 
-    /// Give the shortcut back. `removeHandler` drops the stored handler *and*
-    /// unregisters the Carbon hotkey, which is what makes `start()` reversible.
+    /// Give the shortcut back: withdrawing the section hands its chord back
+    /// to the system, which is what makes `start()` reversible.
     public override func stop() {
         guard hasClaimedGlobalShortcut else { return }
         hasClaimedGlobalShortcut = false
-        KeyboardShortcuts.removeHandler(for: .showCommandPalette)
-        KeyCommandRegistry.shared.releaseExternal([.showCommandPalette])
+        keyCommands.uninstall(sectionTitled: Self.shortcutSectionTitle)
     }
 
     /// Whether the global shortcut is claimed right now.
@@ -110,7 +116,30 @@ public final class CommandPaletteCoordinator: AppFeature {
     /// about this feature is that *constructing* it claims no machine-wide
     /// hotkey, and there is no other way to see that from outside.
     var isGlobalShortcutInstalled: Bool {
-        KeyboardShortcuts.isEnabled(for: .showCommandPalette)
+        keyCommands.descriptor(for: Self.shortcutCommandID) != nil
+    }
+
+    static let shortcutSectionTitle = "Command Palette"
+    static let shortcutCommandID = "commandPalette.show"
+
+    static let shortcutCaption = "Opens the command palette: a search field listing every "
+        + "command in the app, including the ones extensions add."
+
+    /// Carry the shortcut over from where it lived before it was a key command.
+    ///
+    /// It was a `KeyboardShortcuts` name of its own, recorded by a separate
+    /// control and on out of the box. A global key command ships off, so
+    /// without this every user would lose the palette's hotkey on upgrade, and
+    /// one who rebound it would lose their chord too. Once only: after this the
+    /// key command's binding is what the user authored, and the old entry is
+    /// cleared so its hotkey never fires beside the new one.
+    private func adoptLegacyShortcut() {
+        guard !keyCommands.hasAuthoredBinding(for: Self.shortcutCommandID) else { return }
+        let legacy = KeyboardShortcuts.getShortcut(for: .showCommandPalette)
+        keyCommands.setBinding(
+            KeyCommandBinding(shortcut: legacy, isEnabled: legacy != nil),
+            for: Self.shortcutCommandID)
+        KeyboardShortcuts.setShortcut(nil, for: .showCommandPalette)
     }
 
     // MARK: - Showing
@@ -154,17 +183,19 @@ extension CommandPaletteCoordinator: Loggable {
     public static nonisolated let logger = makeLogger()
 }
 
-/// The user-rebindable shortcut that opens the palette.
+/// Where the palette's shortcut lived before it was a global key command, and
+/// still the source of its default.
 ///
-/// The default is ⌃⌥C rather than VS Code's ⇧⌘P because `KeyboardShortcuts`
-/// installs a *system-global* hotkey: ⇧⌘P taken globally would be stolen from
-/// every other app on the machine, VS Code included. ⌃⌥ is this toolkit's
-/// established global family (see `SystemWindowShortcutNames`) and `.c` is the
-/// one letter in reach that family has not already spent.
+/// The default is ⌃⌥C rather than VS Code's ⇧⌘P because the shortcut is a
+/// *system-global* hotkey: ⇧⌘P taken globally would be stolen from every other
+/// app on the machine, VS Code included. ⌃⌥ is this toolkit's established
+/// global family (see `SystemWindowShortcutNames`) and `.c` is the one letter
+/// in reach that family has not already spent.
 extension KeyboardShortcuts.Name {
 
-    /// The raw value is a persisted `UserDefaults` key holding the user's own
-    /// rebinding — renaming it silently discards their customisation.
+    /// The raw value is a persisted `UserDefaults` key holding a user's
+    /// rebinding from before the move, read once by `adoptLegacyShortcut` —
+    /// renaming it silently discards that customisation.
     public static let showCommandPalette = Self(
         "showCommandPalette",
         default: .init(.c, modifiers: [.control, .option]))

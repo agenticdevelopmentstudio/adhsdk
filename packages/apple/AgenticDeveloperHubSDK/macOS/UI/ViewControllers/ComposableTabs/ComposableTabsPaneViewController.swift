@@ -249,7 +249,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         move.submenu = submenu
         move.isEnabled = items.contains { $0.isEnabled }
         move.accessibilityID("pane.options.move")
-        return [move]
+        return [move] + super.makeMenuItems()
     }
 
     /// The distinct views the spec will let this pane sit beside, named for the

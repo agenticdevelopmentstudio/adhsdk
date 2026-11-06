@@ -163,11 +163,14 @@ open class PaneViewController: NSViewController {
 
     /// The pane's own items in the gear menu, above `Settings…`.
     ///
-    /// Empty here, and deliberately so: a bare pane has nothing to offer but
-    /// its settings, and it must not learn about split views to say so. A pane
-    /// that lives in a layout knows which ways it can move, and that knowledge
-    /// belongs to *that* pane (`srp`).
-    open func makeMenuItems() -> [NSMenuItem] { [] }
+    /// Only the content's here (`PaneMenuProviding`), and deliberately so: a
+    /// bare pane has nothing to offer but its settings, and it must not learn
+    /// about split views to say so. A pane that lives in a layout knows which
+    /// ways it can move, and that knowledge belongs to *that* pane (`srp`) —
+    /// an override puts its own items first and then calls `super`.
+    open func makeMenuItems() -> [NSMenuItem] {
+        (contentViewController as? PaneMenuProviding)?.makePaneMenuItems() ?? []
+    }
 
     // MARK: - Loading
 

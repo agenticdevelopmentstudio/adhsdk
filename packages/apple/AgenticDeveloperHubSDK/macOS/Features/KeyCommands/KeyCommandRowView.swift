@@ -5,8 +5,15 @@ import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 
 /// One command's settings row:
-/// `[title] … [click-to-record field] [✓ | ✗] [on/off]`, with the
+/// `[title] … [click-to-record field] [✓ | ✗] [on/off]` for a global command,
+/// `[title] … [click-to-record field] [✓ | ✗] [⊗]` for an in-app one, with the
 /// available/unavailable readout appearing underneath while an edit is pending.
+///
+/// Only a global command has a switch. A global hotkey is taken away from
+/// every other app while it is on, so it ships off and is switched on by
+/// choice; an in-app chord costs nothing elsewhere, and a switch beside it only
+/// offered a second way to say "no shortcut". Its ⊗ clears the chord instead,
+/// the same control the command palette's recorder carries.
 ///
 /// The row — not the field — owns the edit. A captured chord is pending until
 /// the user commits it, and focus can leave in the middle of that (they click
@@ -22,6 +29,7 @@ public final class KeyCommandRowView: NSView {
     private let captureField = KeyCommandCaptureField()
     private let confirmCancel = ConfirmCancelControl()
     private let toggle = NSSwitch()
+    private let clearButton = NSButton()
     private let statusLabel: ThemedLabel
     private let readoutRow: NSStackView
 
@@ -34,6 +42,7 @@ public final class KeyCommandRowView: NSView {
             guard isEditing != oldValue else { return }
             if isEditing { refusal = nil }
             confirmCancel.isHidden = !isEditing
+            updateClearButton()
             updateReadoutVisibility()
         }
     }
@@ -61,10 +70,20 @@ public final class KeyCommandRowView: NSView {
         toggle.action = #selector(toggleChanged)
         toggle.setAccessibilityTitleUIElement(titleLabel)
 
+        clearButton.image = NSImage(systemSymbolName: "xmark.circle.fill",
+                                    accessibilityDescription: "Clear \(command.title) shortcut")
+        clearButton.isBordered = false
+        clearButton.imagePosition = .imageOnly
+        clearButton.target = self
+        clearButton.action = #selector(clearShortcut)
+        clearButton.toolTip = "Remove this shortcut"
+
         captureField.accessibilityID("settings.key-commands.\(command.id).recorder")
         toggle.accessibilityID("settings.key-commands.\(command.id).enabled")
+        clearButton.accessibilityID("settings.key-commands.\(command.id).clear")
 
-        let mainRow = NSView.makeRow([titleLabel, captureField, confirmCancel, toggle])
+        let trailing: NSView = command.scope == .global ? toggle : clearButton
+        let mainRow = NSView.makeRow([titleLabel, captureField, confirmCancel, trailing])
 
         let stack = NSStackView(views: [mainRow, readoutRow])
         stack.orientation = .vertical
@@ -189,6 +208,12 @@ public final class KeyCommandRowView: NSView {
         refresh()
     }
 
+    @objc private func clearShortcut() {
+        refusal = nil
+        registry.setBinding(KeyCommandBinding(shortcut: nil, isEnabled: true), for: command.id)
+        refresh()
+    }
+
     // MARK: - Display
 
     /// Pull the row back into line with what the registry holds.
@@ -200,7 +225,18 @@ public final class KeyCommandRowView: NSView {
         // Nothing to switch on when no chord has been recorded — which is how
         // the windows listed without a key command read.
         toggle.isEnabled = binding.shortcut != nil
+        updateClearButton()
         refreshAvailability()
+    }
+
+    /// Faded rather than hidden: the row is a stack, and a hidden button would
+    /// let the recorder slide sideways, so the fields stop lining up down the
+    /// card whenever one row has no chord.
+    private func updateClearButton() {
+        let shows = !isEditing && registry.binding(for: command.id).shortcut != nil
+        clearButton.alphaValue = shows ? 1 : 0
+        clearButton.isEnabled = shows
+        clearButton.setAccessibilityElement(shows)
     }
 
     private func updateReadoutVisibility() {

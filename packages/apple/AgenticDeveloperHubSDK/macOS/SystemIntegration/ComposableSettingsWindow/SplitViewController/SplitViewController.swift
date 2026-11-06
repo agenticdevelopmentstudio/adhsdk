@@ -98,7 +98,9 @@ extension ComposableSettings {
         /// stuck on the container's name while the reader moved down its list.
         /// A section's topic list is looked through the same way, to the topic on screen.
         public var currentPanelTitle: String? {
-            if let nested = visiblePanel as? SplitViewController,
+            // A nested split with its list hidden reads as one topic, so it is
+            // named for itself rather than for the content inside it.
+            if let nested = visiblePanel as? SplitViewController, nested.showsSidebar,
                let inner = nested.currentPanelTitle {
                 return inner
             }

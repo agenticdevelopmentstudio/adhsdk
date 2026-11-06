@@ -15,6 +15,11 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// A topic/detail split on the `AIPanelViewController` model — one detail panel
 /// per loaded extension, plus a trailing panel for anything that went wrong.
 /// It is the only place the work of Tasks 4.3–4.5 is visible at all.
+///
+/// It reads as one topic: the list beside the detail appears only when there
+/// are two or more rows to choose between. Browse & Install is not a row. With
+/// nothing installed it is the whole panel; otherwise it is a button under the
+/// detail that opens the browser in a sheet.
 @MainActor
 public final class ExtensionsSettingsPanelViewController: ComposableSettings.SettingsPanelSplitViewController {
 
@@ -31,6 +36,9 @@ public final class ExtensionsSettingsPanelViewController: ComposableSettings.Set
         // The sidebar lists extensions, not sub-topics of one extension.
         sidebarTitle = "Installed"
     }
+
+    /// The sheet the browser is shown in, while it is up.
+    private var browseDialog: ComposableSettings.TopicDialogWindow?
 
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -53,7 +61,7 @@ public final class ExtensionsSettingsPanelViewController: ComposableSettings.Set
             ),
             .init(
                 title: "Installing One",
-                body: "Browse & Install, at the bottom of this list, searches Open VSX and "
+                body: "Browse & Install searches Open VSX and "
                     + "installs from it — verified against the digest and signature the "
                     + "publisher published, and live immediately, with no relaunch. An "
                     + "extension can also be unpacked by hand (a .vsix file is a zip) into "
@@ -92,17 +100,34 @@ public final class ExtensionsSettingsPanelViewController: ComposableSettings.Set
 
     /// The registry browser — **one instance for the life of this panel**.
     ///
-    /// Every rebuild replaces the whole sidebar, and an install is what triggers
-    /// a rebuild. A freshly built browse panel each time would clear the search
-    /// the reader typed, the results it found and the extension they had
-    /// selected, at exactly the moment they installed one of them and are most
-    /// likely to want another. The per-extension panels are rebuilt because
-    /// their content *is* the registry; this one's content is the reader's own
-    /// place in someone else's catalogue, and nothing on disk speaks for it.
+    /// An install rebuilds the installed list. A freshly built browse panel
+    /// each time would clear the search the reader typed, the results it found
+    /// and the extension they had selected, at exactly the moment they
+    /// installed one of them and are most likely to want another. The
+    /// per-extension panels are rebuilt because their content *is* the
+    /// registry; this one's content is the reader's own place in someone
+    /// else's catalogue, and nothing on disk speaks for it.
     private lazy var browsePanel: ExtensionsBrowsePanel = ExtensionsBrowsePanel(
         coordinator: coordinator,
-        onInstalled: { [weak self] in self?.rebuildPanelsStayingOnBrowse() }
+        onInstalled: { [weak self] in self?.rebuildPanelsKeepingSelection() }
     )
+
+    /// The "Browse & Install…" button under the detail, shown whenever the
+    /// browser is not itself the detail.
+    private lazy var browseFooter: NSView = {
+        let button = NSButton(title: "Browse & Install…", target: self, action: #selector(showBrowser))
+        button.bezelStyle = .push
+        button.setAccessibilityIdentifier("settings.extensions.browse")
+        button.translatesAutoresizingMaskIntoConstraints = false
+        let footer = NSView()
+        footer.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.topAnchor.constraint(equalTo: footer.topAnchor, constant: 8),
+            button.bottomAnchor.constraint(equalTo: footer.bottomAnchor, constant: -12),
+            button.trailingAnchor.constraint(equalTo: footer.trailingAnchor, constant: -20)
+        ])
+        return footer
+    }()
 
     public override func viewDidLoad() {
         super.viewDidLoad()
@@ -115,6 +140,7 @@ public final class ExtensionsSettingsPanelViewController: ComposableSettings.Set
     /// identity-based restore cannot recognise the survivors — the selection
     /// has to be named positionally from here.
     private func rebuildPanels(selecting index: Int = 0) {
+        // The browser may be on screen in its sheet; it is never also a row.
         var built: [any ComposableSettingsPanel] = registry.extensions.map { loaded in
             ExtensionDetailPanel(
                 loaded: loaded,
@@ -151,25 +177,50 @@ public final class ExtensionsSettingsPanelViewController: ComposableSettings.Set
             ))
         }
 
-        // Last, so every index above it is the one it was before — the
-        // positional restore in `onUninstalled` counts from the top and would
-        // land a row off otherwise.
-        built.append(browsePanel)
+        // Nothing to list: the browser is the panel, with no list and no
+        // button pointing at itself. Unless the sheet has it, in which case
+        // the install that emptied nothing cannot have happened — an install
+        // only ever adds a row.
+        if built.isEmpty && browseDialog == nil {
+            showsSidebar = false
+            detailFooterView = nil
+            setPanels([browsePanel])
+            selectPanel(at: 0)
+            return
+        }
 
-        // With nothing installed the list is only the rows that are not
-        // extensions, so the default selection lands on the first of those.
+        // One row is the whole panel, so no list names it; two or more are
+        // the topic list.
+        showsSidebar = built.count > 1
+        detailFooterView = browseFooter
         setPanels(built)
         selectPanel(at: min(max(index, 0), built.count - 1))
     }
 
-    /// Rebuilds after an install without moving the reader off the browser.
-    ///
-    /// `Int.max` rather than a computed index: the browser is appended last and
-    /// the clamp in `rebuildPanels` turns "past the end" into "the last one",
-    /// which is the same panel by construction. Counting the built panels here
-    /// would be a second copy of the list's shape, kept in step by hand.
-    private func rebuildPanelsStayingOnBrowse() {
-        rebuildPanels(selecting: .max)
+    /// Rebuilds after an install. An install from the sheet leaves the row
+    /// under it where it was; an install from the browser as the whole panel
+    /// lands on the first, and only, extension.
+    private func rebuildPanelsKeepingSelection() {
+        let current = selectedPanel.flatMap { selected in panels.firstIndex { $0 === selected } }
+        rebuildPanels(selecting: browseDialog == nil ? 0 : current ?? 0)
+    }
+
+    /// Opens the browser in a sheet on the settings window.
+    @objc private func showBrowser() {
+        guard browseDialog == nil, let window = view.window else { return }
+        let dialog = ComposableSettings.TopicDialogWindow(
+            windowID: "extensions-browse",
+            title: "Browse & Install",
+            panels: [browsePanel],
+            okTitle: "Done",
+            validate: { nil },
+            onFinish: { [weak self] _ in self?.browseDialog = nil }
+        )
+        // Nothing in the browser is pending until Done: an install is live the
+        // moment it finishes, so there is nothing for Cancel to undo.
+        dialog.cancelButton.isHidden = true
+        browseDialog = dialog
+        dialog.beginSheet(on: window)
     }
 }
 

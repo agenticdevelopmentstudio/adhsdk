@@ -111,6 +111,19 @@ public final class KeyCommandRegistry {
         NotificationCenter.default.post(name: Self.sectionsDidChangeNotification, object: self)
     }
 
+    /// Take away the section titled `title`, for a feature that stops
+    /// listening: each command is withdrawn as `install` withdraws one a
+    /// replacement no longer carries, and what the user authored is kept.
+    public func uninstall(sectionTitled title: String) {
+        guard let index = sections.firstIndex(where: { $0.title == title }) else { return }
+        for command in sections[index].allCommands {
+            withdraw(command)
+        }
+        sections.remove(at: index)
+        postBindingsDidChange()
+        NotificationCenter.default.post(name: Self.sectionsDidChangeNotification, object: self)
+    }
+
     private func withdraw(_ command: KeyCommandDescriptor) {
         descriptorsByID[command.id] = nil
         if command.scope == .global {
@@ -160,12 +173,20 @@ public final class KeyCommandRegistry {
 
     /// What `id` is bound to: what the user authored, or the shipped default
     /// when they never touched it.
+    ///
+    /// Only a global command can be off. Its switch exists because a global
+    /// hotkey is taken from every other app; an in-app command has no switch,
+    /// and clearing its chord is how it is turned off. So an app command reads
+    /// as on whatever was saved for it, or one switched off before the switch
+    /// was removed would be a chord that never fires, with nothing on screen to
+    /// say why or to fix it.
     public func binding(for id: String) -> KeyCommandBinding {
-        if let authored = store.currentValue[id] {
-            return authored
+        guard let command = descriptorsByID[id] else {
+            return store.currentValue[id] ?? KeyCommandBinding(shortcut: nil, isEnabled: false)
         }
-        return descriptorsByID[id]?.defaultBinding
-            ?? KeyCommandBinding(shortcut: nil, isEnabled: false)
+        var binding = store.currentValue[id] ?? command.defaultBinding
+        if command.scope != .global { binding.isEnabled = true }
+        return binding
     }
 
     /// The chord that will actually fire for `id`, or `nil`.
