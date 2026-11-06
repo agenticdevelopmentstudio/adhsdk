@@ -1,0 +1,15 @@
+{
+ "id": "m2",
+ "threadId": "t2",
+ "labelIds": [
+  "TRASH"
+ ],
+ "internalDate": "1730800000000",
+ "payload": {
+  "mimeType": "text/html",
+  "headers": [],
+  "body": {
+   "data": "PHA-eDwvcD4"
+  }
+ }
+}
