@@ -38,6 +38,10 @@ public struct FloodFolder: Sendable {
     public mutating func admit(_ notice: Notice, at now: Date) -> Decision {
         guard notice.urgency.rank < Notice.Urgency.now.rank else { return .show }
 
+        // Drop sources that have been quiet for a full window; their count
+        // would reset on return anyway, and this keeps `runs` from growing.
+        runs = runs.filter { now.timeIntervalSince($0.value.lastSeen) < configuration.window }
+
         var run = runs[notice.source] ?? Run(count: 0, lastSeen: now)
         if now.timeIntervalSince(run.lastSeen) >= configuration.window {
             run.count = 0

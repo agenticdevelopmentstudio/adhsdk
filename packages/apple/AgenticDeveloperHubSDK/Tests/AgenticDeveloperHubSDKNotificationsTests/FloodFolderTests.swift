@@ -49,4 +49,25 @@ final class FloodFolderTests: XCTestCase {
         XCTAssertEqual(folder.admit(notice(), at: start), .show)
         XCTAssertEqual(folder.admit(notice(), at: start), .fold(source: "ci", count: 2))
     }
+
+    func testWindowResetBoundaryIsExactlyTheWindow() {
+        var folder = FloodFolder()
+        for _ in 0..<6 { _ = folder.admit(notice(), at: start) }
+        // One tick short of the window: still the same burst.
+        XCTAssertEqual(
+            folder.admit(notice(), at: start.addingTimeInterval(9.999)),
+            .fold(source: "ci", count: 7)
+        )
+        // Exactly one window of quiet after the last notice: a new burst.
+        var other = FloodFolder()
+        for _ in 0..<6 { _ = other.admit(notice(), at: start) }
+        XCTAssertEqual(other.admit(notice(), at: start.addingTimeInterval(10)), .show)
+    }
+
+    func testLapsedSourcesStillResetAfterPruning() {
+        var folder = FloodFolder()
+        for _ in 0..<6 { _ = folder.admit(notice("ci"), at: start) }
+        _ = folder.admit(notice("mail"), at: start.addingTimeInterval(30))
+        XCTAssertEqual(folder.admit(notice("ci"), at: start.addingTimeInterval(31)), .show)
+    }
 }
