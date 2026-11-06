@@ -18,9 +18,18 @@ public struct MenuContribution {
         case file
         /// View menu — typically Toggle Sidebar / Enter Full Screen.
         case view
-        /// Window menu — typically Minimize / Zoom / Bring All to Front +
-        /// app-specific window pickers.
-        case window
+        /// Notes menu, between View and Window — the commands that open the
+        /// notes windows.
+        case notes
+        // swiftlint:disable identifier_name
+        /// AI menu, between Notes and Window — the commands that open the AI
+        /// windows (chat, partner, sessions, logs). Named for the menu's title.
+        case ai
+        // swiftlint:enable identifier_name
+        // There is deliberately no Window slot. The Window menu holds the
+        // window verbs (Minimize, Zoom, Bring All to Front) and AppKit's list
+        // of the windows already open; a command that opens a window belongs
+        // in File, Notes or AI, never there.
         /// Status-item dropdown. The `section` integer groups items between
         /// separators (lower = higher in the menu).
         case statusItem(section: Int)

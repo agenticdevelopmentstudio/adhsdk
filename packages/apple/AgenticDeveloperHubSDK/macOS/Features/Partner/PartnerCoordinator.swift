@@ -135,7 +135,7 @@ public final class PartnerCoordinator: AppFeature {
             id: CommandID.showWindow, title: "Coding Partner", category: "Coding Partner",
             run: { [weak self] in self?.showWindow() }))
         menuContributions = [
-            MenuContribution(slot: .window, title: "Coding Partner", commandID: CommandID.showWindow,
+            MenuContribution(slot: .ai, title: "Coding Partner", commandID: CommandID.showWindow,
                              registry: commandRegistry, order: 55, key: "")
         ]
     }

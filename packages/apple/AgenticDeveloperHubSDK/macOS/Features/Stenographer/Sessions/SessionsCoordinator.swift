@@ -35,7 +35,7 @@ public final class SessionsCoordinator: AppFeature {
             id: CommandID.showWindow, title: "Sessions", category: "Stenographer",
             run: { [weak self] in self?.showWindow() }))
         menuContributions = [
-            MenuContribution(slot: .window, title: "Sessions", commandID: CommandID.showWindow,
+            MenuContribution(slot: .ai, title: "Sessions", commandID: CommandID.showWindow,
                              registry: commandRegistry, order: 40, key: ""),
             MenuContribution(slot: .statusItem(section: 1), title: "Sessions", commandID: CommandID.showWindow,
                              registry: commandRegistry, order: 30)

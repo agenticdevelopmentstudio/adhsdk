@@ -63,8 +63,10 @@ public enum StandardMainMenu {
         /// The host's own menus, in bar order, between View and Window.
         public var sections: [Section]
 
-        /// The app's own windows, between Zoom and Bring All to Front. AppKit
-        /// lists the open windows below all of them.
+        /// Window verbs of the app's own (Center, Arrange), between Zoom and
+        /// Bring All to Front. AppKit lists the open windows below all of them.
+        /// Commands that open a window go in File or a host section instead:
+        /// this menu shows only windows that are already open.
         public var windowCommands: [MainMenuCommand]
 
         /// Appended to Help. The menu is built either way: AppKit shows its own

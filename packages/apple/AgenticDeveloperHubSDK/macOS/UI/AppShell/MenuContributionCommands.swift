@@ -12,7 +12,7 @@ import AgenticDeveloperHubSDKUI
 ///     appCommands: contributed.commands(for: .app),
 ///     fileCommands: contributed.commands(for: .file),
 ///     viewCommands: contributed.commands(for: .view),
-///     windowCommands: contributed.commands(for: .window)
+///     sections: [.init(title: "AI", commands: contributed.commands(for: .ai))]
 /// ))
 /// contributed.attach(to: bar)
 /// ```

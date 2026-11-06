@@ -36,7 +36,7 @@ public final class OversightCoordinator: AppFeature {
             id: CommandID.showWindow, title: "AI Oversight", category: "Stenographer",
             run: { [weak self] in self?.showWindow() }))
         menuContributions = [
-            MenuContribution(slot: .window, title: "AI Oversight", commandID: CommandID.showWindow,
+            MenuContribution(slot: .ai, title: "AI Oversight", commandID: CommandID.showWindow,
                              registry: commandRegistry, order: 60, key: ""),
             MenuContribution(slot: .statusItem(section: 1), title: "AI Oversight", commandID: CommandID.showWindow,
                              registry: commandRegistry, order: 50)

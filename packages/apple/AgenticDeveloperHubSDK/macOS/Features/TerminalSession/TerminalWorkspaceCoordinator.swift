@@ -82,9 +82,9 @@ public final class TerminalWorkspaceCoordinator: AppFeature {
                 order: 0, key: "t"
             ),
             MenuContribution(
-                slot: .window, title: "Terminal Window",
+                slot: .file, title: "Terminal Window",
                 commandID: CommandID.showWindow, registry: registry,
-                order: 0, key: "1"
+                order: 10, key: "1"
             )
         ]
     }

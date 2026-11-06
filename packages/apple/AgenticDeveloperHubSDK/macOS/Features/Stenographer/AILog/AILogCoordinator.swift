@@ -35,7 +35,7 @@ public final class AILogCoordinator: AppFeature {
             id: CommandID.showWindow, title: "AI Log", category: "Stenographer",
             run: { [weak self] in self?.showWindow() }))
         menuContributions = [
-            MenuContribution(slot: .window, title: "AI Log", commandID: CommandID.showWindow,
+            MenuContribution(slot: .ai, title: "AI Log", commandID: CommandID.showWindow,
                              registry: commandRegistry, order: 70, key: ""),
             MenuContribution(slot: .statusItem(section: 1), title: "AI Log", commandID: CommandID.showWindow,
                              registry: commandRegistry, order: 60)

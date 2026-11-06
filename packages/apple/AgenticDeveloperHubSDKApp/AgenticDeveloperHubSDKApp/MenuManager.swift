@@ -22,8 +22,16 @@ final class MenuManager {
         menu.addItem(submenu(buildFileMenu(extras: slotMap[.file] ?? []), title: "File"))
         menu.addItem(submenu(buildEditMenu(), title: "Edit"))
         menu.addItem(submenu(buildViewMenu(extras: slotMap[.view] ?? []), title: "View"))
+        // The features' own menus, between View and Window, each only when
+        // some feature contributes to it.
+        for (slot, title) in [(MenuContribution.Slot.notes, "Notes"), (.ai, "AI")] {
+            guard let extras = slotMap[slot], !extras.isEmpty else { continue }
+            let featureMenu = NSMenu(title: title)
+            appendContributions(extras, to: featureMenu)
+            menu.addItem(submenu(featureMenu, title: title))
+        }
 
-        let windowMenu = buildWindowMenu(extras: slotMap[.window] ?? [])
+        let windowMenu = buildWindowMenu()
         menu.addItem(submenu(windowMenu, title: "Window"))
         NSApp.windowsMenu = windowMenu
 
@@ -100,12 +108,12 @@ final class MenuManager {
         return menu
     }
 
-    private func buildWindowMenu(extras: [MenuContribution]) -> NSMenu {
+    /// Window verbs only: AppKit lists the open windows below them. Commands
+    /// that open a window live in File, Notes or AI.
+    private func buildWindowMenu() -> NSMenu {
         let menu = NSMenu(title: "Window")
         menu.addItem(stock("Minimize", #selector(NSWindow.performMiniaturize(_:)), key: "m"))
         menu.addItem(stock("Zoom", #selector(NSWindow.performZoom(_:))))
-        menu.addItem(.separator())
-        appendContributions(extras, to: menu)
         menu.addItem(.separator())
         menu.addItem(stock("Bring All to Front", #selector(NSApplication.arrangeInFront(_:))))
         return menu

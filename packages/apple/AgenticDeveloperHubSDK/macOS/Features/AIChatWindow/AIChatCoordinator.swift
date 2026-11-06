@@ -40,7 +40,7 @@ public final class AIChatCoordinator: AppFeature {
 
         self.menuContributions = [
             MenuContribution(
-                slot: .window,
+                slot: .ai,
                 title: "AI Chat",
                 commandID: CommandID.showWindow,
                 registry: registry,

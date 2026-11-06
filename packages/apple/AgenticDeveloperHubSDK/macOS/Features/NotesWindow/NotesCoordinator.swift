@@ -137,7 +137,7 @@ public final class NotesCoordinator: AppFeature {
 
         self.menuContributions = [
             MenuContribution(
-                slot: .window, title: "Notes",
+                slot: .notes, title: "Notes",
                 commandID: CommandID.showNotes, registry: registry,
                 order: 40, key: "4"
             ),
