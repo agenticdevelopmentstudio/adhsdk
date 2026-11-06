@@ -45,7 +45,6 @@ import {
   type TopicDetailItem,
   type RailSlot,
   type TopicListSearch,
-  hasListTools,
   rowExitEl,
 } from "./topic-detail"
 import { TopicSelectHint } from "./topic-select-hint"
@@ -182,11 +181,12 @@ interface TopicLevel {
   /** Tint the `+` gold to signal an in-progress create (nothing selected in the list). */
   newActive?: boolean
   /** Operations on this level's list (e.g. the Sites list's Auto Configure), right-justified in
-   *  its list toolbar, after the `+` and the magnifier. Named for the title row they used to
+   *  its list toolbar, after the filter and the `+`. Named for the title row they used to
    *  ride. Keep them compact — the toolbar is one line. */
   titleActions?: ReactNode
-  /** Make this level's list searchable: a magnifier in its toolbar pops a query field over the
-   *  rows. `{}` lets the rail filter on label + sublabel; pass `query` to own the filtering. */
+  /** Customise this level's filter. Every titled rail has one, leftmost in its toolbar, popping a
+   *  query field over the rows; left out, the rail filters on label + sublabel. Pass `query` to
+   *  own the filtering, `placeholder` to name it. */
   search?: TopicListSearch
   /** Fixed rail width in px for THIS level (default 240 / FULL_RAIL). Widen a level
    *  whose rows must show on one line (e.g. long API paths). Covered style. */
@@ -1951,7 +1951,6 @@ function MinimizedStack({
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
               search={level.search}
-              reserveToolbar={rendered.some(hasListTools)}
               collapsed={isCollapsed(level, i)}
               onToggle={manualCollapse ? (e) => setCollapse(i, e) : () => {}}
               onResize={(w) => onResizeLevel(level, w)}
@@ -2452,7 +2451,6 @@ function CoveredStack({
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
               search={level.search}
-              reserveToolbar={rendered.some(hasListTools)}
               // Covered lists never shrink to an icon strip (no toggle) — but the trailing-border
               // handle DOES resize the rail: drag it to widen/narrow the column.
               collapsed={false}
@@ -2763,7 +2761,7 @@ function CascadingStack({
   // comes or goes (it is part of the step, and a level's tools can arrive without its rows
   // changing), or the container width changes; the ResizeObserver below also catches height
   // changes, and the container handlers catch scroll.
-  const measureSig = `${rendered.map((l) => `${l.id}#${l.items.length}`).join("|")}::${rendered.some(hasListTools)}::${containerW}`
+  const measureSig = `${rendered.map((l) => `${l.id}#${l.items.length}`).join("|")}::${containerW}`
   useLayoutEffect(() => {
     const cont = containerRef.current
     if (!cont) return
@@ -3506,7 +3504,6 @@ function CascadingStack({
                 railSlot={level.railSlot}
                 headerSlot={level.headerSlot}
                 search={level.search}
-                reserveToolbar={rendered.some(hasListTools)}
                 // (#1) Tighten the bottom padding so a short, hugging menu doesn't trail dead space
                 // under its last row.
                 denseBottom
@@ -3802,7 +3799,6 @@ function NarrowStack({
             railSlot={level.railSlot}
             headerSlot={level.headerSlot}
             search={level.search}
-            reserveToolbar={levels.some(hasListTools)}
             // Nothing to disclose, cover or resize: the pane IS the whole view.
             collapsed={false}
             onToggle={() => {}}

@@ -228,8 +228,8 @@ export function EndpointsSection({
   const platformOptions = useMemo(() => platformFilterOptions(endpoints), [endpoints]);
 
   // Publish the (filtered) roster as the hierarchy's entity level; the editor is
-  // the leaf. The filter toolbar rides the level's headerSlot, pinned under the
-  // level title. Items are computed inside the memo: a site is listed only when
+  // the leaf. The text filter is the rail's own; the platform and status pop-menus
+  // ride the level's headerSlot, under its toolbar. Items are computed inside the memo: a site is listed only when
   // it passes ALL three filters — text, platform, and config status; each filter
   // is OR-within (any selected option matches), AND-across. Per-keystroke level
   // republish is event-driven, so it can't loop.
@@ -281,11 +281,11 @@ export function EndpointsSection({
       // so it is where a failed load has to speak — ConfigPanel's error line sits in the
       // detail pane the nudge replaces.
       ...rosterOverview(load),
-      // Auto Configure rides the level's TITLE row (next to +), per the shared recipe;
-      // the filters get a header row to themselves.
+      // Auto Configure rides the level's toolbar, right of the filter and +.
       titleActions: <AutoConfigureButton />,
-      // ONE filter header: [platform ▾] [status ▾] [filter text], left-to-right. The
-      // text input flex-grows to fill; each filter is a compact pop-menu.
+      // The text filter is the rail's own, on its toolbar; the two pop-menus get a header
+      // row of their own beneath it.
+      search: { query: filter, onQueryChange: setFilter, placeholder: `Filter ${endpoints.length} sites` },
       headerSlot: (
         <div className="flex flex-wrap items-center gap-2 px-2 py-1.5" role="toolbar" aria-label="Site filters">
           <MultiSelectFilter
@@ -310,17 +310,6 @@ export function EndpointsSection({
             onSetAll={setAllStatuses}
             allAriaLabel="all statuses"
             menuMinWidth={160}
-          />
-          <Input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder={`Filter ${endpoints.length} sites…`}
-            aria-label="Filter sites"
-            // Focuses whenever the list opens (the input re-mounts each time the entity
-            // level re-enters the stack); a keystroke republish reuses the same element,
-            // so it never steals focus.
-            autoFocus
-            className="h-8 min-w-0 flex-1 text-[0.8rem]"
           />
         </div>
       ),

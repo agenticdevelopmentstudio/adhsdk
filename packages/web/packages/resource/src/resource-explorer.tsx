@@ -358,9 +358,8 @@ export function ResourceExplorer<T>({
     sublabel: rail?.getSublabel?.(it),
     icon: getItemIcon ? getItemIcon(it) : itemIcon,
   }));
-  // A query over a list that has loaded EMPTY has nothing left to narrow and no field left to
-  // clear it from — the magnifier below goes with the last row. Kept, it would narrow whatever
-  // rows arrive next (a refetch that picks up another session's creates) by a query typed against
+  // A query over a list that has loaded EMPTY has nothing left to narrow, and the empty rail must
+  // say "None yet", not that a search failed. Kept, it would also narrow whatever rows arrive next (a refetch that picks up another session's creates) by a query typed against
   // a list that no longer exists. Dropped during render, React's adjust-state-while-rendering
   // pattern, so no frame commits with it; the `filter !== ""` guard makes it fire once.
   if (loaded && allEntityItems.length === 0 && filter !== "") setFilter("");
@@ -457,17 +456,13 @@ export function ResourceExplorer<T>({
     newActive: newOpen,
     titleActions:
       canCreate && renderNewControl ? renderNewControl(() => setNewOpen(true)) : undefined,
-    // A filter over nothing is noise, and over a list that has not loaded is a control that cannot
-    // work yet — so the magnifier appears once there are rows to narrow. Gated on the UNFILTERED
-    // list, or a query matching nothing would take away the very field that could clear it.
-    search:
-      loaded && allEntityItems.length > 0
-        ? {
-            query: filter,
-            onQueryChange: setFilter,
-            placeholder: `Filter ${(rail?.title ?? nameSuffix).toLowerCase()}`,
-          }
-        : undefined,
+    // Every titled rail has its filter, leftmost in its toolbar, whether or not there are rows yet
+    // (Mike, 2026-11-06: "always show the filter button"). This only names it and owns its query.
+    search: {
+      query: filter,
+      onQueryChange: setFilter,
+      placeholder: `Filter ${(rail?.title ?? nameSuffix).toLowerCase()}`,
+    },
     // FOUR different reasons for an empty rail, and they must not be spoken as one. An un-loaded
     // list is `items === null`, which maps to zero rows exactly like a genuinely empty one — so
     // without this the rail asserts "No teams yet." at a host that has teams, for as long as the

@@ -81,18 +81,10 @@ describe('HierarchicalMenuDetail — the cascade step', () => {
     expect(childTop()).toBe(`${TOOLBAR_BOTTOM}px`)
   })
 
-  it('opens a child just under the header when no list has a toolbar', () => {
+  it('opens a child under the toolbar of a list with no tools of its own — its filter is there', () => {
+    // Every titled list has a toolbar now (its filter), so there is no header-only step left.
     render(cascade(levels(nextSurface())))
-    expect(document.querySelector('[data-htd-toolbar]')).toBeNull()
-    expect(childTop()).toBe(`${HEADER_BOTTOM}px`)
-  })
-
-  it("steps again when a list's tools arrive after its rows", () => {
-    // The rows and ids stay the same, so only the toolbar's arrival can prompt a new measurement.
-    const surface = nextSurface()
-    const { rerender } = render(cascade(levels(surface)))
-    expect(childTop()).toBe(`${HEADER_BOTTOM}px`)
-    rerender(cascade(levels(surface, manageFeatures)))
+    expect(document.querySelector('[data-htd-toolbar]')).not.toBeNull()
     expect(childTop()).toBe(`${TOOLBAR_BOTTOM}px`)
   })
 })

@@ -10,7 +10,7 @@ export { Field } from "./field";
 export { FieldGroup } from "./field-group";
 export { GearMenuTrigger, type GearMenuTriggerProps } from "./gear-menu-trigger";
 // Its sibling for a tool that ACTS rather than opens a menu: the muted icon button a list toolbar
-// is built from (the rail's own `+` and magnifier). Exported so a host's tool on that toolbar —
+// is built from (the rail's own filter and `+`). Exported so a host's tool on that toolbar —
 // the Manage features puzzle piece, a bucket's settings gear — draws exactly like the rail's own;
 // the copies that used a class literal or a ghost `Button` instead had already drifted apart.
 export { ListToolButton, type ListToolButtonProps } from "./topic-detail";

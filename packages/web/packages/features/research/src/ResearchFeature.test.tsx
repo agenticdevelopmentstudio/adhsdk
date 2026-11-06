@@ -873,15 +873,16 @@ describe("ResearchFeature", () => {
     // some other way would satisfy every assertion above; only counting the whole document
     // catches it.
     expect(screen.getAllByRole("button", { name: "Create Document" })).toHaveLength(1);
-    expect(screen.getAllByRole("searchbox")).toHaveLength(1);
+    // Every level carries its own filter now, so count this level's by its name.
+    expect(screen.getAllByRole("searchbox", { name: "Search research documents" })).toHaveLength(1);
   });
 
   // The shared `RailStandIn` draws these three controls in the REAL rail's own order (G68, Mike,
-  // 2026-09-25): `+`, then the search box, then `titleActions` (the gear) — `topic-detail.tsx`'s
-  // list toolbar (`newButton`, then the search `ListToolButton`, then a flex spacer, then
-  // `titleActions`). Pinning it here is pinning that shared helper's contract, not inventing a
+  // 2026-09-25; filter first since Mike, 2026-11-06): the search box, then `+`, then
+  // `titleActions` (the gear) — `topic-detail.tsx`'s list toolbar (the filter `ListToolButton`,
+  // then `newButton`, then a flex spacer, then `titleActions`). Pinning it here is pinning that shared helper's contract, not inventing a
   // second opinion on it — the helper's own doc comment says where ITS order comes from.
-  it("draws the toolbar in the real rail's order: + before search before the filters gear", async () => {
+  it("draws the toolbar in the real rail's order: search before + before the filters gear", async () => {
     render(
       <Harness>
         <ResearchFeature basePath="/w1/research" />
@@ -893,11 +894,11 @@ describe("ResearchFeature", () => {
     const search = toolbar.getByRole("searchbox", { name: "Search research documents" });
     const gear = toolbar.getByRole("button", { name: "Document filters" });
     // DOCUMENT_POSITION_FOLLOWING (4): `other` comes AFTER `this` in the tree. Two checks chain
-    // the whole order: create < search < gear.
+    // the whole order: search < create < gear.
     // eslint-disable-next-line no-bitwise -- Node's own DOM ordering API is bitwise by design.
-    expect(create.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(search.compareDocumentPosition(create) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // eslint-disable-next-line no-bitwise
-    expect(search.compareDocumentPosition(gear) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(create.compareDocumentPosition(gear) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("opens the category and tag axes from the toolbar's gear — the whole filter cluster arrives", async () => {

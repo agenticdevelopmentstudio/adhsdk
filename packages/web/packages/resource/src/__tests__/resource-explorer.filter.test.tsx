@@ -123,8 +123,8 @@ describe("ResourceExplorer's rail filter", () => {
     expect(rows()).toEqual(["Alpha", "Beta"]);
   });
 
-  // Once the loaded list is empty the magnifier goes with the last row, so nothing is left that
-  // could clear the query — and the rows that arrive next must not come back pre-filtered by it.
+  // A query typed against a list that has since emptied describes rows that no longer exist; the
+  // rows that arrive next must not come back pre-filtered by it.
   it("drops a stale query once the loaded list is empty", () => {
     const { Host, resourceLevel, rows, query } = capturingHost();
     const { rerender } = render(<Host>{explorer({ items: ROWS })}</Host>);
@@ -132,7 +132,8 @@ describe("ResourceExplorer's rail filter", () => {
     expect(rows()).toEqual([]);
 
     rerender(<Host>{explorer({ items: [] })}</Host>);
-    expect(resourceLevel().search).toBeUndefined();
+    // The filter stays (every titled rail has one), its query cleared.
+    expect(resourceLevel().search?.query).toBe("");
     expect(resourceLevel().emptyLabel).toBe("None yet.");
 
     rerender(<Host>{explorer({ items: ROWS })}</Host>);
@@ -147,9 +148,8 @@ describe("ResourceExplorer's rail filter", () => {
     const { rerender } = render(explorer({ items: ROWS }));
     const toolbar = screen.getByRole("toolbar", { name: "All tools" });
     fireEvent.click(within(toolbar).getByRole("button", { name: "Filter all" }));
-    fireEvent.change(screen.getByRole("searchbox", { name: "Filter all" }), {
-      target: { value: "zzz" },
-    });
+    const field = screen.getByRole("combobox", { name: "Filter all" });
+    fireEvent.change(field, { target: { value: "zzz" } });
     expect(screen.getByText("Nothing matches “zzz”.")).toBeInTheDocument();
 
     rerender(explorer({ items: [] }));

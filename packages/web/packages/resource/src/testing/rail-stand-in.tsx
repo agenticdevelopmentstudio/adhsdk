@@ -16,7 +16,7 @@ import type { TopicDetailItem, TopicLevel, TopicListSearch } from "@adh-sdk/ui/b
 // drive (the rows, the toolbar's `+`/search/titleActions, the empty label, the busy spinner) but
 // does not attempt the real rail's layout, collapse behavior, or hover-dwell timing — those are
 // `topic-detail.tsx`'s own business and are pinned in its own suite
-// (`topic-rail-toolbar.test.tsx` for the toolbar's `+`-then-search-then-titleActions order, which
+// (`topic-rail-toolbar.test.tsx` for the toolbar's filter-then-`+`-then-titleActions order, which
 // this stand-in mirrors so a test asserting order here is pinning the REAL rail's order, not an
 // arbitrary one this file chose).
 export interface RailStandInProps {
@@ -31,14 +31,20 @@ export interface RailStandInProps {
 }
 
 /** One level's toolbar search field. Its own component (not inlined in the `.map` below) because
- *  it owns local state — `useState` cannot live inside a loop body, and every level with a
- *  `search` needs its OWN fallback query, not one shared across levels.
+ *  it owns local state — `useState` cannot live inside a loop body, and every level needs its OWN
+ *  fallback query, not one shared across levels.
  *
  *  `search.query === undefined` is the real rail's "I own my own filtering" mode (`search: {}}`,
  *  documented on `TopicListSearch`): the field must still be usable in that mode, so it falls
  *  back to locally-held state rather than rendering an uncontrolled-forever empty input. When
  *  `query` IS passed, the host owns it and this field is purely controlled — mirroring exactly
- *  what a level publishing `search: { query, onQueryChange }` is telling the real rail to do. */
+ *  what a level publishing `search: { query, onQueryChange }` is telling the real rail to do.
+ *
+ *  It hands `onQueryChange` every keystroke, as the real rail does. The real rail also offers the
+ *  rows the host narrows to as an autocomplete, selects one on Return and hands back `""` when it
+ *  closes; this stand-in leaves all that out on purpose: the suites using it pin a host's WIRING —
+ *  that the query it receives filters its rows — and the autocomplete is pinned once, in
+ *  `topic-rail-toolbar.test.tsx`. */
 function ToolbarSearch({ search }: { search: TopicListSearch }) {
   const [localQuery, setLocalQuery] = useState("");
   const controlled = search.query !== undefined;
@@ -46,7 +52,7 @@ function ToolbarSearch({ search }: { search: TopicListSearch }) {
   return (
     <input
       type="search"
-      aria-label={search.placeholder}
+      aria-label={search.placeholder ?? "Filter"}
       value={query}
       onChange={(e) => {
         const next = e.target.value;
@@ -83,9 +89,9 @@ function LevelRows({ level }: { level: TopicLevel }) {
  * Renders every published rail level the way a hub workspace shell's rail would: the rows, the
  * empty label when a level has zero items (G32: a level's `emptyLabel` must be visible for a test
  * to tell "still loading" from "loaded and empty" from "loaded and matches nothing"), the busy
- * spinner stand-in, and each level's own TOOLBAR — the `+` (`onNew`/`newLabel`), then the search
- * field, then `titleActions` — in that order because that is the REAL rail's order
- * (`topic-detail.tsx`'s list toolbar draws `+` first, then the magnifier, then trailing
+ * spinner stand-in, and each level's own TOOLBAR — the search field, then the `+`
+ * (`onNew`/`newLabel`), then `titleActions` — in that order because that is the REAL rail's order
+ * (`topic-detail.tsx`'s list toolbar draws the magnifying glass first, then `+`, then trailing
  * `titleActions`); a test that wants to pin toolbar ORDER should pin it against the real rail's
  * own suite, not against this stand-in.
  *
@@ -107,12 +113,13 @@ export function RailStandIn({ levels, showTitle = false }: RailStandInProps) {
             {String(Boolean(level.hideItemIcons))}
           </span>
           <div data-testid={`toolbar-${level.id}`}>
+            {/* The real rail's filter is on every level, first; `search` only customises it. */}
+            <ToolbarSearch search={level.search ?? {}} />
             {level.onNew ? (
               <button type="button" onClick={() => level.onNew?.()}>
                 {level.newLabel}
               </button>
             ) : null}
-            {level.search ? <ToolbarSearch search={level.search} /> : null}
             {level.titleActions}
           </div>
           {level.items.length === 0 ? <p>{level.emptyLabel}</p> : null}

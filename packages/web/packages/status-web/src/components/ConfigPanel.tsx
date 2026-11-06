@@ -12,7 +12,7 @@ import { Select } from "@adh-sdk/ui/components/select";
 import { Switch } from "@adh-sdk/ui/components/switch";
 import { Label } from "@adh-sdk/ui/components/label";
 import { Badge } from "@adh-sdk/ui/components/badge";
-import { Field, ListHeader, type TopicLevel } from "@adh-sdk/ui/blocks";
+import { Field, ListToolButton, type TopicLevel } from "@adh-sdk/ui/blocks";
 import { useStatusApi } from "../api/client";
 import * as api from "../api/monitored-sites";
 import { PLATFORMS, type SiteGroupView, type SiteView, type IntegrationView, type EndpointView } from "../api/monitored-sites";
@@ -359,32 +359,18 @@ function PlatformsSection({
         newActive: creating,
         emptyLabel: rosterEmptyLabel("platforms", load),
         ...rosterOverview(load),
-        // Auto-configure lives in the headerSlot (not titleActions: the HMDV level
-        // header centers the title under titleActions and the two overlap on this
-        // narrow level) on its own row (not in the ListHeader actions row, which is
-        // too narrow to share with the search field).
-        headerSlot: (
+        // The rail's own filter; this host filters (`visible` above), so it is controlled.
+        search: { query: rosterFilter, onQueryChange: setRosterFilter, placeholder: "Filter platforms" },
+        // Refresh and Auto Configure ride the level's toolbar, right of the filter and +.
+        titleActions: (
           <>
-            <ListHeader
-              ariaLabel="Platform filters"
-              search={{ value: rosterFilter, onChange: setRosterFilter, placeholder: "Filter platforms…", grow: true }}
-              actions={
-                <button
-                  type="button"
-                  className="rounded border border-apt-border px-1.5 py-1 text-apt-text-muted hover:text-apt-text disabled:opacity-50"
-                  title="Refresh platform projects"
-                  aria-label="Refresh platform projects"
-                  disabled={refreshing}
-                  onClick={() => void refreshProjects()}
-                >
-                  <RefreshCw size={14} aria-hidden className={refreshing ? "animate-spin" : undefined} />
-                </button>
-              }
-            />
-            <AutoConfigureButton className="w-full" />
-            {refreshError && <SectionErrorText>{refreshError}</SectionErrorText>}
+            <ListToolButton label="Refresh platform projects" disabled={refreshing} onClick={() => void refreshProjects()}>
+              <RefreshCw size={14} aria-hidden className={refreshing ? "animate-spin" : undefined} />
+            </ListToolButton>
+            <AutoConfigureButton />
           </>
         ),
+        headerSlot: refreshError ? <SectionErrorText>{refreshError}</SectionErrorText> : undefined,
       };
     },
     [integrations, load, unmonitoredByPlatform, selectedId, creating, onNavigate, setError, setDraft, discardDraft, rosterFilter, refreshing, refreshError],

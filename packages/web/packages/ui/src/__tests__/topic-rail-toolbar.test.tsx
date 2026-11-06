@@ -26,29 +26,36 @@ const props = {
 const toolbar = () => document.querySelector('[data-htd-toolbar]') as HTMLElement | null
 const header = () => document.querySelector('[data-htd-header]') as HTMLElement
 const rowLabels = () => screen.queryAllByRole('button').map((b) => b.textContent).filter((t) => t && /Alpha|Beta|Gamma/.test(t))
-const magnifier = () => within(toolbar()!).getByRole('button', { name: 'Search' })
+const filterButton = () => within(toolbar()!).getByRole('button', { name: 'Filter' })
 const popover = () => document.querySelector('[data-htd-search]') as HTMLElement
+// Type a query and press Return: the filter applies what was typed only then (Mike, 2026-11-06).
+// Type into the open field.
+const type = (value: string) => fireEvent.change(field(), { target: { value } })
+const field = () => screen.getByRole('combobox')
+const key = (k: string, init: Record<string, unknown> = {}) => fireEvent.keyDown(field(), { key: k, ...init })
+const suggestions = () => screen.queryAllByRole('option').map((o) => o.textContent)
+const highlighted = () => screen.getAllByRole('option').find((o) => o.getAttribute('aria-selected') === 'true')?.textContent
+// Type a query and press Return: the first match is selected (Mike, 2026-11-06).
+const typeAndChoose = (value: string) => {
+  type(value)
+  key('Enter')
+}
 
 // Mike, 2026-09-24: the page-wide filter strip was clunky, so each list carries its own operations
-// on a toolbar row under its title — `+`, search, then the list's own tools.
+// on a toolbar row under its title. Mike, 2026-11-06: every titled list has that toolbar, with the
+// filter always its leftmost tool — then `+`, then the list's own tools right-justified.
 describe('the topic list toolbar', () => {
-  it('is absent from a list with no tools, unless a sibling asked for the row', () => {
+  it('is on every titled list, with the filter, even one that passes no tools at all', () => {
     render(<TopicRail {...props} />)
-    expect(toolbar()).toBeNull()
-    cleanup()
-    render(<TopicRail {...props} reserveToolbar />)
     expect(toolbar()).not.toBeNull()
+    fireEvent.click(filterButton())
+    type('gam')
+    expect(suggestions()).toEqual(['Gamma'])
   })
 
-  // The stacks ask `hasListTools` whether any level has a toolbar; a rail that answered the same
-  // question differently would drop a lone tool that the stacks counted.
-  it.each<[string, Pick<ComponentProps<typeof TopicRail>, 'onNew' | 'search' | 'titleActions'>]>([
-    ['a +', { onNew: () => {} }],
-    ['search', { search: {} }],
-    ['its own tools', { titleActions: <button type="button">Tools</button> }],
-  ])('is shown for a list whose only tool is %s', (_, tools) => {
-    render(<TopicRail {...props} {...tools} />)
-    expect(toolbar()).not.toBeNull()
+  it('is not on an untitled list', () => {
+    render(<TopicRail {...props} title={undefined} />)
+    expect(toolbar()).toBeNull()
   })
 
   it('carries the + and the list tools, and the title row no longer does', () => {
@@ -62,19 +69,37 @@ describe('the topic list toolbar', () => {
     expect(within(header()).queryByRole('button', { name: 'Tools' })).toBeNull()
   })
 
+  it('opens its filter, focused, on mount when the host asks — and closes it like any other', () => {
+    render(<TopicRail {...props} search={{ autoOpen: true }} />)
+    expect(screen.getByRole('combobox', { name: 'Filter' })).toHaveFocus()
+    key('Escape')
+    expect(screen.queryByRole('combobox')).toBeNull()
+  })
+
   it('is not shown on a collapsed icon strip', () => {
     render(<TopicRail {...props} collapsed onNew={() => {}} search={{}} />)
     expect(toolbar()).toBeNull()
   })
 
-  it('reads +, then search, then the list tools', () => {
-    // The order the stacks' prop docs promise their hosts; they used to describe the `+` as
-    // right-justified in the header, after the list tools.
-    render(<TopicRail {...props} onNew={() => {}} newLabel="New Topic" search={{}} titleActions={<button type="button">Tools</button>} />)
+  it.each<[string, Pick<ComponentProps<typeof TopicRail>, 'onNew' | 'search' | 'titleActions'>]>([
+    ['no other tools', {}],
+    ['a +', { onNew: () => {} }],
+    ['a + and its own tools', { onNew: () => {}, titleActions: <button type="button">Tools</button> }],
+    ['a customised filter', { search: { placeholder: 'Find' } }],
+  ])('puts the filter first, left-justified, with %s', (_, tools) => {
+    render(<TopicRail {...props} newLabel="New Topic" {...tools} />)
+    const buttons = within(toolbar()!).getAllByRole('button')
+    expect(buttons[0]).toHaveAttribute('aria-expanded', 'false')
+    // Its slot opens the row: nothing — not even the spacer — comes before it.
+    expect(toolbar()!.firstElementChild).toContainElement(buttons[0]!)
+  })
+
+  it('reads filter, then +, then the list tools', () => {
+    render(<TopicRail {...props} onNew={() => {}} newLabel="New Topic" titleActions={<button type="button">Tools</button>} />)
     const bar = within(toolbar()!)
     const follows = (a: Node, b: Node) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-    expect(follows(bar.getByRole('button', { name: 'New Topic' }), magnifier())).toBe(true)
-    expect(follows(magnifier(), bar.getByRole('button', { name: 'Tools' }))).toBe(true)
+    expect(follows(filterButton(), bar.getByRole('button', { name: 'New Topic' }))).toBe(true)
+    expect(follows(bar.getByRole('button', { name: 'New Topic' }), bar.getByRole('button', { name: 'Tools' }))).toBe(true)
   })
 })
 
@@ -91,7 +116,7 @@ describe('ListToolButton', () => {
     render(<TopicRail {...props} onNew={() => {}} newLabel="New Topic" search={{}} titleActions={tool} />)
     const host = within(toolbar()!).getByRole('button', { name: 'Manage workspace features' })
     expect(host.className).toBe(within(toolbar()!).getByRole('button', { name: 'New Topic' }).className)
-    expect(host.className).toBe(magnifier().className)
+    expect(host.className).toBe(filterButton().className)
     expect(host).toHaveAttribute('aria-haspopup', 'dialog')
   })
 
@@ -108,49 +133,275 @@ describe('ListToolButton', () => {
   })
 })
 
-describe('topic list search', () => {
-  it('pops a field over the list and filters on label and sublabel', () => {
+// Mike, 2026-11-06: "typing in the filter should show up autocomplete style list that the arrows
+// operate in filled with the content of the topic list, pressing return selects that item in the
+// list and dismisses the filter list".
+describe('topic list filter', () => {
+  it('pops a focused field over the toolbar', () => {
     render(<TopicRail {...props} search={{ placeholder: 'Search topics' }} />)
-    expect(screen.queryByRole('searchbox')).toBeNull()
+    expect(screen.queryByRole('combobox')).toBeNull()
     fireEvent.click(within(toolbar()!).getByRole('button', { name: 'Search topics' }))
-    const field = screen.getByRole('searchbox', { name: 'Search topics' })
-    expect(field).toHaveFocus()
-    fireEvent.change(field, { target: { value: 'FIRST' } })
-    expect(rowLabels()).toEqual([expect.stringContaining('Alpha')])
+    expect(screen.getByRole('combobox', { name: 'Search topics' })).toHaveFocus()
   })
 
-  it('keeps the selected row whatever the query', () => {
-    render(<TopicRail {...props} selectedId="c" search={{}} />)
-    fireEvent.click(within(toolbar()!).getByRole('button', { name: 'Search' }))
+  it('is a magnifying glass, and the panel keeps its glass exactly where the button was', () => {
+    render(<TopicRail {...props} />)
+    const slot = filterButton().parentElement!
+    const glass = filterButton().querySelector('svg')!
+    expect(glass.getAttribute('class')).toMatch(/lucide-search/)
+    fireEvent.click(filterButton())
+    const panelGlass = popover().firstElementChild!
+    // Same `w-4` slot as the button's, first in the panel, and the same icon.
+    expect(slot.className).toMatch(/\bw-4\b/)
+    expect(panelGlass.className).toMatch(/\bw-4\b/)
+    expect(panelGlass.querySelector('svg')!.getAttribute('class')).toMatch(/lucide-search/)
+    // Exactly the toolbar: as wide as the rail, no wider, and never placed by hand.
+    expect(popover().className).toMatch(/\binset-0\b/)
+    expect(popover().getAttribute('style')).toBeNull()
+  })
+
+  it('lists the matching topics as you type, on label and sublabel, and leaves the rail whole', () => {
+    render(<TopicRail {...props} />)
+    fireEvent.click(filterButton())
+    expect(screen.queryByRole('listbox')).toBeNull()
+    type('a')
+    expect(suggestions()).toEqual(['Alpha', 'Beta', 'Gamma'])
+    type('FIRST')
+    expect(suggestions()).toEqual(['Alpha'])
+    type('mm')
+    expect(suggestions()).toEqual(['Gamma'])
+    expect(rowLabels()).toHaveLength(3)
+    expect(field()).toHaveAttribute('aria-expanded', 'true')
+    expect(field()).toHaveAttribute('aria-controls', screen.getByRole('listbox').id)
+  })
+
+  it('underlines the letters each suggestion matched on', () => {
+    render(<TopicRail {...props} />)
+    fireEvent.click(filterButton())
+    type('MM')
+    const match = screen.getByRole('option', { name: 'Gamma' }).querySelector('[data-htd-match]')
+    expect(match).toHaveTextContent(/^mm$/)
+    expect(match).toHaveClass('underline')
+    // Matched on its sublabel: nothing in the label to underline.
+    type('first')
+    expect(screen.getByRole('option', { name: 'Alpha' }).querySelector('[data-htd-match]')).toBeNull()
+  })
+
+  it("hides the rail's rows under the list while it is up, and only then", () => {
+    render(<TopicRail {...props} />)
+    const list = () => document.querySelector('[data-htd-row]')!.closest('.overflow-y-auto')!
+    expect(list()).not.toHaveClass('invisible')
+    fireEvent.click(filterButton())
+    expect(list()).not.toHaveClass('invisible')
+    type('a')
+    expect(list()).toHaveClass('invisible')
+    type('zzz')
+    expect(list()).not.toHaveClass('invisible')
+    type('a')
+    key('Escape')
+    expect(list()).not.toHaveClass('invisible')
+  })
+
+  it('shows the rows again with the chosen topic selected, scrolled into view', () => {
+    const scrolled: string[] = []
+    const real = HTMLElement.prototype.scrollIntoView
+    HTMLElement.prototype.scrollIntoView = function (this: HTMLElement) {
+      if (this.matches('[data-htd-row]')) scrolled.push(this.textContent ?? '')
+    }
+    try {
+      let selected: string | null = null
+      const rail = () => <TopicRail {...props} selectedId={selected} onSelect={(id) => (selected = id)} />
+      const { rerender } = render(rail())
+      fireEvent.click(filterButton())
+      typeAndChoose('gam')
+      // The host selects it on its own next render.
+      rerender(rail())
+      const list = document.querySelector('[data-htd-row]')!.closest('.overflow-y-auto')!
+      expect(list).not.toHaveClass('invisible')
+      expect(screen.getByRole('button', { name: /Gamma/ })).toHaveAttribute('aria-current', 'true')
+      expect(scrolled).toEqual([expect.stringContaining('Gamma')])
+      // Once: a later selection is the host's own business.
+      rerender(<TopicRail {...props} selectedId="a" />)
+      expect(scrolled).toHaveLength(1)
+    } finally {
+      HTMLElement.prototype.scrollIntoView = real
+    }
+  })
+
+  it('hangs the list under the toolbar, as wide as the rail', () => {
+    render(<TopicRail {...props} />)
+    fireEvent.click(filterButton())
+    type('a')
+    const list = screen.getByRole('listbox')
+    expect(toolbar()).toContainElement(list)
+    expect(list.className).toMatch(/\btop-full\b/)
+    expect(list.className).toMatch(/\bleft-0\b/)
+    expect(list.className).toMatch(/\bright-0\b/)
+  })
+
+  it('moves the highlight with Up and Down, wrapping at either end', () => {
+    render(<TopicRail {...props} />)
+    fireEvent.click(filterButton())
+    type('a')
+    expect(highlighted()).toBe('Alpha')
+    key('ArrowDown')
+    expect(highlighted()).toBe('Beta')
+    key('ArrowDown')
+    key('ArrowDown')
+    expect(highlighted()).toBe('Alpha')
+    key('ArrowUp')
+    expect(highlighted()).toBe('Gamma')
+    expect(field()).toHaveAttribute('aria-activedescendant', screen.getAllByRole('option')[2]!.id)
+  })
+
+  it('keeps the caret where it is: the arrows are cancelled', () => {
+    render(<TopicRail {...props} />)
+    fireEvent.click(filterButton())
+    type('a')
+    expect(fireEvent.keyDown(field(), { key: 'ArrowDown' })).toBe(false)
+  })
+
+  it('starts the highlight over on every keystroke', () => {
+    render(<TopicRail {...props} />)
+    fireEvent.click(filterButton())
+    type('a')
+    key('ArrowDown')
+    key('ArrowDown')
+    type('am')
+    expect(suggestions()).toEqual(['Gamma'])
+    expect(highlighted()).toBe('Gamma')
+  })
+
+  it('Return selects the highlighted topic and dismisses the filter', () => {
+    const onSelect = vi.fn()
+    render(<TopicRail {...props} onSelect={onSelect} />)
+    fireEvent.click(filterButton())
+    type('a')
+    key('ArrowDown')
+    key('Enter')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('b')
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(rowLabels()).toHaveLength(3)
+    // Nothing is left behind: the next open starts empty.
+    fireEvent.click(filterButton())
+    expect(field()).toHaveValue('')
+  })
+
+  it('a click selects a suggestion too', () => {
+    const onSelect = vi.fn()
+    render(<TopicRail {...props} onSelect={onSelect} />)
+    fireEvent.click(filterButton())
+    type('a')
+    fireEvent.click(screen.getByRole('option', { name: 'Gamma' }))
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('c')
+    expect(screen.queryByRole('combobox')).toBeNull()
+  })
+
+  it('does not toggle off the topic already selected', () => {
+    const onSelect = vi.fn()
+    render(<TopicRail {...props} selectedId="b" onSelect={onSelect} />)
+    fireEvent.click(filterButton())
+    typeAndChoose('beta')
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(screen.queryByRole('combobox')).toBeNull()
+  })
+
+  it('runs a link row through onSelect, as its row would', () => {
+    const onSelect = vi.fn()
+    const items = [...props.items, { id: 'l', label: 'Elsewhere', onLink: () => {} }]
+    render(<TopicRail {...props} items={items} selectedId="l" onSelect={onSelect} />)
+    fireEvent.click(filterButton())
+    typeAndChoose('else')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('l')
+  })
+
+  it('never offers a disabled topic', () => {
+    const items = [...props.items, { id: 'd', label: 'Delta', disabled: true }]
+    render(<TopicRail {...props} items={items} />)
+    fireEvent.click(filterButton())
+    type('ta')
+    expect(suggestions()).toEqual(['Beta'])
+  })
+
+  it('offers nothing to choose when nothing matches, and Return leaves the field open', () => {
+    const onSelect = vi.fn()
+    render(<TopicRail {...props} onSelect={onSelect} />)
+    fireEvent.click(filterButton())
+    typeAndChoose('zzz')
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(field()).toBeInTheDocument()
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  it('Escape dismisses the filter and selects nothing', () => {
+    const onSelect = vi.fn()
+    render(<TopicRail {...props} onSelect={onSelect} />)
+    fireEvent.click(filterButton())
+    type('beta')
+    key('Escape')
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(onSelect).not.toHaveBeenCalled()
+    fireEvent.click(filterButton())
+    expect(field()).toHaveValue('')
+  })
+
+  it('✕ dismisses the filter', () => {
+    render(<TopicRail {...props} />)
+    fireEvent.click(filterButton())
+    type('beta')
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filter' }))
+    expect(screen.queryByRole('combobox')).toBeNull()
+  })
+
+  it('leaves Return to an IME composing its candidate', () => {
+    const onSelect = vi.fn()
+    render(<TopicRail {...props} onSelect={onSelect} />)
+    fireEvent.click(filterButton())
+    type('beta')
+    key('Enter', { keyCode: 229 })
+    expect(field()).toBeInTheDocument()
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  it('filters the rail itself, with no list, when the host asks for live', () => {
+    render(<TopicRail {...props} search={{ live: true }} />)
+    fireEvent.click(filterButton())
+    const box = screen.getByRole('searchbox')
+    fireEvent.change(box, { target: { value: 'beta' } })
+    expect(rowLabels()).toEqual([expect.stringContaining('Beta')])
+    expect(screen.queryByRole('listbox')).toBeNull()
+    fireEvent.keyDown(box, { key: 'Escape' })
+    expect(rowLabels()).toEqual([expect.stringContaining('Beta')])
+  })
+
+  it('live keeps the selected row whatever the query, and says when nothing matches', () => {
+    render(<TopicRail {...props} selectedId="c" search={{ live: true }} />)
+    fireEvent.click(filterButton())
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'beta' } })
     expect(rowLabels()).toHaveLength(2)
-  })
-
-  it('Escape closes the field and clears the query', () => {
-    render(<TopicRail {...props} search={{}} />)
-    fireEvent.click(within(toolbar()!).getByRole('button', { name: 'Search' }))
-    const field = screen.getByRole('searchbox')
-    fireEvent.change(field, { target: { value: 'beta' } })
-    fireEvent.keyDown(field, { key: 'Escape' })
-    expect(screen.queryByRole('searchbox')).toBeNull()
-    expect(rowLabels()).toHaveLength(3)
-  })
-
-  it('says when nothing matches', () => {
-    render(<TopicRail {...props} search={{}} />)
-    fireEvent.click(within(toolbar()!).getByRole('button', { name: 'Search' }))
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'zzz' } })
+    expect(rowLabels()).toHaveLength(1)
+    cleanup()
+    render(<TopicRail {...props} search={{ live: true }} />)
+    fireEvent.click(filterButton())
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'zzz' } })
     expect(screen.getByText('Nothing matches “zzz”.')).toBeInTheDocument()
   })
 
-  it('leaves filtering to the host when the query is controlled', () => {
+  it('hands a controlled host every keystroke, offers the rows it narrows to, and clears on close', () => {
     const onQueryChange = vi.fn()
-    render(<TopicRail {...props} search={{ query: 'beta', onQueryChange }} />)
-    // The host owns the rows it passes, so the rail shows them all.
-    expect(rowLabels()).toHaveLength(3)
-    fireEvent.click(within(toolbar()!).getByRole('button', { name: 'Search' }))
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'gam' } })
-    expect(onQueryChange).toHaveBeenCalledWith('gam')
+    const onSelect = vi.fn()
+    const { rerender } = render(<TopicRail {...props} onSelect={onSelect} search={{ query: '', onQueryChange }} />)
+    fireEvent.click(filterButton())
+    type('gam')
+    expect(onQueryChange).toHaveBeenLastCalledWith('gam')
+    // The host matched on more than the label: its rows are the suggestions, as given.
+    rerender(<TopicRail {...props} items={[props.items[0]!]} onSelect={onSelect} search={{ query: 'gam', onQueryChange }} />)
+    expect(suggestions()).toEqual(['Alpha'])
+    key('Enter')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('a')
+    expect(onQueryChange).toHaveBeenLastCalledWith('')
   })
 
   it('leaves the empty label to the host when the query is controlled', () => {
@@ -165,126 +416,68 @@ describe('topic list search', () => {
 // Closing the pop-over unmounts the field that has focus, and focus used to fall to <body>; the
 // field's own blur closed it on Tab onto ✕, so Clear was out of the keyboard's reach.
 describe('the search pop-over and the keyboard', () => {
-  const closers: [string, (field: HTMLElement) => void][] = [
-    ['Escape', (field) => fireEvent.keyDown(field, { key: 'Escape' })],
-    ['Enter', (field) => fireEvent.keyDown(field, { key: 'Enter' })],
-    ['✕', () => fireEvent.click(screen.getByRole('button', { name: 'Clear search' }))],
+  const closers: [string, () => void][] = [
+    ['Escape', () => key('Escape')],
+    ['Enter', () => key('Enter')],
+    ['✕', () => fireEvent.click(screen.getByRole('button', { name: 'Clear filter' }))],
   ]
-  it.each(closers)('hands focus back to the magnifier when %s closes the field', (_, close) => {
+  it.each(closers)('hands focus back to the filter button when %s closes the field', (_, close) => {
     render(<TopicRail {...props} search={{}} />)
-    fireEvent.click(magnifier())
-    const field = screen.getByRole('searchbox')
-    expect(field).toHaveFocus()
-    close(field)
-    expect(screen.queryByRole('searchbox')).toBeNull()
-    expect(magnifier()).toHaveFocus()
+    fireEvent.click(filterButton())
+    expect(field()).toHaveFocus()
+    type('a')
+    close()
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(filterButton()).toHaveFocus()
   })
 
-  it('stays closed after Enter, keeping the query', async () => {
-    // Enter's keypress goes to the magnifier the focus was just handed to, and a button takes it
+  it('stays closed after Enter chooses', async () => {
+    // Enter's keypress goes to the filter button the focus was just handed to, and a button takes it
     // as a click — which would reopen the field Enter closed.
     const user = userEvent.setup()
-    render(<TopicRail {...props} search={{}} />)
-    await user.click(magnifier())
-    await user.keyboard('beta{Enter}')
-    expect(screen.queryByRole('searchbox')).toBeNull()
-    expect(magnifier()).toHaveFocus()
-    expect(rowLabels()).toEqual([expect.stringContaining('Beta')])
+    const onSelect = vi.fn()
+    render(<TopicRail {...props} onSelect={onSelect} search={{}} />)
+    await user.click(filterButton())
+    await user.keyboard('gam{ArrowUp}{Enter}')
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(filterButton()).toHaveFocus()
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('c')
   })
 
   it('stays open when Tab moves from the field onto ✕', async () => {
     const user = userEvent.setup()
     render(<TopicRail {...props} search={{}} />)
-    await user.click(magnifier())
+    await user.click(filterButton())
     await user.tab()
-    expect(screen.getByRole('button', { name: 'Clear search' })).toHaveFocus()
-    expect(screen.getByRole('searchbox')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Clear filter' })).toHaveFocus()
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
   })
 
-  it('closes when focus leaves it, keeping the query', async () => {
+  it('closes when focus leaves it, dismissed as Escape would', async () => {
     const user = userEvent.setup()
     render(<TopicRail {...props} search={{}} />)
-    await user.click(magnifier())
+    await user.click(filterButton())
     await user.keyboard('beta')
     await user.tab() // onto ✕, still inside
     await user.tab() // out, onto the list
-    expect(screen.queryByRole('searchbox')).toBeNull()
-    expect(rowLabels()).toEqual([expect.stringContaining('Beta')])
+    expect(screen.queryByRole('combobox')).toBeNull()
+    await user.click(filterButton())
+    expect(field()).toHaveValue('')
   })
 })
 
-// In the hub's covered stack each rail sits in an `overflow-hidden` column no wider than the
-// rail, and on a rail narrower than the field the column cut off the ✕ and the end of the query.
-// jsdom has no layout, so the column's clip and both boxes' edges are stated here.
-describe('the search pop-over inside a clipping column', () => {
-  const rect = (left: number, right: number) =>
-    ({ left, right, x: left, width: right - left, top: 0, bottom: 0, y: 0, height: 0, toJSON: () => ({}) }) as DOMRect
-  const placeAt = (el: Element, left: number, right: number) =>
-    vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(rect(left, right))
-  const renderIn = (clips: boolean) => {
-    render(
-      <div data-testid="column" style={clips ? { overflowX: 'hidden' } : undefined}>
-        <TopicRail {...props} search={{}} />
-      </div>,
-    )
-    return screen.getByTestId('column')
-  }
-
-  it('stops at the edge of the box that clips it, and follows that edge', () => {
-    const column = placeAt(renderIn(true), 0, 150)
-    placeAt(toolbar()!, 20, 150)
-    fireEvent.click(magnifier())
-    expect(popover().style.maxWidth).toBe('130px')
-    column.mockReturnValue(rect(0, 200))
-    fireEvent(window, new Event('resize'))
-    expect(popover().style.maxWidth).toBe('180px')
-  })
-
-  it('follows the column as it wipes open around a rail whose own width never moves', () => {
-    // The covered stack's reveal widens the COLUMN; the toolbar inside it never resizes.
-    const watching = new Map<Element, () => void>()
-    const realObserver = globalThis.ResizeObserver
-    globalThis.ResizeObserver = class {
-      cb: () => void
-      constructor(cb: () => void) {
-        this.cb = cb
-      }
-      observe(el: Element) {
-        watching.set(el, this.cb)
-      }
-      unobserve() {}
-      disconnect() {
-        watching.clear()
-      }
-    } as unknown as typeof ResizeObserver
-    try {
-      const columnEl = renderIn(true)
-      const column = placeAt(columnEl, 0, 48)
-      placeAt(toolbar()!, 0, 240)
-      fireEvent.click(magnifier())
-      expect(popover().style.maxWidth).toBe('48px')
-      column.mockReturnValue(rect(0, 240))
-      act(() => watching.get(columnEl)?.())
-      expect(popover().style.maxWidth).toBe('240px')
-      // Closing stops the watching.
-      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Escape' })
-      expect(watching.size).toBe(0)
-    } finally {
-      globalThis.ResizeObserver = realObserver
-    }
-  })
-
-  it('is not capped where nothing clips it', () => {
-    placeAt(renderIn(false), 0, 150)
-    placeAt(toolbar()!, 20, 150)
-    fireEvent.click(magnifier())
-    expect(popover().style.maxWidth).toBe('')
+describe('the search panel', () => {
+  it("hides the browser's own clear button, leaving the panel's one ✕", () => {
+    render(<TopicRail {...props} search={{}} />)
+    fireEvent.click(filterButton())
+    expect(field().className).toContain('[&::-webkit-search-cancel-button]:appearance-none')
+    expect(within(popover()).getAllByRole('button')).toHaveLength(1)
   })
 })
 
 // A rail filtering its own rows measured just the MATCHES when something else made it
 // re-measure, and kept that width after the query cleared, ellipsising the full list.
-describe('auto-fit while the rail filters its own rows', () => {
+describe('auto-fit while a live rail filters its own rows', () => {
   it('never measures the matches, and measures the whole list again once the query clears', () => {
     // jsdom has no layout: a column of rows is as wide as its widest row, at 10px a character.
     const real = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollWidth')
@@ -299,14 +492,14 @@ describe('auto-fit while the rail filters its own rows', () => {
       const long = { id: 'long', label: 'x'.repeat(30) } // 300px, inside the fit range
       const wider = { id: 'wider', label: 'y'.repeat(35) } // 350px, and no match for "beta"
       const onFit = vi.fn()
-      const rail = (items: typeof props.items) => <TopicRail {...props} items={items} onFit={onFit} search={{}} />
+      const rail = (items: typeof props.items) => <TopicRail {...props} items={items} onFit={onFit} search={{ live: true }} />
       const { rerender } = render(rail([long, ...props.items]))
-      fireEvent.click(magnifier())
+      fireEvent.click(filterButton())
       fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'beta' } })
       // A new row lands while the query hides it — a searched Personas rail's `+`. The rail
-      // used to measure the one match here, and nothing measured it again after Escape.
+      // used to measure the one match here, and nothing measured it again once it cleared.
       rerender(rail([long, ...props.items, wider]))
-      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Escape' })
+      fireEvent.click(screen.getByRole('button', { name: 'Clear filter' }))
       expect(onFit.mock.calls.map(([w]) => w)).toEqual([300, 350])
     } finally {
       if (real) Object.defineProperty(HTMLElement.prototype, 'scrollWidth', real)

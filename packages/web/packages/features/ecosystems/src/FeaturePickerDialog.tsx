@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type KeyboardEvent, type ReactElement } from "react";
-import { HierarchicalDetailView, ListHeader, type TopicLevel, type TopicDetailItem } from "@adh-sdk/ui/blocks";
+import { HierarchicalDetailView, type TopicLevel, type TopicDetailItem } from "@adh-sdk/ui/blocks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@adh-sdk/ui/components/dialog";
 import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
 import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
@@ -353,8 +353,9 @@ export function FeaturePickerDialog({
   /**
    * The picker's keyboard, wired on the filter row because that is where focus lives: the
    * user types to narrow the list and never leaves the field, so the arrows, Space and
-   * Return have to work from there. Keydown bubbles out of the `<input>`, so one handler on
-   * the wrapper covers the whole header.
+   * Return have to work from there. The field is the rail's own filter (opened on mount by
+   * `search.autoOpen`); keydown bubbles out of its `<input>` to the list box, which hands only
+   * the filter's keys here — a row's own keys stay the rail's.
    *
    * SPACE CANNOT TYPE A SPACE HERE. It toggles the cursor row instead, which is the
    * requested behaviour and is worth stating plainly: a multi-word filter must be typed
@@ -362,11 +363,12 @@ export function FeaturePickerDialog({
    * deliberate — a filter over 35 single-phrase feature names rarely needs a space, while a
    * hand that never leaves the field needs a toggle key.
    *
-   * Escape is NOT handled here: Base-UI's dialog owns it, and handling it in both places
-   * would cancel twice.
+   * Escape is NOT handled here. The filter takes the first one (it clears and closes the field,
+   * and stops it there); the next reaches Base-UI's dialog, which cancels.
    */
-  const onHeaderKeyDown = useCallback(
+  const onFilterKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
+      if (!(e.target instanceof Element) || !e.target.closest("[data-htd-search]")) return;
       if (busy || confirming) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -413,21 +415,10 @@ export function FeaturePickerDialog({
     overview: true,
     overviewHelp: "Tick a feature to add it to this ecosystem; untick one to remove it.",
     width: 280,
-    headerSlot: (
-      <div onKeyDown={onHeaderKeyDown}>
-        <ListHeader
-          ariaLabel="Filter features"
-          search={{
-            value: query,
-            onChange: setQuery,
-            label: "Filter features",
-            placeholder: "Filter features…",
-            autoFocus: true,
-            grow: true,
-          }}
-        />
-      </div>
-    ),
+    // The rail's own filter, open and focused from the start: this dialog's first act is narrowing
+    // the list. Controlled, because `visible` is filtered here (the coming-soon divider and the
+    // measured height both read it).
+    search: { query, onQueryChange: setQuery, placeholder: "Filter features", autoOpen: true, live: true },
   };
 
   const active = activeId != null ? byKey.get(activeId) : undefined;
@@ -504,6 +495,7 @@ export function FeaturePickerDialog({
             onBlur={(e) => setFocusedRowKey(rowKeyFromTarget(e.relatedTarget))}
             onMouseOver={(e) => setHoveredRowKey(rowKeyFromTarget(e.target))}
             onMouseOut={(e) => setHoveredRowKey(rowKeyFromTarget(e.relatedTarget))}
+            onKeyDown={onFilterKeyDown}
           >
             {catalogError ? (
               // The catalog never arrived — `catalog` is `[]` exactly as it is while still

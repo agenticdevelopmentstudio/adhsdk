@@ -43,8 +43,12 @@ export interface ListHeaderProps {
  * The shared header above a list: title · filter field · [flex] · actions, in
  * the same recessed {@link ButtonBar} strip every toolbar uses. The one home
  * for the "header above a list" pattern — {@link ListWithDetailsPane} renders
- * it above its table, and a HierarchicalTopicDetail level hosts it via the
- * level's `headerSlot` so entity lists inside the stack get the same header.
+ * it above its table.
+ *
+ * NOT for a HierarchicalTopicDetail level's `headerSlot`: every titled rail
+ * already has its own filter on its toolbar, so a `search` here would be a
+ * second one. Hand the level a `search` (`TopicListSearch`) to control
+ * that filter, and its `titleActions` for list tools.
  */
 export function ListHeader({
   title,
