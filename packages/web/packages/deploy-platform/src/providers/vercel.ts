@@ -1,3 +1,4 @@
+import { noteIfRateLimited, rateLimitedUntil } from "../cooldown/provider-cooldown.js";
 import { pickCanonicalHost } from "./host-pick.js";
 
 interface VercelDomain {
@@ -20,6 +21,12 @@ const domainListCache = new Map<string, { domains: VercelDomain[]; at: number }>
  * On any failure (token lacks scope, network) returns the last-known list, or [] —
  * and says so via `live`, so a caller can tell "this project serves no custom
  * domain" from "we could not look".
+ *
+ * It honors the shared Vercel 429 cooldown like every other call on this token: while
+ * one is in force it does not ask (a miss is answered as a failure), and a 429 here
+ * records one. Callers fan this out several projects at a time on the token the deploy
+ * poll uses, so a lookup that ignored the cooldown would keep a throttled account
+ * throttled, and one that swallowed its 429 would leave the next caller to find out.
  */
 async function fetchProjectDomainList(
   token: string,
@@ -28,12 +35,14 @@ async function fetchProjectDomainList(
 ): Promise<{ domains: VercelDomain[]; live: boolean }> {
   const hit = domainListCache.get(projectName);
   if (hit && Date.now() - hit.at < DOMAIN_CACHE_TTL_MS) return { domains: hit.domains, live: true };
+  if (rateLimitedUntil("vercel")) return { domains: hit?.domains ?? [], live: false };
   try {
     const url = new URL(`https://api.vercel.com/v9/projects/${encodeURIComponent(projectName)}/domains`);
     if (teamId) url.searchParams.set("teamId", teamId);
     // Self-bounded so a stalled connection can't hang a caller (e.g. the
     // deploy-projects enumeration that resolves every project's domains).
     const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(5_000) });
+    noteIfRateLimited("vercel", res);
     if (!res.ok) return { domains: hit?.domains ?? [], live: false };
     const body = (await res.json()) as { domains?: VercelDomain[] };
     const domains = (body.domains ?? []).filter((d) => d.verified && !d.name.endsWith(".vercel.app"));
