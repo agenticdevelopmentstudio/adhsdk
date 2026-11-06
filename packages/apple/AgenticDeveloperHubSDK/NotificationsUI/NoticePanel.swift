@@ -65,6 +65,20 @@ public final class NoticePanel: NSPanel {
         handOffKey(self)
     }
 
+    /// How a reply field asks for the keyboard: makes the panel key, then
+    /// reports whether it took. The answer is read on the next default-mode
+    /// turn of the run loop, after the click that started the reply has been
+    /// tracked, since a panel clicked into may only become key on mouse-up.
+    /// `false` means the window server refused (an inactive agent app, a panel
+    /// off screen), and no resign notification will ever follow. A seam, so
+    /// tests never make a real window key.
+    var takeKey: @MainActor (NoticePanel, @escaping @MainActor @Sendable (Bool) -> Void) -> Void = { panel, done in
+        panel.makeKey()
+        RunLoop.main.perform(inModes: [.default]) {
+            MainActor.assumeIsolated { done(panel.isKeyWindow) }
+        }
+    }
+
     /// How `relinquishKey()` returns key. A seam, so tests never reorder a
     /// real window.
     var handOffKey: @MainActor (NoticePanel) -> Void = { panel in
