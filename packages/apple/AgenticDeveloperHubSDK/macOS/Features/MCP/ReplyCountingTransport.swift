@@ -18,6 +18,8 @@ import MCP
 ///   reply. It is counted as soon as it arrives, before the server sees it.
 /// - The debt is paid when `send` writes a response (an `id` and no `method`)
 ///   with the same id.
+/// - A `notifications/cancelled` for an owed id also pays it: the client has
+///   given up, and MCP says the server need not answer a cancelled request.
 /// - Batches (JSON arrays) are not counted. The SDK answers a batch inside
 ///   the receive loop, so its reply is sent before the loop ends.
 actor ReplyCountingTransport: Transport {
@@ -85,14 +87,23 @@ actor ReplyCountingTransport: Transport {
     // MARK: - Bookkeeping
 
     private func noteIncoming(_ data: Data) {
-        guard let message = Self.object(data), message["method"] != nil,
-              let id = Self.idKey(message["id"]) else { return }
-        owed.insert(id)
+        guard let message = Self.object(data), let method = message["method"] as? String else { return }
+        if let id = Self.idKey(message["id"]) {
+            owed.insert(id)
+        } else if method == "notifications/cancelled",
+                  let params = message["params"] as? [String: Any],
+                  let id = Self.idKey(params["requestId"]) {
+            pay(id)
+        }
     }
 
     private func noteOutgoing(_ data: Data) {
         guard let message = Self.object(data), message["method"] == nil,
               let id = Self.idKey(message["id"]) else { return }
+        pay(id)
+    }
+
+    private func pay(_ id: String) {
         owed.remove(id)
         if owed.isEmpty { releaseWaiters() }
     }
