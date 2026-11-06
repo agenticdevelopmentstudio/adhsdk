@@ -183,4 +183,25 @@ struct KeychainHelperTests {
             #expect(!KeychainHelper.exists(forKey: key))
         }
     }
+
+    @Test("an explicit service scopes set, get, exists and delete without touching the global one")
+    func explicitServiceIsolatesItems() {
+        let key = uniqueKey("svc")
+        let service = "kctest.service.\(UUID().uuidString)"
+        let global = KeychainHelper.service
+        defer {
+            KeychainHelper.delete(forKey: key, service: service)
+            KeychainHelper.delete(forKey: key)
+        }
+
+        #expect(KeychainHelper.set("scoped", forKey: key, service: service))
+        #expect(KeychainHelper.get(forKey: key, service: service) == "scoped")
+        #expect(KeychainHelper.exists(forKey: key, service: service))
+        #expect(KeychainHelper.get(forKey: key) == nil, "the global service holds no copy")
+        #expect(!KeychainHelper.exists(forKey: key))
+        #expect(KeychainHelper.service == global)
+
+        #expect(KeychainHelper.delete(forKey: key, service: service))
+        #expect(KeychainHelper.get(forKey: key, service: service) == nil)
+    }
 }

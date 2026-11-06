@@ -97,12 +97,15 @@ public enum KeychainHelper {
 
     /// Stores a value in the Keychain for the given account key.
     /// Overwrites any existing value for the same key.
+    ///
+    /// `service` defaults to the process-wide ``service``; pass one to scope a
+    /// caller's items without retargeting that global for everyone else.
     @discardableResult
-    public static func set(_ value: String, forKey key: String) -> Bool {
+    public static func set(_ value: String, forKey key: String, service: String = KeychainHelper.service) -> Bool {
         let data = Data(value.utf8)
-        deleteItem(makeQuery(account: key))
+        deleteItem(makeQuery(account: key, service: service))
 
-        var query = makeQuery(account: key)
+        var query = makeQuery(account: key, service: service)
         query[kSecValueData as String] = data
         if readsFileKeychainFallback {
             // Data-protection items default to `WhenUnlocked`. A co-signed daemon may
@@ -119,9 +122,10 @@ public enum KeychainHelper {
         return status == errSecSuccess
     }
 
-    /// Retrieves a value from the Keychain for the given account key.
-    public static func get(forKey key: String) -> String? {
-        if let value = copyValue(forKey: key, accessGroup: accessGroup) {
+    /// Retrieves a value from the Keychain for the given account key, under
+    /// `service` (the process-wide ``service`` by default).
+    public static func get(forKey key: String, service: String = KeychainHelper.service) -> String? {
+        if let value = copyValue(forKey: key, accessGroup: accessGroup, service: service) {
             return value
         }
         // Legacy migration: secrets written before an access group was configured live
@@ -129,8 +133,8 @@ public enum KeychainHelper {
         // queries (and to a co-signed daemon). Recover one if present and re-store it
         // under the current group so future reads — including the daemon's — succeed.
         if readsFileKeychainFallback,
-           let legacy = copyValue(forKey: key, accessGroup: nil, dataProtection: false) {
-            set(legacy, forKey: key)
+           let legacy = copyValue(forKey: key, accessGroup: nil, dataProtection: false, service: service) {
+            set(legacy, forKey: key, service: service)
             return legacy
         }
         // Retired-service migration: the service defaults to the bundle
@@ -143,7 +147,7 @@ public enum KeychainHelper {
                     ? copyValue(forKey: key, accessGroup: nil, dataProtection: false, service: legacyService)
                     : nil) {
                 logger.info("Recovered '\(key, privacy: .public)' from retired Keychain service")
-                set(legacy, forKey: key)
+                set(legacy, forKey: key, service: service)
                 return legacy
             }
         }
@@ -177,12 +181,13 @@ public enum KeychainHelper {
 
     /// Deletes the Keychain item for the given account key, along with any
     /// copy under a retired service (``legacyServices``) that `get` would
-    /// otherwise recover.
+    /// otherwise recover. `service` defaults to the process-wide ``service``.
     @discardableResult
-    public static func delete(forKey key: String) -> Bool {
-        var deleted = deleteItem(makeQuery(account: key))
+    public static func delete(forKey key: String, service: String = KeychainHelper.service) -> Bool {
+        var deleted = deleteItem(makeQuery(account: key, service: service))
         if readsFileKeychainFallback {
-            deleted = deleteItem(makeQuery(account: key, accessGroup: nil, dataProtection: false)) && deleted
+            deleted = deleteItem(makeQuery(
+                account: key, accessGroup: nil, dataProtection: false, service: service)) && deleted
         }
         for legacyService in legacyServices {
             deleted = deleteItem(makeQuery(account: key, service: legacyService)) && deleted
@@ -206,8 +211,8 @@ public enum KeychainHelper {
     /// as any caller is concerned, and answering `false` here would have a
     /// settings pane render an empty field over a stored secret. This probe
     /// does not migrate — the first `get` does that.
-    public static func exists(forKey key: String) -> Bool {
-        var query = makeQuery(account: key)
+    public static func exists(forKey key: String, service: String = KeychainHelper.service) -> Bool {
+        var query = makeQuery(account: key, service: service)
         query[kSecMatchLimit as String] = kSecMatchLimitOne
         if SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess {
             return true
@@ -220,7 +225,7 @@ public enum KeychainHelper {
             return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
         }
         if readsFileKeychainFallback,
-           present(makeQuery(account: key, accessGroup: nil, dataProtection: false)) {
+           present(makeQuery(account: key, accessGroup: nil, dataProtection: false, service: service)) {
             return true
         }
         return legacyServices.contains { legacyService in
