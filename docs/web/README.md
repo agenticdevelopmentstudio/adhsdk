@@ -16,6 +16,10 @@
 
 ## Reference
 
+- [`htdv-rail-toolbar-and-filter.md`](htdv-rail-toolbar-and-filter.md) — the
+  web HTDV rail's list toolbar, its always-on filter (an autocomplete, with
+  controlled and `live` modes), category switching, auto-fit, and the
+  unsaved-changes guard's settle-as-Stay.
 - [`shared-analytics.md`](shared-analytics.md) — the shared PostHog
   package: why it is shared, its privacy configuration, and how each kind
   of site wires it.
