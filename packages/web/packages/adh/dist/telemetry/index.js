@@ -167,7 +167,7 @@ var FOREIGN_FRAME = [
   /^(?:chrome|moz|safari|safari-web)-extension:\/\//
   // browser extensions
 ];
-var NETWORK_FAILURE = /^(?:Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.?)$/;
+var NETWORK_FAILURE = /^(?:Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.?)(?: \([^()\s]+\))?$/;
 function frameSource(frame) {
   return frame.abs_path || frame.filename || "";
 }
