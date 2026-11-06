@@ -63,6 +63,22 @@ final class KeyCommandBehaviourTests: XCTestCase {
         XCTAssertEqual(registry.availability(of: chord, for: sleeper).reason, "taken by “holder”")
     }
 
+    /// App commands lost their switch. One saved as switched off reads as
+    /// cleared, so a chord another command took while it was off is not
+    /// claimed twice.
+    func testAnAppCommandSavedSwitchedOffReadsAsCleared() {
+        let chord = KeyboardShortcuts.Shortcut(.f14, modifiers: .command)
+        let sleeper = id("sleeper"), holder = id("holder")
+        registry.install(KeyCommandSection(title: "W", scope: .app, commands: [
+            command(sleeper), command(holder, chord: chord)
+        ]))
+        registry.setBinding(KeyCommandBinding(shortcut: chord, isEnabled: false), for: sleeper)
+
+        XCTAssertEqual(registry.binding(for: sleeper), KeyCommandBinding(shortcut: nil, isEnabled: true))
+        XCTAssertNil(registry.shortcut(for: sleeper))
+        XCTAssertEqual(registry.shortcut(for: holder), chord)
+    }
+
     func testAChordAnotherOwnerRegisteredIsTakenUntilReleased() {
         let chord = KeyboardShortcuts.Shortcut(.f15, modifiers: [.command, .option])
         let name = KeyboardShortcuts.Name("keyCommandBehaviourTests.external")
@@ -159,11 +175,12 @@ final class KeyCommandBehaviourTests: XCTestCase {
     func testTheSwitchRefusesToPutATakenChordBackInPlay() throws {
         let chord = KeyboardShortcuts.Shortcut(.f10, modifiers: [.command, .option])
         let sleeper = command(id("sleeper"))
-        registry.install(KeyCommandSection(title: "W", scope: .app, commands: [
+        registry.install(KeyCommandSection(title: "W", scope: .global, commands: [
             sleeper, command(id("holder"), chord: chord)
         ]))
         registry.setBinding(KeyCommandBinding(shortcut: chord, isEnabled: false), for: sleeper.id)
-        let row = try hosted(KeyCommandRowView(command: sleeper, registry: registry))
+        let row = try hosted(KeyCommandRowView(
+            command: try XCTUnwrap(registry.descriptor(for: sleeper.id)), registry: registry))
         let toggle = try XCTUnwrap(first(NSSwitch.self, in: row))
 
         toggle.state = .on

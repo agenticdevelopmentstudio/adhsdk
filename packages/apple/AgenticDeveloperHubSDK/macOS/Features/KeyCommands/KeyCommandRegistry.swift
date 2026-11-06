@@ -176,17 +176,18 @@ public final class KeyCommandRegistry {
     ///
     /// Only a global command can be off. Its switch exists because a global
     /// hotkey is taken from every other app; an in-app command has no switch,
-    /// and clearing its chord is how it is turned off. So an app command reads
-    /// as on whatever was saved for it, or one switched off before the switch
-    /// was removed would be a chord that never fires, with nothing on screen to
-    /// say why or to fix it.
+    /// and clearing its chord is how it is turned off. So an app command saved
+    /// as switched off — before the switch was removed — reads as cleared: on,
+    /// with no chord. Reading it as on *with* its chord would revive a chord the
+    /// user may since have given to another command (the clash check ignored
+    /// it while it was off), and two commands would answer one key.
     public func binding(for id: String) -> KeyCommandBinding {
         guard let command = descriptorsByID[id] else {
             return store.currentValue[id] ?? KeyCommandBinding(shortcut: nil, isEnabled: false)
         }
-        var binding = store.currentValue[id] ?? command.defaultBinding
-        if command.scope != .global { binding.isEnabled = true }
-        return binding
+        let binding = store.currentValue[id] ?? command.defaultBinding
+        guard command.scope != .global, !binding.isEnabled else { return binding }
+        return KeyCommandBinding(shortcut: nil, isEnabled: true)
     }
 
     /// The chord that will actually fire for `id`, or `nil`.
