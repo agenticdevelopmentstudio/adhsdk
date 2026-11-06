@@ -32,6 +32,25 @@ final class NoticePanelTests: XCTestCase {
         XCTAssertFalse(panel.canBecomeKey)
     }
 
+    func testApplyHideFromSharingUpdatesEveryNoticePanelLive() {
+        _ = NSApplication.shared
+        let shared = NoticePanel(layer: .floating, hideFromSharing: false)
+        let hidden = NoticePanel(layer: .normal, hideFromSharing: true)
+        let other = NSWindow(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
+        other.isReleasedWhenClosed = false
+        defer { shared.close(); hidden.close(); other.close() }
+        let otherBefore = other.sharingType
+
+        NoticePanel.applyHideFromSharing(true, to: [shared, hidden, other])
+        XCTAssertEqual(shared.sharingType, .none)
+        XCTAssertEqual(hidden.sharingType, .none)
+        XCTAssertEqual(other.sharingType, otherBefore, "a window that is not a notice panel is left alone")
+
+        NoticePanel.applyHideFromSharing(false, to: [shared, hidden, other])
+        XCTAssertEqual(shared.sharingType, .readOnly)
+        XCTAssertEqual(hidden.sharingType, .readOnly)
+    }
+
     func testTakesFocusPanelCanBecomeKey() {
         _ = NSApplication.shared
         let panel = NoticePanel(layer: .floating, hideFromSharing: false, takesFocus: true)

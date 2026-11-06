@@ -427,6 +427,38 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertEqual(env.toast.shownIDs, ["a"])
     }
 
+    /// The host refused the change the user made (the daemon said the notice
+    /// is finished, or it was unreachable): the id must not stay suppressed,
+    /// so the next reconcile shows what the host still calls active.
+    func testActionNotAppliedLetsTheNextReconcileShowTheCardAgain() {
+        let env = harness()
+        let shown = notice("a", at: env.clock)
+        env.center.receive(shown)
+        env.center.archive(id: "a")
+        env.center.reconcile(active: [shown])
+        XCTAssertTrue(env.toast.shownIDs.isEmpty, "still suppressed before the refusal")
+
+        env.center.actionNotApplied(id: "a")
+        env.center.reconcile(active: [shown])
+
+        XCTAssertEqual(env.toast.shownIDs, ["a"])
+    }
+
+    func testActionNotAppliedForgetsAnUntilBackSnooze() {
+        let readings = IdleReadings([301, 1])
+        let idle = IdleMonitor(idleSeconds: readings.next, threshold: 300, poll: 15)
+        let env = harness(idle: idle)
+        env.center.receive(notice("a", at: env.clock))
+        env.center.snooze(id: "a", option: .untilBack)
+
+        env.center.actionNotApplied(id: "a")
+        idle.step()
+        idle.step()
+
+        XCTAssertFalse(env.center.hasUntilBackNotices)
+        XCTAssertFalse(env.handler.calls.contains(.setState("a", .unread)), "a refused snooze is not woken")
+    }
+
     func testActedIDIsForgottenWhenItLeavesTheActiveList() {
         let env = harness()
         let shown = notice("a", at: env.clock)
