@@ -375,6 +375,21 @@ describe('topic list filter', () => {
     expect(rowLabels()).toEqual([expect.stringContaining('Beta')])
   })
 
+  it('live leaves Return to the host, with the field still open and focused', () => {
+    const onKeyDown = vi.fn((e: { defaultPrevented: boolean }) => e.defaultPrevented)
+    render(
+      <div onKeyDown={(e) => onKeyDown(e)}>
+        <TopicRail {...props} search={{ live: true }} />
+      </div>,
+    )
+    fireEvent.click(filterButton())
+    const box = screen.getByRole('searchbox')
+    fireEvent.change(box, { target: { value: 'beta' } })
+    fireEvent.keyDown(box, { key: 'Enter' })
+    expect(onKeyDown).toHaveLastReturnedWith(false)
+    expect(screen.getByRole('searchbox')).toHaveFocus()
+  })
+
   it('live keeps the selected row whatever the query, and says when nothing matches', () => {
     render(<TopicRail {...props} selectedId="c" search={{ live: true }} />)
     fireEvent.click(filterButton())

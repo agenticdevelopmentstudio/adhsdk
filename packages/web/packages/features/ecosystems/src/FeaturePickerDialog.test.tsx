@@ -221,6 +221,15 @@ describe('FeaturePickerDialog — Enter-to-confirm ignores IME composition', () 
     expect(screen.getByText('Add 1 feature?')).toBeInTheDocument()
   })
 
+  it('keeps the filter field open through Enter, so the picker keyboard still works after a cancel', () => {
+    renderPicker()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Research' }))
+    fireEvent.keyDown(filterField(), { key: 'Enter' })
+    // The rail used to close its live field on Return: the arrows, Space and Return are wired to it.
+    // (The confirm hides the picker from the accessibility tree while it is up.)
+    expect(screen.getByRole('searchbox', { name: 'Filter features', hidden: true })).toBeInTheDocument()
+  })
+
   it('does not open the confirm on an Enter that is composing an IME candidate', () => {
     renderPicker()
     fireEvent.click(screen.getByRole('checkbox', { name: 'Research' }))
