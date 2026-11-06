@@ -29,6 +29,22 @@ function section(data: Record<string, unknown>): Record<string, unknown> {
   return object({ data: { anyOf: [data, { type: 'null' }] }, error: nullableStr, updatedAt: nullableStr });
 }
 
+function nullable(schema: Record<string, unknown>): Record<string, unknown> {
+  return { anyOf: [schema, { type: 'null' }] };
+}
+
+function described(schema: Record<string, unknown>, description: string): Record<string, unknown> {
+  return { ...schema, description };
+}
+
+/** A map from site name to `schema`. */
+function bySite(schema: unknown): Record<string, unknown> {
+  return { type: 'object', additionalProperties: schema };
+}
+
+const nullableNums = { type: 'array', items: nullableNum };
+const vitalRating = { type: ['string', 'null'], enum: ['good', 'fair', 'poor', null] };
+
 export const dashboardSchemas: Schemas = {
   SiteHealthRow: object({ host: str, errors: num, requests: num, failures: num, p95Ms: nullableNum }),
   DashboardMarginal: object({ name: str, pageviews: num }),
@@ -82,7 +98,124 @@ export const dashboardSchemas: Schemas = {
     total: num,
     groups: list(ref('RuntimeErrorGroup')),
   }),
+
+  // ── views: what the pages draw, derived on the server (src/telemetry/dashboard/views.ts) ──
+  RatedHealth: described(
+    object({ host: str, errors: num, requests: num, failures: num, p95Ms: nullableNum, failureRateHigh: bool }),
+    'A site\'s health, its hosts joined (counts add, p95 is the worse). `failureRateHigh`: failures/requests is at or above 5%.',
+  ),
+  ChartSeries: described(
+    object({ labels: strs, posthog: nullable(nullableNums), vercel: nullable(nullableNums) }),
+    'Pageviews per bucket from each provider on the union of their axes. A null provider has not seen it; a null value is a bucket it has not reached.',
+  ),
+  JoinedSite: described(
+    object({
+      key: str,
+      posthog: nullable(object({ pageviews: num, sessions: num, series: nums })),
+      vercel: nullable(object({ project: str, pageviews: num, visitors: num, series: nums })),
+      health: nullable(ref('RatedHealth')),
+    }),
+    'One site across both providers, never summed. Null means that provider has not seen the site.',
+  ),
+  RatedVitalsRow: described(
+    object({
+      host: str,
+      samples: num,
+      lcp: nullableNum,
+      inp: nullableNum,
+      cls: nullableNum,
+      fcp: nullableNum,
+      site: str,
+      ratings: object({ lcp: vitalRating, inp: vitalRating, cls: vitalRating, fcp: vitalRating }),
+    }),
+    'One host\'s web vitals, rated against Google\'s Core Web Vitals boundaries (null: not measured).',
+  ),
+  SectionFailure: described(
+    object({ source: { type: 'string', enum: ['PostHog', 'Vercel'] }, what: strs, error: str }),
+    'Sections of one source that could not be read at all, failing with the same error.',
+  ),
+  SiteReport: described(
+    object({
+      posthog: nullable(object({ pageviews: num, sessions: num })),
+      vercel: nullable(object({ pageviews: num, visitors: num })),
+      health: nullable(ref('RatedHealth')),
+      pageviews: nullable(ref('ChartSeries')),
+      breakdowns: list(
+        object({
+          topic: { type: 'string', enum: ['pages', 'countries', 'referrers', 'devices', 'browsers'] },
+          posthog: nullable(marginalList()),
+          vercel: nullable(marginalList()),
+        }),
+      ),
+      projects: list(
+        object({ project: str, domain: nullableStr, analyticsOn: bool, pageviews: nullableNum, visitors: nullableNum }),
+      ),
+      vercelIncomplete: bool,
+      vitals: list(ref('RatedVitalsRow')),
+      empty: bool,
+    }),
+    'What one site has, and only that: an absent figure is null or empty. `empty` says nothing has anything to draw.',
+  ),
+  AnalyticsViews: described(
+    object({
+      sites: strs,
+      joined: list(ref('JoinedSite')),
+      pageviews: ref('ChartSeries'),
+      pages: nullable(marginalList()),
+      dimensions: nullable(
+        object({ country: marginalList(), device: marginalList(), browser: marginalList(), referrer: marginalList() }),
+      ),
+      vercelProjects: nullable(list(object({ site: str, project: str, pageviews: num, visitors: num }))),
+      vercelBreakdowns: nullable(
+        object({ countries: marginalList(), referrers: marginalList(), paths: marginalList(), devices: marginalList() }),
+      ),
+      vitals: nullable(list(ref('RatedVitalsRow'))),
+      siteReports: bySite(ref('SiteReport')),
+      failures: list(ref('SectionFailure')),
+    }),
+    'Everything the Analytics pages draw, derived from `sections`: the joined site list and table, the all-sites ' +
+      'chart and breakdowns, rated vitals, each site\'s report, and which configured sections could not be read.',
+  ),
+  ErrorsSiteReport: described(
+    object({
+      health: nullable(ref('RatedHealth')),
+      chart: nullable(object({ buckets: strs, errors: nums, failures: nums })),
+      errors: list(
+        object({
+          host: str,
+          name: str,
+          feature: nullableStr,
+          step: nullableStr,
+          boundary: nullableStr,
+          page: nullableStr,
+          count: num,
+          lastSeen: nullableStr,
+          id: str,
+        }),
+      ),
+      requests: list(
+        object({ host: str, status: num, method: nullableStr, path: str, count: num, lastSeen: nullableStr, id: str }),
+      ),
+      empty: bool,
+    }),
+    'One site\'s errors page, its hosts joined; rows commonest first, each with the identity it was merged on.',
+  ),
+  ErrorsViews: described(
+    object({
+      sites: strs,
+      mostErrors: list(ref('RatedHealth')),
+      mostErrorsLimit: num,
+      siteReports: bySite(ref('ErrorsSiteReport')),
+      siteFailures: list(ref('SectionFailure')),
+    }),
+    'What the Errors pages draw from PostHog\'s per-site sections: the site list, the sites with the most errors, ' +
+      'each site\'s report, and which sections could not be read.',
+  ),
 };
+
+function marginalList(): Record<string, unknown> {
+  return list(ref('DashboardMarginal'));
+}
 
 const siteHealth = ref('SiteHealthRow');
 const marginals = list(ref('DashboardMarginal'));
@@ -114,6 +247,7 @@ const analyticsSections = object({
       projectsTotal: num,
       projectsEnabled: num,
       failed: num,
+      incomplete: num,
       roster: list(
         object({ project: str, domain: nullableStr, analyticsOn: bool, pageviews: nullableNum, visitors: nullableNum }),
       ),
@@ -131,6 +265,7 @@ const analyticsSections = object({
           referrers: marginals,
           paths: marginals,
           devices: marginals,
+          incomplete: bool,
         }),
       ),
     }),
@@ -184,6 +319,7 @@ export const dashboardPaths: Paths = {
             range: str,
             configured: object({ posthog: bool, vercel: bool }),
             sections: analyticsSections,
+            views: ref('AnalyticsViews'),
           }),
         ),
         ...errors(400, 401),
@@ -204,6 +340,7 @@ export const dashboardPaths: Paths = {
             refreshing: bool,
             configured: object({ glitchtip: bool, posthog: bool, vercel: bool }),
             sections: errorsSections,
+            views: ref('ErrorsViews'),
           }),
         ),
         ...errors(401),

@@ -36,8 +36,8 @@ const COMPLETE_HOLD_MS = 2000;
 export function useBuildProgress(activity: ActivityRow[]): BuildProgress {
   const [cohort, setCohort] = useState<ReadonlySet<string>>(() => new Set());
 
-  // A build is in-flight exactly while the SERVER says it is: `tone === "progress"`
-  // on a deploy/build row. The client does not get a vote.
+  // A build is in-flight exactly while the SERVER says it is: the row's `buildInFlight`
+  // verdict (`isBuildInFlight`, src/board/view.ts). The client does not get a vote.
   //
   // This used to AND in a second term — `nowMs - Date.parse(a.at) < UNCONFIRMED_AFTER_MS`
   // — a private 10-minute clock that re-judged a verdict the server had already made,
@@ -55,8 +55,7 @@ export function useBuildProgress(activity: ActivityRow[]): BuildProgress {
   // completing. That is the honest render — the build has not finished — and it now
   // ends the moment the row beside it stops saying "building", which is the only
   // behaviour a viewer can reconcile.
-  const isInFlightBuild = (a: ActivityRow): boolean =>
-    a.kind === "deploy" && a.step === "build" && a.tone === "progress";
+  const isInFlightBuild = (a: ActivityRow): boolean => a.buildInFlight === true;
   const inFlight = new Set(activity.filter(isInFlightBuild).map((a) => a.id));
   const inFlightKey = [...inFlight].sort().join("|");
 

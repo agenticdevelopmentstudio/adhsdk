@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { DeploymentDTO } from "../types";
+import type { DeploymentDTO } from "../src/monitor/types";
 
 // The endpoint shape the deploy-view helpers are exercised against. Local to this
 // test: the roster type it mirrors is HOST data, not something this package ships.
@@ -17,9 +17,14 @@ interface ServiceEndpoint {
 import {
   summarizeByPlatform,
   deploysForEndpoint,
+  endpointDeploys,
   latestTerminalForEndpoint,
   failuresForEndpoint,
-} from "./deploy-view";
+} from "../src/monitor/overview";
+
+// Ported from status-web's deploy-view tests when the per-platform summary and the
+// endpoint→deploy correlation moved here: `/live` now publishes `platformSummary` and each
+// service's `deployIds` / `latestTerminalDeployId` / `deployFailures`.
 
 const NOW = Date.parse("2026-06-12T12:00:00.000Z");
 
@@ -28,6 +33,7 @@ function deploy(overrides: Partial<DeploymentDTO> & { status: DeploymentDTO["sta
     id: "test-id",
     platform: "vercel",
     projectName: "test-project",
+    providerProjectId: null,
     buildPhase: null,
     deployPhase: "none",
     environment: "production",
@@ -250,5 +256,23 @@ describe("failuresForEndpoint", () => {
       deploy({ platform: "vercel", projectName: "hub-production", status: "canceled", createdAt: "2024-01-02T00:00:00Z" }),
     ];
     expect(failuresForEndpoint(deploys, ep)).toBe(0);
+  });
+});
+
+describe("endpointDeploys (what /live publishes per service)", () => {
+  it("lists the endpoint's deploy ids newest first, its latest settled outcome, and its failures", () => {
+    const ep = endpoint({ slug: "hub-production", environment: "production", platform: "vercel", deployProject: "hub-production" });
+    const deploys = [
+      deploy({ id: "old", platform: "vercel", projectName: "hub-production", status: "failed", createdAt: "2024-01-01T00:00:00Z" }),
+      deploy({ id: "mid", platform: "vercel", projectName: "hub-production", status: "success", createdAt: "2024-01-02T00:00:00Z" }),
+      deploy({ id: "new", platform: "vercel", projectName: "hub-production", status: "building", createdAt: "2024-01-03T00:00:00Z" }),
+      deploy({ id: "other", platform: "vercel", projectName: "elsewhere", status: "failed", createdAt: "2024-01-04T00:00:00Z" }),
+    ];
+    expect(endpointDeploys(deploys, ep)).toEqual({ deployIds: ["new", "mid", "old"], latestTerminalDeployId: "mid", deployFailures: 1 });
+  });
+
+  it("is empty for an endpoint wired to no deploy target", () => {
+    const ep = endpoint({ slug: "x", environment: "production" });
+    expect(endpointDeploys([deploy({ status: "failed" })], ep)).toEqual({ deployIds: [], latestTerminalDeployId: null, deployFailures: 0 });
   });
 });

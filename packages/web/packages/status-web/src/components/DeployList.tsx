@@ -1,30 +1,27 @@
 "use client";
 import type { ReactElement } from "react";
-import type { DeploymentDTO, DeployStatus } from "../types";
+import type { DeployStatus } from "../types";
+import type { LiveDeploymentDTO } from "../lib/live-types";
 import { platformGlyph, deployStatusColor, deployStatusLabel } from "../lib/deploy-display";
-import { deployDtoUnconfirmed } from "../lib/row-model";
 import { shortSha } from "../lib/format";
 import { timeAgo } from "../lib/time-ago";
 import { useNow } from "../hooks/use-now";
 
 import { COLORS, PALETTE, TINT } from "../lib/colors";
 export interface DeployListProps {
-  deploys: DeploymentDTO[];
-  /** Backend probe cadence (snapshot.probeIntervalMs) — scales the demotion window so
-   *  a stale in-flight deploy greys to "outcome unknown" in lockstep with the activity list. */
-  probeIntervalMs?: number;
+  deploys: LiveDeploymentDTO[];
 }
 
-export function DeployList({ deploys, probeIntervalMs }: DeployListProps): ReactElement | null {
+export function DeployList({ deploys }: DeployListProps): ReactElement | null {
   const nowMs = useNow();
   if (deploys.length === 0) return null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0, overflow: "hidden" }}>
       {deploys.map((d) => {
-        // An in-flight deploy nothing has re-confirmed demotes to a muted "outcome
-        // unknown" — same rule the activity list applies — instead of asserting building.
-        const status: DeployStatus = deployDtoUnconfirmed(d, nowMs, probeIntervalMs) ? "unknown" : d.status;
+        // The server's `effectiveStatus`: an in-flight deploy nothing has re-confirmed
+        // already reads "unknown" there, so this never asserts building on nothing.
+        const status: DeployStatus = d.effectiveStatus;
         const isIssue = status === "failed" || status === "building";
         const color = deployStatusColor(status);
         const label = deployStatusLabel(status);

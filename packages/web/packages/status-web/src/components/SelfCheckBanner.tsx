@@ -2,17 +2,17 @@
 import type { ReactElement } from "react";
 import { cn } from "@adh-sdk/ui/lib/utils";
 import type { IntegrationsResponse } from "../types";
-import { computeSelfCheck } from "../lib/self-check";
 
 export interface SelfCheckBannerProps {
   data: IntegrationsResponse | undefined;
 }
 
 export function SelfCheckBanner({ data }: SelfCheckBannerProps): ReactElement | null {
-  const view = computeSelfCheck(data);
+  // The server judges which checks the bar lists and whether it goes red (`selfCheck`,
+  // null when all is well); the KPI pill reads the same view's `issueCount`.
+  const view = data?.selfCheck;
   if (!view) return null;
-  const { missingEnv, missingEnvError, issues, hasError } = view;
-  const count = issues.length + missingEnv.length;
+  const { missingEnv, missingEnvError, issues, hasError, issueCount: count } = view;
 
   return (
     <div

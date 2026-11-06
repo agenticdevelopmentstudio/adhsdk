@@ -8,26 +8,45 @@ import { StatusHostProvider } from "./StatusHost";
 // environment variable or a built-in hostname — the package must not know where a
 // deployment's GlitchTip or PostHog live. Both cards, both directions.
 
-const telemetry = vi.hoisted(() => ({ errors: [] as unknown[], errorsFrozen: undefined as boolean | undefined }));
+const telemetry = vi.hoisted(() => ({
+  errors: [] as unknown[],
+  errorsFrozen: undefined as boolean | undefined,
+  errorsSummary: undefined as unknown,
+}));
 
 vi.mock("../hooks/use-telemetry", () => ({
-  useTelemetry: () => ({ errors: telemetry.errors, errorsFrozen: telemetry.errorsFrozen, analytics: [], stale: false, offline: false }),
+  useTelemetry: () => ({
+    errors: telemetry.errors,
+    errorsFrozen: telemetry.errorsFrozen,
+    errorsSummary: telemetry.errorsSummary,
+    analytics: [],
+    stale: false,
+    offline: false,
+  }),
 }));
 
 afterEach(() => {
   cleanup();
   telemetry.errors = [];
   telemetry.errorsFrozen = undefined;
+  telemetry.errorsSummary = undefined;
 });
 
-function issue(id: string, level: string, hoursAgo: number, count: number): unknown {
+function issue(id: string, level: string, hoursAgo: number, count: number, active = hoursAgo < 24): { count: number; active: boolean } {
   const seen = new Date(Date.now() - hoursAgo * 3_600_000).toISOString();
-  return { id, issueKey: id, project: "adh", title: `Issue ${id}`, culprit: null, level, count, userCount: 0, firstSeen: seen, lastSeen: seen, permalink: null };
+  return { id, issueKey: id, project: "adh", title: `Issue ${id}`, culprit: null, level, count, userCount: 0, firstSeen: seen, lastSeen: seen, permalink: null, active } as never;
+}
+
+/** The snapshot's `errorsSummary`, stated as the SERVER publishes it
+ *  (src/telemetry/errors-summary.ts) — the card renders it and derives nothing. */
+function summary(active: { count: number }[], backlog: number, events: number): unknown {
+  return { active: active.length, backlog, events, top: active };
 }
 
 describe("the Errors card", () => {
   it("stays calm over a backlog: old issues are counted but raise no alarm", () => {
-    telemetry.errors = [issue("old", "error", 72, 500), issue("warn", "warning", 1, 40)];
+    telemetry.errors = [issue("old", "error", 72, 500), issue("warn", "warning", 1, 40, false)];
+    telemetry.errorsSummary = summary([], 2, 540);
     render(<ErrorsCard />);
     expect(screen.getByText("✓ No errors in the last 24h")).toBeTruthy();
     expect(screen.queryByText("Issue old")).toBeNull();
@@ -36,27 +55,32 @@ describe("the Errors card", () => {
   });
 
   it("lists only what is active, largest first", () => {
-    telemetry.errors = [issue("small", "error", 1, 3), issue("big", "fatal", 2, 30), issue("old", "error", 72, 500)];
+    const small = issue("small", "error", 1, 3);
+    const big = issue("big", "fatal", 2, 30);
+    telemetry.errors = [small, big, issue("old", "error", 72, 500)];
+    telemetry.errorsSummary = summary([big, small], 1, 533);
     render(<ErrorsCard />);
     expect(screen.queryByText("✓ No errors in the last 24h")).toBeNull();
     expect(screen.queryByText("Issue old")).toBeNull();
-    const big = screen.getByText("Issue big");
-    const small = screen.getByText("Issue small");
-    expect(big.compareDocumentPosition(small) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const bigRow = screen.getByText("Issue big");
+    const smallRow = screen.getByText("Issue small");
+    expect(bigRow.compareDocumentPosition(smallRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByText("active · 24h").parentElement?.textContent).toContain("2");
   });
 
   it("takes the backend's verdict over its own reading of level and time", () => {
     // A fresh error from a project GLITCHTIP_PROJECTS leaves out: the board raises nothing for it.
-    telemetry.errors = [{ ...(issue("scratch", "error", 1, 9) as object), active: false }];
+    telemetry.errors = [issue("scratch", "error", 1, 9, false)];
+    telemetry.errorsSummary = summary([], 1, 9);
     render(<ErrorsCard />);
     expect(screen.queryByText("Issue scratch")).toBeNull();
     expect(screen.getByText("active · 24h").parentElement?.textContent).toContain("0");
   });
 
   it("makes no all-clear while GlitchTip can't be read, and says why", () => {
-    telemetry.errors = [{ ...(issue("old", "warning", 72, 5) as object), active: false }];
+    telemetry.errors = [issue("old", "warning", 72, 5)];
     telemetry.errorsFrozen = true;
+    telemetry.errorsSummary = summary([], 1, 5);
     render(<ErrorsCard />);
     expect(screen.queryByText("✓ No errors in the last 24h")).toBeNull();
     expect(screen.getByText(/GlitchTip can.t be read right now/)).toBeTruthy();

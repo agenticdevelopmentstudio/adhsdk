@@ -3,7 +3,21 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { OverviewTab } from "./OverviewTab";
-import { BOARD_STALE_MS, boardDataStaleMs } from "../lib/board-staleness";
+
+/** The verdict fields `GET /board` publishes beside its lists (src/board/view.ts). The
+ *  fixtures state them outright: the client reads them and derives none of them. */
+function verdicts(state: "current" | "frozen" | "no-data" = "current", staleAt = inFuture()) {
+  return {
+    freshness: { state, staleAt, pollIntervalMs: 60_000 },
+    deployCounts: { builds: 0, deploys: 0, failures: 0 },
+    scope: { environments: null, indicator: "operational", problemCount: 0, endpoints: { total: 0, healthy: 0 } },
+  };
+}
+/** A read deadline the client's clock has not reached / has already passed. */
+function inFuture(): string { return new Date(Date.now() + 180_000).toISOString(); }
+function inPast(): string { return new Date(Date.now() - 5_000).toISOString(); }
+/** Long enough ago that nothing could call it current. */
+const LONG_AGO_MS = 20 * 60_000;
 
 // Everything below mocks a DATA-FETCHING dependency OverviewTab pulls in besides the
 // board — the point of this file is the board-unreadable branch (CRITICAL 1), not
@@ -120,13 +134,14 @@ describe("OverviewTab — board unreadable (C1)", () => {
 // what they assert because OverviewTab's `!board` branch already covered this panel;
 // only the mechanism producing `board === null` moved.
 describe("OverviewTab — board frozen by a persistent failure (Fix Round 2 item 3, folded into useBoard in Round 3)", () => {
-  it("a board whose generatedAt is past the stale window renders unknown, not its last verdict", async () => {
+  it("a board past the server's read deadline renders unknown, not its last verdict", async () => {
     mobile.current = false;
     const staleBoard = {
-      generatedAt: new Date(Date.now() - BOARD_STALE_MS - 5_000).toISOString(),
+      generatedAt: new Date(Date.now() - LONG_AGO_MS).toISOString(),
       // Its DATA was current as of its own derivation — the read itself is what stopped
       // arriving, so this exercises `stale` and not group 6's `frozen`.
-      dataAsOfMs: Date.now() - BOARD_STALE_MS - 5_000,
+      dataAsOfMs: Date.now() - LONG_AGO_MS,
+      ...verdicts("current", inPast()),
       indicator: "operational",
       problems: [],
       activity: [],
@@ -146,6 +161,7 @@ describe("OverviewTab — board frozen by a persistent failure (Fix Round 2 item
     const freshBoard = {
       generatedAt: new Date().toISOString(),
       dataAsOfMs: Date.now(),
+      ...verdicts(),
       indicator: "operational",
       problems: [],
       activity: [],
@@ -166,10 +182,11 @@ describe("OverviewTab — board frozen by a persistent failure (Fix Round 2 item
 // staleness rule above is structurally blind to it. This is the same false claim of
 // health from an absence of data as C1, arriving through a different door.
 describe("OverviewTab — the monitor is wedged (Fix Round 4 group 6)", () => {
-  function wedged(dataAsOfMs: number | null) {
+  function wedged(dataAsOfMs: number | null, state: "current" | "frozen" | "no-data") {
     return {
       generatedAt: new Date().toISOString(), // brand new — the READ is perfectly healthy
       dataAsOfMs,
+      ...verdicts(state),
       indicator: "operational",
       problems: [],
       activity: [],
@@ -179,7 +196,7 @@ describe("OverviewTab — the monitor is wedged (Fix Round 4 group 6)", () => {
 
   it("a fresh board over data older than the window renders unknown, not ALL SYSTEMS OPERATIONAL", async () => {
     mobile.current = true; // the mobile hero is where "ALL SYSTEMS OPERATIONAL" is shouted
-    renderWithBoardFetch(async () => new Response(JSON.stringify(wedged(Date.now() - boardDataStaleMs() - 5_000)), {
+    renderWithBoardFetch(async () => new Response(JSON.stringify(wedged(Date.now() - LONG_AGO_MS, "frozen")), {
       status: 200, headers: { "content-type": "application/json" },
     }));
 
@@ -194,7 +211,7 @@ describe("OverviewTab — the monitor is wedged (Fix Round 4 group 6)", () => {
 
   it("a board resting on NO observations at all, with endpoints to watch, renders unknown", async () => {
     mobile.current = false; // desktop: the empty Problems list is where the lie would be
-    renderWithBoardFetch(async () => new Response(JSON.stringify(wedged(null)), {
+    renderWithBoardFetch(async () => new Response(JSON.stringify(wedged(null, "no-data")), {
       status: 200, headers: { "content-type": "application/json" },
     }));
 
@@ -208,7 +225,7 @@ describe("OverviewTab — the monitor is wedged (Fix Round 4 group 6)", () => {
 
   it("a board whose data is current renders the normal panels — the guard is not a blanket veto", async () => {
     mobile.current = false;
-    renderWithBoardFetch(async () => new Response(JSON.stringify(wedged(Date.now() - 1_000)), {
+    renderWithBoardFetch(async () => new Response(JSON.stringify(wedged(Date.now() - 1_000, "current")), {
       status: 200, headers: { "content-type": "application/json" },
     }));
 
@@ -223,10 +240,11 @@ describe("OverviewTab — the monitor is wedged (Fix Round 4 group 6)", () => {
 // first, so the actionable "no endpoints configured" panel became unreachable for exactly
 // the roster it was written for. The two states must render differently.
 describe("OverviewTab — an empty roster is a config fault, not a wedged monitor (C3)", () => {
-  function board(dataAsOfMs: number | null) {
+  function board(dataAsOfMs: number | null, state: "current" | "frozen" | "no-data", staleAt = inFuture()) {
     return {
       generatedAt: new Date().toISOString(),
       dataAsOfMs,
+      ...verdicts(state, staleAt),
       indicator: "operational",
       problems: [],
       activity: [],
@@ -237,7 +255,7 @@ describe("OverviewTab — an empty roster is a config fault, not a wedged monito
   it("no endpoints AND no observations reaches the actionable blind panel", async () => {
     mobile.current = false;
     blind.current = true; // the live snapshot monitored NOTHING
-    renderWithBoardFetch(async () => new Response(JSON.stringify(board(null)), {
+    renderWithBoardFetch(async () => new Response(JSON.stringify(board(null, "no-data")), {
       status: 200, headers: { "content-type": "application/json" },
     }));
 
@@ -256,7 +274,7 @@ describe("OverviewTab — an empty roster is a config fault, not a wedged monito
     // Platform samples exist (a fleet can have integrations and no HTTP endpoints) and
     // have stopped moving. `blind` must NOT mask that: a wedged monitor is a stronger
     // "we don't know" than a config message, and the config message would be a lie here.
-    renderWithBoardFetch(async () => new Response(JSON.stringify(board(Date.now() - boardDataStaleMs() - 5_000)), {
+    renderWithBoardFetch(async () => new Response(JSON.stringify(board(Date.now() - LONG_AGO_MS, "frozen")), {
       status: 200, headers: { "content-type": "application/json" },
     }));
 
@@ -268,8 +286,8 @@ describe("OverviewTab — an empty roster is a config fault, not a wedged monito
   it("an empty roster with a READ that stopped arriving still reaches the stale panel", async () => {
     mobile.current = false;
     blind.current = true;
-    const stale = { ...board(Date.now() - BOARD_STALE_MS - 5_000),
-                    generatedAt: new Date(Date.now() - BOARD_STALE_MS - 5_000).toISOString() };
+    const stale = { ...board(Date.now() - LONG_AGO_MS, "current", inPast()),
+                    generatedAt: new Date(Date.now() - LONG_AGO_MS).toISOString() };
     renderWithBoardFetch(async () => new Response(JSON.stringify(stale), {
       status: 200, headers: { "content-type": "application/json" },
     }));
@@ -280,14 +298,19 @@ describe("OverviewTab — an empty roster is a config fault, not a wedged monito
 });
 
 // Recent Activity's gear "Filter" section: the one checkbox narrows the pane to rows
-// still in flight or failed, keyed off the server's tone rather than the verb text.
+// still in flight or failed — the server's `unresolved` verdict on each row — and the
+// server's `running` verdict orders them.
 describe("OverviewTab — Recent Activity 'in progress or failed only' filter", () => {
-  function activityRow(id: string, name: string, verb: string, tone: string, at = new Date().toISOString()) {
+  function activityRow(
+    id: string, name: string, verb: string, tone: string, at = new Date().toISOString(),
+    flags: { unresolved?: boolean; running?: boolean } = {},
+  ) {
     return {
       id, kind: "deploy", step: "build", source: "vercel", tone, verb,
       target: `vercel:${name}`, name, environment: "production", detail: null,
       sourceUrl: null, liveUrl: null, commitHash: null, commitMessage: null,
       commitRepo: null, branch: null, errorText: null, at,
+      unresolved: flags.unresolved ?? false, running: flags.running ?? false, buildInFlight: false,
     };
   }
 
@@ -305,13 +328,14 @@ describe("OverviewTab — Recent Activity 'in progress or failed only' filter", 
     const withActivity = {
       generatedAt: new Date().toISOString(),
       dataAsOfMs: Date.now(),
+      ...verdicts(),
       indicator: "operational",
       // site-failed is still broken (its target is a live problem); site-recovered failed
       // and has since recovered (no problem), so it is a resolved failure and must not show.
       problems: [problem("vercel:site-failed", "site-failed")],
       activity: [
-        activityRow("a", "site-queued", "queued", "progress"),
-        activityRow("b", "site-failed", "build failed", "bad"),
+        activityRow("a", "site-queued", "queued", "progress", undefined, { unresolved: true }),
+        activityRow("b", "site-failed", "build failed", "bad", undefined, { unresolved: true }),
         activityRow("e", "site-recovered", "build failed", "bad"),
         activityRow("c", "site-done", "deployed", "good"),
         activityRow("d", "site-stale", "unknown", "stale"),
@@ -350,13 +374,14 @@ describe("OverviewTab — Recent Activity 'in progress or failed only' filter", 
     const board = {
       generatedAt: new Date().toISOString(),
       dataAsOfMs: Date.now(),
+      ...verdicts(),
       indicator: "operational",
       problems: [],
       activity: [
-        activityRow("b1", "site-building", "building", "progress", t(30)),
-        activityRow("d1", "site-deploying", "deploying", "progress", t(25)),
-        activityRow("q1", "site-q1", "queued", "progress", t(20)),
-        activityRow("q2", "site-q2", "queued", "progress", t(10)),
+        activityRow("b1", "site-building", "building", "progress", t(30), { unresolved: true, running: true }),
+        activityRow("d1", "site-deploying", "deploying", "progress", t(25), { unresolved: true, running: true }),
+        activityRow("q1", "site-q1", "queued", "progress", t(20), { unresolved: true }),
+        activityRow("q2", "site-q2", "queued", "progress", t(10), { unresolved: true }),
       ],
       monitoredTargets: [],
     };

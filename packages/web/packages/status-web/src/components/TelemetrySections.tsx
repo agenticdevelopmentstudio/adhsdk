@@ -6,9 +6,7 @@ import { StatCard } from "@adh-sdk/ui/blocks/stat-card";
 import { StatList, StatListRow } from "@adh-sdk/ui/blocks/stat-list";
 import { ExternalLink } from "@adh-sdk/ui/components/external-link";
 import { type StatusDotTone } from "@adh-sdk/ui/components/status-dot";
-import { useNow } from "../hooks/use-now";
 import { useTelemetry } from "../hooks/use-telemetry";
-import { isActiveError } from "../lib/error-activity";
 import { useStatusHost } from "./StatusHost";
 import type { AnalyticsMetricDTO } from "../telemetry/types";
 
@@ -55,28 +53,24 @@ function IssueLink({ href, title }: { href: string | undefined; title: string })
  * neutral tone, and the Errors topic lists it.
  */
 export function ErrorsCard(): ReactElement {
-  const { errors, errorsFrozen } = useTelemetry();
-  const now = useNow();
+  const { errors, errorsFrozen, errorsSummary: summary } = useTelemetry();
   const { glitchtipUrl } = useStatusHost();
-  // The backend marks each error with the board's own verdict (allowlist and frozen feed
-  // included). `isActiveError` covers only a cached snapshot from before it did.
-  const active = errors.filter((e) => e.active ?? isActiveError(e.level, e.lastSeen, now));
-  const totalEvents = errors.reduce((s, e) => s + (e.count || 0), 0);
-  // Sort by event count desc so the shown "top 5" actually matches the prominent
-  // {count}× label — the feed arrives in GlitchTip's last-seen order, not by volume.
-  const top = [...active].sort((a, b) => b.count - a.count).slice(0, 5);
+  // Every figure here is the server's (`errorsSummary`): which issues are active (the
+  // board's own verdict), the backlog, the event total and the loudest few. A snapshot
+  // without it — a cached one from an older backend — claims nothing either way.
+  const activeCount = summary?.active ?? 0;
 
   return (
     <StatCard
       title="Errors"
-      icon={<Bug size={15} className={active.length > 0 ? "text-apt-red" : "text-apt-text-muted"} />}
+      icon={<Bug size={15} className={activeCount > 0 ? "text-apt-red" : "text-apt-text-muted"} />}
       link={glitchtipUrl ? { href: glitchtipUrl, label: "GlitchTip" } : undefined}
       stats={
-        errors.length > 0
+        summary && errors.length > 0
           ? [
-              { label: "active · 24h", value: String(active.length), tone: active.length > 0 ? "error" : undefined },
-              { label: "backlog", value: String(errors.length - active.length) },
-              { label: "events · all unresolved", value: COMPACT.format(totalEvents) },
+              { label: "active · 24h", value: String(summary.active), tone: summary.active > 0 ? "error" : undefined },
+              { label: "backlog", value: String(summary.backlog) },
+              { label: "events · all unresolved", value: COMPACT.format(summary.events) },
             ]
           : undefined
       }
@@ -86,7 +80,7 @@ export function ErrorsCard(): ReactElement {
           GlitchTip can&apos;t be read right now; this is its last answer.
         </p>
       )}
-      {active.length === 0 ? (
+      {!summary ? null : summary.active === 0 ? (
         // An unreadable feed can't vouch for the last 24h, so it makes no all-clear.
         errorsFrozen ? null : (
           <div className="font-mono text-[13px] font-semibold text-apt-green">✓ No errors in the last 24h</div>
@@ -94,7 +88,7 @@ export function ErrorsCard(): ReactElement {
       ) : (
         // Each deep-links to its GlitchTip page (the shared status-list block).
         <StatList divided>
-          {top.map((e) => (
+          {summary.top.map((e) => (
             <StatListRow
               key={e.id}
               tone={levelTone(e.level)}

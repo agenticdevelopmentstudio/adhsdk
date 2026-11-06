@@ -1,37 +1,26 @@
 import { describe, it, expect } from "vitest";
-import * as web from "./deploy-status";
-// The SERVER's vocabulary module, imported by relative path (the two packages share no
-// build). This is the whole point of the test — pin the hand-mirror against the original.
-import * as server from "@adh-sdk/status-server/deploy-status";
+import type * as web from "./deploy-status";
+// The SERVER's vocabulary module. Type-only: the rules over these unions (phase mappings,
+// combinedStatus, in-flight, the unconfirmed demotion) live on the server alone now, so
+// what is left to hold together is the vocabulary the client renders.
+import type * as server from "@adh-sdk/status-server/deploy-status";
 
-// DRIFT GUARD. web/src/lib/deploy-status.ts is a HAND COPY of src/monitor/deploy-status.ts
-// (there is no shared package between the backend and its embedded web app). If the two
-// drift — a new in-flight phase added server-side but not here, a combinedStatus branch
-// that differs — the board silently mislabels deploys with no compile error to catch it.
-// This test imports BOTH and asserts they agree across the full phase space.
+// DRIFT GUARD. web/src/lib/deploy-status.ts mirrors the server's deploy unions by hand.
+// A union member added on one side only would mislabel deploys with no compile error, so
+// the assertions below only compile while both sides agree. The dashboard host's `web`
+// typecheck names this file under `files`, which checks the vendored pair as well.
+
+/** Mutual assignability: a union member on one side only stops this resolving to `true`. */
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
+
+const vocabularyAgrees: [
+  Exact<server.DeployStatus, web.DeployStatus>,
+  Exact<server.BuildPhase, web.BuildPhase>,
+  Exact<server.DeployPhase, web.DeployPhase>,
+] = [true, true, true];
+
 describe("deploy-status vocabulary parity (web mirrors server)", () => {
-  const BUILD_PHASES = [null, "queued", "building", "built", "failed", "canceled", "unknown"] as const;
-  const DEPLOY_PHASES = ["none", "deploying", "deployed", "failed", "unknown"] as const;
-
-  it("shares the in-flight phase vocabulary", () => {
-    expect([...web.IN_FLIGHT_BUILD_PHASES]).toEqual([...server.IN_FLIGHT_BUILD_PHASES]);
-    expect(web.IN_FLIGHT_DEPLOY_PHASE).toBe(server.IN_FLIGHT_DEPLOY_PHASE);
-  });
-
-  it("isInFlight agrees for every (build, deploy) phase pair", () => {
-    for (const b of BUILD_PHASES) {
-      for (const d of DEPLOY_PHASES) {
-        expect(web.isInFlight(b, d)).toBe(server.isInFlight(b, d));
-      }
-    }
-  });
-
-  it("combinedStatus agrees for every (build, deploy) phase pair", () => {
-    for (const b of BUILD_PHASES) {
-      for (const d of DEPLOY_PHASES) {
-        const phases = { buildPhase: b, deployPhase: d };
-        expect(web.combinedStatus(phases)).toBe(server.combinedStatus(phases));
-      }
-    }
+  it("compiles only while the unions agree", () => {
+    expect(vocabularyAgrees).toEqual([true, true, true]);
   });
 });

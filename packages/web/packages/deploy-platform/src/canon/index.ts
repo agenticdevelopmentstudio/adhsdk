@@ -2,6 +2,11 @@
 // platform/project correlation key, the project-name → environment convention, and
 // the host/project string manipulation the "Add project" planner relies on. All pure.
 
+/** The order every platform-grouped surface lists platforms in — the per-platform deploy
+ *  summary `/live` publishes and the Auto Configure review's sections — so the two never
+ *  order the same platforms differently. Platforms not listed sort after, in arrival order. */
+export const PLATFORM_ORDER: readonly string[] = ["vercel", "cloudflare-pages", "railway", "crunchy"];
+
 // The deployments table records Cloudflare as "cloudflare-pages"; config uses the
 // friendlier "cloudflare". Treat them as one platform when matching.
 export function platformCanon(p: string | null | undefined): string {

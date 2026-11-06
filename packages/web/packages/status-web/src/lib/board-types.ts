@@ -114,6 +114,38 @@ export interface ActivityRow {
   errorText: string | null;
   /** ISO time the event happened. */
   at: string;
+  /** The SERVER's verdict: a build/deploy still in flight, or a failure a live problem on
+   *  its target still carries (`isUnresolvedActivity`, src/board/view.ts). */
+  unresolved?: boolean;
+  /** In flight and past the queue (`isRunningActivity`). */
+  running?: boolean;
+  /** A build still queued or building — what the build-progress bar counts. */
+  buildInFlight?: boolean;
+}
+
+/** `Board.freshness` — mirror of src/board/view.ts `BoardFreshness`. */
+export type BoardDataFreshness = "current" | "frozen" | "no-data";
+
+export interface BoardFreshness {
+  state: BoardDataFreshness;
+  /** After this instant, with no newer read, the board can no longer back a claim. */
+  staleAt: string;
+  pollIntervalMs: number;
+}
+
+/** `Board.deployCounts` — deploy-kind rows inside the activity window. */
+export interface DeployCounts {
+  builds: number;
+  deploys: number;
+  failures: number;
+}
+
+/** `Board.scope` — the headline over the environments asked for with `?environments=`. */
+export interface BoardScope {
+  environments: string[] | null;
+  indicator: Indicator;
+  problemCount: number;
+  endpoints: { total: number; healthy: number };
 }
 
 /** The whole board. One read, one clock, one truth. */
@@ -147,6 +179,9 @@ export interface Board {
    * ledger writer needs it.
    */
   monitoredTargets: string[];
+  freshness: BoardFreshness;
+  deployCounts: DeployCounts;
+  scope: BoardScope;
 }
 
 /**

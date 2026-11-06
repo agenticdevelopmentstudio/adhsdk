@@ -1,6 +1,5 @@
 import { useLiveSnapshot } from "./use-live-snapshot";
 import { useBoard } from "./use-board";
-import { snapshotFreshness } from "../lib/snapshot-staleness";
 import { INDICATOR_STATE, type IndicatorState } from "../lib/overview";
 
 export interface PortfolioIndicator {
@@ -22,24 +21,21 @@ export function usePortfolioIndicator(): PortfolioIndicator {
   const store = useLiveSnapshot();
   const { board } = useBoard();
   // Stale snapshot data can't back a confident status claim — surface "unknown" so
-  // this pill and the /home sign AGREE with the board-wide SnapshotStaleBanner (one
-  // staleness rule, shared via snapshotFreshness) instead of showing a green
+  // this pill and the /home sign AGREE with the board-wide SnapshotStaleBanner (both
+  // read the server's `snapshot.freshness` verdict) instead of showing a green
   // "operational" over a red "monitoring paused". null lastCycleAt (no probe yet) is
   // fresh, so a healthy monitor is unaffected. This is a DIFFERENT fact from the
   // board's own staleness below: the live transport and the board poll fail
   // independently, and either one alone going stale is real information the other
   // can't stand in for.
-  const stale =
-    store.snapshot != null &&
-    snapshotFreshness(store.snapshot.lastCycleAt, store.snapshot.generatedAt, store.snapshot.probeIntervalMs) !==
-      "fresh";
+  const stale = store.snapshot != null && store.snapshot.freshness.state !== "fresh";
   // `board === null`, not a `polling` test and not a deletion: this means "nothing
   // has come back yet, do not claim a colour" — and the thing that must now have
   // come back is the board. Without it the pill would render a false green
   // "operational" off nothing before the first read lands.
   //
   // Fix Round 3 item 1: `useBoard` itself now folds a STALE board (one that arrived
-  // but hasn't refreshed in `BOARD_STALE_MS`) into this same `null`, so this hook no
+  // but has passed the server's `freshness.staleAt` deadline) into this same `null`, so this hook no
   // longer computes its own `isBoardStale` term — `board === null` already covers
   // both "never arrived" and "gone stale" by construction, the same way every other
   // consumer of `useBoard` now does. See use-board.ts.

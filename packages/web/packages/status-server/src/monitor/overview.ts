@@ -1,5 +1,6 @@
 import type { DeploymentDTO } from "./types";
-import { platformCanon, deployTargetKey } from "@adh-sdk/deploy-platform/canon";
+import { platformCanon, deployTargetKey, PLATFORM_ORDER } from "@adh-sdk/deploy-platform/canon";
+import { deployUnconfirmed } from "./live-view";
 
 export interface PlatformSummary {
   platform: string;
@@ -9,14 +10,17 @@ export interface PlatformSummary {
   total: number;
 }
 
-// Stable ordering for known platforms; unknowns go after.
-const PLATFORM_ORDER = ["vercel", "cloudflare-pages", "railway", "crunchy"];
-
 /**
- * Summarize deploys by platform.
- * status buckets: success→ready; building|queued→building; failed→failed; canceled→total only
+ * Summarize deploys by platform — the per-platform pills `/live` publishes as
+ * `platformSummary`. Buckets: success→ready; building|queued→building; failed→failed;
+ * canceled AND an unconfirmed in-flight deploy→total only.
+ *
+ * `nowMs`/`probeIntervalMs` drive the same demotion `effectiveDeployStatus` applies to each
+ * row: an in-flight deploy nothing has re-confirmed is no longer a live "building", so it
+ * drops out of the building count rather than letting the KPI pill assert progress the
+ * rest of the board has stopped asserting. (Moved here from status-web's deploy-view.)
  */
-export function summarizeByPlatform(deploys: DeploymentDTO[]): PlatformSummary[] {
+export function summarizeByPlatform(deploys: DeploymentDTO[], nowMs: number, probeIntervalMs?: number | null): PlatformSummary[] {
   const map = new Map<string, PlatformSummary>();
 
   for (const d of deploys) {
@@ -26,6 +30,7 @@ export function summarizeByPlatform(deploys: DeploymentDTO[]): PlatformSummary[]
       map.set(d.platform, entry);
     }
     entry.total++;
+    if (deployUnconfirmed(d, nowMs, probeIntervalMs)) continue; // stale in-flight → total only
     if (d.status === "success") entry.ready++;
     else if (d.status === "building" || d.status === "queued") entry.building++;
     else if (d.status === "failed") entry.failed++;
@@ -53,7 +58,7 @@ export interface EndpointLike {
 // platformCanon + deployTargetKey now live in @adh-sdk/deploy-platform/canon.
 // Imported above for use in this module; re-exported so existing `./overview`
 // importers keep their path.
-export { platformCanon, deployTargetKey };
+export { platformCanon, deployTargetKey, PLATFORM_ORDER };
 
 /**
  * All deploys wired to this endpoint — matched by the endpoint's EXPLICIT
@@ -82,4 +87,23 @@ export function latestTerminalForEndpoint(deploys: DeploymentDTO[], ep: Endpoint
 /** Returns the count of failed deploys for a specific endpoint. */
 export function failuresForEndpoint(deploys: DeploymentDTO[], ep: EndpointLike): number {
   return deploysForEndpoint(deploys, ep).filter((d) => d.status === "failed").length;
+}
+
+/** One endpoint's view of the deploy feed, as `/live` publishes it on each service: the ids
+ *  of its deploys (newest first, into `deployments`), its latest settled outcome, and how
+ *  many failed. The dashboard's matrix and detail pane read these instead of correlating
+ *  endpoints to deploys themselves. */
+export interface EndpointDeploys {
+  deployIds: string[];
+  latestTerminalDeployId: string | null;
+  deployFailures: number;
+}
+
+export function endpointDeploys(deploys: DeploymentDTO[], ep: EndpointLike): EndpointDeploys {
+  const mine = deploysForEndpoint(deploys, ep);
+  return {
+    deployIds: mine.map((d) => d.id),
+    latestTerminalDeployId: mine.find((d) => d.status === "success" || d.status === "failed")?.id ?? null,
+    deployFailures: mine.filter((d) => d.status === "failed").length,
+  };
 }

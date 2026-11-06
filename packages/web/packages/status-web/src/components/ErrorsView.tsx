@@ -11,10 +11,9 @@ import { StatusDot, type StatusDotTone } from "@adh-sdk/ui/components/status-dot
 import { ToggleGroup, ToggleGroupItem } from "@adh-sdk/ui/components/toggle-group";
 import { useErrorsDashboard } from "../hooks/use-dashboards";
 import { useNow } from "../hooks/use-now";
-import { bucketDetail, bucketLabel } from "../lib/analytics-model";
 import { ERROR_CHART_COLOR } from "../lib/colors";
-import { MOST_ERRORS_LIMIT, mostErrorSites } from "../lib/errors-model";
-import type { DashboardSections, ErrorIssue, ErrorsSectionData } from "../telemetry/dashboard-types";
+import { bucketDetail, bucketLabel } from "../lib/dashboard-format";
+import type { DashboardSections, ErrorIssue, ErrorsSectionData, ErrorsViews } from "../telemetry/dashboard-types";
 import { DashboardPanel, formatAge, WrappedCell } from "./DashboardParts";
 import { ErrorsSitePage } from "./ErrorsSitePage";
 import { useStatusHost } from "./StatusHost";
@@ -23,7 +22,12 @@ const EMPTY_SECTIONS: DashboardSections<ErrorsSectionData> = {
   issues: { data: null, error: null, updatedAt: null },
   sites: { data: null, error: null, updatedAt: null },
   detail: { data: null, error: null, updatedAt: null },
+  runtime: { data: null, error: null, updatedAt: null },
 };
+
+// Before the first answer: nothing listed, nothing failed. Nothing reads this as a verdict, because
+// every panel that draws from it is gated on its section having answered.
+const EMPTY_VIEWS: ErrorsViews = { sites: [], mostErrors: [], mostErrorsLimit: 0, siteReports: {}, siteFailures: [] };
 
 type IssueView = "active" | "backlog" | "all";
 const ISSUE_VIEWS: { id: IssueView; label: string }[] = [
@@ -112,6 +116,7 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
 
   const body = query.data;
   const sections = body?.sections ?? EMPTY_SECTIONS;
+  const views = body?.views ?? EMPTY_VIEWS;
   // A failed read keeps the last body (TanStack Query holds on to it), and that body may have
   // been taken mid-refresh: claiming it is still filling in would leave skeletons up for a
   // refresh nobody can see finish. The alert below says what happened instead.
@@ -128,7 +133,6 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
     () => sortIssues(filterIssues(issues?.issues ?? [], view, search), sort.key, sort.dir),
     [issues, view, search, sort],
   );
-  const topSites = useMemo(() => mostErrorSites(sections), [sections]);
 
   const columns: DataTableColumn<ErrorIssue>[] = [
     {
@@ -188,6 +192,7 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
               key={site}
               site={site}
               sections={sections}
+              views={views}
               posthogOn={posthogOn}
               refreshing={refreshing}
               posthogUrl={posthogUrl}
@@ -328,18 +333,18 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
                 section={sections.sites}
                 configured={posthogOn}
                 refreshing={refreshing}
-                note={`Production only. The ${MOST_ERRORS_LIMIT} sites that reported the most errors to PostHog, not GlitchTip issues: GlitchTip no longer holds the event data to attribute an issue to a site. Open one for its page.`}
+                note={`Production only. The ${views.mostErrorsLimit} sites that reported the most errors to PostHog, not GlitchTip issues: GlitchTip no longer holds the event data to attribute an issue to a site. Open one for its page.`}
               >
                 {() => (
                   <BarList
                     ariaLabel="Sites that reported the most errors, from PostHog"
-                    items={topSites.map((row) => ({
+                    items={views.mostErrors.map((row) => ({
                       name: row.host,
                       value: row.errors,
                       detail: `${formatCount(row.errors)} ${row.errors === 1 ? "error" : "errors"}`,
                     }))}
                     color={ERROR_CHART_COLOR}
-                    maxItems={MOST_ERRORS_LIMIT}
+                    maxItems={views.mostErrorsLimit}
                     onSelect={onSite}
                     emptyLabel="✓ No site reported an error in the last 30 days."
                   />

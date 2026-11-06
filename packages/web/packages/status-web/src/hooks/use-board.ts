@@ -1,15 +1,16 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useStatusApi, type StatusApiClient } from "../api/client";
 import type { Board } from "../lib/board-types";
 import { subscribeLiveFrames } from "./use-live-snapshot";
 import { useNow } from "./use-now";
-import { BOARD_POLL_INTERVAL_MS, isBoardStale, boardDataFreshness } from "../lib/board-staleness";
 
-export { BOARD_POLL_INTERVAL_MS };
+/** How often to re-read the board before the first read has said (`freshness.pollIntervalMs`). */
+const FIRST_POLL_MS = 60_000;
 
-async function fetchBoard(api: StatusApiClient): Promise<Board> {
-  const res = await api.fetch("/board", { headers: { accept: "application/json" } });
+async function fetchBoard(api: StatusApiClient, envKey: string | null): Promise<Board> {
+  const q = envKey === null ? "" : `?${new URLSearchParams({ environments: envKey })}`;
+  const res = await api.fetch(`/board${q}`, { headers: { accept: "application/json" } });
   if (!res.ok) throw new Error(`board fetch failed: ${res.status}`);
   return res.json();
 }
@@ -40,7 +41,7 @@ export interface UseBoardResult {
    * cause was added). Never merely "arrived once, however long ago", and never merely
    * "arrived".
    * Fix Round 3 item 1: this is folded in HERE, the ONE place, rather than left for
-   * every consumer to re-derive by also calling `isBoardStale` itself. Three
+   * every consumer to re-derive by also judging staleness itself. Three
    * separate rounds produced three separate instances of exactly one bug — a
    * consumer that checked `board === null` but not whether a present board had gone
    * stale, and rendered a confident verdict off a frozen read — because `board`
@@ -67,15 +68,23 @@ export interface UseBoardResult {
  *
  * A problem that stops being derived server-side is simply absent from the next read.
  */
-export function useBoard(): UseBoardResult {
+export function useBoard(opts: { environments?: readonly string[] | null } = {}): UseBoardResult {
   const api = useStatusApi();
+  // The environments the reader chose, for `board.scope` — the SERVER judges the headline
+  // over them. Null (every environment) shares one cache entry with every other reader.
+  const environments = opts.environments ?? null;
+  const envKey = environments === null ? null : [...environments].sort().join(",");
   const q = useQuery<Board>({
-    queryKey: ["board"],
-    queryFn: () => fetchBoard(api),
-    refetchInterval: BOARD_POLL_INTERVAL_MS,
+    queryKey: ["board", envKey],
+    queryFn: () => fetchBoard(api, envKey),
+    // A new environment choice keeps the last board on screen until its own read lands,
+    // rather than flashing the loading panel on every filter toggle.
+    placeholderData: keepPreviousData,
+    // The server says how often to re-read it — the same number its `staleAt` assumes.
+    refetchInterval: (query) => query.state.data?.freshness.pollIntervalMs ?? FIRST_POLL_MS,
     // Fix Round 2 item 5: matches useLiveSnapshot's own `retry: 1` (use-live-snapshot.ts),
     // the sibling feed that gates the SAME OverviewTab loading screen. Board and live
-    // already poll every BOARD_POLL_INTERVAL_MS/POLL_INTERVAL_MS regardless, so React
+    // already poll on their own cadence regardless, so React
     // Query's default (3 retries with growing backoff) only delays surfacing a genuinely
     // down backend behind a longer spinner — it doesn't make the eventual read any more
     // likely to succeed, and it is the auto-retry-loop-over-a-down-backend the sibling
@@ -86,37 +95,20 @@ export function useBoard(): UseBoardResult {
   // The stream is the fast path; the poll above is the floor if it's down.
   useEffect(() => subscribeLiveFrames(() => void q.refetch()), [q.refetch]);
 
-  // Fix Round 3 item 1: the ONE call site for `isBoardStale` on this feed —
-  // `board-staleness.ts` still owns the rule and the threshold, this just applies
-  // it before anything downstream ever sees `data`. React Query keeps the last
-  // successful `data` on screen forever once `refetchInterval` starts failing (a
-  // permanently-500ing `/api/board` never clears it on its own), so without this a
-  // frozen board would keep reading as a current "operational" verdict forever.
-  //
-  // Fix Round 4 group 6 adds the second half of that sentence: a board can also keep
-  // arriving perfectly on time and be just as unable to back a claim, because the
-  // MONITOR wedged rather than the API. `generatedAt` is the derivation clock and is
-  // re-stamped on every read, so `isBoardStale` is structurally blind to it; the
-  // board's data clock is what catches it. Both fold into `board === null` here, in the
-  // one place, for exactly the reason the first one does — a consumer that has to
-  // remember to ask a second question is a consumer that will eventually forget.
-  //
-  // The data-clock window is cadence-scaled, so it needs the backend's probe interval —
-  // taken off THE BOARD BEING JUDGED. It used to come off the live-snapshot singleton
-  // instead, which meant the cadence and the clock it scales arrived on two different
-  // feeds: null for every consumer that never opens the SSE stream (the header pill,
-  // `usePortfolioIndicator`) and null again for every consumer that opens one but is asked
-  // before the first frame lands, silently widening the window in exactly the cases where
-  // it mattered. One board, one answer.
+  // Every verdict here is the server's (`board.freshness`): whether the facts behind the
+  // board are current, frozen, or absent, and the instant after which this read is too
+  // old to back a claim. The one thing only this client can see is that reads have
+  // STOPPED arriving — React Query keeps the last good `data` forever while `/board`
+  // fails — so the client's clock is compared to the server's deadline, and an
+  // unparseable deadline fails closed. All of it folds into `board === null` here, in
+  // one place, so no consumer can render a verdict off a board that cannot back one.
   const nowMs = useNow();
   const data = q.data ?? null;
-  const dataFreshness =
-    data == null ? null : boardDataFreshness(data.dataAsOfMs, data.generatedAt, data.probeIntervalMs);
   const reason: BoardUnavailableReason | null =
     data == null ? (q.isLoading ? "loading" : "unavailable")
-    : isBoardStale(data.generatedAt, nowMs) ? "stale"
-    : dataFreshness === "current" ? null
-    : dataFreshness === "no-data" ? "no-data"
+    : !(nowMs <= Date.parse(data.freshness.staleAt)) ? "stale"
+    : data.freshness.state === "current" ? null
+    : data.freshness.state === "no-data" ? "no-data"
     : "frozen";
 
   return {

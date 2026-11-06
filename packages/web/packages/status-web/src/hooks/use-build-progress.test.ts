@@ -8,9 +8,9 @@ import type { ActivityRow } from "../lib/board-types";
 // (`nowMs - Date.parse(a.at) < UNCONFIRMED_AFTER_MS`) that re-judged a verdict the
 // server had already made — while the RENDERED row went on saying "building". So past
 // ten minutes the bar dropped a build and read complete while the row beside it still
-// said "building". The rule is now: in-flight ⇔ the board says `tone === "progress"` on
-// a deploy/build row — the same single source `row-model.ts` renders, its own
-// client-side freshness clock having since been deleted for the identical reason.
+// said "building". The rule is now: in-flight ⇔ the board's own `buildInFlight` verdict on
+// the row (src/board/view.ts `isBuildInFlight`: a deploy/build row toned "progress") — the
+// fixture below stamps it exactly as the server does.
 
 const T0 = Date.parse("2026-06-04T19:30:00.000Z");
 
@@ -34,6 +34,7 @@ function buildRow(name: string, tone: ActivityRow["tone"], atMs: number): Activi
     branch: null,
     errorText: null,
     at: new Date(atMs).toISOString(),
+    buildInFlight: tone === "progress",
   };
 }
 
@@ -107,15 +108,17 @@ describe("useBuildProgress", () => {
     expect(result.current.visible).toBe(false); // …then the cohort resets and it hides
   });
 
-  it("ignores rows that are not deploy BUILD steps", () => {
+  it("ignores rows the server does not mark as builds in flight", () => {
     // The DEPLOY step of a deployment has its own progress semantics and is not part of
-    // the build cohort; a probe row isn't a deployment at all. The probe row wears the
+    // the build cohort; a probe row isn't a deployment at all. Both are toned "progress",
+    // and the server marks neither `buildInFlight` (`isBuildInFlight`, tested in
+    // status-server's board-view.test.ts) — the hook must follow the flag, not the tone. The probe row wears the
     // shape `deriveActivity` actually emits for one — an ISSUE event, `kind: "probe"` with
     // a null step and an `issue:<target>:<step>:<atMs>:<issueId>` id — because a fixture
     // that invents a third id grammar would keep passing a cohort predicate that had
     // started keying off the id.
-    const deployStep: ActivityRow = { ...buildRow("app", "progress", T0), id: "deploy:vc_app:deploy", step: "deploy" };
-    const probe: ActivityRow = { ...buildRow("app", "progress", T0), id: `issue:ep-app:opened:${T0}:41`, kind: "probe", step: null };
+    const deployStep: ActivityRow = { ...buildRow("app", "progress", T0), id: "deploy:vc_app:deploy", step: "deploy", buildInFlight: false };
+    const probe: ActivityRow = { ...buildRow("app", "progress", T0), id: `issue:ep-app:opened:${T0}:41`, kind: "probe", step: null, buildInFlight: false };
     const { result } = renderHook(() => useBuildProgress([deployStep, probe]));
     expect(result.current.visible).toBe(false);
     expect(result.current.total).toBe(0);

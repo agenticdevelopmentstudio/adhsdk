@@ -10,7 +10,7 @@ import {
   loadTraffic,
   loadVitals,
 } from './posthog-sections';
-import { rangeWindow, type AnalyticsRange } from './ranges';
+import { ANALYTICS_RANGES as ANALYTICS_RANGE_KEYS, rangeWindow, type AnalyticsRange } from './ranges';
 import { emptySections, sectionedDashboard, type DashboardSection } from './sectioned-dashboard';
 import type {
   AnalyticsDashboardResponse,
@@ -20,6 +20,7 @@ import type {
   RuntimeErrorsReport,
 } from './types';
 import { loadVercelTraffic } from './vercel-section';
+import { analyticsViews, errorsViews, type AnalyticsViews, type ErrorsViews } from './views';
 
 // ---------------------------------------------------------------------------
 // The Analytics and Errors dashboards: ONE set of stale-while-revalidate caches per app.
@@ -69,6 +70,23 @@ async function runtimeSection(storage: Storage, nowMs: number): Promise<Dashboar
   }
 }
 
+/**
+ * Remembers the last value computed from these inputs. A section object is replaced only when a
+ * refresh publishes it, so the clients polling a refresh reuse one derivation of the views until
+ * something they depend on actually changes.
+ */
+function lastValue<V>(): (inputs: readonly unknown[], compute: () => V) => V {
+  let last: { inputs: readonly unknown[]; value: V } | null = null;
+  return (inputs, compute) => {
+    if (last && last.inputs.length === inputs.length && last.inputs.every((input, i) => input === inputs[i])) {
+      return last.value;
+    }
+    const value = compute();
+    last = { inputs, value };
+    return value;
+  };
+}
+
 const allSettled = async (waits: Promise<boolean>[]): Promise<boolean> => (await Promise.all(waits)).every(Boolean);
 
 export function createDashboardSet(config: StatusConfig, storage: Storage): DashboardSet {
@@ -96,6 +114,8 @@ export function createDashboardSet(config: StatusConfig, storage: Storage): Dash
     incomplete: (_name, data) => data.failed > 0 || data.incomplete > 0,
     loaders: (range) => ({ vercel: () => loadVercelTraffic(creds, rangeWindow(range, Date.now())) }),
   });
+  const analyticsViewsOf = new Map(ANALYTICS_RANGE_KEYS.map((range) => [range, lastValue<AnalyticsViews>()]));
+  const errorsViewsOf = lastValue<ErrorsViews>();
   const resolvedCount = resolvedCounter(creds);
   const glitchtip = sectionedDashboard<'all', GlitchtipSections>({
     ttlMs: ERRORS_TTL_MS,
@@ -122,15 +142,21 @@ export function createDashboardSet(config: StatusConfig, storage: Storage): Dash
       const vercelOn = vercelConfigured(config);
       const ph = posthogOn ? posthog.read(range) : null;
       const vc = vercelOn ? vercel.read(range) : null;
+      const configured = { posthog: posthogOn, vercel: vercelOn };
+      const sections = {
+        ...(ph?.sections ?? emptySections<PosthogSections>(POSTHOG_SECTIONS)),
+        ...(vc?.sections ?? emptySections<VercelSections>(VERCEL_SECTIONS)),
+      };
       return {
         generatedAt: new Date().toISOString(),
         refreshing: Boolean(ph?.refreshing || vc?.refreshing),
         range,
-        configured: { posthog: posthogOn, vercel: vercelOn },
-        sections: {
-          ...(ph?.sections ?? emptySections<PosthogSections>(POSTHOG_SECTIONS)),
-          ...(vc?.sections ?? emptySections<VercelSections>(VERCEL_SECTIONS)),
-        },
+        configured,
+        sections,
+        views: analyticsViewsOf.get(range)!(
+          [...Object.values(sections), posthogOn, vercelOn],
+          () => analyticsViews(sections, configured),
+        ),
       };
     },
 
@@ -143,15 +169,20 @@ export function createDashboardSet(config: StatusConfig, storage: Storage): Dash
       const runtime: DashboardSection<RuntimeErrorsReport> = vercelOn
         ? await runtimeSection(storage, nowMs)
         : { data: null, error: null, updatedAt: null };
+      const sections = {
+        ...(gt?.sections ?? emptySections<GlitchtipSections>(GLITCHTIP_SECTIONS)),
+        ...(sites?.sections ?? emptySections<SitesSections>(SITES_SECTIONS)),
+        runtime,
+      };
       return {
         generatedAt: new Date(nowMs).toISOString(),
         refreshing: Boolean(gt?.refreshing || sites?.refreshing),
         configured: { glitchtip: glitchtipOn, posthog: posthogOn, vercel: vercelOn },
-        sections: {
-          ...(gt?.sections ?? emptySections<GlitchtipSections>(GLITCHTIP_SECTIONS)),
-          ...(sites?.sections ?? emptySections<SitesSections>(SITES_SECTIONS)),
-          runtime,
-        },
+        sections,
+        // Runtime is read fresh every request and no view uses it, so it is not an input.
+        views: errorsViewsOf([sections.sites, sections.detail, posthogOn], () =>
+          errorsViews(sections, { posthog: posthogOn }),
+        ),
       };
     },
 

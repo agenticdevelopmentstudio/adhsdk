@@ -8,9 +8,6 @@ import {
   rowToStatusRowProps,
   rowSearchText,
   commitUrlOf,
-  deployDtoUnconfirmed,
-  unconfirmedWindowMs,
-  UNCONFIRMED_AFTER_MS,
   type Row,
 } from "./row-model";
 
@@ -19,6 +16,7 @@ function deploy(overrides: Partial<DeploymentDTO>): DeploymentDTO {
     id: "vc_1",
     platform: "vercel",
     projectName: "adh",
+    providerProjectId: null,
     status: "success",
     buildPhase: "built",
     deployPhase: "none",
@@ -32,6 +30,7 @@ function deploy(overrides: Partial<DeploymentDTO>): DeploymentDTO {
     errorText: null,
     liveHost: null,
     createdAt: "2026-06-04T18:00:00.000Z",
+    phaseConfirmedAt: "2026-06-04T18:00:00.000Z",
     ...overrides,
   };
 }
@@ -347,51 +346,5 @@ describe("commitUrlOf", () => {
     expect(commitUrlOf("o/r", "deadbeef")).toBe("https://github.com/o/r/commit/deadbeef");
     expect(commitUrlOf(null, "deadbeef")).toBeNull();
     expect(commitUrlOf("o/r", null)).toBeNull();
-  });
-});
-
-describe("unconfirmedWindowMs (cadence-scaled demotion window)", () => {
-  it("is the floor when the probe is fast or unknown, and 5× the interval when slow", () => {
-    expect(unconfirmedWindowMs(undefined)).toBe(UNCONFIRMED_AFTER_MS);
-    expect(unconfirmedWindowMs(60_000)).toBe(UNCONFIRMED_AFTER_MS); // 5×60s=5min < 10min floor
-    expect(unconfirmedWindowMs(5 * 60_000)).toBe(25 * 60_000); // 5×5min = 25min > floor
-  });
-});
-
-// The ONLY freshness clock left in the client. The Row-side twin this used to sit beside
-// is gone: a Row arrives already judged (the server expires an unconfirmed phase to verb
-// "unknown" / tone "stale" in derive-activity.ts), whereas a DeploymentDTO is raw provider
-// state the panels render directly, so it still needs judging here.
-describe("deployDtoUnconfirmed (DTO-side demotion, for DeployList / summarizeByPlatform)", () => {
-  const confirmed = "2026-06-04T18:00:00.000Z";
-  const confirmedMs = Date.parse(confirmed);
-
-  it("demotes an in-flight deploy whose phase outlived its confirmation", () => {
-    const d = deploy({ status: "building", buildPhase: "building", deployPhase: "none", phaseConfirmedAt: confirmed });
-    expect(deployDtoUnconfirmed(d, confirmedMs + UNCONFIRMED_AFTER_MS - 1)).toBe(false);
-    expect(deployDtoUnconfirmed(d, confirmedMs + UNCONFIRMED_AFTER_MS + 1)).toBe(true);
-  });
-
-  it("never demotes a terminal (settled) deploy, however old", () => {
-    const d = deploy({ status: "success", buildPhase: "built", deployPhase: "deployed", phaseConfirmedAt: confirmed });
-    expect(deployDtoUnconfirmed(d, confirmedMs + 30 * 86_400_000)).toBe(false);
-  });
-
-  it("fails CLOSED on an unparseable clock, and falls back to createdAt when no phaseConfirmedAt", () => {
-    const noClock = deploy({ status: "building", buildPhase: "building", deployPhase: "none", createdAt: confirmed });
-    delete (noClock as { phaseConfirmedAt?: string }).phaseConfirmedAt;
-    expect(deployDtoUnconfirmed(noClock, confirmedMs + UNCONFIRMED_AFTER_MS + 1)).toBe(true);
-    const broken = deploy({ status: "building", buildPhase: "building", deployPhase: "none", createdAt: "nope" });
-    delete (broken as { phaseConfirmedAt?: string }).phaseConfirmedAt;
-    expect(deployDtoUnconfirmed(broken, confirmedMs)).toBe(true);
-  });
-
-  it("honors the cadence-scaled window over the floor", () => {
-    // A SLOWER backend probe widens the window, so a deploy re-confirmed on that slower
-    // cadence is not false-demoted at the 10-minute floor — only past its own threshold.
-    const d = deploy({ status: "building", buildPhase: "building", deployPhase: "none", phaseConfirmedAt: confirmed });
-    const slow = 6 * 60_000; // 5× = 30min
-    expect(deployDtoUnconfirmed(d, confirmedMs + UNCONFIRMED_AFTER_MS + 1, slow)).toBe(false);
-    expect(deployDtoUnconfirmed(d, confirmedMs + 30 * 60_000 + 1, slow)).toBe(true);
   });
 });

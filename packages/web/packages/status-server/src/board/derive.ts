@@ -7,8 +7,9 @@ import {
   platformProblems,
   staleProdProblems,
 } from "./derive-problems";
-import { rosterTargets } from "./ownership";
+import { rosterTargets, type RosterIndex } from "./ownership";
 import { ACTIVITY_WINDOW_MS } from "./types";
+import { boardFreshness, boardScope, deployCounts, withAttention } from "./view";
 import type { Board, BoardFacts, Problem } from "./types";
 
 /** Oldest first — the pane renders this array top-to-bottom, and the newest row belongs at
@@ -74,7 +75,11 @@ function dataAsOf(facts: BoardFacts): number | null {
  * with the same facts gives a deep-equal result. That is what makes the scenarios we
  * kept regressing on cheap to pin as unit tests.
  */
-export function deriveBoard(facts: BoardFacts, nowMs: number): Board {
+export function deriveBoard(
+  facts: BoardFacts,
+  nowMs: number,
+  opts: { environments?: readonly string[] | null } = {},
+): Board {
   // Built ONCE and threaded through, rather than left for each rule to rebuild off
   // `facts.roster`. Five call sites each re-indexed the roster and one of them
   // (`deriveActivity`) re-ran `monitoredTargets`, which re-indexed it a sixth time — the
@@ -83,10 +88,41 @@ export function deriveBoard(facts: BoardFacts, nowMs: number): Board {
   // facts; this is the one place that has more than one of them to feed.
   const index = rosterTargets(facts.roster, facts.liveVercelProjects);
   const monitored = monitoredTargets(facts, index);
+  const problems = deriveProblems(facts, nowMs, index);
 
+  const dataAsOfMs = dataAsOf(facts);
+  // The SAME boundary `deriveActivity` cuts the feed at, published rather than left for
+  // the client to reconstruct from a constant it would have to keep in step by hand.
+  const activityFromMs = nowMs - ACTIVITY_WINDOW_MS;
+  const activity = withAttention(deriveActivity(facts, nowMs, index, new Set(monitored)), problems);
+  return {
+    generatedAt: new Date(nowMs).toISOString(),
+    dataAsOfMs,
+    probeIntervalMs: facts.probeIntervalMs,
+    activityFromMs,
+    problems,
+    activity,
+    indicator: indicatorFor(problems),
+    freshness: boardFreshness(dataAsOfMs, nowMs, facts.probeIntervalMs),
+    deployCounts: deployCounts(activity, activityFromMs),
+    scope: boardScope(facts, problems, opts.environments ?? null),
+    monitoredTargets: monitored,
+  };
+}
+
+/**
+ * The Problems list alone — every rule that mints a problem, collapsed and ordered as the
+ * board publishes it. `deriveBoard` builds on it; `/activity` judges a page of history
+ * against it without deriving a whole board's feed it would throw away.
+ */
+export function deriveProblems(
+  facts: BoardFacts,
+  nowMs: number,
+  index: RosterIndex = rosterTargets(facts.roster, facts.liveVercelProjects),
+): Problem[] {
   const deploy = deployProblems(facts, nowMs, index);
   const suppress = new Set(deploy.map((p) => p.target));
-  const problems = [
+  return [
     ...deploy,
     ...endpointProblems(facts, nowMs),
     // NOT passed `suppress`, unlike `staleProdProblems`. Suppression exists so two rules
@@ -97,17 +133,4 @@ export function deriveBoard(facts: BoardFacts, nowMs: number): Board {
     ...platformProblems(facts, nowMs),
     ...staleProdProblems(facts, nowMs, suppress, index),
   ].sort(byRecency);
-
-  return {
-    generatedAt: new Date(nowMs).toISOString(),
-    dataAsOfMs: dataAsOf(facts),
-    probeIntervalMs: facts.probeIntervalMs,
-    // The SAME boundary `deriveActivity` cuts the feed at, published rather than left for
-    // the client to reconstruct from a constant it would have to keep in step by hand.
-    activityFromMs: nowMs - ACTIVITY_WINDOW_MS,
-    problems,
-    activity: deriveActivity(facts, nowMs, index, new Set(monitored)),
-    indicator: indicatorFor(problems),
-    monitoredTargets: monitored,
-  };
 }

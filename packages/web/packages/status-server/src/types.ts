@@ -5,3 +5,6 @@
 export type * from "./board/types";
 export type * from "./monitor/live-types";
 export type { StatusConfig, StatusCredentialName } from "./config/port";
+export type * from "./monitor/types";
+export type { UptimeTone } from "./monitor/uptime";
+export type * from "./telemetry/types";

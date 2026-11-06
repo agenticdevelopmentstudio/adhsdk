@@ -15,8 +15,7 @@ import { useNow } from "../hooks/use-now";
 import { useBuildProgress } from "../hooks/use-build-progress";
 import { problemToRow, activityToRow, type Row } from "../lib/row-model";
 import type { ActivityRow } from "../lib/board-types";
-import { indicatorFromProblems, INDICATOR_STATE, isActiveBuild, isUnresolvedActivity } from "../lib/overview";
-import { overallUptimePercent } from "../lib/uptime";
+import { INDICATOR_STATE } from "../lib/overview";
 import { buildSublabel } from "../lib/status-sublabel";
 import { shortSha } from "../lib/format";
 import { ISSUE_SOURCES, type IssueSource } from "../lib/issue-sources";
@@ -94,7 +93,13 @@ export function OverviewTab(): ReactElement {
   // anything on this board except the uptime stat (a stats read) and the self-check
   // banner.
   const store = useLiveSnapshot();
-  const { board, reason: boardReason, error: boardError } = useBoard();
+  // Environment filter (persisted, SHARED by both activity panels' gears and the
+  // indicator). The filter itself is UI state; what it means for the headline is the
+  // server's — the board's `scope` is judged over exactly the environments asked for.
+  const { envs, all: allEnvNames, toggle: toggleEnv } = useEnvFilter();
+  const allEnvs = envs.size === allEnvNames.length;
+  const scopeEnvs = useMemo(() => (allEnvs ? null : [...envs]), [allEnvs, envs]);
+  const { board, reason: boardReason, error: boardError } = useBoard({ environments: scopeEnvs });
   const uptimeQuery = useUptime(90);
   // The monitor's own health — a failed/degraded self-check surfaces here on the
   // default wallboard (not just the Details tab) so a broken monitor can't hide.
@@ -159,12 +164,10 @@ export function OverviewTab(): ReactElement {
     fontSize: 14,
   };
 
-  // Environment filter (persisted, SHARED by both activity panels' gears and the
-  // indicator): keep a row when all envs are selected, the row is env-agnostic
-  // (no environment), or its environment is selected. Env-agnostic rows (e.g. a
-  // platform-wide outage) must never be hidden by an env filter.
-  const { envs, all: allEnvNames, toggle: toggleEnv } = useEnvFilter();
-  const allEnvs = envs.size === allEnvNames.length;
+  // The display filter over the rows: keep a row when all envs are selected, the row is
+  // env-agnostic (no environment), or its environment is selected. Env-agnostic rows (e.g.
+  // a platform-wide outage) must never be hidden by an env filter — the same scoping the
+  // server applies to `board.scope`.
   const keep = useCallback(
     (x: { environment?: string | null }): boolean => allEnvs || x.environment == null || envs.has(x.environment),
     [allEnvs, envs],
@@ -213,20 +216,18 @@ export function OverviewTab(): ReactElement {
       a.at === b.at ? (a.id === b.id ? 0 : a.id < b.id ? -1 : 1) : a.at < b.at ? -1 : 1,
     );
     const activityRows = pipeline(feed);
-    // Which feed rows the "in progress or failed only" filter keeps — judged on the WIRE
-    // row, because a resolved failure is recognised by its target and time against the
-    // live Problems list, and `Row` carries neither. Against the unfiltered problems: the
-    // env filter is the pipeline's job, not this one's.
-    const allProblems = board?.problems ?? [];
-    const unresolvedIds = new Set(feed.filter((a) => isUnresolvedActivity(a, allProblems)).map((a) => a.id));
+    // Which feed rows the "in progress or failed only" filter keeps, and which of them are
+    // actually running — both the SERVER's verdicts on the wire row (`unresolved`,
+    // `running`, src/board/view.ts). A paged-in history row carries the verdict its page
+    // was read with.
+    const unresolvedIds = new Set(feed.filter((a) => a.unresolved === true).map((a) => a.id));
     // `feed` goes out UNFILTERED as well: the controls that decide what the reader is
     // even offered (Clear, the Sources list) have to see the whole record, not the view.
-    const activeIds = new Set(feed.filter(isActiveBuild).map((a) => a.id));
+    const activeIds = new Set(feed.filter((a) => a.running === true).map((a) => a.id));
     return { problems: problemRows, activity: activityRows, feed, unresolvedIds, activeIds };
   }, [board, history.rows, keep, clearedBefore, ttlMs, ttlNowMs]);
-  // Unfiltered (all envs) takes the server's answer verbatim, so the common case
-  // can never disagree with it; an env-filtered view re-derives the sign over just
-  // the problems it's showing.
+  // The headline is the server's `scope` — judged over the environments this view asked
+  // for, so an env-filtered view never re-derives the sign client-side.
   const indicator = useMemo(() => {
     // `board` is null whenever it can't back a current claim, whatever the cause
     // (`BoardUnavailableReason` is the list; re-spelling it here is how this comment
@@ -235,10 +236,8 @@ export function OverviewTab(): ReactElement {
     // ever rendered. This fallback only gives the hook SOMETHING to return meanwhile;
     // it must never reach the screen as a claimed "0 problems, ok".
     if (!board) return { state: "ok" as const, count: 0 };
-    return allEnvs
-      ? { state: INDICATOR_STATE[board.indicator], count: board.problems.length }
-      : indicatorFromProblems(board.problems.filter(keep));
-  }, [board, allEnvs, keep]);
+    return { state: INDICATOR_STATE[board.scope.indicator], count: board.scope.problemCount };
+  }, [board]);
   // Build-cohort progress over the env-filtered activity — matches the Recent
   // Activity view it sits in, so a filtered-out env's build isn't counted.
   //
@@ -290,10 +289,10 @@ export function OverviewTab(): ReactElement {
   const isCanceled = (r: Row): boolean => r.statusWord === "canceled";
   const hasCanceled = activityAll.some(isCanceled);
   const withCanceled = showCanceled ? activityAll : activityAll.filter((r) => !isCanceled(r));
-  // In flight, or failed AND still unresolved — `isUnresolvedActivity` (lib/overview.ts)
-  // is the rule; a failure the fleet has since recovered from is history, not shown here.
+  // In flight, or failed AND still unresolved — the server's `unresolved` verdict; a
+  // failure the fleet has since recovered from is history, not shown here.
   //
-  // In that view, rows that are actually building or deploying go LAST (`isActiveBuild`):
+  // In that view, rows that are actually building or deploying go LAST (`running`):
   // the platform queue is FIFO, so the running builds are the oldest of their batch and would
   // otherwise sit at the top, out of sight of a reader tailing the bottom. Each group keeps
   // the server's oldest-first order. The unfiltered log stays strictly chronological.
@@ -302,7 +301,8 @@ export function OverviewTab(): ReactElement {
     ? [...unresolved.filter((r) => !activeIds.has(r.key)), ...unresolved.filter((r) => activeIds.has(r.key))]
     : withCanceled;
 
-  const uptimePercent = overallUptimePercent(uptimeQuery.data?.services ?? []);
+  const uptimePercent = uptimeQuery.data?.overallUptimePercent ?? null;
+  const uptimeTone = uptimeQuery.data?.overallUptimeTone ?? "unknown";
 
   // Before anything is known — no snapshot, poll not failed, or the board's own
   // first-ever fetch is still in flight — there is genuinely nothing to show yet.
@@ -324,9 +324,9 @@ export function OverviewTab(): ReactElement {
   // blindness, not health (store.blind). Treated exactly like the poll failing.
   const blind = store.blind;
 
-  const services = (store.snapshot?.services ?? []).filter((s) => keep({ environment: s.environment || null }));
-  const healthyCount = services.filter((s) => s.status === "healthy").length;
-  const sublabel = buildSublabel(indicator.state, healthyCount, services.length, problems);
+  // "N/M healthy" — the server's count over the same scope as the indicator.
+  const endpoints = board?.scope.endpoints ?? { total: 0, healthy: 0 };
+  const sublabel = buildSublabel(indicator.state, endpoints.healthy, endpoints.total, problems);
 
   // Only the `blind` panel below reads this now — a transient live-feed outage no
   // longer tears the board down (BoardShell's ConnectionOverlay covers it calmly),
@@ -457,7 +457,7 @@ export function OverviewTab(): ReactElement {
   // to leave React Query's last GOOD board on screen forever, which was the exact same
   // false claim as never having loaded, just arriving slower). Never fall through to the
   // normal panels here: `board?.problems ?? []` would silently read as "zero problems"
-  // and `indicatorFromProblems([])` as "ok", i.e. a false "ALL SYSTEMS OPERATIONAL" claim
+  // and the absent server `board.scope.indicator` as "ok", i.e. a false "ALL SYSTEMS OPERATIONAL" claim
   // from having no CURRENT data, not from having checked anything. `boardReason` only
   // changes the wording of the detail line below — a human can tell "never refreshed"
   // from "the fetch failed", but a caller that only checks `!board` can't get that
@@ -488,7 +488,7 @@ export function OverviewTab(): ReactElement {
         {banners}
         <div className="adh-snap-scroll">
           <section className="adh-snap-pane adh-snap-hero">
-            <BigIndicator state={indicator.state} count={indicator.count} sublabel={sublabel} extra={<OverviewStats uptimePercent={uptimePercent} span={span} onSpanChange={setSpan} />} />
+            <BigIndicator state={indicator.state} count={indicator.count} sublabel={sublabel} extra={<OverviewStats uptimePercent={uptimePercent} uptimeTone={uptimeTone} span={span} onSpanChange={setSpan} />} />
           </section>
           <section className="adh-snap-pane" style={{ display: "flex", flexDirection: "column", gap: 12, padding: 12 }}>
             {problemsPanel("0 1 auto", "45%")}
@@ -515,7 +515,7 @@ export function OverviewTab(): ReactElement {
         </div>
         <div style={{ flex: "0 0 30%", minHeight: 0, display: "flex", flexDirection: "column", gap: 16, overflowY: "auto" }}>
           <InfoPanel title="Stats" icon={<BarChart3 size={15} color={COLORS.gold} />} actions={<StatsGear span={span} onSpanChange={setSpan} />}>
-            <OverviewStats uptimePercent={uptimePercent} layout="card" span={span} onSpanChange={setSpan} />
+            <OverviewStats uptimePercent={uptimePercent} uptimeTone={uptimeTone} layout="card" span={span} onSpanChange={setSpan} />
           </InfoPanel>
           <ErrorsCard />
           <TrafficCard />

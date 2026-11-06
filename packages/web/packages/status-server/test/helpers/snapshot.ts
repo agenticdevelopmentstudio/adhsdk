@@ -19,6 +19,10 @@ export function liveSnapshot(over: Partial<LiveSnapshot> = {}): LiveSnapshot {
     },
     configDegraded: false,
     configReason: null,
+    freshness: { state: 'fresh', asOf: null },
+    blind: false,
+    platformSummary: [],
+    staleMonitors: { thresholdDays: 7, monitors: [] },
     ...over,
   };
 }

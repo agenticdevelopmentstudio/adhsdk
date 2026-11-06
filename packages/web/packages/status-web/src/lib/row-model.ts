@@ -1,6 +1,5 @@
 import type { DeploymentDTO } from "../types";
 import type { StatusRowProps } from "../components/StatusRow";
-import { deployStatusInFlight } from "./deploy-status";
 import { shortSha, commitFirstLine } from "./format";
 import { timeAgo } from "./time-ago";
 import { envBadgeLabel } from "./colors";
@@ -69,49 +68,6 @@ const TONE_COLOR: Record<RowTone, string> = {
   neutral: "var(--color-apt-gold)", // canceled → amber
   stale: "var(--color-apt-text-muted)", // unconfirmed claim / expired outcome → muted
 };
-
-/** FLOOR for how long an IN-FLIGHT deploy may go without backend confirmation before the
- *  UI stops asserting it as live progress. At the default 60s probe cadence the
- *  backend re-confirms in-flight rows every ~2 min (by-id reconcile) and every 5 min
- *  (provider poll), so 10 minutes unconfirmed means several consecutive confirmation
- *  failures — not jitter. This is the render-time half of the freshness contract: even
- *  when every server-side healer is dead, the display degrades to honesty by
- *  construction.
- *
- *  It judges DeploymentDTOs ONLY, via {@link deployDtoUnconfirmed} — the raw-deploy
- *  panels are the last place the client still holds a phase the server has not already
- *  ruled on. A `Row` never passes through here: an activity/problem row arrives with the
- *  server's own verdict (`derive-activity.ts` expires an unconfirmed phase to tone
- *  "stale" itself), so a second client-side clock over the same fact could only
- *  disagree with it. */
-export const UNCONFIRMED_AFTER_MS = 10 * 60_000;
-
-/** The unconfirmed window for a given backend probe cadence: 5× the probe interval,
- *  floored at {@link UNCONFIRMED_AFTER_MS}. Mirrors snapshot-staleness' `snapshotStaleMs`
- *  (and the scheduler's own `staleAfterMs`) so a SLOWER-configured poller doesn't make
- *  a normally-confirmed row false-demote — the render threshold tracks the real cadence,
- *  never a hardcoded 10 min that assumes a 60s probe. Undefined interval (older backend)
- *  → the floor. */
-export function unconfirmedWindowMs(probeIntervalMs?: number): number {
-  return Math.max(UNCONFIRMED_AFTER_MS, (probeIntervalMs ?? 0) * 5);
-}
-
-/** Whether an in-flight deploy's phase has outlived its confirmation, for the panels
- *  (DeployList, and summarizeByPlatform's "Build pipeline" counts) that render a
- *  DeploymentDTO directly instead of a Row — so they demote a wedged build in lockstep
- *  with the activity list, whose equivalent demotion the SERVER applies before the row
- *  ever reaches the browser. Fails CLOSED: an in-flight deploy whose clock is
- *  unparseable demotes, rather than asserting live progress on a date we can't read. */
-export function deployDtoUnconfirmed(
-  d: Pick<DeploymentDTO, "status" | "phaseConfirmedAt" | "createdAt">,
-  nowMs: number,
-  probeIntervalMs?: number,
-): boolean {
-  if (!deployStatusInFlight(d.status)) return false;
-  const confirmed = Date.parse(d.phaseConfirmedAt ?? d.createdAt);
-  if (!Number.isFinite(confirmed)) return true;
-  return nowMs - confirmed > unconfirmedWindowMs(probeIntervalMs);
-}
 
 /** Adapt a Row to the one <StatusRow>'s props. Every pane goes through here.
  *

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Problem } from "../src/board";
-import type { LiveSnapshot } from "../src/monitor/live-types";
-import type { DeploymentDTO, IntegrationsResponse, ServiceStatusDTO, UptimeResponse } from "../src/monitor/types";
+import type { LiveDeploymentDTO, LiveSnapshot } from "../src/monitor/live-types";
+import type { IntegrationsResponse, ServiceStatusDTO, UptimeResponse } from "../src/monitor/types";
 import type { CompactSnapshot } from "../src/routes/reads";
 import type { DashboardSection } from "../src/telemetry/dashboard/sectioned-dashboard";
 import type {
@@ -21,6 +21,7 @@ import {
   type RuntimeErrorsInput,
 } from "../src/report/report-rules";
 import { REPORT_SCHEMA } from "../src/report/types";
+import { analyticsViews, errorsViews } from "../src/telemetry/dashboard/views";
 
 // The rules worth pinning are the ones an agent's "all good?" depends on: a failed or
 // still-filling source is never read as healthy, an unconfigured provider is disclosed without
@@ -50,6 +51,7 @@ function service(over: Partial<ServiceStatusDTO>): ServiceStatusDTO {
     statusCode: 200,
     error: null,
     lastCheckedAt: "2026-11-06T11:59:00Z",
+    slow: false,
     ...over,
   };
 }
@@ -94,8 +96,8 @@ function openIssue(p: Problem): CompactSnapshot["openIssues"][number] {
   };
 }
 
-function deployment(over: Partial<DeploymentDTO>): DeploymentDTO {
-  return {
+function deployment(over: Partial<LiveDeploymentDTO>): LiveDeploymentDTO {
+  const row = {
     id: "d",
     platform: "vercel",
     projectName: "zork",
@@ -115,7 +117,8 @@ function deployment(over: Partial<DeploymentDTO>): DeploymentDTO {
     createdAt: "2026-11-06T11:00:00Z",
     phaseConfirmedAt: "2026-11-06T11:00:00Z",
     ...over,
-  } as DeploymentDTO;
+  };
+  return { ...row, effectiveStatus: over.effectiveStatus ?? row.status } as LiveDeploymentDTO;
 }
 
 const SNAPSHOT: CompactSnapshot = {
@@ -143,40 +146,42 @@ const LIVE: LiveSnapshot = {
   },
   configDegraded: false,
   configReason: null,
+  freshness: { state: "fresh", asOf: null },
+  blind: false,
+  platformSummary: [],
+  staleMonitors: { thresholdDays: 7, monitors: [] },
 };
 
 const INTEGRATIONS: IntegrationsResponse = {
   generatedAt: "2026-11-06T11:59:00Z",
   overall: "ok",
   checks: [{ id: "glitchtip", label: "GlitchTip", configured: true, ok: true, state: "ok", detail: "fine" }],
+  selfCheck: null,
 };
 
 function errorsDashboard(over: Partial<ErrorsDashboardResponse["sections"]> = {}): ErrorsDashboardResponse {
+  const sections: ErrorsDashboardResponse["sections"] = {
+    issues: section({
+      buckets: [],
+      issues: [],
+      summary: { active: 0, backlog: 0, events: 0, resolved: 0, complete: true, byType: [], newPerDay: [] },
+    }),
+    sites: section([]),
+    detail: section({ buckets: [], days: [], errors: [], requests: [], truncated: false }),
+    runtime: section<RuntimeErrorsReport>(null),
+    ...over,
+  };
   return {
     generatedAt: "x",
     refreshing: false,
     configured: { glitchtip: true, posthog: true, vercel: true },
-    sections: {
-      issues: section({
-        buckets: [],
-        issues: [],
-        summary: { active: 0, backlog: 0, events: 0, resolved: 0, complete: true, byType: [], newPerDay: [] },
-      }),
-      sites: section([]),
-      detail: section({ buckets: [], days: [], errors: [], requests: [], truncated: false }),
-      runtime: section<RuntimeErrorsReport>(null),
-      ...over,
-    },
+    sections,
+    views: errorsViews(sections, { posthog: true }),
   };
 }
 
 function analyticsDashboard(): AnalyticsDashboardResponse {
-  return {
-    generatedAt: "x",
-    refreshing: false,
-    range: "24h",
-    configured: { posthog: true, vercel: true },
-    sections: {
+  const sections = {
       traffic: section({
         buckets: [],
         totals: { pageviews: 10, sessions: 4 },
@@ -200,7 +205,14 @@ function analyticsDashboard(): AnalyticsDashboardResponse {
         visitors: [],
         projects: [],
       }),
-    } as AnalyticsDashboardResponse["sections"],
+    } as AnalyticsDashboardResponse["sections"];
+  return {
+    generatedAt: "x",
+    refreshing: false,
+    range: "24h",
+    configured: { posthog: true, vercel: true },
+    sections,
+    views: analyticsViews(sections, { posthog: true, vercel: true }),
   };
 }
 
@@ -210,7 +222,7 @@ const RUNTIME: RuntimeErrorsInput = {
 };
 
 const UPTIME: UptimeResponse = {
-  days: 7,
+  days: 7, overallUptimePercent: null, overallUptimeTone: "unknown",
   services: [{ slug: "hub", name: "Hub", uptimePercent: 100, totalChecks: 99 } as UptimeResponse["services"][number]],
 };
 
@@ -352,6 +364,17 @@ describe("buildReport — ported digest rules", () => {
     expect(report.sections.deploys!.deployTargets).toBe(2);
   });
 
+  it("an unconfirmed in-flight deploy is not counted as in flight (the /live demotion)", () => {
+    const live = {
+      ...LIVE,
+      deployments: [
+        deployment({ id: "a", projectName: "a", providerProjectId: "pa", status: "building" }),
+        deployment({ id: "b", projectName: "b", providerProjectId: "pb", status: "building", effectiveStatus: "unknown" }),
+      ],
+    };
+    expect(build({ deploys: ok({ live }) }).sections.deploys!.inFlight).toBe(1);
+  });
+
   it("a stalled monitor is a major finding and incomplete", () => {
     const report = build({ monitor: ok({ ...MONITOR, lastCycleAt: "2026-11-06T11:00:00Z", stale: true }) });
     expect(report.complete).toBe(false);
@@ -385,7 +408,7 @@ describe("buildReport — ported digest rules", () => {
       { host: "b.dev", errors: 0, requests: 9, failures: 0, p95Ms: null },
     ];
     const uptime: UptimeResponse = {
-      days: 7,
+      days: 7, overallUptimePercent: null, overallUptimeTone: "unknown",
       services: [{ slug: "s", name: "Shop", uptimePercent: 97.5, totalChecks: 10 } as UptimeResponse["services"][number]],
     };
     const report = build({ errors: ok(errorsDashboard({ sites: section(sites) })), uptime: ok(uptime) });
@@ -446,6 +469,7 @@ describe("buildReport — rules the server adds", () => {
     const integrations: IntegrationsResponse = {
       generatedAt: "x",
       overall: "error",
+      selfCheck: null,
       checks: [
         { id: "cron", label: "Cron", configured: true, ok: false, state: "error", detail: "missed\nmore" },
         { id: "posthog", label: "PostHog", configured: true, ok: true, state: "warn", detail: "slow" },
@@ -521,7 +545,7 @@ describe("buildReport — rules the server adds", () => {
 
   it("findings sort by severity, then source, then title, and counts add up", () => {
     const report = build({
-      uptime: ok({ days: 7, services: [{ slug: "s", name: "Shop", uptimePercent: 90, totalChecks: 1 } as UptimeResponse["services"][number]] }),
+      uptime: ok({ days: 7, overallUptimePercent: null, overallUptimeTone: "unknown", services: [{ slug: "s", name: "Shop", uptimePercent: 90, totalChecks: 1 } as UptimeResponse["services"][number]] }),
       integrations: { ok: false, error: "x" },
       monitor: ok({ ...MONITOR, snapshot: { ...SNAPSHOT, services: [service({ status: "down" })] } }),
     });

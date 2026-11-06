@@ -59,7 +59,8 @@
           "responseTimeMs",
           "statusCode",
           "error",
-          "lastCheckedAt"
+          "lastCheckedAt",
+          "slow"
         ],
         "properties": {
           "slug": {
@@ -122,6 +123,10 @@
               "null"
             ]
           },
+          "slow": {
+            "type": "boolean",
+            "description": "The last response was slower than 1000 ms"
+          },
           "links": {
             "$ref": "#/components/schemas/Links"
           }
@@ -136,7 +141,10 @@
             "type": "object",
             "required": [
               "dnsOk",
-              "downSince"
+              "downSince",
+              "deployIds",
+              "latestTerminalDeployId",
+              "deployFailures"
             ],
             "properties": {
               "dnsOk": {
@@ -147,10 +155,149 @@
                   "string",
                   "null"
                 ]
+              },
+              "deployIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Ids of this snapshot's deployments that belong to the endpoint's deploy target, newest first"
+              },
+              "latestTerminalDeployId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of the newest definitive (success or failed) deploy of the target — canceled and in-flight are skipped — or null"
+              },
+              "deployFailures": {
+                "type": "number",
+                "description": "Count of the target's failed deploys in this snapshot"
               }
             }
           }
         ]
+      },
+      "LiveDeployment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Deployment"
+          },
+          {
+            "type": "object",
+            "required": [
+              "effectiveStatus"
+            ],
+            "properties": {
+              "effectiveStatus": {
+                "type": "string",
+                "description": "`status`, except an in-flight (building/queued) phase no poll has re-confirmed within the window reads 'unknown'"
+              }
+            }
+          }
+        ]
+      },
+      "PlatformSummary": {
+        "type": "object",
+        "required": [
+          "platform",
+          "ready",
+          "building",
+          "failed",
+          "total"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "number"
+          },
+          "building": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        }
+      },
+      "StaleMonitor": {
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "url",
+          "environment",
+          "detail",
+          "dnsOk",
+          "downSince",
+          "ageMs"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "environment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "dnsOk": {
+            "type": "boolean"
+          },
+          "downSince": {
+            "type": "string"
+          },
+          "ageMs": {
+            "type": "number"
+          }
+        }
+      },
+      "SelfCheckView": {
+        "type": "object",
+        "required": [
+          "missingEnv",
+          "missingEnvError",
+          "issues",
+          "hasError",
+          "issueCount"
+        ],
+        "properties": {
+          "missingEnv": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingEnvError": {
+            "type": "boolean"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationCheck"
+            }
+          },
+          "hasError": {
+            "type": "boolean"
+          },
+          "issueCount": {
+            "type": "number"
+          }
+        }
       },
       "Deployment": {
         "type": "object",
@@ -402,12 +549,23 @@
           }
         }
       },
+      "UptimeTone": {
+        "type": "string",
+        "enum": [
+          "good",
+          "warn",
+          "bad",
+          "unknown"
+        ],
+        "description": "good ≥ 99%, warn ≥ 95%, bad below; unknown when there is no figure"
+      },
       "UptimeService": {
         "type": "object",
         "required": [
           "slug",
           "name",
           "uptimePercent",
+          "uptimeTone",
           "totalChecks",
           "daily"
         ],
@@ -420,6 +578,9 @@
           },
           "uptimePercent": {
             "type": "number"
+          },
+          "uptimeTone": {
+            "$ref": "#/components/schemas/UptimeTone"
           },
           "totalChecks": {
             "type": "number"
@@ -701,8 +862,114 @@
           },
           "at": {
             "type": "string"
+          },
+          "unresolved": {
+            "type": "boolean",
+            "description": "A build/deploy row still in flight, or a failure a live problem on its target still carries (board/view.ts isUnresolvedActivity). Judged against the problems at the time of the read."
+          },
+          "running": {
+            "type": "boolean",
+            "description": "A build/deploy in flight and past the queue (board/view.ts isRunningActivity)"
+          },
+          "buildInFlight": {
+            "type": "boolean",
+            "description": "A deploy-kind build row still queued or building (board/view.ts isBuildInFlight)"
           }
         }
+      },
+      "BoardFreshness": {
+        "type": "object",
+        "required": [
+          "state",
+          "staleAt",
+          "pollIntervalMs"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "current",
+              "frozen",
+              "no-data"
+            ],
+            "description": "Whether the facts behind the board are current: frozen once dataAsOfMs lags generatedAt by more than two cadence-scaled stale windows; no-data when the board rests on no observation"
+          },
+          "staleAt": {
+            "type": "string",
+            "description": "ISO instant after which this read can no longer back a claim if no newer read has arrived"
+          },
+          "pollIntervalMs": {
+            "type": "number",
+            "description": "How often a client should re-read the board"
+          }
+        }
+      },
+      "DeployCounts": {
+        "type": "object",
+        "required": [
+          "builds",
+          "deploys",
+          "failures"
+        ],
+        "properties": {
+          "builds": {
+            "type": "number"
+          },
+          "deploys": {
+            "type": "number"
+          },
+          "failures": {
+            "type": "number"
+          }
+        },
+        "description": "Deploy-kind activity rows since activityFromMs: builds, deploys, and failed rows of either step"
+      },
+      "BoardScope": {
+        "type": "object",
+        "required": [
+          "environments",
+          "indicator",
+          "problemCount",
+          "endpoints"
+        ],
+        "properties": {
+          "environments": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "indicator": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "degraded",
+              "outage"
+            ]
+          },
+          "problemCount": {
+            "type": "number"
+          },
+          "endpoints": {
+            "type": "object",
+            "required": [
+              "total",
+              "healthy"
+            ],
+            "properties": {
+              "total": {
+                "type": "number"
+              },
+              "healthy": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "description": "The headline over the environments asked for with ?environments= (null = every environment). A problem or endpoint with no environment is always in scope."
       },
       "Board": {
         "type": "object",
@@ -714,7 +981,10 @@
           "problems",
           "activity",
           "indicator",
-          "monitoredTargets"
+          "monitoredTargets",
+          "freshness",
+          "deployCounts",
+          "scope"
         ],
         "properties": {
           "generatedAt": {
@@ -757,6 +1027,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "freshness": {
+            "$ref": "#/components/schemas/BoardFreshness"
+          },
+          "deployCounts": {
+            "$ref": "#/components/schemas/DeployCounts"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/BoardScope"
           }
         }
       },
@@ -1184,6 +1463,37 @@
               "string",
               "null"
             ]
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Would this issue hold a board Problem open (live snapshot only)"
+          }
+        }
+      },
+      "ErrorsSummary": {
+        "type": "object",
+        "required": [
+          "active",
+          "backlog",
+          "events",
+          "top"
+        ],
+        "properties": {
+          "active": {
+            "type": "number"
+          },
+          "backlog": {
+            "type": "number"
+          },
+          "events": {
+            "type": "number"
+          },
+          "top": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorDTO"
+            },
+            "description": "At most five active issues, most events first"
           }
         }
       },
@@ -1587,6 +1897,887 @@
           }
         }
       },
+      "RatedHealth": {
+        "type": "object",
+        "required": [
+          "host",
+          "errors",
+          "requests",
+          "failures",
+          "p95Ms",
+          "failureRateHigh"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "number"
+          },
+          "requests": {
+            "type": "number"
+          },
+          "failures": {
+            "type": "number"
+          },
+          "p95Ms": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "failureRateHigh": {
+            "type": "boolean"
+          }
+        },
+        "description": "A site's health, its hosts joined (counts add, p95 is the worse). `failureRateHigh`: failures/requests is at or above 5%."
+      },
+      "ChartSeries": {
+        "type": "object",
+        "required": [
+          "labels",
+          "posthog",
+          "vercel"
+        ],
+        "properties": {
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "posthog": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vercel": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Pageviews per bucket from each provider on the union of their axes. A null provider has not seen it; a null value is a bucket it has not reached."
+      },
+      "JoinedSite": {
+        "type": "object",
+        "required": [
+          "key",
+          "posthog",
+          "vercel",
+          "health"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "posthog": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "pageviews",
+                  "sessions",
+                  "series"
+                ],
+                "properties": {
+                  "pageviews": {
+                    "type": "number"
+                  },
+                  "sessions": {
+                    "type": "number"
+                  },
+                  "series": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vercel": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "project",
+                  "pageviews",
+                  "visitors",
+                  "series"
+                ],
+                "properties": {
+                  "project": {
+                    "type": "string"
+                  },
+                  "pageviews": {
+                    "type": "number"
+                  },
+                  "visitors": {
+                    "type": "number"
+                  },
+                  "series": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "health": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RatedHealth"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "One site across both providers, never summed. Null means that provider has not seen the site."
+      },
+      "RatedVitalsRow": {
+        "type": "object",
+        "required": [
+          "host",
+          "samples",
+          "lcp",
+          "inp",
+          "cls",
+          "fcp",
+          "site",
+          "ratings"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "samples": {
+            "type": "number"
+          },
+          "lcp": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "inp": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cls": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fcp": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "site": {
+            "type": "string"
+          },
+          "ratings": {
+            "type": "object",
+            "required": [
+              "lcp",
+              "inp",
+              "cls",
+              "fcp"
+            ],
+            "properties": {
+              "lcp": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "good",
+                  "fair",
+                  "poor",
+                  null
+                ]
+              },
+              "inp": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "good",
+                  "fair",
+                  "poor",
+                  null
+                ]
+              },
+              "cls": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "good",
+                  "fair",
+                  "poor",
+                  null
+                ]
+              },
+              "fcp": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "good",
+                  "fair",
+                  "poor",
+                  null
+                ]
+              }
+            }
+          }
+        },
+        "description": "One host's web vitals, rated against Google's Core Web Vitals boundaries (null: not measured)."
+      },
+      "SectionFailure": {
+        "type": "object",
+        "required": [
+          "source",
+          "what",
+          "error"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "PostHog",
+              "Vercel"
+            ]
+          },
+          "what": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "description": "Sections of one source that could not be read at all, failing with the same error."
+      },
+      "SiteReport": {
+        "type": "object",
+        "required": [
+          "posthog",
+          "vercel",
+          "health",
+          "pageviews",
+          "breakdowns",
+          "projects",
+          "vercelIncomplete",
+          "vitals",
+          "empty"
+        ],
+        "properties": {
+          "posthog": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "pageviews",
+                  "sessions"
+                ],
+                "properties": {
+                  "pageviews": {
+                    "type": "number"
+                  },
+                  "sessions": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vercel": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "pageviews",
+                  "visitors"
+                ],
+                "properties": {
+                  "pageviews": {
+                    "type": "number"
+                  },
+                  "visitors": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "health": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RatedHealth"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pageviews": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChartSeries"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "breakdowns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "topic",
+                "posthog",
+                "vercel"
+              ],
+              "properties": {
+                "topic": {
+                  "type": "string",
+                  "enum": [
+                    "pages",
+                    "countries",
+                    "referrers",
+                    "devices",
+                    "browsers"
+                  ]
+                },
+                "posthog": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DashboardMarginal"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "vercel": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DashboardMarginal"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "project",
+                "domain",
+                "analyticsOn",
+                "pageviews",
+                "visitors"
+              ],
+              "properties": {
+                "project": {
+                  "type": "string"
+                },
+                "domain": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "analyticsOn": {
+                  "type": "boolean"
+                },
+                "pageviews": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "visitors": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "vercelIncomplete": {
+            "type": "boolean"
+          },
+          "vitals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RatedVitalsRow"
+            }
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        },
+        "description": "What one site has, and only that: an absent figure is null or empty. `empty` says nothing has anything to draw."
+      },
+      "AnalyticsViews": {
+        "type": "object",
+        "required": [
+          "sites",
+          "joined",
+          "pageviews",
+          "pages",
+          "dimensions",
+          "vercelProjects",
+          "vercelBreakdowns",
+          "vitals",
+          "siteReports",
+          "failures"
+        ],
+        "properties": {
+          "sites": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "joined": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JoinedSite"
+            }
+          },
+          "pageviews": {
+            "$ref": "#/components/schemas/ChartSeries"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DashboardMarginal"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dimensions": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "country",
+                  "device",
+                  "browser",
+                  "referrer"
+                ],
+                "properties": {
+                  "country": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  },
+                  "device": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  },
+                  "browser": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  },
+                  "referrer": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vercelProjects": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "site",
+                    "project",
+                    "pageviews",
+                    "visitors"
+                  ],
+                  "properties": {
+                    "site": {
+                      "type": "string"
+                    },
+                    "project": {
+                      "type": "string"
+                    },
+                    "pageviews": {
+                      "type": "number"
+                    },
+                    "visitors": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vercelBreakdowns": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "countries",
+                  "referrers",
+                  "paths",
+                  "devices"
+                ],
+                "properties": {
+                  "countries": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  },
+                  "referrers": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  },
+                  "paths": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  },
+                  "devices": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DashboardMarginal"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vitals": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RatedVitalsRow"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "siteReports": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SiteReport"
+            }
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionFailure"
+            }
+          }
+        },
+        "description": "Everything the Analytics pages draw, derived from `sections`: the joined site list and table, the all-sites chart and breakdowns, rated vitals, each site's report, and which configured sections could not be read."
+      },
+      "ErrorsSiteReport": {
+        "type": "object",
+        "required": [
+          "health",
+          "chart",
+          "errors",
+          "requests",
+          "empty"
+        ],
+        "properties": {
+          "health": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RatedHealth"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chart": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "buckets",
+                  "errors",
+                  "failures"
+                ],
+                "properties": {
+                  "buckets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "errors": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "failures": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "host",
+                "name",
+                "feature",
+                "step",
+                "boundary",
+                "page",
+                "count",
+                "lastSeen",
+                "id"
+              ],
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "feature": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "step": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "boundary": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "page": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "count": {
+                  "type": "number"
+                },
+                "lastSeen": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "requests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "host",
+                "status",
+                "method",
+                "path",
+                "count",
+                "lastSeen",
+                "id"
+              ],
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "number"
+                },
+                "method": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "path": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "number"
+                },
+                "lastSeen": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        },
+        "description": "One site's errors page, its hosts joined; rows commonest first, each with the identity it was merged on."
+      },
+      "ErrorsViews": {
+        "type": "object",
+        "required": [
+          "sites",
+          "mostErrors",
+          "mostErrorsLimit",
+          "siteReports",
+          "siteFailures"
+        ],
+        "properties": {
+          "sites": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mostErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RatedHealth"
+            }
+          },
+          "mostErrorsLimit": {
+            "type": "number"
+          },
+          "siteReports": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ErrorsSiteReport"
+            }
+          },
+          "siteFailures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionFailure"
+            }
+          }
+        },
+        "description": "What the Errors pages draw from PostHog's per-site sections: the site list, the sites with the most errors, each site's report, and which sections could not be read."
+      },
       "ReportCoverage": {
         "type": "object",
         "required": [
@@ -1894,7 +3085,11 @@
                     "staleProd",
                     "providers",
                     "configDegraded",
-                    "configReason"
+                    "configReason",
+                    "freshness",
+                    "blind",
+                    "platformSummary",
+                    "staleMonitors"
                   ],
                   "properties": {
                     "generatedAt": {
@@ -1924,7 +3119,7 @@
                     "deployments": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/Deployment"
+                        "$ref": "#/components/schemas/LiveDeployment"
                       }
                     },
                     "staleProd": {
@@ -1992,6 +3187,58 @@
                         "string",
                         "null"
                       ]
+                    },
+                    "freshness": {
+                      "type": "object",
+                      "required": [
+                        "state",
+                        "asOf"
+                      ],
+                      "description": "How far the data clock (lastCycleAt) lags generatedAt — the frozen-snapshot verdict",
+                      "properties": {
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "fresh",
+                            "stale",
+                            "very-stale"
+                          ]
+                        },
+                        "asOf": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    "blind": {
+                      "type": "boolean",
+                      "description": "True when the snapshot has no endpoints at all — never read as healthy"
+                    },
+                    "platformSummary": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlatformSummary"
+                      }
+                    },
+                    "staleMonitors": {
+                      "type": "object",
+                      "required": [
+                        "thresholdDays",
+                        "monitors"
+                      ],
+                      "properties": {
+                        "thresholdDays": {
+                          "type": "number"
+                        },
+                        "monitors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/StaleMonitor"
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -2032,7 +3279,8 @@
                   "required": [
                     "overall",
                     "services",
-                    "checkedAt"
+                    "checkedAt",
+                    "counts"
                   ],
                   "properties": {
                     "overall": {
@@ -2052,6 +3300,30 @@
                     },
                     "checkedAt": {
                       "type": "string"
+                    },
+                    "counts": {
+                      "type": "object",
+                      "required": [
+                        "up",
+                        "degraded",
+                        "down",
+                        "total"
+                      ],
+                      "description": "Endpoint tallies; an unprobed (unknown) endpoint counts as down, never up",
+                      "properties": {
+                        "up": {
+                          "type": "number"
+                        },
+                        "degraded": {
+                          "type": "number"
+                        },
+                        "down": {
+                          "type": "number"
+                        },
+                        "total": {
+                          "type": "number"
+                        }
+                      }
                     }
                   }
                 }
@@ -2371,7 +3643,9 @@
                   "type": "object",
                   "required": [
                     "services",
-                    "days"
+                    "days",
+                    "overallUptimePercent",
+                    "overallUptimeTone"
                   ],
                   "properties": {
                     "services": {
@@ -2382,6 +3656,16 @@
                     },
                     "days": {
                       "type": "number"
+                    },
+                    "overallUptimePercent": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Mean of the services' uptime over those with data; null when none has data"
+                    },
+                    "overallUptimeTone": {
+                      "$ref": "#/components/schemas/UptimeTone"
                     }
                   }
                 }
@@ -2750,7 +4034,8 @@
                   "required": [
                     "generatedAt",
                     "overall",
-                    "checks"
+                    "checks",
+                    "selfCheck"
                   ],
                   "properties": {
                     "generatedAt": {
@@ -2764,6 +4049,17 @@
                       "items": {
                         "$ref": "#/components/schemas/IntegrationCheck"
                       }
+                    },
+                    "selfCheck": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/SelfCheckView"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "The self-check bar verdict; null when every check is ok"
                     }
                   }
                 }
@@ -2792,6 +4088,17 @@
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "environments",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated environments the `scope` headline covers. Absent = every environment; present but empty = none (only environment-less rows)."
           }
         ],
         "responses": {
@@ -5032,6 +6339,17 @@
                       "items": {
                         "$ref": "#/components/schemas/AnalyticsMetricDTO"
                       }
+                    },
+                    "errorsFrozen": {
+                      "type": "boolean",
+                      "description": "GlitchTip could not be read just now; `errors` is its last answer"
+                    },
+                    "analyticsPending": {
+                      "type": "boolean",
+                      "description": "No analytics read since the backend started"
+                    },
+                    "errorsSummary": {
+                      "$ref": "#/components/schemas/ErrorsSummary"
                     }
                   }
                 }
@@ -5181,7 +6499,8 @@
                     "refreshing",
                     "range",
                     "configured",
-                    "sections"
+                    "sections",
+                    "views"
                   ],
                   "properties": {
                     "generatedAt": {
@@ -5535,6 +6854,7 @@
                                     "projectsTotal",
                                     "projectsEnabled",
                                     "failed",
+                                    "incomplete",
                                     "roster",
                                     "totals",
                                     "pageviews",
@@ -5555,6 +6875,9 @@
                                       "type": "number"
                                     },
                                     "failed": {
+                                      "type": "number"
+                                    },
+                                    "incomplete": {
                                       "type": "number"
                                     },
                                     "roster": {
@@ -5636,7 +6959,8 @@
                                           "countries",
                                           "referrers",
                                           "paths",
-                                          "devices"
+                                          "devices",
+                                          "incomplete"
                                         ],
                                         "properties": {
                                           "project": {
@@ -5683,6 +7007,9 @@
                                             "items": {
                                               "$ref": "#/components/schemas/DashboardMarginal"
                                             }
+                                          },
+                                          "incomplete": {
+                                            "type": "boolean"
                                           }
                                         }
                                       }
@@ -5709,6 +7036,9 @@
                           }
                         }
                       }
+                    },
+                    "views": {
+                      "$ref": "#/components/schemas/AnalyticsViews"
                     }
                   }
                 }
@@ -5760,7 +7090,8 @@
                     "generatedAt",
                     "refreshing",
                     "configured",
-                    "sections"
+                    "sections",
+                    "views"
                   ],
                   "properties": {
                     "generatedAt": {
@@ -6066,6 +7397,9 @@
                           }
                         }
                       }
+                    },
+                    "views": {
+                      "$ref": "#/components/schemas/ErrorsViews"
                     }
                   }
                 }

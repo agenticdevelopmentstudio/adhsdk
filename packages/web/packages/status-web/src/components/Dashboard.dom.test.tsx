@@ -37,7 +37,7 @@ vi.mock("../hooks/use-status", () => ({
       overall: "operational",
       checkedAt: new Date().toISOString(),
       services: [
-        { slug: "adh-app-production", group: "G", name: "App", url: "https://x.example.com/health", environment: "production", platform: null, deployProject: null, status: "healthy", responseTimeMs: 10, statusCode: 200, error: null, lastCheckedAt: new Date().toISOString(), dnsOk: true },
+        { slug: "adh-app-production", group: "G", name: "App", url: "https://x.example.com/health", environment: "production", platform: null, deployProject: null, status: "healthy", responseTimeMs: 10, statusCode: 200, error: null, lastCheckedAt: new Date().toISOString(), slow: false, dnsOk: true },
       ],
     },
   }),
@@ -95,6 +95,10 @@ function board(overrides: Record<string, unknown> = {}) {
     activity: [],
     indicator: "operational",
     monitoredTargets: [],
+    // The server's verdicts (src/board/view.ts): a current read over current data.
+    freshness: { state: "current", staleAt: new Date(Date.now() + 180_000).toISOString(), pollIntervalMs: 60_000 },
+    deployCounts: { builds: 0, deploys: 0, failures: 0 },
+    scope: { environments: null, indicator: "operational", problemCount: 0, endpoints: { total: 0, healthy: 0 } },
     ...overrides,
   };
 }

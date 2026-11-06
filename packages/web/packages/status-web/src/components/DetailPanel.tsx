@@ -1,7 +1,7 @@
 "use client";
 import type { ReactElement } from "react";
-import type { ServiceStatusDTO, UptimeService, DeploymentDTO } from "../types";
-import { deploysForEndpoint } from "../lib/deploy-view";
+import type { ServiceStatusDTO, UptimeService } from "../types";
+import type { LiveDeploymentDTO, LiveServiceDTO } from "../lib/live-types";
 import { COLORS, PALETTE } from "../lib/colors";
 import { useHistory } from "../hooks/use-history";
 import { ResponseChart } from "./ResponseChart";
@@ -16,23 +16,25 @@ export interface DetailPanelProps {
   /** The one ServiceStatusDTO for this endpoint. */
   svc: ServiceStatusDTO | undefined;
   uptime?: UptimeService;
-  deploys: DeploymentDTO[];
-  /** Backend probe cadence (snapshot.probeIntervalMs) — forwarded to DeployList so a
-   *  stale in-flight deploy greys out on the same clock as the rest of the board. */
-  probeIntervalMs?: number;
+  /** The same endpoint as the live snapshot serves it — carries the server's join of the
+   *  endpoint to its deploys (`deployIds`). Undefined when the snapshot lacks the slug. */
+  live: LiveServiceDTO | undefined;
+  /** The live snapshot's deployments, which `live.deployIds` index into. */
+  deploys: LiveDeploymentDTO[];
 }
 
 export function DetailPanel({
   selectedSlug,
   svc,
   uptime,
+  live,
   deploys,
-  probeIntervalMs,
 }: DetailPanelProps): ReactElement {
   const history = useHistory(selectedSlug);
 
-  // Deploy list for this specific endpoint — correlated by its url host (liveHost).
-  const endpointDeploys = svc ? deploysForEndpoint(deploys, svc) : [];
+  // Deploy list for this endpoint — the server's join, newest first.
+  const byId = new Map(deploys.map((d) => [d.id, d]));
+  const endpointDeploys = (live?.deployIds ?? []).flatMap((id) => byId.get(id) ?? []);
 
   // Response chart data from history
   const checks = history.data?.checks ?? [];
@@ -48,12 +50,10 @@ export function DetailPanel({
 
   const uptimePct = uptime?.uptimePercent;
   const uptimeLabel = uptimePct != null ? `${uptimePct.toFixed(2)}%` : "—";
+  // The server's verdict on the figure (`uptimeTone`); the client only picks the colour.
+  // No figure keeps the green it always had — the label already reads "—".
   const uptimeColor =
-    uptimePct != null && uptimePct < 99
-      ? uptimePct < 95
-        ? PALETTE.red
-        : PALETTE.amber
-      : PALETTE.green;
+    uptime?.uptimeTone === "bad" ? PALETTE.red : uptime?.uptimeTone === "warn" ? PALETTE.amber : PALETTE.green;
 
   return (
     // The pane's identity (host, env badge, open link) lives on the split's
@@ -88,7 +88,7 @@ export function DetailPanel({
         <div style={{ ...paneStyle, borderRight: "none" }}>
           <h4 className={sectionLabelClass}>Deploys for this endpoint</h4>
           <div style={{ flex: 1, overflow: "hidden" }}>
-            <DeployList deploys={endpointDeploys} probeIntervalMs={probeIntervalMs} />
+            <DeployList deploys={endpointDeploys} />
           </div>
         </div>
       </div>

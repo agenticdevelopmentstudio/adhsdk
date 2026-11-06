@@ -87,14 +87,73 @@ export const boardSchemas: Schemas = {
       branch: nul('string'),
       errorText: nul('string'),
       at: { type: 'string' },
+      unresolved: {
+        type: 'boolean',
+        description:
+          'A build/deploy row still in flight, or a failure a live problem on its target still carries ' +
+          '(board/view.ts isUnresolvedActivity). Judged against the problems at the time of the read.',
+      },
+      running: {
+        type: 'boolean',
+        description: 'A build/deploy in flight and past the queue (board/view.ts isRunningActivity)',
+      },
+      buildInFlight: {
+        type: 'boolean',
+        description: 'A deploy-kind build row still queued or building (board/view.ts isBuildInFlight)',
+      },
     },
+  },
+  BoardFreshness: {
+    type: 'object',
+    required: ['state', 'staleAt', 'pollIntervalMs'],
+    properties: {
+      state: {
+        type: 'string',
+        enum: ['current', 'frozen', 'no-data'],
+        description:
+          'Whether the facts behind the board are current: frozen once dataAsOfMs lags generatedAt by more ' +
+          'than two cadence-scaled stale windows; no-data when the board rests on no observation',
+      },
+      staleAt: {
+        type: 'string',
+        description: 'ISO instant after which this read can no longer back a claim if no newer read has arrived',
+      },
+      pollIntervalMs: { type: 'number', description: 'How often a client should re-read the board' },
+    },
+  },
+  DeployCounts: {
+    type: 'object',
+    required: ['builds', 'deploys', 'failures'],
+    properties: {
+      builds: { type: 'number' },
+      deploys: { type: 'number' },
+      failures: { type: 'number' },
+    },
+    description: 'Deploy-kind activity rows since activityFromMs: builds, deploys, and failed rows of either step',
+  },
+  BoardScope: {
+    type: 'object',
+    required: ['environments', 'indicator', 'problemCount', 'endpoints'],
+    properties: {
+      environments: { type: ['array', 'null'], items: { type: 'string' } },
+      indicator: { type: 'string', enum: ['operational', 'degraded', 'outage'] },
+      problemCount: { type: 'number' },
+      endpoints: {
+        type: 'object',
+        required: ['total', 'healthy'],
+        properties: { total: { type: 'number' }, healthy: { type: 'number' } },
+      },
+    },
+    description:
+      'The headline over the environments asked for with ?environments= (null = every environment). ' +
+      'A problem or endpoint with no environment is always in scope.',
   },
   // Board (src/board/types.ts) — the whole board. One read, one clock, one truth.
   Board: {
     type: 'object',
     required: [
       'generatedAt', 'dataAsOfMs', 'probeIntervalMs', 'activityFromMs', 'problems',
-      'activity', 'indicator', 'monitoredTargets',
+      'activity', 'indicator', 'monitoredTargets', 'freshness', 'deployCounts', 'scope',
     ],
     properties: {
       generatedAt: { type: 'string' },
@@ -110,6 +169,9 @@ export const boardSchemas: Schemas = {
       activity: { type: 'array', items: ref('ActivityRow') },
       indicator: { type: 'string', enum: ['operational', 'degraded', 'outage'] },
       monitoredTargets: { type: 'array', items: { type: 'string' } },
+      freshness: ref('BoardFreshness'),
+      deployCounts: ref('DeployCounts'),
+      scope: ref('BoardScope'),
     },
   },
 };
@@ -120,6 +182,17 @@ export const boardPaths: Paths = {
       tags: [tag],
       summary: 'The whole board in one read: Problems, Activity and the indicator',
       security: BEARER,
+      parameters: [
+        {
+          name: 'environments',
+          in: 'query',
+          required: false,
+          schema: { type: 'string' },
+          description:
+            'Comma-separated environments the `scope` headline covers. Absent = every environment; ' +
+            'present but empty = none (only environment-less rows).',
+        },
+      ],
       responses: {
         200: okJson('Board', ref('Board')),
         ...errors(401),

@@ -248,8 +248,8 @@ export function digestMonitor(input: MonitorInput, ctx: MonitorContext): Digest<
  * The newest deployment per deploy target — (platform, provider project id ?? name, tier) — so
  * a failure already fixed by a later build is history, not a problem.
  */
-export function newestPerTarget(deployments: DeploymentDTO[]): DeploymentDTO[] {
-  const latest = new Map<string, DeploymentDTO>();
+export function newestPerTarget<D extends DeploymentDTO>(deployments: D[]): D[] {
+  const latest = new Map<string, D>();
   for (const d of deployments) {
     const key = JSON.stringify([d.platform, d.providerProjectId ?? d.projectName, d.tier ?? d.environment]);
     const held = latest.get(key);
@@ -304,7 +304,9 @@ export function digestDeploys(input: DeploysInput): Digest<DeploysReportSection>
     updatedAt: live.lastCycleAt,
     section: {
       deployTargets: latest.length,
-      inFlight: latest.filter((d) => d.status === 'building' || d.status === 'queued').length,
+      // The SAME demotion `/live` applies (effectiveStatus): an in-flight phase nothing has
+      // re-confirmed is not counted as a build in progress.
+      inFlight: latest.filter((d) => d.effectiveStatus === 'building' || d.effectiveStatus === 'queued').length,
       failing,
       staleProd: live.staleProd,
       providers: live.providers,

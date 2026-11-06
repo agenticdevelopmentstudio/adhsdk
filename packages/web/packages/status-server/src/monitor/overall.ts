@@ -21,3 +21,19 @@ export function publicOverall(statuses: HealthStatus[], hasNonEndpointProblem: b
   const base = computeOverall(statuses);
   return base === "operational" && hasNonEndpointProblem ? "degraded" : base;
 }
+
+/** The endpoint counts `GET /status` publishes (up / degraded / down / total). An endpoint
+ *  with no probe yet counts as down: absence of a check is never "up". */
+export function endpointCounts(statuses: readonly (HealthStatus | "unknown")[]): {
+  up: number;
+  degraded: number;
+  down: number;
+  total: number;
+} {
+  return {
+    up: statuses.filter((s) => s === "healthy").length,
+    degraded: statuses.filter((s) => s === "degraded").length,
+    down: statuses.filter((s) => s === "down" || s === "unknown").length,
+    total: statuses.length,
+  };
+}

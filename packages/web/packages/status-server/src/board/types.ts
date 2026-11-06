@@ -1,3 +1,4 @@
+import type { BoardFreshness, BoardScope, DeployCounts } from "./view";
 import type { BuildPhase, DeployPhase } from "../monitor/deploy-status";
 import type { IssueSource } from "../monitor/issue-sources";
 import type { HealthStatus } from "../monitor/health";
@@ -443,6 +444,16 @@ export interface ActivityRow {
   errorText: string | null;
   /** ISO time the event happened. */
   at: string;
+  /**
+   * The server's judgements of this row against the CURRENT problems (`board/view.ts`),
+   * set on every row `GET /board` and `GET /activity` serve and absent only inside the
+   * fold. `unresolved`: a build/deploy still in flight, or failed in a run a live problem
+   * still carries. `running`: in flight and past the queue. `buildInFlight`: a build row
+   * queued or building, what the build-progress bar counts.
+   */
+  unresolved?: boolean;
+  running?: boolean;
+  buildInFlight?: boolean;
 }
 
 export type Indicator = "operational" | "degraded" | "outage";
@@ -489,6 +500,13 @@ export interface Board {
   problems: Problem[];
   activity: ActivityRow[];
   indicator: Indicator;
+  /** Whether this board can back a current claim — its facts, and its own read deadline. */
+  freshness: BoardFreshness;
+  /** The stats strip's build/deploy/failure counts over `activity` since `activityFromMs`. */
+  deployCounts: DeployCounts;
+  /** The headline over the environments the request named (`?environments=`); every
+   *  environment when it named none. */
+  scope: BoardScope;
   /**
    * Every target the board is CURRENTLY WATCHING — the roster's own targets, whether or
    * not they have a problem. This is what separates "this target recovered" from "this

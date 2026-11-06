@@ -8,6 +8,7 @@ import { cachedSingleFlight } from '@adh-sdk/deploy-platform/util';
 import type { AnalyticsMetricDTO, ErrorDTO, TelemetrySnapshot } from '../telemetry/types';
 import { errorCountsAsProblem, errorFeedFrozen } from '../board/derive-problems';
 import { isoMs } from '../telemetry/dashboard/errors-sections';
+import { errorsSummary } from '../telemetry/errors-summary';
 
 // ---------------------------------------------------------------------------
 // The TELEMETRY read API — the production-visibility band (errors + analytics).
@@ -116,9 +117,11 @@ export function telemetryRoutes(
   app.get('/telemetry', async (c) => {
     const fresh = c.req.query('fresh') === '1';
     const [errors, analytics] = await Promise.all([cachedErrors(fresh), analyticsForSnapshot(fresh)]);
+    const judgedErrors = await judged(errors);
     const snapshot: TelemetrySnapshot = {
       generatedAt: new Date().toISOString(),
-      errors: await judged(errors),
+      errors: judgedErrors,
+      errorsSummary: errorsSummary(judgedErrors),
       analytics: analytics ?? [],
       ...(errors.frozen ? { errorsFrozen: true } : {}),
       ...(analytics ? {} : { analyticsPending: true }),
