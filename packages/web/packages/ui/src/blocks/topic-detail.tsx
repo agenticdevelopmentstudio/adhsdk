@@ -155,6 +155,12 @@ export interface TopicListSearch {
    *  surface whose keys go on driving the list from the field (a picker dialog's arrows, Space and
    *  Return). The query stays when the panel closes; Escape just closes. */
   live?: boolean
+  /** A controlled host's `items` do not yet reflect `query`: it narrows them after a debounce,
+   *  or is still reading the narrowed list. The autocomplete offers nothing until they do —
+   *  "Searching…" instead — so Return can never choose a row matched for a query typed away
+   *  from, and a topic a suggestion chose is brought into view only once the rows it sits in
+   *  have arrived. */
+  pending?: boolean
 }
 
 /** A plain `<button>`'s props, less the accessible name, which `label` gives. */
@@ -986,8 +992,11 @@ export function TopicRail({
   const listSearch: TopicListSearch = search ?? {}
   const [ownQuery, setOwnQuery] = useState("")
   const [searchOpen, setSearchOpen] = useState(listSearch.autoOpen === true)
-  // The autocomplete's highlighted suggestion, an index into `suggestions` (below).
-  const [activeSuggestion, setActiveSuggestion] = useState(0)
+  // The autocomplete's highlighted suggestion, by TOPIC ID rather than position: a host's rows
+  // can change under the highlight (a debounced list landing), and an index kept across that
+  // change pointed at a different topic than the one the arrows had reached. `null`, or an id no
+  // longer offered, highlights the first suggestion.
+  const [activeSuggestionId, setActiveSuggestionId] = useState<string | null>(null)
   const controlledQuery = listSearch.query !== undefined
   const query = controlledQuery ? (listSearch.query ?? "") : ownQuery
   // A controlled host filters before it passes `items`, so as far as this rail can tell its rows
@@ -1178,7 +1187,7 @@ export function TopicRail({
     searchTriggerRef.current?.focus()
   }
   const openSearch = () => {
-    setActiveSuggestion(0)
+    setActiveSuggestionId(null)
     setSearchOpen(true)
   }
   const shownItems = selfFiltering ? filterTopicItems(items, query, selectedId) : items
@@ -1191,14 +1200,18 @@ export function TopicRail({
   // highlight, and Return chose the topic already open instead of the one typed. A disabled row
   // cannot be chosen, so it is not offered.
   const typed = query.trim().toLowerCase()
+  // A controlled host whose rows are still catching up with the query (`pending`) offers nothing:
+  // its rows were matched for another query, and offering them let Return open a topic that does
+  // not match what was typed.
+  const pendingQuery = controlledQuery && listSearch.pending === true
   const suggestions =
-    !listSearch.live && typed !== ""
+    !listSearch.live && typed !== "" && !pendingQuery
       ? (controlledQuery
           ? items.filter((it) => it.id !== selectedId || topicMatches(it, typed))
           : filterTopicItems(items, query, null)
         ).filter((it) => !it.disabled)
       : []
-  const highlighted = Math.min(activeSuggestion, Math.max(0, suggestions.length - 1))
+  const highlighted = Math.max(0, suggestions.findIndex((it) => it.id === activeSuggestionId))
   const suggestionsId = useId()
   const suggestionId = (i: number) => `${suggestionsId}-${i}`
   const suggestionsRef = useRef<HTMLUListElement>(null)
@@ -1229,17 +1242,23 @@ export function TopicRail({
   // that comes back is a new element to measure and observe.
   const searchShown = showToolbar && searchOpen
   const queryActive = query.trim() !== ""
+  // Waiting on a controlled host's rows for what is typed: "Searching…" hangs where the
+  // suggestions will.
+  const searchingShown = searchShown && !listSearch.live && queryActive && pendingQuery
   // The autocomplete is on screen exactly when this holds.
-  const suggestionsShown = searchShown && suggestions.length > 0
-  // Reveal the topic a suggestion chose (see `revealChosen`).
+  const suggestionsShown = searchShown && (suggestions.length > 0 || searchingShown)
+  // Reveal the topic a suggestion chose (see `revealChosen`). Not while a host's rows are still
+  // catching up with the query that choosing cleared: a reveal run against the narrowed rows was
+  // used up, and the full list arrived with the chosen row off-screen. Keyed on `sig` too, so it
+  // runs again when those rows land.
   useLayoutEffect(() => {
     const chosen = revealChosen.current
-    if (chosen === null || suggestionsShown || selectedId !== chosen) return
+    if (chosen === null || suggestionsShown || pendingQuery || selectedId !== chosen) return
     revealChosen.current = null
     listRef.current
       ?.querySelector<HTMLElement>('[data-htd-row][aria-current="true"]')
       ?.scrollIntoView?.({ block: "nearest" })
-  }, [selectedId, suggestionsShown])
+  }, [selectedId, suggestionsShown, pendingQuery, sig])
   const searchLabel = listSearch.placeholder ?? "Filter"
   const toolbar = showToolbar ? (
     <div
@@ -1305,7 +1324,7 @@ export function TopicRail({
             placeholder={searchLabel}
             aria-label={searchLabel}
             onChange={(e) => {
-              setActiveSuggestion(0)
+              setActiveSuggestionId(null)
               setQuery(e.target.value)
             }}
             onKeyDown={(e) => {
@@ -1316,7 +1335,9 @@ export function TopicRail({
                 // The caret stays put; the highlight moves, wrapping at either end.
                 e.preventDefault()
                 const step = e.key === "ArrowDown" ? 1 : -1
-                setActiveSuggestion((highlighted + step + suggestions.length) % suggestions.length)
+                setActiveSuggestionId(
+                  suggestions[(highlighted + step + suggestions.length) % suggestions.length]?.id ?? null,
+                )
               } else if (e.key === "Enter") {
                 // An IME commits its candidate on Return; that keystroke is the typing, not the filter.
                 if (e.nativeEvent.isComposing || e.keyCode === 229) return
@@ -1344,7 +1365,16 @@ export function TopicRail({
           </ListToolButton>
         </div>
       )}
-      {suggestionsShown && (
+      {searchingShown && (
+        <div
+          role="status"
+          data-htd-suggestions
+          className="absolute top-full right-0 left-0 z-20 border-y border-apt-border bg-apt-surface py-2 pr-2 pl-2.5 text-[0.8rem] text-apt-text-muted shadow-lg"
+        >
+          Searching…
+        </div>
+      )}
+      {searchShown && suggestions.length > 0 && (
         <ul
           ref={suggestionsRef}
           id={suggestionsId}
@@ -1366,7 +1396,7 @@ export function TopicRail({
               // Focus stays in the field through the click, or its blur would dismiss the panel
               // (and unmount this list) before the click landed.
               onMouseDown={(e) => e.preventDefault()}
-              onMouseEnter={() => setActiveSuggestion(i)}
+              onMouseEnter={() => setActiveSuggestionId(item.id)}
               onClick={() => chooseSuggestion(item)}
               className={cn(
                 "flex cursor-pointer items-center gap-2 py-1.5 pr-2 pl-2.5 text-[0.8rem]",

@@ -757,6 +757,9 @@ export function ResearchPane({
       query: filters.q,
       onQueryChange: (q) => setFilters((prev) => ({ ...prev, q })),
       placeholder: "Search research documents",
+      // The rows lag the field by the debounce and then by the read: until they are the
+      // answer to what is typed, the rail's autocomplete must not offer them.
+      pending: filters.q !== applied.q || (docs === undefined && !listError),
     },
     titleActions: (
       <ResearchFilters
