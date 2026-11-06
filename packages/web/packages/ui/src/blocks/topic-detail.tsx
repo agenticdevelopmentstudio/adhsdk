@@ -153,7 +153,8 @@ export interface TopicListSearch {
   autoOpen?: boolean
   /** Filter the RAIL'S OWN ROWS on every keystroke instead of offering the autocomplete — for a
    *  surface whose keys go on driving the list from the field (a picker dialog's arrows, Space and
-   *  Return). The query stays when the panel closes; Escape just closes. */
+   *  Return, all left to the host). The field stays open when focus leaves it, and the query
+   *  stays when the panel closes; Escape just closes. */
   live?: boolean
   /** A controlled host's `items` do not yet reflect `query`: it narrows them after a debounce,
    *  or is still reading the narrowed list. The autocomplete offers nothing until they do —
@@ -1299,9 +1300,12 @@ export function TopicRail({
           // `gap-2` as the toolbar, so its glass sits exactly where the button was.
           className="absolute inset-0 z-10 flex items-center gap-2 bg-apt-surface pr-1.5 pl-2.5"
           // Leaving the panel dismisses it, as Escape does; moving focus inside it (Tab onto ✕)
-          // does not, or ✕ would unmount in the instant it took focus.
+          // does not, or ✕ would unmount in the instant it took focus. A `live` field is the
+          // host's keyboard, not a passing autocomplete: it stays until Escape or ✕ closes it. A
+          // picker's confirm takes focus on Return, and a field closed by that blur was gone when
+          // the confirm was cancelled, so focus had nowhere to come back to.
           onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget)) dismissSearch()
+            if (!listSearch.live && !e.currentTarget.contains(e.relatedTarget)) dismissSearch()
           }}
         >
           <span className="flex w-4 shrink-0 items-center justify-center text-apt-text-muted">
@@ -1341,12 +1345,15 @@ export function TopicRail({
               } else if (e.key === "Enter") {
                 // An IME commits its candidate on Return; that keystroke is the typing, not the filter.
                 if (e.nativeEvent.isComposing || e.keyCode === 229) return
+                // `live` leaves Return to the host, which drives its list from the field (a picker
+                // confirms on it). Closing here unmounted the field the host's keys are wired to,
+                // and focus landed on the filter button, out of the host's reach.
+                if (listSearch.live) return
                 // Closing hands focus to the filter button BEFORE this keystroke's `keypress`, which
                 // goes to whatever holds focus by then — and a button takes Return's keypress as a
                 // click, reopening the panel it just closed. A cancelled keydown sends no keypress.
                 e.preventDefault()
-                if (listSearch.live) closeSearch()
-                else if (suggestions[highlighted]) chooseSuggestion(suggestions[highlighted])
+                if (suggestions[highlighted]) chooseSuggestion(suggestions[highlighted])
                 // Nothing matches: nothing to choose, and the field stays open to be corrected.
               }
             }}
