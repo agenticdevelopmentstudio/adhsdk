@@ -247,11 +247,12 @@ final class EventStoreTrimTests: XCTestCase {
     }
 
     /// A status read answers while long maintenance reads hold every reader.
-    func testFileStatsAnswersWhileEveryReaderIsHeld() throws {
+    func testFileStatsAndMetaValueAnswerWhileEveryReaderIsHeld() throws {
         let store = try makeStore()
         var batch = NormalizedBatch()
         batch.events = [event("e", session: "s", at: 1)]
         try store.write(batch, provider: "mock")
+        try store.setMetaValue("42", forKey: "probe")
 
         let release = DispatchSemaphore(value: 0)
         let holding = DispatchGroup()
@@ -268,6 +269,7 @@ final class EventStoreTrimTests: XCTestCase {
         let answered = expectation(description: "fileStats answers")
         DispatchQueue.global().async {
             XCTAssertGreaterThan((try? store.fileStats().pageCount) ?? 0, 0)
+            XCTAssertEqual(try? store.metaValue(forKey: "probe"), "42")
             answered.fulfill()
         }
         wait(for: [answered], timeout: 5)

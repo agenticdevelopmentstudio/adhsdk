@@ -278,9 +278,18 @@ public final class EventStore: @unchecked Sendable {
         }
     }
 
-    /// The `store_meta` value under `key`, or nil when it is not set.
+    /// The `store_meta` value under `key`, or nil when it is not set. Read on a
+    /// short-lived read-only connection of its own, never one of the pool's
+    /// readers: maintenance reads can hold all three for minutes, and status
+    /// readers (`/storage`, the backfill's progress) must still answer. The
+    /// store has this file open, so its `-wal` and `-shm` already exist and the
+    /// open creates nothing; it sees every committed write, as a pool read does.
     public func metaValue(forKey key: String) throws -> String? {
-        try pool.read { conn in
+        var configuration = Configuration()
+        configuration.readonly = true
+        let queue = try DatabaseQueue(path: path, configuration: configuration)
+        defer { try? queue.close() }
+        return try queue.read { conn in
             try String.fetchOne(conn, sql: "SELECT value FROM store_meta WHERE key = ?", arguments: [key])
         }
     }
