@@ -298,17 +298,20 @@ export function useAdminCategorySelection(
   const [chosen, setChosenState] = useState<AdminCategoryId | null>(() =>
     topicId ? adminCategoryOf(topicId) : lastCategory,
   );
+  // For event handlers and settled promises only: never call it during render, where a render
+  // React throws away (StrictMode, a concurrent restart) would leave the module-level choice
+  // naming a category that was never committed.
   const setChosen = (next: AdminCategoryId | null): void => {
     lastCategory = next;
     setChosenState(next);
   };
   // Following the open section's category is state adjusted DURING render, React's documented
   // pattern for "reset state when a prop changes" — not an effect, which would paint one frame
-  // with the stale category first.
+  // with the stale category first. Local state only; the effect below records it once committed.
   const [seenTopic, setSeenTopic] = useState(topicId);
   if (topicId !== seenTopic) {
     setSeenTopic(topicId);
-    if (topicId) setChosen(adminCategoryOf(topicId));
+    if (topicId) setChosenState(adminCategoryOf(topicId));
   }
 
   const selectedId = topicId ? adminCategoryOf(topicId) : chosen;
@@ -327,11 +330,13 @@ export function useAdminCategorySelection(
     // Re-choosing the open section's own category leaves the section open.
     if (next === selectedId) return;
     // Recorded BEFORE leaving: in the hub the route can land, and the console remount, before
-    // `leaveTopic` resolves — and the new instance reads its category the moment it mounts.
+    // `leaveTopic` resolves — and the new instance reads its category the moment it mounts. The
+    // guard ALWAYS answers, even when another request (a Back press) replaces this one's dialog,
+    // so a choice that never completed is rolled back here.
     lastCategory = next;
     void leaveTopic().then((left) => {
       if (left) setChosen(next);
-      else lastCategory = selectedId; // The guard said stay: the open section's category stands.
+      else if (lastCategory === next) lastCategory = selectedId; // Stay: the section's category stands.
     });
   };
 

@@ -76,6 +76,22 @@ export function UnsavedChangesGuard({
     href?: string
     resolve?: (ok: boolean) => void
   } | null>(null)
+  // The pending confirm's resolver, outside state so a replacement can settle it. A second
+  // request (Back pressed while a programmatic confirm is up) used to REPLACE the first, whose
+  // promise then never settled: its caller's rollback never ran, and the admin console's last
+  // category stayed on a choice the user never completed.
+  const pendingResolveRef = React.useRef<((ok: boolean) => void) | undefined>(undefined)
+  /** Raise `next`, first answering the confirm it replaces with "stay": its navigation is the
+   *  one that did not happen. */
+  const raiseConfirm = React.useCallback(
+    (next: { href?: string; resolve?: (ok: boolean) => void }): void => {
+      const replaced = pendingResolveRef.current
+      pendingResolveRef.current = next.resolve
+      setConfirm(next)
+      replaced?.(false)
+    },
+    [],
+  )
   // Set while a navigation this guard already approved is underway, so the
   // beforeunload guard doesn't re-prompt on the unload it just allowed.
   const approvedRef = React.useRef(false)
@@ -100,9 +116,9 @@ export function UnsavedChangesGuard({
   /** Raise the confirm dialog; resolves the caller's promise on user choice. */
   const requestConfirm = React.useCallback((): Promise<boolean> => {
     return new Promise<boolean>((resolve) => {
-      setConfirm({ resolve })
+      raiseConfirm({ resolve })
     })
-  }, [])
+  }, [raiseConfirm])
 
   React.useEffect(() => {
     if (!when) return
@@ -146,7 +162,7 @@ export function UnsavedChangesGuard({
       // defaulted event, while the anchor's other handlers (menu close-on-
       // select, analytics) still run.
       e.preventDefault()
-      setConfirm({ href: url.pathname + url.search + url.hash })
+      raiseConfirm({ href: url.pathname + url.search + url.hash })
     }
 
     function onPopState(): void {
@@ -195,10 +211,11 @@ export function UnsavedChangesGuard({
       window.removeEventListener("popstate", onPopState)
       document.removeEventListener("click", onClick, true)
     }
-  }, [when, requestConfirm, approveBriefly])
+  }, [when, requestConfirm, approveBriefly, raiseConfirm])
 
   function settle(ok: boolean): void {
     const current = confirm
+    pendingResolveRef.current = undefined
     setConfirm(null)
     if (!current) return
     if (ok) approveBriefly() // the caller (or the branch below) navigates now
