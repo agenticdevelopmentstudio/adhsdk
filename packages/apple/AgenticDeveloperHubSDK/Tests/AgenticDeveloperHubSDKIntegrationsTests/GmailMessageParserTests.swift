@@ -39,7 +39,18 @@ enum GmailFixture {
 
     @Test func decodesLatin1Charset() throws {
         let msg = try parsed("message-latin1")
-        #expect(msg.bodyText == "caf\u{E9}")
+        // C3 A9 is valid UTF-8 ("e-acute"); only the declared charset makes it "A-tilde, copyright".
+        #expect(msg.bodyText == "\u{C3}\u{A9}")
+    }
+
+    @Test func decodesWindows1252Charset() throws {
+        let msg = try parsed("message-windows1252")
+        #expect(msg.bodyText == "\u{20AC}")
+    }
+
+    @Test func decodesQuotedMixedCaseCharsetParameter() throws {
+        let msg = try parsed("message-quoted-charset")
+        #expect(msg.bodyText == "\u{C3}\u{A9}")
     }
 
     @Test func splitsAddressListsRespectingQuotes() throws {
