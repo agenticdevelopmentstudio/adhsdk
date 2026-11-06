@@ -50,6 +50,17 @@ extension ComposableSettings {
                 terms.append(topic.title)
                 terms.append(topic.body)
             }
+            // A section's topics are panels in their own right, handed over
+            // before the section is ever built, each built or not on its own;
+            // the container's view is only the list. Asked before the split
+            // case below, which a section also is, because a section's panels
+            // are there whether or not its view has loaded.
+            if let container = panel as? any SettingsPanelContainer {
+                for child in container.containedPanels {
+                    terms.append(contentsOf: harvest(from: child))
+                }
+                return terms
+            }
             // A nested split's own view holds only a sidebar; the settings the
             // reader is searching for are in the panels it hosts. Recurse into
             // the ones it has — but only if it has loaded, since a split
@@ -57,14 +68,6 @@ extension ComposableSettings {
             if let split = panel as? SplitViewController {
                 guard split.isViewLoaded else { return terms }
                 for child in split.panels {
-                    terms.append(contentsOf: harvest(from: child))
-                }
-                return terms
-            }
-            // A section's tabs are panels in their own right, each built or not
-            // on its own; the container's view is only the tab bar.
-            if let container = panel as? any SettingsPanelContainer {
-                for child in container.containedPanels {
                     terms.append(contentsOf: harvest(from: child))
                 }
                 return terms

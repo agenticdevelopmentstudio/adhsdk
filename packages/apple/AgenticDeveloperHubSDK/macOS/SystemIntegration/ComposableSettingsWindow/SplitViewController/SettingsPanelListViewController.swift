@@ -26,6 +26,16 @@ extension ComposableSettings {
             }
         }
 
+        /// Whether a run of panels sharing a section title gets that title as a
+        /// header. Off for a section's own topic list, where every panel carries
+        /// the section's name and the selected sidebar row already says it.
+        public var showsSectionTitles: Bool = true {
+            didSet {
+                guard oldValue != showsSectionTitles else { return }
+                rebuildSections()
+            }
+        }
+
         private var panels: [any ComposableSettingsPanel] = []
         private let searchIndex = SettingsSearchIndex()
 
@@ -79,7 +89,7 @@ extension ComposableSettings {
         // MARK: - Internals
 
         private func rebuildSections() {
-            setSections(Self.buildSections(from: visiblePanels()))
+            setSections(Self.buildSections(from: visiblePanels(), titled: showsSectionTitles))
         }
 
         /// The panels the current query admits, each paired with its position in
@@ -97,7 +107,8 @@ extension ComposableSettings {
         }
 
         private static func buildSections(
-            from panels: [(index: Int, panel: any ComposableSettingsPanel)]
+            from panels: [(index: Int, panel: any ComposableSettingsPanel)],
+            titled: Bool
         ) -> [TopicListSection] {
             // Sections come out in the order the panels arrive, and a run of
             // panels sharing one section title is one section. Grouping by title
@@ -112,10 +123,11 @@ extension ComposableSettings {
                     icon: entry.panel.descriptor.icon,
                     isDisabled: entry.panel.descriptor.isDisabled
                 )
-                if !runs.isEmpty, runs[runs.count - 1].title == entry.panel.descriptor.section {
+                let title = titled ? entry.panel.descriptor.section : nil
+                if !runs.isEmpty, runs[runs.count - 1].title == title {
                     runs[runs.count - 1].items.append(item)
                 } else {
-                    runs.append((title: entry.panel.descriptor.section, items: [item]))
+                    runs.append((title: title, items: [item]))
                 }
             }
             return runs.map { TopicListSection(title: $0.title, items: $0.items) }

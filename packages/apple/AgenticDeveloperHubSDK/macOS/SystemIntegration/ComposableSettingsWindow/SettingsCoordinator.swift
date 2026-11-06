@@ -16,12 +16,12 @@ extension ComposableSettings {
         /// The sidebar row each section is shown as, by section title.
         private let sectionIcons: [String: NSImage]
 
-        /// Every panel handed over, before sections are folded into tabs.
+        /// Every panel handed over, before sections are folded into topic lists.
         private var panels: [any ComposableSettingsPanel]
 
-        /// One topic per section, kept across `addPanel` so the tab a reader
+        /// One topic per section, kept across `addPanel` so the row a reader
         /// is on survives a panel arriving late.
-        private var sectionTopics: [String: SectionTabsPanel] = [:]
+        private var sectionTopics: [String: SectionTopicsPanel] = [:]
 
         /// The ids this feature's actions answer to.
         public enum CommandID {
@@ -101,7 +101,7 @@ extension ComposableSettings {
         }
 
         /// Hands the window its sidebar: each unsectioned panel as a topic of
-        /// its own, and each section as one topic whose tabs are its panels.
+        /// its own, and each section as one topic whose list is its panels.
         private func publishTopics() {
             var topics: [any ComposableSettingsPanel] = []
             var members: [String: [any ComposableSettingsPanel]] = [:]
@@ -112,7 +112,7 @@ extension ComposableSettings {
                 }
                 if members[section] == nil {
                     let topic = sectionTopics[section]
-                        ?? SectionTabsPanel(section: section, icon: sectionIcons[section] ?? panel.descriptor.icon)
+                        ?? SectionTopicsPanel(section: section, icon: sectionIcons[section] ?? panel.descriptor.icon)
                     sectionTopics[section] = topic
                     topics.append(topic)
                 }
@@ -120,7 +120,7 @@ extension ComposableSettings {
             }
             sectionTopics = sectionTopics.filter { members[$0.key] != nil }
             for (section, topic) in sectionTopics {
-                topic.setPanels(members[section] ?? [])
+                topic.setSectionPanels(members[section] ?? [])
             }
             settingsWindow.settingPanels = topics
         }

@@ -52,7 +52,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         self.siteData = siteData
         self.settings = settings
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: "Browser",
+            title: "Web Browser",
             icon: NSImage(systemSymbolName: "globe", accessibilityDescription: nil)
         ))
     }
@@ -65,7 +65,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     public override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
-                title: "Browser",
+                title: "Web Browser",
                 body: "The Browser pane is a web browser inside a project window: an address "
                     + "bar over a page. These topics decide how its pages load, what it "
                     + "remembers about where you have been, what sites may keep and do, "

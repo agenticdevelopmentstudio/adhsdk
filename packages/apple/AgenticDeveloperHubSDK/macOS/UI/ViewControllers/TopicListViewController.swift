@@ -600,7 +600,12 @@ extension TopicListViewController: NSOutlineViewDelegate {
 
     public func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
         guard let node = item as? TopicListNode else { return nil }
-        let palette = view.resolvedThemeScope.palette
+        // The outline's scope, not `view`'s: `loadView` reloads the outline
+        // before it assigns `view`, so reading `view` here re-entered
+        // `loadView` for a list populated before it loaded (a section's topic
+        // list) — a second column, every row drawn twice side by side. Inside
+        // the hierarchy the outline resolves to the same scope.
+        let palette = outlineView.resolvedThemeScope.palette
 
         switch node.kind {
         case .header(let title):

@@ -75,8 +75,17 @@ extension ComposableSettings {
 
         /// Whether the topic list is shown. Off for a window that has only one
         /// topic, where the list would be a column naming the one thing on
-        /// screen. Read when the view loads.
-        public var showsSidebar: Bool = true
+        /// screen. Takes effect immediately, so a list that gains its second
+        /// topic while on screen appears then and there.
+        public var showsSidebar: Bool = true {
+            didSet {
+                guard oldValue != showsSidebar, isViewLoaded,
+                      let sidebarItem = splitViewItems.first else { return }
+                sidebarItem.canCollapse = !showsSidebar
+                sidebarItem.isCollapsed = !showsSidebar
+                enclosingSettingsSplit?.updateSidebarLayout()
+            }
+        }
 
         /// Fired whenever the selection or the trail behind it changes, so a
         /// toolbar can revalidate its back/forward arrows and retitle itself.
@@ -87,7 +96,7 @@ extension ComposableSettings {
         /// with the topic selected *inside* it: that is the panel the reader is
         /// looking at, and naming the outer container instead left the toolbar
         /// stuck on the container's name while the reader moved down its list.
-        /// A section's tabs are looked through the same way, to the tab on screen.
+        /// A section's topic list is looked through the same way, to the topic on screen.
         public var currentPanelTitle: String? {
             if let nested = visiblePanel as? SplitViewController,
                let inner = nested.currentPanelTitle {
@@ -121,8 +130,11 @@ extension ComposableSettings {
         /// list — so "back" has to undo *that* before it backs out of the nested
         /// panel entirely.
         private func navigator(goingBack: Bool) -> SplitViewController {
-            guard let inner = (visiblePanel as? SplitViewController)?
-                    .navigator(goingBack: goingBack),
+            // The selected panel first: a section's topic list is a split
+            // with a trail of its own, and looking through it to the topic
+            // it shows would skip that trail.
+            let nested = (currentPanel as? SplitViewController) ?? (visiblePanel as? SplitViewController)
+            guard let inner = nested?.navigator(goingBack: goingBack),
                   goingBack ? inner.history.canGoBack : inner.history.canGoForward
             else { return self }
             return inner
@@ -373,7 +385,7 @@ extension ComposableSettings {
         /// Called on appearance and whenever the panel set changes, so panels added
         /// while the window is already open still share one width (rather than the
         /// new split sizing to its own content while its siblings keep the old one).
-        private func updateSidebarLayout() {
+        func updateSidebarLayout() {
             unifyNestedSidebars()
             applySidebarWidth()
         }
@@ -398,8 +410,15 @@ extension ComposableSettings {
         /// inner divider. Force-loads each so its list is populated enough to
         /// report a content width (they otherwise load lazily on first show).
         private func unifyNestedSidebars() {
-            let nested = panels.compactMap { $0 as? SplitViewController }
-            guard nested.count > 1 else { return }
+            // A split whose list is hidden (a section of one panel) has no
+            // sidebar width to share, and counting it would widen the others'
+            // lists to fit a list nobody sees.
+            let nested = panels.compactMap { $0 as? SplitViewController }.filter(\.showsSidebar)
+            guard nested.count > 1 else {
+                nestedDetailFloor = 0
+                applyDetailMinimumThickness()
+                return
+            }
             let widest = min(
                 nested.map { split -> CGFloat in
                     _ = split.view
@@ -685,17 +704,10 @@ extension ComposableSettings {
             enclosingSettingsSplit?.notifyNavigationChange()
         }
 
-        /// Told by a `SettingsPanelContainer` hosted here that its selection
-        /// moved: the toolbar title and the help drawer follow the tab.
-        func containedSelectionDidChange() {
-            refreshHelp()
-            notifyNavigationChange()
-        }
-
         private let revealIndex = SettingsSearchIndex()
 
-        /// Picked from search results, a section opens on the first of its tabs
-        /// the query matched — the tab that put the section in the results —
+        /// Picked from search results, a section opens on the first of its topics
+        /// the query matched — the topic that put the section in the results —
         /// rather than on whichever tab it was last left at.
         private func revealSearchMatch(in panel: (any ComposableSettingsPanel)?) {
             let query = listViewController.searchQuery
