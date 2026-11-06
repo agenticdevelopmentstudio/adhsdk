@@ -107,6 +107,12 @@ export interface GlitchtipIssuesResult {
   issues: GlitchtipIssue[];
   /** The walk reached the end, so "absent from `issues`" really means absent. */
   complete: boolean;
+  /**
+   * Set when the walk is short because a request after page 1 FAILED — as opposed to the page
+   * cap, a repeated cursor or a full page with no way forward, which a second walk would meet
+   * again. A caller that keeps an incomplete answer for long uses it to keep a blip out.
+   */
+  interrupted?: true;
 }
 
 /**
@@ -150,7 +156,7 @@ export async function fetchGlitchtipIssues(
   let pagesRead = 0;
   /** What a failure after page 1 returns: the pages that answered, never claimed whole. */
   const stopped = (): GlitchtipIssuesResult =>
-    pagesRead === 0 ? failed : { ok: true, issues: [...byId.values()], complete: false };
+    pagesRead === 0 ? failed : { ok: true, issues: [...byId.values()], complete: false, interrupted: true };
   /** Page 1 again, merged in; `complete` only if it answered. See the doc comment above. */
   const confirmed = async (): Promise<GlitchtipIssuesResult> => {
     const res = await fetch(first, {

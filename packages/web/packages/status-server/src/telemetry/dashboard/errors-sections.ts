@@ -93,13 +93,14 @@ export type ResolvedCount = () => Promise<number | null>;
  * GlitchTip has no count endpoint, so counting means walking every `is:resolved` page (up to
  * MAX_PAGES) only to take the list's length. Doing that on the issue list's own 60s refresh spent
  * up to twenty requests a minute on one figure that barely moves. A failed read is not kept, so
- * the next refresh tries again; a walk that hit the page cap is kept, since walking it again
- * would hit the cap again.
+ * the next refresh tries again, and that includes a walk cut short by a failure after its first
+ * page (`interrupted`), which would otherwise stand as "not counted" for the whole TTL. A walk
+ * that hit the page cap is kept, since walking it again would hit the cap again.
  */
 export function resolvedCounter(env: GlitchtipEnv, ttlMs: number = RESOLVED_COUNT_TTL_MS): ResolvedCount {
   const cached = cachedSingleFlight(ttlMs, async () => {
     const resolved = await fetchGlitchtipIssues(env, "is:resolved");
-    if (!resolved.ok) throw new Error("GlitchTip resolved issues could not be read");
+    if (!resolved.ok || resolved.interrupted) throw new Error("GlitchTip resolved issues could not be read");
     return resolved.complete ? resolved.issues.length : null;
   });
   return () => cached().catch(() => null);
