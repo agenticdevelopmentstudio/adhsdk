@@ -422,6 +422,41 @@ describe('topic list filter', () => {
     expect(suggestions()).toEqual(['Alpha'])
   })
 
+  it('offers nothing while a controlled host says its rows are still catching up', () => {
+    const onSelect = vi.fn()
+    // Notebook and Research narrow their rows 200ms after the field changes, and read them after.
+    const host = (query: string, items: typeof props.items, pending: boolean) => (
+      <TopicRail {...props} items={items} onSelect={onSelect} search={{ query, onQueryChange: () => {}, pending }} />
+    )
+    const { rerender } = render(host('', props.items, false))
+    fireEvent.click(filterButton())
+    rerender(host('gam', props.items, true))
+    expect(suggestions()).toEqual([])
+    expect(screen.getByText('Searching…')).toHaveAttribute('role', 'status')
+    key('Enter')
+    expect(onSelect).not.toHaveBeenCalled()
+    rerender(host('gam', [props.items[2]!], false))
+    expect(suggestions()).toEqual(['Gamma'])
+    key('Enter')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('c')
+  })
+
+  it('keeps the highlight on the topic the arrows reached when the host rows change', () => {
+    const onSelect = vi.fn()
+    const host = (items: typeof props.items) => (
+      <TopicRail {...props} items={items} onSelect={onSelect} search={{ query: 'a', onQueryChange: () => {} }} />
+    )
+    const { rerender } = render(host(props.items))
+    fireEvent.click(filterButton())
+    key('ArrowDown')
+    expect(highlighted()).toBe('Beta')
+    // The host's answer lands with a row ahead of Beta: the highlight stays on Beta.
+    rerender(host([{ id: 'z', label: 'Zeta' }, ...props.items]))
+    expect(highlighted()).toBe('Beta')
+    key('Enter')
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('b')
+  })
+
   it('leaves the empty label to the host when the query is controlled', () => {
     // The host's list is empty while a new query's read is in flight, and only the host knows
     // that — the notebook's "Loading…" used to be replaced by "Nothing matches".
