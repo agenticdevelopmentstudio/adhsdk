@@ -368,7 +368,9 @@ export function FeaturePickerDialog({
    */
   const onFilterKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
-      if (!(e.target instanceof Element) || !e.target.closest("[data-htd-search]")) return;
+      // The FIELD only. The panel also holds ✕ ("Clear filter"), which Tab reaches, and Return and
+      // Space there must press it rather than confirm the picker or tick a row.
+      if (!(e.target instanceof Element) || !e.target.matches("[data-htd-search] input")) return;
       if (busy || confirming) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();

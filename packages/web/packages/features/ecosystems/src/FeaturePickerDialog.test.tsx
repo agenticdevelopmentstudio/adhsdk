@@ -209,6 +209,22 @@ describe('FeaturePickerDialog — target state survives a provisioned-list refet
   })
 })
 
+describe('FeaturePickerDialog — the filter panel’s ✕ keeps its own keys', () => {
+  it('lets Return and Space press ✕ instead of confirming or ticking', () => {
+    renderPicker()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Research' }))
+    const clear = screen.getByRole('button', { name: 'Clear filter' })
+    const enter = fireEvent.keyDown(clear, { key: 'Enter' })
+    expect(enter).toBe(true) // not default-prevented: the button still activates
+    expect(screen.queryByText('Add 1 feature?')).toBeNull()
+    const ticks = () => screen.getAllByRole('checkbox').map((c) => (c as HTMLInputElement).checked)
+    const before = ticks()
+    const space = fireEvent.keyDown(clear, { key: ' ' })
+    expect(space).toBe(true)
+    expect(ticks()).toEqual(before)
+  })
+})
+
 describe('FeaturePickerDialog — Enter-to-confirm ignores IME composition', () => {
   function filterField(): HTMLElement {
     return screen.getByRole('searchbox', { name: 'Filter features' })
