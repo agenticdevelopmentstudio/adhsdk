@@ -518,6 +518,23 @@ describe('the search pop-over and the keyboard', () => {
     ['Enter', () => key('Enter')],
     ['✕', () => fireEvent.click(screen.getByRole('button', { name: 'Clear filter' }))],
   ]
+  it('lets only a MOVING pointer take the highlight, and keeps the field through a press on the list', () => {
+    render(<TopicRail {...props} search={{}} />)
+    fireEvent.click(filterButton())
+    type('a')
+    key('ArrowDown')
+    expect(highlighted()).toBe('Beta')
+    const options = screen.getAllByRole('option')
+    // The arrows scrolled an option under a resting pointer: enter, but no move.
+    fireEvent.mouseEnter(options[2]!)
+    fireEvent.mouseOver(options[2]!)
+    expect(highlighted()).toBe('Beta')
+    fireEvent.mouseMove(options[2]!)
+    expect(highlighted()).toBe('Gamma')
+    // A press on the list's own padding must not take focus from the field.
+    expect(fireEvent.mouseDown(screen.getByRole('listbox'))).toBe(false)
+  })
+
   it('stops Escape even for a listener on the React root itself (a dialog under the App Router)', () => {
     const { container } = render(<TopicRail {...props} search={{}} />)
     // Added after React's own root listener, on the same node, as Base UI's document listener is.
