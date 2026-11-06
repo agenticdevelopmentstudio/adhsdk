@@ -6,17 +6,23 @@ import { confirmNavigation } from "@adh-sdk/ui/lib/navigation-guard";
 
 import { AdminQueryProvider } from "./AdminQueryProvider";
 import { ADMIN_PANES } from "./adminPanes";
-import { ADMIN_TOPICS, type AdminTopicId } from "./adminTopics";
+import {
+  ADMIN_CATEGORIES,
+  adminTopicsIn,
+  useAdminCategorySelection,
+  type AdminTopicId,
+} from "./adminTopics";
 
 /**
- * The admin console as a mountable, hierarchical topic/detail feature: one rail of sections
- * (Users, Invitations, Feature Flags, …) beside the selected section's pane.
+ * The admin console as a mountable, hierarchical topic/detail feature: a rail of categories
+ * (Access, AI Processing, …), then the chosen category's sections (Audit, Invitations, Users, …),
+ * beside the selected section's pane.
  *
  * This is the SAME rail `admin.agenticdeveloperhub`'s own `AdminShell` renders, but built on the
  * fleet's shared `StackGroupDetail` / `RailHostBoundary` instead of admin's own
  * `HierarchicalDetailView` call, because that is the shape the hub's features share. The hub
  * mounts it as its Admin workspace at the top-level `/admin`, where no rail host sits above it, so
- * `RailHostBoundary` hosts the stack itself and the twelve sections ARE the root list. Under a host
+ * `RailHostBoundary` hosts the stack itself and the categories ARE the root list. Under a host
  * that already owns a merged topic/detail stack the same boundary would instead join it as one
  * more level — nothing here depends on which. The admin site keeps its own `AdminShell` because it
  * IS its site's whole stack, and `HierarchicalDetailView` is the right tool for owning one outright.
@@ -56,36 +62,67 @@ export function AdminFeature({
     },
     [pushSegment],
   );
+  // Closing the open section for a category switch — the same guard, reporting whether it moved so
+  // the category selection follows only a navigation that actually happened.
+  const leaveTopic = useCallback(async () => {
+    if (!(await confirmNavigation())) return false;
+    pushSegment(null);
+    return true;
+  }, [pushSegment]);
+  const categorySelection = useAdminCategorySelection(topicId ?? null, leaveTopic);
 
   return (
     <AdminQueryProvider>
       <RailHostBoundary>
+        {/* Two levels: the categories, then the chosen category's sections. The URL still names
+            only the section (`<basePath>/<topicId>`) — the category is read off it — so the
+            category rail's selection comes from useAdminCategorySelection, not a URL segment. */}
         <StackGroupDetail
-          levelId="admin-topics"
+          levelId="admin-categories"
           title="Admin"
-          itemNoun="admin section"
-          urlSelection={{ selectedId: topicId ?? null, onSelect: selectGuarded }}
-          items={ADMIN_TOPICS.map((topic) => {
-            const Icon = topic.icon;
-            const Pane = ADMIN_PANES[topic.id];
+          itemNoun="admin category"
+          urlSelection={categorySelection}
+          items={ADMIN_CATEGORIES.map((category) => {
+            const CategoryIcon = category.icon;
             return {
-              id: topic.id,
-              label: topic.label,
-              description: topic.description,
-              icon: <Icon size={16} aria-hidden />,
-              // Every member IS its section's detail — none of the twelve publish a further rail of
-              // their own — so choosing one is the final choice, same as `leadsTo`'s documented
-              // default. Named explicitly anyway so a reader doesn't have to know the default to
-              // know this rail never nests.
-              leadsTo: "detail",
+              id: category.id,
+              label: category.label,
+              description: category.description,
+              icon: <CategoryIcon size={16} aria-hidden />,
+              // Choosing a category opens a further rail (its sections), not a detail.
+              leadsTo: "list",
               render: () => (
-                // Each pane owns its own fixed FeatureTitle header and scrolling body (padding
-                // included), so this wrapper only has to keep the flex/min-h-0 chain intact — it
-                // must NOT add overflow or padding of its own, or the pane would get two scroll
-                // regions nested inside each other.
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                  <Pane help={topic.description} />
-                </div>
+                // A member's own StackGroupDetail lands as the NEXT rail of the same merged stack
+                // (StackLevels advances the depth), not as a rail nested inside this one.
+                <StackGroupDetail
+                  levelId="admin-topics"
+                  title={category.label}
+                  itemNoun="admin section"
+                  urlSelection={{ selectedId: topicId ?? null, onSelect: selectGuarded }}
+                  items={adminTopicsIn(category.id).map((topic) => {
+                    const Icon = topic.icon;
+                    const Pane = ADMIN_PANES[topic.id];
+                    return {
+                      id: topic.id,
+                      label: topic.label,
+                      description: topic.description,
+                      icon: <Icon size={16} aria-hidden />,
+                      // Every section IS its own detail — none publishes a further rail — so
+                      // choosing one is the final choice, same as `leadsTo`'s documented default.
+                      // Named explicitly so a reader doesn't have to know the default.
+                      leadsTo: "detail",
+                      render: () => (
+                        // Each pane owns its own fixed FeatureTitle header and scrolling body
+                        // (padding included), so this wrapper only has to keep the flex/min-h-0
+                        // chain intact — it must NOT add overflow or padding of its own, or the
+                        // pane would get two scroll regions nested inside each other.
+                        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                          <Pane help={topic.description} />
+                        </div>
+                      ),
+                    };
+                  })}
+                />
               ),
             };
           })}
