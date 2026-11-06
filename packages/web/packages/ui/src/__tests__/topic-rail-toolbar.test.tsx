@@ -419,6 +419,35 @@ describe('topic list filter', () => {
     expect(onQueryChange).toHaveBeenLastCalledWith('')
   })
 
+  it('keeps a controlled query when focus leaves, and clears it once on Escape, ✕ or a pick', () => {
+    const onQueryChange = vi.fn()
+    const host = (query: string) => (
+      <>
+        <TopicRail {...props} search={{ query, onQueryChange }} />
+        <button type="button">Platform</button>
+      </>
+    )
+    const { rerender } = render(host(''))
+    // Reaching for the host's other filter: the text filter must survive the blur.
+    fireEvent.click(filterButton())
+    rerender(host('gam'))
+    onQueryChange.mockClear()
+    fireEvent.blur(field(), { relatedTarget: screen.getByRole('button', { name: 'Platform' }) })
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(onQueryChange).not.toHaveBeenCalled()
+    const closers: (() => void)[] = [
+      () => key('Escape'),
+      () => fireEvent.click(screen.getByRole('button', { name: 'Clear filter' })),
+      () => key('Enter'),
+    ]
+    for (const close of closers) {
+      fireEvent.click(filterButton())
+      onQueryChange.mockClear()
+      close()
+      expect(onQueryChange.mock.calls).toEqual([['']])
+    }
+  })
+
   it('does not offer the open topic a controlled host keeps in its rows unless it matches', () => {
     const onSelect = vi.fn()
     // The resource explorer keeps its open entity among the rows whatever the query.

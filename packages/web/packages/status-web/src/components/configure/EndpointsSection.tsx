@@ -285,7 +285,10 @@ export function EndpointsSection({
       titleActions: <AutoConfigureButton />,
       // The text filter is the rail's own, on its toolbar; the two pop-menus get a header
       // row of their own beneath it.
-      search: { query: filter, onQueryChange: setFilter, placeholder: `Filter ${endpoints.length} sites` },
+      // A fixed name, as the old field's was: a name that changed with the count was a
+      // different control to a screen reader every time a site came or went. `autoOpen` keeps
+      // the old field's focus-on-open — the list's first act is finding a site.
+      search: { query: filter, onQueryChange: setFilter, placeholder: "Filter sites", autoOpen: true },
       headerSlot: (
         <div className="flex flex-wrap items-center gap-2 px-2 py-1.5" role="toolbar" aria-label="Site filters">
           <MultiSelectFilter
