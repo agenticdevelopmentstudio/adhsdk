@@ -89,6 +89,8 @@ const ICONS: Record<string, ReactNode> = {
   research: <FlaskConical size={16} aria-hidden />,
   projects: <FolderKanban size={16} aria-hidden />,
   narratives: <ScrollText size={16} aria-hidden />,
+  // The Organization ecosystem's Teams: the glyph the hub's `/teams` row has (menu-icons).
+  teams: <UsersRound size={16} aria-hidden />,
   storage: <HardDrive size={16} aria-hidden />,
   integrations: <Plug size={16} aria-hidden />,
   messaging: <MessageCircle size={16} aria-hidden />,

@@ -16,7 +16,7 @@ import { useBillingContext } from "@adh-sdk/adh-billing/context";
  *
  * The hub answers the same seam with its whole workspace feature-panel registry, because on the
  * hub every one of these ids is ALSO a rail feature with a route of its own. Here there is no
- * such registry and no such route, so this is the list itself — four ids, and the switch is
+ * such registry and no such route, so this is the list itself, and the switch is
  * exhaustive over them (the `never` default makes an id added to that list a compile error here,
  * which is the point of the list being exported data rather than a switch's fall-through).
  *
@@ -92,6 +92,10 @@ export function productFeaturePanelRenderer({
         // The hub-data rows of a Personal / Organization ecosystem. Their panes are the hub's; this
         // site lists the ecosystem (it is the workspace's child) but does not draw them.
         return <ElsewherePane title={HUB_DATA_TITLES[feature]} where="Agentic Developer Hub" scope="ecosystem" />;
+      case "teams":
+        // The Organization ecosystem's Teams row. An org's teams are managed on the hub, whose
+        // TeamsPanel reads its own workspace context; this site lists the ecosystem but has neither.
+        return <ElsewherePane title="Teams" where="Agentic Developer Hub" scope="organization" />;
       case "email-signup":
         // The Authentication group's fourth member, and the one pane this site genuinely cannot
         // draw: the panel is the hub's, built on hub-local workspace context and API clients, and

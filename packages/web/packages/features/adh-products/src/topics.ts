@@ -50,6 +50,12 @@ export const PRODUCT_TOPICS = [
   { id: "research", label: "Research", dividerAfter: false, features: ["research"], types: HUB_DATA_TYPES },
   { id: "projects", label: "Planning", dividerAfter: false, features: ["planning"], types: HUB_DATA_TYPES },
   { id: "narratives", label: "Narratives", dividerAfter: false, features: ["narratives"], types: HUB_DATA_TYPES },
+  // Teams: an organization's teams of people, which live in its Organization ecosystem — not at the
+  // workspace root beside Personas, where they sat until the root ecosystems landed (Mike,
+  // 2026-11-06). Organization only: a user has no teams of their own (the catalog allows `teams`
+  // in the `organization` type and never in `personal`). The pane is the host's — on the hub, the
+  // same TeamsPanel the `/<slug>/teams` route draws.
+  { id: "teams", label: "Teams", dividerAfter: false, features: ["teams"], types: ["organization"] },
   { id: "storage", label: "Storage", dividerAfter: false, features: ["storage"] },
   { id: "integrations", label: "Integrations", dividerAfter: false, features: ["integrations"] },
   // Messaging and Dashboards stand on their catalog features like every other row. They were
@@ -149,6 +155,8 @@ export const HOST_RENDERED_TOPIC_IDS = [
   "research",
   "projects",
   "narratives",
+  // The Organization ecosystem's Teams row: on the hub, its TeamsPanel.
+  "teams",
   "dashboards",
   "billing",
   "all-data",

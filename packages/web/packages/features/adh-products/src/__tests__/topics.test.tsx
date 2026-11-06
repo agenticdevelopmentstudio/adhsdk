@@ -149,10 +149,21 @@ describe("the old addresses", () => {
 describe("the hub-data rows", () => {
   const HUB_IDS = ["notebook", "docs", "research", "projects", "narratives"];
 
-  it("are typed to personal and organization, and every typed row is one of them", () => {
+  it("are typed to personal and organization, and every other typed row is Teams", () => {
     const typed = PRODUCT_TOPICS.filter((t) => "types" in t);
-    expect(typed.map((t) => t.id)).toEqual(HUB_IDS);
-    for (const t of typed) expect("types" in t && [...t.types]).toEqual(["personal", "organization"]);
+    expect(typed.map((t) => t.id)).toEqual([...HUB_IDS, "teams"]);
+    for (const t of typed.filter((t) => HUB_IDS.includes(t.id))) {
+      expect("types" in t && [...t.types]).toEqual(["personal", "organization"]);
+    }
+  });
+
+  // An organization's teams live in its Organization ecosystem, not at the workspace root, and a
+  // user has none — so the row is typed to `organization` alone and stands on the catalog's key.
+  it("draw Teams in the Organization ecosystem only, on the `teams` key, for the host to render", () => {
+    const teams = PRODUCT_TOPICS.find((t) => t.id === "teams");
+    expect(teams && "types" in teams && [...teams.types]).toEqual(["organization"]);
+    expect(teams && "features" in teams && [...teams.features]).toEqual(["teams"]);
+    expect(HOST_RENDERED_TOPIC_IDS as readonly string[]).toContain("teams");
   });
 
   it("stand on the catalog's keys, and reach the rail config with their types", () => {
