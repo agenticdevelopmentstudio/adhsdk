@@ -1,4 +1,5 @@
 import Foundation
+import Testing
 @testable import AgenticDeveloperHubSDKIntegrations
 
 /// A `MailClient` whose transport answers a scripted `MailResponse` and records each request.
@@ -19,9 +20,9 @@ final class ScriptedMail: @unchecked Sendable {
         }
     }
 
-    static func message(id: String = "m1", labelNames: [String] = ["Inbox", "Work"]) -> MailMessage {
+    static func message(labelNames: [String] = ["Inbox", "Work"]) -> MailMessage {
         MailMessage(
-            id: id, gmailId: "g1", threadId: "t1", account: "me@example.com", from: "a@example.com",
+            id: "m1", gmailId: "g1", threadId: "t1", account: "me@example.com", from: "a@example.com",
             to: ["me@example.com"], cc: [], labels: ["INBOX"], labelNames: labelNames, subject: "Hello",
             snippet: "snip", date: "2026-01-02T03:04:05.000Z", mailClass: .filed, bodyText: "body",
             bodyHtml: nil, attachments: [])
@@ -38,4 +39,11 @@ final class Output: @unchecked Sendable {
     var stderr: [String] { lock.withLock { err } }
     func writeOut(_ text: String) { lock.withLock { out.append(text) } }
     func writeErr(_ text: String) { lock.withLock { err.append(text) } }
+}
+
+/// The expected `--json` / MCP text for a value: pretty-printed, keys sorted.
+func expectedJSON<Value: Encodable>(_ value: Value) throws -> String {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    return try #require(String(bytes: try encoder.encode(value), encoding: .utf8))
 }

@@ -23,7 +23,8 @@ public enum MailCommandLine {
             return 64
         }
         do {
-            stdout(try await execute(parsed.command, json: parsed.json, client: client))
+            let output = try await execute(parsed.command, json: parsed.json, client: client)
+            if !output.isEmpty { stdout(output) }
             return 0
         } catch {
             stderr("Error: \(error.localizedDescription)")
@@ -132,22 +133,22 @@ public enum MailCommandLine {
         switch command {
         case .accounts:
             let accounts = try await client.accounts()
-            return json ? MailJSON.encode(accounts) : accounts.map(accountLine).joined(separator: "\n")
+            return try json ? MailJSON.encode(accounts) : accounts.map(accountLine).joined(separator: "\n")
         case .labels(let account):
             let labels = try await client.labels(account: account)
-            return json ? MailJSON.encode(labels) : labels.map(labelLine).joined(separator: "\n")
+            return try json ? MailJSON.encode(labels) : labels.map(labelLine).joined(separator: "\n")
         case .list(let filter):
             let page = try await client.messages(filter)
-            if json { return MailJSON.encode(page) }
+            if json { return try MailJSON.encode(page) }
             var lines = page.messages.map(messageLine)
             if let cursor = page.nextCursor { lines.append("next cursor: \(cursor)") }
             return lines.joined(separator: "\n")
         case .get(let account, let id):
             let message = try await client.message(account: account, id: id)
-            return json ? MailJSON.encode(message) : detail(message)
+            return try json ? MailJSON.encode(message) : detail(message)
         case .modify(let account, let ids, let add, let remove):
             let messages = try await client.modifyLabels(account: account, messageIds: ids, add: add, remove: remove)
-            return json ? MailJSON.encode(messages) : messages.map(messageLine).joined(separator: "\n")
+            return try json ? MailJSON.encode(messages) : messages.map(messageLine).joined(separator: "\n")
         }
     }
 
