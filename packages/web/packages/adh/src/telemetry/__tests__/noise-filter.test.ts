@@ -59,13 +59,26 @@ describe('noiseReason', () => {
     expect(noiseReason(chunk, { userAgent: CHROME })).toBe('stale-deploy')
   })
 
-  it.each(['Failed to fetch', 'Load failed', 'NetworkError when attempting to fetch resource.'])(
+  it.each([
+    'Failed to fetch',
+    'Load failed',
+    'NetworkError when attempting to fetch resource.',
+    // as Sentry's fetch instrumentation rewrites them (enhanceFetchErrorMessages: 'always')
+    'Failed to fetch (auth.agenticdeveloperhub.com)',
+    'Load failed (api.example.com:8443)',
+    'NetworkError when attempting to fetch resource. (api.example.com)',
+  ])(
     'drops the browser network failure "%s"',
     (value) => {
       expect(noiseReason(exc('TypeError', value, 'https://agenticdeveloperbilling.com/_next/static/x.js'), { userAgent: CHROME }))
         .toBe('network')
     },
   )
+
+  it('keeps a network-shaped message with anything else after it', () => {
+    expect(noiseReason(exc('TypeError', 'Failed to fetch (profile is undefined)', 'https://a.com/app.js'), { userAgent: CHROME }))
+      .toBeNull()
+  })
 
   it('keeps a TypeError that merely mentions fetching', () => {
     expect(noiseReason(exc('TypeError', 'Failed to fetch user: profile is undefined', 'https://a.com/app.js'), { userAgent: CHROME }))
