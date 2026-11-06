@@ -16,5 +16,11 @@ describe("stepIndex", () => {
   });
   it("returns -1 for an empty list", () => {
     expect(stepIndex(0, -1, "ArrowDown")).toBe(-1);
+    expect(stepIndex(0, -1, "ArrowDown", { wrap: true })).toBe(-1);
+  });
+  it("wraps past either end when asked to", () => {
+    expect(stepIndex(3, 2, "ArrowDown", { wrap: true })).toBe(0);
+    expect(stepIndex(3, 0, "ArrowUp", { wrap: true })).toBe(2);
+    expect(stepIndex(3, 1, "ArrowDown", { wrap: true })).toBe(2);
   });
 });

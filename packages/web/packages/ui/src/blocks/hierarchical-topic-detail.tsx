@@ -219,9 +219,9 @@ export interface TopicLevel {
   /** An optional leading ROW above this level's topics (scrolls with them, can carry
    *  the selection bar) — e.g. a "New…" affordance. Omit for a plain list. */
   railSlot?: RailSlot
-  /** A pinned full-width strip between this level's title header and its rows (does
-   *  NOT scroll with them) — the hook for the shared `ListHeader` (filter field +
-   *  actions) when an entity list lives inside the stack. */
+  /** A pinned full-width strip between this level's list toolbar and its rows (does
+   *  NOT scroll with them) — for a control that belongs with the list but is not a tool.
+   *  The list's filter is not one: every titled level has it in its toolbar (`search`). */
   headerSlot?: ReactNode
   /** Drop the LEADING icon from this level's rows in the expanded list. For a list whose rows
    *  have no identity icon to show — where the shared fallback `Circle` is noise and a state

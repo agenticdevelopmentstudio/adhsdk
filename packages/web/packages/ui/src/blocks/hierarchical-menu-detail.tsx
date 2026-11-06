@@ -194,9 +194,9 @@ interface TopicLevel {
   /** An optional leading ROW above this level's topics (scrolls with them, can carry
    *  the selection bar) — e.g. a "New…" affordance. Omit for a plain list. */
   railSlot?: RailSlot
-  /** A pinned full-width strip between this level's title header and its rows (does
-   *  NOT scroll with them) — the hook for the shared `ListHeader` (filter field +
-   *  actions) when an entity list lives inside the stack. */
+  /** A pinned full-width strip between this level's list toolbar and its rows (does
+   *  NOT scroll with them) — for a control that belongs with the list but is not a tool.
+   *  The list's filter is not one: every titled level has it in its toolbar (`search`). */
   headerSlot?: ReactNode
 }
 
@@ -2767,10 +2767,10 @@ function CascadingStack({
   // top, as fallbacks for a headerless rail).
   const [rowOffset, setRowOffset] = useState<number[]>([])
   const rowMeasureRef = useRef<() => void>(() => {})
-  // Re-measure when the set of lists changes, a list gains/loses its first row, the toolbar row
-  // comes or goes (it is part of the step, and a level's tools can arrive without its rows
-  // changing), or the container width changes; the ResizeObserver below also catches height
-  // changes, and the container handlers catch scroll.
+  // Re-measure when the set of lists changes, a list's row count changes, or the container width
+  // changes. Every titled level has its toolbar (its filter is always there), so the toolbar no
+  // longer comes or goes on its own. The ResizeObserver below catches the CONTAINER resizing, not
+  // a header or toolbar growing inside it; the container handlers catch scroll.
   const measureSig = `${rendered.map((l) => `${l.id}#${l.items.length}`).join("|")}::${containerW}`
   useLayoutEffect(() => {
     const cont = containerRef.current

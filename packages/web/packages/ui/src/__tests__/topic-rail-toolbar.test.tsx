@@ -1,6 +1,6 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
 import type { ComponentProps } from 'react'
-import { render, screen, cleanup, fireEvent, within, act } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MIN_FIT_RAIL, TopicRail } from '../blocks/topic-detail'
@@ -28,8 +28,8 @@ const header = () => document.querySelector('[data-htd-header]') as HTMLElement
 const rowLabels = () => screen.queryAllByRole('button').map((b) => b.textContent).filter((t) => t && /Alpha|Beta|Gamma/.test(t))
 const filterButton = () => within(toolbar()!).getByRole('button', { name: 'Filter' })
 const popover = () => document.querySelector('[data-htd-search]') as HTMLElement
-// Type a query and press Return: the filter applies what was typed only then (Mike, 2026-11-06).
-// Type into the open field.
+// Type into the open field: the suggestions follow every keystroke, and Return chooses the
+// highlighted one (Mike, 2026-11-06).
 const type = (value: string) => fireEvent.change(field(), { target: { value } })
 const field = () => screen.getByRole('combobox')
 const key = (k: string, init: Record<string, unknown> = {}) => fireEvent.keyDown(field(), { key: k, ...init })
