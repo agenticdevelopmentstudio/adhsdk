@@ -9,20 +9,18 @@ import AgenticDeveloperHubSDKNotifications
 /// `ToastStackLayout`, newest nearest the anchor.
 ///
 /// A stack shows at most `visibleLimit` cards; the rest are hidden behind a
-/// "+N more" pill that opens the history. Each card sits in its own panel
-/// rather than one panel per stack, so the gaps between cards stay
-/// click-through to whatever is underneath.
+/// "+N more" pill that opens the history, and their countdowns hold until they
+/// come back into view. Each card sits in its own panel rather than one panel
+/// per stack, so the gaps between cards stay click-through to whatever is
+/// underneath. Which id sits where is `CardStackModel`'s; this class owns only
+/// the windows.
 @MainActor
 class CardStackPresenter: NoticePresenter {
 
-    struct StackKey: Hashable {
-        let displayID: UInt32
-        let position: NoticeProfile.Position
-    }
+    typealias StackKey = CardStackModel.StackKey
 
     private struct Placement {
-        let key: StackKey
-        let screen: NSScreen
+        var key: StackKey
         let panel: NoticePanel
         let card: NoticeCardView
     }
@@ -38,9 +36,9 @@ class CardStackPresenter: NoticePresenter {
 
     private(set) var shownIDs: [String] = []
     private var placements: [String: [Placement]] = [:]
-    /// Ids per stack, newest first.
-    private var stacks: [StackKey: [String]] = [:]
+    private var model = CardStackModel()
     private var pills: [StackKey: Pill] = [:]
+    private var screenObserver: NSObjectProtocol?
 
     init(
         rules: @escaping @MainActor () -> NoticeRoutingRules,
@@ -50,6 +48,17 @@ class CardStackPresenter: NoticePresenter {
         self.rules = rules
         self.cardStyle = cardStyle
         self.showHistory = showHistory
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.screensDidChange() }
+        }
+    }
+
+    isolated deinit {
+        if let screenObserver {
+            NotificationCenter.default.removeObserver(screenObserver)
+        }
     }
 
     /// How many cards one stack shows before the rest fold behind the pill.
@@ -70,11 +79,16 @@ class CardStackPresenter: NoticePresenter {
             let key = StackKey(displayID: screen.noticeDisplayID, position: profile.position)
             let panel = NoticePanel(layer: profile.layer, hideFromSharing: hideFromSharing)
             let card = NoticeCardView(notice: notice, actions: actions, style: cardStyle)
-            card.onHoverChange = { [weak self] _ in self?.layout(key) }
+            card.onHoverChange = { [weak self, weak card] hovered in
+                guard let self, let card else { return }
+                self.hoverChanged(on: card, hovered: hovered)
+            }
             panel.contentView = card
+            // Hidden until a layout puts it in its stack's visible prefix.
+            card.setInOverflow(true)
             card.startAutoDismiss(after: autoDismiss(for: profile))
-            made.append(Placement(key: key, screen: screen, panel: panel, card: card))
-            stacks[key, default: []].insert(notice.id, at: 0)
+            made.append(Placement(key: key, panel: panel, card: card))
+            model.insert(notice.id, in: key)
         }
         guard !made.isEmpty else { return }
         placements[notice.id] = made
@@ -88,14 +102,12 @@ class CardStackPresenter: NoticePresenter {
         guard let removed = placements.removeValue(forKey: id) else { return }
         shownIDs.removeAll { $0 == id }
         for placement in removed {
-            placement.card.stop()
-            placement.panel.orderOut(nil)
-            placement.panel.close()
-            stacks[placement.key]?.removeAll { $0 == id }
+            close(placement)
         }
-        for key in Set(removed.map(\.key)) {
+        for key in model.remove(id) {
             layout(key)
         }
+        closeOrphanedPills()
     }
 
     func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
@@ -113,21 +125,66 @@ class CardStackPresenter: NoticePresenter {
         for placement in existing {
             placement.card.update(notice: notice, actions: actions)
             placement.card.startAutoDismiss(after: autoDismiss(for: profile))
-            if let index = stacks[placement.key]?.firstIndex(of: oldID) {
-                stacks[placement.key]?[index] = notice.id
-            }
         }
+        let touched = model.replace(oldID, with: notice.id)
         placements[notice.id] = existing
         if let index = shownIDs.firstIndex(of: oldID) {
             shownIDs[index] = notice.id
         }
-        for key in Set(existing.map(\.key)) {
+        for key in touched {
             layout(key)
         }
     }
 
     func focusReply(id: String) {
         placements[id]?.first?.card.focusReply()
+    }
+
+    // MARK: Hover
+
+    /// The pointer moved onto or off one placement: every other copy of the
+    /// same notice holds still with it, and the stack the card grew or shrank
+    /// in is laid out again.
+    private func hoverChanged(on card: NoticeCardView, hovered: Bool) {
+        guard let group = placements.values.first(where: { $0.contains { $0.card === card } }) else { return }
+        for placement in group where placement.card !== card {
+            placement.card.setPeerHovered(hovered)
+        }
+        if let key = group.first(where: { $0.card === card })?.key {
+            layout(key)
+        }
+    }
+
+    // MARK: Screens
+
+    /// Displays came, went or moved. Stacks on a display that is gone move to
+    /// the main one; every stack is laid out against its display's current frame.
+    func screensDidChange() {
+        let live = Set(NSScreen.screens.map(\.noticeDisplayID))
+        guard let fallback = (NSScreen.main ?? NSScreen.screens.first)?.noticeDisplayID else { return }
+        for key in model.keys where !live.contains(key.displayID) {
+            let target = key.onDisplay(fallback)
+            for id in model.ids(in: key) {
+                rehome(id, from: key, to: target)
+            }
+            closePill(key)
+        }
+        for key in model.keys {
+            layout(key)
+        }
+        closeOrphanedPills()
+    }
+
+    private func rehome(_ id: String, from source: StackKey, to target: StackKey) {
+        guard var group = placements[id], let index = group.firstIndex(where: { $0.key == source }) else { return }
+        if group.contains(where: { $0.key == target }) {
+            // Shown on every screen: the copy that lost its screen just goes.
+            close(group.remove(at: index))
+        } else {
+            group[index].key = target
+        }
+        placements[id] = group
+        model.move(id, from: source, to: target)
     }
 
     // MARK: Layout
@@ -140,22 +197,40 @@ class CardStackPresenter: NoticePresenter {
         placements[id]?.first { $0.key == key }
     }
 
+    private func screen(for displayID: UInt32) -> NSScreen? {
+        NSScreen.screens.first { $0.noticeDisplayID == displayID }
+    }
+
+    private func close(_ placement: Placement) {
+        placement.card.stop()
+        placement.panel.orderOut(nil)
+        placement.panel.close()
+    }
+
     private func layout(_ key: StackKey) {
-        let ids = stacks[key] ?? []
-        guard let screen = ids.lazy.compactMap({ self.placement(of: $0, in: key)?.screen }).first else {
-            stacks[key] = nil
+        let split = model.split(key, limit: visibleLimit)
+        let visible = split.visible.compactMap { placement(of: $0, in: key) }
+        for placement in split.hidden.compactMap({ placement(of: $0, in: key) }) {
+            placement.card.setInOverflow(true)
+            placement.panel.orderOut(nil)
+        }
+        guard !visible.isEmpty, let screen = screen(for: key.displayID) else {
+            // Nothing left here, or the display is gone and
+            // `screensDidChange` is about to move the stack.
+            for placement in visible {
+                placement.card.setInOverflow(true)
+                placement.panel.orderOut(nil)
+            }
             closePill(key)
             return
         }
-        let limit = max(1, visibleLimit)
-        let visible = ids.prefix(limit).compactMap { placement(of: $0, in: key) }
-        let hiddenCount = ids.count - visible.count
 
         var sizes = visible.map { placement in
             placement.card.layoutSubtreeIfNeeded()
             return placement.card.fittingSize
         }
-        let pill = hiddenCount > 0 ? makePill(key, count: hiddenCount, layer: visible.first?.panel.level) : nil
+        let pill = split.pillCount > 0
+            ? makePill(key, count: split.pillCount, layer: visible.first?.panel.level) : nil
         if let pill {
             sizes.append(pill.view.fittingSize)
         }
@@ -166,9 +241,7 @@ class CardStackPresenter: NoticePresenter {
             if !placement.panel.isVisible {
                 placement.panel.orderFrontRegardless()
             }
-        }
-        for id in ids.dropFirst(limit) {
-            placement(of: id, in: key)?.panel.orderOut(nil)
+            placement.card.setInOverflow(false)
         }
         if let pill, let frame = frames.last {
             pill.panel.setFrame(frame, display: true)
@@ -196,6 +269,13 @@ class CardStackPresenter: NoticePresenter {
         guard let pill = pills.removeValue(forKey: key) else { return }
         pill.panel.orderOut(nil)
         pill.panel.close()
+    }
+
+    /// A pill whose stack emptied out goes with it.
+    private func closeOrphanedPills() {
+        for key in Array(pills.keys) where model.ids(in: key).isEmpty {
+            closePill(key)
+        }
     }
 }
 

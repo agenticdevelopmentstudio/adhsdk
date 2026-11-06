@@ -43,6 +43,29 @@ final class ToastStackLayoutTests: XCTestCase {
         XCTAssertEqual(frames[0], CGRect(x: 688, y: 12, width: 300, height: 80))
         XCTAssertEqual(frames[1], CGRect(x: 688, y: 100, width: 300, height: 140))
     }
+
+    func testCenterStackThatOutgrowsTheLowerHalfMovesUpToStayOnScreen() {
+        // Five 200-pt alerts need 1032 pt with spacing; below the middle there are 400.
+        let tall = CGSize(width: 440, height: 150)
+        let frames = ToastStackLayout.frames(count: 5, cardSize: tall, in: visible, position: .center)
+        for frame in frames {
+            XCTAssertGreaterThanOrEqual(frame.minY, visible.minY + 12, "\(frame) runs off the bottom")
+            XCTAssertLessThanOrEqual(frame.maxY, visible.maxY - 12, "\(frame) runs off the top")
+        }
+        for (newer, older) in zip(frames, frames.dropFirst()) {
+            XCTAssertLessThanOrEqual(older.maxY, newer.minY, "cards overlap")
+        }
+    }
+
+    func testStackTallerThanTheScreenIsClampedInsideIt() {
+        let tall = CGSize(width: 440, height: 300)
+        for position in NoticeProfile.Position.allCases {
+            let frames = ToastStackLayout.frames(count: 6, cardSize: tall, in: visible, position: position)
+            for frame in frames {
+                XCTAssertTrue(visible.insetBy(dx: 12, dy: 12).contains(frame), "\(position): \(frame)")
+            }
+        }
+    }
 }
 
 @MainActor

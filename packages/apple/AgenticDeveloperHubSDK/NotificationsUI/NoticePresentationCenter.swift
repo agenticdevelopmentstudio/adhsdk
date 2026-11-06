@@ -43,9 +43,18 @@ public final class NoticePresentationCenter {
     private var order: [String] = []
     private var held: [Notice] = []
     private var floodFolder = FloodFolder()
-    /// Ids already counted into a flood summary, so a reconcile does not count
-    /// them twice or show them after all.
-    private var foldedIDs: Set<String> = []
+    /// Ids already counted into a flood summary, with their source, so a
+    /// reconcile does not count them twice or show them after all, and a
+    /// summary goes once nothing it folded is still active.
+    private var foldedIDs: [String: String] = [:]
+    /// Ids routed to no style and not forwarded: evaluated once and drawn
+    /// nowhere. Remembered so each reconcile does not feed them to the flood
+    /// folder again and conjure a summary out of one quiet notice.
+    private var evaluatedIDs: Set<String> = []
+    /// Ids the user has just acted on. Their card is gone, but until the host
+    /// applies the change its active list still has them, and a reconcile in
+    /// that gap must not bring the card back.
+    private var actedIDs: Set<String> = []
     private var escalationTimer: Timer?
 
     public init(
@@ -63,6 +72,10 @@ public final class NoticePresentationCenter {
         presenters[.toast] = ToastPresenter(
             rules: rules, showHistory: { [weak handler] in handler?.showHistory() })
         presenters[.alert] = AlertPresenter(rules: rules)
+    }
+
+    isolated deinit {
+        escalationTimer?.invalidate()
     }
 
     /// Adds or replaces the presenter for a style.
@@ -112,10 +125,10 @@ public final class NoticePresentationCenter {
             return
         }
 
-        guard !foldedIDs.contains(notice.id) else { return }
+        guard foldedIDs[notice.id] == nil, !evaluatedIDs.contains(notice.id) else { return }
         floodFolder.configuration = rules.flood
         if case let .fold(source, count) = floodFolder.admit(notice, at: now) {
-            foldedIDs.insert(notice.id)
+            foldedIDs[notice.id] = source
             showSummary(source: source, count: count, like: notice, rules: rules, now: now)
             return
         }
@@ -128,8 +141,11 @@ public final class NoticePresentationCenter {
     public func apply(_ change: NoticeStateChange) {
         guard change.state != .unread else { return }
         held.removeAll { $0.id == change.id }
-        foldedIDs.remove(change.id)
+        foldedIDs[change.id] = nil
+        evaluatedIDs.remove(change.id)
+        actedIDs.remove(change.id)
         dismiss(change.id)
+        dropSpentSummaries()
     }
 
     /// Makes the screen match the host's list of active notices: removes every
@@ -140,10 +156,13 @@ public final class NoticePresentationCenter {
             dismiss(id)
         }
         held.removeAll { !activeIDs.contains($0.id) }
-        foldedIDs.formIntersection(activeIDs)
+        foldedIDs = foldedIDs.filter { activeIDs.contains($0.key) }
+        evaluatedIDs.formIntersection(activeIDs)
+        actedIDs.formIntersection(activeIDs)
+        dropSpentSummaries()
         let heldIDs = Set(held.map(\.id))
         for notice in active.sorted(by: { $0.timestamp < $1.timestamp })
-        where entries[notice.id] == nil && !heldIDs.contains(notice.id) {
+        where entries[notice.id] == nil && !heldIDs.contains(notice.id) && !actedIDs.contains(notice.id) {
             receive(notice)
         }
     }
@@ -192,7 +211,7 @@ public final class NoticePresentationCenter {
             return
         }
         guard let action = entry.notice.primaryAction else {
-            dismiss(id)
+            userDismiss(id)
             handler.setState(id, .read)
             return
         }
@@ -200,7 +219,7 @@ public final class NoticePresentationCenter {
             presenters[entry.profile.style]?.focusReply(id: id)
             return
         }
-        dismiss(id)
+        userDismiss(id)
         perform(action, of: id, text: nil)
     }
 
@@ -208,22 +227,26 @@ public final class NoticePresentationCenter {
     public func respond(id: String, actionID: String, text: String?) {
         guard let entry = entries[id], !entry.isSummary,
               let action = entry.notice.actions.first(where: { $0.id == actionID }) else { return }
-        dismiss(id)
+        userDismiss(id)
         perform(action, of: id, text: text)
     }
 
     public func archive(id: String) {
         guard let entry = entries[id] else { return }
-        dismiss(id)
-        if !entry.isSummary {
+        if entry.isSummary {
+            dismiss(id)
+        } else {
+            userDismiss(id)
             handler.setState(id, .archived)
         }
     }
 
     public func snooze(id: String, option: SnoozeOption) {
         guard let entry = entries[id] else { return }
-        dismiss(id)
-        if !entry.isSummary {
+        if entry.isSummary {
+            dismiss(id)
+        } else {
+            userDismiss(id)
             handler.snooze(id, until: option.until(now: clock(), calendar: calendar))
         }
     }
@@ -231,8 +254,10 @@ public final class NoticePresentationCenter {
     /// The close button or an auto-dismiss expiry: off screen, marked `read`.
     public func close(id: String) {
         guard let entry = entries[id] else { return }
-        dismiss(id)
-        if !entry.isSummary {
+        if entry.isSummary {
+            dismiss(id)
+        } else {
+            userDismiss(id)
             handler.setState(id, .read)
         }
     }
@@ -240,14 +265,17 @@ public final class NoticePresentationCenter {
     // MARK: Presenting
 
     private func present(_ notice: Notice, profile: NoticeProfile) {
-        guard profile.style != .none || profile.forwardToSystem else { return }
+        guard profile.style != .none || profile.forwardToSystem else {
+            evaluatedIDs.insert(notice.id)
+            return
+        }
         entries[notice.id] = Entry(notice: notice, profile: profile)
         order.append(notice.id)
         let actions = cardActions(for: notice.id)
         if profile.style != .none {
             presenters[profile.style]?.show(notice, profile: profile, actions: actions)
         }
-        if profile.forwardToSystem, profile.style != .system {
+        if Self.forwards(profile) {
             presenters[.system]?.show(notice, profile: profile, actions: actions)
         }
         rearmEscalation()
@@ -265,7 +293,20 @@ public final class NoticePresentationCenter {
             presenters[existing.profile.style]?.remove(id: oldID)
             presenters[profile.style]?.show(notice, profile: profile, actions: actions)
         }
+        // The system copy follows: the old one goes, and the new one is
+        // posted if the new profile forwards.
+        if Self.forwards(existing.profile) {
+            presenters[.system]?.remove(id: oldID)
+        }
+        if Self.forwards(profile) {
+            presenters[.system]?.show(notice, profile: profile, actions: actions)
+        }
         rearmEscalation()
+    }
+
+    /// Whether a profile also posts to the system presenter, beside its own style.
+    private static func forwards(_ profile: NoticeProfile) -> Bool {
+        profile.forwardToSystem && profile.style != .system
     }
 
     private func showSummary(source: String, count: Int, like notice: Notice, rules: NoticeRoutingRules, now: Date) {
@@ -291,16 +332,33 @@ public final class NoticePresentationCenter {
         }
     }
 
-    /// Off screen everywhere. Every presenter is told, because a notice that
-    /// escalated or was forwarded may be on more than one.
+    /// Off screen everywhere. Every presenter is told, tracked or not, because
+    /// a notice that escalated or was forwarded may be on more than one, and a
+    /// presenter may hold a card this center has already forgotten.
     private func dismiss(_ id: String) {
-        guard entries.removeValue(forKey: id) != nil else { return }
+        entries[id] = nil
         order.removeAll { $0 == id }
         var seen: Set<ObjectIdentifier> = []
         for presenter in presenters.values where seen.insert(ObjectIdentifier(presenter)).inserted {
             presenter.remove(id: id)
         }
         rearmEscalation()
+    }
+
+    /// Off screen because the user acted, so a reconcile racing the host's
+    /// broadcast leaves it off.
+    private func userDismiss(_ id: String) {
+        actedIDs.insert(id)
+        dismiss(id)
+    }
+
+    /// A flood summary goes once nothing it folded is still active.
+    private func dropSpentSummaries() {
+        let folding = Set(foldedIDs.values)
+        for id in order {
+            guard let entry = entries[id], entry.isSummary, !folding.contains(entry.notice.source) else { continue }
+            dismiss(id)
+        }
     }
 
     private func perform(_ action: Notice.Action, of id: String, text: String?) {
