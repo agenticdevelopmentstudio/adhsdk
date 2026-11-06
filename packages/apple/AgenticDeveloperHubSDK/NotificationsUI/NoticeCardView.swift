@@ -9,10 +9,15 @@ import AgenticDeveloperHubSDKNotifications
 /// close controls.
 ///
 /// Clicking anywhere that is not a control acts on the notice. Hovering pauses
-/// the auto-dismiss countdown, and so does being folded out of sight; when it
-/// runs out the card calls `close`, which marks the notice read.
+/// the auto-dismiss countdown, and so does being folded out of sight, or being
+/// replied to; when it runs out the card calls `close`, which marks the notice
+/// read.
+///
+/// A notice whose actions include a reply gets a reply field. It is the one
+/// place a floating card takes typing: clicking into it lets the panel become
+/// key, Return sends the reply, and Esc clears it and gives the keyboard back.
 @MainActor
-public final class NoticeCardView: NSView, Themeable {
+public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
 
     public enum Style: Sendable {
         /// A compact card: two action buttons, details clamped until hovered.
@@ -37,6 +42,9 @@ public final class NoticeCardView: NSView, Themeable {
     let snoozeButton = CardControlButton(symbol: "clock", label: "Snooze")
     let archiveButton = CardControlButton(symbol: "archivebox", label: "Archive")
     let closeButton = CardControlButton(symbol: "xmark", label: "Close")
+    /// The reply field, when the notice has a reply action.
+    private(set) var replyField: NoticeReplyField?
+    private var replyActionID: String?
 
     /// Called when the pointer enters or leaves, after the card has resized
     /// its details, so a presenter can lay its stack out again.
@@ -46,6 +54,7 @@ public final class NoticeCardView: NSView, Themeable {
     private let stripe = NSView()
     private let iconView = NSImageView()
     private let actionRow = NSStackView()
+    private let column = NSStackView()
     private var actionIDs: [String] = []
     private var observer: ThemePaletteObserver?
     private let countdown: DismissCountdown
@@ -98,6 +107,7 @@ public final class NoticeCardView: NSView, Themeable {
         snoozeButton.isHidden = actions.snooze == nil
         archiveButton.isHidden = actions.archive == nil
         rebuildActionButtons()
+        rebuildReplyField()
         updateDetailLines()
         setAccessibilityLabel([notice.title, notice.subtitle, notice.body].compactMap { $0 }.joined(separator: ". "))
         applyTheme(resolvedThemeScope.palette)
@@ -111,15 +121,11 @@ public final class NoticeCardView: NSView, Themeable {
         }
     }
 
-    /// Hook for the reply field, which arrives with the reply action.
-    func focusReply() {}
-
     private func rebuildActionButtons() {
         for button in actionButtons {
             actionRow.removeView(button)
         }
-        // Reply actions get a text field, not a button; that field is not
-        // part of this card yet.
+        // A reply action gets the reply field, not a button.
         let shown = notice.actions
             .filter { if case .reply = $0.kind { false } else { true } }
             .prefix(style.maxActions)
@@ -140,6 +146,35 @@ public final class NoticeCardView: NSView, Themeable {
         actionRow.isHidden = actionButtons.isEmpty
     }
 
+    private func rebuildReplyField() {
+        let reply = notice.actions.first { if case .reply = $0.kind { true } else { false } }
+        guard let reply, case let .reply(placeholder) = reply.kind else {
+            if let replyField {
+                column.removeView(replyField)
+                self.replyField = nil
+            }
+            replyActionID = nil
+            return
+        }
+        replyActionID = reply.id
+        let field = replyField ?? makeReplyField()
+        field.placeholderString = placeholder ?? reply.label
+        field.setAccessibilityLabel(reply.label)
+        field.applyTheme(resolvedThemeScope.palette)
+    }
+
+    private func makeReplyField() -> NoticeReplyField {
+        let field = NoticeReplyField()
+        field.delegate = self
+        field.onClick = { [weak self] in self?.beginReply() }
+        field.translatesAutoresizingMaskIntoConstraints = false
+        column.insertArrangedSubview(field, at: column.arrangedSubviews.firstIndex(of: actionRow) ?? 0)
+        column.setCustomSpacing(8, after: field)
+        field.widthAnchor.constraint(equalTo: column.widthAnchor).isActive = true
+        replyField = field
+        return field
+    }
+
     private func updateDetailLines() {
         detailsLabel.maximumNumberOfLines = isHovered ? 0 : style.detailLines
     }
@@ -153,6 +188,57 @@ public final class NoticeCardView: NSView, Themeable {
         return NSImage(systemSymbolName: "bell.badge", accessibilityDescription: nil)
     }
 
+    // MARK: Reply
+
+    /// The user is about to type a reply: the panel may become key, and the
+    /// card holds still until the reply is sent or cancelled.
+    func beginReply() {
+        guard replyField != nil else { return }
+        if let panel = window as? NoticePanel {
+            panel.allowKeyForReply = true
+            panel.makeKey()
+        }
+        countdown.setPaused(true, for: .replying)
+    }
+
+    /// The reply was cancelled: the field empties, the panel gives up the
+    /// keyboard, and the countdown carries on.
+    func endReply() {
+        replyField?.abortEditing()
+        replyField?.stringValue = ""
+        if let panel = window as? NoticePanel {
+            panel.makeFirstResponder(nil)
+            panel.allowKeyForReply = false
+        }
+        countdown.setPaused(false, for: .replying)
+    }
+
+    /// Puts the cursor in the reply field (the card was clicked, or a hotkey
+    /// acted on a notice whose primary action is a reply).
+    func focusReply() {
+        guard let replyField else { return }
+        beginReply()
+        window?.makeFirstResponder(replyField)
+    }
+
+    public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard let replyField, control === replyField else { return false }
+        switch commandSelector {
+        case #selector(NSResponder.insertNewline(_:)):
+            let text = replyField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty, let replyActionID else { return true }
+            (window as? NoticePanel)?.allowKeyForReply = false
+            countdown.setPaused(false, for: .replying)
+            actions.respond(replyActionID, text)
+            return true
+        case #selector(NSResponder.cancelOperation(_:)):
+            endReply()
+            return true
+        default:
+            return false
+        }
+    }
+
     // MARK: Auto-dismiss
 
     /// Starts the countdown, if the profile has one. It runs only while the
@@ -161,6 +247,9 @@ public final class NoticeCardView: NSView, Themeable {
     func startAutoDismiss(after seconds: TimeInterval?) {
         countdown.start(after: seconds) { [weak self] in self?.actions.close() }
     }
+
+    /// Whether the auto-dismiss timer is counting right now.
+    var isCountdownRunning: Bool { countdown.isRunning }
 
     /// Cancels any countdown. A presenter calls this when it removes the card.
     func stop() {
@@ -203,9 +292,14 @@ public final class NoticeCardView: NSView, Themeable {
     public override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     /// Everything but a control belongs to the card, so a click on a label
-    /// acts on the notice rather than landing in the label.
+    /// acts on the notice rather than landing in the label. The reply field
+    /// is the exception among text fields: a click there, or in the field
+    /// editor inside it while editing, goes to the field.
     public override func hitTest(_ point: NSPoint) -> NSView? {
         guard let hit = super.hitTest(point) else { return nil }
+        if let replyField, hit === replyField || hit.isDescendant(of: replyField) {
+            return hit
+        }
         return hit is NSControl && !(hit is NSTextField) ? hit : self
     }
 
@@ -285,7 +379,9 @@ public final class NoticeCardView: NSView, Themeable {
         actionRow.orientation = .horizontal
         actionRow.spacing = 8
 
-        let column = NSStackView(views: [titleRow, subtitleLabel, detailsLabel, actionRow])
+        for view in [titleRow, subtitleLabel, detailsLabel, actionRow] {
+            column.addArrangedSubview(view)
+        }
         column.orientation = .vertical
         column.alignment = .leading
         column.spacing = 4
@@ -324,6 +420,30 @@ public final class NoticeCardView: NSView, Themeable {
             titleRow.widthAnchor.constraint(equalTo: column.widthAnchor),
             detailsLabel.widthAnchor.constraint(equalTo: column.widthAnchor)
         ])
+    }
+}
+
+/// The reply field. A click into it tells the card first, so the panel is
+/// allowed to become key before the field asks to be first responder.
+@MainActor
+final class NoticeReplyField: ThemedTextField {
+
+    var onClick: (@MainActor () -> Void)?
+
+    init() {
+        super.init(string: "")
+        lineBreakMode = .byTruncatingTail
+        cell?.usesSingleLineMode = true
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func mouseDown(with event: NSEvent) {
+        onClick?()
+        super.mouseDown(with: event)
     }
 }
 

@@ -164,7 +164,7 @@ public final class ThemedHighlightLabel: NSTextField, Themeable {
 /// An editable text field themed from the palette: control-background fill,
 /// primary text, body font, and a placeholder in the placeholder-text role.
 @MainActor
-public final class ThemedTextField: NSTextField, Themeable {
+open class ThemedTextField: NSTextField, Themeable {
     private var observer: ThemePaletteObserver?
 
     public init(string: String = "") {
@@ -184,7 +184,9 @@ public final class ThemedTextField: NSTextField, Themeable {
         backgroundColor = palette.controlBackgroundColor
         textColor = palette.primaryTextColor
         font = palette.font(.body)
-        if let placeholder = placeholderString {
+        // Setting the attributed placeholder clears `placeholderString`, so a
+        // second pass reads the text back from the attributed one.
+        if let placeholder = placeholderString ?? placeholderAttributedString?.string {
             placeholderAttributedString = NSAttributedString(string: placeholder, attributes: [
                 .foregroundColor: palette.placeholderTextColor,
                 .font: palette.font(.body)
@@ -212,7 +214,9 @@ public final class ThemedSearchField: NSSearchField, Themeable {
     public func applyTheme(_ palette: SemanticPalette) {
         textColor = palette.primaryTextColor
         font = palette.font(.body)
-        if let placeholder = placeholderString {
+        // Setting the attributed placeholder clears `placeholderString`, so a
+        // second pass reads the text back from the attributed one.
+        if let placeholder = placeholderString ?? placeholderAttributedString?.string {
             placeholderAttributedString = NSAttributedString(string: placeholder, attributes: [
                 .foregroundColor: palette.placeholderTextColor,
                 .font: palette.font(.body)
@@ -848,7 +852,9 @@ public extension NSTextField {
         backgroundColor = palette.controlBackgroundColor
         textColor = palette.primaryTextColor
         font = palette.font(.body)
-        if let placeholder = placeholderString {
+        // Setting the attributed placeholder clears `placeholderString`, so a
+        // second pass reads the text back from the attributed one.
+        if let placeholder = placeholderString ?? placeholderAttributedString?.string {
             placeholderAttributedString = NSAttributedString(string: placeholder, attributes: [
                 .foregroundColor: palette.placeholderTextColor,
                 .font: palette.font(.body)

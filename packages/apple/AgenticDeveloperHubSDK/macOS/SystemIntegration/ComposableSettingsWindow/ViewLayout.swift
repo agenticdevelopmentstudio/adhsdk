@@ -62,7 +62,7 @@ extension NSView {
     /// rather than hug the right edge (a slider) says so by taking a horizontal
     /// hugging priority below `rowSpacerHugging`.
     @MainActor
-    static func makeRow(
+    public static func makeRow(
         _ views: [NSView]
     ) -> NSStackView {
         for view in views {

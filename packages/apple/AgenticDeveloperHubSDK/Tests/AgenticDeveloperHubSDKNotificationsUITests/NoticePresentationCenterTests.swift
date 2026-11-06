@@ -2,65 +2,6 @@ import XCTest
 import AgenticDeveloperHubSDKNotifications
 @testable import AgenticDeveloperHubSDKNotificationsUI
 
-@MainActor
-private final class RecordingHandler: NoticeActionHandler {
-
-    enum Call: Equatable {
-        case setState(String, Notice.Lifecycle)
-        case snooze(String, Date)
-        case respond(String, String, String?)
-        case openURL(URL)
-        case showHistory
-        case sendTest(String)
-    }
-
-    var calls: [Call] = []
-
-    func setState(_ id: String, _ state: Notice.Lifecycle) { calls.append(.setState(id, state)) }
-    func snooze(_ id: String, until: Date) { calls.append(.snooze(id, until)) }
-    func respond(_ id: String, actionID: String, text: String?) { calls.append(.respond(id, actionID, text)) }
-    func openURL(_ url: URL) { calls.append(.openURL(url)) }
-    func showHistory() { calls.append(.showHistory) }
-    func sendTest(_ notice: Notice) { calls.append(.sendTest(notice.id)) }
-}
-
-@MainActor
-private final class RecordingPresenter: NoticePresenter {
-
-    private(set) var shownIDs: [String] = []
-    private(set) var shown: [Notice] = []
-    private(set) var removed: [String] = []
-    private(set) var replaced: [(old: String, new: String)] = []
-    private(set) var focusedReplies: [String] = []
-    private(set) var actions: [String: NoticeCardActions] = [:]
-    private(set) var notices: [String: Notice] = [:]
-
-    func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
-        shown.append(notice)
-        shownIDs.append(notice.id)
-        self.actions[notice.id] = actions
-        notices[notice.id] = notice
-    }
-
-    func remove(id: String) {
-        removed.append(id)
-        shownIDs.removeAll { $0 == id }
-    }
-
-    func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
-        replaced.append((oldID, notice.id))
-        if let index = shownIDs.firstIndex(of: oldID) {
-            shownIDs[index] = notice.id
-        } else {
-            shownIDs.append(notice.id)
-        }
-        self.actions[notice.id] = actions
-        notices[notice.id] = notice
-    }
-
-    func focusReply(id: String) { focusedReplies.append(id) }
-}
-
 private struct StubFocus: NoticeFocusMonitor {
     let box: FocusBox
     var isFocused: Bool { box.focused }
@@ -68,10 +9,6 @@ private struct StubFocus: NoticeFocusMonitor {
 
 private final class FocusBox {
     var focused = true
-}
-
-private final class Clock {
-    var now = Date(timeIntervalSince1970: 1_800_000_000)
 }
 
 @MainActor
@@ -88,12 +25,14 @@ final class NoticePresentationCenterTests: XCTestCase {
     private func harness(
         rules: NoticeRoutingRules = .defaults,
         filter: NoticeFilter = NoticeFilter(),
-        focus: NoticeFocusMonitor = NeverFocused()
+        focus: NoticeFocusMonitor = NeverFocused(),
+        idle: IdleMonitor = IdleMonitor(idleSeconds: { 0 })
     ) -> Harness {
         let handler = RecordingHandler()
         let clock = Clock()
         let center = NoticePresentationCenter(
-            handler: handler, rules: { rules }, filter: { filter }, focus: focus, clock: { clock.now })
+            handler: handler, rules: { rules }, filter: { filter }, focus: focus, idle: idle,
+            clock: { clock.now })
         let toast = RecordingPresenter()
         let alert = RecordingPresenter()
         center.presenters = [.toast: toast, .alert: alert]
@@ -244,6 +183,67 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertTrue(env.toast.shownIDs.isEmpty)
     }
 
+    func testUntilBackWakesOnReturn() {
+        let readings = IdleReadings([0, 301, 302, 1, 400, 2])
+        let idle = IdleMonitor(idleSeconds: readings.next, threshold: 300, poll: 15)
+        let env = harness(idle: idle)
+        env.center.receive(notice("a", at: env.clock))
+        env.center.receive(notice("b", at: env.clock))
+        env.center.snooze(id: "a", option: .untilBack)
+        env.center.snooze(id: "b", option: .fiveMinutes)
+        env.center.apply(NoticeStateChange(id: "a", state: .snoozed, stateAt: env.clock.now))
+        XCTAssertEqual(env.handler.calls, [
+            .snooze("a", env.clock.now.addingTimeInterval(24 * 60 * 60)),
+            .snooze("b", env.clock.now.addingTimeInterval(300))
+        ])
+
+        idle.step() // 0: active
+        idle.step() // 301: idle
+        idle.step() // 302: still idle
+        XCTAssertEqual(env.handler.calls.count, 2, "nothing wakes while the user is away")
+        idle.step() // 1: back
+        XCTAssertEqual(env.handler.calls.last, .setState("a", .unread))
+        XCTAssertEqual(env.handler.calls.count, 3, "only the until-back notice wakes")
+
+        idle.step() // 400: away again
+        idle.step() // 2: back again
+        XCTAssertEqual(env.handler.calls.count, 3, "a woken notice is not woken twice")
+    }
+
+    func testUntilBackIsForgottenOnceTheNoticeIsConsumed() {
+        let readings = IdleReadings([301, 1])
+        let idle = IdleMonitor(idleSeconds: readings.next, threshold: 300, poll: 15)
+        let env = harness(idle: idle)
+        env.center.receive(notice("a", at: env.clock))
+        env.center.snooze(id: "a", option: .untilBack)
+        env.center.apply(NoticeStateChange(id: "a", state: .archived, stateAt: env.clock.now))
+        idle.step()
+        idle.step()
+        XCTAssertFalse(env.handler.calls.contains(.setState("a", .unread)))
+    }
+
+    func testShowHistoryReachesTheHandler() {
+        let env = harness()
+        env.center.showHistory()
+        XCTAssertEqual(env.handler.calls, [.showHistory])
+    }
+
+    func testSetPresenterRegistersAStyle() {
+        let crawl = RecordingPresenter()
+        var rules = NoticeRoutingRules.defaults
+        rules.profiles[.soon]?.style = .crawl
+        let routed = harness(rules: rules)
+        routed.center.setPresenter(crawl, for: .crawl)
+        routed.center.receive(notice("a", urgency: .soon, at: routed.clock))
+        XCTAssertEqual(crawl.shownIDs, ["a"])
+    }
+
+    func testStandardRegistersEveryStyle() {
+        let center = NoticePresentationCenter.standard(
+            handler: RecordingHandler(), rules: { .defaults }, filter: { NoticeFilter() })
+        XCTAssertEqual(Set(center.presenters.keys), [.toast, .alert, .crawl, .fullScreen, .system])
+    }
+
     func testReconcileRemovesStaleAndAddsMissing() {
         let env = harness()
         let first = notice("a", at: env.clock)
@@ -302,7 +302,7 @@ final class NoticePresentationCenterTests: XCTestCase {
     private func harnessWithSystem(rules: NoticeRoutingRules = .defaults) -> (Harness, RecordingPresenter) {
         let env = harness(rules: rules)
         let system = RecordingPresenter()
-        env.center.register(system, for: .system)
+        env.center.setPresenter(system, for: .system)
         return (env, system)
     }
 
