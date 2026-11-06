@@ -70,7 +70,14 @@ public final class FileBrowserViewController: NSViewController {
 
     private let excludedURL: URL
     private let config: FileTreeConfig
-    private let ignorePatterns: [String]
+
+    /// The user's `.gitignore`-style exclusions, watched so an edit in
+    /// Settings re-filters every root of this browser as it is made.
+    private let exclusionsObserver: UserSettingObserver<[String]>
+
+    private var exclusions: GitIgnoreMatcher {
+        GitIgnoreMatcher(patterns: exclusionsObserver.value)
+    }
 
     /// The app-wide open-document registry, threaded down to the tree so it
     /// can show a dirty indicator on a node with unsaved changes.
@@ -112,7 +119,9 @@ public final class FileBrowserViewController: NSViewController {
     ///     browser neither indexes nor thrashes on it.
     ///   - config: Which directory extensions are opaque packages, and the
     ///     `UserDefaults` keys backing the browser's settings.
-    ///   - ignorePatterns: Wildcard filename patterns to leave out of the tree.
+    ///   - exclusions: The setting holding the `.gitignore`-style patterns to
+    ///     leave out of the tree, anchored at each root. Watched: a change
+    ///     re-filters the tree on screen at once.
     ///   - selection: The selection this tree drives. Defaults to one of its
     ///     own, so a browser used alone needs to know nothing about it.
     ///   - documentStore: The app-wide open-document registry, threaded down
@@ -124,7 +133,7 @@ public final class FileBrowserViewController: NSViewController {
         directories: FileBrowserDirectories,
         excludedURL: URL,
         config: FileTreeConfig = .default,
-        ignorePatterns: [String] = [],
+        exclusions: UserSetting<[String]> = UserSettings.fileBrowserExcludedPatterns,
         selection: FileBrowserSelection = FileBrowserSelection(),
         restoration: FileBrowserRestorationState = FileBrowserRestorationState(),
         documentStore: TextDocumentStore,
@@ -133,12 +142,17 @@ public final class FileBrowserViewController: NSViewController {
         self.directories = directories
         self.excludedURL = excludedURL
         self.config = config
-        self.ignorePatterns = ignorePatterns
+        self.exclusionsObserver = UserSettingObserver(exclusions)
         self.selection = selection
         self.restoration = restoration
         self.documentStore = documentStore
         self.injectedGitStatusProvider = gitStatusProvider
         super.init(nibName: nil, bundle: nil)
+
+        exclusionsObserver.onChange = { [weak self] patterns in
+            let matcher = GitIgnoreMatcher(patterns: patterns)
+            self?.managersByRoot.values.forEach { $0.exclusions = matcher }
+        }
 
         rebuildManagers()
         directories.$additional
@@ -166,7 +180,7 @@ public final class FileBrowserViewController: NSViewController {
         rootURL: URL,
         excludedURL: URL,
         config: FileTreeConfig = .default,
-        ignorePatterns: [String] = [],
+        exclusions: UserSetting<[String]> = UserSettings.fileBrowserExcludedPatterns,
         selection: FileBrowserSelection = FileBrowserSelection(),
         restoration: FileBrowserRestorationState = FileBrowserRestorationState(),
         documentStore: TextDocumentStore,
@@ -176,7 +190,7 @@ public final class FileBrowserViewController: NSViewController {
             directories: FileBrowserDirectories(primary: rootURL),
             excludedURL: excludedURL,
             config: config,
-            ignorePatterns: ignorePatterns,
+            exclusions: exclusions,
             selection: selection,
             restoration: restoration,
             documentStore: documentStore,
@@ -386,7 +400,7 @@ public final class FileBrowserViewController: NSViewController {
             repoRootURL: root,
             packageURL: excludedURL,
             config: config,
-            ignorePatterns: ignorePatterns,
+            exclusions: exclusions,
             gitStatusProvider: provider
         )
     }

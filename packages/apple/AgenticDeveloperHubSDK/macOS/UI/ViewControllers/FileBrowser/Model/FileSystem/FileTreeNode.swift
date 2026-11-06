@@ -44,8 +44,10 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
     /// What this node's children are read with, kept so a directory can
     /// materialise its own children the first time it is shown — the view
     /// would otherwise have to carry the scan's configuration down the tree
-    /// alongside every node (`dry`).
-    private let ignorePatterns: [String]
+    /// alongside every node (`dry`). The filter is a `var` so a change to the
+    /// exclusions reaches nodes already in the tree — see
+    /// `DirectoryWatchCoordinator.applyExclusions()`. Main thread only.
+    var filter: FileTreeFilter
     private let packageExtensions: Set<String>
 
     /// File size in bytes, if available. Only populated for files.
@@ -67,21 +69,21 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
     ///   - loadChildren: Whether to read this directory's children now. One
     ///     level only — the children themselves are left unread until they are
     ///     shown. Pass `false` to read nothing at all.
-    ///   - ignorePatterns: Wildcard patterns for filenames to exclude.
+    ///   - filter: What to leave out of this directory's children.
     ///   - packageExtensions: Extensions that identify directories as opaque
     ///     packages (e.g. `catnip-proj`). Packages appear as single items.
     public init(
         url: URL,
         isDirectory: Bool,
         loadChildren: Bool = false,
-        ignorePatterns: [String] = [],
+        filter: FileTreeFilter = .none,
         packageExtensions: Set<String> = []
     ) {
         self.id = url.path
         self.url = url
         self.name = url.lastPathComponent
         self.isDirectory = isDirectory
-        self.ignorePatterns = ignorePatterns
+        self.filter = filter
         self.packageExtensions = packageExtensions
 
         let isPkg = packageExtensions.contains(url.pathExtension)
@@ -97,7 +99,7 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
             if loadChildren {
                 self.children = FileTreeNode.loadChildren(
                     for: url,
-                    ignorePatterns: ignorePatterns,
+                    filter: filter,
                     packageExtensions: packageExtensions
                 )
                 self.childrenLoaded = true
@@ -128,12 +130,12 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
         // must not both start the same enumeration.
         childrenLoaded = true
         let url = self.url
-        let patterns = ignorePatterns
+        let filter = self.filter
         let extensions = packageExtensions
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let loaded = FileTreeNode.loadChildren(
                 for: url,
-                ignorePatterns: patterns,
+                filter: filter,
                 packageExtensions: extensions
             )
             // `nil`, not an empty array, for a directory that turned out to
@@ -155,16 +157,6 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
         children = fresh.map { existing[$0.id] ?? $0 }
     }
 
-    // MARK: - Ignore Patterns
-
-    /// Returns true if the filename matches any of the given ignore patterns.
-    private static func shouldIgnore(_ filename: String, patterns: [String]) -> Bool {
-        for pattern in patterns where fnmatch(pattern, filename, 0) == 0 {
-            return true
-        }
-        return false
-    }
-
     // MARK: - Child Loading
 
     /// Loads and sorts one directory's immediate children.
@@ -175,7 +167,7 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
     /// unread — see `loadChildrenIfNeeded()`.
     public static func loadChildren(
         for url: URL,
-        ignorePatterns: [String] = [],
+        filter: FileTreeFilter = .none,
         packageExtensions: Set<String> = []
     ) -> [FileTreeNode] {
         let fileManager = FileManager.default
@@ -195,18 +187,21 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
                 return nil
             }
 
-            // Skip files matching ignore patterns
-            if shouldIgnore(filename, patterns: ignorePatterns) {
+            let resourceValues = try? childURL.resourceValues(forKeys: [.isDirectoryKey])
+            let isDir = resourceValues?.isDirectory ?? false
+
+            // The user's exclusions, `.gitignore`-style. An excluded directory
+            // is never read, so nothing inside it can be re-included — which
+            // is also how a `.gitignore` treats one.
+            if filter.excludes(childURL, isDirectory: isDir) {
                 return nil
             }
 
-            let resourceValues = try? childURL.resourceValues(forKeys: [.isDirectoryKey])
-            let isDir = resourceValues?.isDirectory ?? false
             return FileTreeNode(
                 url: childURL,
                 isDirectory: isDir,
                 loadChildren: false,
-                ignorePatterns: ignorePatterns,
+                filter: filter,
                 packageExtensions: packageExtensions
             )
         }

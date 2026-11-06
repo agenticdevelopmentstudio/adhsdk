@@ -33,7 +33,7 @@ public final class FileTreeManager: ObservableObject {
         repoRootURL: URL,
         packageURL: URL,
         config: FileTreeConfig,
-        ignorePatterns: [String] = [],
+        exclusions: GitIgnoreMatcher = .empty,
         gitStatusProvider: GitStatusProvider? = nil
     ) {
         self.repoRootURL = repoRootURL
@@ -49,7 +49,7 @@ public final class FileTreeManager: ObservableObject {
             ]
         )
 
-        coordinator.ignorePatterns = ignorePatterns
+        coordinator.exclusions = exclusions
 
         // One provider serves every pane of a checkout and broadcasts to all
         // of them, so this manager registers once and is told about every
@@ -75,10 +75,11 @@ public final class FileTreeManager: ObservableObject {
             .store(in: &cancellables)
     }
 
-    /// Updates the ignore patterns and triggers a full resync of the file tree.
-    public func updateIgnorePatterns(_ patterns: [String]) {
-        coordinator.ignorePatterns = patterns
-        coordinator.fullSync()
+    /// What the tree leaves out. Setting it re-filters the tree on screen in
+    /// place — see `DirectoryWatchCoordinator.exclusions`.
+    public var exclusions: GitIgnoreMatcher {
+        get { coordinator.exclusions }
+        set { coordinator.exclusions = newValue }
     }
 
     public func loadInitial() {

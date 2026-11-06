@@ -1,3 +1,4 @@
+import AgenticDeveloperHubSDKCore
 import Combine
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
@@ -100,6 +101,50 @@ final class DirectoryWatchCoordinatorTests: XCTestCase {
             coordinator.rootNode?.children?.first?.children?.map(\.url.lastPathComponent),
             ["file.swift"]
         )
+    }
+
+    /// Waits for the re-read that setting `exclusions` starts.
+    private func setExclusions(_ patterns: [String], on coordinator: DirectoryWatchCoordinator) {
+        let done = expectation(description: "re-filter complete")
+        let token = coordinator.$isSyncing
+            .dropFirst()
+            .filter { $0 == false }
+            .sink { _ in done.fulfill() }
+        coordinator.exclusions = GitIgnoreMatcher(patterns: patterns)
+        wait(for: [done], timeout: 5)
+        token.cancel()
+    }
+
+    func testTheFirstSyncLeavesOutWhatIsExcluded() throws {
+        let directory = makeDirectory()
+        try "x".write(to: directory.appendingPathComponent("debug.log"), atomically: true, encoding: .utf8)
+        let coordinator = makeCoordinator(at: directory)
+        coordinator.exclusions = GitIgnoreMatcher(patterns: ["*.log"])
+        sync(coordinator)
+
+        XCTAssertEqual(coordinator.rootNode?.children?.map(\.url.lastPathComponent), ["nested"])
+    }
+
+    /// The Settings list is live: an edit hides and un-hides at once, inside
+    /// folders already open, and leaves those folders open.
+    func testChangingExclusionsRefiltersTheTreeOnScreen() throws {
+        let directory = makeDirectory()
+        try "x".write(to: directory.appendingPathComponent("nested/other.txt"), atomically: true, encoding: .utf8)
+        let coordinator = makeCoordinator(at: directory)
+        sync(coordinator)
+        let nested = try XCTUnwrap(coordinator.rootNode?.children?.first)
+        openFolder(nested)
+        XCTAssertEqual(nested.children?.map(\.url.lastPathComponent), ["file.swift", "other.txt"])
+
+        setExclusions(["*.swift"], on: coordinator)
+        XCTAssertTrue(coordinator.rootNode?.children?.first === nested, "the open folder must survive")
+        XCTAssertEqual(nested.children?.map(\.url.lastPathComponent), ["other.txt"])
+
+        setExclusions(["nested/"], on: coordinator)
+        XCTAssertEqual(coordinator.rootNode?.children?.map(\.url.lastPathComponent) ?? [], [])
+
+        setExclusions([], on: coordinator)
+        XCTAssertEqual(coordinator.rootNode?.children?.map(\.url.lastPathComponent), ["nested"])
     }
 
     func testASyncOfADifferentRootReplacesTheTree() {

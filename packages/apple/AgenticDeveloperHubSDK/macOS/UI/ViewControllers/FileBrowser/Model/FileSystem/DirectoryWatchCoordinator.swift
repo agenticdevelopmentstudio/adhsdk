@@ -17,8 +17,26 @@ public final class DirectoryWatchCoordinator: ObservableObject {
     public let excludedPrefixes: [String]
     public let config: FileTreeConfig
 
-    /// Wildcard patterns for filenames to exclude from the file tree.
-    public var ignorePatterns: [String] = []
+    /// `.gitignore`-style patterns for what to leave out of the tree, anchored
+    /// at `rootURL`. Setting it re-filters the tree already on screen — every
+    /// directory that has been read is read again — so a change shows at
+    /// once, without collapsing anything the user had open.
+    public var exclusions: GitIgnoreMatcher = .empty {
+        didSet {
+            guard exclusions != oldValue else { return }
+            applyExclusions()
+        }
+    }
+
+    /// The filter every read uses: `exclusions`, anchored at the root.
+    private var filter: FileTreeFilter {
+        FileTreeFilter(rootURL: rootURL, matcher: exclusions)
+    }
+
+    /// Bumped by every `applyExclusions()`, so a re-read that finishes after a
+    /// newer one started is dropped instead of merging nodes that carry the
+    /// filter it started with.
+    private var exclusionsGeneration = 0
 
     @Published public var rootNode: FileTreeNode?
     @Published public var isSyncing: Bool = false
@@ -43,7 +61,7 @@ public final class DirectoryWatchCoordinator: ObservableObject {
     /// checkout is.
     public func fullSync() {
         isSyncing = true
-        let patterns = ignorePatterns
+        let filter = self.filter
         let pkgExts = config.packageExtensions
         let rootURL = self.rootURL
 
@@ -52,7 +70,7 @@ public final class DirectoryWatchCoordinator: ObservableObject {
                 url: rootURL,
                 isDirectory: true,
                 loadChildren: true,
-                ignorePatterns: patterns,
+                filter: filter,
                 packageExtensions: pkgExts
             )
 
@@ -73,6 +91,9 @@ public final class DirectoryWatchCoordinator: ObservableObject {
                 self.isSyncing = false
                 self.onChangeCallback?()
                 self.logger.info("Sync complete for \(self.rootURL.lastPathComponent)")
+                // The exclusions changed while this read was in flight, so it
+                // read with the old ones.
+                if filter != self.filter { self.applyExclusions() }
             }
         }
     }
@@ -120,7 +141,7 @@ public final class DirectoryWatchCoordinator: ObservableObject {
             return (parentNode, parentNode.url)
         }
 
-        let patterns = ignorePatterns
+        let filter = self.filter
         let pkgExts = config.packageExtensions
 
         // Do the filesystem I/O on a background queue
@@ -129,7 +150,7 @@ public final class DirectoryWatchCoordinator: ObservableObject {
             let updates: [(FileTreeNode, [FileTreeNode])] = nodesToUpdate.map { (node, url) in
                 let newChildren = FileTreeNode.loadChildren(
                     for: url,
-                    ignorePatterns: patterns,
+                    filter: filter,
                     packageExtensions: pkgExts
                 )
                 return (node, newChildren)
@@ -149,6 +170,62 @@ public final class DirectoryWatchCoordinator: ObservableObject {
                 self.isSyncing = false
                 self.onChangeCallback?()
             }
+        }
+    }
+
+    /// Re-filters the tree on screen with the current `exclusions`.
+    ///
+    /// Every node gets the new filter, so a directory read later reads with
+    /// it; every directory already read is read again, so what the change
+    /// hides disappears and what it un-hides comes back. The reads are
+    /// merged, so expanded folders stay expanded. Before the first sync there
+    /// is nothing on screen, and the sync itself reads with the new filter.
+    func applyExclusions() {
+        guard let root = rootNode else { return }
+        exclusionsGeneration += 1
+        let generation = exclusionsGeneration
+        let filter = self.filter
+        let pkgExts = config.packageExtensions
+
+        var loaded: [FileTreeNode] = []
+        stampFilter(filter, on: root, collectingLoaded: &loaded)
+        let targets = loaded.map { ($0, $0.url) }
+        isSyncing = true
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let updates = targets.map { node, url in
+                (node, FileTreeNode.loadChildren(for: url, filter: filter, packageExtensions: pkgExts))
+            }
+            DispatchQueue.main.async {
+                guard let self, generation == self.exclusionsGeneration else { return }
+                for (node, fresh) in updates {
+                    // `nil` for a read directory left with nothing to show,
+                    // as `loadChildrenIfNeeded()` does: an empty array is
+                    // "not read yet" and would keep a triangle that opens
+                    // onto nothing. The root is always a list.
+                    if fresh.isEmpty && node !== root {
+                        node.children = nil
+                    } else {
+                        node.merge(children: fresh)
+                    }
+                }
+                self.isSyncing = false
+                self.onChangeCallback?()
+            }
+        }
+    }
+
+    /// Sets `filter` on `node` and everything below it, and collects the
+    /// directories whose children have been read.
+    private func stampFilter(
+        _ filter: FileTreeFilter,
+        on node: FileTreeNode,
+        collectingLoaded loaded: inout [FileTreeNode]
+    ) {
+        node.filter = filter
+        if node.isDirectory, !node.isPackage, node.childrenLoaded { loaded.append(node) }
+        for child in node.children ?? [] {
+            stampFilter(filter, on: child, collectingLoaded: &loaded)
         }
     }
 
