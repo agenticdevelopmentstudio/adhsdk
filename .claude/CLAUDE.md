@@ -237,6 +237,7 @@ open packages/apple/AgenticDeveloperHubSDK.xcworkspace
 | `AgenticDeveloperHubSDKMacOS` | `macOS/` | `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKCoreUI`, `AgenticDeveloperHubSDKCoreMacOS`, SwiftTerm, CodeEditSourceEditor, CodeEditLanguages |
 | `AgenticDeveloperHubSDKSystemMonitor` | `SystemMonitor/` | `AgenticDeveloperHubSDKCore` |
 | `AgenticDeveloperHubSDKSystemMonitorUI` | `SystemMonitorUI/` | `AgenticDeveloperHubSDKSystemMonitor`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMacOS`, `AgenticDeveloperHubSDKUI` |
+| `AgenticDeveloperHubSDKNotifications` | `Notifications/` | none (Foundation only; macOS + iOS) |
 
 `AgenticDeveloperHubSDKCore` is Foundation-only; `AgenticDeveloperHubSDKCoreUI` holds
 cross-cutting AppKit utilities; `AgenticDeveloperHubSDKCoreMacOS` adds macOS-only
