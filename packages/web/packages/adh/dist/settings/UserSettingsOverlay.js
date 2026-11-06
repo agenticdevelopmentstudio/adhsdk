@@ -129,6 +129,12 @@ var SITE_ROUTE_SEGMENTS = [
   "oidc",
   "explore",
   "old-landing",
+  // hub — app/{privacy-policy,terms-of-use}, the family's legal text bare at the hub's root
+  // (adh-registry's `sites/legal.ts`). Every site's footer links these two addresses, and the
+  // hub's own `/privacy` and `/terms` redirect to them; the template's `privacy` and `terms` are
+  // listed in FAMILY_ROUTE_SEGMENTS.
+  "privacy-policy",
+  "terms-of-use",
   // hub — the marketing feature pages. These are not directories either: they were served
   // by `app/[slug]/page.tsx`, which dispatched on the slug ahead of a user profile, and the
   // root segment is `[workspace]` now — so each is a permanent REDIRECT source in the hub's
@@ -194,6 +200,12 @@ var RESERVED_HANDLE_WORDS = [
   "logout",
   "me",
   "monitoring",
+  // The names of the two hub-data ecosystems under every workspace (`ecosystem.<ws>.personal`,
+  // `ecosystem.<ws>.organization`). The server refuses both as a principal slug and as an
+  // ecosystem slug (`HUB_DATA_ECOSYSTEM_SLUGS` in the backend's `lib/rdid.ts`), so a form that
+  // let them through would only fail on submit.
+  "organization",
+  "personal",
   // Held on the same footing as the rest of this list, not because anything routes it.
   // `games/parse-path.ts` matched `/<workspace>/new` for the create-game dialog until
   // 2026-08-22 (`product-gaming-modes`), and when that grammar went the word came here rather

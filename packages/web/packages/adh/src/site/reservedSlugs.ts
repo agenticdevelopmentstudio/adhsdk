@@ -125,6 +125,12 @@ export const SITE_ROUTE_SEGMENTS: readonly string[] = [
   'oidc',
   'explore',
   'old-landing',
+  // hub — app/{privacy-policy,terms-of-use}, the family's legal text bare at the hub's root
+  // (adh-registry's `sites/legal.ts`). Every site's footer links these two addresses, and the
+  // hub's own `/privacy` and `/terms` redirect to them; the template's `privacy` and `terms` are
+  // listed in FAMILY_ROUTE_SEGMENTS.
+  'privacy-policy',
+  'terms-of-use',
   // hub — the marketing feature pages. These are not directories either: they were served
   // by `app/[slug]/page.tsx`, which dispatched on the slug ahead of a user profile, and the
   // root segment is `[workspace]` now — so each is a permanent REDIRECT source in the hub's
