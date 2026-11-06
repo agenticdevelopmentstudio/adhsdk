@@ -1333,7 +1333,12 @@ export function TopicRail({
             }}
             onKeyDown={(e) => {
               if (e.key === "Escape") {
+                // Escape stops HERE, at the filter. React's stopPropagation alone cannot stop a
+                // listener on React's own root node: under the Next App Router that root is
+                // `document`, where a Base UI dialog listens for Escape too, so the first Escape
+                // closed the dialog the rail sits in as well (RegisterWizard has the same guard).
                 e.stopPropagation()
+                e.nativeEvent.stopImmediatePropagation()
                 closeSearch()
               } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && suggestions.length > 0) {
                 // The caret stays put; the highlight moves, wrapping at either end.

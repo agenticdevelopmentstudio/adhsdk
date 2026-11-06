@@ -489,6 +489,17 @@ describe('the search pop-over and the keyboard', () => {
     ['Enter', () => key('Enter')],
     ['✕', () => fireEvent.click(screen.getByRole('button', { name: 'Clear filter' }))],
   ]
+  it('stops Escape even for a listener on the React root itself (a dialog under the App Router)', () => {
+    const { container } = render(<TopicRail {...props} search={{}} />)
+    // Added after React's own root listener, on the same node, as Base UI's document listener is.
+    const dialogEscape = vi.fn()
+    container.addEventListener('keydown', dialogEscape)
+    fireEvent.click(filterButton())
+    key('Escape')
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(dialogEscape).not.toHaveBeenCalled()
+  })
+
   it.each(closers)('hands focus back to the filter button when %s closes the field', (_, close) => {
     render(<TopicRail {...props} search={{}} />)
     fireEvent.click(filterButton())

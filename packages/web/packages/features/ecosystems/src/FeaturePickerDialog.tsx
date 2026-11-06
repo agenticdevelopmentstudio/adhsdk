@@ -363,8 +363,8 @@ export function FeaturePickerDialog({
    * deliberate — a filter over 35 single-phrase feature names rarely needs a space, while a
    * hand that never leaves the field needs a toggle key.
    *
-   * Escape is NOT handled here. The filter takes the first one (it clears and closes the field,
-   * and stops it there); the next reaches Base-UI's dialog, which cancels.
+   * Escape is NOT handled here. The filter takes the first one (it closes the field, keeping
+   * the query, and stops it there); the next reaches Base-UI's dialog, which cancels.
    */
   const onFilterKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
