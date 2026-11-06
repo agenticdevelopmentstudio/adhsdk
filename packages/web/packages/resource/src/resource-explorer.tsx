@@ -358,11 +358,18 @@ export function ResourceExplorer<T>({
     sublabel: rail?.getSublabel?.(it),
     icon: getItemIcon ? getItemIcon(it) : itemIcon,
   }));
-  // A query over a list that has loaded EMPTY has nothing left to narrow, and the empty rail must
-  // say "None yet", not that a search failed. Kept, it would also narrow whatever rows arrive next (a refetch that picks up another session's creates) by a query typed against
-  // a list that no longer exists. Dropped during render, React's adjust-state-while-rendering
-  // pattern, so no frame commits with it; the `filter !== ""` guard makes it fire once.
-  if (loaded && allEntityItems.length === 0 && filter !== "") setFilter("");
+  // A query over a list that has just loaded EMPTY has nothing left to narrow, and the empty rail
+  // must say "None yet", not that a search failed. Kept, it would also narrow whatever rows arrive
+  // next (a refetch that picks up another session's creates) by a query typed against a list that
+  // no longer exists. Dropped during render, React's adjust-state-while-rendering pattern, so no
+  // frame commits with it. Only on the list's TURN to empty: the filter is always on offer, and a
+  // reset on every render of an empty list undid each keystroke typed into it.
+  const loadedEmpty = loaded && allEntityItems.length === 0;
+  const [wasLoadedEmpty, setWasLoadedEmpty] = useState(loadedEmpty);
+  if (wasLoadedEmpty !== loadedEmpty) {
+    setWasLoadedEmpty(loadedEmpty);
+    if (loadedEmpty && filter !== "") setFilter("");
+  }
   // Filtering narrows the ROWS only — `active`/`titleFor` above still read the unfiltered
   // `items`, so filtering away the selected entity never blanks its pane or its breadcrumb.
   //
@@ -473,9 +480,8 @@ export function ResourceExplorer<T>({
     // matches nothing, is named HERE, in the rail's own words: the query is controlled, and a rail
     // names a no-match only over rows it filtered itself (a controlled host's empty list may still
     // be loading the query's read, which only the host can know). Only while the UNFILTERED list
-    // has rows: this label once outlived the field, so a list that emptied under a query read as
-    // a failed search with nothing to clear it from (the magnifier goes with the last row, and
-    // the stale query is dropped above).
+    // has rows: an empty list is "None yet" whatever is typed into its filter (the query a list
+    // emptied under is dropped above).
     emptyLabel: !loaded
       ? (rail?.loadError ?? "Loading…")
       : needle && allEntityItems.length > 0

@@ -158,4 +158,17 @@ describe("ResourceExplorer's rail filter", () => {
     expect(screen.getByText("None yet.")).toBeInTheDocument();
     expect(screen.queryByText(/matches/)).toBeNull();
   });
+
+  it("keeps what is typed into an empty list's filter", () => {
+    render(explorer({ items: [] }));
+    const toolbar = screen.getByRole("toolbar", { name: "All tools" });
+    fireEvent.click(within(toolbar).getByRole("button", { name: "Filter all" }));
+    const field = screen.getByRole("combobox", { name: "Filter all" });
+    fireEvent.change(field, { target: { value: "a" } });
+    expect(field).toHaveValue("a");
+    fireEvent.change(field, { target: { value: "ab" } });
+    expect(field).toHaveValue("ab");
+    // The list is still "None yet", not a failed search.
+    expect(screen.getByText("None yet.")).toBeInTheDocument();
+  });
 });
