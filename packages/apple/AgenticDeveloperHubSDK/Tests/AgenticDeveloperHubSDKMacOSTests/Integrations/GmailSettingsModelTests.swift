@@ -217,6 +217,26 @@ struct GmailSettingsModelTests {
         #expect(model.busy == false)
     }
 
+    @Test func aReloadDuringASettingsSendKeepsShowingTheChosenValue() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        var chosen = MailSyncSettings.default
+        chosen.windowDays = 7
+        service.gate {
+            if case .updateSettings = $0 { return true }
+            return false
+        }
+        let before = service.requests.count
+        let update = Task { await model.update(accountId: "a1", chosen) }
+        await service.waitForRequests(before + 1)
+        // Another call's reload lands while the send is still in flight.
+        await model.syncNow(accountId: "a1")
+        #expect(model.accounts.first?.settings == chosen, "the reload must not flash the old value")
+        service.release()
+        await update.value
+    }
+
     @Test func cancelSignInSendsCancelWhileSigningIn() async {
         let service = ScriptedMailService(accounts: [.fixture()])
         let model = GmailSettingsModel(client: service.client)
