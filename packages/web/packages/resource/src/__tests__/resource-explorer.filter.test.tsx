@@ -150,7 +150,9 @@ describe("ResourceExplorer's rail filter", () => {
     fireEvent.click(within(toolbar).getByRole("button", { name: "Filter all" }));
     const field = screen.getByRole("combobox", { name: "Filter all" });
     fireEvent.change(field, { target: { value: "zzz" } });
-    expect(screen.getByText("Nothing matches “zzz”.")).toBeInTheDocument();
+    // Said where the suggestions hang; the rail's own rows (hidden under it) say it too.
+    const said = document.querySelector("[data-htd-suggestions][role='status']");
+    expect(said).toHaveTextContent("Nothing matches “zzz”.");
 
     rerender(explorer({ items: [] }));
     expect(screen.getByText("None yet.")).toBeInTheDocument();

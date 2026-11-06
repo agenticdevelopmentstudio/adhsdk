@@ -195,7 +195,10 @@ describe('topic list filter', () => {
     expect(list()).not.toHaveClass('invisible')
     type('a')
     expect(list()).toHaveClass('invisible')
+    // Nothing matches: the rows stay hidden under the message that says so.
     type('zzz')
+    expect(list()).toHaveClass('invisible')
+    type('')
     expect(list()).not.toHaveClass('invisible')
     type('a')
     key('Escape')
@@ -324,12 +327,14 @@ describe('topic list filter', () => {
     expect(suggestions()).toEqual(['Beta'])
   })
 
-  it('offers nothing to choose when nothing matches, and Return leaves the field open', () => {
+  it('says when nothing matches, offers nothing to choose, and Return leaves the field open', () => {
     const onSelect = vi.fn()
     render(<TopicRail {...props} onSelect={onSelect} />)
     fireEvent.click(filterButton())
     typeAndChoose('zzz')
     expect(screen.queryByRole('listbox')).toBeNull()
+    expect(screen.getByText('Nothing matches “zzz”.')).toHaveAttribute('role', 'status')
+    expect(field()).toHaveAttribute('aria-expanded', 'false')
     expect(field()).toBeInTheDocument()
     expect(onSelect).not.toHaveBeenCalled()
   })

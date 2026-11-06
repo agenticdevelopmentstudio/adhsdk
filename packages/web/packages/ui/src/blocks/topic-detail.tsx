@@ -1251,8 +1251,11 @@ export function TopicRail({
   // Waiting on a controlled host's rows for what is typed: "Searching…" hangs where the
   // suggestions will.
   const searchingShown = searchShown && !listSearch.live && queryActive && pendingQuery
+  // Nothing matches what is typed: SAY so where the suggestions would hang. Showing nothing left
+  // the rows up, unfiltered, reading as if every one of them matched, with Return doing nothing.
+  const noMatchShown = searchShown && !listSearch.live && queryActive && !pendingQuery && suggestions.length === 0
   // The autocomplete is on screen exactly when this holds.
-  const suggestionsShown = searchShown && (suggestions.length > 0 || searchingShown)
+  const suggestionsShown = searchShown && (suggestions.length > 0 || searchingShown || noMatchShown)
   // Reveal the topic a suggestion chose (see `revealChosen`). Not while a host's rows are still
   // catching up with the query that choosing cleared: a reveal run against the narrowed rows was
   // used up, and the full list arrived with the chosen row off-screen. Keyed on `sig` too, so it
@@ -1389,6 +1392,15 @@ export function TopicRail({
           className="absolute top-full right-0 left-0 z-20 border-y border-apt-border bg-apt-surface py-2 pr-2 pl-2.5 text-[0.8rem] text-apt-text-muted shadow-lg"
         >
           Searching…
+        </div>
+      )}
+      {noMatchShown && (
+        <div
+          role="status"
+          data-htd-suggestions
+          className="absolute top-full right-0 left-0 z-20 border-y border-apt-border bg-apt-surface py-2 pr-2 pl-2.5 text-[0.8rem] text-apt-text-muted shadow-lg"
+        >
+          {`Nothing matches “${query.trim()}”.`}
         </div>
       )}
       {searchShown && suggestions.length > 0 && (
