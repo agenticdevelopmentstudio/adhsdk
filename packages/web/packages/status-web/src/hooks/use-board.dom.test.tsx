@@ -176,6 +176,39 @@ describe("useBoard", () => {
   });
 });
 
+describe("useBoard — an expired board left in the cache for an environment choice", () => {
+  // The user leaves the production filter for longer than the board's deadline, then picks it
+  // again: the cache still holds production's last board, now past its `staleAt`.
+  function cachedClient() {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    qc.setQueryData(["board", "production"], { ...board, freshness: pastDeadline() }, { updatedAt: Date.now() - 600_000 });
+    const Wrap = ({ children }: { children: ReactNode }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+    return Wrap;
+  }
+  const json = (b: Board) => new Response(JSON.stringify(b), { status: 200, headers: { "content-type": "application/json" } });
+
+  it("is loading while the choice's own read is in flight, not \"has not refreshed\"", async () => {
+    let release: (r: Response) => void = () => {};
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((resolve) => { release = resolve; })));
+    const { result } = renderHook(() => useBoard({ environments: ["production"] }), { wrapper: cachedClient() });
+    expect(result.current.reason).toBe("loading");
+    expect(result.current.board).toBeNull();
+
+    release(json(board));
+    await waitFor(() => expect(result.current.board).not.toBeNull());
+    expect(result.current.reason).toBeNull();
+  });
+
+  it("is stale once that read fails: reads really have stopped", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })));
+    const { result } = renderHook(() => useBoard({ environments: ["production"] }), { wrapper: cachedClient() });
+    expect(result.current.reason).toBe("loading");
+    // The hook retries once, a second later, before the read counts as failed.
+    await waitFor(() => expect(result.current.reason).toBe("stale"), { timeout: 4000 });
+    expect(result.current.error).not.toBeNull();
+  });
+});
+
 describe("useBoard — folding staleness into null (Fix Round 3 item 1)", () => {
   it("a board from a backend older than `freshness` reads as stale instead of throwing", async () => {
     const { freshness: _gone, ...older } = board;
