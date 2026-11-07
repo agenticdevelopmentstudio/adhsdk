@@ -648,8 +648,12 @@ public final class BrowserPaneViewController: NSViewController {
         let label = paneTitle
         // Removing the web view drops a first responder it held to the
         // window; the new one takes it back, as does a paused pane's, whose
-        // page is meant to be focused and frozen (spec section 7).
-        let refocus = isEventsPaused || pageHolds(viewIfLoaded?.window?.firstResponder)
+        // page is meant to be focused and frozen (spec section 7) — but only
+        // when nothing else in the window holds the focus: a rebuild a global
+        // setting caused must not pull the keyboard out of a terminal.
+        let responder = viewIfLoaded?.window?.firstResponder
+        let focusIsFree = responder == nil || responder === viewIfLoaded?.window
+        let refocus = pageHolds(responder) || (isEventsPaused && focusIsFree)
         detachWebView()
         webView.removeFromSuperview()
         pageHost?.removeFromSuperview()
