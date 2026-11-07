@@ -83,6 +83,22 @@ public final class BrowserPaneViewController: NSViewController {
     public let consoleLog = BrowserConsoleLog()
     /// The jar the current web view was built on.
     private(set) var resolvedJar: ResolvedJar
+    /// Whether the current web view captures the page console: read once,
+    /// where its configuration is built, and used for the message handler,
+    /// the user script and the automation alike, so a later shield toggle can
+    /// never install the script without its handler or the handler without
+    /// its script. A construction-time setting; a change waits for a rebuild.
+    private(set) var capturesConsole: Bool
+    /// The Third-Party Content value last asked of the current web view, so
+    /// an unrelated browser key change does not compile the rules again.
+    /// `nil` on a web view that has been asked for nothing yet.
+    private var requestedThirdPartyContent: BrowserThirdPartyContent?
+    /// The value whose rules the current web view actually has. What tests
+    /// wait on; the compile behind it is asynchronous.
+    private(set) var appliedThirdPartyContent: BrowserThirdPartyContent?
+    /// Counts content-rule requests, so a compile that finishes after a newer
+    /// request — or after the web view was rebuilt — is dropped.
+    private var contentRulesGeneration = 0
     /// What the jar's row was last named, so a title change writes only when
     /// the name it would write is new.
     private var jarLabel: String?
@@ -94,6 +110,7 @@ public final class BrowserPaneViewController: NSViewController {
     public var automation: BrowserAutomation {
         if let builtAutomation { return builtAutomation }
         let automation = BrowserAutomation(webView: webView, console: consoleLog)
+        automation.isConsoleCaptureOn = capturesConsole
         automation.onDriveStateChange = { [weak self] driving in
             guard let self else { return }
             // The start of every drive is a use of this pane, so it becomes
@@ -149,8 +166,12 @@ public final class BrowserPaneViewController: NSViewController {
         self.history = history
         self.fallbackHomeURL = homeURL
         let jar = Self.resolveJar(settings: settings, context: context, label: Self.untitledLabel)
-        let configuration = Self.makeConfiguration(settings: settings, consoleLog: consoleLog, jar: jar)
+        let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
+        let configuration = Self.makeConfiguration(
+            settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: capturesConsole
+        )
         self.resolvedJar = jar
+        self.capturesConsole = capturesConsole
         self.siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
         webView = Self.makeWebView(configuration: configuration)
         activationShield = BrowserActivationShield(webView: webView)
@@ -186,12 +207,16 @@ public final class BrowserPaneViewController: NSViewController {
         }
         updatePageBackground()
         installUserScripts()
+        // A new web view starts with no rule lists, whatever the last one had.
+        requestedThirdPartyContent = nil
+        appliedThirdPartyContent = nil
         applyLiveSettings()
     }
 
     /// Puts every user script the pane wants on the current web view's
-    /// controller: the console hook always, the activation shield's script
-    /// while the shield is up.
+    /// controller: the console hook when this web view captures the console
+    /// (`capturesConsole`), the activation shield's script while the shield
+    /// is up.
     ///
     /// The only place the pane adds or removes user scripts.
     /// `WKUserContentController` cannot remove one script, only all of them,
@@ -203,7 +228,7 @@ public final class BrowserPaneViewController: NSViewController {
     private func installUserScripts() {
         let controller = webView.configuration.userContentController
         controller.removeAllUserScripts()
-        controller.addUserScript(consoleLog.userScript)
+        if capturesConsole { controller.addUserScript(consoleLog.userScript) }
         if let shieldScript = activationShield.userScript {
             controller.addUserScript(shieldScript)
         }
@@ -273,17 +298,26 @@ public final class BrowserPaneViewController: NSViewController {
         makeConfiguration(
             settings: settings,
             consoleLog: consoleLog,
-            jar: resolveJar(settings: settings, context: context, label: untitledLabel)
+            jar: resolveJar(settings: settings, context: context, label: untitledLabel),
+            capturesConsole: settings.get(UserSettings.browserPrivacyConsoleCapture)
         )
     }
 
+    /// - Parameter capturesConsole: Whether to register the console message
+    ///   handler. The pane reads the setting once and hands the same answer
+    ///   to `installUserScripts()`, so the handler and the hook come together
+    ///   or not at all. Off, a page has no `webkit.messageHandlers` entry to
+    ///   find the hook by.
     static func makeConfiguration(
         settings: SettingsStore,
         consoleLog: BrowserConsoleLog,
-        jar: ResolvedJar
+        jar: ResolvedJar,
+        capturesConsole: Bool
     ) -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
-        configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
+        if capturesConsole {
+            configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
+        }
         configuration.websiteDataStore = jar.dataStore
         configuration.upgradeKnownHostsToHTTPS = settings.get(UserSettings.browserUpgradesToHTTPS)
         configuration.allowsAirPlayForMediaPlayback = settings.get(UserSettings.browserAllowsAirPlay)
@@ -327,6 +361,7 @@ public final class BrowserPaneViewController: NSViewController {
         let agent = settings.get(UserSettings.browserCustomUserAgent)
         webView.customUserAgent = agent.isEmpty ? nil : agent
         webView.isInspectable = settings.get(UserSettings.browserWebInspectorEnabled)
+        applyContentRules()
 
         let preferences = webView.configuration.preferences
         let fontSize = settings.get(UserSettings.browserMinimumFontSize)
@@ -334,6 +369,42 @@ public final class BrowserPaneViewController: NSViewController {
         preferences.minimumFontSize = CGFloat(min(max(fontSize, fontRange.lowerBound), fontRange.upperBound))
         preferences.javaScriptCanOpenWindowsAutomatically = !settings.get(UserSettings.browserBlocksPopups)
         preferences.isFraudulentWebsiteWarningEnabled = settings.get(UserSettings.browserFraudWarning)
+    }
+
+    /// Puts the Third-Party Content setting's rule list on the current web
+    /// view, live: the old list comes off and the new one goes on when its
+    /// compile finishes (spec section 9). Only when the value differs from
+    /// the one last asked of this web view, so a zoom drag does not recompile.
+    ///
+    /// The compile is asynchronous, so a request carries a generation; one
+    /// that finishes after a newer request, or after a rebuild (which asks
+    /// again for its new web view), is dropped rather than applied over it.
+    /// `.allow` takes the rules off at once, with nothing to wait for. Until a
+    /// blocking compile lands the web view keeps whatever list it had.
+    private func applyContentRules() {
+        let policy = settings.get(UserSettings.browserPrivacyThirdPartyContent)
+        guard policy != requestedThirdPartyContent else { return }
+        requestedThirdPartyContent = policy
+        contentRulesGeneration += 1
+        let generation = contentRulesGeneration
+        guard policy != .allow else {
+            webView.configuration.userContentController.removeAllContentRuleLists()
+            appliedThirdPartyContent = .allow
+            return
+        }
+        Task { [weak self, logger] in
+            do {
+                let list = try await BrowserContentRules.ruleList(for: policy)
+                guard let self, self.contentRulesGeneration == generation else { return }
+                let controller = self.webView.configuration.userContentController
+                controller.removeAllContentRuleLists()
+                if let list { controller.add(list) }
+                self.appliedThirdPartyContent = policy
+            } catch {
+                logger.error(
+                    "browser content rules failed to compile: \(error.localizedDescription, privacy: .public)")
+            }
+        }
     }
 
     /// The cookie policy belongs to the data store, not the web view, and a
@@ -427,8 +498,14 @@ public final class BrowserPaneViewController: NSViewController {
         pageHost = nil
 
         let jar = Self.resolveJar(settings: settings, context: paneContext, label: label)
-        let configuration = Self.makeConfiguration(settings: settings, consoleLog: consoleLog, jar: jar)
+        let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
+        let configuration = Self.makeConfiguration(
+            settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: capturesConsole
+        )
         resolvedJar = jar
+        self.capturesConsole = capturesConsole
+        // What the old web view captured is not this one's to report.
+        if !capturesConsole { consoleLog.clear() }
         jarLabel = jar.jarID == nil ? nil : label
         paneContext.jars?.noteUse(of: jar.jarID, by: self)
         siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
@@ -436,6 +513,7 @@ public final class BrowserPaneViewController: NSViewController {
         activationShield = BrowserActivationShield(webView: webView)
         wireWebView()
         builtAutomation?.retarget(to: webView)
+        builtAutomation?.isConsoleCaptureOn = capturesConsole
         applyCookiePolicy()
         observeSettings()
 

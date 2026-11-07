@@ -103,6 +103,11 @@ public final class BrowserAutomation: NSObject {
     /// its web view onto another storage jar — see `retarget(to:)`.
     public private(set) var webView: WKWebView
     public let console: BrowserConsoleLog
+    /// Whether the page's console is being captured at all. Set by the pane
+    /// from the Capture Page Console setting it built the current web view
+    /// with, so the console tool can say capture is off rather than report
+    /// an empty console as a quiet page.
+    public var isConsoleCaptureOn = true
 
     public private(set) var isActionInFlight = false
     public var onDriveStateChange: ((Bool) -> Void)?

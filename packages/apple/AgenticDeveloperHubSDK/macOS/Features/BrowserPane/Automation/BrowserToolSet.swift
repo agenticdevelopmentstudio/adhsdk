@@ -268,6 +268,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             let png = try await automation.screenshot(ref: target.ref, generation: target.generation)
             return "data:image/png;base64," + png.base64EncodedString()
         case "browser_console":
+            guard automation.isConsoleCaptureOn else { return "Console capture is off for this pane." }
             let messages = automation.console.messages(level: args.optionalString("level"))
             if messages.isEmpty { return "no console messages" }
             return messages.map { "[\($0.level)] \($0.text)" }.joined(separator: "\n")

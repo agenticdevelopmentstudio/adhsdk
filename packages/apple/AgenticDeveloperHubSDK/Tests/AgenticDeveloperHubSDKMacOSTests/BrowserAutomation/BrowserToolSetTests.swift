@@ -317,6 +317,15 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(reply.content, "browser_evaluate is turned off in Settings")
     }
 
+    func testConsoleSaysWhenCaptureIsOff() async {
+        directory.panes[0].automation.isConsoleCaptureOn = false
+        let reply = await call("browser_console", ["pane_id": "A"])
+        XCTAssertFalse(reply.isError, reply.content)
+        XCTAssertEqual(reply.content, "Console capture is off for this pane.")
+        let other = await call("browser_console", ["pane_id": "B"])
+        XCTAssertEqual(other.content, "no console messages")
+    }
+
     func testScreenshotReturnsAnImageDataURL() async {
         pages["A"]!.orderInOffscreen()
         let reply = await call("browser_screenshot", ["pane_id": "A"])

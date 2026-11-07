@@ -68,6 +68,24 @@ final class BrowserActivationShieldTests: XCTestCase {
         XCTAssertEqual(consoleScriptCount(pane.webView), 1, "turning the shield off keeps the console hook")
     }
 
+    /// A shield toggle puts every script back; with console capture off the
+    /// console hook is not among them.
+    func testShieldToggleWithCaptureOffAddsNoConsoleHook() {
+        let settings = makeSettings()
+        settings.set(false, for: UserSettings.browserPrivacyConsoleCapture)
+        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        XCTAssertEqual(consoleScriptCount(pane.webView), 0)
+
+        settings.set(true, for: UserSettings.browserPrivacyHideActivation)
+        settle()
+        XCTAssertEqual(shieldScriptCount(pane.webView), 1)
+        XCTAssertEqual(consoleScriptCount(pane.webView), 0)
+
+        settings.set(false, for: UserSettings.browserPrivacyHideActivation)
+        settle()
+        XCTAssertEqual(consoleScriptCount(pane.webView), 0)
+    }
+
     func testARebuiltWebViewGetsTheShieldAgain() {
         let settings = makeSettings()
         settings.set(true, for: UserSettings.browserPrivacyHideActivation)
