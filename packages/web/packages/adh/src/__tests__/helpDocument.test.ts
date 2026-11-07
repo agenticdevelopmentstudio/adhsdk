@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { OVERVIEW_ID, contentDocument, type DocCard, type DocNode } from '../help/document/model'
-import { apiRoutesOf, glossaryOf, sectionsOf, stepOf, termMatches } from '../help/document/parts'
+import { apiRoutesOf, glossaryOf, plainText, sectionsOf, stepOf, termMatches } from '../help/document/parts'
 import { readProgress, startOf, stepsDone, toggle } from '../help/document/progress'
 
 function card(name: string, over: Partial<DocCard> = {}): DocCard {
@@ -66,6 +66,10 @@ describe('parts', () => {
       ['make-it', 'Make it', 1],
       ['use-it', 'Use it', 1],
     ])
+  })
+
+  it('reads numeric and common named entities as their characters, and leaves unknown ones', () => {
+    expect(plainText('<p>A&nbsp;&mdash;&#8217;s &#x2019; &amp; &hellip; &bogus; &#0;</p>')).toBe('A \u2014\u2019s \u2019 & \u2026 &bogus; &#0;')
   })
 
   it('keeps two steps with one title apart', () => {
