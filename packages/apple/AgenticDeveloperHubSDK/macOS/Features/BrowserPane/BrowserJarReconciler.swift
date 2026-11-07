@@ -57,6 +57,15 @@ public enum BrowserJarReconciler {
         }
     }
 
+    /// How long a new jar row is safe from the reconciler.
+    ///
+    /// The in-use set is this process's alone, and a Debug build lets several
+    /// copies share one database: a row another copy made a moment ago, for a
+    /// pane whose layout it has not saved yet, is in no saved layout and in
+    /// none of this copy's panes. A minute covers that gap; a leftover is
+    /// collected on a later pass.
+    public static let newJarGracePeriod: TimeInterval = 60
+
     /// One pass. Safe to call at any time and from anywhere on the main actor.
     ///
     /// - Parameters:
@@ -64,10 +73,12 @@ public enum BrowserJarReconciler {
     ///     the value from — the same store the panes fall back to, so the
     ///     reconciler resolves a pane the way the pane does.
     ///   - dataStores: The WebKit stores to sweep.
+    ///   - now: The time the grace period is measured to; a test moves it on.
     public static func reconcile(
         database: ProjectDatabase,
         settings: SettingsStore = UserSettings.shared,
-        dataStores: DataStores = .webKit
+        dataStores: DataStores = .webKit,
+        now: Date = Date()
     ) async {
         do {
             let records = try database.allBrowserJars()
@@ -77,7 +88,9 @@ public enum BrowserJarReconciler {
                 livePanes: live,
                 liveNodeIDs: try database.livePaneNodeIDs(),
                 effectiveJar: { effectiveJar(of: $0, database: database, settings: settings) },
-                inUse: jarIDsInUse(database: database)
+                inUse: jarIDsInUse(database: database),
+                createdAt: try database.browserJarCreationDates(),
+                now: now
             )
             for id in stale {
                 try database.deleteBrowserJar(id: id)
@@ -116,18 +129,25 @@ public enum BrowserJarReconciler {
     /// regardless: it is what open panes hold, whether or not their layout has
     /// been saved yet. `liveNodeIDs` adds panes the layout knows only by a
     /// state key (`ProjectDatabase.livePaneNodeIDs()`) to `livePanes`' own.
+    /// A row younger than `newJarGracePeriod` by `createdAt` is kept too; a
+    /// row with no date there has no such protection.
     public static func staleJarIDs(
         records: [BrowserJarRecord],
         livePanes: [LiveBrowserPane],
         liveNodeIDs extraLiveNodeIDs: Set<UUID> = [],
         effectiveJar: (LiveBrowserPane) -> BrowserStorageJar,
-        inUse: Set<UUID> = []
+        inUse: Set<UUID> = [],
+        createdAt: [UUID: Date] = [:],
+        now: Date = Date()
     ) -> Set<UUID> {
         let liveNodeIDs = Set(livePanes.map(\.nodeID)).union(extraLiveNodeIDs)
         let worktreesInUse = Set(livePanes.filter { effectiveJar($0) == .worktree }
             .map { WorktreeKey(repoID: $0.repoID, path: $0.worktreePath) })
+        func isNew(_ record: BrowserJarRecord) -> Bool {
+            createdAt[record.id].map { now.timeIntervalSince($0) < newJarGracePeriod } ?? false
+        }
         var stale: Set<UUID> = []
-        for record in records where !inUse.contains(record.id) {
+        for record in records where !inUse.contains(record.id) && !isNew(record) {
             switch record.kind {
             case .pane:
                 if !(record.paneNodeID.map(liveNodeIDs.contains) ?? false) {

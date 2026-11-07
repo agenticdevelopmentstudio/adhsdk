@@ -152,6 +152,60 @@ extension ProjectDatabase {
         try queryJars("SELECT \(Self.jarColumns) FROM browser_jars ORDER BY created_at")
     }
 
+    /// When each jar was made, for the reconciler's grace period.
+    public func browserJarCreationDates() throws -> [UUID: Date] {
+        var stmt: OpaquePointer?
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_prepare_v2(database, "SELECT id, created_at FROM browser_jars", -1, &stmt, nil) == SQLITE_OK
+        else {
+            throw ProjectDatabaseError.prepareFailed(lastErrorMessage)
+        }
+        var dates: [UUID: Date] = [:]
+        try forEachRow(stmt) {
+            guard let idText = columnText(stmt, 0), let id = UUID(uuidString: idText) else { return }
+            dates[id] = Date(timeIntervalSince1970: sqlite3_column_double(stmt, 1))
+        }
+        return dates
+    }
+
+    /// The upgrade half of migration 5: every browser pane already in a
+    /// saved layout gets a per-pane override that puts it on the shared
+    /// (global) jar.
+    ///
+    /// Before jars, every pane used WebKit's default store. The setting now
+    /// defaults to a jar per pane, so without this an upgrade would put every
+    /// restored pane on an empty store and sign the user out of every site
+    /// (spec section 4, "Upgrade"). The override is the one the pane's
+    /// settings sheet writes — `PaneStateSettingsStorageProvider`'s shape, in
+    /// the pane's own state — so the sheet shows it as an override and the
+    /// user can revert it there. A fresh database has no panes and gets
+    /// nothing, so new panes keep the default.
+    ///
+    /// A pane that already overrides the jar is left as it is, and the index
+    /// of overridden names is merged, not replaced (`idempotency`).
+    func keepExistingBrowserPanesOnTheSharedJar() throws {
+        let name = BrowserStorageJar.settingName
+        guard let value = String(data: try JSONEncoder().encode([BrowserStorageJar.global]), encoding: .utf8)
+        else { return }
+        for pane in try liveBrowserPanes() {
+            let base = pane.stateKeyPrefix(ComposableTabsViewRegistry.browserStatePrefix)
+                + PaneStateSettingsStorageProvider.defaultPrefix
+            let node = pane.stateNodeID
+            if try paneState(repoID: pane.repoID, nodeID: node, key: base + name) == nil {
+                try setPaneState(repoID: pane.repoID, nodeID: node, key: base + name, value: value)
+            }
+            let indexKey = base + PaneStateSettingsStorageProvider.indexName
+            var names = try paneState(repoID: pane.repoID, nodeID: node, key: indexKey)
+                .flatMap { $0.data(using: .utf8) }
+                .flatMap { try? JSONDecoder().decode([String].self, from: $0) } ?? []
+            guard !names.contains(name) else { continue }
+            names.append(name)
+            if let index = String(data: try JSONEncoder().encode(names), encoding: .utf8) {
+                try setPaneState(repoID: pane.repoID, nodeID: node, key: indexKey, value: index)
+            }
+        }
+    }
+
     public func deleteBrowserJar(id: UUID) throws {
         try executeBound("DELETE FROM browser_jars WHERE id = ?") { stmt in
             bindText(stmt, 1, id.uuidString)

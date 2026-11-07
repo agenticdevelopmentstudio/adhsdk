@@ -17,7 +17,12 @@ public final class PaneStateSettingsStorageProvider: SettingsStorageProvider {
     private let prefix: String
     private let changeSubject = PassthroughSubject<String, Never>()
 
-    public init(store: PaneStateStore, prefix: String = "settings.") {
+    /// Where a pane's settings live among its state keys by default.
+    public nonisolated static let defaultPrefix = "settings."
+    /// The key, after the prefix, of the list of names a pane overrides.
+    public nonisolated static let indexName = "__keys"
+
+    public init(store: PaneStateStore, prefix: String = PaneStateSettingsStorageProvider.defaultPrefix) {
         self.store = store
         self.prefix = prefix
     }
@@ -73,7 +78,7 @@ public final class PaneStateSettingsStorageProvider: SettingsStorageProvider {
             .sorted()
     }
 
-    private var indexKey: String { prefix + "__keys" }
+    private var indexKey: String { prefix + Self.indexName }
 
     private func indexedNames() -> [String] {
         guard let text = store.paneStateValue(forKey: indexKey),

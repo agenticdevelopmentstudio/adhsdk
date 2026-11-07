@@ -250,6 +250,7 @@ public final class BrowserPaneViewController: NSViewController {
         super.init(nibName: nil, bundle: nil)
         jarLabel = jar.jarID == nil ? nil : Self.untitledLabel
         context.jars?.noteUse(of: jar.jarID, by: self)
+        recordJarFallback(jar)
         wireWebView()
         applyCookiePolicy()
         observeSettings()
@@ -333,14 +334,20 @@ public final class BrowserPaneViewController: NSViewController {
     struct ResolvedJar {
         let dataStore: WKWebsiteDataStore
         /// `nil` for private browsing, which is no jar at all; `.global` for
-        /// a worktree or pane jar that could not be had.
+        /// a pane with no jar registry.
         let jar: BrowserStorageJar?
         /// The `browser_jars` row, for a worktree or pane jar.
         let jarID: UUID?
+        /// Why the worktree or pane jar asked for could not be made; the store
+        /// is then a non-persistent one of the pane's own.
+        var fallbackReason: String?
+
+        /// Whether the jar asked for was replaced by a non-persistent store.
+        var isFallback: Bool { fallbackReason != nil }
 
         /// Whether this pane alone uses the store, so a policy set on it
         /// changes no other pane.
-        var isOwnedByPane: Bool { jar == nil || jar == .pane }
+        var isOwnedByPane: Bool { jar == nil || jar == .pane || isFallback }
     }
 
     /// Private browsing first — a store that lives only as long as the pane,
@@ -359,7 +366,19 @@ public final class BrowserPaneViewController: NSViewController {
             return ResolvedJar(dataStore: .default(), jar: .global, jarID: nil)
         }
         let resolution = jars.resolve(wanted, context: context, label: label)
-        return ResolvedJar(dataStore: resolution.dataStore, jar: resolution.jar, jarID: resolution.jarID)
+        return ResolvedJar(
+            dataStore: resolution.dataStore, jar: resolution.jar, jarID: resolution.jarID,
+            fallbackReason: resolution.fallbackReason
+        )
+    }
+
+    /// Puts a jar that failed closed in the pane's event log, where the
+    /// pane's own record of what happened to it lives.
+    private func recordJarFallback(_ jar: ResolvedJar) {
+        guard let reason = jar.fallbackReason else { return }
+        eventLog.record(
+            channel: "settings", event: "jarFallback", decision: .info,
+            detail: "\(jar.jar?.rawValue ?? "jar") not made, non-persistent store: \(reason)")
     }
 
     /// The configuration WebKit fixes when the web view is made. The settings
@@ -596,9 +615,13 @@ public final class BrowserPaneViewController: NSViewController {
     /// a different one by definition.
     func needsRebuildForJar() -> Bool {
         let wanted = settings.get(UserSettings.browserPrivacyStorageJar)
-        guard let jars = paneContext.jars, wanted != .global,
-              jars.canIsolate(wanted, context: paneContext) else {
+        guard let jars = paneContext.jars, wanted != .global else {
             return resolvedJar.jar != .global
+        }
+        // A jar this context cannot have resolves to a non-persistent store
+        // under the same name; a pane already on that has nowhere to go.
+        guard jars.canIsolate(wanted, context: paneContext) else {
+            return !(resolvedJar.isFallback && resolvedJar.jar == wanted)
         }
         guard resolvedJar.jar == wanted else { return true }
         return jars.jarID(for: wanted, context: paneContext) != resolvedJar.jarID
@@ -623,6 +646,10 @@ public final class BrowserPaneViewController: NSViewController {
         // pane was going, so it wins over the page the old one was showing.
         let heldURL = heldLoad?.url
         let label = paneTitle
+        // Removing the web view drops a first responder it held to the
+        // window; the new one takes it back, as does a paused pane's, whose
+        // page is meant to be focused and frozen (spec section 7).
+        let refocus = isEventsPaused || pageHolds(viewIfLoaded?.window?.firstResponder)
         detachWebView()
         webView.removeFromSuperview()
         pageHost?.removeFromSuperview()
@@ -650,11 +677,13 @@ public final class BrowserPaneViewController: NSViewController {
         applyCookiePolicy()
         observeSettings()
         eventLog.record(channel: "settings", event: "rebuild", decision: .info, detail: jar.jar?.rawValue ?? "private")
+        recordJarFallback(jar)
 
         guard isViewLoaded else { return }
         installPageHost()
         observeWebView()
         if view.window != nil { observeFirstResponder() }
+        if refocus { view.window?.makeFirstResponder(webView) }
         loadOnceRulesAreOn(URLRequest(url: heldURL ?? shownURL ?? restorationURL))
     }
 
@@ -760,12 +789,17 @@ public final class BrowserPaneViewController: NSViewController {
         observeWindow()
     }
 
+    /// Whether `responder` is the page: the web view or a view inside it.
+    private func pageHolds(_ responder: NSResponder?) -> Bool {
+        guard let view = responder as? NSView else { return false }
+        return view === webView || view.isDescendant(of: webView)
+    }
+
     private func observeFirstResponder() {
         firstResponderObservation = view.window?.observe(\.firstResponder, options: [.new]) { [weak self] window, _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                let responder = window.firstResponder as? NSView
-                let pageHolds = responder.map { $0 === self.webView || $0.isDescendant(of: self.webView) } ?? false
+                let pageHolds = self.pageHolds(window.firstResponder)
                 if pageHolds != self.pageHeldFirstResponder {
                     self.pageHeldFirstResponder = pageHolds
                     self.eventLog.record(

@@ -33,7 +33,9 @@ final class BrowserActivationShieldTests: XCTestCase {
     }
 
     func testTheScriptResourceIsBundledAndMarked() throws {
-        let source = try XCTUnwrap(BrowserActivationShield.source, "BrowserActivationShield.js must be a resource")
+        let webView = WKWebView(frame: .zero)
+        let source = try XCTUnwrap(BrowserActivationShield(webView: webView).source,
+                                   "BrowserActivationShield.js must be a resource")
         XCTAssertTrue(source.hasPrefix(BrowserActivationShield.marker))
     }
 
@@ -184,10 +186,37 @@ final class BrowserActivationShieldTests: XCTestCase {
 
     // MARK: - The live page (Pause Events, spec section 7)
 
+    /// The shield's token is readable by the page, so two web views on
+    /// different jars must not share it, or it would link them (spec
+    /// section 4).
+    func testShieldedWebViewsOnDifferentJarsReadDifferentTokens() async throws {
+        var tokens: [String] = []
+        for _ in 0..<2 {
+            let configuration = WKWebViewConfiguration()
+            configuration.websiteDataStore = .nonPersistent()
+            let webView = try await loadedWebView("<p>jar</p>", configuration: configuration)
+            let shield = BrowserActivationShield(webView: webView)
+            shield.apply(active: true)
+            let raised = try await waitFor(
+                "String(typeof window.__adkActivationShield === 'function')", toBe: "true", in: webView
+            )
+            XCTAssertEqual(raised, "true")
+            let token = try await webView.evaluateJavaScript(
+                "__adkActivationShield('x').proof.split('|')[1]"
+            ) as? String
+            XCTAssertEqual(token, shield.token)
+            tokens.append(try XCTUnwrap(token))
+        }
+        XCTAssertNotEqual(tokens[0], tokens[1])
+    }
+
     /// Loads `html` into a fresh offscreen web view and waits for it, or
     /// skips when this test host cannot load a page at all.
-    private func loadedWebView(_ html: String) async throws -> WKWebView {
-        let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
+    private func loadedWebView(
+        _ html: String,
+        configuration: WKWebViewConfiguration = WKWebViewConfiguration()
+    ) async throws -> WKWebView {
+        let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 320, height: 240), configuration: configuration)
         webView.loadHTMLString(html, baseURL: URL(string: "about:blank"))
         let deadline = Date().addingTimeInterval(5)
         while Date() < deadline {
@@ -273,10 +302,11 @@ final class BrowserActivationShieldTests: XCTestCase {
     /// immediate run) shields it once: one lift takes it all off.
     func testASecondRunOverTheSameDocumentAddsNothing() async throws {
         let webView = try await loadedWebView("<p>twice</p>")
-        let source = try XCTUnwrap(BrowserActivationShield.source)
+        let shield = BrowserActivationShield(webView: webView)
+        let source = try XCTUnwrap(shield.source)
         _ = try await webView.evaluateJavaScript(source)
         _ = try await webView.evaluateJavaScript(source)
-        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.liftSource))
+        _ = try await webView.evaluateJavaScript(try XCTUnwrap(shield.liftSource))
         let answer = try await webView.evaluateJavaScript("""
         [typeof window.__adkActivationShield,
          String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined)].join(',')
@@ -288,6 +318,7 @@ final class BrowserActivationShieldTests: XCTestCase {
     /// shield skip the window nor is run as the lift.
     func testAPageDefinedRecordCannotSuppressOrHijackTheShield() async throws {
         let webView = try await loadedWebView("<p>forged</p>")
+        let shield = BrowserActivationShield(webView: webView)
         _ = try await webView.evaluateJavaScript("""
         window.__forgedLiftRan = false;
         window.__adkActivationShield = function (challenge) {
@@ -296,13 +327,13 @@ final class BrowserActivationShieldTests: XCTestCase {
         };
         true
         """)
-        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.source))
+        _ = try await webView.evaluateJavaScript(try XCTUnwrap(shield.source))
         let raised = try await webView.evaluateJavaScript("""
         String(Object.getOwnPropertyDescriptor(document, 'hidden') !== undefined)
         """) as? String
         XCTAssertEqual(raised, "true", "the forged record did not make the shield skip the window")
 
-        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.liftSource))
+        _ = try await webView.evaluateJavaScript(try XCTUnwrap(shield.liftSource))
         let lifted = try await webView.evaluateJavaScript("""
         [String(window.__forgedLiftRan),
          String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined)].join(',')
@@ -330,7 +361,7 @@ final class BrowserActivationShieldTests: XCTestCase {
               && frames[1].document.readyState === 'complete')
             """, toBe: "true", in: webView)
         XCTAssertEqual(ready, "true", "both srcdoc frames loaded")
-        let raise = try XCTUnwrap(BrowserActivationShield.source)
+        let raise = try XCTUnwrap(BrowserActivationShield(webView: webView).source)
 
         // Hidden-descriptor state of a frame's current document: "shielded"
         // when the shim's own descriptor is on it, "plain" when not.

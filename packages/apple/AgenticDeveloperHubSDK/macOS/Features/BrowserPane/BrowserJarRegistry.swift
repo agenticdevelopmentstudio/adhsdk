@@ -15,23 +15,35 @@ import os
 /// the reconciler reads to tell a store in use from a leftover. The global jar
 /// is WebKit's default store and needs no row.
 ///
-/// Anything this cannot resolve — a detached pane, a context without a node or
-/// a project, a database that refuses — falls back to the default store with a
-/// log line. A pane that cannot be isolated still browses; it browses in the
-/// shared jar, which is the behaviour every pane had before jars existed
-/// (`graceful-degradation`).
+/// A worktree or pane jar this cannot make — a context without a node or a
+/// project, a database that refuses — fails closed: the pane gets a
+/// non-persistent store of its own, never the shared one, and the resolution
+/// says why so the pane can log it. A pane that asked to be kept apart still
+/// browses, and is still apart; only its session does not outlive it.
 @MainActor
 public final class BrowserJarRegistry {
 
-    /// What a pane ends up with: the store, the jar it actually got, and the
-    /// row naming it (`nil` for the global jar).
+    /// What a pane ends up with: the store, the jar it asked for, and the
+    /// row naming it (`nil` for the global jar and for a fallback).
     public struct Resolution {
         public let dataStore: WKWebsiteDataStore
-        /// The jar in effect — `.global` when a worktree or pane jar was asked
-        /// for but could not be resolved, so a caller never believes it is
-        /// isolated when it is not.
+        /// The jar asked for. A worktree or pane jar that could not be made
+        /// keeps its name here, with a non-persistent store and a
+        /// `fallbackReason`: the pane is isolated, just not kept.
         public let jar: BrowserStorageJar
         public let jarID: UUID?
+        /// Why the jar asked for could not be made, when it could not; the
+        /// pane's store is then a non-persistent one of its own.
+        public let fallbackReason: String?
+
+        public init(
+            dataStore: WKWebsiteDataStore, jar: BrowserStorageJar, jarID: UUID?, fallbackReason: String? = nil
+        ) {
+            self.dataStore = dataStore
+            self.jar = jar
+            self.jarID = jarID
+            self.fallbackReason = fallbackReason
+        }
     }
 
     public let database: ProjectDatabase
@@ -93,23 +105,26 @@ public final class BrowserJarRegistry {
         context: BrowserPaneContext,
         label: String
     ) -> Resolution {
-        let shared = Resolution(dataStore: .default(), jar: .global, jarID: nil)
-        guard jar != .global else { return shared }
+        guard jar != .global else { return Resolution(dataStore: .default(), jar: .global, jarID: nil) }
         guard let wanted = recordShape(for: jar, context: context, label: label) else {
-            logger.info(
-                "browser pane has no project or pane node; using the shared jar for \(jar.rawValue, privacy: .public)"
-            )
-            return shared
+            return fallback(for: jar, reason: "no project, worktree or pane node")
         }
         do {
             let record = try findOrInsert(wanted)
             return Resolution(dataStore: WKWebsiteDataStore(forIdentifier: record.id), jar: jar, jarID: record.id)
         } catch {
-            logger.error(
-                "browser jar lookup failed; using the shared jar: \(error.localizedDescription, privacy: .public)"
-            )
-            return shared
+            return fallback(for: jar, reason: "jar lookup failed: \(error.localizedDescription)")
         }
+    }
+
+    /// A worktree or pane jar that could not be made: a store of the pane's
+    /// own that is never written to disk, so the pane fails closed rather
+    /// than onto the jar every other pane shares.
+    private func fallback(for jar: BrowserStorageJar, reason: String) -> Resolution {
+        logger.error(
+            "browser \(jar.rawValue, privacy: .public) jar not made, non-persistent: \(reason, privacy: .public)"
+        )
+        return Resolution(dataStore: .nonPersistent(), jar: jar, jarID: nil, fallbackReason: reason)
     }
 
     /// The row `jar` resolves to for `context`, without making one — `nil`
