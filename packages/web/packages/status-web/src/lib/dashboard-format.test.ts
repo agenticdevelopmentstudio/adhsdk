@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bucketDetail, bucketLabel, formatVital, withSite } from "./dashboard-format";
+import { bucketDetail, bucketLabel, formatVital, siteReportFor, withSite } from "./dashboard-format";
 
 describe("bucket labels", () => {
   it("label in UTC: a day on long ranges, an hour on 24h", () => {
@@ -27,4 +27,20 @@ describe("withSite", () => {
   it("puts a deep-linked site the server does not list in its alphabetical place", () => {
     expect(withSite(["a.com", "c.com"], "b.com")).toEqual(["a.com", "b.com", "c.com"]);
   });
+});
+
+describe("siteReportFor", () => {
+  const none = { empty: true };
+  const reports: Record<string, { empty: boolean }> = { "example.com": { empty: false } };
+
+  it("returns the server's report for a site it sent", () => {
+    expect(siteReportFor(reports, "example.com", none)).toEqual({ empty: false });
+  });
+
+  it.each(["unknown.com", "constructor", "toString", "hasOwnProperty", "__proto__"])(
+    "treats %s, which the server did not send, as no report",
+    (site) => {
+      expect(siteReportFor(reports, site, none)).toBe(none);
+    },
+  );
 });

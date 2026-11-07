@@ -35,3 +35,12 @@ export function withSite(sites: readonly string[], site: string | null): string[
   if (site === null || sites.includes(site)) return [...sites];
   return [...sites, site].sort((a, b) => a.localeCompare(b));
 }
+
+/**
+ * The server's report for the site the URL names, or `none` when it sent none. Only the record's own
+ * entries count: a site segment such as "constructor" or "__proto__" would otherwise read a property
+ * every object inherits, and the page would destructure a function or Object.prototype as a report.
+ */
+export function siteReportFor<T>(reports: Readonly<Record<string, T>>, site: string, none: T): T {
+  return Object.hasOwn(reports, site) ? reports[site]! : none;
+}
