@@ -114,6 +114,16 @@ final class BrowserEventLogTests: XCTestCase {
         XCTAssertEqual(log.entries.last?.event, "insertText:replacementRange:", "past the window it is its own line")
     }
 
+    /// The user's text never folds into an agent's keystroke.
+    func testTextInputDoesNotFoldIntoAnAgentKeyDown() {
+        let log = makeLog()
+        log.record(channel: "keyboard", event: "keyDown", decision: .withheld, detail: "agent character")
+        log.record(channel: "keyboard", event: "insertText:", decision: .withheld)
+        XCTAssertEqual(log.entries.map(\.event), ["keyDown", "insertText:"])
+        XCTAssertTrue(BrowserEventLog.isUserCharacterKey("⌃⌥⇧⌘character"))
+        XCTAssertFalse(BrowserEventLog.isUserCharacterKey("agent ⌘character"))
+    }
+
     /// Text arriving after a named key is not that key's echo (Dictation or
     /// the character viewer after a Return), so it gets its own line.
     func testTextInputAfterReturnIsNotFolded() {
@@ -124,15 +134,17 @@ final class BrowserEventLogTests: XCTestCase {
     }
 
     /// The remembered keyDown follows the ring: once evicted it absorbs
-    /// nothing, and one recorded after the ring wrapped still does.
+    /// nothing, and one recorded after the ring wrapped still does. The line
+    /// that takes the evicted keyDown's slot is one a fold would accept, so
+    /// only the eviction check keeps the text on its own line.
     func testTrackedKeyDownSurvivesEviction() {
         let log = makeLog(capacity: 3)
         log.record(channel: "keyboard", event: "keyDown", decision: .delivered, detail: "character")
-        for index in 0..<3 {
-            log.record(channel: "mouse", event: "mouseDown", decision: .delivered, detail: "\(index)")
-        }
+        log.record(channel: "mouse", event: "mouseDown", decision: .delivered)
+        log.record(channel: "mouse", event: "mouseDown", decision: .delivered)
+        log.record(channel: "keyboard", event: "keyUp", decision: .delivered, detail: "character")
         log.record(channel: "keyboard", event: "insertText:", decision: .delivered)
-        XCTAssertEqual(log.entries.map(\.event), ["mouseDown", "mouseDown", "insertText:"])
+        XCTAssertEqual(log.entries.map(\.event), ["mouseDown", "keyUp", "insertText:"])
 
         log.record(channel: "keyboard", event: "keyDown", decision: .delivered, detail: "character")
         log.record(channel: "keyboard", event: "keyUp", decision: .delivered, detail: "character")
@@ -188,9 +200,18 @@ final class BrowserEventLogTests: XCTestCase {
             )
         )
         let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        // The pane hears settings through `receive(on: .main)`, so the line
+        // arrives on a later turn of the main queue.
+        let recorded = expectation(description: "settings change recorded")
+        let subscription = pane.eventLog.changes.sink {
+            if pane.eventLog.entries.contains(where: { $0.channel == "settings" && $0.event == "changed" }) {
+                recorded.fulfill()
+            }
+        }
+        recorded.assertForOverFulfill = false
         settings.set(1.5, for: UserSettings.browserPageZoom)
-        // The pane hears settings through `receive(on: .main)`.
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        wait(for: [recorded], timeout: 5)
+        subscription.cancel()
         let change = try XCTUnwrap(pane.eventLog.entries.first { $0.channel == "settings" && $0.event == "changed" })
         XCTAssertEqual(change.detail, UserSettings.browserPageZoom.name)
         XCTAssertFalse(change.detail.contains("1.5"), "the key, never the value")

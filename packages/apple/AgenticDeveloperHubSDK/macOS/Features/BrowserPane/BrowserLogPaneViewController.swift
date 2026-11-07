@@ -15,10 +15,10 @@ import AgenticDeveloperHubSDKCoreUI
 ///
 /// Registered only in debug builds (`.browserLog`); the log it shows is
 /// recorded in every build. The pane remembers one thing, the node id of the
-/// browser pane it follows, and looks for that pane in its window whenever it
-/// has none: when it appears, when it is pointed at one, and on every reload.
-/// A layout restored in any order therefore finds its target once the target's
-/// content is loaded and the log next reloads or reappears. A target that is
+/// browser pane it follows, and looks for that pane in its window when it
+/// appears (`viewDidAppear`) and when it is pointed at one (`setTarget`). A
+/// target whose content is not loaded yet, in a tab never shown since a
+/// relaunch, is found the next time the log pane appears. A target that is
 /// discarded is let go, so the list empties and the title drops its name.
 @MainActor
 public final class BrowserLogPaneViewController: NSViewController {
@@ -178,14 +178,10 @@ public final class BrowserLogPaneViewController: NSViewController {
         return visible.maxY >= tableView.bounds.height - tableView.rowHeight - tableView.intercellSpacing.height
     }
 
-    /// Catches up with the target's log: lets go of a discarded target, looks
-    /// again for a missing one, then redraws.
+    /// Catches up with the target's log: lets go of a discarded target, then
+    /// redraws.
     func reload() {
         if target?.isDiscarded == true { return attach(nil) }
-        if target == nil, let nodeID = targetNodeID,
-           let found = Self.browserPane(nodeID: nodeID, in: viewIfLoaded?.window) {
-            return attach(found)
-        }
         refresh()
     }
 

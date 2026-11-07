@@ -113,9 +113,13 @@ public final class BrowserEventLog {
     /// - an input method's text call (`textInputEvents`) is the second report
     ///   of a keystroke whose keyDown line, a printable key with the same
     ///   decision, is less than `coalescingWindow` old. It adds nothing, not
-    ///   even a count. A named key's keyDown (Return, Tab, …) never absorbs
-    ///   one, so Dictation or the character viewer inserting text just after
-    ///   a Return still gets its own line.
+    ///   even a count. Only the user's own printable keystroke absorbs one
+    ///   (`isUserCharacterKey`): a named key's keyDown (Return, Tab, …) does
+    ///   not, so Dictation or the character viewer inserting text just after
+    ///   a Return still gets its own line, and neither does an agent's
+    ///   keyDown, so the user's text never hides behind the agent's line. The
+    ///   price: an input method's conversion (Space) and commit (Return) each
+    ///   show their text call as a second line.
     public func record(
         channel: String,
         event: String,
@@ -136,7 +140,7 @@ public final class BrowserEventLog {
         if Self.textInputEvents.contains(event), let sequence = lastKeyDown, let slot = slot(of: sequence) {
             let keyDown = storage[slot]
             if date.timeIntervalSince(keyDown.date) <= Self.coalescingWindow, keyDown.channel == channel,
-               keyDown.decision == decision, keyDown.detail.hasSuffix("character") {
+               keyDown.decision == decision, Self.isUserCharacterKey(keyDown.detail) {
                 return
             }
         }
@@ -153,6 +157,13 @@ public final class BrowserEventLog {
         appended = 0
         lastKeyDown = nil
         subject.send()
+    }
+
+    /// Whether a keyDown's detail is the user's printable key: modifier
+    /// symbols, then `"character"`, as `keyDetail(for:)` writes it. An agent's
+    /// key carries an `agent` prefix and is not one.
+    static func isUserCharacterKey(_ detail: String) -> Bool {
+        detail.drop { "⌃⌥⇧⌘".contains($0) } == "character"
     }
 
     private func append(_ entry: BrowserEventLogEntry) {
