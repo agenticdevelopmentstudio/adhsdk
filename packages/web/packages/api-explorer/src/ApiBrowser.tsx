@@ -11,7 +11,9 @@ import {
   allTags,
   endpointsForTag,
   getEndpoint,
+  matchEndpoints,
   endpointKey as toKey,
+  type EndpointMatch,
 } from '@adh-sdk/api-explorer/lib/getEndpoint'
 import { methodDotClass } from './lib/tone'
 import { ApiEndpointDetail } from './ApiEndpointDetail'
@@ -33,7 +35,16 @@ export interface ApiBrowserProps {
    *  which has no session; the authenticated surfaces (hub/admin/community/the Help modal) omit it
    *  and keep try-it. See {@link ApiEndpointDetailProps.readOnly}. */
   readOnly?: boolean
+  /** Endpoints to set apart: they are listed first, under a tag of their own named
+   *  `highlightLabel`, which the browser opens on with the first of them chosen. A match with no
+   *  method stands for every method on its path. Ignored when `endpoint`/`endpointKey` is set. */
+  highlight?: readonly EndpointMatch[]
+  /** The name of the highlighted endpoints' tag. Defaults to "Highlighted". */
+  highlightLabel?: string
 }
+
+/** The id of the highlighted endpoints' tag: not a spec tag, which never starts with a space. */
+const HIGHLIGHT_TAG = ' highlight'
 
 function methodDot(method: string): ReactNode {
   return <span aria-hidden className={cn('inline-block size-2 rounded-full', methodDotClass(method))} />
@@ -46,23 +57,43 @@ function methodDot(method: string): ReactNode {
  * endpoint stays browsable via the rails + breadcrumb. Selecting an endpoint remounts
  * its detail (keyed by key) so try-it state never leaks between endpoints.
  */
-export function ApiBrowser({ endpoint, endpointKey, pathValues, queryValues, body, apiOrigin, readOnly }: ApiBrowserProps) {
+export function ApiBrowser({
+  endpoint,
+  endpointKey,
+  pathValues,
+  queryValues,
+  body,
+  apiOrigin,
+  readOnly,
+  highlight,
+  highlightLabel = 'Highlighted',
+}: ApiBrowserProps) {
   const focusKey = endpointKey ?? (endpoint ? toKey(endpoint) : undefined)
   const focusMeta = focusKey ? getEndpoint(focusKey) : undefined
+  const [highlighted] = useState(() => (focusMeta || !highlight ? [] : matchEndpoints(highlight)))
+  const firstHighlight = highlighted[0]
 
   // Match getEndpoint's index, which buckets untagged endpoints under 'other'.
-  const [tag, setTag] = useState<string | null>(focusMeta ? (focusMeta.tag ?? 'other') : null)
-  const [selKey, setSelKey] = useState<string | null>(focusMeta ? focusKey! : null)
+  const [tag, setTag] = useState<string | null>(
+    focusMeta ? (focusMeta.tag ?? 'other') : firstHighlight ? HIGHLIGHT_TAG : null,
+  )
+  const [selKey, setSelKey] = useState<string | null>(
+    focusMeta ? focusKey! : firstHighlight ? firstHighlight.key : null,
+  )
 
   const tags = allTags()
-  const endpoints = tag ? endpointsForTag(tag) : []
+  const endpoints = tag === HIGHLIGHT_TAG ? highlighted : tag ? endpointsForTag(tag) : []
   const selMeta = selKey ? getEndpoint(selKey) : undefined
+  const highlightKeys = new Set(highlighted.map((m) => m.key))
 
   const levels: TopicLevel[] = [
     {
       id: 'tags',
       title: 'Tags',
-      items: tags.map((t) => ({ id: t, label: t })),
+      items: [
+        ...(highlighted.length ? [{ id: HIGHLIGHT_TAG, label: highlightLabel, dividerAfter: true }] : []),
+        ...tags.map((t) => ({ id: t, label: t })),
+      ],
       selectedId: tag,
       onSelect: (t) => {
         setTag(t)
@@ -78,7 +109,12 @@ export function ApiBrowser({ endpoint, endpointKey, pathValues, queryValues, bod
       title: 'Endpoints',
       // A wider rail fits the full method+path on ONE line — no wrap, no truncation.
       width: 400,
-      items: endpoints.map((m) => ({ id: m.key, label: `${m.method} ${m.path}`, icon: methodDot(m.method) })),
+      // Outside their own tag, the highlighted endpoints are marked where the spec files them.
+      items: endpoints.map((m) => ({
+        id: m.key,
+        label: tag !== HIGHLIGHT_TAG && highlightKeys.has(m.key) ? `${m.method} ${m.path} ★` : `${m.method} ${m.path}`,
+        icon: methodDot(m.method),
+      })),
       selectedId: selKey,
       emptyLabel: 'Pick a tag to see its endpoints.',
       onSelect: (k) => setSelKey(k),

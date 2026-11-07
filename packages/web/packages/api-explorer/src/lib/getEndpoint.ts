@@ -46,3 +46,41 @@ export function allTags(): string[] {
 export function endpointsForTag(tag: string): EndpointMeta[] {
   return index().get(tag) ?? []
 }
+
+/**
+ * A route as a page names it: a path, with or without a method. Its placeholders may be named
+ * differently from the spec's (`{ecosystem id}` for `{ecosystemId}`); only where they are counts.
+ */
+export interface EndpointMatch {
+  method?: string
+  path: string
+}
+
+/** A path with every `{placeholder}` emptied, so two namings of one route compare equal. */
+function shapeOf(path: string): string {
+  return path.replace(/\{[^}]*\}/g, '{}')
+}
+
+/**
+ * The endpoints `matches` name, in the order they name them, each once. A match with a method is
+ * that one endpoint; a match with no method is every endpoint on its path. A match the spec has
+ * no endpoint for is left out.
+ */
+export function matchEndpoints(matches: readonly EndpointMatch[]): EndpointMeta[] {
+  const out: EndpointMeta[] = []
+  const seen = new Set<string>()
+  const all = Object.values(API_ENDPOINTS)
+  for (const match of matches) {
+    const shape = shapeOf(match.path)
+    const method = match.method?.toUpperCase()
+    const hits = all
+      .filter((meta) => shapeOf(meta.path) === shape && (!method || meta.method === method))
+      .sort((a, b) => (METHOD_ORDER[a.method] ?? 9) - (METHOD_ORDER[b.method] ?? 9))
+    for (const meta of hits) {
+      if (seen.has(meta.key)) continue
+      seen.add(meta.key)
+      out.push(meta)
+    }
+  }
+  return out
+}

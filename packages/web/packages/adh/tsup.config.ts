@@ -110,6 +110,12 @@ export default defineConfig({
     // trick as themes/DbThemeApplier. Kept un-inlined via the matching `external`.
     'help/surface': 'src/help/surface.ts',
     'help/HelpMasterDetail': 'src/help/HelpMasterDetail.tsx',
+    // The help site's content documents (Hub Features, Tutorials): a SERVER entry, and its two
+    // interactive panes as 'use client' entries of their own, imported by package path and kept
+    // un-inlined by the matching `external`, the same trick as help/HelpMasterDetail above.
+    'help/document/index': 'src/help/document/index.ts',
+    'help/document/TutorialSteps': 'src/help/document/TutorialSteps.tsx',
+    'help/document/GlossarySearch': 'src/help/document/GlossarySearch.tsx',
     // The ROUTE-keyed help store — one function over a JSON file, and nothing else in this
     // directory. Its own entry because every host mounting a portable feature package passes it
     // down as that package's `helpFor` seam, and a site that wants one blurb must not have to
@@ -422,6 +428,10 @@ export default defineConfig({
     // client' over the whole help/surface entry and the help site's server component would
     // stop being one. Same shape as themes/DbThemeApplier above.
     '@adh-sdk/adh/help/HelpMasterDetail',
+    // The document surface's client panes, reached by package path from the SERVER module
+    // help/document/DocumentDetail — the same reason as HelpMasterDetail above.
+    '@adh-sdk/adh/help/document/TutorialSteps',
+    '@adh-sdk/adh/help/document/GlossarySearch',
     // help/HelpWindow borrows the debug console's draggable FloatingWindow shell. That was a
     // genuine cross-package import in @adh-shared/adh and became a SELF-reference on the way
     // in — the shape that silently forks state. FloatingWindow's module-level drag geometry

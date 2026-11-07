@@ -1,0 +1,156 @@
+/* The help site's content documents (@adh-sdk/adh/help/document): the prose inside each card,
+ * and the detail pane's own padding. The pane is the HMDV detail; the cards are StatCards.
+ * Everything here is scoped under `.doc-prose` or `.doc-copy`, so no rule reaches the rail or any
+ * other help route. Imported once by the site: `@import "@adh-sdk/adh/document.css"`. */
+
+/* A tutorial step's place in the page when a tick scrolls it into view: clear of the pane's top. */
+.doc-prose [aria-current="step"] {
+  scroll-margin-top: 1.5rem;
+}
+
+/* A glossary term a tutorial linked to (`#<term id>`): its block outlined in gold on arrival. */
+.doc-prose .doc-term:target {
+  border-color: var(--color-apt-gold);
+}
+
+.doc-prose {
+  width: 100%;
+  padding: 1.5rem 2rem 6rem;
+  color: var(--color-apt-text);
+}
+
+[data-htd-layout="narrow"] .doc-prose {
+  padding: 1rem 10px 4rem;
+  --info-panel-body-padding: 12px 10px;
+}
+/* The card HEADER's side padding on a phone. The body above goes through the InfoPanel's own
+ * `--info-panel-body-padding` seam; the header has no prop or variable for it, so this reaches
+ * it by DOM position (the panel's first child), the way status-web's panels.css does. If the
+ * toolkit gives the header a seam, use it and delete this. */
+[data-htd-layout="narrow"] .doc-prose section > div:first-child {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.doc-copy {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-apt-text);
+}
+.doc-copy > :last-child {
+  margin-bottom: 0;
+}
+.doc-copy.doc-blurb {
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.doc-copy h1,
+.doc-copy h2,
+.doc-copy h3,
+.doc-copy h4,
+.doc-copy h5,
+.doc-copy h6 {
+  margin: 2.2em 0 0.7em;
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--color-apt-text);
+}
+.doc-copy h1 {
+  font-size: 1.7rem;
+}
+.doc-copy h2 {
+  font-size: 1.35rem;
+}
+.doc-copy h3 {
+  font-size: 1.12rem;
+}
+.doc-copy h4,
+.doc-copy h5,
+.doc-copy h6 {
+  font-size: 1rem;
+  color: var(--color-apt-text-dim);
+}
+
+.doc-copy p,
+.doc-copy ul,
+.doc-copy ol,
+.doc-copy blockquote,
+.doc-copy pre,
+.doc-copy table {
+  margin: 0 0 1.1em;
+}
+.doc-copy ul,
+.doc-copy ol {
+  padding-left: 1.5em;
+}
+.doc-copy ul {
+  list-style: disc;
+}
+.doc-copy ol {
+  list-style: decimal;
+}
+.doc-copy li {
+  margin: 0 0 0.35em;
+}
+.doc-copy li > ul,
+.doc-copy li > ol {
+  margin: 0.35em 0 0;
+}
+.doc-copy strong {
+  font-weight: 700;
+}
+.doc-copy em {
+  font-style: italic;
+}
+.doc-copy a {
+  color: var(--color-apt-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.doc-copy code {
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-apt-gold) 12%, transparent);
+  font-size: 0.88em;
+}
+.doc-copy pre {
+  padding: 0.9rem 1rem;
+  border-radius: 6px;
+  background: var(--color-apt-bg);
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.doc-copy pre code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: inherit;
+}
+.doc-copy blockquote {
+  padding: 0.1em 0 0.1em 1.1rem;
+  border-left: 3px solid var(--color-apt-border);
+  color: var(--color-apt-text-dim);
+}
+.doc-copy hr {
+  margin: 2.4em 0;
+  border: 0;
+  border-top: 1px solid var(--color-apt-border);
+}
+.doc-copy table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.doc-copy th,
+.doc-copy td {
+  padding: 0.45em 0.7em;
+  border: 1px solid var(--color-apt-border);
+  text-align: left;
+  vertical-align: top;
+}
+.doc-copy th {
+  background: var(--color-apt-surface);
+  font-weight: 650;
+}
