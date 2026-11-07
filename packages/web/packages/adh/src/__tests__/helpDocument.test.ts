@@ -120,6 +120,28 @@ describe('parts', () => {
     const single = stepOf({ ...section, html: ['<ol><li>Only</li></ol>'] })
     expect(single.substeps).toEqual([])
     expect(single.before).toEqual(['<ol><li>Only</li></ol>'])
+    expect(step.start).toBe(1)
+  })
+
+  it('reads a list a code fence split in two as one, keeping its numbering', () => {
+    const step = stepOf({
+      id: 'go',
+      title: 'Go',
+      titleHtml: 'Go',
+      html: [
+        '<ol start="3"><li>Run it:</li></ol>',
+        '<pre><code>npm run x</code></pre>',
+        '<ol start="4"><li>Check it.</li><li>Ship it.</li></ol>',
+        '<p>Done.</p>',
+      ],
+    })
+    expect(step.start).toBe(3)
+    expect(step.substeps.map((s) => s.html)).toEqual([
+      'Run it:<pre><code>npm run x</code></pre>',
+      'Check it.',
+      'Ship it.',
+    ])
+    expect(step.after).toEqual(['<p>Done.</p>'])
   })
 
   it('reads the routes an API names, each method code going to the next path', () => {

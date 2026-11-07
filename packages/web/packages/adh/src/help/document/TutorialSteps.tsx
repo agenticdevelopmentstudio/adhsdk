@@ -155,7 +155,7 @@ export function TutorialSteps({
                               data-testid="tutorial-substep-check"
                             />
                             <div id={subLabel} className={`doc-copy flex-1 ${subDone ? 'text-apt-text-dim line-through' : ''}`}>
-                              <span className="mr-2 font-mono text-[12px] text-apt-text-muted">{n + 1}.</span>
+                              <span className="mr-2 font-mono text-[12px] text-apt-text-muted">{step.start + n}.</span>
                               <span dangerouslySetInnerHTML={{ __html: sub.html }} />
                             </div>
                           </li>

@@ -42,6 +42,10 @@ function sectionsOf(blocks) {
   return { lead, sections };
 }
 var ORDERED = /^\s*<ol(?:\s[^>]*)?>([\s\S]*)<\/ol>\s*$/;
+function listStart(block) {
+  const start = /^\s*<ol\s[^>]*\bstart="?(\d+)/.exec(block);
+  return start ? Number(start[1]) : 1;
+}
 function listItems(inner) {
   const items = [];
   const tag = /<(\/?)li(?:\s[^>]*)?>/g;
@@ -63,18 +67,32 @@ function listItems(inner) {
   return items;
 }
 function stepOf(section) {
-  for (let k = 0; k < section.html.length; k++) {
-    const list = ORDERED.exec(section.html[k] ?? "");
-    const items = list ? listItems(list[1] ?? "") : [];
+  const { html: blocks } = section;
+  for (let k = 0; k < blocks.length; k++) {
+    const block = blocks[k] ?? "";
+    const list = ORDERED.exec(block);
+    if (!list) continue;
+    const start = listStart(block);
+    const items = listItems(list[1] ?? "");
+    let end = k + 1;
+    for (let j = k + 1; j < blocks.length; j++) {
+      const next = ORDERED.exec(blocks[j] ?? "");
+      if (!next) continue;
+      if (!items.length || listStart(blocks[j] ?? "") !== start + items.length) break;
+      items[items.length - 1] += blocks.slice(end, j).join("");
+      items.push(...listItems(next[1] ?? ""));
+      end = j + 1;
+    }
     if (items.length < 2) continue;
     return {
       ...section,
-      before: section.html.slice(0, k),
+      before: blocks.slice(0, k),
       substeps: items.map((html, n) => ({ id: `${section.id}/${n + 1}`, html })),
-      after: section.html.slice(k + 1)
+      start,
+      after: blocks.slice(end)
     };
   }
-  return { ...section, before: section.html, substeps: [], after: [] };
+  return { ...section, before: blocks, substeps: [], start: 1, after: [] };
 }
 function tutorialLinks(html, base, known) {
   const out = [];

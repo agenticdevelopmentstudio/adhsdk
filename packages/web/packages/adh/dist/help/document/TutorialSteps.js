@@ -195,7 +195,7 @@ function TutorialSteps({
                     ),
                     /* @__PURE__ */ jsxs("div", { id: subLabel, className: `doc-copy flex-1 ${subDone ? "text-apt-text-dim line-through" : ""}`, children: [
                       /* @__PURE__ */ jsxs("span", { className: "mr-2 font-mono text-[12px] text-apt-text-muted", children: [
-                        n + 1,
+                        step.start + n,
                         "."
                       ] }),
                       /* @__PURE__ */ jsx("span", { dangerouslySetInnerHTML: { __html: sub.html } })
