@@ -23,7 +23,6 @@ class PutEcosystemEcosystemsIdBody:
         dedicated_db_connection_id (None | str | Unset):
         primary_domain (str | Unset):
         is_default (bool | Unset):
-        is_infrastructure (bool | Unset):
         namespace_id (None | str | Unset):
         parent_id (None | str | Unset):
         archived_at (None | str | Unset):
@@ -38,7 +37,6 @@ class PutEcosystemEcosystemsIdBody:
     dedicated_db_connection_id: None | str | Unset = UNSET
     primary_domain: str | Unset = UNSET
     is_default: bool | Unset = UNSET
-    is_infrastructure: bool | Unset = UNSET
     namespace_id: None | str | Unset = UNSET
     parent_id: None | str | Unset = UNSET
     archived_at: None | str | Unset = UNSET
@@ -69,8 +67,6 @@ class PutEcosystemEcosystemsIdBody:
         primary_domain = self.primary_domain
 
         is_default = self.is_default
-
-        is_infrastructure = self.is_infrastructure
 
         namespace_id: None | str | Unset
         if isinstance(self.namespace_id, Unset):
@@ -111,8 +107,6 @@ class PutEcosystemEcosystemsIdBody:
             field_dict["primaryDomain"] = primary_domain
         if is_default is not UNSET:
             field_dict["isDefault"] = is_default
-        if is_infrastructure is not UNSET:
-            field_dict["isInfrastructure"] = is_infrastructure
         if namespace_id is not UNSET:
             field_dict["namespaceId"] = namespace_id
         if parent_id is not UNSET:
@@ -159,8 +153,6 @@ class PutEcosystemEcosystemsIdBody:
 
         is_default = d.pop("isDefault", UNSET)
 
-        is_infrastructure = d.pop("isInfrastructure", UNSET)
-
         def _parse_namespace_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -198,7 +190,6 @@ class PutEcosystemEcosystemsIdBody:
             dedicated_db_connection_id=dedicated_db_connection_id,
             primary_domain=primary_domain,
             is_default=is_default,
-            is_infrastructure=is_infrastructure,
             namespace_id=namespace_id,
             parent_id=parent_id,
             archived_at=archived_at,

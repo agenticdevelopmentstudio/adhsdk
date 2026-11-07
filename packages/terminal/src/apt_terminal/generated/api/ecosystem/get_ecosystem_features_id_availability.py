@@ -73,9 +73,10 @@ def sync_detailed(
 ) -> Response[Error | GetEcosystemFeaturesIdAvailabilityResponse200]:
     """The catalog features this ecosystem may not add, and why
 
-     A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables
-    exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not
-    listed — the catalog already marks them.
+     An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold
+    Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the
+    same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are
+    not listed — the catalog already marks them.
 
     Args:
         id (str):
@@ -106,9 +107,10 @@ def sync(
 ) -> Error | GetEcosystemFeaturesIdAvailabilityResponse200 | None:
     """The catalog features this ecosystem may not add, and why
 
-     A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables
-    exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not
-    listed — the catalog already marks them.
+     An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold
+    Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the
+    same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are
+    not listed — the catalog already marks them.
 
     Args:
         id (str):
@@ -134,9 +136,10 @@ async def asyncio_detailed(
 ) -> Response[Error | GetEcosystemFeaturesIdAvailabilityResponse200]:
     """The catalog features this ecosystem may not add, and why
 
-     A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables
-    exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not
-    listed — the catalog already marks them.
+     An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold
+    Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the
+    same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are
+    not listed — the catalog already marks them.
 
     Args:
         id (str):
@@ -165,9 +168,10 @@ async def asyncio(
 ) -> Error | GetEcosystemFeaturesIdAvailabilityResponse200 | None:
     """The catalog features this ecosystem may not add, and why
 
-     A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables
-    exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not
-    listed — the catalog already marks them.
+     An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold
+    Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the
+    same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are
+    not listed — the catalog already marks them.
 
     Args:
         id (str):

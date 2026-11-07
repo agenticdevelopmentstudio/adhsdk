@@ -1949,7 +1949,7 @@ public protocol APIProtocol: Sendable {
     func postEcosystemFeaturesId(_ input: Operations.PostEcosystemFeaturesId.Input) async throws -> Operations.PostEcosystemFeaturesId.Output
     /// The catalog features this ecosystem may not add, and why
     ///
-    /// A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not listed — the catalog already marks them.
+    /// An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are not listed — the catalog already marks them.
     ///
     /// - Remark: HTTP `GET /ecosystem/features/{id}/availability`.
     /// - Remark: Generated from `#/paths//ecosystem/features/{id}/availability/get`.
@@ -10783,7 +10783,7 @@ extension APIProtocol {
     }
     /// The catalog features this ecosystem may not add, and why
     ///
-    /// A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not listed — the catalog already marks them.
+    /// An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are not listed — the catalog already marks them.
     ///
     /// - Remark: HTTP `GET /ecosystem/features/{id}/availability`.
     /// - Remark: Generated from `#/paths//ecosystem/features/{id}/availability/get`.
@@ -32453,10 +32453,53 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/CatalogFeature/requiresFeatures`.
             public var requiresFeatures: [Swift.String]?
-            /// Only a user's or an organization's own ecosystem may hold it; a client ecosystem cannot (400). GET /ecosystem/features/{id}/availability names these per ecosystem.
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/AllowedInPayload`.
+            @frozen public enum AllowedInPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case workspace = "workspace"
+                case persona = "persona"
+                case personal = "personal"
+                case organization = "organization"
+                case container = "container"
+                case product = "product"
+            }
+            /// The ecosystem types that may hold it; absent means every type except workspace, personal and organization. Adding it elsewhere is refused (400). GET /ecosystem/features/{id}/availability names these per ecosystem.
             ///
-            /// - Remark: Generated from `#/components/schemas/CatalogFeature/ownEcosystemOnly`.
-            public var ownEcosystemOnly: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/allowedIn`.
+            public typealias AllowedInPayload = [Components.Schemas.CatalogFeature.AllowedInPayloadPayload]
+            /// The ecosystem types that may hold it; absent means every type except workspace, personal and organization. Adding it elsewhere is refused (400). GET /ecosystem/features/{id}/availability names these per ecosystem.
+            ///
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/allowedIn`.
+            public var allowedIn: Components.Schemas.CatalogFeature.AllowedInPayload?
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/WorkspaceOwnerKindsPayload`.
+            @frozen public enum WorkspaceOwnerKindsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case organization = "organization"
+            }
+            /// Narrows allowedIn for a workspace by who owns it: Teams is allowed only in an organization workspace. Absent means either owner kind.
+            ///
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/workspaceOwnerKinds`.
+            public typealias WorkspaceOwnerKindsPayload = [Components.Schemas.CatalogFeature.WorkspaceOwnerKindsPayloadPayload]
+            /// Narrows allowedIn for a workspace by who owns it: Teams is allowed only in an organization workspace. Absent means either owner kind.
+            ///
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/workspaceOwnerKinds`.
+            public var workspaceOwnerKinds: Components.Schemas.CatalogFeature.WorkspaceOwnerKindsPayload?
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/AutomaticInPayload`.
+            @frozen public enum AutomaticInPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case workspace = "workspace"
+                case persona = "persona"
+                case personal = "personal"
+                case organization = "organization"
+                case container = "container"
+                case product = "product"
+            }
+            /// The ecosystem types that get it when provisioned, with no owner opt-in (a workspace gets Personas; a Personal or Organization ecosystem gets its hub data).
+            ///
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/automaticIn`.
+            public typealias AutomaticInPayload = [Components.Schemas.CatalogFeature.AutomaticInPayloadPayload]
+            /// The ecosystem types that get it when provisioned, with no owner opt-in (a workspace gets Personas; a Personal or Organization ecosystem gets its hub data).
+            ///
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/automaticIn`.
+            public var automaticIn: Components.Schemas.CatalogFeature.AutomaticInPayload?
             /// The feature this one comes with (the Users Settings, the Applications Client Auth panel). The picker does not list it: adding the parent adds it, removing the parent removes it, adding it adds the parent, and removing it on its own is refused (400).
             ///
             /// - Remark: Generated from `#/components/schemas/CatalogFeature/includedWith`.
@@ -32471,7 +32514,9 @@ public enum Components {
             ///   - featureSite: The feature carries a public site of its own (the persona registry, research).
             ///   - comingSoon: Not built yet. Listed so the picker can say it is coming; provisioning it is refused (400).
             ///   - requiresFeatures: Feature keys this one needs. Adding it provisions them too; they cannot be removed while it is active (409 feature_required).
-            ///   - ownEcosystemOnly: Only a user's or an organization's own ecosystem may hold it; a client ecosystem cannot (400). GET /ecosystem/features/{id}/availability names these per ecosystem.
+            ///   - allowedIn: The ecosystem types that may hold it; absent means every type except workspace, personal and organization. Adding it elsewhere is refused (400). GET /ecosystem/features/{id}/availability names these per ecosystem.
+            ///   - workspaceOwnerKinds: Narrows allowedIn for a workspace by who owns it: Teams is allowed only in an organization workspace. Absent means either owner kind.
+            ///   - automaticIn: The ecosystem types that get it when provisioned, with no owner opt-in (a workspace gets Personas; a Personal or Organization ecosystem gets its hub data).
             ///   - includedWith: The feature this one comes with (the Users Settings, the Applications Client Auth panel). The picker does not list it: adding the parent adds it, removing the parent removes it, adding it adds the parent, and removing it on its own is refused (400).
             public init(
                 key: Swift.String,
@@ -32481,7 +32526,9 @@ public enum Components {
                 featureSite: Swift.Bool? = nil,
                 comingSoon: Swift.Bool? = nil,
                 requiresFeatures: [Swift.String]? = nil,
-                ownEcosystemOnly: Swift.Bool? = nil,
+                allowedIn: Components.Schemas.CatalogFeature.AllowedInPayload? = nil,
+                workspaceOwnerKinds: Components.Schemas.CatalogFeature.WorkspaceOwnerKindsPayload? = nil,
+                automaticIn: Components.Schemas.CatalogFeature.AutomaticInPayload? = nil,
                 includedWith: Swift.String? = nil
             ) {
                 self.key = key
@@ -32491,7 +32538,9 @@ public enum Components {
                 self.featureSite = featureSite
                 self.comingSoon = comingSoon
                 self.requiresFeatures = requiresFeatures
-                self.ownEcosystemOnly = ownEcosystemOnly
+                self.allowedIn = allowedIn
+                self.workspaceOwnerKinds = workspaceOwnerKinds
+                self.automaticIn = automaticIn
                 self.includedWith = includedWith
             }
             public enum CodingKeys: String, CodingKey {
@@ -32502,7 +32551,9 @@ public enum Components {
                 case featureSite
                 case comingSoon
                 case requiresFeatures
-                case ownEcosystemOnly
+                case allowedIn
+                case workspaceOwnerKinds
+                case automaticIn
                 case includedWith
             }
         }
@@ -41724,6 +41775,45 @@ public enum Components {
             public var teamId: Swift.String
             /// - Remark: Generated from `#/components/schemas/RegistryProvisionedOrganization/ecosystem`.
             public var ecosystem: Components.Schemas.RegistryEcosystem
+            /// The org's Organization ecosystem: the child of its workspace that holds the org's own data — Notes, Research, Documents, Integrations, Planning, Storage
+            ///
+            /// - Remark: Generated from `#/components/schemas/RegistryProvisionedOrganization/hubData`.
+            public struct HubDataPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RegistryProvisionedOrganization/hubData/id`.
+                public var id: Swift.String
+                /// Always `organization`
+                ///
+                /// - Remark: Generated from `#/components/schemas/RegistryProvisionedOrganization/hubData/slug`.
+                public var slug: Swift.String
+                /// ecosystem.<workspace path>.organization
+                ///
+                /// - Remark: Generated from `#/components/schemas/RegistryProvisionedOrganization/hubData/rdid`.
+                public var rdid: Swift.String
+                /// Creates a new `HubDataPayload`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                ///   - slug: Always `organization`
+                ///   - rdid: ecosystem.<workspace path>.organization
+                public init(
+                    id: Swift.String,
+                    slug: Swift.String,
+                    rdid: Swift.String
+                ) {
+                    self.id = id
+                    self.slug = slug
+                    self.rdid = rdid
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case id
+                    case slug
+                    case rdid
+                }
+            }
+            /// The org's Organization ecosystem: the child of its workspace that holds the org's own data — Notes, Research, Documents, Integrations, Planning, Storage
+            ///
+            /// - Remark: Generated from `#/components/schemas/RegistryProvisionedOrganization/hubData`.
+            public var hubData: Components.Schemas.RegistryProvisionedOrganization.HubDataPayload
             /// Creates a new `RegistryProvisionedOrganization`.
             ///
             /// - Parameters:
@@ -41731,22 +41821,26 @@ public enum Components {
             ///   - namespace:
             ///   - teamId: The provisioned admin team id
             ///   - ecosystem:
+            ///   - hubData: The org's Organization ecosystem: the child of its workspace that holds the org's own data — Notes, Research, Documents, Integrations, Planning, Storage
             public init(
                 organization: Components.Schemas.RegistryOrganization,
                 namespace: Components.Schemas.RegistryNamespace,
                 teamId: Swift.String,
-                ecosystem: Components.Schemas.RegistryEcosystem
+                ecosystem: Components.Schemas.RegistryEcosystem,
+                hubData: Components.Schemas.RegistryProvisionedOrganization.HubDataPayload
             ) {
                 self.organization = organization
                 self.namespace = namespace
                 self.teamId = teamId
                 self.ecosystem = ecosystem
+                self.hubData = hubData
             }
             public enum CodingKeys: String, CodingKey {
                 case organization
                 case namespace
                 case teamId
                 case ecosystem
+                case hubData
             }
         }
         /// - Remark: Generated from `#/components/schemas/RegistryPersonaApproval`.
@@ -151108,6 +151202,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/features/{id}/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/features/{id}/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostEcosystemFeaturesId.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostEcosystemFeaturesId.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/features/{id}/post/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostEcosystemFeaturesId.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostEcosystemFeaturesId.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
             public struct UnprocessableContent: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/ecosystem/features/{id}/POST/responses/422/content`.
                 @frozen public enum Body: Sendable, Hashable {
@@ -151192,7 +151337,7 @@ public enum Operations {
     }
     /// The catalog features this ecosystem may not add, and why
     ///
-    /// A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not listed — the catalog already marks them.
+    /// An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are not listed — the catalog already marks them.
     ///
     /// - Remark: HTTP `GET /ecosystem/features/{id}/availability`.
     /// - Remark: Generated from `#/paths//ecosystem/features/{id}/availability/get`.
@@ -151818,54 +151963,99 @@ public enum Operations {
                 @frozen public enum Body: Sendable, Hashable {
                     /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json`.
                     public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/error`.
-                        public struct _ErrorPayload: Codable, Hashable, Sendable {
-                            /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/error/code`.
-                            @frozen public enum CodePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                                case featureRequired = "feature_required"
+                        /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1/error`.
+                            public struct _ErrorPayload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1/error/code`.
+                                @frozen public enum CodePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case featureRequired = "feature_required"
+                                }
+                                /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1/error/code`.
+                                public var code: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload.Value1Payload._ErrorPayload.CodePayload
+                                /// this feature is needed by <labels>
+                                ///
+                                /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1/error/message`.
+                                public var message: Swift.String
+                                /// Keys of the active features that require this one or what comes with it, named by the feature the picker lists.
+                                ///
+                                /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1/error/neededBy`.
+                                public var neededBy: [Swift.String]
+                                /// Creates a new `_ErrorPayload`.
+                                ///
+                                /// - Parameters:
+                                ///   - code:
+                                ///   - message: this feature is needed by <labels>
+                                ///   - neededBy: Keys of the active features that require this one or what comes with it, named by the feature the picker lists.
+                                public init(
+                                    code: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload.Value1Payload._ErrorPayload.CodePayload,
+                                    message: Swift.String,
+                                    neededBy: [Swift.String]
+                                ) {
+                                    self.code = code
+                                    self.message = message
+                                    self.neededBy = neededBy
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case code
+                                    case message
+                                    case neededBy
+                                }
                             }
-                            /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/error/code`.
-                            public var code: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload._ErrorPayload.CodePayload
-                            /// this feature is needed by <labels>
-                            ///
-                            /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/error/message`.
-                            public var message: Swift.String
-                            /// Keys of the active features that require this one or what comes with it, named by the feature the picker lists.
-                            ///
-                            /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/error/neededBy`.
-                            public var neededBy: [Swift.String]
-                            /// Creates a new `_ErrorPayload`.
+                            /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1/error`.
+                            public var error: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload.Value1Payload._ErrorPayload
+                            /// Creates a new `Value1Payload`.
                             ///
                             /// - Parameters:
-                            ///   - code:
-                            ///   - message: this feature is needed by <labels>
-                            ///   - neededBy: Keys of the active features that require this one or what comes with it, named by the feature the picker lists.
-                            public init(
-                                code: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload._ErrorPayload.CodePayload,
-                                message: Swift.String,
-                                neededBy: [Swift.String]
-                            ) {
-                                self.code = code
-                                self.message = message
-                                self.neededBy = neededBy
+                            ///   - error:
+                            public init(error: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload.Value1Payload._ErrorPayload) {
+                                self.error = error
                             }
                             public enum CodingKeys: String, CodingKey {
-                                case code
-                                case message
-                                case neededBy
+                                case error
                             }
                         }
-                        /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/error`.
-                        public var error: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload._ErrorPayload
+                        /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value1`.
+                        public var value1: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload.Value1Payload?
+                        /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/json/value2`.
+                        public var value2: Components.Schemas._Error?
                         /// Creates a new `JsonPayload`.
                         ///
                         /// - Parameters:
-                        ///   - error:
-                        public init(error: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload._ErrorPayload) {
-                            self.error = error
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.DeleteEcosystemFeaturesIdKey.Output.Conflict.Body.JsonPayload.Value1Payload? = nil,
+                            value2: Components.Schemas._Error? = nil
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
                         }
-                        public enum CodingKeys: String, CodingKey {
-                            case error
+                        public init(from decoder: any Swift.Decoder) throws {
+                            var errors: [any Swift.Error] = []
+                            do {
+                                self.value1 = try .init(from: decoder)
+                            } catch {
+                                errors.append(error)
+                            }
+                            do {
+                                self.value2 = try .init(from: decoder)
+                            } catch {
+                                errors.append(error)
+                            }
+                            try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                                [
+                                    self.value1,
+                                    self.value2
+                                ],
+                                type: Self.self,
+                                codingPath: decoder.codingPath,
+                                errors: errors
+                            )
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1?.encode(to: encoder)
+                            try self.value2?.encode(to: encoder)
                         }
                     }
                     /// - Remark: Generated from `#/paths/ecosystem/features/{id}/{key}/DELETE/responses/409/content/application\/json`.
@@ -151893,7 +152083,7 @@ public enum Operations {
                     self.body = body
                 }
             }
-            /// Another active feature needs this one; nothing was removed
+            /// Nothing was removed: another active feature needs this one (feature_required), or this is a Personal or Organization ecosystem, whose features are fixed (a plain error)
             ///
             /// - Remark: Generated from `#/paths//ecosystem/features/{id}/{key}/delete/responses/409`.
             ///
@@ -359460,12 +359650,14 @@ public enum Operations {
                         public var isDeleted: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/isDefault`.
                         public var isDefault: Swift.Bool
-                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/isInfrastructure`.
-                        public var isInfrastructure: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/type`.
                         public var _type: Swift.String
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/archivedAt`.
                         public var archivedAt: Swift.String?
+                        /// Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
+                        ///
+                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/isInfrastructure`.
+                        public var isInfrastructure: Swift.Bool
                         /// Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise.
                         ///
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/canManage`.
@@ -359484,9 +359676,9 @@ public enum Operations {
                         ///   - updatedAt:
                         ///   - isDeleted:
                         ///   - isDefault:
-                        ///   - isInfrastructure:
                         ///   - _type:
                         ///   - archivedAt:
+                        ///   - isInfrastructure: Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
                         ///   - canManage: Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise.
                         public init(
                             id: Swift.String,
@@ -359500,9 +359692,9 @@ public enum Operations {
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
                             isDefault: Swift.Bool,
-                            isInfrastructure: Swift.Bool,
                             _type: Swift.String,
                             archivedAt: Swift.String? = nil,
+                            isInfrastructure: Swift.Bool,
                             canManage: Swift.Bool? = nil
                         ) {
                             self.id = id
@@ -359516,9 +359708,9 @@ public enum Operations {
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
                             self.isDefault = isDefault
-                            self.isInfrastructure = isInfrastructure
                             self._type = _type
                             self.archivedAt = archivedAt
+                            self.isInfrastructure = isInfrastructure
                             self.canManage = canManage
                         }
                         public enum CodingKeys: String, CodingKey {
@@ -359533,9 +359725,9 @@ public enum Operations {
                             case updatedAt
                             case isDeleted
                             case isDefault
-                            case isInfrastructure
                             case _type = "type"
                             case archivedAt
+                            case isInfrastructure
                             case canManage
                         }
                         public init(from decoder: any Swift.Decoder) throws {
@@ -359584,10 +359776,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDefault
                             )
-                            self.isInfrastructure = try container.decode(
-                                Swift.Bool.self,
-                                forKey: .isInfrastructure
-                            )
                             self._type = try container.decode(
                                 Swift.String.self,
                                 forKey: ._type
@@ -359595,6 +359783,10 @@ public enum Operations {
                             self.archivedAt = try container.decodeIfPresent(
                                 Swift.String.self,
                                 forKey: .archivedAt
+                            )
+                            self.isInfrastructure = try container.decode(
+                                Swift.Bool.self,
+                                forKey: .isInfrastructure
                             )
                             self.canManage = try container.decodeIfPresent(
                                 Swift.Bool.self,
@@ -359612,9 +359804,9 @@ public enum Operations {
                                 "updatedAt",
                                 "isDeleted",
                                 "isDefault",
-                                "isInfrastructure",
                                 "type",
                                 "archivedAt",
+                                "isInfrastructure",
                                 "canManage"
                             ])
                         }
@@ -359965,8 +360157,6 @@ public enum Operations {
                     public var primaryDomain: Swift.String?
                     /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/requestBody/json/isDefault`.
                     public var isDefault: Swift.Bool?
-                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/requestBody/json/isInfrastructure`.
-                    public var isInfrastructure: Swift.Bool?
                     /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/requestBody/json/archivedAt`.
                     public var archivedAt: Swift.String?
                     /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/requestBody/json/id`.
@@ -359981,7 +360171,6 @@ public enum Operations {
                     ///   - region:
                     ///   - primaryDomain:
                     ///   - isDefault:
-                    ///   - isInfrastructure:
                     ///   - archivedAt:
                     ///   - id:
                     public init(
@@ -359992,7 +360181,6 @@ public enum Operations {
                         region: Swift.String? = nil,
                         primaryDomain: Swift.String? = nil,
                         isDefault: Swift.Bool? = nil,
-                        isInfrastructure: Swift.Bool? = nil,
                         archivedAt: Swift.String? = nil,
                         id: Swift.String? = nil
                     ) {
@@ -360003,7 +360191,6 @@ public enum Operations {
                         self.region = region
                         self.primaryDomain = primaryDomain
                         self.isDefault = isDefault
-                        self.isInfrastructure = isInfrastructure
                         self.archivedAt = archivedAt
                         self.id = id
                     }
@@ -360015,7 +360202,6 @@ public enum Operations {
                         case region
                         case primaryDomain
                         case isDefault
-                        case isInfrastructure
                         case archivedAt
                         case id
                     }
@@ -360049,10 +360235,6 @@ public enum Operations {
                             Swift.Bool.self,
                             forKey: .isDefault
                         )
-                        self.isInfrastructure = try container.decodeIfPresent(
-                            Swift.Bool.self,
-                            forKey: .isInfrastructure
-                        )
                         self.archivedAt = try container.decodeIfPresent(
                             Swift.String.self,
                             forKey: .archivedAt
@@ -360069,7 +360251,6 @@ public enum Operations {
                             "region",
                             "primaryDomain",
                             "isDefault",
-                            "isInfrastructure",
                             "archivedAt",
                             "id"
                         ])
@@ -360123,12 +360304,14 @@ public enum Operations {
                         public var isDeleted: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/201/content/json/isDefault`.
                         public var isDefault: Swift.Bool
-                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/201/content/json/isInfrastructure`.
-                        public var isInfrastructure: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/201/content/json/type`.
                         public var _type: Swift.String
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/201/content/json/archivedAt`.
                         public var archivedAt: Swift.String?
+                        /// Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
+                        ///
+                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/201/content/json/isInfrastructure`.
+                        public var isInfrastructure: Swift.Bool
                         /// Creates a new `JsonPayload`.
                         ///
                         /// - Parameters:
@@ -360143,9 +360326,9 @@ public enum Operations {
                         ///   - updatedAt:
                         ///   - isDeleted:
                         ///   - isDefault:
-                        ///   - isInfrastructure:
                         ///   - _type:
                         ///   - archivedAt:
+                        ///   - isInfrastructure: Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
                         public init(
                             id: Swift.String,
                             ownerId: Swift.String,
@@ -360158,9 +360341,9 @@ public enum Operations {
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
                             isDefault: Swift.Bool,
-                            isInfrastructure: Swift.Bool,
                             _type: Swift.String,
-                            archivedAt: Swift.String? = nil
+                            archivedAt: Swift.String? = nil,
+                            isInfrastructure: Swift.Bool
                         ) {
                             self.id = id
                             self.ownerId = ownerId
@@ -360173,9 +360356,9 @@ public enum Operations {
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
                             self.isDefault = isDefault
-                            self.isInfrastructure = isInfrastructure
                             self._type = _type
                             self.archivedAt = archivedAt
+                            self.isInfrastructure = isInfrastructure
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
@@ -360189,9 +360372,9 @@ public enum Operations {
                             case updatedAt
                             case isDeleted
                             case isDefault
-                            case isInfrastructure
                             case _type = "type"
                             case archivedAt
+                            case isInfrastructure
                         }
                         public init(from decoder: any Swift.Decoder) throws {
                             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -360239,10 +360422,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDefault
                             )
-                            self.isInfrastructure = try container.decode(
-                                Swift.Bool.self,
-                                forKey: .isInfrastructure
-                            )
                             self._type = try container.decode(
                                 Swift.String.self,
                                 forKey: ._type
@@ -360250,6 +360429,10 @@ public enum Operations {
                             self.archivedAt = try container.decodeIfPresent(
                                 Swift.String.self,
                                 forKey: .archivedAt
+                            )
+                            self.isInfrastructure = try container.decode(
+                                Swift.Bool.self,
+                                forKey: .isInfrastructure
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
@@ -360263,9 +360446,9 @@ public enum Operations {
                                 "updatedAt",
                                 "isDeleted",
                                 "isDefault",
-                                "isInfrastructure",
                                 "type",
-                                "archivedAt"
+                                "archivedAt",
+                                "isInfrastructure"
                             ])
                         }
                     }
@@ -360521,6 +360704,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostEcosystemEcosystems.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostEcosystemEcosystems.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Refused: an ecosystem with that id or slug already exists, or the `parent` is the Personal or Organization ecosystem, which cannot have sub-ecosystems.
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/ecosystems/post/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostEcosystemEcosystems.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostEcosystemEcosystems.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
@@ -360625,12 +360859,14 @@ public enum Operations {
                         public var isDeleted: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/GET/responses/200/content/json/isDefault`.
                         public var isDefault: Swift.Bool
-                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/GET/responses/200/content/json/isInfrastructure`.
-                        public var isInfrastructure: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/GET/responses/200/content/json/type`.
                         public var _type: Swift.String
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/GET/responses/200/content/json/archivedAt`.
                         public var archivedAt: Swift.String?
+                        /// Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
+                        ///
+                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/GET/responses/200/content/json/isInfrastructure`.
+                        public var isInfrastructure: Swift.Bool
                         /// Creates a new `JsonPayload`.
                         ///
                         /// - Parameters:
@@ -360645,9 +360881,9 @@ public enum Operations {
                         ///   - updatedAt:
                         ///   - isDeleted:
                         ///   - isDefault:
-                        ///   - isInfrastructure:
                         ///   - _type:
                         ///   - archivedAt:
+                        ///   - isInfrastructure: Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
                         public init(
                             id: Swift.String,
                             ownerId: Swift.String,
@@ -360660,9 +360896,9 @@ public enum Operations {
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
                             isDefault: Swift.Bool,
-                            isInfrastructure: Swift.Bool,
                             _type: Swift.String,
-                            archivedAt: Swift.String? = nil
+                            archivedAt: Swift.String? = nil,
+                            isInfrastructure: Swift.Bool
                         ) {
                             self.id = id
                             self.ownerId = ownerId
@@ -360675,9 +360911,9 @@ public enum Operations {
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
                             self.isDefault = isDefault
-                            self.isInfrastructure = isInfrastructure
                             self._type = _type
                             self.archivedAt = archivedAt
+                            self.isInfrastructure = isInfrastructure
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
@@ -360691,9 +360927,9 @@ public enum Operations {
                             case updatedAt
                             case isDeleted
                             case isDefault
-                            case isInfrastructure
                             case _type = "type"
                             case archivedAt
+                            case isInfrastructure
                         }
                         public init(from decoder: any Swift.Decoder) throws {
                             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -360741,10 +360977,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDefault
                             )
-                            self.isInfrastructure = try container.decode(
-                                Swift.Bool.self,
-                                forKey: .isInfrastructure
-                            )
                             self._type = try container.decode(
                                 Swift.String.self,
                                 forKey: ._type
@@ -360752,6 +360984,10 @@ public enum Operations {
                             self.archivedAt = try container.decodeIfPresent(
                                 Swift.String.self,
                                 forKey: .archivedAt
+                            )
+                            self.isInfrastructure = try container.decode(
+                                Swift.Bool.self,
+                                forKey: .isInfrastructure
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
@@ -360765,9 +361001,9 @@ public enum Operations {
                                 "updatedAt",
                                 "isDeleted",
                                 "isDefault",
-                                "isInfrastructure",
                                 "type",
-                                "archivedAt"
+                                "archivedAt",
+                                "isInfrastructure"
                             ])
                         }
                     }
@@ -361002,8 +361238,6 @@ public enum Operations {
                     public var primaryDomain: Swift.String?
                     /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/requestBody/json/isDefault`.
                     public var isDefault: Swift.Bool?
-                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/requestBody/json/isInfrastructure`.
-                    public var isInfrastructure: Swift.Bool?
                     /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/requestBody/json/archivedAt`.
                     public var archivedAt: Swift.String?
                     /// Creates a new `JsonPayload`.
@@ -361016,7 +361250,6 @@ public enum Operations {
                     ///   - region:
                     ///   - primaryDomain:
                     ///   - isDefault:
-                    ///   - isInfrastructure:
                     ///   - archivedAt:
                     public init(
                         ownerId: Swift.String? = nil,
@@ -361026,7 +361259,6 @@ public enum Operations {
                         region: Swift.String? = nil,
                         primaryDomain: Swift.String? = nil,
                         isDefault: Swift.Bool? = nil,
-                        isInfrastructure: Swift.Bool? = nil,
                         archivedAt: Swift.String? = nil
                     ) {
                         self.ownerId = ownerId
@@ -361036,7 +361268,6 @@ public enum Operations {
                         self.region = region
                         self.primaryDomain = primaryDomain
                         self.isDefault = isDefault
-                        self.isInfrastructure = isInfrastructure
                         self.archivedAt = archivedAt
                     }
                     public enum CodingKeys: String, CodingKey {
@@ -361047,7 +361278,6 @@ public enum Operations {
                         case region
                         case primaryDomain
                         case isDefault
-                        case isInfrastructure
                         case archivedAt
                     }
                     public init(from decoder: any Swift.Decoder) throws {
@@ -361080,10 +361310,6 @@ public enum Operations {
                             Swift.Bool.self,
                             forKey: .isDefault
                         )
-                        self.isInfrastructure = try container.decodeIfPresent(
-                            Swift.Bool.self,
-                            forKey: .isInfrastructure
-                        )
                         self.archivedAt = try container.decodeIfPresent(
                             Swift.String.self,
                             forKey: .archivedAt
@@ -361096,7 +361322,6 @@ public enum Operations {
                             "region",
                             "primaryDomain",
                             "isDefault",
-                            "isInfrastructure",
                             "archivedAt"
                         ])
                     }
@@ -361149,12 +361374,14 @@ public enum Operations {
                         public var isDeleted: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/responses/200/content/json/isDefault`.
                         public var isDefault: Swift.Bool
-                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/responses/200/content/json/isInfrastructure`.
-                        public var isInfrastructure: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/responses/200/content/json/type`.
                         public var _type: Swift.String
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/responses/200/content/json/archivedAt`.
                         public var archivedAt: Swift.String?
+                        /// Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
+                        ///
+                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/responses/200/content/json/isInfrastructure`.
+                        public var isInfrastructure: Swift.Bool
                         /// Creates a new `JsonPayload`.
                         ///
                         /// - Parameters:
@@ -361169,9 +361396,9 @@ public enum Operations {
                         ///   - updatedAt:
                         ///   - isDeleted:
                         ///   - isDefault:
-                        ///   - isInfrastructure:
                         ///   - _type:
                         ///   - archivedAt:
+                        ///   - isInfrastructure: Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead.
                         public init(
                             id: Swift.String,
                             ownerId: Swift.String,
@@ -361184,9 +361411,9 @@ public enum Operations {
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
                             isDefault: Swift.Bool,
-                            isInfrastructure: Swift.Bool,
                             _type: Swift.String,
-                            archivedAt: Swift.String? = nil
+                            archivedAt: Swift.String? = nil,
+                            isInfrastructure: Swift.Bool
                         ) {
                             self.id = id
                             self.ownerId = ownerId
@@ -361199,9 +361426,9 @@ public enum Operations {
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
                             self.isDefault = isDefault
-                            self.isInfrastructure = isInfrastructure
                             self._type = _type
                             self.archivedAt = archivedAt
+                            self.isInfrastructure = isInfrastructure
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
@@ -361215,9 +361442,9 @@ public enum Operations {
                             case updatedAt
                             case isDeleted
                             case isDefault
-                            case isInfrastructure
                             case _type = "type"
                             case archivedAt
+                            case isInfrastructure
                         }
                         public init(from decoder: any Swift.Decoder) throws {
                             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -361265,10 +361492,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDefault
                             )
-                            self.isInfrastructure = try container.decode(
-                                Swift.Bool.self,
-                                forKey: .isInfrastructure
-                            )
                             self._type = try container.decode(
                                 Swift.String.self,
                                 forKey: ._type
@@ -361276,6 +361499,10 @@ public enum Operations {
                             self.archivedAt = try container.decodeIfPresent(
                                 Swift.String.self,
                                 forKey: .archivedAt
+                            )
+                            self.isInfrastructure = try container.decode(
+                                Swift.Bool.self,
+                                forKey: .isInfrastructure
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
@@ -361289,9 +361516,9 @@ public enum Operations {
                                 "updatedAt",
                                 "isDeleted",
                                 "isDefault",
-                                "isInfrastructure",
                                 "type",
-                                "archivedAt"
+                                "archivedAt",
+                                "isInfrastructure"
                             ])
                         }
                     }
@@ -361491,6 +361718,57 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/{id}/PUT/responses/409/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PutEcosystemEcosystemsId.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PutEcosystemEcosystemsId.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Refused: the slug is taken under this parent, or this is the Personal or Organization ecosystem, whose name and slug cannot be changed.
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/ecosystems/{id}/put/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PutEcosystemEcosystemsId.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PutEcosystemEcosystemsId.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
                             response: self
                         )
                     }
@@ -361738,7 +362016,7 @@ public enum Operations {
                     self.body = body
                 }
             }
-            /// Refused: an account infrastructure ecosystem cannot be deleted. Or: Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again.
+            /// Refused: an account infrastructure ecosystem, or the Personal or Organization ecosystem, cannot be deleted. Or: Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again.
             ///
             /// - Remark: Generated from `#/paths//ecosystem/ecosystems/{id}/delete/responses/409`.
             ///

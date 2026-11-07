@@ -27,23 +27,21 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
         slug (str):
         name (str):
         auth_type (GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyAuthType):
+        identity_mapping (GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping):
         authorize_url (None | str | Unset):
         token_url (None | str | Unset):
         userinfo_url (None | str | Unset):
         default_scopes (list[str] | Unset):
-        identity_mapping (GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping | Unset):
     """
 
     slug: str
     name: str
     auth_type: GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyAuthType
+    identity_mapping: GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping
     authorize_url: None | str | Unset = UNSET
     token_url: None | str | Unset = UNSET
     userinfo_url: None | str | Unset = UNSET
     default_scopes: list[str] | Unset = UNSET
-    identity_mapping: (
-        GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping | Unset
-    ) = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,6 +50,8 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
         name = self.name
 
         auth_type = self.auth_type.value
+
+        identity_mapping = self.identity_mapping.to_dict()
 
         authorize_url: None | str | Unset
         if isinstance(self.authorize_url, Unset):
@@ -75,10 +75,6 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
         if not isinstance(self.default_scopes, Unset):
             default_scopes = self.default_scopes
 
-        identity_mapping: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.identity_mapping, Unset):
-            identity_mapping = self.identity_mapping.to_dict()
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -86,6 +82,7 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
                 "slug": slug,
                 "name": name,
                 "authType": auth_type,
+                "identityMapping": identity_mapping,
             }
         )
         if authorize_url is not UNSET:
@@ -96,8 +93,6 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
             field_dict["userinfoUrl"] = userinfo_url
         if default_scopes is not UNSET:
             field_dict["defaultScopes"] = default_scopes
-        if identity_mapping is not UNSET:
-            field_dict["identityMapping"] = identity_mapping
 
         return field_dict
 
@@ -114,6 +109,10 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
 
         auth_type = GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyAuthType(
             d.pop("authType")
+        )
+
+        identity_mapping = GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping.from_dict(
+            d.pop("identityMapping")
         )
 
         def _parse_authorize_url(data: object) -> None | str | Unset:
@@ -145,26 +144,15 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
 
         default_scopes = cast(list[str], d.pop("defaultScopes", UNSET))
 
-        _identity_mapping = d.pop("identityMapping", UNSET)
-        identity_mapping: (
-            GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping | Unset
-        )
-        if isinstance(_identity_mapping, Unset):
-            identity_mapping = UNSET
-        else:
-            identity_mapping = GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping.from_dict(
-                _identity_mapping
-            )
-
         get_oauth_provider_templates_response_200_templates_additional_property = cls(
             slug=slug,
             name=name,
             auth_type=auth_type,
+            identity_mapping=identity_mapping,
             authorize_url=authorize_url,
             token_url=token_url,
             userinfo_url=userinfo_url,
             default_scopes=default_scopes,
-            identity_mapping=identity_mapping,
         )
 
         get_oauth_provider_templates_response_200_templates_additional_property.additional_properties = d

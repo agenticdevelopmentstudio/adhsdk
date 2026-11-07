@@ -27,11 +27,12 @@ class GetEcosystemEcosystemsResponse200Item:
         updated_at (str):
         is_deleted (bool):
         is_default (bool):
-        is_infrastructure (bool):
         type_ (str):
         namespace_id (None | str):
         parent_id (None | str):
         archived_at (None | str):
+        is_infrastructure (bool): Whether this is a principal's own ecosystem: true exactly when `type` is `workspace`
+            or `persona`. Derived from `type`; read `type` instead.
         can_manage (bool | Unset): Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise.
     """
 
@@ -48,11 +49,11 @@ class GetEcosystemEcosystemsResponse200Item:
     updated_at: str
     is_deleted: bool
     is_default: bool
-    is_infrastructure: bool
     type_: str
     namespace_id: None | str
     parent_id: None | str
     archived_at: None | str
+    is_infrastructure: bool
     can_manage: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,8 +85,6 @@ class GetEcosystemEcosystemsResponse200Item:
 
         is_default = self.is_default
 
-        is_infrastructure = self.is_infrastructure
-
         type_ = self.type_
 
         namespace_id: None | str
@@ -96,6 +95,8 @@ class GetEcosystemEcosystemsResponse200Item:
 
         archived_at: None | str
         archived_at = self.archived_at
+
+        is_infrastructure = self.is_infrastructure
 
         can_manage = self.can_manage
 
@@ -116,11 +117,11 @@ class GetEcosystemEcosystemsResponse200Item:
                 "updatedAt": updated_at,
                 "isDeleted": is_deleted,
                 "isDefault": is_default,
-                "isInfrastructure": is_infrastructure,
                 "type": type_,
                 "namespaceId": namespace_id,
                 "parentId": parent_id,
                 "archivedAt": archived_at,
+                "isInfrastructure": is_infrastructure,
             }
         )
         if can_manage is not UNSET:
@@ -169,8 +170,6 @@ class GetEcosystemEcosystemsResponse200Item:
 
         is_default = d.pop("isDefault")
 
-        is_infrastructure = d.pop("isInfrastructure")
-
         type_ = d.pop("type")
 
         def _parse_namespace_id(data: object) -> None | str:
@@ -194,6 +193,8 @@ class GetEcosystemEcosystemsResponse200Item:
 
         archived_at = _parse_archived_at(d.pop("archivedAt"))
 
+        is_infrastructure = d.pop("isInfrastructure")
+
         can_manage = d.pop("canManage", UNSET)
 
         get_ecosystem_ecosystems_response_200_item = cls(
@@ -210,11 +211,11 @@ class GetEcosystemEcosystemsResponse200Item:
             updated_at=updated_at,
             is_deleted=is_deleted,
             is_default=is_default,
-            is_infrastructure=is_infrastructure,
             type_=type_,
             namespace_id=namespace_id,
             parent_id=parent_id,
             archived_at=archived_at,
+            is_infrastructure=is_infrastructure,
             can_manage=can_manage,
         )
 
