@@ -80,4 +80,26 @@ final class LayeredSettingsStoreTests: XCTestCase {
         XCTAssertFalse(layered.hasOverride(home))
         XCTAssertTrue(layered.hasOverride(editorFont))
     }
+
+    func testRemoveOverrideEmitsAChangeForThatKey() {
+        let layered = makeLayered(fallback: makeFallback())
+        layered.set(2.0, for: zoom)
+        var names: [String] = []
+        let cancellable = layered.changes.sink { names.append($0) }
+        layered.removeOverride(zoom)
+        XCTAssertEqual(names, [zoom.name])
+        cancellable.cancel()
+    }
+
+    func testSecureKeyGoesStraightToTheFallback() {
+        let secret = UserSetting<String>("test.secret", default: "", isSecure: true)
+        let fallback = makeFallback()
+        let overrides = InMemorySettingsStorageProvider()
+        let layered = LayeredSettingsStore(overrides: overrides, fallback: fallback)
+        layered.set("s3cret", for: secret)
+        XCTAssertEqual(fallback.get(secret), "s3cret")
+        XCTAssertFalse(overrides.contains(secret))
+        XCTAssertFalse(layered.hasOverride(secret))
+        XCTAssertEqual(layered.get(secret), "s3cret")
+    }
 }
