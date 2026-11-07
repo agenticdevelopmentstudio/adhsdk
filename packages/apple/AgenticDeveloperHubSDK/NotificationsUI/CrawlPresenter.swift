@@ -116,7 +116,7 @@ public final class CrawlPresenter: NoticePresenter {
     public func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         items.removeValue(forKey: notice.id)?.countdown.stop()
         guard let profile = profiles.first else { return }
-        let (keys, frames) = placement(for: profile)
+        let (keys, frames) = placement()
         guard !keys.isEmpty else {
             apply(model.remove(notice.id), layer: profile.layer, frames: frames)
             return
@@ -145,7 +145,7 @@ public final class CrawlPresenter: NoticePresenter {
             show(notice, profiles: profiles, actions: actions)
             return
         }
-        let (keys, frames) = placement(for: profile)
+        let (keys, frames) = placement()
         guard !keys.isEmpty else {
             remove(id: oldID)
             return
@@ -165,10 +165,6 @@ public final class CrawlPresenter: NoticePresenter {
     // MARK: Strips
 
     /// The strips a profile runs on now, with the visible frame of each.
-    private func placement(for profile: NoticeProfile) -> ([StripKey], [StripKey: CGRect]) {
-        placement()
-    }
-
     private func placement() -> ([StripKey], [StripKey: CGRect]) {
         let edge = rules().crawl.edge
         var frames: [StripKey: CGRect] = [:]
@@ -373,9 +369,13 @@ final class CrawlStripView: NSView {
 
     private func restyle() {
         background.isHidden = !settings.showsBackground
-        let color = settings.background.resolved(
-            system: .windowBackgroundColor, themeRole: .elevatedSurface, palette: palette)
-        background.layer?.backgroundColor = color.withAlphaComponent(settings.backgroundOpacity).cgColor
+        // System is a dynamic color: resolve it under this view's appearance,
+        // and again when the appearance changes (`viewDidChangeEffectiveAppearance`).
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let color = settings.background.resolved(
+                system: .windowBackgroundColor, themeRole: .elevatedSurface, palette: palette)
+            background.layer?.backgroundColor = color.withAlphaComponent(settings.backgroundOpacity).cgColor
+        }
         row.alphaValue = settings.itemOpacity
         let base = palette.font(.body, weight: .semibold)
         let font = NSFont(descriptor: base.fontDescriptor, size: textSize) ?? base
@@ -388,6 +388,11 @@ final class CrawlStripView: NSView {
             bullet.textColor = palette.nsColor(.secondaryText)
         }
         refit()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        restyle()
     }
 
     private func refit() {

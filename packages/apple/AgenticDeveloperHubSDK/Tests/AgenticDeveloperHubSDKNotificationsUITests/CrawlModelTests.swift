@@ -171,6 +171,20 @@ final class CrawlPresenterTests: XCTestCase {
         presenter.remove(id: "a")
     }
 
+    func testSystemBackgroundFollowsLightAndDark() throws {
+        _ = NSApplication.shared
+        let view = CrawlStripView(settings: CrawlSettings(background: .system, backgroundOpacity: 1))
+        func backgroundColor(_ appearance: NSAppearance.Name) throws -> NSColor {
+            view.appearance = NSAppearance(named: appearance)
+            view.viewDidChangeEffectiveAppearance()
+            let cgColor = try XCTUnwrap(view.background.layer?.backgroundColor)
+            return try XCTUnwrap(NSColor(cgColor: cgColor)?.usingColorSpace(.sRGB))
+        }
+        let dark = try backgroundColor(.darkAqua)
+        let light = try backgroundColor(.aqua)
+        XCTAssertNotEqual(dark.redComponent, light.redComponent, accuracy: 0.05, "the system color re-resolves")
+    }
+
     func testCrawlStripHeightFollowsTextSize() {
         XCTAssertEqual(CrawlPresenter.stripHeight(textSize: 10), 28, "never under 28")
         XCTAssertEqual(CrawlPresenter.stripHeight(textSize: 13), 28)
