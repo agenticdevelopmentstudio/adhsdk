@@ -6,19 +6,22 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    code: str,
+    code: str | Unset = UNSET,
     state: str,
+    error: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["code"] = code
 
     params["state"] = state
+
+    params["error"] = error
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -67,14 +70,16 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    code: str,
+    code: str | Unset = UNSET,
     state: str,
+    error: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Provider redirect target → 302 back with a single-use exchange code
 
     Args:
-        code (str):
+        code (str | Unset):
         state (str):
+        error (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -87,6 +92,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         code=code,
         state=state,
+        error=error,
     )
 
     response = client.get_httpx_client().request(
@@ -99,14 +105,16 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    code: str,
+    code: str | Unset = UNSET,
     state: str,
+    error: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Provider redirect target → 302 back with a single-use exchange code
 
     Args:
-        code (str):
+        code (str | Unset):
         state (str):
+        error (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -120,20 +128,23 @@ def sync(
         client=client,
         code=code,
         state=state,
+        error=error,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    code: str,
+    code: str | Unset = UNSET,
     state: str,
+    error: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Provider redirect target → 302 back with a single-use exchange code
 
     Args:
-        code (str):
+        code (str | Unset):
         state (str):
+        error (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -146,6 +157,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         code=code,
         state=state,
+        error=error,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -156,14 +168,16 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    code: str,
+    code: str | Unset = UNSET,
     state: str,
+    error: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Provider redirect target → 302 back with a single-use exchange code
 
     Args:
-        code (str):
+        code (str | Unset):
         state (str):
+        error (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -178,5 +192,6 @@ async def asyncio(
             client=client,
             code=code,
             state=state,
+            error=error,
         )
     ).parsed

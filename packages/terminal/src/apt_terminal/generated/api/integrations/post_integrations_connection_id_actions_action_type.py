@@ -6,9 +6,17 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.integration_action_album_create import IntegrationActionAlbumCreate
+from ...models.integration_action_album_remove_items import IntegrationActionAlbumRemoveItems
+from ...models.integration_action_album_update import IntegrationActionAlbumUpdate
 from ...models.integration_action_broadcast import IntegrationActionBroadcast
 from ...models.integration_action_broadcast_send import IntegrationActionBroadcastSend
 from ...models.integration_action_comment import IntegrationActionComment
+from ...models.integration_action_import_picked import IntegrationActionImportPicked
+from ...models.integration_action_label_create import IntegrationActionLabelCreate
+from ...models.integration_action_label_delete import IntegrationActionLabelDelete
+from ...models.integration_action_label_update import IntegrationActionLabelUpdate
+from ...models.integration_action_modify_labels import IntegrationActionModifyLabels
 from ...models.integration_action_post import IntegrationActionPost
 from ...models.integration_action_result import IntegrationActionResult
 from ...models.integration_action_send import IntegrationActionSend
@@ -16,6 +24,7 @@ from ...models.integration_action_sms import IntegrationActionSms
 from ...models.integration_action_submit import IntegrationActionSubmit
 from ...models.integration_action_subscribe import IntegrationActionSubscribe
 from ...models.integration_action_unsubscribe import IntegrationActionUnsubscribe
+from ...models.integration_action_upload import IntegrationActionUpload
 from ...models.problem_details import ProblemDetails
 from ...types import UNSET, Response, Unset
 
@@ -24,15 +33,24 @@ def _get_kwargs(
     connection_id: str,
     action_type: str,
     *,
-    body: IntegrationActionBroadcast
+    body: IntegrationActionAlbumCreate
+    | IntegrationActionAlbumRemoveItems
+    | IntegrationActionAlbumUpdate
+    | IntegrationActionBroadcast
     | IntegrationActionBroadcastSend
     | IntegrationActionComment
+    | IntegrationActionImportPicked
+    | IntegrationActionLabelCreate
+    | IntegrationActionLabelDelete
+    | IntegrationActionLabelUpdate
+    | IntegrationActionModifyLabels
     | IntegrationActionPost
     | IntegrationActionSend
     | IntegrationActionSms
     | IntegrationActionSubmit
     | IntegrationActionSubscribe
     | IntegrationActionUnsubscribe
+    | IntegrationActionUpload
     | Unset = UNSET,
     idempotency_key: str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -57,6 +75,15 @@ def _get_kwargs(
         or isinstance(body, IntegrationActionSubscribe)
         or isinstance(body, IntegrationActionUnsubscribe)
         or isinstance(body, IntegrationActionBroadcast)
+        or isinstance(body, IntegrationActionBroadcastSend)
+        or isinstance(body, IntegrationActionLabelCreate)
+        or isinstance(body, IntegrationActionLabelUpdate)
+        or isinstance(body, IntegrationActionLabelDelete)
+        or isinstance(body, IntegrationActionModifyLabels)
+        or isinstance(body, IntegrationActionAlbumCreate)
+        or isinstance(body, IntegrationActionAlbumUpdate)
+        or isinstance(body, IntegrationActionAlbumRemoveItems)
+        or isinstance(body, IntegrationActionUpload)
     ):
         _kwargs["json"] = body.to_dict()
     else:
@@ -133,15 +160,24 @@ def sync_detailed(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: IntegrationActionBroadcast
+    body: IntegrationActionAlbumCreate
+    | IntegrationActionAlbumRemoveItems
+    | IntegrationActionAlbumUpdate
+    | IntegrationActionBroadcast
     | IntegrationActionBroadcastSend
     | IntegrationActionComment
+    | IntegrationActionImportPicked
+    | IntegrationActionLabelCreate
+    | IntegrationActionLabelDelete
+    | IntegrationActionLabelUpdate
+    | IntegrationActionModifyLabels
     | IntegrationActionPost
     | IntegrationActionSend
     | IntegrationActionSms
     | IntegrationActionSubmit
     | IntegrationActionSubscribe
     | IntegrationActionUnsubscribe
+    | IntegrationActionUpload
     | Unset = UNSET,
     idempotency_key: str | Unset = UNSET,
 ) -> Response[IntegrationActionResult | ProblemDetails]:
@@ -157,10 +193,13 @@ def sync_detailed(
         connection_id (str):
         action_type (str):
         idempotency_key (str | Unset):
-        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
-            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+        body (IntegrationActionAlbumCreate | IntegrationActionAlbumRemoveItems |
+            IntegrationActionAlbumUpdate | IntegrationActionBroadcast | IntegrationActionBroadcastSend
+            | IntegrationActionComment | IntegrationActionImportPicked | IntegrationActionLabelCreate
+            | IntegrationActionLabelDelete | IntegrationActionLabelUpdate |
+            IntegrationActionModifyLabels | IntegrationActionPost | IntegrationActionSend |
             IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
-            IntegrationActionUnsubscribe | Unset):
+            IntegrationActionUnsubscribe | IntegrationActionUpload | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -189,15 +228,24 @@ def sync(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: IntegrationActionBroadcast
+    body: IntegrationActionAlbumCreate
+    | IntegrationActionAlbumRemoveItems
+    | IntegrationActionAlbumUpdate
+    | IntegrationActionBroadcast
     | IntegrationActionBroadcastSend
     | IntegrationActionComment
+    | IntegrationActionImportPicked
+    | IntegrationActionLabelCreate
+    | IntegrationActionLabelDelete
+    | IntegrationActionLabelUpdate
+    | IntegrationActionModifyLabels
     | IntegrationActionPost
     | IntegrationActionSend
     | IntegrationActionSms
     | IntegrationActionSubmit
     | IntegrationActionSubscribe
     | IntegrationActionUnsubscribe
+    | IntegrationActionUpload
     | Unset = UNSET,
     idempotency_key: str | Unset = UNSET,
 ) -> IntegrationActionResult | ProblemDetails | None:
@@ -213,10 +261,13 @@ def sync(
         connection_id (str):
         action_type (str):
         idempotency_key (str | Unset):
-        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
-            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+        body (IntegrationActionAlbumCreate | IntegrationActionAlbumRemoveItems |
+            IntegrationActionAlbumUpdate | IntegrationActionBroadcast | IntegrationActionBroadcastSend
+            | IntegrationActionComment | IntegrationActionImportPicked | IntegrationActionLabelCreate
+            | IntegrationActionLabelDelete | IntegrationActionLabelUpdate |
+            IntegrationActionModifyLabels | IntegrationActionPost | IntegrationActionSend |
             IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
-            IntegrationActionUnsubscribe | Unset):
+            IntegrationActionUnsubscribe | IntegrationActionUpload | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -240,15 +291,24 @@ async def asyncio_detailed(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: IntegrationActionBroadcast
+    body: IntegrationActionAlbumCreate
+    | IntegrationActionAlbumRemoveItems
+    | IntegrationActionAlbumUpdate
+    | IntegrationActionBroadcast
     | IntegrationActionBroadcastSend
     | IntegrationActionComment
+    | IntegrationActionImportPicked
+    | IntegrationActionLabelCreate
+    | IntegrationActionLabelDelete
+    | IntegrationActionLabelUpdate
+    | IntegrationActionModifyLabels
     | IntegrationActionPost
     | IntegrationActionSend
     | IntegrationActionSms
     | IntegrationActionSubmit
     | IntegrationActionSubscribe
     | IntegrationActionUnsubscribe
+    | IntegrationActionUpload
     | Unset = UNSET,
     idempotency_key: str | Unset = UNSET,
 ) -> Response[IntegrationActionResult | ProblemDetails]:
@@ -264,10 +324,13 @@ async def asyncio_detailed(
         connection_id (str):
         action_type (str):
         idempotency_key (str | Unset):
-        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
-            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+        body (IntegrationActionAlbumCreate | IntegrationActionAlbumRemoveItems |
+            IntegrationActionAlbumUpdate | IntegrationActionBroadcast | IntegrationActionBroadcastSend
+            | IntegrationActionComment | IntegrationActionImportPicked | IntegrationActionLabelCreate
+            | IntegrationActionLabelDelete | IntegrationActionLabelUpdate |
+            IntegrationActionModifyLabels | IntegrationActionPost | IntegrationActionSend |
             IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
-            IntegrationActionUnsubscribe | Unset):
+            IntegrationActionUnsubscribe | IntegrationActionUpload | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -294,15 +357,24 @@ async def asyncio(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: IntegrationActionBroadcast
+    body: IntegrationActionAlbumCreate
+    | IntegrationActionAlbumRemoveItems
+    | IntegrationActionAlbumUpdate
+    | IntegrationActionBroadcast
     | IntegrationActionBroadcastSend
     | IntegrationActionComment
+    | IntegrationActionImportPicked
+    | IntegrationActionLabelCreate
+    | IntegrationActionLabelDelete
+    | IntegrationActionLabelUpdate
+    | IntegrationActionModifyLabels
     | IntegrationActionPost
     | IntegrationActionSend
     | IntegrationActionSms
     | IntegrationActionSubmit
     | IntegrationActionSubscribe
     | IntegrationActionUnsubscribe
+    | IntegrationActionUpload
     | Unset = UNSET,
     idempotency_key: str | Unset = UNSET,
 ) -> IntegrationActionResult | ProblemDetails | None:
@@ -318,10 +390,13 @@ async def asyncio(
         connection_id (str):
         action_type (str):
         idempotency_key (str | Unset):
-        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
-            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+        body (IntegrationActionAlbumCreate | IntegrationActionAlbumRemoveItems |
+            IntegrationActionAlbumUpdate | IntegrationActionBroadcast | IntegrationActionBroadcastSend
+            | IntegrationActionComment | IntegrationActionImportPicked | IntegrationActionLabelCreate
+            | IntegrationActionLabelDelete | IntegrationActionLabelUpdate |
+            IntegrationActionModifyLabels | IntegrationActionPost | IntegrationActionSend |
             IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
-            IntegrationActionUnsubscribe | Unset):
+            IntegrationActionUnsubscribe | IntegrationActionUpload | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

@@ -9,8 +9,8 @@ from ...client import AuthenticatedClient, Client
 from ...models.delete_ecosystem_features_id_key_response_200 import (
     DeleteEcosystemFeaturesIdKeyResponse200,
 )
-from ...models.delete_ecosystem_features_id_key_response_409 import (
-    DeleteEcosystemFeaturesIdKeyResponse409,
+from ...models.delete_ecosystem_features_id_key_response_409_type_0 import (
+    DeleteEcosystemFeaturesIdKeyResponse409Type0,
 )
 from ...models.error import Error
 from ...types import Response
@@ -34,7 +34,11 @@ def _get_kwargs(
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> (
-    DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error | None
+    DeleteEcosystemFeaturesIdKeyResponse200
+    | DeleteEcosystemFeaturesIdKeyResponse409Type0
+    | Error
+    | Error
+    | None
 ):
     if response.status_code == 200:
         response_200 = DeleteEcosystemFeaturesIdKeyResponse200.from_dict(response.json())
@@ -62,7 +66,25 @@ def _parse_response(
         return response_404
 
     if response.status_code == 409:
-        response_409 = DeleteEcosystemFeaturesIdKeyResponse409.from_dict(response.json())
+
+        def _parse_response_409(
+            data: object,
+        ) -> DeleteEcosystemFeaturesIdKeyResponse409Type0 | Error:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_409_type_0 = DeleteEcosystemFeaturesIdKeyResponse409Type0.from_dict(data)
+
+                return response_409_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            if not isinstance(data, dict):
+                raise TypeError()
+            response_409_type_1 = Error.from_dict(data)
+
+            return response_409_type_1
+
+        response_409 = _parse_response_409(response.json())
 
         return response_409
 
@@ -75,7 +97,10 @@ def _parse_response(
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
-    DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error
+    DeleteEcosystemFeaturesIdKeyResponse200
+    | DeleteEcosystemFeaturesIdKeyResponse409Type0
+    | Error
+    | Error
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -91,7 +116,10 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[
-    DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error
+    DeleteEcosystemFeaturesIdKeyResponse200
+    | DeleteEcosystemFeaturesIdKeyResponse409Type0
+    | Error
+    | Error
 ]:
     """Take a feature off the ecosystem
 
@@ -109,7 +137,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error]
+        Response[DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409Type0 | Error | Error]
     """
 
     kwargs = _get_kwargs(
@@ -130,7 +158,11 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> (
-    DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error | None
+    DeleteEcosystemFeaturesIdKeyResponse200
+    | DeleteEcosystemFeaturesIdKeyResponse409Type0
+    | Error
+    | Error
+    | None
 ):
     """Take a feature off the ecosystem
 
@@ -148,7 +180,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error
+        DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409Type0 | Error | Error
     """
 
     return sync_detailed(
@@ -164,7 +196,10 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[
-    DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error
+    DeleteEcosystemFeaturesIdKeyResponse200
+    | DeleteEcosystemFeaturesIdKeyResponse409Type0
+    | Error
+    | Error
 ]:
     """Take a feature off the ecosystem
 
@@ -182,7 +217,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error]
+        Response[DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409Type0 | Error | Error]
     """
 
     kwargs = _get_kwargs(
@@ -201,7 +236,11 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> (
-    DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error | None
+    DeleteEcosystemFeaturesIdKeyResponse200
+    | DeleteEcosystemFeaturesIdKeyResponse409Type0
+    | Error
+    | Error
+    | None
 ):
     """Take a feature off the ecosystem
 
@@ -219,7 +258,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409 | Error
+        DeleteEcosystemFeaturesIdKeyResponse200 | DeleteEcosystemFeaturesIdKeyResponse409Type0 | Error | Error
     """
 
     return (

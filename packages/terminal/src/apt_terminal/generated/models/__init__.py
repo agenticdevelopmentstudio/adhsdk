@@ -98,7 +98,10 @@ from .campaign_create import CampaignCreate
 from .campaign_patch import CampaignPatch
 from .campaign_status import CampaignStatus
 from .catalog_feature import CatalogFeature
+from .catalog_feature_allowed_in_item import CatalogFeatureAllowedInItem
+from .catalog_feature_automatic_in_item import CatalogFeatureAutomaticInItem
 from .catalog_feature_subscription_tier import CatalogFeatureSubscriptionTier
+from .catalog_feature_workspace_owner_kinds_item import CatalogFeatureWorkspaceOwnerKindsItem
 from .catalog_sync_outcome import CatalogSyncOutcome
 from .catalog_sync_outcome_source import CatalogSyncOutcomeSource
 from .catalog_sync_run import CatalogSyncRun
@@ -180,12 +183,14 @@ from .delete_ecosystem_feature_flags_id_key_response_200 import (
     DeleteEcosystemFeatureFlagsIdKeyResponse200,
 )
 from .delete_ecosystem_features_id_key_response_200 import DeleteEcosystemFeaturesIdKeyResponse200
-from .delete_ecosystem_features_id_key_response_409 import DeleteEcosystemFeaturesIdKeyResponse409
-from .delete_ecosystem_features_id_key_response_409_error import (
-    DeleteEcosystemFeaturesIdKeyResponse409Error,
+from .delete_ecosystem_features_id_key_response_409_type_0 import (
+    DeleteEcosystemFeaturesIdKeyResponse409Type0,
 )
-from .delete_ecosystem_features_id_key_response_409_error_code import (
-    DeleteEcosystemFeaturesIdKeyResponse409ErrorCode,
+from .delete_ecosystem_features_id_key_response_409_type_0_error import (
+    DeleteEcosystemFeaturesIdKeyResponse409Type0Error,
+)
+from .delete_ecosystem_features_id_key_response_409_type_0_error_code import (
+    DeleteEcosystemFeaturesIdKeyResponse409Type0ErrorCode,
 )
 from .delete_ecosystem_server_bag_id_key_response_200 import (
     DeleteEcosystemServerBagIdKeyResponse200,
@@ -198,6 +203,9 @@ from .delete_gamification_realms_ecosystem_id_event_types_id_response_200 import
 )
 from .delete_integrations_connection_id_response_200 import (
     DeleteIntegrationsConnectionIdResponse200,
+)
+from .delete_integrations_me_connections_id_response_200 import (
+    DeleteIntegrationsMeConnectionsIdResponse200,
 )
 from .delete_persona_provider_templates_id_response_200 import (
     DeletePersonaProviderTemplatesIdResponse200,
@@ -676,28 +684,30 @@ from .get_integration_integration_items_id_response_200 import (
 from .get_integration_integration_items_response_200_item import (
     GetIntegrationIntegrationItemsResponse200Item,
 )
-from .get_integration_integration_media_items_id_response_200 import (
-    GetIntegrationIntegrationMediaItemsIdResponse200,
-)
-from .get_integration_integration_media_items_response_200_item import (
-    GetIntegrationIntegrationMediaItemsResponse200Item,
-)
 from .get_integration_integration_pages_id_response_200 import (
     GetIntegrationIntegrationPagesIdResponse200,
 )
 from .get_integration_integration_pages_response_200_item import (
     GetIntegrationIntegrationPagesResponse200Item,
 )
-from .get_integration_integration_social_notifications_id_response_200 import (
-    GetIntegrationIntegrationSocialNotificationsIdResponse200,
-)
-from .get_integration_integration_social_notifications_response_200_item import (
-    GetIntegrationIntegrationSocialNotificationsResponse200Item,
-)
 from .get_integrations_admin_configs_response_200 import GetIntegrationsAdminConfigsResponse200
 from .get_integrations_ecosystems_ecosystem_id_provider_configs_response_200 import (
     GetIntegrationsEcosystemsEcosystemIdProviderConfigsResponse200,
 )
+from .get_integrations_end_user_connections_response_200 import (
+    GetIntegrationsEndUserConnectionsResponse200,
+)
+from .get_integrations_end_user_connections_response_200_connections_item import (
+    GetIntegrationsEndUserConnectionsResponse200ConnectionsItem,
+)
+from .get_integrations_me_connections_id_media_media_item_id_content_response_200 import (
+    GetIntegrationsMeConnectionsIdMediaMediaItemIdContentResponse200,
+)
+from .get_integrations_me_connections_response_200 import GetIntegrationsMeConnectionsResponse200
+from .get_integrations_me_providers_provider_id_auth_url_response_200 import (
+    GetIntegrationsMeProvidersProviderIdAuthUrlResponse200,
+)
+from .get_integrations_me_providers_response_200 import GetIntegrationsMeProvidersResponse200
 from .get_integrations_providers_provider_id_auth_url_response_200 import (
     GetIntegrationsProvidersProviderIdAuthUrlResponse200,
 )
@@ -740,6 +750,12 @@ from .get_oauth_provider_templates_response_200_templates_additional_property_au
 from .get_oauth_provider_templates_response_200_templates_additional_property_identity_mapping import (
     GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping,
 )
+from .get_oauth_provider_templates_response_200_templates_additional_property_identity_mapping_client_secret_jwt import (
+    GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMappingClientSecretJwt,
+)
+from .get_oauth_provider_templates_response_200_templates_additional_property_identity_mapping_response_mode import (
+    GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMappingResponseMode,
+)
 from .get_oauth_providers_response_200_item import GetOauthProvidersResponse200Item
 from .get_oauth_providers_response_200_item_auth_type import (
     GetOauthProvidersResponse200ItemAuthType,
@@ -747,12 +763,24 @@ from .get_oauth_providers_response_200_item_auth_type import (
 from .get_oauth_providers_response_200_item_identity_mapping import (
     GetOauthProvidersResponse200ItemIdentityMapping,
 )
+from .get_oauth_providers_response_200_item_identity_mapping_client_secret_jwt import (
+    GetOauthProvidersResponse200ItemIdentityMappingClientSecretJwt,
+)
+from .get_oauth_providers_response_200_item_identity_mapping_response_mode import (
+    GetOauthProvidersResponse200ItemIdentityMappingResponseMode,
+)
 from .get_oauth_providers_slug_response_200 import GetOauthProvidersSlugResponse200
 from .get_oauth_providers_slug_response_200_auth_type import (
     GetOauthProvidersSlugResponse200AuthType,
 )
 from .get_oauth_providers_slug_response_200_identity_mapping import (
     GetOauthProvidersSlugResponse200IdentityMapping,
+)
+from .get_oauth_providers_slug_response_200_identity_mapping_client_secret_jwt import (
+    GetOauthProvidersSlugResponse200IdentityMappingClientSecretJwt,
+)
+from .get_oauth_providers_slug_response_200_identity_mapping_response_mode import (
+    GetOauthProvidersSlugResponse200IdentityMappingResponseMode,
 )
 from .get_oauth_signin_discovery_response_200 import GetOauthSigninDiscoveryResponse200
 from .get_oauth_signin_discovery_response_200_clients_item import (
@@ -974,11 +1002,19 @@ from .get_usage_usage_counters_scope_principal_id_period_start_response_200 impo
 from .get_usage_usage_events_id_response_200 import GetUsageUsageEventsIdResponse200
 from .get_usage_usage_events_response_200_item import GetUsageUsageEventsResponse200Item
 from .get_workspaces_slug_members_response_200 import GetWorkspacesSlugMembersResponse200
+from .integration_action_album_create import IntegrationActionAlbumCreate
+from .integration_action_album_remove_items import IntegrationActionAlbumRemoveItems
+from .integration_action_album_update import IntegrationActionAlbumUpdate
 from .integration_action_broadcast import IntegrationActionBroadcast
 from .integration_action_broadcast_send import IntegrationActionBroadcastSend
 from .integration_action_comment import IntegrationActionComment
 from .integration_action_fields import IntegrationActionFields
+from .integration_action_import_picked import IntegrationActionImportPicked
+from .integration_action_label_create import IntegrationActionLabelCreate
+from .integration_action_label_delete import IntegrationActionLabelDelete
+from .integration_action_label_update import IntegrationActionLabelUpdate
 from .integration_action_media_item import IntegrationActionMediaItem
+from .integration_action_modify_labels import IntegrationActionModifyLabels
 from .integration_action_post import IntegrationActionPost
 from .integration_action_result import IntegrationActionResult
 from .integration_action_result_status import IntegrationActionResultStatus
@@ -987,6 +1023,7 @@ from .integration_action_sms import IntegrationActionSms
 from .integration_action_submit import IntegrationActionSubmit
 from .integration_action_subscribe import IntegrationActionSubscribe
 from .integration_action_unsubscribe import IntegrationActionUnsubscribe
+from .integration_action_upload import IntegrationActionUpload
 from .integration_connect_api_key import IntegrationConnectApiKey
 from .integration_connect_api_key_type import IntegrationConnectApiKeyType
 from .integration_connect_app_password import IntegrationConnectAppPassword
@@ -1001,9 +1038,20 @@ from .integration_connect_o_auth_type import IntegrationConnectOAuthType
 from .integration_connect_plaid_link import IntegrationConnectPlaidLink
 from .integration_connect_plaid_link_type import IntegrationConnectPlaidLinkType
 from .integration_connection import IntegrationConnection
+from .integration_connection_data_page import IntegrationConnectionDataPage
+from .integration_connection_data_page_rows_item import IntegrationConnectionDataPageRowsItem
 from .integration_connection_sync_settings_type_0 import IntegrationConnectionSyncSettingsType0
 from .integration_global_config import IntegrationGlobalConfig
 from .integration_global_config_config import IntegrationGlobalConfigConfig
+from .integration_gmail_label_color import IntegrationGmailLabelColor
+from .integration_gmail_label_list_visibility import IntegrationGmailLabelListVisibility
+from .integration_gmail_message_list_visibility import IntegrationGmailMessageListVisibility
+from .integration_me_action_result import IntegrationMeActionResult
+from .integration_me_action_result_status import IntegrationMeActionResultStatus
+from .integration_me_connect_request import IntegrationMeConnectRequest
+from .integration_me_provider import IntegrationMeProvider
+from .integration_picker_session_start import IntegrationPickerSessionStart
+from .integration_picker_session_state import IntegrationPickerSessionState
 from .integration_provider import IntegrationProvider
 from .integration_provider_auth_method import IntegrationProviderAuthMethod
 from .integration_provider_config import IntegrationProviderConfig
@@ -1104,11 +1152,26 @@ from .patch_integrations_connection_id_settings_response_200 import (
 from .patch_integrations_connection_id_settings_response_200_sync_settings import (
     PatchIntegrationsConnectionIdSettingsResponse200SyncSettings,
 )
+from .patch_integrations_me_connections_id_settings_body import (
+    PatchIntegrationsMeConnectionsIdSettingsBody,
+)
+from .patch_integrations_me_connections_id_settings_response_200 import (
+    PatchIntegrationsMeConnectionsIdSettingsResponse200,
+)
+from .patch_integrations_me_connections_id_settings_response_200_sync_settings import (
+    PatchIntegrationsMeConnectionsIdSettingsResponse200SyncSettings,
+)
 from .patch_oauth_clients_slug_body import PatchOauthClientsSlugBody
 from .patch_oauth_clients_slug_response_200 import PatchOauthClientsSlugResponse200
 from .patch_oauth_providers_slug_body import PatchOauthProvidersSlugBody
 from .patch_oauth_providers_slug_body_identity_mapping import (
     PatchOauthProvidersSlugBodyIdentityMapping,
+)
+from .patch_oauth_providers_slug_body_identity_mapping_client_secret_jwt import (
+    PatchOauthProvidersSlugBodyIdentityMappingClientSecretJwt,
+)
+from .patch_oauth_providers_slug_body_identity_mapping_response_mode import (
+    PatchOauthProvidersSlugBodyIdentityMappingResponseMode,
 )
 from .patch_oauth_providers_slug_response_200 import PatchOauthProvidersSlugResponse200
 from .patch_oauth_providers_slug_response_200_auth_type import (
@@ -1116,6 +1179,12 @@ from .patch_oauth_providers_slug_response_200_auth_type import (
 )
 from .patch_oauth_providers_slug_response_200_identity_mapping import (
     PatchOauthProvidersSlugResponse200IdentityMapping,
+)
+from .patch_oauth_providers_slug_response_200_identity_mapping_client_secret_jwt import (
+    PatchOauthProvidersSlugResponse200IdentityMappingClientSecretJwt,
+)
+from .patch_oauth_providers_slug_response_200_identity_mapping_response_mode import (
+    PatchOauthProvidersSlugResponse200IdentityMappingResponseMode,
 )
 from .patch_organization_organizations_id_body import PatchOrganizationOrganizationsIdBody
 from .patch_persona_mcp_servers_id_body import PatchPersonaMcpServersIdBody
@@ -1597,19 +1666,9 @@ from .post_integration_integration_items_body import PostIntegrationIntegrationI
 from .post_integration_integration_items_response_201 import (
     PostIntegrationIntegrationItemsResponse201,
 )
-from .post_integration_integration_media_items_body import PostIntegrationIntegrationMediaItemsBody
-from .post_integration_integration_media_items_response_201 import (
-    PostIntegrationIntegrationMediaItemsResponse201,
-)
 from .post_integration_integration_pages_body import PostIntegrationIntegrationPagesBody
 from .post_integration_integration_pages_response_201 import (
     PostIntegrationIntegrationPagesResponse201,
-)
-from .post_integration_integration_social_notifications_body import (
-    PostIntegrationIntegrationSocialNotificationsBody,
-)
-from .post_integration_integration_social_notifications_response_201 import (
-    PostIntegrationIntegrationSocialNotificationsResponse201,
 )
 from .post_integrations_connection_id_sync_response_202 import (
     PostIntegrationsConnectionIdSyncResponse202,
@@ -1628,6 +1687,18 @@ from .post_integrations_ecosystems_ecosystem_id_provider_configs_body_fields imp
 )
 from .post_integrations_ecosystems_ecosystem_id_provider_configs_config_id_transfer_body import (
     PostIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdTransferBody,
+)
+from .post_integrations_me_connections_id_google_photos_uploads_response_200 import (
+    PostIntegrationsMeConnectionsIdGooglePhotosUploadsResponse200,
+)
+from .post_integrations_me_connections_id_sync_response_202 import (
+    PostIntegrationsMeConnectionsIdSyncResponse202,
+)
+from .post_integrations_me_providers_provider_id_register_instance_body import (
+    PostIntegrationsMeProvidersProviderIdRegisterInstanceBody,
+)
+from .post_integrations_me_providers_provider_id_register_instance_response_200 import (
+    PostIntegrationsMeProvidersProviderIdRegisterInstanceResponse200,
 )
 from .post_integrations_providers_provider_id_adopt_installations_body import (
     PostIntegrationsProvidersProviderIdAdoptInstallationsBody,
@@ -1692,11 +1763,24 @@ from .post_oauth_clients_slug_rotate_token_response_200 import (
 from .post_oauth_providers_body import PostOauthProvidersBody
 from .post_oauth_providers_body_auth_type import PostOauthProvidersBodyAuthType
 from .post_oauth_providers_body_identity_mapping import PostOauthProvidersBodyIdentityMapping
+from .post_oauth_providers_body_identity_mapping_client_secret_jwt import (
+    PostOauthProvidersBodyIdentityMappingClientSecretJwt,
+)
+from .post_oauth_providers_body_identity_mapping_response_mode import (
+    PostOauthProvidersBodyIdentityMappingResponseMode,
+)
 from .post_oauth_providers_response_201 import PostOauthProvidersResponse201
 from .post_oauth_providers_response_201_auth_type import PostOauthProvidersResponse201AuthType
 from .post_oauth_providers_response_201_identity_mapping import (
     PostOauthProvidersResponse201IdentityMapping,
 )
+from .post_oauth_providers_response_201_identity_mapping_client_secret_jwt import (
+    PostOauthProvidersResponse201IdentityMappingClientSecretJwt,
+)
+from .post_oauth_providers_response_201_identity_mapping_response_mode import (
+    PostOauthProvidersResponse201IdentityMappingResponseMode,
+)
+from .post_oauth_signin_callback_body import PostOauthSigninCallbackBody
 from .post_oauth_signin_complete_body import PostOauthSigninCompleteBody
 from .post_oauth_signin_exchange_body import PostOauthSigninExchangeBody
 from .post_oauth_signin_login_body import PostOauthSigninLoginBody
@@ -2442,21 +2526,9 @@ from .put_integration_integration_items_id_body import PutIntegrationIntegration
 from .put_integration_integration_items_id_response_200 import (
     PutIntegrationIntegrationItemsIdResponse200,
 )
-from .put_integration_integration_media_items_id_body import (
-    PutIntegrationIntegrationMediaItemsIdBody,
-)
-from .put_integration_integration_media_items_id_response_200 import (
-    PutIntegrationIntegrationMediaItemsIdResponse200,
-)
 from .put_integration_integration_pages_id_body import PutIntegrationIntegrationPagesIdBody
 from .put_integration_integration_pages_id_response_200 import (
     PutIntegrationIntegrationPagesIdResponse200,
-)
-from .put_integration_integration_social_notifications_id_body import (
-    PutIntegrationIntegrationSocialNotificationsIdBody,
-)
-from .put_integration_integration_social_notifications_id_response_200 import (
-    PutIntegrationIntegrationSocialNotificationsIdResponse200,
 )
 from .put_integrations_admin_configs_provider_id_body import (
     PutIntegrationsAdminConfigsProviderIdBody,
@@ -2656,6 +2728,7 @@ from .registry_persona_tool_catalog_item import RegistryPersonaToolCatalogItem
 from .registry_persona_tool_grant import RegistryPersonaToolGrant
 from .registry_persona_user_tool import RegistryPersonaUserTool
 from .registry_provisioned_organization import RegistryProvisionedOrganization
+from .registry_provisioned_organization_hub_data import RegistryProvisionedOrganizationHubData
 from .registry_section import RegistrySection
 from .registry_submission_policy import RegistrySubmissionPolicy
 from .registry_user_actable_persona import RegistryUserActablePersona
@@ -2941,7 +3014,10 @@ __all__ = (
     "CampaignPatch",
     "CampaignStatus",
     "CatalogFeature",
+    "CatalogFeatureAllowedInItem",
+    "CatalogFeatureAutomaticInItem",
     "CatalogFeatureSubscriptionTier",
+    "CatalogFeatureWorkspaceOwnerKindsItem",
     "CatalogSyncOutcome",
     "CatalogSyncOutcomeSource",
     "CatalogSyncRun",
@@ -3015,13 +3091,14 @@ __all__ = (
     "DeleteCustomerMembershipsCustomerIdResponse200",
     "DeleteEcosystemFeatureFlagsIdKeyResponse200",
     "DeleteEcosystemFeaturesIdKeyResponse200",
-    "DeleteEcosystemFeaturesIdKeyResponse409",
-    "DeleteEcosystemFeaturesIdKeyResponse409Error",
-    "DeleteEcosystemFeaturesIdKeyResponse409ErrorCode",
+    "DeleteEcosystemFeaturesIdKeyResponse409Type0",
+    "DeleteEcosystemFeaturesIdKeyResponse409Type0Error",
+    "DeleteEcosystemFeaturesIdKeyResponse409Type0ErrorCode",
     "DeleteEcosystemServerBagIdKeyResponse200",
     "DeleteGamificationRealmsEcosystemIdBadgesIdResponse200",
     "DeleteGamificationRealmsEcosystemIdEventTypesIdResponse200",
     "DeleteIntegrationsConnectionIdResponse200",
+    "DeleteIntegrationsMeConnectionsIdResponse200",
     "DeletePersonaProviderTemplatesIdResponse200",
     "DeleteProcessingWebhooksIdResponse200",
     "DeleteProjectIterationsIdResponse200",
@@ -3359,14 +3436,16 @@ __all__ = (
     "GetIntegrationIntegrationFinancialTransactionsResponse200Item",
     "GetIntegrationIntegrationItemsIdResponse200",
     "GetIntegrationIntegrationItemsResponse200Item",
-    "GetIntegrationIntegrationMediaItemsIdResponse200",
-    "GetIntegrationIntegrationMediaItemsResponse200Item",
     "GetIntegrationIntegrationPagesIdResponse200",
     "GetIntegrationIntegrationPagesResponse200Item",
-    "GetIntegrationIntegrationSocialNotificationsIdResponse200",
-    "GetIntegrationIntegrationSocialNotificationsResponse200Item",
     "GetIntegrationsAdminConfigsResponse200",
     "GetIntegrationsEcosystemsEcosystemIdProviderConfigsResponse200",
+    "GetIntegrationsEndUserConnectionsResponse200",
+    "GetIntegrationsEndUserConnectionsResponse200ConnectionsItem",
+    "GetIntegrationsMeConnectionsIdMediaMediaItemIdContentResponse200",
+    "GetIntegrationsMeConnectionsResponse200",
+    "GetIntegrationsMeProvidersProviderIdAuthUrlResponse200",
+    "GetIntegrationsMeProvidersResponse200",
     "GetIntegrationsProvidersProviderIdAuthUrlResponse200",
     "GetIntegrationsProvidersProviderIdInstallUrlResponse200",
     "GetIntegrationsProvidersResponse200",
@@ -3393,12 +3472,18 @@ __all__ = (
     "GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty",
     "GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyAuthType",
     "GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping",
+    "GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMappingClientSecretJwt",
+    "GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMappingResponseMode",
     "GetOauthProvidersResponse200Item",
     "GetOauthProvidersResponse200ItemAuthType",
     "GetOauthProvidersResponse200ItemIdentityMapping",
+    "GetOauthProvidersResponse200ItemIdentityMappingClientSecretJwt",
+    "GetOauthProvidersResponse200ItemIdentityMappingResponseMode",
     "GetOauthProvidersSlugResponse200",
     "GetOauthProvidersSlugResponse200AuthType",
     "GetOauthProvidersSlugResponse200IdentityMapping",
+    "GetOauthProvidersSlugResponse200IdentityMappingClientSecretJwt",
+    "GetOauthProvidersSlugResponse200IdentityMappingResponseMode",
     "GetOauthSigninDiscoveryResponse200",
     "GetOauthSigninDiscoveryResponse200ClientsItem",
     "GetOauthSigninDiscoveryResponse200ClientsItemProvidersItem",
@@ -3535,11 +3620,19 @@ __all__ = (
     "GetUsageUsageEventsIdResponse200",
     "GetUsageUsageEventsResponse200Item",
     "GetWorkspacesSlugMembersResponse200",
+    "IntegrationActionAlbumCreate",
+    "IntegrationActionAlbumRemoveItems",
+    "IntegrationActionAlbumUpdate",
     "IntegrationActionBroadcast",
     "IntegrationActionBroadcastSend",
     "IntegrationActionComment",
     "IntegrationActionFields",
+    "IntegrationActionImportPicked",
+    "IntegrationActionLabelCreate",
+    "IntegrationActionLabelDelete",
+    "IntegrationActionLabelUpdate",
     "IntegrationActionMediaItem",
+    "IntegrationActionModifyLabels",
     "IntegrationActionPost",
     "IntegrationActionResult",
     "IntegrationActionResultStatus",
@@ -3548,6 +3641,7 @@ __all__ = (
     "IntegrationActionSubmit",
     "IntegrationActionSubscribe",
     "IntegrationActionUnsubscribe",
+    "IntegrationActionUpload",
     "IntegrationConnectApiKey",
     "IntegrationConnectApiKeyType",
     "IntegrationConnectAppPassword",
@@ -3562,9 +3656,20 @@ __all__ = (
     "IntegrationConnectPlaidLink",
     "IntegrationConnectPlaidLinkType",
     "IntegrationConnection",
+    "IntegrationConnectionDataPage",
+    "IntegrationConnectionDataPageRowsItem",
     "IntegrationConnectionSyncSettingsType0",
     "IntegrationGlobalConfig",
     "IntegrationGlobalConfigConfig",
+    "IntegrationGmailLabelColor",
+    "IntegrationGmailLabelListVisibility",
+    "IntegrationGmailMessageListVisibility",
+    "IntegrationMeActionResult",
+    "IntegrationMeActionResultStatus",
+    "IntegrationMeConnectRequest",
+    "IntegrationMeProvider",
+    "IntegrationPickerSessionStart",
+    "IntegrationPickerSessionState",
     "IntegrationProvider",
     "IntegrationProviderAuthMethod",
     "IntegrationProviderConfig",
@@ -3651,13 +3756,20 @@ __all__ = (
     "PatchIntegrationsConnectionIdSettingsBody",
     "PatchIntegrationsConnectionIdSettingsResponse200",
     "PatchIntegrationsConnectionIdSettingsResponse200SyncSettings",
+    "PatchIntegrationsMeConnectionsIdSettingsBody",
+    "PatchIntegrationsMeConnectionsIdSettingsResponse200",
+    "PatchIntegrationsMeConnectionsIdSettingsResponse200SyncSettings",
     "PatchOauthClientsSlugBody",
     "PatchOauthClientsSlugResponse200",
     "PatchOauthProvidersSlugBody",
     "PatchOauthProvidersSlugBodyIdentityMapping",
+    "PatchOauthProvidersSlugBodyIdentityMappingClientSecretJwt",
+    "PatchOauthProvidersSlugBodyIdentityMappingResponseMode",
     "PatchOauthProvidersSlugResponse200",
     "PatchOauthProvidersSlugResponse200AuthType",
     "PatchOauthProvidersSlugResponse200IdentityMapping",
+    "PatchOauthProvidersSlugResponse200IdentityMappingClientSecretJwt",
+    "PatchOauthProvidersSlugResponse200IdentityMappingResponseMode",
     "PatchOrganizationOrganizationsIdBody",
     "PatchPersonaMcpServersIdBody",
     "PatchPersonaMcpServersIdResponse200",
@@ -3980,18 +4092,18 @@ __all__ = (
     "PostIntegrationIntegrationFinancialTransactionsResponse201",
     "PostIntegrationIntegrationItemsBody",
     "PostIntegrationIntegrationItemsResponse201",
-    "PostIntegrationIntegrationMediaItemsBody",
-    "PostIntegrationIntegrationMediaItemsResponse201",
     "PostIntegrationIntegrationPagesBody",
     "PostIntegrationIntegrationPagesResponse201",
-    "PostIntegrationIntegrationSocialNotificationsBody",
-    "PostIntegrationIntegrationSocialNotificationsResponse201",
     "PostIntegrationsConnectionIdSyncResponse202",
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody",
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyCredentialStyle",
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyEndpoints",
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyFields",
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdTransferBody",
+    "PostIntegrationsMeConnectionsIdGooglePhotosUploadsResponse200",
+    "PostIntegrationsMeConnectionsIdSyncResponse202",
+    "PostIntegrationsMeProvidersProviderIdRegisterInstanceBody",
+    "PostIntegrationsMeProvidersProviderIdRegisterInstanceResponse200",
     "PostIntegrationsProvidersProviderIdAdoptInstallationsBody",
     "PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200",
     "PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200ConnectedItem",
@@ -4031,9 +4143,14 @@ __all__ = (
     "PostOauthProvidersBody",
     "PostOauthProvidersBodyAuthType",
     "PostOauthProvidersBodyIdentityMapping",
+    "PostOauthProvidersBodyIdentityMappingClientSecretJwt",
+    "PostOauthProvidersBodyIdentityMappingResponseMode",
     "PostOauthProvidersResponse201",
     "PostOauthProvidersResponse201AuthType",
     "PostOauthProvidersResponse201IdentityMapping",
+    "PostOauthProvidersResponse201IdentityMappingClientSecretJwt",
+    "PostOauthProvidersResponse201IdentityMappingResponseMode",
+    "PostOauthSigninCallbackBody",
     "PostOauthSigninCompleteBody",
     "PostOauthSigninExchangeBody",
     "PostOauthSigninLoginBody",
@@ -4545,12 +4662,8 @@ __all__ = (
     "PutIntegrationIntegrationFinancialTransactionsIdResponse200",
     "PutIntegrationIntegrationItemsIdBody",
     "PutIntegrationIntegrationItemsIdResponse200",
-    "PutIntegrationIntegrationMediaItemsIdBody",
-    "PutIntegrationIntegrationMediaItemsIdResponse200",
     "PutIntegrationIntegrationPagesIdBody",
     "PutIntegrationIntegrationPagesIdResponse200",
-    "PutIntegrationIntegrationSocialNotificationsIdBody",
-    "PutIntegrationIntegrationSocialNotificationsIdResponse200",
     "PutIntegrationsAdminConfigsProviderIdBody",
     "PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle",
     "PutIntegrationsAdminConfigsProviderIdBodyEndpoints",
@@ -4693,6 +4806,7 @@ __all__ = (
     "RegistryPersonaToolGrant",
     "RegistryPersonaUserTool",
     "RegistryProvisionedOrganization",
+    "RegistryProvisionedOrganizationHubData",
     "RegistrySection",
     "RegistrySubmissionPolicy",
     "RegistryUserActablePersona",

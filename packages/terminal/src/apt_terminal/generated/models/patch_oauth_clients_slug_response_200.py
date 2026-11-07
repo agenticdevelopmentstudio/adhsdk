@@ -19,6 +19,8 @@ class PatchOauthClientsSlugResponse200:
         slug (str):
         name (str):
         allowed_return_origins (list[str]):
+        origins_managed (bool): The deployment sets these return origins, so they cannot be edited here. A site adds its
+            origin on its application.
         is_internal (bool):
         default_ecosystem_id (None | str | Unset):
         app_token_prefix (None | str | Unset):
@@ -28,6 +30,7 @@ class PatchOauthClientsSlugResponse200:
     slug: str
     name: str
     allowed_return_origins: list[str]
+    origins_managed: bool
     is_internal: bool
     default_ecosystem_id: None | str | Unset = UNSET
     app_token_prefix: None | str | Unset = UNSET
@@ -41,6 +44,8 @@ class PatchOauthClientsSlugResponse200:
         name = self.name
 
         allowed_return_origins = self.allowed_return_origins
+
+        origins_managed = self.origins_managed
 
         is_internal = self.is_internal
 
@@ -64,6 +69,7 @@ class PatchOauthClientsSlugResponse200:
                 "slug": slug,
                 "name": name,
                 "allowedReturnOrigins": allowed_return_origins,
+                "originsManaged": origins_managed,
                 "isInternal": is_internal,
             }
         )
@@ -84,6 +90,8 @@ class PatchOauthClientsSlugResponse200:
         name = d.pop("name")
 
         allowed_return_origins = cast(list[str], d.pop("allowedReturnOrigins"))
+
+        origins_managed = d.pop("originsManaged")
 
         is_internal = d.pop("isInternal")
 
@@ -110,6 +118,7 @@ class PatchOauthClientsSlugResponse200:
             slug=slug,
             name=name,
             allowed_return_origins=allowed_return_origins,
+            origins_managed=origins_managed,
             is_internal=is_internal,
             default_ecosystem_id=default_ecosystem_id,
             app_token_prefix=app_token_prefix,
