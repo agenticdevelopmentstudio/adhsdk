@@ -62,6 +62,32 @@ public final class NoticePanel: NSPanel {
 
     public override var canBecomeKey: Bool { takesFocus || allowKeyForReply }
 
+    /// A click into a view that takes typing must make the panel key-capable
+    /// before AppKit sees it. `NSWindow.sendEvent` decides whether a panel
+    /// clicked into becomes key — and whether a text field's mouse-down is
+    /// delivered at all — from `canBecomeKey` at that moment, so asking from
+    /// the field's own `mouseDown` is too late: the click never reaches it.
+    public override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown {
+            keyRequester(at: event.locationInWindow)?.panelWillDeliverClick()
+        }
+        super.sendEvent(event)
+    }
+
+    /// The view under `point` (window coordinates), or its nearest ancestor,
+    /// that asks for the keyboard when clicked. The field editor inside a
+    /// field being edited resolves to the field.
+    func keyRequester(at point: NSPoint) -> NoticePanelKeyRequester? {
+        guard let content = contentView else { return nil }
+        let inSuperview = content.superview?.convert(point, from: nil) ?? point
+        var view = content.hitTest(inSuperview)
+        while let current = view {
+            if let requester = current as? NoticePanelKeyRequester { return requester }
+            view = current.superview
+        }
+        return nil
+    }
+
     public override var canBecomeMain: Bool { takesFocus }
 
     /// Hands the keyboard back to the app the user was in, once a reply is
@@ -100,4 +126,12 @@ public final class NoticePanel: NSPanel {
         panel.orderOut(nil)
         panel.orderFrontRegardless()
     }
+}
+
+/// A view in a notice panel that needs the keyboard when clicked — the reply
+/// field. The panel tells it before delivering the click, so it can let the
+/// panel become key first.
+@MainActor
+protocol NoticePanelKeyRequester: AnyObject {
+    func panelWillDeliverClick()
 }

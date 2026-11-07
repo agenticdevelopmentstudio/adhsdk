@@ -468,10 +468,11 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
     }
 }
 
-/// The reply field. A click into it tells the card first, so the panel is
+/// The reply field. The panel tells it about a click before delivering it
+/// (`NoticePanelKeyRequester`), and it tells the card, so the panel is
 /// allowed to become key before the field asks to be first responder.
 @MainActor
-final class NoticeReplyField: ThemedTextField {
+final class NoticeReplyField: ThemedTextField, NoticePanelKeyRequester {
 
     var onClick: (@MainActor () -> Void)?
 
@@ -486,9 +487,8 @@ final class NoticeReplyField: ThemedTextField {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    override func mouseDown(with event: NSEvent) {
+    func panelWillDeliverClick() {
         onClick?()
-        super.mouseDown(with: event)
     }
 }
 

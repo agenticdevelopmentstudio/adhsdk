@@ -84,9 +84,13 @@ final class NoticeReplyFieldTests: XCTestCase {
         let release = try XCTUnwrap(NSEvent.mouseEvent(
             with: .leftMouseUp, location: inWindow, modifierFlags: [], timestamp: 0,
             windowNumber: panel.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 0))
-        // The field editor tracks the click until the button comes up.
+        XCTAssertTrue(panel.keyRequester(at: inWindow) === field, "the panel finds the field under the click")
+        // The click goes through the panel, as on screen: AppKit decides
+        // there whether the panel may become key and the field gets the
+        // click, so the field cannot be the one to ask. The field editor
+        // tracks the click until the button comes up.
         NSApp.postEvent(release, atStart: false)
-        hit?.mouseDown(with: down)
+        panel.sendEvent(down)
 
         XCTAssertTrue(panel.allowKeyForReply, "clicking into the field lets the panel take typing")
         XCTAssertTrue(panel.canBecomeKey)
