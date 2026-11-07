@@ -7,7 +7,7 @@ import AgenticDeveloperHubSDKCore
 final class BrowserSettingsTests: XCTestCase {
 
     private func configuration(_ store: SettingsStore) -> WKWebViewConfiguration {
-        BrowserPaneViewController.makeConfiguration(settings: store, consoleLog: BrowserConsoleLog())
+        WebKitBrowserEngine.makeConfiguration(settings: store, consoleLog: BrowserConsoleLog())
     }
 
     private func makeStore() -> SettingsStore {
@@ -143,19 +143,20 @@ final class BrowserSettingsTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
 
-        let first = BrowserPaneViewController.uniqueDestination(for: "file.zip", in: directory)
+        let first = WebBrowserPaneViewController.uniqueDestination(for: "file.zip", in: directory)
         XCTAssertEqual(first.lastPathComponent, "file.zip")
         FileManager.default.createFile(atPath: first.path, contents: Data())
 
-        let second = BrowserPaneViewController.uniqueDestination(for: "file.zip", in: directory)
+        let second = WebBrowserPaneViewController.uniqueDestination(for: "file.zip", in: directory)
         XCTAssertEqual(second.lastPathComponent, "file 2.zip")
         FileManager.default.createFile(atPath: second.path, contents: Data())
 
         XCTAssertEqual(
-            BrowserPaneViewController.uniqueDestination(for: "file.zip", in: directory).lastPathComponent, "file 3.zip"
+            WebBrowserPaneViewController.uniqueDestination(for: "file.zip", in: directory).lastPathComponent,
+            "file 3.zip"
         )
         XCTAssertEqual(
-            BrowserPaneViewController.uniqueDestination(for: "", in: directory).lastPathComponent, "download",
+            WebBrowserPaneViewController.uniqueDestination(for: "", in: directory).lastPathComponent, "download",
             "a nameless download still gets a file"
         )
     }

@@ -212,7 +212,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
            let scheme = home.scheme?.lowercased(), scheme == "http" || scheme == "https" {
             return home
         }
-        return BrowserPaneViewController.blankPage
+        return WebBrowserPaneViewController.blankPage
     }
 
     @MainActor

@@ -113,6 +113,20 @@ extension UserSettings {
     // Developer
     public static let browserWebInspectorEnabled = UserSetting<Bool>("browser.web_inspector_enabled", default: false)
 
+    // Chrome only. The Safari-only keys above keep the names they shipped
+    // with; these are new, so they say which browser they belong to.
+    public static let browserChromeDevToolsEnabled = UserSetting<Bool>(
+        "browser.chrome.devtools_enabled", default: false
+    )
+    /// 0 is off. Chromium reads it once, when it starts.
+    public static let browserChromeRemoteDebuggingPort = UserSetting<Int>(
+        "browser.chrome.remote_debugging_port", default: 0
+    )
+    /// Chromium reads it once, when it starts.
+    public static let browserChromeHardwareAcceleration = UserSetting<Bool>(
+        "browser.chrome.hardware_acceleration", default: true
+    )
+
     // Automation
     public static let browserAutomationEnabled = UserSetting<Bool>("browser.automation.enabled", default: true)
     public static let browserAutomationEvaluate = UserSetting<Bool>("browser.automation.evaluate", default: false)
@@ -142,8 +156,12 @@ public enum BrowserSettings {
         UserSettings.browserUpgradesToHTTPS, UserSettings.browserLockdownMode,
         UserSettings.browserAutoplay, UserSettings.browserAllowsAirPlay, UserSettings.browserMediaCapture,
         UserSettings.browserDownloadDirectory, UserSettings.browserAsksDownloadLocation,
-        UserSettings.browserWebInspectorEnabled
+        UserSettings.browserWebInspectorEnabled, UserSettings.browserChromeDevToolsEnabled,
+        UserSettings.browserChromeRemoteDebuggingPort, UserSettings.browserChromeHardwareAcceleration
     ]
+
+    /// The remote-debugging ports the Chrome topic accepts; 0 is off.
+    public static let chromeRemoteDebuggingPortRange: ClosedRange<Int> = 0...65535
 
     /// The names of every browser key, for a test to hold the list to.
     public static var allKeyNames: [String] { allKeys.map(\.name) }
@@ -160,7 +178,7 @@ public enum BrowserSettings {
     public static func homePage(in store: SettingsStore) -> URL? {
         let entry = store.get(UserSettings.browserHomePage)
         guard !entry.isEmpty else { return nil }
-        return BrowserPaneViewController.resolveAddress(entry)
+        return WebBrowserPaneViewController.resolveAddress(entry)
     }
 
     /// Where downloads land when the setting is blank.
