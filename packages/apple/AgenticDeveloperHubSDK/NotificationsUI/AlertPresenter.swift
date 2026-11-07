@@ -13,6 +13,11 @@ final class AlertPresenter: CardStackPresenter {
         super.init(rules: rules, cardStyle: .alert, showHistory: {})
     }
 
+    /// An alert draws only the set's first item.
+    override func drawn(_ profiles: [NoticeProfile]) -> [NoticeProfile] {
+        Array(profiles.prefix(1))
+    }
+
     /// An alert never times out, whatever the profile says.
     override func autoDismiss(for profile: NoticeProfile) -> TimeInterval? { nil }
 }

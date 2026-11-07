@@ -103,7 +103,7 @@ final class CrawlPresenterTests: XCTestCase {
             rules: { [unowned self] in rules }, windowing: windowing, screens: { [unowned self] _ in screens })
     }
 
-    func testReplaceOntoTheOtherEdgeClosesTheOldStripAndStopsWhenEmpty() {
+    func testReplaceAfterTheEdgeSettingChangesClosesTheOldStripAndStopsWhenEmpty() {
         screens = [testScreen(1)]
         let windowing = RecordingWindowing()
         let presenter = makePresenter(windowing)
@@ -111,6 +111,7 @@ final class CrawlPresenterTests: XCTestCase {
         XCTAssertEqual(windowing.presented.count, 1)
         XCTAssertTrue(presenter.isAnimating)
 
+        rules.crawl.edge = rules.crawl.edge == .top ? .bottom : .top
         presenter.replace(
             oldID: "a", with: Notice(id: "a2", source: "ci", title: "a2"), profiles: profiles(.bottomRight),
             actions: .inert)
@@ -122,6 +123,98 @@ final class CrawlPresenterTests: XCTestCase {
         XCTAssertEqual(windowing.dismissed.count, 2)
         XCTAssertTrue(presenter.shownIDs.isEmpty)
         XCTAssertFalse(presenter.isAnimating, "no strip, no frame timer")
+    }
+
+    private func crawlProfiles() -> [NoticeProfile] {
+        [NoticeProfile(style: .crawl, position: .bottomCenter)]
+    }
+
+    func testCrawlUsesSettingsEdgeSpeedAndTextSize() throws {
+        screens = [testScreen(1)]
+        rules.crawl = CrawlSettings(edge: .top, speed: 200, textSize: 20)
+        let windowing = RecordingWindowing()
+        let presenter = makePresenter(windowing)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: crawlProfiles(), actions: .inert)
+
+        let panel = try XCTUnwrap(windowing.presented.first)
+        XCTAssertEqual(panel.frame.height, 34, "textSize + 14")
+        XCTAssertEqual(panel.frame.maxY, screens[0].visibleFrame.maxY, "the setting's edge, not the item's position")
+
+        let key = CrawlPresenter.StripKey(displayID: 1, edge: .top)
+        let view = try XCTUnwrap(presenter.stripView(of: key))
+        XCTAssertEqual(view.textSize, 20)
+        XCTAssertEqual(view.labelFontSizes, [20])
+        let width = view.bounds.width
+        presenter.advance(by: 1)
+        XCTAssertEqual(view.contentOriginX, width - 200, accuracy: 0.5, "speed is the setting's")
+        presenter.remove(id: "a")
+    }
+
+    func testCrawlHidesBackgroundWhenOff() throws {
+        screens = [testScreen(1)]
+        rules.crawl.showsBackground = false
+        let presenter = makePresenter(RecordingWindowing())
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: crawlProfiles(), actions: .inert)
+        let key = CrawlPresenter.StripKey(displayID: 1, edge: .bottom)
+        XCTAssertTrue(try XCTUnwrap(presenter.stripView(of: key)).background.isHidden)
+
+        rules.crawl.showsBackground = true
+        rules.crawl.background = .custom(red: 0, green: 0, blue: 1)
+        rules.crawl.backgroundOpacity = 0.5
+        presenter.rulesDidChange()
+        let view = try XCTUnwrap(presenter.stripView(of: key))
+        XCTAssertFalse(view.background.isHidden)
+        let cgColor = try XCTUnwrap(view.background.layer?.backgroundColor)
+        let rgb = try XCTUnwrap(NSColor(cgColor: cgColor)?.usingColorSpace(.sRGB))
+        XCTAssertEqual(rgb.blueComponent, 1, accuracy: 0.01)
+        XCTAssertEqual(rgb.alphaComponent, 0.5, accuracy: 0.01)
+        presenter.remove(id: "a")
+    }
+
+    func testCrawlStripHeightFollowsTextSize() {
+        XCTAssertEqual(CrawlPresenter.stripHeight(textSize: 10), 28, "never under 28")
+        XCTAssertEqual(CrawlPresenter.stripHeight(textSize: 13), 28)
+        XCTAssertEqual(CrawlPresenter.stripHeight(textSize: 14), 28)
+        XCTAssertEqual(CrawlPresenter.stripHeight(textSize: 20), 34)
+        XCTAssertEqual(CrawlPresenter.stripHeight(textSize: 28), 42)
+    }
+
+    func testItemOpacityFollowsTheSetting() throws {
+        screens = [testScreen(1)]
+        rules.crawl.itemOpacity = 0.4
+        let presenter = makePresenter(RecordingWindowing())
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: crawlProfiles(), actions: .inert)
+        let key = CrawlPresenter.StripKey(displayID: 1, edge: .bottom)
+        XCTAssertEqual(try XCTUnwrap(presenter.stripView(of: key)).itemAlpha, 0.4, accuracy: 0.001)
+        presenter.remove(id: "a")
+    }
+
+    func testRulesDidChangeRelaysOutLiveStrips() throws {
+        screens = [testScreen(1)]
+        let windowing = RecordingWindowing()
+        let presenter = makePresenter(windowing)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: crawlProfiles(), actions: .inert)
+        let bottom = CrawlPresenter.StripKey(displayID: 1, edge: .bottom)
+        presenter.advance(by: 2)
+
+        // A setting that only restyles keeps the strip and its place in the pass.
+        rules.crawl.textSize = 24
+        rules.crawl.leftToRight = true
+        presenter.rulesDidChange()
+        XCTAssertEqual(try XCTUnwrap(presenter.stripView(of: bottom)).textSize, 24)
+        XCTAssertEqual(presenter.leftToRight(of: bottom), true)
+        XCTAssertEqual(try XCTUnwrap(presenter.elapsed(of: bottom)), 2, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(windowing.presented.first).frame.height, 38)
+        XCTAssertEqual(windowing.presented.count, 1)
+
+        // A new edge moves the strip.
+        rules.crawl.edge = .top
+        presenter.rulesDidChange()
+        XCTAssertNil(presenter.stripView(of: bottom))
+        XCTAssertNotNil(presenter.stripView(of: CrawlPresenter.StripKey(displayID: 1, edge: .top)))
+        XCTAssertEqual(windowing.dismissed.count, 1)
+        XCTAssertEqual(presenter.shownIDs, ["a"])
+        presenter.remove(id: "a")
     }
 
     func testStripCachesDirectionAndRestartsOnNewContent() throws {

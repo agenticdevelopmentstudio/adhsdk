@@ -129,6 +129,14 @@ public final class NoticePresentationCenter {
         presenters[style] = presenter
     }
 
+    /// The routing rules changed: lets each presenter restyle or move what it
+    /// already has on screen.
+    public func rulesDidChange() {
+        for presenter in presenters.values {
+            presenter.rulesDidChange()
+        }
+    }
+
     /// Brings up the host's history (the history hotkey, a menu item).
     public func showHistory() {
         handler.showHistory()

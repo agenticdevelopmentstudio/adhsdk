@@ -3,26 +3,18 @@ import AgenticDeveloperHubSDK
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKNotifications
 
-/// Crawl: a thin strip along the top or bottom of each selected screen, its
-/// notices scrolling across it one after another, right to left unless the
-/// rules say otherwise. Hovering holds the strip (and the notices'
+/// Crawl: a thin strip along the edge the rules name on each selected screen,
+/// its notices scrolling across it one after another, right to left unless the
+/// rules say otherwise. The rules' crawl settings (speed, text size,
+/// background, item opacity) style it; `rulesDidChange()` restyles live
+/// strips. Hovering holds the strip (and the notices'
 /// countdowns) still; clicking a notice acts on it. A strip goes away once it
 /// has nothing left to show.
 @MainActor
 public final class CrawlPresenter: NoticePresenter {
 
-    /// Which edge of the screen a strip runs along. The top positions crawl
-    /// along the top; every other position along the bottom.
-    enum Edge: Hashable {
-        case top, bottom
-
-        init(_ position: NoticeProfile.Position) {
-            switch position {
-            case .topLeft, .topCenter: self = .top
-            case .center, .bottomLeft, .bottomCenter, .bottomRight: self = .bottom
-            }
-        }
-    }
+    /// Which edge of the screen a strip runs along: the crawl setting's.
+    typealias Edge = CrawlSettings.Edge
 
     struct StripKey: Hashable {
         let displayID: UInt32
@@ -33,14 +25,17 @@ public final class CrawlPresenter: NoticePresenter {
         var notice: Notice
         var actions: NoticeCardActions
         let countdown: DismissCountdown
+        var layer: NoticeProfile.Layer
     }
 
     private final class Strip {
         let panel: NoticePanel
         let view: CrawlStripView
         var elapsed: TimeInterval = 0
-        /// Read from the rules when the content changes, not on every frame.
+        /// Read from the rules when the content changes or the rules do, not
+        /// on every frame.
         var leftToRight = false
+        var speed: CGFloat = 80
 
         init(panel: NoticePanel, view: CrawlStripView) {
             self.panel = panel
@@ -48,9 +43,11 @@ public final class CrawlPresenter: NoticePresenter {
         }
     }
 
-    static let stripHeight: CGFloat = 28
-    /// Points per second.
-    static let speed: CGFloat = 80
+    /// The strip's height: the text plus 14 points, never under 28.
+    nonisolated static func stripHeight(textSize: CGFloat) -> CGFloat {
+        max(28, textSize + 14)
+    }
+
     private static let frameInterval: TimeInterval = 1.0 / 30
 
     private let rules: @MainActor () -> NoticeRoutingRules
@@ -114,7 +111,8 @@ public final class CrawlPresenter: NoticePresenter {
 
     // MARK: NoticePresenter
 
-    /// Draws `profiles[0]` only: one crawl item per notice.
+    /// Draws `profiles[0]` only: one crawl item per notice. Edge, speed and
+    /// look come from the rules' crawl settings, not from the item.
     public func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         items.removeValue(forKey: notice.id)?.countdown.stop()
         guard let profile = profiles.first else { return }
@@ -124,7 +122,7 @@ public final class CrawlPresenter: NoticePresenter {
             return
         }
         let countdown = DismissCountdown()
-        items[notice.id] = Item(notice: notice, actions: actions, countdown: countdown)
+        items[notice.id] = Item(notice: notice, actions: actions, countdown: countdown, layer: profile.layer)
         apply(model.show(notice.id, on: keys), layer: profile.layer, frames: frames)
         if keys.contains(where: { strips[$0]?.view.isHovered == true }) {
             countdown.setPaused(true, for: .hover)
@@ -158,6 +156,7 @@ public final class CrawlPresenter: NoticePresenter {
         items[oldID] = nil
         item.notice = notice
         item.actions = actions
+        item.layer = profile.layer
         items[notice.id] = item
         apply(model.replace(oldID, with: notice.id, on: keys), layer: profile.layer, frames: frames)
         item.countdown.start(after: profile.autoDismiss) { [weak self] in self?.items[notice.id]?.actions.close() }
@@ -167,7 +166,11 @@ public final class CrawlPresenter: NoticePresenter {
 
     /// The strips a profile runs on now, with the visible frame of each.
     private func placement(for profile: NoticeProfile) -> ([StripKey], [StripKey: CGRect]) {
-        let edge = Edge(profile.position)
+        placement()
+    }
+
+    private func placement() -> ([StripKey], [StripKey: CGRect]) {
+        let edge = rules().crawl.edge
         var frames: [StripKey: CGRect] = [:]
         let keys = screens(rules().screens).map { screen in
             let key = StripKey(displayID: screen.displayID, edge: edge)
@@ -199,7 +202,7 @@ public final class CrawlPresenter: NoticePresenter {
 
     private func makeStrip(_ key: StripKey, layer: NoticeProfile.Layer, visibleFrame: CGRect?) {
         let panel = NoticePanel(layer: layer, hideFromSharing: rules().hideFromScreenSharing)
-        let view = CrawlStripView()
+        let view = CrawlStripView(settings: rules().crawl)
         panel.contentView = view
         let strip = Strip(panel: panel, view: view)
         view.onHoverChange = { [weak self] hovered in
@@ -216,7 +219,9 @@ public final class CrawlPresenter: NoticePresenter {
         }
         strips[key] = strip
         if let visibleFrame {
-            panel.setFrame(Self.stripFrame(in: visibleFrame, edge: key.edge, height: Self.stripHeight), display: false)
+            panel.setFrame(
+                Self.stripFrame(in: visibleFrame, edge: key.edge, height: Self.stripHeight(textSize: view.textSize)),
+                display: false)
         }
         windowing.present(panel)
     }
@@ -226,7 +231,9 @@ public final class CrawlPresenter: NoticePresenter {
         guard let strip = strips[key] else { return }
         strip.view.setNotices(model.ids(on: key).compactMap { items[$0]?.notice })
         strip.elapsed = 0
-        strip.leftToRight = rules().crawl.leftToRight
+        let crawl = rules().crawl
+        strip.leftToRight = crawl.leftToRight
+        strip.speed = CGFloat(crawl.speed)
         place(strip)
     }
 
@@ -249,18 +256,42 @@ public final class CrawlPresenter: NoticePresenter {
 
     private func place(_ strip: Strip) {
         strip.view.setContentX(Self.offset(
-            elapsed: strip.elapsed, speed: Self.speed, contentWidth: strip.view.contentWidth,
+            elapsed: strip.elapsed, speed: strip.speed, contentWidth: strip.view.contentWidth,
             stripWidth: strip.view.bounds.width, leftToRight: strip.leftToRight))
     }
 
     /// Refits every strip to its screen after a display was added, removed
     /// or rearranged.
     func screensDidChange() {
+        restyleStrips()
+    }
+
+    /// The crawl settings (or the rules around them) changed: strips whose
+    /// edge or screens changed move, and every live strip restyles in place,
+    /// keeping its place in the pass.
+    public func rulesDidChange() {
+        for id in model.order {
+            guard let item = items[id] else { continue }
+            let (keys, frames) = placement()
+            guard Set(keys) != Set(model.keys(of: id)) else { continue }
+            apply(model.replace(id, with: id, on: keys), layer: item.layer, frames: frames)
+        }
+        restyleStrips()
+    }
+
+    private func restyleStrips() {
         let visible = Dictionary(
             screens(.all).map { ($0.displayID, $0.visibleFrame) }, uniquingKeysWith: { first, _ in first })
+        let crawl = rules().crawl
         for (key, strip) in strips {
-            guard let frame = visible[key.displayID] else { continue }
-            strip.panel.setFrame(Self.stripFrame(in: frame, edge: key.edge, height: Self.stripHeight), display: true)
+            strip.view.apply(crawl)
+            strip.leftToRight = crawl.leftToRight
+            strip.speed = CGFloat(crawl.speed)
+            if let frame = visible[key.displayID] {
+                strip.panel.setFrame(
+                    Self.stripFrame(in: frame, edge: key.edge, height: Self.stripHeight(textSize: strip.view.textSize)),
+                    display: true)
+            }
             place(strip)
         }
     }
@@ -273,9 +304,12 @@ public final class CrawlPresenter: NoticePresenter {
     func elapsed(of key: StripKey) -> TimeInterval? { strips[key]?.elapsed }
 
     func leftToRight(of key: StripKey) -> Bool? { strips[key]?.leftToRight }
+
+    func stripView(of key: StripKey) -> CrawlStripView? { strips[key]?.view }
 }
 
-/// One strip: a themed bar with the notices in a row that slides across it.
+/// One strip: a bar with the notices in a row that slides across it, styled
+/// by the crawl settings and the live theme.
 @MainActor
 final class CrawlStripView: NSView {
 
@@ -284,14 +318,29 @@ final class CrawlStripView: NSView {
     var onClick: ((Int) -> Void)?
     private(set) var isHovered = false
 
-    private let background = ThemedBox(fill: .elevatedSurface, stroke: .outline, cornerRadius: 0)
+    let background = NSView()
     private let row = NSStackView()
     private var labels: [NSTextField] = []
+    private var bullets: [NSTextField] = []
+    private var notices: [Notice] = []
+    private var settings: CrawlSettings
+    private var palette: SemanticPalette = ThemePaletteObserver.currentPalette
+    private var observer: ThemePaletteObserver?
 
-    init() {
+    var textSize: CGFloat { CGFloat(settings.textSize) }
+    /// How opaque the notices are, from the setting.
+    var itemAlpha: CGFloat { row.alphaValue }
+    /// The point sizes of the notices' text, in order.
+    var labelFontSizes: [CGFloat] { labels.compactMap { $0.font?.pointSize } }
+    /// Where the content's leading edge sits in the strip.
+    var contentOriginX: CGFloat { row.frame.origin.x }
+
+    init(settings: CrawlSettings) {
+        self.settings = settings
         super.init(frame: .zero)
         wantsLayer = true
         layer?.masksToBounds = true
+        background.wantsLayer = true
         background.translatesAutoresizingMaskIntoConstraints = false
         addSubview(background)
         row.orientation = .horizontal
@@ -306,35 +355,69 @@ final class CrawlStripView: NSView {
         ])
         setAccessibilityElement(true)
         setAccessibilityRole(.group)
+        // Paints now, then follows the live theme.
+        observer = ThemePaletteObserver(host: self) { [weak self] palette in
+            self?.palette = palette
+            self?.restyle()
+        }
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
+    /// New settings: the notices keep their order, only the look changes.
+    func apply(_ settings: CrawlSettings) {
+        self.settings = settings
+        restyle()
+    }
+
+    private func restyle() {
+        background.isHidden = !settings.showsBackground
+        let color = settings.background.resolved(
+            system: .windowBackgroundColor, themeRole: .elevatedSurface, palette: palette)
+        background.layer?.backgroundColor = color.withAlphaComponent(settings.backgroundOpacity).cgColor
+        row.alphaValue = settings.itemOpacity
+        let base = palette.font(.body, weight: .semibold)
+        let font = NSFont(descriptor: base.fontDescriptor, size: textSize) ?? base
+        for label in labels {
+            label.font = font
+            label.textColor = palette.nsColor(.primaryText)
+        }
+        for bullet in bullets {
+            bullet.font = font
+            bullet.textColor = palette.nsColor(.secondaryText)
+        }
+        refit()
+    }
+
+    private func refit() {
+        row.layoutSubtreeIfNeeded()
+        row.frame.size = row.fittingSize
+    }
+
     var contentWidth: CGFloat { row.frame.width }
 
     func setNotices(_ notices: [Notice]) {
+        self.notices = notices
         for view in row.arrangedSubviews {
             row.removeView(view)
         }
         labels = notices.map { notice in
-            let label = ThemedLabel(role: .primaryText, textRole: .body, weight: .semibold)
-            label.stringValue = [notice.title, notice.body].compactMap { $0 }.filter { !$0.isEmpty }
-                .joined(separator: " — ")
+            let label = NSTextField(labelWithString: [notice.title, notice.body].compactMap { $0 }
+                .filter { !$0.isEmpty }.joined(separator: " — "))
             label.lineBreakMode = .byClipping
             return label
         }
+        bullets = []
         for (index, label) in labels.enumerated() {
             if index > 0 {
-                let bullet = ThemedLabel(role: .secondaryText, textRole: .body)
-                bullet.stringValue = "•"
+                let bullet = NSTextField(labelWithString: "•")
+                bullets.append(bullet)
                 row.addArrangedSubview(bullet)
             }
             row.addArrangedSubview(label)
         }
-        row.layoutSubtreeIfNeeded()
-        let size = row.fittingSize
-        row.frame.size = size
+        restyle()
         setAccessibilityLabel(labels.map(\.stringValue).joined(separator: ". "))
     }
 

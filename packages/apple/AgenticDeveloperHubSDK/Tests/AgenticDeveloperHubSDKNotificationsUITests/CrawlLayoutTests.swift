@@ -47,14 +47,6 @@ final class CrawlLayoutTests: XCTestCase {
             0)
     }
 
-    func testEdgeFollowsPosition() {
-        XCTAssertEqual(CrawlPresenter.Edge(.topLeft), .top)
-        XCTAssertEqual(CrawlPresenter.Edge(.topCenter), .top)
-        XCTAssertEqual(CrawlPresenter.Edge(.center), .bottom)
-        XCTAssertEqual(CrawlPresenter.Edge(.bottomLeft), .bottom)
-        XCTAssertEqual(CrawlPresenter.Edge(.bottomRight), .bottom)
-    }
-
     func testStripFrameHugsTheEdge() {
         let visible = CGRect(x: 0, y: 40, width: 1440, height: 835)
         XCTAssertEqual(CrawlPresenter.stripFrame(in: visible, edge: .top, height: 30),
