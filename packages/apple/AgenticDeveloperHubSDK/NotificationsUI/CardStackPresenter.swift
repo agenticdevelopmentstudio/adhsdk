@@ -36,6 +36,9 @@ class CardStackPresenter: NoticePresenter {
 
     private(set) var shownIDs: [String] = []
     private var placements: [String: [Placement]] = [:]
+    /// The screen selection each shown notice was placed with, so a replace
+    /// can tell "the selection changed" from "the pointer moved displays".
+    private var selections: [String: NoticeProfile.ScreenSelection] = [:]
     private var model = CardStackModel()
     private var pills: [StackKey: Pill] = [:]
     private var screenObserver: NSObjectProtocol?
@@ -98,6 +101,7 @@ class CardStackPresenter: NoticePresenter {
         }
         guard !made.isEmpty else { return }
         placements[notice.id] = made
+        selections[notice.id] = profile.screens
         shownIDs.append(notice.id)
         for key in Set(made.map(\.key)) {
             layout(key)
@@ -106,6 +110,7 @@ class CardStackPresenter: NoticePresenter {
 
     func remove(id: String) {
         guard let removed = placements.removeValue(forKey: id) else { return }
+        selections[id] = nil
         shownIDs.removeAll { $0 == id }
         for placement in removed {
             close(placement)
@@ -118,17 +123,20 @@ class CardStackPresenter: NoticePresenter {
 
     func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
         // In place only while the card would land exactly where it stands:
-        // same position, same layer, same set of screens. An escalation from
-        // `.main` to `.cursor`, say, moves it.
+        // same position, same layer, same screen *selection*. An escalation
+        // from `.main` to `.cursor`, say, moves it. The selection is compared,
+        // not the screens it resolves to right now: a `.cursor` card must not
+        // jump just because the pointer has since moved to another display.
         guard let existing = placements[oldID],
-              existing.allSatisfy({ $0.key.position == profile.position && $0.panel.level == level(profile) }),
-              Set(existing.map(\.key.displayID)) == Set(displays(profile.screens))
+              selections[oldID] == profile.screens,
+              existing.allSatisfy({ $0.key.position == profile.position && $0.panel.level == level(profile) })
         else {
             remove(id: oldID)
             show(notice, profile: profile, actions: actions)
             return
         }
         placements[oldID] = nil
+        selections[oldID] = nil
         if oldID != notice.id {
             remove(id: notice.id)
         }
@@ -138,6 +146,7 @@ class CardStackPresenter: NoticePresenter {
         }
         let touched = model.replace(oldID, with: notice.id)
         placements[notice.id] = existing
+        selections[notice.id] = profile.screens
         if let index = shownIDs.firstIndex(of: oldID) {
             shownIDs[index] = notice.id
         }
@@ -149,6 +158,12 @@ class CardStackPresenter: NoticePresenter {
     /// The displays a notice's cards are on, for tests.
     func displayIDs(of id: String) -> [UInt32] {
         placements[id]?.map(\.key.displayID) ?? []
+    }
+
+    /// The panels a notice's cards live in, for tests that tell an in-place
+    /// replace from a remove-and-show.
+    func panels(of id: String) -> [NoticePanel] {
+        placements[id]?.map(\.panel) ?? []
     }
 
     @discardableResult

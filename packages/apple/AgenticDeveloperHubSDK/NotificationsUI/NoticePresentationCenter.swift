@@ -426,8 +426,11 @@ public final class NoticePresentationCenter {
         if oldID != notice.id {
             replacedIDs.insert(oldID)
         }
-        // A refresh or a replacement stands in the same slot, so its
-        // escalation clock keeps running from when that slot was filled.
+        // The slot's `presentedAt` carries over, but the escalation clock
+        // runs from `max(timestamp, presentedAt)`, the later of the two. A
+        // key replacement carries a newer timestamp, so it restarts the clock
+        // from the replacement's timestamp; a refresh with an unchanged
+        // timestamp keeps the clock running from when the slot was filled.
         entries[notice.id] = Entry(notice: notice, profile: profile, presentedAt: existing.presentedAt)
         order.append(notice.id)
         if profile.style == existing.profile.style {

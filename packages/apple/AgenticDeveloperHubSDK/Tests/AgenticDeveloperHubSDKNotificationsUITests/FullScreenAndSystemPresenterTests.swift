@@ -259,6 +259,8 @@ final class CardStackReplaceTests: XCTestCase {
     func testReplaceOntoTheSameScreensStaysInPlace() {
         let presenter = presenter()
         presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.all), actions: actions)
+        let before = presenter.panels(of: "a")
+        XCTAssertEqual(before.count, 2)
 
         presenter.replace(
             oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profile: profile(.all),
@@ -267,6 +269,33 @@ final class CardStackReplaceTests: XCTestCase {
         XCTAssertEqual(Set(presenter.displayIDs(of: "b")), [1, 2])
         XCTAssertEqual(presenter.displayIDs(of: "a"), [])
         XCTAssertEqual(presenter.shownIDs, ["b"])
+        assertSamePanels(before, presenter.panels(of: "b"))
         presenter.remove(id: "b")
+    }
+
+    func testReplaceKeepsACursorCardInPlaceWhenThePointerChangedDisplays() {
+        let presenter = presenter()
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.cursor), actions: actions)
+        let before = presenter.panels(of: "a")
+        XCTAssertEqual(presenter.displayIDs(of: "a"), [2])
+
+        // The pointer moves to display 3; the selection is still `.cursor`.
+        presenter.displays = { _ in [3] }
+        presenter.replace(
+            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profile: profile(.cursor),
+            actions: actions)
+
+        assertSamePanels(before, presenter.panels(of: "b"))
+        XCTAssertEqual(presenter.displayIDs(of: "b"), [2], "the card stays where it was shown")
+        presenter.remove(id: "b")
+    }
+
+    private func assertSamePanels(
+        _ before: [NoticePanel], _ after: [NoticePanel], file: StaticString = #filePath, line: UInt = #line
+    ) {
+        XCTAssertEqual(before.count, after.count, file: file, line: line)
+        for (old, new) in zip(before, after) {
+            XCTAssertTrue(old === new, "the panel was replaced instead of updated in place", file: file, line: line)
+        }
     }
 }
