@@ -100,6 +100,48 @@ final class NoticeHotkeysTests: XCTestCase {
         XCTAssertEqual(registrar.registered.count, 4)
     }
 
+    /// Another app may let go of a combination later. Enabling again while
+    /// already on retries just the refused hotkeys, and never registers an
+    /// accepted one twice.
+    func testEnablingAgainRetriesOnlyTheRefusedHotkeys() {
+        let env = makeEnv()
+        let registrar = FakeRegistrar()
+        registrar.refused = [UInt32(kVK_ANSI_S), UInt32(kVK_ANSI_H)]
+        let hotkeys = NoticeHotkeys(center: env.center, registrar: registrar)
+        hotkeys.setEnabled(true)
+        XCTAssertEqual(hotkeys.unavailableCommands, [.snooze, .history])
+
+        registrar.refused = [UInt32(kVK_ANSI_H)]
+        hotkeys.setEnabled(true)
+        XCTAssertTrue(hotkeys.isEnabled)
+        XCTAssertEqual(hotkeys.unavailableCommands, [.history], "the snooze hotkey was retried and taken")
+        XCTAssertEqual(registrar.registered.map(\.keyCode),
+                       [UInt32(kVK_Return), UInt32(kVK_Delete), UInt32(kVK_ANSI_S)],
+                       "accepted hotkeys are not registered again")
+
+        registrar.refused = []
+        hotkeys.setEnabled(true)
+        XCTAssertTrue(hotkeys.unavailableCommands.isEmpty)
+        XCTAssertEqual(registrar.registered.count, 4)
+
+        hotkeys.setEnabled(true)
+        XCTAssertEqual(registrar.registered.count, 4, "with nothing refused, enabling again does nothing")
+    }
+
+    /// Turning the hotkeys off when the system had refused every one still
+    /// clears the refused list, so nothing reports a problem with a switch
+    /// that is off.
+    func testDisablingAfterEveryHotkeyWasRefusedClearsTheRefusedList() {
+        let env = makeEnv()
+        let registrar = FakeRegistrar()
+        registrar.refused = Set(NoticeHotkeys.bindings.map(\.keyCode))
+        let hotkeys = NoticeHotkeys(center: env.center, registrar: registrar)
+        hotkeys.setEnabled(true)
+        hotkeys.setEnabled(false)
+        XCTAssertTrue(hotkeys.unavailableCommands.isEmpty)
+        XCTAssertFalse(hotkeys.isEnabled)
+    }
+
     func testCommandsActOnTheNewestShownNotice() {
         let env = makeEnv()
         let registrar = FakeRegistrar()
