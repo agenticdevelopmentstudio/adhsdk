@@ -193,6 +193,23 @@ describe('a document with entries that have no card', () => {
   })
 })
 
+describe('a tutorial with nothing for its panes', () => {
+  it('fails the build rather than falling back to a plain page', () => {
+    expect(() =>
+      contentDocument({
+        topicId: 'tutorials',
+        base: '/tutorials',
+        title: 'Tutorials',
+        descriptionTitle: 'Overview',
+        index: [leaf('glossary', 'Glossary'), leaf('prose', 'Prose only')],
+        bodies: { '': card('Tutorials'), glossary: card('Glossary'), prose: card('Prose only', { description: ['<p>Just words.</p>'] }) },
+        builtFrom: 'test',
+        tutorials: { glossaryId: 'glossary' },
+      }),
+    ).toThrow(/"prose" has no ### step/)
+  })
+})
+
 describe('a tutorials document', () => {
   it('lists the Glossary and each tutorial at the root, after the Overview', () => {
     const root = doc.view([OVERVIEW_ID])!.rails[0]!
