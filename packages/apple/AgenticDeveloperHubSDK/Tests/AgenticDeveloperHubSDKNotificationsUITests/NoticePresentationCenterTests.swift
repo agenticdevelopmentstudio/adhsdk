@@ -573,4 +573,57 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertTrue(env.toast.shownIDs.isEmpty, "a notice drawn nowhere is evaluated once, not folded")
         XCTAssertTrue(env.toast.shown.isEmpty)
     }
+
+    // MARK: Final review fixes
+
+    /// Finding 1: the daemon broadcasts the new notice, then the old one's
+    /// `archived` state. That frame is for a card already replaced in place,
+    /// so it must not take the new card down.
+    func testArchivedFrameForANoticeReplacedByKeyDoesNotRemoveTheReplacement() {
+        let env = harness()
+        env.center.receive(notice("old", key: "build", at: env.clock))
+        env.center.receive(notice("new", key: "build", at: env.clock))
+        env.center.apply(NoticeStateChange(id: "old", state: .archived, stateAt: env.clock.now))
+
+        XCTAssertEqual(env.toast.replaced.map(\.old), ["old"])
+        XCTAssertEqual(env.toast.replaced.map(\.new), ["new"])
+        XCTAssertTrue(env.toast.removed.isEmpty, "the replaced card is not removed a second time")
+        XCTAssertEqual(env.toast.shownIDs, ["new"])
+        XCTAssertEqual(env.center.newestShownID, "new")
+    }
+
+    /// Finding 3: the app's backlog covers only part of what is shown. A card
+    /// outside that part (an fyi toast) survives a reconcile that does not
+    /// list it.
+    func testReconcileLeavesCardsTheActiveListDoesNotCover() {
+        let env = harness()
+        env.center.receive(notice("fyi", urgency: .fyi, at: env.clock))
+        env.center.receive(notice("soon", urgency: .soon, at: env.clock))
+
+        env.center.reconcile(active: [], covering: { $0.urgency != .fyi })
+
+        XCTAssertEqual(env.toast.removed, ["soon"])
+        XCTAssertEqual(env.toast.shownIDs, ["fyi"])
+    }
+
+    /// Finding 4: escalation counts from when the card went up, not from the
+    /// notice's timestamp, so a backlog notice does not escalate the moment
+    /// it is first drawn.
+    func testEscalationCountsFromPresentationNotFromTheTimestamp() {
+        let env = harness()
+        let posted = env.clock.now
+        env.clock.now.addTimeInterval(3600)
+        env.center.receive(Notice(id: "a", timestamp: posted, source: "ci", title: "a", urgency: .soon))
+        env.center.tick()
+        XCTAssertEqual(env.toast.shownIDs, ["a"], "an hour-old notice is not escalated on arrival")
+        XCTAssertTrue(env.alert.shownIDs.isEmpty)
+
+        env.clock.now.addTimeInterval(899)
+        env.center.tick()
+        XCTAssertTrue(env.alert.shownIDs.isEmpty, "not yet")
+
+        env.clock.now.addTimeInterval(2)
+        env.center.tick()
+        XCTAssertEqual(env.alert.shownIDs, ["a"])
+    }
 }

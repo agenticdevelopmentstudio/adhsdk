@@ -20,6 +20,9 @@ public final class NoticePresentationCenter {
     private struct Entry {
         var notice: Notice
         var profile: NoticeProfile
+        /// When the card first went on screen; escalation counts from here,
+        /// so a backlog notice gets its full threshold once drawn.
+        var presentedAt: Date
         var escalated = false
         var isSummary = false
     }
@@ -44,10 +47,11 @@ public final class NoticePresentationCenter {
     private var order: [String] = []
     private var held: [Notice] = []
     private var floodFolder = FloodFolder()
-    /// Ids already counted into a flood summary, with their source, so a
-    /// reconcile does not count them twice or show them after all, and a
-    /// summary goes once nothing it folded is still active.
-    private var foldedIDs: [String: String] = [:]
+    /// Notices already counted into a flood summary, by id, so a reconcile
+    /// does not count them twice or show them after all, and a summary goes
+    /// once nothing it folded is still active. The notice is kept so a
+    /// partial reconcile can tell whether its list speaks for it.
+    private var foldedIDs: [String: Notice] = [:]
     /// Ids routed to no style and not forwarded: evaluated once and drawn
     /// nowhere. Remembered so each reconcile does not feed them to the flood
     /// folder again and conjure a summary out of one quiet notice.
@@ -56,6 +60,11 @@ public final class NoticePresentationCenter {
     /// applies the change its active list still has them, and a reconcile in
     /// that gap must not bring the card back.
     private var actedIDs: Set<String> = []
+    /// Ids whose card was replaced in place by a newer notice with the same
+    /// `source` + `key`. The host follows the new notice with the old one's
+    /// `archived` change; that change is for a card already gone and must
+    /// not take down the replacement now standing where it was.
+    private var replacedIDs: Set<String> = []
     private var escalationTimer: Timer?
     /// Ids snoozed "until I'm back", with when that snooze ends on its own:
     /// woken early, as `unread`, the first time the user returns from being
@@ -169,7 +178,7 @@ public final class NoticePresentationCenter {
         guard foldedIDs[notice.id] == nil, !evaluatedIDs.contains(notice.id) else { return }
         floodFolder.configuration = rules.flood
         if case let .fold(source, count) = floodFolder.admit(notice, at: now) {
-            foldedIDs[notice.id] = source
+            foldedIDs[notice.id] = notice
             showSummary(source: source, count: count, like: notice, rules: rules, now: now)
             return
         }
@@ -188,21 +197,35 @@ public final class NoticePresentationCenter {
         foldedIDs[change.id] = nil
         evaluatedIDs.remove(change.id)
         actedIDs.remove(change.id)
-        dismiss(change.id)
+        if replacedIDs.remove(change.id) == nil {
+            dismiss(change.id)
+        }
         dropSpentSummaries()
     }
 
     /// Makes the screen match the host's list of active notices: removes every
     /// card not in it and presents any that are missing.
-    public func reconcile(active: [Notice]) {
+    ///
+    /// `covering` says which notices the list speaks for. A host whose list is
+    /// only part of what it broadcasts (say, everything above `fyi` from the
+    /// last week) passes that test, and a card outside it stays where it is
+    /// rather than being taken down for not being listed. The default covers
+    /// every notice: the list is the whole truth.
+    public func reconcile(active: [Notice], covering: (Notice) -> Bool = { _ in true }) {
         let activeIDs = Set(active.map(\.id))
-        for id in order where entries[id]?.isSummary == false && !activeIDs.contains(id) {
+        func stale(_ notice: Notice) -> Bool { covering(notice) && !activeIDs.contains(notice.id) }
+        for id in order {
+            guard let entry = entries[id], !entry.isSummary, stale(entry.notice) else { continue }
             dismiss(id)
         }
-        held.removeAll { !activeIDs.contains($0.id) }
-        foldedIDs = foldedIDs.filter { activeIDs.contains($0.key) }
+        held.removeAll(where: stale)
+        foldedIDs = foldedIDs.filter { !stale($0.value) }
         evaluatedIDs.formIntersection(activeIDs)
         actedIDs.formIntersection(activeIDs)
+        // A replaced notice is archived, so never in the list; a change for
+        // it still in flight would only tell presenters to drop a card they
+        // no longer have.
+        replacedIDs.formIntersection(activeIDs)
         dropSpentSummaries()
         let heldIDs = Set(held.map(\.id))
         for notice in active.sorted(by: { $0.timestamp < $1.timestamp })
@@ -217,7 +240,8 @@ public final class NoticePresentationCenter {
         let rules = rules()
         for id in order {
             guard let entry = entries[id], !entry.escalated, !entry.isSummary,
-                  let urgency = rules.escalation.escalated(entry.notice, now: now) else { continue }
+                  let urgency = rules.escalation.escalated(entry.notice, since: entry.presentedAt, now: now)
+            else { continue }
             var shown = entry.notice
             shown.urgency = urgency
             let profile = rules.profile(for: entry.notice, effectiveUrgency: urgency)
@@ -228,7 +252,10 @@ public final class NoticePresentationCenter {
                 presenters[entry.profile.style]?.remove(id: id)
                 presenters[profile.style]?.show(shown, profile: profile, actions: cardActions(for: id))
             }
-            entries[id] = Entry(notice: entry.notice, profile: profile, escalated: true)
+            var escalated = entry
+            escalated.profile = profile
+            escalated.escalated = true
+            entries[id] = escalated
         }
         rearmEscalation()
     }
@@ -380,7 +407,7 @@ public final class NoticePresentationCenter {
             evaluatedIDs.insert(notice.id)
             return
         }
-        entries[notice.id] = Entry(notice: notice, profile: profile)
+        entries[notice.id] = Entry(notice: notice, profile: profile, presentedAt: clock())
         order.append(notice.id)
         let actions = cardActions(for: notice.id)
         if profile.style != .none {
@@ -396,7 +423,12 @@ public final class NoticePresentationCenter {
         let actions = cardActions(for: notice.id)
         entries[oldID] = nil
         order.removeAll { $0 == oldID }
-        entries[notice.id] = Entry(notice: notice, profile: profile)
+        if oldID != notice.id {
+            replacedIDs.insert(oldID)
+        }
+        // A refresh or a replacement stands in the same slot, so its
+        // escalation clock keeps running from when that slot was filled.
+        entries[notice.id] = Entry(notice: notice, profile: profile, presentedAt: existing.presentedAt)
         order.append(notice.id)
         if profile.style == existing.profile.style {
             presenters[profile.style]?.replace(oldID: oldID, with: notice, profile: profile, actions: actions)
@@ -432,12 +464,12 @@ public final class NoticePresentationCenter {
         let actions = cardActions(for: id, summary: true)
 
         if entries[id] != nil {
-            entries[id] = Entry(notice: summary, profile: profile, isSummary: true)
+            entries[id] = Entry(notice: summary, profile: profile, presentedAt: now, isSummary: true)
             order.removeAll { $0 == id }
             order.append(id)
             presenters[.toast]?.replace(oldID: id, with: summary, profile: profile, actions: actions)
         } else {
-            entries[id] = Entry(notice: summary, profile: profile, isSummary: true)
+            entries[id] = Entry(notice: summary, profile: profile, presentedAt: now, isSummary: true)
             order.append(id)
             presenters[.toast]?.show(summary, profile: profile, actions: actions)
         }
@@ -465,7 +497,7 @@ public final class NoticePresentationCenter {
 
     /// A flood summary goes once nothing it folded is still active.
     private func dropSpentSummaries() {
-        let folding = Set(foldedIDs.values)
+        let folding = Set(foldedIDs.values.map(\.source))
         for id in order {
             guard let entry = entries[id], entry.isSummary, !folding.contains(entry.notice.source) else { continue }
             dismiss(id)
@@ -502,7 +534,7 @@ public final class NoticePresentationCenter {
         let policy = rules().escalation
         let next = entries.values
             .filter { !$0.escalated && !$0.isSummary }
-            .compactMap { policy.nextCheck(for: $0.notice) }
+            .compactMap { policy.nextCheck(for: $0.notice, since: $0.presentedAt) }
             .min()
         guard let next else { return }
         let interval = max(0.5, next.timeIntervalSince(clock()))
