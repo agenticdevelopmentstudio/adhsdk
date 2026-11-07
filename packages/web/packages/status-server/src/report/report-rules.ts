@@ -191,10 +191,10 @@ export function digestMonitor(input: MonitorInput, ctx: MonitorContext): Digest<
     // An unreachable deploy provider is the provider rule's finding.
     const platform = parsePlatformHealthTarget(p.target);
     if (platform !== null && ctx.providers && Object.prototype.hasOwnProperty.call(ctx.providers, platform)) continue;
-    // A stale production deploy is major whatever tone the board paints it.
-    const severity = p.state === 'stale' ? worse(p.severity, 'major') : p.severity;
+    // The board's severity is the verdict: it already makes a stale production deploy major
+    // and keeps staging and testing ones minor on purpose.
     findings.push(
-      finding(severity, `monitor:${p.source}`, `${words(p.name, p.environment)}: ${words(p.source, p.state)}`, {
+      finding(p.severity, `monitor:${p.source}`, `${words(p.name, p.environment)}: ${words(p.source, p.state)}`, {
         detail: p.detail,
         since: p.since,
         link: p.sourceUrl ?? p.liveUrl,

@@ -458,10 +458,24 @@ describe("buildReport — rules the server adds", () => {
     expect(report.findings).toEqual([{ severity: "major", source: "provider:vercel", title: "vercel API unreachable from the monitor" }]);
   });
 
-  it("a stale production deploy is major even when the board paints it minor", () => {
-    const stale = problem({ state: "stale", severity: "minor", target: "vercel|prj_2|" });
-    const report = build({ monitor: ok({ ...MONITOR, problems: [stale] }) });
-    expect(report.findings[0]).toMatchObject({ severity: "major", title: "zork production: vercel stale" });
+  it("a stale deploy keeps the board's severity: major in production, minor in testing", () => {
+    // The board grades staleness by tier (staleProdProblems); the report must not re-grade it.
+    const prod = problem({ state: "stale", severity: "major", target: "vercel|prj_2|" });
+    const testing = problem({ state: "stale", severity: "minor", target: "vercel|prj_3|testing", name: "hub-help", environment: "testing" });
+    const report = build({ monitor: ok({ ...MONITOR, problems: [prod, testing] }) });
+    expect(report.findings.map((f) => [f.severity, f.title])).toEqual([
+      ["major", "zork production: vercel stale"],
+      ["minor", "hub-help testing: vercel stale"],
+    ]);
+    expect(report.verdict).toBe("degraded");
+  });
+
+  it("a testing-tier stale deploy alone is attention, not degraded", () => {
+    const testing = problem({ state: "stale", severity: "minor", target: "vercel|prj_3|testing", name: "hub-help", environment: "testing" });
+    const report = build({ monitor: ok({ ...MONITOR, problems: [testing] }) });
+    expect(report.findings).toHaveLength(1);
+    expect(report.findings[0]!.severity).toBe("minor");
+    expect(report.verdict).toBe("attention");
   });
 
   it("an issue key is the target when two open issues share a name", () => {
