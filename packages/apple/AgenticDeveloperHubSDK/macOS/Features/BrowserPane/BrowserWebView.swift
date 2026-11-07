@@ -18,8 +18,10 @@ public final class BrowserWebView: LiveResizingWebView {
     public var gate: BrowserInputGate = .open
 
     /// Told every decision: channel, event name, whether it was delivered,
-    /// whether it was the agent's. The event log (section 8) reads this.
-    public var onInputDecision: ((BrowserInputChannel, String, Bool, Bool) -> Void)?
+    /// whether it was the agent's, and a detail — for a key, its name and
+    /// modifiers from `BrowserEventLog.keyDetail(for:)`, never the character
+    /// typed. The pane's event log (spec section 12) reads this.
+    public var onInputDecision: ((BrowserInputChannel, String, Bool, Bool, String) -> Void)?
 
     private var automationDepth = 0
 
@@ -36,11 +38,15 @@ public final class BrowserWebView: LiveResizingWebView {
         return holdsFirstResponder
     }
 
-    private func allows(_ channel: BrowserInputChannel, _ event: String) -> Bool {
+    private func allows(_ channel: BrowserInputChannel, _ event: String, detail: String = "") -> Bool {
         let synthesized = automationDepth > 0
         let delivered = gate.allows(channel, synthesized: synthesized, pageHasFocus: pageHasFocus)
-        onInputDecision?(channel, event, delivered, synthesized)
+        onInputDecision?(channel, event, delivered, synthesized, detail)
         return delivered
+    }
+
+    private func allows(_ event: String, key: NSEvent) -> Bool {
+        allows(.keyboard, event, detail: BrowserEventLog.keyDetail(for: key))
     }
 
     // MARK: - Keyboard
@@ -57,18 +63,18 @@ public final class BrowserWebView: LiveResizingWebView {
     private var isHandlingAllowedKeyDown = false
 
     public override func keyDown(with event: NSEvent) {
-        guard allows(.keyboard, "keyDown") else { return }
+        guard allows("keyDown", key: event) else { return }
         isHandlingAllowedKeyDown = true
         defer { isHandlingAllowedKeyDown = false }
         super.keyDown(with: event)
     }
 
     public override func keyUp(with event: NSEvent) {
-        if allows(.keyboard, "keyUp") { super.keyUp(with: event) }
+        if allows("keyUp", key: event) { super.keyUp(with: event) }
     }
 
     public override func flagsChanged(with event: NSEvent) {
-        if allows(.keyboard, "flagsChanged") { super.flagsChanged(with: event) }
+        if allows("flagsChanged", key: event) { super.flagsChanged(with: event) }
     }
 
     /// NSWindow offers every key equivalent to every view in the window, so a
@@ -77,7 +83,7 @@ public final class BrowserWebView: LiveResizingWebView {
     /// the rest go to WebKit untouched, as they would without this subclass.
     public override func performKeyEquivalent(with event: NSEvent) -> Bool {
         guard holdsFirstResponder else { return super.performKeyEquivalent(with: event) }
-        return allows(.keyboard, "performKeyEquivalent") ? super.performKeyEquivalent(with: event) : false
+        return allows("performKeyEquivalent", key: event) ? super.performKeyEquivalent(with: event) : false
     }
 
     // MARK: - Mouse (back and forward swipes follow it)

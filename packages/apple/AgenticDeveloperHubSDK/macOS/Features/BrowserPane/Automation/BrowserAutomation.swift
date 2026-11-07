@@ -105,6 +105,9 @@ public final class BrowserAutomation: NSObject {
 
     public private(set) var isActionInFlight = false
     public var onDriveStateChange: ((Bool) -> Void)?
+    /// Told after every action: its name (`click`, `navigate`, …) and whether
+    /// it succeeded. The pane's event log (spec section 12) reads this.
+    public var onAction: ((String, Bool) -> Void)?
 
     private var driveDepth = 0
     private var pendingDialog: BrowserDialog?
@@ -373,7 +376,7 @@ public final class BrowserAutomation: NSObject {
     // MARK: Actions
 
     public func click(ref: String, generation: Int, native: Bool) async throws -> BrowserActionDelta {
-        try await act {
+        try await act("click") {
             if native {
                 let r = try await self.rect(ref: ref, generation: generation)
                 try self.nativeClick(atViewportX: r.midX, viewportY: r.midY)
@@ -384,27 +387,27 @@ public final class BrowserAutomation: NSObject {
     }
 
     public func type(ref: String, generation: Int, text: String, submit: Bool) async throws -> BrowserActionDelta {
-        try await act { _ = try await self.call("type", ["ref": ref, "gen": generation, "text": text, "submit": submit]) }
+        try await act("type") { _ = try await self.call("type", ["ref": ref, "gen": generation, "text": text, "submit": submit]) }
     }
 
     public func fill(ref: String, generation: Int, value: String) async throws -> BrowserActionDelta {
-        try await act { _ = try await self.call("fill", ["ref": ref, "gen": generation, "value": value]) }
+        try await act("fill") { _ = try await self.call("fill", ["ref": ref, "gen": generation, "value": value]) }
     }
 
     public func select(ref: String, generation: Int, value: String) async throws -> BrowserActionDelta {
-        try await act { _ = try await self.call("select", ["ref": ref, "gen": generation, "value": value]) }
+        try await act("select") { _ = try await self.call("select", ["ref": ref, "gen": generation, "value": value]) }
     }
 
     public func hover(ref: String, generation: Int) async throws -> BrowserActionDelta {
-        try await act { _ = try await self.call("hover", ["ref": ref, "gen": generation]) }
+        try await act("hover") { _ = try await self.call("hover", ["ref": ref, "gen": generation]) }
     }
 
     public func pressKey(_ key: String) async throws -> BrowserActionDelta {
-        try await act { _ = try await self.call("pressKey", ["spec": key]) }
+        try await act("pressKey") { _ = try await self.call("pressKey", ["spec": key]) }
     }
 
     public func scroll(ref: String?, generation: Int?, direction: String?, amount: Int?) async throws -> BrowserActionDelta {
-        try await act {
+        try await act("scroll") {
             _ = try await self.call("scroll", ["ref": ref ?? NSNull(), "gen": generation ?? NSNull(),
                                                "direction": direction ?? "down", "amount": amount ?? NSNull()])
         }
@@ -433,7 +436,7 @@ public final class BrowserAutomation: NSObject {
     public func clickAt(x: Double, y: Double) async throws -> BrowserActionDelta {
         guard let frame = lastScreenshot else { throw BrowserAutomationError.noScreenshot }
         let point = frame.viewportPoint(imageX: x, imageY: y)
-        return try await act { try self.nativeClick(atViewportX: point.x, viewportY: point.y) }
+        return try await act("clickAt") { try self.nativeClick(atViewportX: point.x, viewportY: point.y) }
     }
 
     /// Runs `expression` as the body `return (<expression>);` of an async
@@ -522,15 +525,28 @@ public final class BrowserAutomation: NSObject {
     }
 
     public func navigate(to url: URL) async throws -> BrowserActionDelta {
-        try await act { self.webView.load(URLRequest(url: url)) }
+        try await act("navigate") { self.webView.load(URLRequest(url: url)) }
     }
 
-    public func goBack() async throws -> BrowserActionDelta { try await act { self.webView.goBack() } }
-    public func goForward() async throws -> BrowserActionDelta { try await act { self.webView.goForward() } }
+    public func goBack() async throws -> BrowserActionDelta { try await act("goBack") { self.webView.goBack() } }
+    public func goForward() async throws -> BrowserActionDelta { try await act("goForward") { self.webView.goForward() } }
 
-    /// Runs one action and gathers its delta: arm the mutation counter and
-    /// navigation counters, act, wait 300 ms, read what moved.
-    private func act(_ body: () async throws -> Void) async throws -> BrowserActionDelta {
+    /// Runs one action, reports it to `onAction` by name and outcome, and
+    /// returns its delta.
+    private func act(_ name: String, _ body: () async throws -> Void) async throws -> BrowserActionDelta {
+        do {
+            let delta = try await gatherDelta(body)
+            onAction?(name, true)
+            return delta
+        } catch {
+            onAction?(name, false)
+            throw error
+        }
+    }
+
+    /// Gathers one action's delta: arm the mutation counter and navigation
+    /// counters, act, wait 300 ms, read what moved.
+    private func gatherDelta(_ body: () async throws -> Void) async throws -> BrowserActionDelta {
         try ensureDrivable()
         let urlBefore = currentURL, titleBefore = currentTitle
         let startedBefore = navigationsStarted, finishedBefore = navigationsFinished
