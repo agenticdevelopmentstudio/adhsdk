@@ -146,6 +146,16 @@ describe("grouping", () => {
     expect(groupIdentity(entry({ message: "x".repeat(300) })).message).toHaveLength(200);
   });
 
+  it("shapes the whole first line before cutting it, so the cut never splits one error in two", () => {
+    // "Order 1: …tail" is 199 characters and keeps its tail; "Order 1234567: …tail" is longer,
+    // and a cut before shaping would drop the tail and give the same error a second key.
+    const message = (n: string) => `Order ${n}: ${"x".repeat(185)} tail`;
+    const short = groupIdentity(entry({ message: message("1") }));
+    const long = groupIdentity(entry({ message: message("1234567") }));
+    expect(long.key).toBe(short.key);
+    expect(long.message).toHaveLength(200);
+  });
+
   it("a message that embeds an id, number or timestamp is one error, not one per value", () => {
     expect(messageShape("Order 8231 not found")).toBe("Order # not found");
     expect(messageShape("user 3f2504e0-4f89-11d3-9a0c-0305e82c3301 has no plan")).toBe("user :id has no plan");
