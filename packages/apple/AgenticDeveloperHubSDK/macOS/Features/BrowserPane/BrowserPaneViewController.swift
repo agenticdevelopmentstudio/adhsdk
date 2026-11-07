@@ -116,6 +116,10 @@ public final class BrowserPaneViewController: NSViewController {
     /// Called as each navigation starts. A test seam: it is how a test sees
     /// what rules were on the web view when its first page began loading.
     var onNavigationStart: (() -> Void)?
+    /// How many finished compiles were dropped because a newer request or a
+    /// rebuild had come since. For tests: what a test awaits to know a stale
+    /// result has come back and been ignored, rather than waiting a while.
+    private(set) var droppedContentRules = 0
     /// What the jar's row was last named, so a title change writes only when
     /// the name it would write is new.
     private var jarLabel: String?
@@ -424,14 +428,24 @@ public final class BrowserPaneViewController: NSViewController {
         Task { [weak self, logger] in
             do {
                 let list = try await provide(policy)
-                guard let self, self.contentRulesGeneration == generation else { return }
+                guard let self else { return }
+                guard self.contentRulesGeneration == generation else {
+                    self.droppedContentRules += 1
+                    return
+                }
                 let controller = self.webView.configuration.userContentController
                 controller.removeAllContentRuleLists()
                 if let list { controller.add(list) }
                 self.appliedThirdPartyContent = policy
                 self.finishContentRules()
             } catch {
-                guard let self, self.contentRulesGeneration == generation else { return }
+                guard let self else { return }
+                // A stale failure says nothing about the current request: it
+                // must neither forget that request nor release its held load.
+                guard self.contentRulesGeneration == generation else {
+                    self.droppedContentRules += 1
+                    return
+                }
                 self.requestedThirdPartyContent = nil
                 logger.error(
                     "browser content rules failed to compile: \(error.localizedDescription, privacy: .public)")
@@ -543,6 +557,9 @@ public final class BrowserPaneViewController: NSViewController {
     /// would hand one jar's session to another.
     public func rebuildWebView() {
         let shownURL = webView.url.flatMap { $0 == Self.blankPage ? nil : $0 }
+        // A navigation still held for the old web view's rules is where the
+        // pane was going, so it wins over the page the old one was showing.
+        let heldURL = heldLoad?.url
         let label = paneTitle
         detachWebView()
         webView.removeFromSuperview()
@@ -574,7 +591,7 @@ public final class BrowserPaneViewController: NSViewController {
         installPageHost()
         observeWebView()
         if view.window != nil { observeFirstResponder() }
-        loadOnceRulesAreOn(URLRequest(url: shownURL ?? restorationURL))
+        loadOnceRulesAreOn(URLRequest(url: heldURL ?? shownURL ?? restorationURL))
     }
 
     /// Keeps the pane jar's row named after the page, so a list of jars says
@@ -836,9 +853,20 @@ public final class BrowserPaneViewController: NSViewController {
         view.window?.makeFirstResponder(webView)
     }
 
-    @objc private func goBack() { webView.goBack() }
-    @objc private func goForward() { webView.goForward() }
-    @objc private func reload() { webView.reload() }
+    // History moves are not held for rules, but they do cancel a held load,
+    // so a load asked for earlier cannot land over them afterwards.
+    @objc private func goBack() {
+        heldLoad = nil
+        webView.goBack()
+    }
+    @objc private func goForward() {
+        heldLoad = nil
+        webView.goForward()
+    }
+    @objc private func reload() {
+        heldLoad = nil
+        webView.reload()
+    }
 }
 
 // MARK: - Pane capabilities
