@@ -137,6 +137,43 @@ describe("useBoard", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(String(fetchMock.mock.calls[0]![0])).not.toContain("environments=");
   });
+
+  it("a board kept on screen from the previous environment choice says its scope is pending", async () => {
+    // The scoped read is held open, so the hook can only show the unscoped board it had.
+    let releaseScoped: (r: Response) => void = () => {};
+    const scopedBoard: Board = {
+      ...board,
+      scope: { environments: ["staging"], indicator: "operational", problemCount: 0, endpoints: { total: 0, healthy: 0 } },
+    };
+    vi.stubGlobal("fetch", vi.fn((url: string) => String(url).includes("environments=")
+      ? new Promise<Response>((resolve) => { releaseScoped = resolve; })
+      : Promise.resolve(new Response(JSON.stringify(board), { status: 200, headers: { "content-type": "application/json" } }))));
+
+    const { result, rerender } = renderHook(
+      ({ environments }: { environments: readonly string[] | null }) => useBoard({ environments }),
+      { wrapper, initialProps: { environments: null as readonly string[] | null } },
+    );
+    await waitFor(() => expect(result.current.board).not.toBeNull());
+    expect(result.current.scopePending).toBe(false);
+
+    rerender({ environments: ["staging"] });
+    await waitFor(() => expect(result.current.scopePending).toBe(true));
+    // Still the old read: lists filtered from it are fine, its headline is not this view's.
+    expect(result.current.board?.scope.environments).toBeNull();
+
+    releaseScoped(new Response(JSON.stringify(scopedBoard), { status: 200, headers: { "content-type": "application/json" } }));
+    await waitFor(() => expect(result.current.scopePending).toBe(false));
+    expect(result.current.board?.scope.environments).toEqual(["staging"]);
+  });
+
+  it("a board that cannot back a claim is never pending — it is null, with its reason", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ ...board, freshness: pastDeadline() }), {
+      status: 200, headers: { "content-type": "application/json" },
+    })));
+    const { result } = renderHook(() => useBoard(), { wrapper });
+    await waitFor(() => expect(result.current.reason).toBe("stale"));
+    expect(result.current.scopePending).toBe(false);
+  });
 });
 
 describe("useBoard — folding staleness into null (Fix Round 3 item 1)", () => {
