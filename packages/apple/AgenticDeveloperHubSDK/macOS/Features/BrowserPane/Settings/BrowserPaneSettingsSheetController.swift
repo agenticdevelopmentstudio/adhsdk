@@ -101,14 +101,56 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
         self.preferredContentSize = NSSize(width: 820, height: 560)
     }
 
+    /// Watches the window the sheet is on for the sheet ending, so a
+    /// dismissal that does not come through Done — the presenter dismissing
+    /// it, the window closing — still closes it.
+    public override func viewDidAppear() {
+        super.viewDidAppear()
+        guard !hasClosed, parentWindow == nil, let parent = view.window?.sheetParent else { return }
+        parentWindow = parent
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(parentDidEndSheet(_:)),
+            name: NSWindow.didEndSheetNotification, object: parent
+        )
+    }
+
+    /// A disappearance is the sheet ending only once its window is no longer
+    /// attached to a parent: the window being ordered out with its parent —
+    /// miniaturized, its Space left — also sends `viewDidDisappear`, and that
+    /// must not close the sheet (it would rebuild the pane under a sheet that
+    /// is still open, then never close again).
     public override func viewDidDisappear() {
         super.viewDidDisappear()
+        guard view.window?.sheetParent == nil else { return }
+        finish(dismissing: false)
+    }
+
+    /// The window that had the sheet, while the sheet is on it.
+    private weak var parentWindow: NSWindow?
+
+    @objc private func parentDidEndSheet(_ notification: Notification) {
+        // The notification names the parent, not which of its sheets ended.
+        guard let parent = parentWindow, let window = view.window,
+              !parent.sheets.contains(window) else { return }
+        finish(dismissing: false)
+    }
+
+    /// Ends the sheet: calls `onClose` once per presentation, however many
+    /// ways the end is reported, and dismisses the sheet when the end starts
+    /// here (Done) rather than being reported after the fact. Internal so a
+    /// test can close a sheet it never put on screen.
+    func finish(dismissing: Bool = true) {
         guard !hasClosed else { return }
         hasClosed = true
+        if let parent = parentWindow {
+            NotificationCenter.default.removeObserver(self, name: NSWindow.didEndSheetNotification, object: parent)
+        }
+        parentWindow = nil
+        if dismissing, presentingViewController != nil { dismiss(self) }
         onClose?()
     }
 
     @objc private func close(_ sender: Any?) {
-        dismiss(self)
+        finish()
     }
 }

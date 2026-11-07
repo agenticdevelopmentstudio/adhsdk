@@ -99,9 +99,9 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
                     + "Right-click the row and choose Use Global Setting to drop the override; "
                     + "the row then follows the Settings window again. Reset clears every "
                     + "override of the pane at once. Private browsing is global only, and "
-                    + "Accept cookies can be overridden only while the pane has a jar of "
-                    + "its own, because under a shared jar it would change every pane on "
-                    + "that jar."
+                    + "Accept cookies can be overridden only while the jar chosen here is "
+                    + "the pane's own, or private browsing is on, because under a shared "
+                    + "jar it would change every pane on that jar."
             ))
         }
         topics.append(.init(
@@ -200,8 +200,11 @@ final class BrowserSettingsRow {
     /// download folder's value row).
     let model: ComposableSettings.AbstractViewModel?
     let view: NSView
-    /// False for a row shown disabled with the global value.
-    let isEnabled: Bool
+    /// The group the row is in, by its caption.
+    let group: String?
+    /// False for a row shown disabled with the global value. Accept cookies
+    /// can change either way while the sheet is up, as the jar it shows does.
+    fileprivate(set) var isEnabled: Bool
     /// The override dot, in pane scope, on a row that can be overridden.
     let marker: OverrideMarker?
     let refresh: () -> Void
@@ -211,6 +214,7 @@ final class BrowserSettingsRow {
         name: String,
         model: ComposableSettings.AbstractViewModel?,
         view: NSView,
+        group: String?,
         isEnabled: Bool,
         marker: OverrideMarker?,
         refresh: @escaping () -> Void,
@@ -219,6 +223,7 @@ final class BrowserSettingsRow {
         self.name = name
         self.model = model
         self.view = view
+        self.group = group
         self.isEnabled = isEnabled
         self.marker = marker
         self.refresh = refresh
@@ -272,15 +277,23 @@ final class BrowserSettingsBinding {
     }
 
     /// Whether, in pane scope, the row for `name` shows the global value and
-    /// takes no edits: a global-only setting, or Accept cookies while the
-    /// pane's store is shared with other panes. Private browsing counts as the
-    /// pane's own store: nothing else is on it.
+    /// takes no edits: a global-only setting, or Accept cookies while the jar
+    /// the sheet shows is shared with other panes. That is the jar the pane
+    /// will be on once the sheet closes, not the one it was built on, so the
+    /// row never takes an override that would not apply. Private browsing
+    /// counts as the pane's own store: nothing else is on it.
     func isLocked(_ name: String) -> Bool {
         guard let pane else { return false }
         if BrowserSettings.globalOnlyKeyNames.contains(name) { return true }
-        if name == UserSettings.browserAcceptsCookies.name { return !pane.resolvedJar.isOwnedByPane }
+        if name == UserSettings.browserAcceptsCookies.name { return !pane.wouldOwnDataStore(under: store) }
         return false
     }
+
+    /// The settings a row's lock depends on besides its own.
+    private static let lockingKeyNames: Set<String> = [
+        UserSettings.browserPrivacyStorageJar.name,
+        UserSettings.browserPrivateBrowsing.name
+    ]
 
     // MARK: Explanations
 
@@ -297,14 +310,22 @@ final class BrowserSettingsBinding {
 
     /// Reads and writes for `key`. A locked row reads the global value and
     /// drops writes, so it cannot create the override it is locked against.
+    /// Asked at each read and write, since a lock can change while the
+    /// sheet is up.
     private func accessors<Value: Codable & Sendable>(
         _ key: UserSetting<Value>
     ) -> (get: () -> Value, set: (Value) -> Void) {
         let store = self.store
-        if isLocked(key.name), let fallback = layered?.fallback {
-            return ({ fallback.get(key) }, { _ in })
+        guard let fallback = layered?.fallback else {
+            return ({ store.get(key) }, { store.set($0, for: key) })
         }
-        return ({ store.get(key) }, { store.set($0, for: key) })
+        let name = key.name
+        return ({ [weak self] in
+            self?.isLocked(name) == true ? fallback.get(key) : store.get(key)
+        }, { [weak self] value in
+            guard self?.isLocked(name) == false else { return }
+            store.set(value, for: key)
+        })
     }
 
     func model<Value: Codable & Sendable>(
@@ -376,18 +397,27 @@ final class BrowserSettingsBinding {
     ) {
         group.addSettingSubview(view)
         let locked = isLocked(name)
-        if locked { Self.disableControls(in: view) }
+        if locked { Self.setControls(enabled: false, in: view) }
         var marker: OverrideMarker?
-        if isPaneScope, !locked {
+        // A global-only row is locked for good and carries no marker; any
+        // other row in pane scope does, hidden while it is locked.
+        if isPaneScope, !BrowserSettings.globalOnlyKeyNames.contains(name) {
             let dot = OverrideMarker(revert: revert)
             group.setRowDecoration(leadingAccessory: dot, contextMenu: dot.rowMenu, for: view)
-            dot.show(overridden: hasOverride())
             marker = dot
         }
-        rows.append(BrowserSettingsRow(
-            name: name, model: model, view: view, isEnabled: !locked, marker: marker,
+        let row = BrowserSettingsRow(
+            name: name, model: model, view: view, group: group.title, isEnabled: !locked, marker: marker,
             refresh: refresh, hasOverride: hasOverride
-        ))
+        )
+        rows.append(row)
+        showMarker(of: row)
+    }
+
+    /// The marker shows an override only where one applies: never on a
+    /// locked row, whose override the pane would ignore.
+    private func showMarker(of row: BrowserSettingsRow) {
+        row.marker?.show(overridden: row.isEnabled && row.hasOverride())
     }
 
     /// Records a button so a test can press it the way a click would.
@@ -395,9 +425,9 @@ final class BrowserSettingsBinding {
         buttons[identifier] = button
     }
 
-    private static func disableControls(in view: NSView) {
-        if let control = view as? NSControl { control.isEnabled = false }
-        view.subviews.forEach(disableControls(in:))
+    private static func setControls(enabled: Bool, in view: NSView) {
+        if let control = view as? NSControl { control.isEnabled = enabled }
+        view.subviews.forEach { setControls(enabled: enabled, in: $0) }
     }
 
     // MARK: Following the store
@@ -420,9 +450,22 @@ final class BrowserSettingsBinding {
     }
 
     func settingDidChange(_ name: String) {
+        if Self.lockingKeyNames.contains(name) { updateLocks() }
         for row in rows(named: name) {
             row.refresh()
-            row.marker?.show(overridden: row.hasOverride())
+            showMarker(of: row)
+        }
+    }
+
+    /// Re-decides every row's lock after a setting a lock depends on moved:
+    /// a row that changes re-reads its value from its new source, and its
+    /// controls and marker follow.
+    private func updateLocks() {
+        for row in rows where row.isEnabled == isLocked(row.name) {
+            row.isEnabled.toggle()
+            Self.setControls(enabled: row.isEnabled, in: row.view)
+            row.refresh()
+            showMarker(of: row)
         }
     }
 }
