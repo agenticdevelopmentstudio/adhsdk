@@ -126,6 +126,24 @@ describe('parts', () => {
   })
 })
 
+describe('a document with entries that have no card', () => {
+  const plain = (index: DocNode[], cards: Record<string, DocCard>) =>
+    contentDocument({ topicId: 'hub', base: '/hub', title: 'Hub', descriptionTitle: 'Overview', index, bodies: cards, builtFrom: 'test' })
+
+  it('makes an untold leaf its own canonical, never a missing Overview under it', () => {
+    const d = plain([{ id: 'x', label: 'X', addr: '', told: false, open: ['x'], children: [] }], { '': card('Hub') })
+    const x = d.view(['x'])!
+    expect(x.card).toBeNull()
+    expect(x.canonical).toEqual(['x'])
+    expect(d.canonicalPaths()).toContainEqual(['x'])
+  })
+
+  it('fails on a told leaf with no card instead of rendering an empty page', () => {
+    const d = plain([leaf('x', 'X')], { '': card('Hub') })
+    expect(() => d.view(['x'])).toThrow(/holds no card for it/)
+  })
+})
+
 describe('a tutorials document', () => {
   it('lists the Glossary and each tutorial at the root, after the Overview', () => {
     const root = doc.view([OVERVIEW_ID])!.rails[0]!

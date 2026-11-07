@@ -450,10 +450,14 @@ export function contentDocument(source: DocSource): ContentDocument {
       : overview
         ? ROOT_KEY
         : null;
-    const card = reads == null ? null : (bodies[reads] ?? null);
-    // A route that reads a card is its own canonical. One that shows a list with nothing chosen
-    // is canonical only when the list has no page to land on; otherwise the page's route is.
-    const canonical = card != null || !rails.at(-1)!.overview ? asked : [...asked, OVERVIEW_ID];
+    // An untold leaf reads no card, by design. Every other route that reads one must find it:
+    // a told entry with no card is a broken build, and failing here keeps it out of prerender.
+    const told = entry ? entry.told : rootTold();
+    const card = reads == null || !told ? null : cardOf(bodies, reads, title);
+    // A route that shows an entry is its own canonical, card or not. One that shows a list with
+    // nothing chosen is canonical only when the list has no page to land on; otherwise the
+    // page's route is.
+    const canonical = reads != null || !rails.at(-1)!.overview ? asked : [...asked, OVERVIEW_ID];
 
     let tutorial: TutorialView | null = null;
     if (entry?.part) tutorial = tutorialView(trail.at(-2)!, entry.part);
