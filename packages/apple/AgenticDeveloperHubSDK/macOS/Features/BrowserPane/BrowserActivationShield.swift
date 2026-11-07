@@ -19,7 +19,13 @@ import WebKit
 ///   window-level `focus`/`blur` and `visibilitychange`/`pagehide`/`freeze`
 ///   events are swallowed before the page's own listeners see them. It
 ///   applies from the next page load, plus one immediate run on a page that
-///   is already showing when the shield goes up.
+///   is already showing when the shield goes up — over the main frame and
+///   every same-origin frame below it — and one immediate run that takes it
+///   off those same frames when the shield comes down (Pause Events, spec
+///   section 7: pausing and unpausing act on the live page, not on the next
+///   one). A cross-origin frame cannot be reached from the main frame and
+///   WebKit has no public way to list frames, so a cross-origin frame that is
+///   already loaded follows only from its next load.
 ///
 /// The shield does not install its script itself. `WKUserContentController`
 /// can only remove *every* user script at once, so one owner — the pane's
@@ -49,6 +55,28 @@ public final class BrowserActivationShield {
         return text
     }()
 
+    /// Takes the shim off every frame the immediate run can reach, by calling
+    /// the function each shielded window keeps under `__adkActivationShield`
+    /// (see the script). A window the shim never reached has none, and is
+    /// left as it is.
+    static let liftSource = """
+    (function () {
+      'use strict';
+      function visit(w) {
+        try {
+          var lift = w.__adkActivationShield;
+          if (typeof lift === 'function') { lift(); }
+        } catch (e) { return; }
+        var count = 0;
+        try { count = w.frames.length; } catch (e) { return; }
+        for (var i = 0; i < count; i += 1) {
+          try { visit(w.frames[i]); } catch (e) { /* cross-origin */ }
+        }
+      }
+      visit(window);
+    })();
+    """
+
     private weak var webView: WKWebView?
     /// Whether the shield is up.
     public private(set) var isActive = false
@@ -67,7 +95,8 @@ public final class BrowserActivationShield {
     }
 
     /// Raises or lowers the shield. The caller reinstalls its user scripts
-    /// when `isActive` changed, so the script follows on the next load.
+    /// when `isActive` changed, so the script follows on the next load; the
+    /// page already showing is shielded, or unshielded, at once.
     public func apply(active: Bool) {
         guard active != isActive else { return }
         isActive = active
@@ -75,12 +104,12 @@ public final class BrowserActivationShield {
         // A Debug build under quiet presentation holds detection off for its
         // screenshots; lowering the shield must not undo that.
         webView.setWindowOcclusionDetectionEnabled(!active && !webView.keepsPaintingUnderQuietPresentation)
-        if active, webView.url != nil, let source = Self.source {
-            webView.evaluateJavaScript(source, in: nil, in: .page) { result in
-                if case .failure(let error) = result {
-                    let reason = error.localizedDescription
-                    Self.logger.debug("activation shield did not run on the current page: \(reason, privacy: .public)")
-                }
+        guard webView.url != nil, let source = active ? Self.source : Self.liftSource else { return }
+        webView.evaluateJavaScript(source, in: nil, in: .page) { result in
+            if case .failure(let error) = result {
+                let reason = error.localizedDescription
+                Self.logger.debug(
+                    "activation shield did not change on the current page: \(reason, privacy: .public)")
             }
         }
     }

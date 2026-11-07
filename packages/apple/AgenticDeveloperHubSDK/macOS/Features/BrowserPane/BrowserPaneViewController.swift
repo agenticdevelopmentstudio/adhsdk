@@ -67,9 +67,14 @@ public final class BrowserPaneViewController: NSViewController {
     /// The pane's own layered settings, when the factory built it with one.
     public var paneSettings: LayeredSettingsStore? { settings as? LayeredSettingsStore }
     /// Whether the user has paused this pane's events (Pause Events, spec
-    /// section 7). Never set yet: the gear item that sets it comes with Pause
-    /// Events itself.
-    public internal(set) var isEventsPaused = false
+    /// section 7). Set only through `setEventsPaused(_:)`, so the gate, the
+    /// shield and the badge always move with it. Not persisted: a relaunch
+    /// reloads the page anyway, and a pane that came back paused would look
+    /// broken.
+    public private(set) var isEventsPaused = false
+    /// Asked to open a log of the events this pane delivered and withheld
+    /// (the debug-only Show Browser Log gear item). The host wires it.
+    public var onShowBrowserLog: ((BrowserPaneViewController) -> Void)?
     /// The pane's effective Agent access, read from its own layered settings
     /// so a per-pane override counts.
     public var agentAccess: BrowserAgentAccess { settings.get(UserSettings.browserPrivacyAgentAccess) }
@@ -158,6 +163,7 @@ public final class BrowserPaneViewController: NSViewController {
     private var pageHost: NSView?
     private weak var addressBar: NSView?
     let drivenBadge = BrowserDrivenBadge()
+    let pausedBadge = BrowserPausedBadge()
     let addressField = NSTextField()
     let backButton = NSButton()
     let forwardButton = NSButton()
@@ -367,20 +373,21 @@ public final class BrowserPaneViewController: NSViewController {
     /// pause state. The one place the gate is built, so a settings change, a
     /// pause change and a rebuilt web view (through `wireWebView`) all land on
     /// the same answer. Only the web view is gated; the pane's address bar and
-    /// chrome never are. Not paused until Pause Events (section 7) exists.
+    /// chrome never are, so the address bar and the back, forward and reload
+    /// buttons still work while the pane is paused.
     private func refreshInputGate() {
-        (webView as? BrowserWebView)?.gate = BrowserInputGate(settings: settings, isPaused: false)
+        (webView as? BrowserWebView)?.gate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
     }
 
     /// Raises or lowers the activation shield from the Hide Focus setting and
     /// the pause state: up when either asks for it. The one place that answer
-    /// is computed, beside `refreshInputGate` for the same reasons. Not paused
-    /// until Pause Events (section 7) exists. When the shield's state moves,
-    /// the user scripts are put back so the next page load follows it.
+    /// is computed, beside `refreshInputGate` for the same reasons. When the
+    /// shield's state moves, the user scripts are put back so the next page
+    /// load follows it; the shield itself acts on the page already showing.
     private func refreshActivationShield() {
-        let isPaused = false
         let wasActive = activationShield.isActive
-        activationShield.apply(active: settings.get(UserSettings.browserPrivacyHideActivation) || isPaused)
+        activationShield.apply(
+            active: settings.get(UserSettings.browserPrivacyHideActivation) || isEventsPaused)
         if activationShield.isActive != wasActive { installUserScripts() }
     }
 
@@ -652,7 +659,7 @@ public final class BrowserPaneViewController: NSViewController {
         addressField.setContentHuggingPriority(.defaultLow, for: .horizontal)
         addressField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let bar = NSStackView(views: [backButton, forwardButton, reloadButton, addressField, drivenBadge])
+        let bar = NSStackView(views: [backButton, forwardButton, reloadButton, addressField, pausedBadge, drivenBadge])
         bar.orientation = .horizontal
         bar.alignment = .centerY
         bar.spacing = 4
@@ -891,6 +898,70 @@ extension BrowserPaneViewController: PaneTitleProviding {
         if let title = webView.title, !title.isEmpty { return title }
         if let host = webView.url?.host, !host.isEmpty { return host }
         return "Browser"
+    }
+}
+
+// MARK: - Pause Events
+
+extension BrowserPaneViewController {
+
+    /// Pauses or unpauses the page's events (spec section 7).
+    ///
+    /// Pausing first makes the web view the window's first responder, so the
+    /// page holds focus at the moment it is frozen. That also ends an edit in
+    /// the address field without navigating, because the field's cell does
+    /// not send its action on end editing. Then the gate closes every user
+    /// channel, the activation shield goes up (on the live page too), and the
+    /// paused badge shows. Unpausing hands the gate and the shield back to
+    /// the settings and hides the badge; first responder stays where it is.
+    public func setEventsPaused(_ paused: Bool) {
+        guard paused != isEventsPaused else { return }
+        if paused { viewIfLoaded?.window?.makeFirstResponder(webView) }
+        isEventsPaused = paused
+        refreshInputGate()
+        refreshActivationShield()
+        pausedBadge.setPaused(paused)
+    }
+}
+
+// MARK: - Gear menu
+
+extension BrowserPaneViewController: PaneMenuProviding {
+
+    /// After the framework's Move: Pause Events (checked while paused),
+    /// Settings…, and in debug builds Show Browser Log (spec section 11).
+    /// Asked on every click, so the checkmark is always the current state.
+    public func makePaneMenuItems() -> [NSMenuItem] {
+        let pause = NSMenuItem(title: "Pause Events", action: #selector(togglePauseEvents), keyEquivalent: "")
+        pause.target = self
+        pause.state = isEventsPaused ? .on : .off
+        pause.accessibilityID("pane.options.browser.pause")
+
+        let settingsItem = NSMenuItem(title: "Settings…", action: #selector(showPaneSettings), keyEquivalent: "")
+        settingsItem.target = self
+        settingsItem.accessibilityID("pane.options.browser.settings")
+
+        var items = [pause, settingsItem]
+        #if DEBUG
+        let log = NSMenuItem(title: "Show Browser Log", action: #selector(showBrowserLog), keyEquivalent: "")
+        log.target = self
+        log.accessibilityID("pane.options.browser.log")
+        items.append(log)
+        #endif
+        return items
+    }
+
+    @objc func togglePauseEvents() {
+        setEventsPaused(!isEventsPaused)
+    }
+
+    /// The pane's settings sheet. Not built yet, so nothing is presented.
+    @objc func showPaneSettings() {
+        logger.info("browser pane settings requested; the sheet is not built yet")
+    }
+
+    @objc func showBrowserLog() {
+        onShowBrowserLog?(self)
     }
 }
 

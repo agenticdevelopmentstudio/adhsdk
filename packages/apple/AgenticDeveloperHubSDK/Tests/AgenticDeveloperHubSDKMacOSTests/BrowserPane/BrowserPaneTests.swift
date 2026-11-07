@@ -161,7 +161,7 @@ final class BrowserPaneTests: XCTestCase {
 
         overrides.set(.paused, for: UserSettings.browserPrivacyAgentWhilePaused)
         XCTAssertFalse(pane.isPausedForAgent, "not paused, so the agent is not held off")
-        pane.isEventsPaused = true
+        pane.setEventsPaused(true)
         XCTAssertTrue(pane.isPausedForAgent)
         overrides.set(.allowed, for: UserSettings.browserPrivacyAgentWhilePaused)
         XCTAssertFalse(pane.isPausedForAgent, "paused, but the agent may still drive")
