@@ -43,9 +43,10 @@ public final class BrowserActivationShield {
 
     private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
-    /// The script's text, read once from the framework's resources; `nil`
-    /// when the resource is missing, which leaves only the native half.
-    static let source: String? = {
+    /// The script's text as bundled, placeholders and all, read once from
+    /// the framework's resources; `nil` when the resource is missing, which
+    /// leaves only the native half.
+    private static let template: String? = {
         guard let url = Bundle(for: BrowserActivationShield.self)
             .url(forResource: "BrowserActivationShield", withExtension: "js"),
             let text = try? String(contentsOf: url, encoding: .utf8) else {
@@ -55,27 +56,26 @@ public final class BrowserActivationShield {
         return text
     }()
 
-    /// Takes the shim off every frame the immediate run can reach, by calling
-    /// the function each shielded window keeps under `__adkActivationShield`
-    /// (see the script). A window the shim never reached has none, and is
-    /// left as it is.
-    static let liftSource = """
-    (function () {
-      'use strict';
-      function visit(w) {
-        try {
-          var lift = w.__adkActivationShield;
-          if (typeof lift === 'function') { lift(); }
-        } catch (e) { return; }
-        var count = 0;
-        try { count = w.frames.length; } catch (e) { return; }
-        for (var i = 0; i < count; i += 1) {
-          try { visit(w.frames[i]); } catch (e) { /* cross-origin */ }
-        }
-      }
-      visit(window);
-    })();
-    """
+    /// Chosen once per launch and written into every copy of the script, so
+    /// the copies — the document-start one, the immediate raise and the lift
+    /// — recognise each other's record on a window, and a value the page put
+    /// under the same name is not taken for one (see the script).
+    private static let token = UUID().uuidString
+
+    private static func script(mode: String) -> String? {
+        template?
+            .replacingOccurrences(of: "__ADK_SHIELD_TOKEN__", with: token)
+            .replacingOccurrences(of: "__ADK_SHIELD_MODE__", with: mode)
+    }
+
+    /// The script that shields: the document-start user script, and the
+    /// immediate run when the shield goes up over a page already showing.
+    static let source: String? = script(mode: "raise")
+
+    /// The same script set to take the shim off every frame the immediate
+    /// run can reach, when the shield comes down. A window the shim never
+    /// reached has no record, and is left as it is.
+    static let liftSource: String? = script(mode: "lift")
 
     private weak var webView: WKWebView?
     /// Whether the shield is up.
