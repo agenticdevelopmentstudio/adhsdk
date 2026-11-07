@@ -71,6 +71,9 @@ describe('parts', () => {
   it('keeps two steps with one title apart', () => {
     const { sections } = sectionsOf(['<h3>Save</h3>', '<h3>Save</h3>'])
     expect(sections.map((s) => s.id)).toEqual(['save', 'save-2'])
+    // A title that is itself "Save 2" claims save-2, so a later repeat skips past it.
+    const again = sectionsOf(['<h3>Save</h3>', '<h3>Save 2</h3>', '<h3>Save</h3>']).sections
+    expect(again.map((s) => s.id)).toEqual(['save', 'save-2', 'save-3'])
   })
 
   it('reads each glossary term and the tutorials it links to', () => {
