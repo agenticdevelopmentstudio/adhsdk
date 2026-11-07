@@ -12,6 +12,11 @@ public enum NoticeSettings {
     public static let routingRules = UserSetting<NoticeRoutingRules>(
         "notice_routing_rules", default: .defaults)
 
+    /// How far the user dragged each toast stack from its position's anchor,
+    /// keyed by `NoticeProfile.Position.rawValue`; it applies on every screen.
+    public static let toastStackOffsets = UserSetting<[String: NoticeStackOffset]>(
+        "notice_toast_stack_offsets", default: [:])
+
     /// Set once the legacy migration has run, so it never runs twice.
     static let migratedMarkerKey = "notice_routing_migrated_v1"
 

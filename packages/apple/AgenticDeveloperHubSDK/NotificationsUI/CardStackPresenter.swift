@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDK
+import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKNotifications
 
@@ -10,10 +11,11 @@ import AgenticDeveloperHubSDKNotifications
 ///
 /// A stack shows at most `visibleLimit` cards; the rest are hidden behind a
 /// "+N more" pill that opens the history, and their countdowns hold until they
-/// come back into view. Each card sits in its own panel rather than one panel
-/// per stack, so the gaps between cards stay click-through to whatever is
-/// underneath. Which id sits where is `CardStackModel`'s; this class owns only
-/// the windows.
+/// come back into view. A presenter that `groupsIntoStackWindow` (toasts) puts
+/// each stack in one `ToastStackWindow`; the others (alerts) give each card its
+/// own panel. Either way the gaps between cards stay click-through to
+/// whatever is underneath. Which id sits where is `CardStackModel`'s; this
+/// class owns only the windows.
 @MainActor
 class CardStackPresenter: NoticePresenter {
 
@@ -21,18 +23,22 @@ class CardStackPresenter: NoticePresenter {
 
     private struct Placement {
         var key: StackKey
-        let panel: NoticePanel
+        /// The card's own panel, or the stack's shared window.
+        var panel: NoticePanel
+        let layer: NoticeProfile.Layer
         let card: NoticeCardView
     }
 
     private struct Pill {
-        let panel: NoticePanel
+        /// `nil` when the pill lives in a stack window.
+        let panel: NoticePanel?
         let view: MorePillView
     }
 
     let rules: @MainActor () -> NoticeRoutingRules
     let cardStyle: NoticeCardView.Style
     private let showHistory: @MainActor () -> Void
+    private let store: SettingsStore
 
     private(set) var shownIDs: [String] = []
     private var placements: [String: [Placement]] = [:]
@@ -41,6 +47,7 @@ class CardStackPresenter: NoticePresenter {
     private var selections: [String: NoticeProfile.ScreenSelection] = [:]
     private var model = CardStackModel()
     private var pills: [StackKey: Pill] = [:]
+    private var stackWindows: [StackKey: ToastStackWindow] = [:]
     private var screenObserver: NSObjectProtocol?
 
     /// The displays a screen selection resolves to right now. Internal so a
@@ -52,8 +59,10 @@ class CardStackPresenter: NoticePresenter {
     init(
         rules: @escaping @MainActor () -> NoticeRoutingRules,
         cardStyle: NoticeCardView.Style,
-        showHistory: @escaping @MainActor () -> Void
+        showHistory: @escaping @MainActor () -> Void,
+        store: SettingsStore = UserSettings.shared
     ) {
+        self.store = store
         self.rules = rules
         self.cardStyle = cardStyle
         self.showHistory = showHistory
@@ -69,6 +78,10 @@ class CardStackPresenter: NoticePresenter {
             NotificationCenter.default.removeObserver(screenObserver)
         }
     }
+
+    /// Whether a stack is one shared window (toasts) rather than a panel per
+    /// card (alerts).
+    var groupsIntoStackWindow: Bool { false }
 
     /// How many cards one stack shows before the rest fold behind the pill.
     var visibleLimit: Int { .max }
@@ -99,17 +112,21 @@ class CardStackPresenter: NoticePresenter {
         for profile in profiles {
             for displayID in displays(rules.screens) {
                 let key = StackKey(displayID: displayID, position: profile.position)
-                let panel = NoticePanel(layer: profile.layer, hideFromSharing: hideFromSharing)
+                let panel = groupsIntoStackWindow
+                    ? stackWindow(for: key, layer: profile.layer)
+                    : NoticePanel(layer: profile.layer, hideFromSharing: hideFromSharing)
                 let card = NoticeCardView(notice: notice, actions: actions, style: cardStyle)
                 card.onHoverChange = { [weak self, weak card] hovered in
                     guard let self, let card else { return }
                     self.hoverChanged(on: card, hovered: hovered)
                 }
-                panel.contentView = card
+                if !groupsIntoStackWindow {
+                    panel.contentView = card
+                }
                 // Hidden until a layout puts it in its stack's visible prefix.
                 card.setInOverflow(true)
                 card.startAutoDismiss(after: autoDismiss(for: profile))
-                made.append(Placement(key: key, panel: panel, card: card))
+                made.append(Placement(key: key, panel: panel, layer: profile.layer, card: card))
                 model.insert(notice.id, in: key)
             }
         }
@@ -133,6 +150,7 @@ class CardStackPresenter: NoticePresenter {
             layout(key)
         }
         closeOrphanedPills()
+        closeOrphanedStackWindows()
     }
 
     func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
@@ -155,7 +173,7 @@ class CardStackPresenter: NoticePresenter {
               selections[oldID] == selection,
               Set(existing.map(\.key.position)) == Set(profiles.map(\.position)),
               existing.allSatisfy({ placement in
-                  profile(at: placement.key.position).map { level($0) == placement.panel.level } ?? false
+                  profile(at: placement.key.position).map { $0.layer == placement.layer } ?? false
               })
         else {
             remove(id: oldID)
@@ -232,6 +250,7 @@ class CardStackPresenter: NoticePresenter {
             layout(key)
         }
         closeOrphanedPills()
+        closeOrphanedStackWindows()
     }
 
     private func rehome(_ id: String, from source: StackKey, to target: StackKey) {
@@ -241,16 +260,16 @@ class CardStackPresenter: NoticePresenter {
             close(group.remove(at: index))
         } else {
             group[index].key = target
+            if group[index].panel is ToastStackWindow {
+                group[index].card.removeFromSuperview()
+                group[index].panel = stackWindow(for: target, layer: group[index].layer)
+            }
         }
         placements[id] = group
         model.move(id, from: source, to: target)
     }
 
     // MARK: Layout
-
-    private func level(_ profile: NoticeProfile) -> NSWindow.Level {
-        profile.layer == .floating ? .statusBar : .normal
-    }
 
     private func placement(of id: String, in key: StackKey) -> Placement? {
         placements[id]?.first { $0.key == key }
@@ -262,25 +281,80 @@ class CardStackPresenter: NoticePresenter {
 
     private func close(_ placement: Placement) {
         placement.card.stop()
-        placement.panel.orderOut(nil)
-        placement.panel.close()
+        if placement.panel is ToastStackWindow {
+            // The stack's window outlives the card; the next layout drops or
+            // closes it.
+            placement.card.removeFromSuperview()
+        } else {
+            placement.panel.orderOut(nil)
+            placement.panel.close()
+        }
+    }
+
+    /// Takes a card out of sight: its own panel goes off screen, or it leaves
+    /// the stack window at the next arrangement.
+    private func hide(_ placement: Placement) {
+        placement.card.setInOverflow(true)
+        if !(placement.panel is ToastStackWindow) {
+            placement.panel.orderOut(nil)
+        }
+    }
+
+    // MARK: Stack windows
+
+    private func stackWindow(for key: StackKey, layer: NoticeProfile.Layer) -> ToastStackWindow {
+        if let window = stackWindows[key] { return window }
+        let window = ToastStackWindow(
+            position: key.position, layer: layer,
+            hideFromSharing: rules().hideFromScreenSharing, store: store)
+        let position = key.position
+        window.onOffsetChange = { [weak self] in self?.offsetChanged(for: position) }
+        stackWindows[key] = window
+        return window
+    }
+
+    private func closeStackWindow(_ key: StackKey) {
+        guard let window = stackWindows.removeValue(forKey: key) else { return }
+        window.orderOut(nil)
+        window.close()
+    }
+
+    private func closeOrphanedStackWindows() {
+        for key in Array(stackWindows.keys) where model.ids(in: key).isEmpty {
+            closeStackWindow(key)
+        }
+    }
+
+    /// A drag or reset moved one stack: its position's stacks on the other
+    /// screens follow.
+    private func offsetChanged(for position: NoticeProfile.Position) {
+        for key in model.keys where key.position == position {
+            layout(key)
+        }
     }
 
     private func layout(_ key: StackKey) {
         let split = model.split(key, limit: visibleLimit)
         let visible = split.visible.compactMap { placement(of: $0, in: key) }
         for placement in split.hidden.compactMap({ placement(of: $0, in: key) }) {
-            placement.card.setInOverflow(true)
-            placement.panel.orderOut(nil)
+            hide(placement)
         }
         guard !visible.isEmpty, let screen = screen(for: key.displayID) else {
             // Nothing left here, or the display is gone and
             // `screensDidChange` is about to move the stack.
             for placement in visible {
-                placement.card.setInOverflow(true)
-                placement.panel.orderOut(nil)
+                hide(placement)
             }
             closePill(key)
+            if visible.isEmpty {
+                closeStackWindow(key)
+            } else {
+                stackWindows[key]?.orderOut(nil)
+            }
+            return
+        }
+        if groupsIntoStackWindow {
+            layoutStackWindow(key, visible: visible, pillCount: split.pillCount, screen: screen)
             return
         }
 
@@ -289,7 +363,7 @@ class CardStackPresenter: NoticePresenter {
             return placement.card.fittingSize
         }
         let pill = split.pillCount > 0
-            ? makePill(key, count: split.pillCount, layer: visible.first?.panel.level) : nil
+            ? makePill(key, count: split.pillCount, layer: visible.first?.layer ?? .floating) : nil
         if let pill {
             sizes.append(pill.view.fittingSize)
         }
@@ -302,22 +376,45 @@ class CardStackPresenter: NoticePresenter {
             }
             placement.card.setInOverflow(false)
         }
-        if let pill, let frame = frames.last {
-            pill.panel.setFrame(frame, display: true)
-            pill.panel.orderFrontRegardless()
+        if let pill, let panel = pill.panel, let frame = frames.last {
+            panel.setFrame(frame, display: true)
+            panel.orderFrontRegardless()
         } else {
             closePill(key)
         }
     }
 
-    private func makePill(_ key: StackKey, count: Int, layer: NSWindow.Level?) -> Pill {
+    private func layoutStackWindow(_ key: StackKey, visible: [Placement], pillCount: Int, screen: NSScreen) {
+        let layer: NoticeProfile.Layer = visible.contains { $0.layer == .floating } ? .floating : .normal
+        let window = stackWindow(for: key, layer: layer)
+        window.apply(layer: layer)
+        var views: [NSView] = visible.map(\.card)
+        if pillCount > 0 {
+            views.append(makePill(key, count: pillCount, layer: layer).view)
+        } else {
+            closePill(key)
+        }
+        window.arrange(views: views, visible: screen.visibleFrame)
+        for placement in visible {
+            placement.card.setInOverflow(false)
+        }
+        if !window.isVisible {
+            window.orderFrontRegardless()
+        }
+    }
+
+    private func makePill(_ key: StackKey, count: Int, layer: NoticeProfile.Layer) -> Pill {
         if let pill = pills[key] {
             pill.view.count = count
             return pill
         }
-        let panel = NoticePanel(
-            layer: layer == .normal ? .normal : .floating, hideFromSharing: rules().hideFromScreenSharing)
         let view = MorePillView(count: count, width: cardStyle.width) { [weak self] in self?.showHistory() }
+        guard !groupsIntoStackWindow else {
+            let pill = Pill(panel: nil, view: view)
+            pills[key] = pill
+            return pill
+        }
+        let panel = NoticePanel(layer: layer, hideFromSharing: rules().hideFromScreenSharing)
         panel.contentView = view
         let pill = Pill(panel: panel, view: view)
         pills[key] = pill
@@ -326,8 +423,12 @@ class CardStackPresenter: NoticePresenter {
 
     private func closePill(_ key: StackKey) {
         guard let pill = pills.removeValue(forKey: key) else { return }
-        pill.panel.orderOut(nil)
-        pill.panel.close()
+        guard let panel = pill.panel else {
+            pill.view.removeFromSuperview()
+            return
+        }
+        panel.orderOut(nil)
+        panel.close()
     }
 
     /// A pill whose stack emptied out goes with it.
