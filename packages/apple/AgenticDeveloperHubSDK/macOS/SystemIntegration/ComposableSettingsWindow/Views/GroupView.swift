@@ -216,6 +216,22 @@ extension ComposableSettings {
             append(row)
         }
 
+        /// Decorates the row holding `view`, which must already have been added
+        /// with ``addSettingSubview(_:style:)``: `leadingAccessory` sits in the
+        /// card's leading inset, centred on the row, so it marks the row without
+        /// moving its label; `contextMenu` is what a right-click anywhere on the
+        /// row shows. Either may be nil, which removes what was there.
+        ///
+        /// A hook rather than a row type of its own, because what a row is marked
+        /// with — a scoped settings sheet's "this overrides the global value"
+        /// dot, say — is the caller's meaning, and every existing row view should
+        /// be able to carry it without a subclass apiece.
+        public func setRowDecoration(leadingAccessory: NSView?, contextMenu: NSMenu?, for view: NSView) {
+            guard let row = rows.first(where: { $0.content === view }) else { return }
+            row.setLeadingAccessory(leadingAccessory)
+            row.menu = contextMenu
+        }
+
         private func append(_ row: CardRow) {
             rows.append(row)
             rowStack.addArrangedSubview(row)
@@ -318,6 +334,23 @@ extension ComposableSettings {
 
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
+        }
+
+        private var leadingAccessory: NSView?
+
+        /// Puts `accessory` in the leading inset, centred on the content, or
+        /// takes the current one away.
+        func setLeadingAccessory(_ accessory: NSView?) {
+            leadingAccessory?.removeFromSuperview()
+            leadingAccessory = accessory
+            guard let accessory else { return }
+            accessory.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(accessory)
+            let gap = ComposableSettings.SettingsLayout.default[.cardHorizontalInset] / 2
+            NSLayoutConstraint.activate([
+                accessory.centerXAnchor.constraint(equalTo: leadingAnchor, constant: gap),
+                accessory.centerYAnchor.constraint(equalTo: content.centerYAnchor)
+            ])
         }
 
         /// Takes the row's visibility from its content's, so a stack that
