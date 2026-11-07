@@ -12,8 +12,8 @@ Second, every HTDV should show the list toolbar under each topic header, with an
 always-visible filter button as the leftmost tool. Over the session, the filter grew
 into an autocomplete. The branch was reviewed with `/mycodereview` (squashr, devteam
 skipped), all 15 findings were fixed, and it shipped with `/ship no squash`. adhsdk
-PR #39, adhcontent PR #390, statussite PR #27 and buildersite PR #6 are merged.
-adhubwebsite is re-pointed at adhsdk main but not landed (see Open threads). The design record is
+PR #39, adhcontent PR #390, statussite PR #27, buildersite PR #6 and adhubwebsite PR #51
+are merged. The design record is
 [`../web/htdv-rail-toolbar-and-filter.md`](../web/htdv-rail-toolbar-and-filter.md).
 
 ## Decisions
@@ -59,11 +59,6 @@ adhubwebsite is re-pointed at adhsdk main but not landed (see Open threads). The
 - The devteam half of review `2026-11-06-live-claude-default-3dbf` is pending. Run
   `mycodereview --id 2026-11-06-live-claude-default-3dbf` from any adhsdk checkout,
   then `teambench live judge`.
-- adhubwebsite's `htdv-fixes` worktree holds 9 uncommitted edits that are not this
-  session's. They revert `HUB_DATA_RAIL_IDS`. The user has to decide what happens to
-  them before that peer can land. Its submodule is also still on the pre-squash
-  `adhubwebsite/htdv-fixes` at `397183512`, with modified `adh/dist` files. Resolve it
-  the way statussite and buildersite were resolved (see Research).
 
 ## Research / findings
 
@@ -85,6 +80,20 @@ adhubwebsite is re-pointed at adhsdk main but not landed (see Open threads). The
   to the squashed commits now on main. So skipping every replayed commit is lossless.
   After that, `proj branch delete <peer>/htdv-fixes --allow-unmerged` clears the
   stale remote branch, which would otherwise block `proj wt delete`.
+- adhubwebsite's worktree held 9 uncommitted files under `websites/agenticdeveloperhub/src`
+  that looked like a revert of the hub-data work. A search of every session transcript showed
+  that only this session touched that worktree. The files came from the hub suite's
+  `[[prepare]]` step "assemble the site from site/" (`assemble_site.py`), which ran when this
+  session ran `sites suite restart .` there at 08:24. The generated app was stale at the
+  branch base, and main later committed the identical regeneration (`d739e8b8`). Committed
+  onto the branch, it dropped out of the rebase as empty. The submodule's modified
+  `adh/dist` files came from the same suite's `pnpm build:shared` step, built from the
+  pre-squash tip, so they were restored. Lesson: starting a hub suite in a worktree can
+  dirty generated files that you never edited.
+- adhubwebsite's branch was 13 submodule-pointer bumps to pre-squash adhsdk SHAs. Each
+  conflict was resolved to adhsdk main's tip `a2334dc1d`, and every bump after the first
+  was skipped as empty. A pointer was accepted when it was an ancestor of the target or
+  inside the squashr backup `397183512`.
 - GitHub returned repeated 500s on one adhubwebsite push. A retry a minute later
   succeeded.
 
@@ -92,7 +101,7 @@ adhubwebsite is re-pointed at adhsdk main but not landed (see Open threads). The
 
 - Design: [`../web/htdv-rail-toolbar-and-filter.md`](../web/htdv-rail-toolbar-and-filter.md)
 - adhsdk PR #39, merged range `8a439903a..e1f13eb96`. adhcontent PR #390, statussite
-  PR #27, buildersite PR #6.
+  PR #27, buildersite PR #6, adhubwebsite PR #51 (`6bd65da9..178bacd8`).
 - Code: `packages/web/packages/ui/src/blocks/topic-detail.tsx`,
   `hierarchical-topic-detail.tsx`, `hierarchical-menu-detail.tsx`,
   `components/unsaved-changes-guard.tsx`, `lib/step-index.ts`.
