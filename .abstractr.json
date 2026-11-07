@@ -4,7 +4,7 @@
     {
       "name": "apple-adt",
       "paths": [
-        "packages/apple/AgenticDeveloperHubSDK/"
+        "packages/apple/AgenticDeveloperHubSDK/SDK/"
       ],
       "depends_on": [],
       "shared": true,
