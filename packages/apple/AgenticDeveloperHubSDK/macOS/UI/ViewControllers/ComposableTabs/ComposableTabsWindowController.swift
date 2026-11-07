@@ -608,9 +608,27 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         guard let contentViewController = window?.contentViewController else { return }
         let settings = ComposableTabsSettingsViewController(
             isEdgeEnabled: { [weak self] edge in self?.tabbed.isEdgeEnabled(edge) ?? false },
-            setEdgeEnabled: { [weak self] edge, enabled in self?.setEdgeEnabled(edge, enabled) }
+            setEdgeEnabled: { [weak self] edge, enabled in self?.setEdgeEnabled(edge, enabled) },
+            browserJars: projectBrowserJars
         )
         contentViewController.presentAsSheet(settings)
+    }
+
+    /// The project's browser jars, for the settings sheet — `nil` when the
+    /// project's pane registry has no browser, so no pane of this project
+    /// can have made a jar.
+    ///
+    /// Derived from the project this window was given rather than passed in
+    /// separately: the jars live in the project's own database, and the
+    /// registry is the one every browser pane over that database shares
+    /// (`BrowserJarRegistry.shared(for:)`), so a host needs no new parameter
+    /// to get the topic.
+    var projectBrowserJars: ProjectBrowserJars? {
+        guard project.layout.registry.isRegistered(.browser) else { return nil }
+        return ProjectBrowserJars(
+            provider: BrowserJarRegistry.shared(for: project.database),
+            repoID: project.id
+        )
     }
 
     /// Single entry point for edge toggling (project settings and Cocoa

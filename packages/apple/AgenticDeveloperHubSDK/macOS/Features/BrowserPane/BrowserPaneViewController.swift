@@ -160,6 +160,8 @@ public final class BrowserPaneViewController: NSViewController {
     /// What the jar's row was last named, so a title change writes only when
     /// the name it would write is new.
     private var jarLabel: String?
+    /// When `jarLabel` may next be rewritten.
+    private var jarLabelGate = BrowserJarLabelGate()
     private var builtAutomation: BrowserAutomation?
     /// The driving seam a model reaches the pane through. Built on first
     /// use so a pane nobody drives pays nothing for it, and moved to the new
@@ -658,10 +660,14 @@ public final class BrowserPaneViewController: NSViewController {
 
     /// Keeps the pane jar's row named after the page, so a list of jars says
     /// what each was for after its pane is gone.
-    private func updateJarLabel() {
+    ///
+    /// At most once per committed navigation (`BrowserJarLabelGate`), so a
+    /// page that keeps retitling itself does not keep writing the database.
+    private func updateJarLabel(finished: Bool) {
         guard resolvedJar.jar == .pane, let jarID = resolvedJar.jarID, let jars = paneContext.jars else { return }
-        let label = paneTitle
-        guard label != jarLabel else { return }
+        guard let label = jarLabelGate.label(
+            pageTitle: webView.title, fallback: paneTitle, finished: finished, current: jarLabel
+        ) else { return }
         jarLabel = label
         jars.updateLabel(jarID: jarID, label: label)
     }
@@ -847,7 +853,7 @@ public final class BrowserPaneViewController: NSViewController {
 
     private func titleDidChange() {
         onPaneTitleChange?()
-        updateJarLabel()
+        updateJarLabel(finished: false)
         guard let visitID = currentVisitID, let title = webView.title, !title.isEmpty else { return }
         file(title, againstVisit: visitID)
     }
@@ -1189,11 +1195,13 @@ extension BrowserPaneViewController: WKNavigationDelegate {
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         consoleLog.clear()
         rememberAddress()
+        jarLabelGate.navigationDidCommit()
         recordNavigation("commit")
     }
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         recordVisit()
+        updateJarLabel(finished: true)
         recordNavigation("finish")
     }
 
