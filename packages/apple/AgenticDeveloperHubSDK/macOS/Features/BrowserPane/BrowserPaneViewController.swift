@@ -99,6 +99,23 @@ public final class BrowserPaneViewController: NSViewController {
     /// Counts content-rule requests, so a compile that finishes after a newer
     /// request — or after the web view was rebuilt — is dropped.
     private var contentRulesGeneration = 0
+    /// Whether the current request's rule list is still being compiled or
+    /// looked up. A load asked for meanwhile is held (`heldLoad`).
+    private var isApplyingContentRules = false
+    /// The load waiting for the rules to land, so a page never starts before
+    /// the blocker it was meant to load under. Released when the current
+    /// request finishes, whether it succeeded or failed.
+    private var heldLoad: URLRequest?
+    /// Whether a load is waiting for the rules. For tests.
+    var isHoldingLoad: Bool { heldLoad != nil }
+    /// Where rule lists come from. The store by default; a test injects a
+    /// slow or failing one to drive the generation and failure paths.
+    var contentRuleListProvider: @MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList? = {
+        try await BrowserContentRules.ruleList(for: $0)
+    }
+    /// Called as each navigation starts. A test seam: it is how a test sees
+    /// what rules were on the web view when its first page began loading.
+    var onNavigationStart: (() -> Void)?
     /// What the jar's row was last named, so a title change writes only when
     /// the name it would write is new.
     private var jarLabel: String?
@@ -210,6 +227,7 @@ public final class BrowserPaneViewController: NSViewController {
         // A new web view starts with no rule lists, whatever the last one had.
         requestedThirdPartyContent = nil
         appliedThirdPartyContent = nil
+        isApplyingContentRules = false
         applyLiveSettings()
     }
 
@@ -380,7 +398,15 @@ public final class BrowserPaneViewController: NSViewController {
     /// that finishes after a newer request, or after a rebuild (which asks
     /// again for its new web view), is dropped rather than applied over it.
     /// `.allow` takes the rules off at once, with nothing to wait for. Until a
-    /// blocking compile lands the web view keeps whatever list it had.
+    /// blocking compile lands the web view keeps whatever list it had, and a
+    /// load asked for meanwhile is held (`loadOnceRulesAreOn`).
+    ///
+    /// A failed compile fails **open**: the web view keeps the lists it had,
+    /// the held load goes ahead, the failure is logged, and the request is
+    /// forgotten so the next settings change tries again. Blocking every load
+    /// because the rule store errored would break browsing outright, which is
+    /// a worse answer to a store fault than a page with its third-party
+    /// content for now.
     private func applyContentRules() {
         let policy = settings.get(UserSettings.browserPrivacyThirdPartyContent)
         guard policy != requestedThirdPartyContent else { return }
@@ -390,20 +416,46 @@ public final class BrowserPaneViewController: NSViewController {
         guard policy != .allow else {
             webView.configuration.userContentController.removeAllContentRuleLists()
             appliedThirdPartyContent = .allow
+            finishContentRules()
             return
         }
+        isApplyingContentRules = true
+        let provide = contentRuleListProvider
         Task { [weak self, logger] in
             do {
-                let list = try await BrowserContentRules.ruleList(for: policy)
+                let list = try await provide(policy)
                 guard let self, self.contentRulesGeneration == generation else { return }
                 let controller = self.webView.configuration.userContentController
                 controller.removeAllContentRuleLists()
                 if let list { controller.add(list) }
                 self.appliedThirdPartyContent = policy
+                self.finishContentRules()
             } catch {
+                guard let self, self.contentRulesGeneration == generation else { return }
+                self.requestedThirdPartyContent = nil
                 logger.error(
                     "browser content rules failed to compile: \(error.localizedDescription, privacy: .public)")
+                self.finishContentRules()
             }
+        }
+    }
+
+    /// The current request is done, one way or the other: a held load may go.
+    private func finishContentRules() {
+        isApplyingContentRules = false
+        guard let request = heldLoad else { return }
+        heldLoad = nil
+        webView.load(request)
+    }
+
+    /// Loads `request` now, or — while the current rule list is still on its
+    /// way — once it is on, so a blocked resource is never fetched by a page
+    /// that started first. A newer request replaces a held one.
+    private func loadOnceRulesAreOn(_ request: URLRequest) {
+        if isApplyingContentRules {
+            heldLoad = request
+        } else {
+            webView.load(request)
         }
     }
 
@@ -496,6 +548,7 @@ public final class BrowserPaneViewController: NSViewController {
         webView.removeFromSuperview()
         pageHost?.removeFromSuperview()
         pageHost = nil
+        heldLoad = nil
 
         let jar = Self.resolveJar(settings: settings, context: paneContext, label: label)
         let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
@@ -521,7 +574,7 @@ public final class BrowserPaneViewController: NSViewController {
         installPageHost()
         observeWebView()
         if view.window != nil { observeFirstResponder() }
-        webView.load(URLRequest(url: shownURL ?? restorationURL))
+        loadOnceRulesAreOn(URLRequest(url: shownURL ?? restorationURL))
     }
 
     /// Keeps the pane jar's row named after the page, so a list of jars says
@@ -608,7 +661,7 @@ public final class BrowserPaneViewController: NSViewController {
         super.viewDidLoad()
         observeWebView()
         pruneHistory()
-        webView.load(URLRequest(url: restorationURL))
+        loadOnceRulesAreOn(URLRequest(url: restorationURL))
     }
 
     /// A pane that appears — opened, or its tab brought forward — is the one
@@ -779,7 +832,7 @@ public final class BrowserPaneViewController: NSViewController {
     /// Navigates the pane. Public so a host — a link in a note, a scripting
     /// command — can point it somewhere without going through the field.
     public func load(_ url: URL) {
-        webView.load(URLRequest(url: url))
+        loadOnceRulesAreOn(URLRequest(url: url))
         view.window?.makeFirstResponder(webView)
     }
 
@@ -879,6 +932,7 @@ extension BrowserPaneViewController: WKNavigationDelegate {
     /// previous page's row.
     public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         currentVisitID = nil
+        onNavigationStart?()
     }
 
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
