@@ -6,14 +6,32 @@ import AgenticDeveloperHubSDKCore
 @MainActor
 final class BrowserPaneAutomationTests: XCTestCase {
 
-    private func makePane() -> BrowserPaneViewController {
-        let settings = UserSettings(
+    private func makeSettings() -> SettingsStore {
+        UserSettings(
             with: InMemorySettingsStorageProvider(),
             secureSettingsProvider: InMemorySecureSettingsStorageProvider()
         )
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+    }
+
+    private func makePane(settings: SettingsStore? = nil) -> BrowserPaneViewController {
+        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings ?? makeSettings())
         _ = pane.view
         return pane
+    }
+
+    private func consoleScriptCount(_ webView: WKWebView) -> Int {
+        webView.configuration.userContentController.userScripts
+            .filter { $0.source == BrowserConsoleLog.script }
+            .count
+    }
+
+    /// Whether the console message handler is registered: WebKit raises on a
+    /// second handler under a name still registered, so only call this where
+    /// the answer is expected to be no.
+    private func assertNoConsoleHandler(_ webView: WKWebView) {
+        let controller = webView.configuration.userContentController
+        controller.add(BrowserConsoleLog(), name: BrowserConsoleLog.handlerName)
+        controller.removeScriptMessageHandler(forName: BrowserConsoleLog.handlerName)
     }
 
     private var loads = 0
@@ -59,6 +77,59 @@ final class BrowserPaneAutomationTests: XCTestCase {
             !pane.consoleLog.messages(level: nil).isEmpty
         }
         XCTAssertEqual(pane.consoleLog.messages(level: nil).map(\.text), ["hello pane"])
+    }
+
+    /// The brief's `makeConfiguration` count, tested where the script now
+    /// lives: the pane's web view.
+    func testConsoleCaptureOffInjectsNoConsoleScript() async {
+        let settings = makeSettings()
+        settings.set(false, for: UserSettings.browserPrivacyConsoleCapture)
+        let off = makePane(settings: settings)
+        XCTAssertEqual(consoleScriptCount(off.webView), 0)
+        assertNoConsoleHandler(off.webView)
+        XCTAssertFalse(off.automation.isConsoleCaptureOn)
+        await load("<script>console.warn('unheard')</script>", into: off)
+        XCTAssertTrue(off.consoleLog.messages(level: nil).isEmpty)
+
+        let captured = makePane()
+        XCTAssertEqual(consoleScriptCount(captured.webView), 1)
+        XCTAssertTrue(captured.automation.isConsoleCaptureOn)
+    }
+
+    /// `makeConfiguration` registers the handler only when told to.
+    func testConfigurationRegistersTheHandlerOnlyWithCapture() {
+        let settings = makeSettings()
+        let jar = BrowserPaneViewController.resolveJar(settings: settings, context: .detached, label: "t")
+        let off = BrowserPaneViewController.makeConfiguration(
+            settings: settings, consoleLog: BrowserConsoleLog(), jar: jar, capturesConsole: false
+        )
+        XCTAssertTrue(off.userContentController.userScripts.isEmpty)
+        off.userContentController.add(BrowserConsoleLog(), name: BrowserConsoleLog.handlerName)
+        off.userContentController.removeScriptMessageHandler(forName: BrowserConsoleLog.handlerName)
+    }
+
+    /// Console capture is read when a web view is built, never live: a change
+    /// waits for the rebuild, which applies it to the script, the handler and
+    /// the automation together.
+    func testConsoleCaptureAppliesAtRebuild() {
+        let settings = makeSettings()
+        let pane = makePane(settings: settings)
+        let automation = pane.automation
+        XCTAssertTrue(automation.isConsoleCaptureOn)
+
+        settings.set(false, for: UserSettings.browserPrivacyConsoleCapture)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        XCTAssertEqual(consoleScriptCount(pane.webView), 1, "not live: the current web view keeps its hook")
+
+        pane.rebuildWebView()
+        XCTAssertEqual(consoleScriptCount(pane.webView), 0)
+        assertNoConsoleHandler(pane.webView)
+        XCTAssertFalse(automation.isConsoleCaptureOn, "the retargeted automation follows the rebuild")
+
+        settings.set(true, for: UserSettings.browserPrivacyConsoleCapture)
+        pane.rebuildWebView()
+        XCTAssertEqual(consoleScriptCount(pane.webView), 1)
+        XCTAssertTrue(automation.isConsoleCaptureOn)
     }
 
     func testConsoleIsClearedOnNavigation() async {
