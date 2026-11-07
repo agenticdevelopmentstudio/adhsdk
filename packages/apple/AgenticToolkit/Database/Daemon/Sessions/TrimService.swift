@@ -391,8 +391,10 @@ public final class TrimService: Sendable {
         // The keep set, read once rather than inside every batch's DELETE (a scan
         // of the account index each time). Safe to hold: a row inserted meanwhile
         // has a higher id, so a "newest" deleted later still has a newer sibling.
+        // A maintenance read: on a slow disk a replay is writing to, the scan
+        // stalled past the 10 s serving ceiling and failed the stage.
         var keep: [Int64] = []
-        try database.query(newest) { row in
+        try database.query(newest, deadline: DaemonDatabase.maintenanceReadDeadline) { row in
             if let id: Int64 = row[0] { keep.append(id) }
         }
         let keepJSON = "[" + keep.map(String.init).joined(separator: ",") + "]"
