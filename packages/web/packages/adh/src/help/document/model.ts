@@ -269,6 +269,14 @@ function withTutorialParts(
       definitions: termsFor(terms, node.id).length > 0,
       steps: sectionsOf(card.description).sections.length > 0,
     };
+    // A tutorial's list is its Overview and its panes, and an Overview needs a list under it. One
+    // with neither steps nor terms would fall back to a plain page while its row still says
+    // tutorial, so it is a broken build.
+    if (!has.definitions && !has.steps) {
+      throw new Error(
+        `the ${title} tutorial "${node.id}" has no ### step and no ${glossaryId} term linking to it — give it steps.`,
+      );
+    }
     const children = TUTORIAL_PARTS.filter((part) => has[part.id]).map(
       (part): DocNode => ({
         id: part.id,

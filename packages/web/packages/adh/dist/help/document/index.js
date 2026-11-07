@@ -195,6 +195,11 @@ function withTutorialParts(tree, bodies, base, glossaryId, title) {
       definitions: termsFor(terms, node.id).length > 0,
       steps: sectionsOf(card.description).sections.length > 0
     };
+    if (!has.definitions && !has.steps) {
+      throw new Error(
+        `the ${title} tutorial "${node.id}" has no ### step and no ${glossaryId} term linking to it \u2014 give it steps.`
+      );
+    }
     const children = TUTORIAL_PARTS.filter((part) => has[part.id]).map(
       (part) => ({
         id: part.id,
