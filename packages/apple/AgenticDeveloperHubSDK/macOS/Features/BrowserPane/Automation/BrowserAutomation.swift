@@ -673,7 +673,11 @@ public final class BrowserAutomation: NSObject {
             guard let event = NSEvent.mouseEvent(
                 with: type, location: inWindow, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
                 windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1) else { continue }
-            if type == .leftMouseDown { webView.mouseDown(with: event) } else { webView.mouseUp(with: event) }
+            let deliver = {
+                if type == .leftMouseDown { self.webView.mouseDown(with: event) } else { self.webView.mouseUp(with: event) }
+            }
+            // Marked as the agent's, so a gate that blocks the user's mouse still lets it through.
+            if let gated = webView as? BrowserWebView { gated.deliveringAutomationInput(deliver) } else { deliver() }
         }
     }
 }
