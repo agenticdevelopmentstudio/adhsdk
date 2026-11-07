@@ -113,8 +113,17 @@ var METHODS = /* @__PURE__ */ new Set(["GET", "POST", "PUT", "PATCH", "DELETE"])
 function apiRoutesOf(blocks) {
   const out = [];
   const seen = /* @__PURE__ */ new Set();
-  let pending = [];
+  const add = (methods, text) => {
+    const path = text.split(/[?#]/)[0] ?? text;
+    for (const method of methods) {
+      const key = `${method ?? "*"} ${path}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(method ? { method, path } : { path });
+    }
+  };
   for (const block of blocks) {
+    let pending = [];
     for (const match of block.matchAll(/<code>([\s\S]*?)<\/code>/g)) {
       const text = plainText(match[1] ?? "");
       const upper = text.toUpperCase();
@@ -122,15 +131,14 @@ function apiRoutesOf(blocks) {
         pending.push(upper);
         continue;
       }
-      if (!text.startsWith("/")) continue;
-      const path = text.split("?")[0] ?? text;
-      const methods = pending.length ? pending : [void 0];
-      for (const method of methods) {
-        const key = `${method ?? "*"} ${path}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(method ? { method, path } : { path });
+      const both = /^([A-Za-z]+)\s+(\/\S*)$/.exec(text);
+      if (both && METHODS.has(both[1].toUpperCase())) {
+        add([both[1].toUpperCase()], both[2]);
+        pending = [];
+        continue;
       }
+      if (!text.startsWith("/")) continue;
+      add(pending.length ? pending : [void 0], text);
       pending = [];
     }
   }

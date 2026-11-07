@@ -91,8 +91,9 @@ export interface ApiRoute {
 /**
  * The routes a card's `## API` names, in order. content-buildr wants a method in code of its own,
  * so the prose reads "a `GET` or `PUT` of `/ecosystem/client-auth/{id}`": each method code waits
- * for the next code that starts with `/`, and is that route's method. A path with no method
- * before it stands for every method on that path. A query string is not part of the route.
+ * for the next code that starts with `/` in the same block, and is that route's method. A code
+ * span may also hold both, as `GET /auth/me`. A path with no method before it stands for every
+ * method on that path. A query string or fragment is not part of the route.
  */
 export declare function apiRoutesOf(blocks: readonly string[]): ApiRoute[];
 //# sourceMappingURL=parts.d.ts.map
