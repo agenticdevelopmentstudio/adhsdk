@@ -116,10 +116,19 @@ describe('parts', () => {
     const step = stepOf(section)
     expect(step.before).toEqual(['<p>First.</p>\n'])
     expect(step.substeps).toEqual([
-      { id: 'go/1', html: 'One <code>x</code>' },
-      { id: 'go/2', html: 'Two<ol><li>inner</li></ol>' },
+      { id: 'go/one-x', html: 'One <code>x</code>' },
+      { id: 'go/two', html: 'Two<ol><li>inner</li></ol>' },
     ])
     expect(step.after).toEqual(['<p>Then.</p>'])
+    // An id is the item's words, so adding an item above one leaves its id, and its tick, alone.
+    const grown = stepOf({ ...section, html: ['<ol><li>Zero</li><li>One <code>x</code></li><li>Two</li></ol>'] })
+    expect(grown.substeps.map((s) => s.id)).toEqual(['go/zero', 'go/one-x', 'go/two'])
+    // Same words twice are told apart; long items keep their first six words; an empty one is "item".
+    const repeated = stepOf({
+      ...section,
+      html: ['<ol><li><p>Save</p><pre>a</pre></li><li>Save</li><li>a b c d e f g h</li><li><code></code></li></ol>'],
+    })
+    expect(repeated.substeps.map((s) => s.id)).toEqual(['go/save', 'go/save-2', 'go/a-b-c-d-e-f', 'go/item'])
     // A list of one item is not a set of sub-steps.
     const single = stepOf({ ...section, html: ['<ol><li>Only</li></ol>'] })
     expect(single.substeps).toEqual([])

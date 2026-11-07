@@ -89,6 +89,19 @@ function listItems(inner) {
   }
   return items;
 }
+var SUBSTEP_ID_WORDS = 6;
+function substepsOf(stepId, items) {
+  const used = /* @__PURE__ */ new Set();
+  return items.map((html) => {
+    const own = html.split(/<(?:ol|ul|pre|blockquote|div|table)[\s>]/)[0] ?? "";
+    const words = slugOf(plainText(own)).split("-").filter(Boolean).slice(0, SUBSTEP_ID_WORDS);
+    const base = words.join("-") || "item";
+    let slug = base;
+    for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
+    used.add(slug);
+    return { id: `${stepId}/${slug}`, html };
+  });
+}
 function stepOf(section) {
   const { html: blocks } = section;
   for (let k = 0; k < blocks.length; k++) {
@@ -110,7 +123,7 @@ function stepOf(section) {
     return {
       ...section,
       before: blocks.slice(0, k),
-      substeps: items.map((html, n) => ({ id: `${section.id}/${n + 1}`, html })),
+      substeps: substepsOf(section.id, items),
       start,
       after: blocks.slice(end)
     };

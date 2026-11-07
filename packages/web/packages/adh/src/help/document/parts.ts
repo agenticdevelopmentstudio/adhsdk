@@ -39,7 +39,7 @@ export interface DocSection {
 
 /** One action within a step: an item of the step's numbered list. */
 export interface Substep {
-  /** `<step id>/<n>`, n counting from 1. */
+  /** `<step id>/<slug of the item's first words>`, deduped within the step. */
   id: string;
   /** The item's rendered HTML. */
   html: string;
@@ -176,6 +176,29 @@ export function listItems(inner: string): string[] {
   return items;
 }
 
+/** The words a sub-step's id is made from, at most this many. */
+const SUBSTEP_ID_WORDS = 6;
+
+/**
+ * A step's list items as sub-steps, each id made from the item's own words: its text up to the
+ * first nested list, code block or quote, the first few words slugged. An id by position would
+ * move a saved tick onto a neighbour when an item is added or removed above it; an id by content
+ * keeps the ticks on unchanged items, and only an item whose words changed starts unticked
+ * (readProgress drops ids it no longer knows). Two items with the same words take -2, -3, ….
+ */
+function substepsOf(stepId: string, items: readonly string[]): Substep[] {
+  const used = new Set<string>();
+  return items.map((html) => {
+    const own = html.split(/<(?:ol|ul|pre|blockquote|div|table)[\s>]/)[0] ?? "";
+    const words = slugOf(plainText(own)).split("-").filter(Boolean).slice(0, SUBSTEP_ID_WORDS);
+    const base = words.join("-") || "item";
+    let slug = base;
+    for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
+    used.add(slug);
+    return { id: `${stepId}/${slug}`, html };
+  });
+}
+
 /**
  * A section as a tutorial step: its first numbered list of two or more items is its sub-steps.
  * A code fence written between two items, not indented under the first, ends the list in
@@ -204,7 +227,7 @@ export function stepOf(section: DocSection): TutorialStep {
     return {
       ...section,
       before: blocks.slice(0, k),
-      substeps: items.map((html, n) => ({ id: `${section.id}/${n + 1}`, html })),
+      substeps: substepsOf(section.id, items),
       start,
       after: blocks.slice(end),
     };
