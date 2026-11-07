@@ -3,6 +3,11 @@
  * Everything here is scoped under `.doc-prose` or `.doc-copy`, so no rule reaches the rail or any
  * other help route. Imported once by the site: `@import "@adh-sdk/adh/document.css"`. */
 
+/* Tailwind @source registration for this package — see the package-root sources.css. Like every
+ * sheet this package exports, importing this one alone is enough for the document components'
+ * utility classes to be generated. */
+@import "../../sources.css";
+
 /* A tutorial step's place in the page when a tick scrolls it into view: clear of the pane's top. */
 .doc-prose [aria-current="step"] {
   scroll-margin-top: 1.5rem;
