@@ -9,6 +9,8 @@ final class ScriptedMailService: @unchecked Sendable {
     private var recorded: [MailRequest] = []
     private var provider: MailProviderStatus
     private var accountList: [MailAccount]
+    fileprivate var labelList: [MailLabel] = []
+    fileprivate var messageList: [MailMessage] = []
     private var failure: String?
     private var failingRequest: ((MailRequest) -> Bool)?
     private var gateMatches: (@Sendable (MailRequest) -> Bool)?
@@ -71,6 +73,9 @@ final class ScriptedMailService: @unchecked Sendable {
     }
 
     func setAccounts(_ accounts: [MailAccount]) { lock.withLock { accountList = accounts } }
+    func setLabels(_ labels: [MailLabel]) { lock.withLock { labelList = labels } }
+    /// Newest first, as the service lists them; bodies are returned only by `getMessage`.
+    func setMessages(_ messages: [MailMessage]) { lock.withLock { messageList = messages } }
 
     var client: MailClient {
         MailClient { data in
@@ -100,9 +105,40 @@ final class ScriptedMailService: @unchecked Sendable {
                     return .account(accountList[index])
                 }
                 return .failure("no such account")
+            case .listLabels: return .labels(labelList)
+            case .listMessages(let filter): return .messages(page(filter))
+            case .getMessage(_, let id):
+                guard let message = messageList.first(where: { $0.id == id }) else {
+                    return .failure("no such message")
+                }
+                return .message(message)
+            case .modifyLabels(_, let ids, let add, let remove):
+                var changed: [MailMessage] = []
+                for index in messageList.indices where ids.contains(messageList[index].id) {
+                    messageList[index].labels.removeAll { remove.contains($0) }
+                    messageList[index].labels += add.filter { !messageList[index].labels.contains($0) }
+                    changed.append(messageList[index])
+                }
+                return .messages(MailMessagePage(messages: changed, nextCursor: nil))
             default: return .ok
             }
         }
+    }
+}
+
+extension ScriptedMailService {
+    /// Called with the lock held.
+    fileprivate func page(_ filter: MailMessageFilter) -> MailMessagePage {
+        let matching = messageList.filter { message in filter.labels.allSatisfy(message.labels.contains) }
+        let offset = filter.cursor.flatMap { Int($0) } ?? 0
+        let listed = matching.dropFirst(offset).prefix(filter.limit).map { message -> MailMessage in
+            var listed = message
+            listed.bodyText = nil
+            listed.bodyHtml = nil
+            return listed
+        }
+        let next = offset + filter.limit < matching.count ? String(offset + filter.limit) : nil
+        return MailMessagePage(messages: Array(listed), nextCursor: next)
     }
 }
 
@@ -110,5 +146,21 @@ extension MailAccount {
     static func fixture(id: String = "a1", email: String = "me@example.com",
                         status: ConnectionStatus = .active) -> MailAccount {
         MailAccount(id: id, email: email, status: status, lastSyncAt: nil, lastError: nil, settings: .default)
+    }
+}
+
+extension MailMessage {
+    static func fixture(id: String, account: String = "me@example.com", labels: [String] = ["INBOX"],
+                        subject: String = "Hello", date: String = "2026-11-07T10:00:00.000Z") -> MailMessage {
+        MailMessage(id: id, gmailId: "g-" + id, threadId: "t-" + id, account: account,
+                    from: "Ann Example <ann@example.com>", to: [account], cc: [], labels: labels,
+                    labelNames: labels, subject: subject, snippet: "snippet " + id, date: date,
+                    mailClass: .filed, bodyText: "body " + id, bodyHtml: nil, attachments: [])
+    }
+}
+
+extension MailLabel {
+    static func fixture(_ id: String, name: String? = nil, type: String = "system", unread: Int? = nil) -> MailLabel {
+        MailLabel(id: id, name: name ?? id, type: type, parentName: nil, messagesTotal: nil, messagesUnread: unread)
     }
 }
