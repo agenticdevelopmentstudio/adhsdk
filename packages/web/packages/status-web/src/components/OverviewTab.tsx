@@ -18,6 +18,7 @@ import type { ActivityRow } from "../lib/board-types";
 import { INDICATOR_STATE } from "../lib/overview";
 import { buildSublabel } from "../lib/status-sublabel";
 import { shortSha } from "../lib/format";
+import { inEnvScope } from "../lib/filter";
 import { ISSUE_SOURCES, type IssueSource } from "../lib/issue-sources";
 import { BigIndicator } from "./BigIndicator";
 import { OverviewStats, StatsGear, DEFAULT_SPAN, SPANS, type Span } from "./OverviewStats";
@@ -164,12 +165,11 @@ export function OverviewTab(): ReactElement {
     fontSize: 14,
   };
 
-  // The display filter over the rows: keep a row when all envs are selected, the row is
-  // env-agnostic (no environment), or its environment is selected. Env-agnostic rows (e.g.
-  // a platform-wide outage) must never be hidden by an env filter — the same scoping the
-  // server applies to `board.scope`.
+  // The display filter over the rows, by the same rule the server scopes `board.scope` with
+  // (`inEnvScope`): an env-agnostic row, including one whose environment is "", is never
+  // hidden, so the rows and the headline over them count the same things.
   const keep = useCallback(
-    (x: { environment?: string | null }): boolean => allEnvs || x.environment == null || envs.has(x.environment),
+    (x: { environment?: string | null }): boolean => inEnvScope(allEnvs ? null : envs, x.environment),
     [allEnvs, envs],
   );
 
