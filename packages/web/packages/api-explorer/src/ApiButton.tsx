@@ -53,7 +53,12 @@ export function ApiButton({
       <DialogContent className="flex h-[96vh] w-[98vw] max-w-none flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b border-apt-border px-5 py-4">
           <DialogTitle>{title ?? 'API reference'}</DialogTitle>
-          <DialogDescription>Browse the API and try any endpoint, authenticated as you.</DialogDescription>
+          <DialogDescription>
+            {browserProps.readOnly ? 'Browse the API.' : 'Browse the API and try any endpoint, authenticated as you.'}
+            {browserProps.highlight?.length
+              ? ` The endpoints under ${browserProps.highlightLabel ?? 'Highlighted'} are the ones this page uses.`
+              : null}
+          </DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-hidden">
           {open && (
