@@ -224,6 +224,10 @@ public final class BrowserAutomation: NSObject {
         let raw: Any?
         do {
             raw = try await driver.callAsyncFunction(body: body, arguments: arguments, world: .automation)
+        } catch let error as BrowserAutomationError {
+            // Already the model's vocabulary; rewrapping it through
+            // `localizedDescription` would lose the message.
+            throw error
         } catch {
             throw BrowserAutomationError.script(error.localizedDescription)
         }
