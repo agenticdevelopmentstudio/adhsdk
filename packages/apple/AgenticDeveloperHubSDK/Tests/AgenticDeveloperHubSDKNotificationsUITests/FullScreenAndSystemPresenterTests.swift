@@ -14,8 +14,15 @@ private final class FakePoster: SystemNotificationPosting {
     var delegations = 0
 
     func becomeDelegate() { delegations += 1 }
-    func requestAuthorization() { authorizationRequests += 1 }
-    func post(_ request: UNNotificationRequest) { posted.append(request) }
+    func isAuthorizationDenied(_ completion: @escaping @MainActor (Bool) -> Void) { completion(false) }
+    func requestAuthorization(_ completion: @escaping @MainActor (Bool, Error?) -> Void) {
+        authorizationRequests += 1
+        completion(true, nil)
+    }
+    func post(_ request: UNNotificationRequest, completion: @escaping @MainActor (Error?) -> Void) {
+        posted.append(request)
+        completion(nil)
+    }
     func removeDelivered(withIdentifiers identifiers: [String]) { removed.append(identifiers) }
     func removePending(withIdentifiers identifiers: [String]) { removedPending.append(identifiers) }
 }

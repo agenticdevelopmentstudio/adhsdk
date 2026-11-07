@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 import UserNotifications
 import AgenticDeveloperHubSDKNotifications
 
@@ -9,8 +10,13 @@ protocol SystemNotificationPosting: AnyObject {
     /// Becomes the Notification Center's delegate and registers the
     /// presenter's category.
     func becomeDelegate()
-    func requestAuthorization()
-    func post(_ request: UNNotificationRequest)
+    /// Whether the user has already turned Rooster's notifications off
+    /// (`getNotificationSettings` reports `.denied`).
+    func isAuthorizationDenied(_ completion: @escaping @MainActor (Bool) -> Void)
+    /// Asks for `[.alert, .sound]`; answers once, with the grant or the error.
+    func requestAuthorization(_ completion: @escaping @MainActor (Bool, Error?) -> Void)
+    /// Adds the request; answers with the error `add` reported, if any.
+    func post(_ request: UNNotificationRequest, completion: @escaping @MainActor (Error?) -> Void)
     func removeDelivered(withIdentifiers identifiers: [String])
     func removePending(withIdentifiers identifiers: [String])
 }
@@ -30,8 +36,18 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     private var injectedPoster: SystemNotificationPosting?
     private let playsSound: @MainActor () -> Bool
     private var actions: [String: NoticeCardActions] = [:]
-    private var authorized = false
+    private enum Authorization { case unknown, pending, granted, denied }
+    private var authorization = Authorization.unknown
+    /// Requests that arrived before the authorization answer.
+    private var queue: [UNNotificationRequest] = []
+    private var deniedReported = false
     private var started = false
+    private let logger = Logger(
+        subsystem: "com.agentic-cookbook.AgenticDeveloperHubSDK", category: "SystemNotificationPresenter")
+
+    /// Called once per launch when Notification Center is off for the host
+    /// app, so the host can say so.
+    public var onAuthorizationDenied: (@MainActor () -> Void)?
 
     /// The category every banner is posted under. It asks for the dismiss
     /// callback, so a banner the user clears comes back as a close.
@@ -74,18 +90,81 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     public func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         guard !profiles.isEmpty else { return }
         start()
-        if !authorized {
-            authorized = true
-            poster.requestAuthorization()
-        }
+        if authorization == .denied { return }
         shownIDs.removeAll { $0 == notice.id }
         shownIDs.append(notice.id)
         self.actions[notice.id] = actions
-        poster.post(UNNotificationRequest(identifier: notice.id, content: content(for: notice), trigger: nil))
+        let request = UNNotificationRequest(identifier: notice.id, content: content(for: notice), trigger: nil)
+        switch authorization {
+        case .granted:
+            add(request)
+        case .pending:
+            enqueue(request)
+        case .unknown:
+            enqueue(request)
+            authorization = .pending
+            resolveAuthorization()
+        case .denied:
+            break
+        }
+    }
+
+    private func enqueue(_ request: UNNotificationRequest) {
+        queue.removeAll { $0.identifier == request.identifier }
+        queue.append(request)
+    }
+
+    /// One question, asked once: already denied, or ask and wait for the answer.
+    private func resolveAuthorization() {
+        poster.isAuthorizationDenied { [weak self] denied in
+            guard let self else { return }
+            if denied {
+                logger.error("Notification Center authorization is denied")
+                deny()
+                return
+            }
+            poster.requestAuthorization { [weak self] granted, error in
+                guard let self else { return }
+                if let error {
+                    logger.error("Authorization request failed: \(error.localizedDescription, privacy: .public)")
+                }
+                logger.info("Authorization \(granted ? "granted" : "denied", privacy: .public)")
+                if granted { grant() } else { deny() }
+            }
+        }
+    }
+
+    private func grant() {
+        authorization = .granted
+        let pending = queue
+        queue = []
+        pending.forEach(add)
+    }
+
+    /// Drops what is queued and tells the host, the first time only.
+    private func deny() {
+        authorization = .denied
+        queue = []
+        shownIDs = []
+        actions = [:]
+        guard !deniedReported else { return }
+        deniedReported = true
+        onAuthorizationDenied?()
+    }
+
+    private func add(_ request: UNNotificationRequest) {
+        let id = request.identifier
+        poster.post(request) { [logger] error in
+            if let error {
+                logger.error(
+                    "Posting \(id, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
     }
 
     public func remove(id: String) {
         guard actions.removeValue(forKey: id) != nil else { return }
+        queue.removeAll { $0.identifier == id }
         shownIDs.removeAll { $0 == id }
         poster.removePending(withIdentifiers: [id])
         poster.removeDelivered(withIdentifiers: [id])
@@ -164,12 +243,23 @@ private final class UserNotificationCenterPoster: SystemNotificationPosting {
             options: [.customDismissAction])])
     }
 
-    func requestAuthorization() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    func isAuthorizationDenied(_ completion: @escaping @MainActor (Bool) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            let denied = settings.authorizationStatus == .denied
+            Task { @MainActor in completion(denied) }
+        }
     }
 
-    func post(_ request: UNNotificationRequest) {
-        UNUserNotificationCenter.current().add(request) { _ in }
+    func requestAuthorization(_ completion: @escaping @MainActor (Bool, Error?) -> Void) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            Task { @MainActor in completion(granted, error) }
+        }
+    }
+
+    func post(_ request: UNNotificationRequest, completion: @escaping @MainActor (Error?) -> Void) {
+        UNUserNotificationCenter.current().add(request) { error in
+            Task { @MainActor in completion(error) }
+        }
     }
 
     func removeDelivered(withIdentifiers identifiers: [String]) {
