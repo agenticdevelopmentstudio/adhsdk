@@ -307,8 +307,9 @@ function contentDocument(source) {
       if (!owner) return null;
     }
     const reads = entry ? overview || !entry.children.length ? entry.owner ?? entry.id : null : overview ? ROOT_KEY : null;
-    const card = reads == null ? null : bodies[reads] ?? null;
-    const canonical = card != null || !rails.at(-1).overview ? asked : [...asked, OVERVIEW_ID];
+    const told = entry ? entry.told : rootTold();
+    const card = reads == null || !told ? null : cardOf(bodies, reads, title);
+    const canonical = reads != null || !rails.at(-1).overview ? asked : [...asked, OVERVIEW_ID];
     let tutorial = null;
     if (entry?.part) tutorial = tutorialView(trail.at(-2), entry.part);
     else if (entry && overview) tutorial = tutorialView(entry, "overview");
