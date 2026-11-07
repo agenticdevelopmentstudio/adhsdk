@@ -12,6 +12,20 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         "browser_screenshot", "browser_click_at", "browser_console", "browser_evaluate"
     ]
 
+    /// The tools that only look at a pane. Agent access `readOnly` lets
+    /// these through and refuses every other tool; `browser_list` is not about
+    /// one pane, so access never refuses it.
+    public static let readToolNames: Set<String> = [
+        "browser_snapshot", "browser_find", "browser_text", "browser_console",
+        "browser_screenshot", "browser_list", "browser_wait_for"
+    ]
+
+    static let readOnlyRefusal =
+        "This browser pane is read only for the agent (Settings > Session Privacy > Agent access)."
+    static let pausedRefusal = "This browser pane's events are paused, and its settings pause the agent too."
+    static let hiddenRefusal =
+        "This browser pane is hidden from the agent (Settings > Session Privacy > Agent access)."
+
     private let directory: any BrowserPaneDirectory
     private let settings: SettingsStore
 
@@ -163,6 +177,34 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         if name == "browser_evaluate" { try requireEvaluateEnabled() }
     }
 
+    /// The switches and the pane's own Agent access, checked when a call
+    /// actually runs. The handle is looked up again here rather than taken
+    /// from before the queue: the user may make the pane read only, pause it,
+    /// hide it or close it while the call waits. `browserPanes()` is the
+    /// lookup because it only reads; `browserPane(id:)` reveals the pane's
+    /// project, which a refused call must not do.
+    @MainActor
+    private func requireSwitches(for name: String, paneID: String) throws {
+        try requireSwitches(for: name)
+        guard let pane = directory.browserPanes().first(where: { $0.id == paneID }) else {
+            throw ToolError(sentence: "pane \(paneID) was closed; call browser_list")
+        }
+        try requireAccess(for: name, on: pane)
+    }
+
+    /// The pane's Agent access and pause state against the tool: a pane
+    /// paused for the agent refuses every tool, a read-only one every tool
+    /// that is not a read. A hidden pane reaches here only straight from
+    /// `openBrowserPane`, the one path that does not go through `visible`.
+    @MainActor
+    private func requireAccess(for name: String, on pane: BrowserPaneHandle) throws {
+        if pane.access == .hidden { throw ToolError(sentence: Self.hiddenRefusal) }
+        if pane.isPausedForAgent { throw ToolError(sentence: Self.pausedRefusal) }
+        if pane.access == .readOnly, !Self.readToolNames.contains(name) {
+            throw ToolError(sentence: Self.readOnlyRefusal)
+        }
+    }
+
     @MainActor
     private func requireEnabled() throws {
         guard settings.get(UserSettings.browserAutomationEnabled) else {
@@ -186,15 +228,20 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         if name == "browser_open" {
             let url = args.optionalString("url") == nil ? openWithoutURLPage() : try args.url("url")
             let pane = try directory.openBrowserPane(besidePane: caller)
+            try requireAccess(for: name, on: pane)
             return try await pane.automation.drive {
-                try self.requireSwitches(for: name)
+                try self.requireSwitches(for: name, paneID: pane.id)
                 let delta = try await pane.automation.navigate(to: url)
                 return "opened pane \(pane.id)\n" + delta.rendered()
             }
         }
-        let automation = try resolvePane(args, caller: caller).automation
+        let pane = try resolvePane(args, caller: caller)
+        // Refused at once when the pane already refuses, rather than after
+        // waiting behind other callers; checked again once dequeued.
+        try requireAccess(for: name, on: pane)
+        let automation = pane.automation
         return try await automation.drive {
-            try self.requireSwitches(for: name)
+            try self.requireSwitches(for: name, paneID: pane.id)
             if let reply = try await self.dispatchNavigation(name, args, automation) { return reply }
             if let reply = try await self.dispatchReading(name, args, automation) { return reply }
             if let reply = try await self.dispatchActions(name, args, automation) { return reply }
@@ -329,11 +376,20 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let rows: [[String: Any]] = panes.map { pane in
             [
                 "id": pane.id, "title": pane.title, "url": pane.url, "project": pane.project,
-                "tab": pane.tab, "is_default": pane.id == defaultID
+                "tab": pane.tab, "is_default": pane.id == defaultID, "access": Self.accessName(pane.access)
             ]
         }
         let data = (try? JSONSerialization.data(withJSONObject: rows, options: [.sortedKeys])) ?? Data()
         return String(bytes: data, encoding: .utf8) ?? ""
+    }
+
+    /// How `browser_list` names a pane's Agent access.
+    static func accessName(_ access: BrowserAgentAccess) -> String {
+        switch access {
+        case .full: "full"
+        case .readOnly: "read only"
+        case .hidden: "hidden"
+        }
     }
 
     // MARK: Definitions
@@ -352,7 +408,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     }
 
     static let definitions: [ToolDefinition] = [
-        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, and which one is the default for this caller.", [:]),
+        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, access (full, or read only: snapshot, find, text, console, screenshot and wait only), and which one is the default for this caller.", [:]),
         tool("browser_open", "Open a new Browser pane beside the caller and load a URL (http or https), or the home page (else a blank page) when no URL is given.", ["url": ToolJSONSchema.string("The page to load; optional")]),
         tool("browser_navigate", "Load a URL in a Browser pane.", ["url": ToolJSONSchema.string("The page to load"), "pane_id": paneID], required: ["url"]),
         tool("browser_back", "Go back one page.", ["pane_id": paneID]),

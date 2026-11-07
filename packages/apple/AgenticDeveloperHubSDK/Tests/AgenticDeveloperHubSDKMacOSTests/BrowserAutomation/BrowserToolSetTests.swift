@@ -311,6 +311,98 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertTrue(reply.content.hasPrefix("data:image/png;base64,"))
     }
 
+    // MARK: Agent access
+
+    /// The handle for page `id` with the given access and pause state.
+    private func handle(_ id: String, access: BrowserAgentAccess = .full, pausedForAgent: Bool = false) -> BrowserPaneHandle {
+        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, access: access, isPausedForAgent: pausedForAgent)
+    }
+
+    func testHiddenPaneIsNotListed() async {
+        directory.panes = FakeBrowserDirectory.visible([handle("A"), handle("B", access: .hidden)])
+        let list = await call("browser_list")
+        let rows = try! JSONSerialization.jsonObject(with: Data(list.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["id"] as? String }, ["A"])
+        let byID = await call("browser_snapshot", ["pane_id": "B"])
+        XCTAssertTrue(byID.isError)
+        XCTAssertEqual(byID.content, "pane B was closed; call browser_list")
+        let byDefault = await call("browser_snapshot")
+        XCTAssertTrue(byDefault.content.contains("One"), byDefault.content)
+    }
+
+    func testReadOnlyPaneRefusesClick() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B")]
+        let snap = await call("browser_snapshot", ["pane_id": "A"])
+        XCTAssertFalse(snap.isError, snap.content)
+        for (tool, args) in [
+            ("browser_click", ["ref": "e1", "generation": 1] as [String: Any]),
+            ("browser_navigate", ["url": "https://example.test/"]),
+            ("browser_press_key", ["key": "Enter"]),
+            ("browser_scroll", [:])
+        ] {
+            let reply = await call(tool, args.merging(["pane_id": "A"]) { $1 })
+            XCTAssertTrue(reply.isError, tool)
+            XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).", tool)
+        }
+        store.set(true, for: UserSettings.browserAutomationEvaluate)
+        let evaluate = await call("browser_evaluate", ["pane_id": "A", "expression": "1+1"])
+        XCTAssertEqual(evaluate.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).")
+        let other = await call("browser_click", ["pane_id": "B", "ref": "e1", "generation": 99])
+        XCTAssertNotEqual(other.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).")
+    }
+
+    func testReadOnlyPaneAllowsSnapshot() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B")]
+        let snap = await call("browser_snapshot", ["pane_id": "A"])
+        XCTAssertFalse(snap.isError, snap.content)
+        XCTAssertTrue(snap.content.contains("One"), snap.content)
+        let find = await call("browser_find", ["pane_id": "A", "text": "one"])
+        XCTAssertFalse(find.isError, find.content)
+        let text = await call("browser_text", ["pane_id": "A"])
+        XCTAssertFalse(text.isError, text.content)
+        let console = await call("browser_console", ["pane_id": "A"])
+        XCTAssertFalse(console.isError, console.content)
+        let wait = await call("browser_wait_for", ["pane_id": "A", "text": "One", "timeout": 1])
+        XCTAssertFalse(wait.isError, wait.content)
+    }
+
+    func testPausedForAgentRefusesSnapshot() async {
+        directory.panes = [handle("A", pausedForAgent: true), handle("B")]
+        for tool in ["browser_snapshot", "browser_text", "browser_back"] {
+            let reply = await call(tool, ["pane_id": "A"])
+            XCTAssertTrue(reply.isError, tool)
+            XCTAssertEqual(reply.content, "This browser pane's events are paused, and its settings pause the agent too.", tool)
+        }
+        let list = await call("browser_list")
+        XCTAssertFalse(list.isError, list.content)
+    }
+
+    /// The handle is read again once the call is dequeued: a pane made read
+    /// only while the call waited refuses it.
+    func testAccessChangedWhileQueuedRefusesTheQueuedCall() async throws {
+        let automation = directory.panes[0].automation
+        let directory = self.directory!
+        let readOnly = handle("A", access: .readOnly)
+        let held = Task { @MainActor in
+            try await automation.drive {
+                try await Task.sleep(nanoseconds: 300_000_000)
+                directory.panes[0] = readOnly
+            }
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        let reply = await call("browser_click", ["pane_id": "A", "ref": "e1", "generation": 1])
+        _ = try await held.value
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).")
+    }
+
+    func testListPanesReportsAccess() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B")]
+        let reply = await call("browser_list")
+        let rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["access"] as? String }, ["read only", "full"])
+    }
+
     func testFindAndTextAndWait() async {
         let find = await call("browser_find", ["pane_id": "B", "text": "two"])
         XCTAssertTrue(find.content.contains("e1"), find.content)
