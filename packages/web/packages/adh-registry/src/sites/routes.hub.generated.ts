@@ -133,6 +133,7 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/rest-api',
     '/rest-api/[...slug]',
     '/terms',
+    '/tutorials/[[...path]]',
   ],
   'hub-sdk': [
     '/',
