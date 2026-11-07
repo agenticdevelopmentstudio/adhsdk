@@ -401,13 +401,18 @@ final class BrowserJarTests: XCTestCase {
         pane.rebuildWebView()
         XCTAssertFalse(pageHasFocus())
 
-        // A paused pane's page is focused whatever had it.
+        // A paused pane's page takes a focus nothing else holds...
         pane.setEventsPaused(true)
-        XCTAssertTrue(window.makeFirstResponder(field))
+        XCTAssertTrue(window.makeFirstResponder(nil))
         old = pane.webView
         pane.rebuildWebView()
         XCTAssertFalse(pane.webView === old)
         XCTAssertTrue(pageHasFocus())
+
+        // ...but never pulls it out of another view, such as a terminal.
+        XCTAssertTrue(window.makeFirstResponder(field))
+        pane.rebuildWebView()
+        XCTAssertFalse(pageHasFocus())
         pane.paneContentWillBeDiscarded()
     }
 
