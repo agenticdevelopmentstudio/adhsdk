@@ -368,6 +368,9 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   /// parent unretained, and creation finishes on a later turn of the loop,
   /// so a pane closed in between would otherwise hand CEF a freed view.
   ADHChromiumBrowserView* _retainedWhileCreating;
+  /// The view was made first responder before its browser existed; the
+  /// focus goes to the page when it arrives.
+  BOOL _wantsFocus;
 }
 
 - (instancetype)initWithFrame:(NSRect)frame options:(ADHChromiumBrowserOptions*)options {
@@ -396,6 +399,39 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
 
 - (BOOL)hasBrowser {
   return _browser != nullptr;
+}
+
+// MARK: Focus
+
+/// The view the page draws into, and takes keys in: CEF's child of this one.
+- (nullable NSView*)pageView {
+  return _browser ? (__bridge NSView*)_browser->GetHost()->GetWindowHandle() : nil;
+}
+
+- (BOOL)acceptsFirstResponder {
+  return YES;
+}
+
+/// A host that focuses this view means the page: the focus is passed on to
+/// CEF's child view, on the next turn so this one finishes becoming first
+/// responder first, or held until the browser exists.
+- (BOOL)becomeFirstResponder {
+  if (!self.pageView) {
+    _wantsFocus = YES;
+    return YES;
+  }
+  dispatch_async(dispatch_get_main_queue(), ^{ [self focusPageIfFirstResponder]; });
+  return YES;
+}
+
+- (void)focusPageIfFirstResponder {
+  _wantsFocus = NO;
+  NSView* page = self.pageView;
+  if (!page || self.window.firstResponder != self) {
+    return;
+  }
+  [self.window makeFirstResponder:page];
+  _browser->GetHost()->SetFocus(true);
 }
 
 // MARK: Creation
@@ -471,6 +507,9 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
     [self sendDevToolsMessage:message];
   }
   [self applyZoom];
+  if (_wantsFocus) {
+    [self focusPageIfFirstResponder];
+  }
   if (_pendingAddress) {
     NSString* address = _pendingAddress;
     _pendingAddress = nil;
