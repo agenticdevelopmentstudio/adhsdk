@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { _resetProviderCooldowns, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 import {
   groupIdentity,
+  messageShape,
   groupRuntimeEntries,
   loadRuntimeErrorsReport,
   logEventToEntry,
@@ -145,6 +146,23 @@ describe("grouping", () => {
     expect(groupIdentity(entry({ message: "x".repeat(300) })).message).toHaveLength(200);
   });
 
+  it("a message that embeds an id, number or timestamp is one error, not one per value", () => {
+    expect(messageShape("Order 8231 not found")).toBe("Order # not found");
+    expect(messageShape("user 3f2504e0-4f89-11d3-9a0c-0305e82c3301 has no plan")).toBe("user :id has no plan");
+    expect(messageShape("timeout after 3000ms at 2026-11-06T10:00:00Z")).toBe("timeout after #ms at #-#-#T#:#:#Z");
+    expect(messageShape("Cannot read properties of undefined (reading 'id')")).toBe("Cannot read properties of undefined (reading 'id')");
+
+    // 40 requests to /api/orders/<n>, each logging its own order number, are one group of 40.
+    const entries = Array.from({ length: 40 }, (_, i) =>
+      entry({ path: `/api/orders/${8231 + i}`, message: `Order ${8231 + i} not found`, requestId: `r${i}`, timestampMs: 1_000 + i }),
+    );
+    const groups = groupRuntimeEntries(entries);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ count: 40, path: "/api/orders/:id", message: "Order 8231 not found" });
+    // Different words stay different errors.
+    expect(groupIdentity(entry({ message: "Order 1 not found" })).key).not.toBe(groupIdentity(entry({ message: "Order 1 shipped" })).key);
+  });
+
   it("folds a read: counts, worst level, and the newest event's deployment and sample", () => {
     const [g, ...rest] = groupRuntimeEntries([
       entry({ requestId: "r1", timestampMs: 1_000, level: "error", deploymentId: "dpl_old" }),
@@ -238,7 +256,8 @@ describe("the runtime-errors store", () => {
 
   it("stores more groups than one insert holds", async () => {
     const store = createLibsqlStorage(await freshDb()).telemetry.runtimeErrors;
-    const many = Array.from({ length: 450 }, (_, i) => entry({ message: `err ${i}`, timestampMs: t(5) }));
+    // Distinct groups need distinct identities; a number in the message no longer makes one.
+    const many = Array.from({ length: 450 }, (_, i) => entry({ project: `p${i}`, message: "err", timestampMs: t(5) }));
     await store.save(many, { nowMs: NOW });
     expect(await store.load()).toHaveLength(450);
     const report = await loadRuntimeErrorsReport(store, NOW);
