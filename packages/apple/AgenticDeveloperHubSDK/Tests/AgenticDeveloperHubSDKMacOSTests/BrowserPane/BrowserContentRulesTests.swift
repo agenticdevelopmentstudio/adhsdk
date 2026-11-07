@@ -170,9 +170,8 @@ final class BrowserContentRulesTests: XCTestCase {
         XCTAssertEqual(pane.appliedThirdPartyContent, .blockScripts)
 
         gated.release(0)
-        await waitUntil { gated.finished == 2 }
-        // One more turn for the pane's continuation after the provider returns.
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { pane.droppedContentRules == 1 }
+        XCTAssertEqual(pane.droppedContentRules, 1, "the older compile came back and was dropped")
         XCTAssertEqual(pane.appliedThirdPartyContent, .blockScripts, "the older compile's result is dropped")
     }
 
@@ -193,8 +192,8 @@ final class BrowserContentRulesTests: XCTestCase {
         XCTAssertEqual(gated.requested, [.blockAll, .blockAll], "the new web view asks for its own list")
 
         gated.release(0)
-        await waitUntil { gated.finished == 1 }
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { pane.droppedContentRules == 1 }
+        XCTAssertEqual(pane.droppedContentRules, 1, "the old web view's compile came back and was dropped")
         XCTAssertNil(pane.appliedThirdPartyContent, "the old web view's compile is not applied to the new one")
 
         gated.release(1)
@@ -260,6 +259,7 @@ final class BrowserContentRulesTests: XCTestCase {
     func testAFailedCompileReleasesTheHeldLoad() async {
         let settings = makeSettings()
         let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        _ = pane.view
         let gated = GatedRuleLists()
         var failNext = true
         pane.contentRuleListProvider = { policy in
@@ -273,11 +273,54 @@ final class BrowserContentRulesTests: XCTestCase {
         settings.set(BrowserThirdPartyContent.blockAll, for: UserSettings.browserPrivacyThirdPartyContent)
         await waitUntil { gated.requested.count == 1 }
 
-        pane.load(URL(string: "data:text/html,after")!)
+        let after = URL(string: "data:text/html,after")!
+        pane.load(after)
         XCTAssertTrue(pane.isHoldingLoad)
         gated.release(0)
         await waitUntil { !pane.isHoldingLoad }
         XCTAssertFalse(pane.isHoldingLoad)
+        await waitUntil { pane.webView.url == after }
+        XCTAssertEqual(pane.webView.url, after, "the held load is what was released")
+    }
+
+    /// A stale failure, coming back after a newer request, neither forgets
+    /// the newer request nor lets go of the load it still holds.
+    func testAStaleFailureLeavesTheCurrentRequestAndItsHeldLoad() async {
+        let settings = makeSettings()
+        let gated = GatedRuleLists()
+        let pane = gatedPane(settings, gated)
+        _ = pane.view
+        var calls = 0
+        pane.contentRuleListProvider = { policy in
+            calls += 1
+            let first = calls == 1
+            let list = try await gated.provide(policy)
+            if first { throw CompileFailed() }
+            return list
+        }
+
+        settings.set(BrowserThirdPartyContent.blockAll, for: UserSettings.browserPrivacyThirdPartyContent)
+        await waitUntil { gated.requested.count == 1 }
+        settings.set(BrowserThirdPartyContent.blockScripts, for: UserSettings.browserPrivacyThirdPartyContent)
+        await waitUntil { gated.requested.count == 2 }
+        let held = URL(string: "data:text/html,still-held")!
+        pane.load(held)
+        XCTAssertTrue(pane.isHoldingLoad)
+
+        gated.release(0)
+        await waitUntil { pane.droppedContentRules == 1 }
+        XCTAssertEqual(pane.droppedContentRules, 1, "the stale failure came back and was dropped")
+        XCTAssertTrue(pane.isHoldingLoad, "the newer request still holds its load")
+        // A forgotten request would be asked for again on the next change.
+        settings.set(1.1, for: UserSettings.browserPageZoom)
+        await waitUntil { abs(pane.webView.pageZoom - 1.1) < 0.001 }
+        XCTAssertEqual(gated.requested.count, 2, "the current request was not forgotten")
+
+        gated.release(1)
+        await waitForRules(.blockScripts, on: pane)
+        XCTAssertEqual(pane.appliedThirdPartyContent, .blockScripts)
+        await waitUntil { pane.webView.url == held }
+        XCTAssertEqual(pane.webView.url, held)
     }
 
     func testUnderAllowTheFirstLoadIsNotHeld() {
@@ -306,5 +349,33 @@ final class BrowserContentRulesTests: XCTestCase {
         XCTAssertTrue(pane.isHoldingLoad)
         await waitUntil { !rulesAtNavigation.isEmpty }
         XCTAssertEqual(rulesAtNavigation.first, .blockScripts)
+    }
+
+    /// A navigation held when the web view is rebuilt is carried to the new
+    /// one: it, not the page the old web view was showing, is what loads.
+    func testAHeldNavigationSurvivesARebuild() async {
+        let settings = makeSettings()
+        let gated = GatedRuleLists()
+        let home = URL(string: "data:text/html,home")!
+        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: home)
+        pane.contentRuleListProvider = { try await gated.provide($0) }
+        _ = pane.view
+        await waitUntil { pane.webView.url == home && !pane.webView.isLoading }
+
+        settings.set(BrowserThirdPartyContent.blockAll, for: UserSettings.browserPrivacyThirdPartyContent)
+        await waitUntil { gated.requested.count == 1 }
+        let held = URL(string: "data:text/html,held-across")!
+        pane.load(held)
+        XCTAssertTrue(pane.isHoldingLoad)
+
+        var started: [URL?] = []
+        pane.onNavigationStart = { [unowned pane] in started.append(pane.webView.url) }
+        pane.rebuildWebView()
+        XCTAssertTrue(pane.isHoldingLoad, "the rebuilt web view holds the load for its own rules")
+        await waitUntil { gated.requested.count == 2 }
+        gated.release(0)
+        gated.release(1)
+        await waitUntil { !started.isEmpty }
+        XCTAssertEqual(started.first, held, "the held navigation, not the shown page, is what loads")
     }
 }
