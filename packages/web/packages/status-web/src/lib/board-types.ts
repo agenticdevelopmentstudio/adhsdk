@@ -117,6 +117,9 @@ export interface ActivityRow {
   /** The SERVER's verdict: a build/deploy still in flight, or a failure a live problem on
    *  its target still carries (`isUnresolvedActivity`, src/board/view.ts). */
   unresolved?: boolean;
+  /** For an unresolved failure, the `since` of each live problem on its target that carries
+   *  it (`heldOpenBy`); empty otherwise. See `stillUnresolved`. */
+  heldOpenBy?: string[];
   /** In flight and past the queue (`isRunningActivity`). */
   running?: boolean;
   /** A build still queued or building — what the build-progress bar counts. */

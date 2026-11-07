@@ -303,7 +303,7 @@ describe("OverviewTab — an empty roster is a config fault, not a wedged monito
 describe("OverviewTab — Recent Activity 'in progress or failed only' filter", () => {
   function activityRow(
     id: string, name: string, verb: string, tone: string, at = new Date().toISOString(),
-    flags: { unresolved?: boolean; running?: boolean } = {},
+    flags: { unresolved?: boolean; running?: boolean; heldOpenBy?: string[] } = {},
   ) {
     return {
       id, kind: "deploy", step: "build", source: "vercel", tone, verb,
@@ -311,6 +311,7 @@ describe("OverviewTab — Recent Activity 'in progress or failed only' filter", 
       sourceUrl: null, liveUrl: null, commitHash: null, commitMessage: null,
       commitRepo: null, branch: null, errorText: null, at,
       unresolved: flags.unresolved ?? false, running: flags.running ?? false, buildInFlight: false,
+      ...(flags.heldOpenBy ? { heldOpenBy: flags.heldOpenBy } : {}),
     };
   }
 
@@ -337,6 +338,10 @@ describe("OverviewTab — Recent Activity 'in progress or failed only' filter", 
         activityRow("a", "site-queued", "queued", "progress", undefined, { unresolved: true }),
         activityRow("b", "site-failed", "build failed", "bad", undefined, { unresolved: true }),
         activityRow("e", "site-recovered", "build failed", "bad"),
+        // Judged unresolved by an older read, but the problem it named has since cleared:
+        // the current board has no problem on its target, so the filter drops it.
+        activityRow("f", "site-fixed", "build failed", "bad", undefined,
+          { unresolved: true, heldOpenBy: [new Date(Date.now() - 3_600_000).toISOString()] }),
         activityRow("c", "site-done", "deployed", "good"),
         activityRow("d", "site-stale", "unknown", "stale"),
       ],
@@ -359,6 +364,7 @@ describe("OverviewTab — Recent Activity 'in progress or failed only' filter", 
     expect(screen.queryAllByText("site-done")).toHaveLength(0);
     expect(screen.queryAllByText("site-stale")).toHaveLength(0);
     expect(screen.queryAllByText("site-recovered")).toHaveLength(0);
+    expect(screen.queryAllByText("site-fixed")).toHaveLength(0);
 
     fireEvent.click(box);
     expect(screen.getAllByText("site-done").length).toBeGreaterThan(0);

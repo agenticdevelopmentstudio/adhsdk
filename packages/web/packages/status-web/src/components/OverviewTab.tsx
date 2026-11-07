@@ -15,7 +15,7 @@ import { useNow } from "../hooks/use-now";
 import { useBuildProgress } from "../hooks/use-build-progress";
 import { problemToRow, activityToRow, type Row } from "../lib/row-model";
 import type { ActivityRow } from "../lib/board-types";
-import { INDICATOR_STATE } from "../lib/overview";
+import { INDICATOR_STATE, stillUnresolved } from "../lib/overview";
 import { buildSublabel } from "../lib/status-sublabel";
 import { shortSha } from "../lib/format";
 import { inEnvScope } from "../lib/filter";
@@ -218,9 +218,12 @@ export function OverviewTab(): ReactElement {
     const activityRows = pipeline(feed);
     // Which feed rows the "in progress or failed only" filter keeps, and which of them are
     // actually running — both the SERVER's verdicts on the wire row (`unresolved`,
-    // `running`, src/board/view.ts). A paged-in history row carries the verdict its page
-    // was read with.
-    const unresolvedIds = new Set(feed.filter((a) => a.unresolved === true).map((a) => a.id));
+    // `running`, src/board/view.ts). A paged-in or retained history row was judged by an
+    // older read, so a failure on it stays only while a problem the server named as carrying
+    // it (`heldOpenBy`) is still on this board (`stillUnresolved`): a fixed deploy leaves the
+    // filter on the next board read, not on reload.
+    const openProblems = board?.problems ?? [];
+    const unresolvedIds = new Set(feed.filter((a) => stillUnresolved(a, openProblems)).map((a) => a.id));
     // `feed` goes out UNFILTERED as well: the controls that decide what the reader is
     // even offered (Clear, the Sources list) have to see the whole record, not the view.
     const activeIds = new Set(feed.filter((a) => a.running === true).map((a) => a.id));

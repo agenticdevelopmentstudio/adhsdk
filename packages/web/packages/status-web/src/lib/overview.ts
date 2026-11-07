@@ -1,4 +1,4 @@
-import type { Indicator as BoardIndicator } from "./board-types";
+import type { ActivityRow, Indicator as BoardIndicator, Problem } from "./board-types";
 
 // ---------------------------------------------------------------------------
 // How the board's verdicts are WORDED and drawn. Every verdict itself is the server's
@@ -43,4 +43,19 @@ export function headlineFor(state: IndicatorState, count: number): string {
   if (state === "ok") return "ALL SYSTEMS OPERATIONAL";
   if (state === "warn") return count === 1 ? "1 SERVICE NEEDS ATTENTION" : `${count} SERVICES NEED ATTENTION`;
   return count === 1 ? "1 PROBLEM" : `${count} PROBLEMS`;
+}
+
+/**
+ * Whether a feed row is still unresolved against the CURRENT board. The server's `unresolved`
+ * verdict was judged against the problems of the read that served the row, and a paged-in or
+ * retained history row outlives that read. A failure stays unresolved only while one of the
+ * problems the server named as carrying it (`heldOpenBy`: target and onset) is still on the
+ * board; this looks them up and judges nothing itself. A row in flight carries no such
+ * problems and keeps its verdict, and so does a row from a backend that sends no `heldOpenBy`.
+ */
+export function stillUnresolved(a: ActivityRow, problems: readonly Pick<Problem, "target" | "since">[]): boolean {
+  if (a.unresolved !== true) return false;
+  const held = a.heldOpenBy;
+  if (held == null || held.length === 0) return true;
+  return problems.some((p) => p.target === a.target && held.includes(p.since));
 }
