@@ -6,7 +6,7 @@
  * it, and it renders the same in either.
  */
 import type { ReactNode } from "react";
-export declare function TermBlock({ term, href, anchor, children, }: {
+export declare function TermBlock({ term, href, anchor, arrived, children, }: {
     term: {
         id: string;
         titleHtml: string;
@@ -16,6 +16,8 @@ export declare function TermBlock({ term, href, anchor, children, }: {
     href?: string;
     /** Whether the block carries the term's id, so `#<term id>` scrolls to it. */
     anchor?: boolean;
+    /** Whether a link just arrived at this term, which outlines it. */
+    arrived?: boolean;
     /** Anything to show under the definition, such as the tutorials that use the term. */
     children?: ReactNode;
 }): import("react").JSX.Element;

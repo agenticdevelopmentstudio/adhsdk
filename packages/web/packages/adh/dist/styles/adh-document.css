@@ -8,8 +8,10 @@
   scroll-margin-top: 1.5rem;
 }
 
-/* A glossary term a tutorial linked to (`#<term id>`): its block outlined in gold on arrival. */
-.doc-prose .doc-term:target {
+/* A glossary term a tutorial linked to (`#<term id>`): its block outlined in gold on arrival.
+ * `data-arrived` covers a client-side move, which never updates `:target` (GlossarySearch). */
+.doc-prose .doc-term:target,
+.doc-prose .doc-term[data-arrived] {
   border-color: var(--color-apt-gold);
 }
 

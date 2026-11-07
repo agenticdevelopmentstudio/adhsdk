@@ -9,13 +9,29 @@
  * 'use client' marks this module only.
  */
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import Link from 'next/link'
 import { StatCard } from '@adh-sdk/ui/blocks'
 import { SearchFilterBar } from '@adh-sdk/ui/components/search-filter-bar'
 import { termMatches, type GlossaryTerm } from './parts'
 import { TermBlock } from './TermBlock'
 import type { DocRef } from './model'
+
+// The term a link arrived at. `:target` alone cannot mark it: a Next <Link> moves by pushState,
+// which never updates `:target`, so the hash is read here and the block marked with it. React
+// re-reads the hash once it subscribes, after Next has written the new URL.
+function subscribeToHash(changed: () => void): () => void {
+  window.addEventListener('hashchange', changed)
+  window.addEventListener('popstate', changed)
+  return () => {
+    window.removeEventListener('hashchange', changed)
+    window.removeEventListener('popstate', changed)
+  }
+}
+
+function currentHash(): string {
+  return decodeURIComponent(window.location.hash.slice(1))
+}
 
 export function GlossarySearch({
   terms,
@@ -29,6 +45,7 @@ export function GlossarySearch({
   icon?: ReactNode
 }) {
   const [query, setQuery] = useState('')
+  const arrived = useSyncExternalStore(subscribeToHash, currentHash, () => '')
   const shown = useMemo(() => terms.filter((term) => termMatches(term, query)), [terms, query])
 
   return (
@@ -50,7 +67,7 @@ export function GlossarySearch({
         {shown.length ? (
           <dl className="flex flex-col gap-3" data-testid="glossary-terms">
             {shown.map((term) => (
-              <TermBlock key={term.id} term={term} anchor>
+              <TermBlock key={term.id} term={term} anchor arrived={arrived === term.id}>
                 {term.tutorials.length ? (
                     <p className="text-sm text-apt-text-dim">
                       <span className="font-semibold text-apt-text">Tutorials: </span>

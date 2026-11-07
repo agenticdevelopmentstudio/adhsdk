@@ -486,6 +486,7 @@ function TermBlock({
   term,
   href,
   anchor = false,
+  arrived = false,
   children
 }) {
   const name = /* @__PURE__ */ jsx("span", { dangerouslySetInnerHTML: { __html: term.titleHtml } });
@@ -493,6 +494,7 @@ function TermBlock({
     "div",
     {
       id: anchor ? term.id : void 0,
+      "data-arrived": arrived || void 0,
       className: "doc-term scroll-mt-6 flex flex-col gap-2 rounded-md border border-apt-border bg-apt-surface px-4 py-3.5",
       children: [
         /* @__PURE__ */ jsx("dt", { className: "text-[1.1rem] font-[650] leading-snug text-apt-gold", children: href ? /* @__PURE__ */ jsx(Link, { href, className: "underline-offset-4 hover:underline", children: name }) : name }),

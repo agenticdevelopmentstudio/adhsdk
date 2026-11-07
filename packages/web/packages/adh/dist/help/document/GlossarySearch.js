@@ -3,7 +3,7 @@
 "use client";
 
 // src/help/document/GlossarySearch.tsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link2 from "next/link";
 import { StatCard } from "@adh-sdk/ui/blocks";
 import { SearchFilterBar } from "@adh-sdk/ui/components/search-filter-bar";
@@ -23,6 +23,7 @@ function TermBlock({
   term,
   href,
   anchor = false,
+  arrived = false,
   children
 }) {
   const name = /* @__PURE__ */ jsx("span", { dangerouslySetInnerHTML: { __html: term.titleHtml } });
@@ -30,6 +31,7 @@ function TermBlock({
     "div",
     {
       id: anchor ? term.id : void 0,
+      "data-arrived": arrived || void 0,
       className: "doc-term scroll-mt-6 flex flex-col gap-2 rounded-md border border-apt-border bg-apt-surface px-4 py-3.5",
       children: [
         /* @__PURE__ */ jsx("dt", { className: "text-[1.1rem] font-[650] leading-snug text-apt-gold", children: href ? /* @__PURE__ */ jsx(Link, { href, className: "underline-offset-4 hover:underline", children: name }) : name }),
@@ -44,6 +46,17 @@ function TermBlock({
 
 // src/help/document/GlossarySearch.tsx
 import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+function subscribeToHash(changed) {
+  window.addEventListener("hashchange", changed);
+  window.addEventListener("popstate", changed);
+  return () => {
+    window.removeEventListener("hashchange", changed);
+    window.removeEventListener("popstate", changed);
+  };
+}
+function currentHash() {
+  return decodeURIComponent(window.location.hash.slice(1));
+}
 function GlossarySearch({
   terms,
   tutorials,
@@ -51,6 +64,7 @@ function GlossarySearch({
   icon
 }) {
   const [query, setQuery] = useState("");
+  const arrived = useSyncExternalStore(subscribeToHash, currentHash, () => "");
   const shown = useMemo(() => terms.filter((term) => termMatches(term, query)), [terms, query]);
   return /* @__PURE__ */ jsx2(StatCard, { title, icon, className: "bg-apt-surface-2", children: /* @__PURE__ */ jsxs2("div", { className: "flex flex-col gap-4", children: [
     /* @__PURE__ */ jsx2(
@@ -65,7 +79,7 @@ function GlossarySearch({
       }
     ),
     /* @__PURE__ */ jsx2("p", { className: "font-mono text-[11px] text-apt-text-dim", "aria-live": "polite", children: shown.length === terms.length ? `${terms.length} terms` : `${shown.length} of ${terms.length} terms` }),
-    shown.length ? /* @__PURE__ */ jsx2("dl", { className: "flex flex-col gap-3", "data-testid": "glossary-terms", children: shown.map((term) => /* @__PURE__ */ jsx2(TermBlock, { term, anchor: true, children: term.tutorials.length ? /* @__PURE__ */ jsxs2("p", { className: "text-sm text-apt-text-dim", children: [
+    shown.length ? /* @__PURE__ */ jsx2("dl", { className: "flex flex-col gap-3", "data-testid": "glossary-terms", children: shown.map((term) => /* @__PURE__ */ jsx2(TermBlock, { term, anchor: true, arrived: arrived === term.id, children: term.tutorials.length ? /* @__PURE__ */ jsxs2("p", { className: "text-sm text-apt-text-dim", children: [
       /* @__PURE__ */ jsx2("span", { className: "font-semibold text-apt-text", children: "Tutorials: " }),
       term.tutorials.map((id, i) => /* @__PURE__ */ jsxs2("span", { children: [
         i ? ", " : null,
