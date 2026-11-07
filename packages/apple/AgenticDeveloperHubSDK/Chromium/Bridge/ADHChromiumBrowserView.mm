@@ -101,7 +101,15 @@ class ADHBrowserClient : public CefClient,
     [view browserDidOpen:browser];
   }
 
-  bool DoClose(CefRefPtr<CefBrowser> /*browser*/) override { return false; }
+  /// A pane's browser is a child of the project window. Returning false would
+  /// send `performClose:` to that window and close every pane in it, so the
+  /// close is finished here instead: taking CEF's child view out of the view
+  /// hierarchy is the tear-down CEF waits for before `OnBeforeClose`.
+  bool DoClose(CefRefPtr<CefBrowser> browser) override {
+    NSView* child = (__bridge NSView*)browser->GetHost()->GetWindowHandle();
+    [child removeFromSuperview];
+    return true;
+  }
 
   void OnBeforeClose(CefRefPtr<CefBrowser> /*browser*/) override {
     [view_ browserDidClose];
