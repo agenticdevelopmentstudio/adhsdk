@@ -97,8 +97,18 @@ final class BrowserActivationShieldTests: XCTestCase {
             throw XCTSkip("the offscreen web view did not load a page in this test host")
         }
 
-        // Offscreen and windowless, the page reports itself hidden and unfocused
-        // until the shield runs on it.
+        // Offscreen and windowless, the page should report itself hidden or
+        // unfocused until the shield runs on it; without that baseline the
+        // assertion below would pass whether the shield did anything or not.
+        let baseline = try await webView.evaluateJavaScript(
+            "document.visibilityState + ',' + document.hasFocus()"
+        ) as? String
+        if baseline == "visible,true" {
+            throw XCTSkip("the offscreen test host already reports \"visible,true\" before the shield, "
+                + "so masking cannot be observed here")
+        }
+        XCTAssertNotEqual(baseline, "visible,true")
+
         shield.apply(active: true)
         var answer: String?
         let answerDeadline = Date().addingTimeInterval(5)
