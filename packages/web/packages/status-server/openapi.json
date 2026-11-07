@@ -1585,7 +1585,7 @@
           "count",
           "firstSeen",
           "lastSeen",
-          "sampleRowId"
+          "sampleRequestId"
         ],
         "properties": {
           "key": {
@@ -1639,7 +1639,7 @@
           "lastSeen": {
             "type": "string"
           },
-          "sampleRowId": {
+          "sampleRequestId": {
             "type": [
               "string",
               "null"
@@ -1873,6 +1873,8 @@
         "required": [
           "generatedAt",
           "window",
+          "readAt",
+          "complete",
           "total",
           "groups"
         ],
@@ -1885,6 +1887,15 @@
             "enum": [
               "24h"
             ]
+          },
+          "readAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "complete": {
+            "type": "boolean"
           },
           "total": {
             "type": "number"
@@ -7433,7 +7444,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Groups last seen in the window",
+            "description": "The groups of the latest whole read of the 24 hours before it",
             "content": {
               "application/json": {
                 "schema": {
@@ -7959,6 +7970,8 @@
                               "type": "object",
                               "required": [
                                 "window",
+                                "readAt",
+                                "complete",
                                 "total",
                                 "groups"
                               ],
@@ -7968,6 +7981,16 @@
                                   "enum": [
                                     "24h"
                                   ]
+                                },
+                                "readAt": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ],
+                                  "format": "date-time"
+                                },
+                                "complete": {
+                                  "type": "boolean"
                                 },
                                 "total": {
                                   "type": "number"

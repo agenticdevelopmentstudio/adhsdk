@@ -231,18 +231,22 @@ export interface RuntimeErrorGroup {
   level: string;
   /** First line of the message, at most 200 characters. */
   message: string;
-  /** Lines counted since `firstSeen` (within the 7-day retention), each `rowId` once. */
+  /** Events in the 24 hours before the read. */
   count: number;
   firstSeen: string;
   lastSeen: string;
-  /** A `rowId` of the most recent line, to look it up in Vercel. */
-  sampleRowId: string | null;
+  /** The request id of the most recent event, to look it up in Vercel. */
+  sampleRequestId: string | null;
 }
 
 /** `GET /errors/runtime`, and the errors dashboard's `runtime` section. */
 export interface RuntimeErrorsReport {
   generatedAt: string;
   window: "24h";
+  /** When the groups were read from Vercel; null before the first read. */
+  readAt: string | null;
+  /** False when that read was cut short, so there may be more groups. */
+  complete: boolean;
   /** Groups seen in the window; `groups` may be capped below it. */
   total: number;
   /** Seen in the window, worst level first, then most frequent. */

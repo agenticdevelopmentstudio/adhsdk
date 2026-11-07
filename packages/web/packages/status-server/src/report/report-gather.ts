@@ -170,9 +170,15 @@ export function reportSources(services: ReportServices): ReportSources {
     integrations: () => services.integrations(),
 
     async runtimeErrors() {
+      const [report, platforms] = await Promise.all([
+        loadRuntimeErrorsReport(storage.telemetry.runtimeErrors),
+        storage.board.readPlatformFacts(),
+      ]);
+      const fact = platforms.find((p) => p.source === 'vercel-runtime');
       return {
         configured: vercelConfigured(config),
-        report: await loadRuntimeErrorsReport(storage.telemetry.runtimeErrors),
+        report,
+        failing: fact && fact.configured && !fact.ok ? { streak: fact.streak, atMs: fact.sampledAtMs } : null,
       };
     },
 

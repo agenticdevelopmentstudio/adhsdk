@@ -64,7 +64,8 @@ export interface DashboardSet {
 async function runtimeSection(storage: Storage, nowMs: number): Promise<DashboardSection<RuntimeErrorsReport>> {
   try {
     const data = await loadRuntimeErrorsReport(storage.telemetry.runtimeErrors, nowMs);
-    return { data, error: null, updatedAt: data.generatedAt };
+    // When the groups were read from Vercel, not when this request asked the store.
+    return { data, error: null, updatedAt: data.readAt };
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : String(err), updatedAt: null };
   }

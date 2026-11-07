@@ -87,6 +87,11 @@ export interface RuntimeErrorsInput {
   /** A Vercel token is present, so the runtime-log poll runs at all. */
   configured: boolean;
   report: RuntimeErrorsReport;
+  /**
+   * The latest reads failed: how many in a row, and when the last one was. Null when the latest
+   * read succeeded. A failed read saves nothing, so `report` is still the last good read.
+   */
+  failing: { streak: number; atMs: number } | null;
 }
 
 export interface ReportInputs {
@@ -394,8 +399,12 @@ export function digestErrors(data: ErrorsDashboardResponse): Digest<ErrorsReport
     );
   }
   if (active.length > ERROR_ISSUE_CAP) {
+    // As bad as the worst issue it hides: a cap must never turn a fatal into a minor.
+    const hiddenSeverity = active
+      .slice(ERROR_ISSUE_CAP)
+      .reduce<Severity>((s, i) => worse(s, i.level === 'fatal' ? 'major' : 'minor'), 'minor');
     findings.push(
-      finding('minor', 'glitchtip', `${active.length - ERROR_ISSUE_CAP} more active GlitchTip issues not listed`, {
+      finding(hiddenSeverity, 'glitchtip', `${active.length - ERROR_ISSUE_CAP} more active GlitchTip issues not listed`, {
         detail: 'all are in sections.errors.active',
       }),
     );
@@ -457,18 +466,42 @@ export function digestRuntimeErrors(input: RuntimeErrorsInput): Digest<RuntimeEr
   // `total` counts every group in the window; `groups` may already be capped below it.
   const hidden = Math.max(report.total, report.groups.length) - shown.length;
   if (hidden > 0) {
+    // As bad as the worst group it hides. Groups past the report's own cap are not here to
+    // judge; they sort after every listed one, so they are no worse than the last listed.
+    const hiddenSeverity = ranked
+      .slice(RUNTIME_GROUP_CAP)
+      .reduce<Severity>((s, r) => worse(s, r.severity), 'minor');
     findings.push(
-      finding('minor', 'vercel-runtime', `${hidden} more Vercel runtime error groups not listed`, {
+      finding(hiddenSeverity, 'vercel-runtime', `${hidden} more Vercel runtime error groups not listed`, {
         detail: 'see sections.runtimeErrors.groups',
       }),
     );
   }
+  const notes: string[] = [];
+  if (input.configured) {
+    if (report.readAt === null) notes.push('vercel runtime errors not read yet');
+    else if (!report.complete) notes.push('vercel runtime read was cut short; there may be more groups than listed');
+    if (input.failing) {
+      const reads = input.failing.streak === 1 ? 'read' : 'reads';
+      notes.push(
+        `last ${input.failing.streak} vercel runtime ${reads} failed (latest ${new Date(input.failing.atMs).toISOString()})` +
+          (report.readAt ? `; these groups are from the read at ${report.readAt}` : ''),
+      );
+    }
+  }
   return {
-    notes: [],
+    notes,
     unconfigured: input.configured ? [] : ['vercel'],
     findings,
-    updatedAt: input.configured ? report.generatedAt : null,
-    section: { window: report.window, total: report.total, groups: report.groups },
+    // When the groups were read from Vercel, not when this report was built.
+    updatedAt: input.configured ? report.readAt : null,
+    section: {
+      window: report.window,
+      readAt: report.readAt,
+      complete: report.complete,
+      total: report.total,
+      groups: report.groups,
+    },
   };
 }
 

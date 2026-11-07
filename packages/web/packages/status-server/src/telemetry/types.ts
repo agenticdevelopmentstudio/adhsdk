@@ -70,24 +70,25 @@ export function emptySnapshot(): TelemetrySnapshot {
 }
 
 /**
- * One Vercel runtime log line worth keeping (an error/fatal line or a 5xx response), read from
- * the current production deployment of a production project. The INPUT of the runtime-errors
- * store: it groups these and counts each `rowId` once per deployment.
+ * One Vercel runtime event worth keeping, from a production project's production environment:
+ * an `error`/`fatal` log line (`vercel.log`) or a 5xx response (`vercel.proxy_response`). The
+ * INPUT of the runtime-errors store, which groups one 24-hour read of them into its snapshot.
  */
 export interface RuntimeLogEntry {
   project: string;
   deploymentId: string;
   domain: string | null;
-  rowId: string;
+  /** Vercel's request id, to look the request up in Vercel's logs. */
+  requestId: string | null;
   timestampMs: number;
-  /** debug | info | warning | error | fatal | trace, as Vercel sends it. */
+  /** debug | info | warning | error | fatal | trace, as Vercel sends it; a 5xx response reads `error`. */
   level: string;
-  /** delimiter | edge-function | edge-middleware | request | serverless. */
+  /** function | edge-function | edge-middleware | ... for a log line; `response` for a 5xx. */
   source: string;
   method: string | null;
   /** The request path, query string removed but NOT yet normalized. */
   path: string | null;
-  /** Null when the line carries no response status. */
+  /** Null when the event carries no response status. */
   status: number | null;
   message: string;
 }
@@ -100,7 +101,7 @@ export interface RuntimeErrorGroup {
   /** Stable hash of the grouping fields. */
   key: string;
   project: string;
-  /** The deployment the group was LAST seen on. */
+  /** The deployment of its newest event. */
   deploymentId: string;
   domain: string | null;
   source: string;
@@ -108,24 +109,39 @@ export interface RuntimeErrorGroup {
   /** Numeric, uuid and hash segments read `:id`. */
   path: string | null;
   status: number | null;
-  /** The worst level any of its lines carried. */
+  /** The worst level any of its events carried. */
   level: string;
   /** First line of the message, at most 200 characters. */
   message: string;
-  /** Lines counted since `firstSeen` (within the 7-day retention), each `rowId` once. */
+  /** Events in the 24 hours before the read that stored it. */
   count: number;
   firstSeen: string; // ISO
   lastSeen: string; // ISO
-  /** A `rowId` of the most recent line, to look it up in Vercel. */
-  sampleRowId: string | null;
+  /** The request id of its newest event, to look it up in Vercel. */
+  sampleRequestId: string | null;
+}
+
+/** The last successful runtime-errors read: what the stored groups are a snapshot of. */
+export interface RuntimeErrorsRead {
+  /** Epoch ms of the read. Its window is the 24 hours before it. */
+  readAtMs: number;
+  /** False when the read stopped before the start of its window, so counts are a floor. */
+  complete: boolean;
 }
 
 /** `GET /errors/runtime`, and the errors dashboard's `runtime` section. */
 export interface RuntimeErrorsReport {
   generatedAt: string; // ISO
   window: "24h";
-  /** Groups seen in the window; `groups` may be capped below it. */
+  /**
+   * When the groups were read: the window is the 24 hours before it. Null before the first
+   * successful read. A failed read keeps the last snapshot, so this can fall behind `generatedAt`.
+   */
+  readAt: string | null; // ISO
+  /** False when that read stopped before the start of its window, so counts are a floor. */
+  complete: boolean;
+  /** Groups the read found; `groups` may be capped below it. */
   total: number;
-  /** Seen in the window, worst level first, then most frequent. */
+  /** Worst level first, then most frequent. */
   groups: RuntimeErrorGroup[];
 }

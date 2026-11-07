@@ -1,6 +1,6 @@
 import type { StatusConfig } from '../config/port';
 import type { Store } from '../telemetry/ports';
-import type { AnalyticsMetricDTO, ErrorDTO, RuntimeErrorGroup, RuntimeLogEntry } from '../telemetry/types';
+import type { AnalyticsMetricDTO, ErrorDTO, RuntimeErrorGroup, RuntimeErrorsRead, RuntimeLogEntry } from '../telemetry/types';
 import type {
   DeployFact,
   ErrorFact,
@@ -873,14 +873,18 @@ export interface TelemetryStore {
 }
 
 /**
- * Vercel runtime errors, grouped. `save` takes the kept log lines of a read; it counts each line
- * once per deployment (a re-read of the same stream adds nothing), merges them into their groups,
- * and drops groups not seen for 7 days. `load` answers every stored group, newest first;
- * `sinceMs` keeps only those last seen at or after it.
+ * Vercel runtime errors, grouped: a SNAPSHOT of the last successful read. `save` takes every
+ * kept event of one 24-hour read, groups them and REPLACES the stored groups with the result, in
+ * one transaction with the read's time and `complete` flag (a read that stopped early still
+ * replaces: its newest-first events are the best view there is, and `complete: false` says the
+ * counts are a floor). A failed read never calls `save`, so the last snapshot stands. `load`
+ * answers the stored groups, newest first; `lastRead` the read they came from, or null before
+ * the first.
  */
 export interface RuntimeErrorsStore extends Store<RuntimeLogEntry, RuntimeErrorGroup> {
   save(entries: RuntimeLogEntry[], opts?: { complete?: boolean; nowMs?: number }): Promise<void>;
-  load(opts?: { sinceMs?: number }): Promise<RuntimeErrorGroup[]>;
+  load(): Promise<RuntimeErrorGroup[]>;
+  lastRead(): Promise<RuntimeErrorsRead | null>;
 }
 
 // --- composed storage ---------------------------------------------------------
