@@ -132,6 +132,24 @@ void ADHInstallApplicationProtocol(void) {
       original(app, sendEvent, event);
     });
     class_replaceMethod(cls, sendEvent, wrapped, method_getTypeEncoding(method));
+
+    // Cmd+Q typed in a page comes back to the app from inside
+    // `CefDoMessageLoopWork`, as CEF re-sends the key event the page did not
+    // handle. Terminating there would run `shutdown`, and `CefShutdown`,
+    // nested in Chromium's own work, so the request is moved to the next turn
+    // of the run loop, outside the pump.
+    SEL terminate = @selector(terminate:);
+    Method terminateMethod = class_getInstanceMethod(cls, terminate);
+    typedef void (*TerminateIMP)(id, SEL, id);
+    TerminateIMP originalTerminate = reinterpret_cast<TerminateIMP>(method_getImplementation(terminateMethod));
+    IMP wrappedTerminate = imp_implementationWithBlock(^(id app, id sender) {
+      if (gPumping) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [app terminate:sender]; });
+        return;
+      }
+      originalTerminate(app, terminate, sender);
+    });
+    class_replaceMethod(cls, terminate, wrappedTerminate, method_getTypeEncoding(terminateMethod));
   });
 }
 
@@ -329,6 +347,13 @@ static void ADHPumpChromium(void) {
 
 - (void)shutdown {
   if (!gRunning.load()) {
+    return;
+  }
+  if (gPumping) {
+    // Reached from inside `CefDoMessageLoopWork` by a path `terminate:` does
+    // not cover. The pump cannot be run from here and `CefShutdown` must not
+    // be, so the process is left to exit with Chromium still up.
+    NSLog(@"Chromium was asked to shut down from inside its own work; skipping CefShutdown");
     return;
   }
   [NSNotificationCenter.defaultCenter postNotificationName:ADHChromiumRuntimeWillShutdownNotification object:self];
