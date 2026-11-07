@@ -57,10 +57,9 @@ export function ApiButton({
         <DialogHeader className="shrink-0 border-b border-apt-border px-5 py-4">
           <DialogTitle>{title ?? 'API reference'}</DialogTitle>
           <DialogDescription>
+            {/* Nothing here about highlighted endpoints: only the browser knows whether any matched,
+                and it says so itself. */}
             {browserProps.readOnly ? 'Browse the API.' : 'Browse the API and try any endpoint, authenticated as you.'}
-            {browserProps.highlight?.length
-              ? ` The endpoints under ${browserProps.highlightLabel ?? 'Highlighted'} are the ones this page uses.`
-              : null}
           </DialogDescription>
           {intro ? (
             <div className="mt-2 flex max-h-40 flex-col gap-2 overflow-y-auto text-sm text-apt-text" data-testid="api-intro">

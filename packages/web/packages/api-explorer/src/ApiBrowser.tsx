@@ -72,6 +72,9 @@ export function ApiBrowser({
   const focusMeta = focusKey ? getEndpoint(focusKey) : undefined
   const [highlighted] = useState(() => (focusMeta || !highlight ? [] : matchEndpoints(highlight)))
   const firstHighlight = highlighted[0]
+  // Endpoints were asked for and none is in the spec (renamed, or never there): say so, rather
+  // than open on a bare tag list as if nothing had been asked.
+  const missedHighlight = !focusMeta && Boolean(highlight?.length) && !highlighted.length
 
   // Match getEndpoint's index, which buckets untagged endpoints under 'other'.
   const [tag, setTag] = useState<string | null>(
@@ -138,7 +141,14 @@ export function ApiBrowser({
       readOnly={readOnly}
     />
   ) : (
-    <p className="text-sm text-apt-text-muted">{!tag ? 'Choose a tag to browse its endpoints.' : 'Choose an endpoint.'}</p>
+    <div className="flex flex-col gap-2 text-sm text-apt-text-muted">
+      {missedHighlight ? (
+        <p data-testid="api-highlight-missed">
+          None of the endpoints this page names are in the API reference.
+        </p>
+      ) : null}
+      <p>{!tag ? 'Choose a tag to browse its endpoints.' : 'Choose an endpoint.'}</p>
+    </div>
   )
 
   return (
