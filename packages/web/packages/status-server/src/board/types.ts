@@ -372,6 +372,14 @@ export interface Problem {
   errorText: string | null;
   /** ISO time the problem began — from the ledger when known, else first observation. */
   since: string;
+  /**
+   * On a deploy problem (`failed` or `stuck`) only: the deployment the board JUDGED — the
+   * standing failure, or the wedged retry. Absent on every other problem. A consumer that
+   * needs "which build is failing" reads it here rather than taking the newest row of a
+   * feed: a canceled or queued row newer than the failure proves nothing, and a busy fleet
+   * pushes an old failure out of `/live`'s window while the board still holds it.
+   */
+  deployment?: { id: string; createdAt: string };
 }
 
 export type ActivityKind = "deploy" | "probe" | "platform";

@@ -90,6 +90,7 @@ export interface FailingDeploy {
   commit: string | null;
   /** First line of the provider's failure text. */
   error: string | null;
+  /** The provider's page for the build. */
   url: string | null;
   /** With `logs=1`: the last lines of the build log. */
   logTail?: string[];
@@ -104,7 +105,11 @@ export interface DeploysReportSection {
   deployTargets: number;
   /** Targets whose newest deploy is building or queued. */
   inFlight: number;
-  /** Targets whose NEWEST deploy failed, newest first. A failure fixed by a later build is not here. */
+  /**
+   * The deploys the board holds as failed (its deploy problems in state failed), newest build
+   * first. A failure fixed by a later build is not here; one with newer canceled or queued rows
+   * on its target, or older than the feed's window, still is.
+   */
   failing: FailingDeploy[];
   staleProd: StaleProdDTO[];
   providers: Record<ProviderKey, { configured: boolean; ok: boolean }>;
