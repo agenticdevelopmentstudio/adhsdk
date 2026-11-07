@@ -66,7 +66,7 @@ final class BrowserInputGateTests: XCTestCase {
         var gate = BrowserInputGate.open
         gate.keyboard = .block
         webView.gate = gate
-        XCTAssertEqual(BrowserWebView.gatedEditActions.count, 8)
+        XCTAssertEqual(BrowserWebView.gatedEditActions.count, 12)
         for action in BrowserWebView.gatedEditActions {
             let item = NSMenuItem(title: "", action: action, keyEquivalent: "")
             XCTAssertFalse(webView.validateUserInterfaceItem(item), "\(action)")
@@ -93,6 +93,65 @@ final class BrowserInputGateTests: XCTestCase {
         XCTAssertEqual(decisions.first?.1, "paste:")
         XCTAssertEqual(decisions.first?.2, false)
         XCTAssertEqual(decisions.first?.3, false)
+    }
+
+    private func keyboardBlockedWebView() -> (BrowserWebView, () -> [(BrowserInputChannel, String, Bool, Bool)]) {
+        let webView = BrowserWebView(frame: NSRect(x: 0, y: 0, width: 100, height: 100),
+                                     configuration: WKWebViewConfiguration())
+        var gate = BrowserInputGate.open
+        gate.keyboard = .block
+        webView.gate = gate
+        var decisions: [(BrowserInputChannel, String, Bool, Bool)] = []
+        webView.onInputDecision = { decisions.append(($0, $1, $2, $3)) }
+        return (webView, { decisions })
+    }
+
+    func testKeyEquivalentForAnotherViewIsNotDecided() throws {
+        let (webView, decisions) = keyboardBlockedWebView()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
+                              styleMask: [.titled], backing: .buffered, defer: true)
+        window.isReleasedWhenClosed = false
+        let field = NSTextField(frame: NSRect(x: 0, y: 150, width: 100, height: 22))
+        window.contentView?.addSubview(webView)
+        window.contentView?.addSubview(field)
+        window.makeFirstResponder(field)
+        let event = try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: .command, timestamp: 0,
+            windowNumber: window.windowNumber, context: nil, characters: "l",
+            charactersIgnoringModifiers: "l", isARepeat: false, keyCode: 37))
+        XCTAssertTrue(window.firstResponder !== window && window.firstResponder !== webView)
+        _ = webView.performKeyEquivalent(with: event)
+        XCTAssertTrue(decisions().isEmpty, "a shortcut for the address bar is not the page's")
+
+        window.makeFirstResponder(webView)
+        XCTAssertFalse(webView.performKeyEquivalent(with: event))
+        XCTAssertEqual(decisions().map(\.1), ["performKeyEquivalent"], "the page's own shortcut is gated")
+    }
+
+    func testBlockedTextInputAndTransformationsAreDropped() {
+        let (webView, decisions) = keyboardBlockedWebView()
+        webView.gatedInsertText("dictated", replacementRange: NSRange(location: NSNotFound, length: 0))
+        webView.gatedInsertText("emoji")
+        webView.gatedSetMarkedText("interim", selectedRange: NSRange(location: 0, length: 0),
+                                   replacementRange: NSRange(location: NSNotFound, length: 0))
+        webView.gatedDelete(nil)
+        webView.gatedUppercaseWord(nil)
+        XCTAssertEqual(decisions().map(\.1), [
+            "insertText:replacementRange:", "insertText:", "setMarkedText:selectedRange:replacementRange:",
+            "delete:", "uppercaseWord:"
+        ])
+        XCTAssertTrue(decisions().allSatisfy { $0.0 == .keyboard && !$0.2 && !$0.3 })
+    }
+
+    func testAutomationInputPassesABlockedKeyboard() {
+        let (webView, decisions) = keyboardBlockedWebView()
+        webView.deliveringAutomationInput { webView.gatedSelectAll(nil) }
+        XCTAssertEqual(decisions().count, 1)
+        XCTAssertEqual(decisions().first?.1, "selectAll:")
+        XCTAssertEqual(decisions().first?.2, true, "delivered")
+        XCTAssertEqual(decisions().first?.3, true, "synthesized")
+        webView.gatedSelectAll(nil)
+        XCTAssertEqual(decisions().last?.2, false, "outside the bracket the user's action is withheld")
     }
 
     func testGateReadsSettings() {

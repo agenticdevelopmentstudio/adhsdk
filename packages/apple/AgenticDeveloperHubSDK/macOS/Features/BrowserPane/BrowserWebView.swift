@@ -32,8 +32,8 @@ public final class BrowserWebView: LiveResizingWebView {
 
     /// The window is key and the first responder is this view or inside it.
     var pageHasFocus: Bool {
-        guard let window, window.isKeyWindow, let responder = window.firstResponder as? NSView else { return false }
-        return responder === self || responder.isDescendant(of: self)
+        guard let window, window.isKeyWindow else { return false }
+        return holdsFirstResponder
     }
 
     private func allows(_ channel: BrowserInputChannel, _ event: String) -> Bool {
@@ -45,8 +45,22 @@ public final class BrowserWebView: LiveResizingWebView {
 
     // MARK: - Keyboard
 
+    /// The first responder is this view or inside it, whether or not the
+    /// window is key.
+    private var holdsFirstResponder: Bool {
+        guard let responder = window?.firstResponder as? NSView else { return false }
+        return responder === self || responder.isDescendant(of: self)
+    }
+
+    /// True while WebKit handles a keyDown the gate already let through, so
+    /// the text it inserts for that key is not decided (and reported) twice.
+    private var isHandlingAllowedKeyDown = false
+
     public override func keyDown(with event: NSEvent) {
-        if allows(.keyboard, "keyDown") { super.keyDown(with: event) }
+        guard allows(.keyboard, "keyDown") else { return }
+        isHandlingAllowedKeyDown = true
+        defer { isHandlingAllowedKeyDown = false }
+        super.keyDown(with: event)
     }
 
     public override func keyUp(with event: NSEvent) {
@@ -57,8 +71,13 @@ public final class BrowserWebView: LiveResizingWebView {
         if allows(.keyboard, "flagsChanged") { super.flagsChanged(with: event) }
     }
 
+    /// NSWindow offers every key equivalent to every view in the window, so a
+    /// Cmd-shortcut typed in the address bar arrives here too. Only one meant
+    /// for the page (the page holds first responder) is gated and reported;
+    /// the rest go to WebKit untouched, as they would without this subclass.
     public override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        allows(.keyboard, "performKeyEquivalent") ? super.performKeyEquivalent(with: event) : false
+        guard holdsFirstResponder else { return super.performKeyEquivalent(with: event) }
+        return allows(.keyboard, "performKeyEquivalent") ? super.performKeyEquivalent(with: event) : false
     }
 
     // MARK: - Mouse (back and forward swipes follow it)
@@ -167,7 +186,8 @@ public final class BrowserWebView: LiveResizingWebView {
     /// Edit-menu actions that carry keyboard intent or clipboard content.
     /// A blocked `performKeyEquivalent` sends Cmd-V on to the menu bar, and the
     /// menu item would then send `paste:` straight back down the responder
-    /// chain to this view, so the keyboard gate has to hold these too.
+    /// chain to this view, so the keyboard gate has to hold these too. Delete
+    /// and the Transformations items edit the page's text the same way.
     nonisolated static let gatedEditActions: Set<Selector> = [
         #selector(NSText.paste(_:)),
         #selector(NSTextView.pasteAsPlainText(_:)),
@@ -176,7 +196,11 @@ public final class BrowserWebView: LiveResizingWebView {
         #selector(NSText.copy(_:)),
         #selector(NSText.selectAll(_:)),
         Selector(("undo:")),
-        Selector(("redo:"))
+        Selector(("redo:")),
+        #selector(NSText.delete(_:)),
+        #selector(NSResponder.uppercaseWord(_:)),
+        #selector(NSResponder.lowercaseWord(_:)),
+        #selector(NSResponder.capitalizeWord(_:))
     ]
 
     /// Whether the keyboard gate would let the user's input through right now,
@@ -222,6 +246,55 @@ public final class BrowserWebView: LiveResizingWebView {
     @objc(selectAll:) public func gatedSelectAll(_ sender: Any?) { performEditAction("selectAll:", sender) }
     @objc(undo:) public func gatedUndo(_ sender: Any?) { performEditAction("undo:", sender) }
     @objc(redo:) public func gatedRedo(_ sender: Any?) { performEditAction("redo:", sender) }
+    @objc(delete:) public func gatedDelete(_ sender: Any?) { performEditAction("delete:", sender) }
+    @objc(uppercaseWord:) public func gatedUppercaseWord(_ sender: Any?) {
+        performEditAction("uppercaseWord:", sender)
+    }
+    @objc(lowercaseWord:) public func gatedLowercaseWord(_ sender: Any?) {
+        performEditAction("lowercaseWord:", sender)
+    }
+    @objc(capitalizeWord:) public func gatedCapitalizeWord(_ sender: Any?) {
+        performEditAction("capitalizeWord:", sender)
+    }
+
+    // MARK: - Text input with no keyDown (keyboard)
+
+    // WKWebView is itself the window's NSTextInputClient (it conforms and
+    // implements these; its one subview, WKFlippedView, never takes first
+    // responder), so Dictation and Emoji & Symbols, which insert text without
+    // a keyDown, come through here. Text for a keyDown the gate already let
+    // through passes without a second decision.
+
+    @objc(insertText:) public func gatedInsertText(_ string: Any) {
+        guard allowsTextInput("insertText:") else { return }
+        let selector = #selector(gatedInsertText(_:))
+        guard let imp = class_getMethodImplementation(LiveResizingWebView.self, selector) else { return }
+        unsafeBitCast(imp, to: ActionIMP.self)(self, selector, string as AnyObject)
+    }
+
+    @objc(insertText:replacementRange:) public func gatedInsertText(_ string: Any, replacementRange: NSRange) {
+        guard allowsTextInput("insertText:replacementRange:") else { return }
+        typealias IMP = @convention(c) (AnyObject, Selector, AnyObject, NSRange) -> Void
+        let selector = #selector(gatedInsertText(_:replacementRange:))
+        guard let imp = class_getMethodImplementation(LiveResizingWebView.self, selector) else { return }
+        unsafeBitCast(imp, to: IMP.self)(self, selector, string as AnyObject, replacementRange)
+    }
+
+    /// Dictation shows its interim words as marked text before it commits
+    /// them with `insertText`; withholding only the commit would leave them
+    /// stranded in the page.
+    @objc(setMarkedText:selectedRange:replacementRange:)
+    public func gatedSetMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+        guard allowsTextInput("setMarkedText:selectedRange:replacementRange:") else { return }
+        typealias IMP = @convention(c) (AnyObject, Selector, AnyObject, NSRange, NSRange) -> Void
+        let selector = #selector(gatedSetMarkedText(_:selectedRange:replacementRange:))
+        guard let imp = class_getMethodImplementation(LiveResizingWebView.self, selector) else { return }
+        unsafeBitCast(imp, to: IMP.self)(self, selector, string as AnyObject, selectedRange, replacementRange)
+    }
+
+    private func allowsTextInput(_ name: String) -> Bool {
+        isHandlingAllowedKeyDown || allows(.keyboard, name)
+    }
 
     private typealias ActionIMP = @convention(c) (AnyObject, Selector, AnyObject?) -> Void
 
