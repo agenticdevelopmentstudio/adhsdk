@@ -50,7 +50,6 @@ final class CrawlLayoutTests: XCTestCase {
     func testEdgeFollowsPosition() {
         XCTAssertEqual(CrawlPresenter.Edge(.topLeft), .top)
         XCTAssertEqual(CrawlPresenter.Edge(.topCenter), .top)
-        XCTAssertEqual(CrawlPresenter.Edge(.topRight), .top)
         XCTAssertEqual(CrawlPresenter.Edge(.center), .bottom)
         XCTAssertEqual(CrawlPresenter.Edge(.bottomLeft), .bottom)
         XCTAssertEqual(CrawlPresenter.Edge(.bottomRight), .bottom)

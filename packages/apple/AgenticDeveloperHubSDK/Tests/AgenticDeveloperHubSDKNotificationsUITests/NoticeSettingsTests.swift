@@ -36,38 +36,42 @@ final class NoticeSettingsTests: XCTestCase {
 
     private var rules: NoticeRoutingRules { store.get(NoticeSettings.routingRules) }
 
+    private var fyiPostsToSystem: Bool {
+        rules.styles[.fyi]?.items.contains { $0.style == .system } ?? false
+    }
+
     private func migrate() {
         NoticeSettings.migrateLegacyDeliverSetting(defaults: defaults, legacyKey: legacyKey, store: store)
     }
 
     func testMigrationActsOnlyOnExplicitTrue() {
         migrate()
-        XCTAssertEqual(rules.profiles[.fyi]?.forwardToSystem, false, "an absent key is not a choice")
+        XCTAssertFalse(fyiPostsToSystem, "an absent key is not a choice")
 
         freshDomain()
         defaults.set(true, forKey: legacyKey)
         migrate()
-        XCTAssertEqual(rules.profiles[.fyi]?.forwardToSystem, true)
+        XCTAssertTrue(fyiPostsToSystem)
         XCTAssertNil(defaults.object(forKey: legacyKey), "the legacy key is retired")
 
         freshDomain()
         defaults.set(false, forKey: legacyKey)
         migrate()
-        XCTAssertEqual(rules.profiles[.fyi]?.forwardToSystem, false)
+        XCTAssertFalse(fyiPostsToSystem)
     }
 
     func testMigrationRunsOnce() {
         defaults.set(true, forKey: legacyKey)
         migrate()
         XCTAssertTrue(defaults.bool(forKey: "notice_routing_migrated_v1"))
-        XCTAssertEqual(rules.profiles[.fyi]?.forwardToSystem, true)
+        XCTAssertTrue(fyiPostsToSystem)
 
         // The user turns forwarding back off; a stale legacy value reappearing
         // must not turn it on again.
         store.set(NoticeRoutingRules.defaults, for: NoticeSettings.routingRules)
         defaults.set(true, forKey: legacyKey)
         migrate()
-        XCTAssertEqual(rules.profiles[.fyi]?.forwardToSystem, false)
+        XCTAssertFalse(fyiPostsToSystem)
     }
 
     func testRoutingRulesSettingDefaults() {

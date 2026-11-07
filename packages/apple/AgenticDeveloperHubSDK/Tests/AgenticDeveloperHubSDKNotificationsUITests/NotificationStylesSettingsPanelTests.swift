@@ -75,30 +75,38 @@ final class NotificationStylesSettingsPanelTests: XCTestCase {
         XCTAssertTrue(behavior.contains("Stacks, escalation and floods"))
         XCTAssertTrue(behavior.contains("Sharing and keyboard"))
         XCTAssertTrue(behavior.contains("Unavailable — needs the Focus Status entitlement"))
-
         topic.overrides.loadViewIfNeeded()
         XCTAssertEqual(Self.buttons(in: topic.overrides.view, titled: "Add").count, 1)
     }
 
     private static let propertyLabels = [
-        "Style", "Position", "Screens", "Layer", "Dismiss after", "Also post to Notification Center"
+        "Style", "Position", "Layer", "Dismiss after"
     ]
 
-    /// An urgency's row shows that urgency's own profile: an override that
+    /// An urgency's row shows that urgency's own style set: an override that
     /// happens to match the sample notice must not leak into it.
     func testUrgencyRowsIgnoreOverrides() {
         var rules = NoticeRoutingRules.defaults
-        let base = NotificationStylesSettingsPanel.baseProfile(for: .fyi, in: rules)
-        var crawl = base
-        crawl.style = .crawl
-        rules.overrides = [.init(category: "test", profile: crawl)]
-        XCTAssertEqual(rules.profile(for: NotificationStylesSettingsPanel.sample(for: .fyi)).style, .crawl)
-        XCTAssertEqual(NotificationStylesSettingsPanel.baseProfile(for: .fyi, in: rules), base)
-
-        rules.profiles[.fyi] = nil
+        let base = NotificationStylesSettingsPanel.baseStyle(for: .fyi, in: rules)
+        rules.overrides = [.init(category: "test", target: .style(.emergency))]
         XCTAssertEqual(
-            NotificationStylesSettingsPanel.baseProfile(for: .fyi, in: rules),
-            NoticeRoutingRules.defaultProfile(for: .fyi))
+            rules.style(for: NotificationStylesSettingsPanel.sample(for: .fyi)),
+            NoticeRoutingRules.defaultStyle(for: .emergency))
+        XCTAssertEqual(NotificationStylesSettingsPanel.baseStyle(for: .fyi, in: rules), base)
+
+        rules.styles[.fyi] = nil
+        XCTAssertEqual(
+            NotificationStylesSettingsPanel.baseStyle(for: .fyi, in: rules),
+            NoticeRoutingRules.defaultStyle(for: .fyi))
+    }
+
+    func testOverrideTargetsDescribeTheUrgencyOrHiding() {
+        XCTAssertEqual(
+            NotificationStylesSettingsPanel.describe(.init(source: "ci", target: .style(.now))),
+            "source ci → Now style")
+        XCTAssertEqual(
+            NotificationStylesSettingsPanel.describe(.init(category: "spam", target: .hide)),
+            "category spam → Don't show")
     }
 
     private static func strings(in view: NSView) -> [String] {

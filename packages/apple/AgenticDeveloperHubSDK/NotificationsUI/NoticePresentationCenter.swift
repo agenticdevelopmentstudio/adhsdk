@@ -10,7 +10,8 @@ import AgenticDeveloperHubSDKNotifications
 /// 2. replaces in place a shown notice with the same `source` + `key`;
 /// 3. holds it while Focus is on and its urgency is below `now`;
 /// 4. folds it into a per-source summary while that source is flooding;
-/// 5. resolves its profile and hands it to that profile's presenter.
+/// 5. resolves its style set and hands each style's items to that style's
+///    presenter, once per style.
 ///
 /// Every user action removes the card first and tells the host second, so the
 /// screen never waits on the host's transport.
@@ -19,7 +20,9 @@ public final class NoticePresentationCenter {
 
     private struct Entry {
         var notice: Notice
-        var profile: NoticeProfile
+        var set: NoticeStyleSet
+        /// The styles the set was handed to, in item order, without repeats.
+        var styles: [NoticeProfile.Style]
         /// When the card first went on screen; escalation counts from here,
         /// so a backlog notice gets its full threshold once drawn.
         var presentedAt: Date
@@ -52,9 +55,9 @@ public final class NoticePresentationCenter {
     /// once nothing it folded is still active. The notice is kept so a
     /// partial reconcile can tell whether its list speaks for it.
     private var foldedIDs: [String: Notice] = [:]
-    /// Ids routed to no style and not forwarded: evaluated once and drawn
-    /// nowhere. Remembered so each reconcile does not feed them to the flood
-    /// folder again and conjure a summary out of one quiet notice.
+    /// Ids whose style set is empty: evaluated once and drawn nowhere.
+    /// Remembered so each reconcile does not feed them to the flood folder
+    /// again and conjure a summary out of one quiet notice.
     private var evaluatedIDs: Set<String> = []
     /// Ids the user has just acted on. Their card is gone, but until the host
     /// applies the change its active list still has them, and a reconcile in
@@ -136,9 +139,9 @@ public final class NoticePresentationCenter {
     /// The most recently presented notice still on screen.
     public var newestShownID: String? { order.last }
 
-    /// The style a notice is presented in, or `nil` when it is not on screen.
-    public func presentedStyle(of id: String) -> NoticeProfile.Style? {
-        entries[id]?.profile.style
+    /// The styles a notice is presented in; empty when it is not on screen.
+    public func presentedStyles(of id: String) -> Set<NoticeProfile.Style> {
+        Set(entries[id]?.styles ?? [])
     }
 
     // MARK: Input
@@ -155,7 +158,7 @@ public final class NoticePresentationCenter {
         // Already on screen (a re-post, or a reconcile racing a broadcast):
         // refresh it where it stands.
         if let existing = entries[notice.id] {
-            replace(oldID: notice.id, existing: existing, with: notice, profile: rules.profile(for: notice))
+            replace(oldID: notice.id, existing: existing, with: notice, set: rules.style(for: notice))
             return
         }
 
@@ -165,7 +168,7 @@ public final class NoticePresentationCenter {
                return entry.notice.source == notice.source && entry.notice.key == key
            }),
            let existing = entries[oldID] {
-            replace(oldID: oldID, existing: existing, with: notice, profile: rules.profile(for: notice))
+            replace(oldID: oldID, existing: existing, with: notice, set: rules.style(for: notice))
             return
         }
 
@@ -179,11 +182,11 @@ public final class NoticePresentationCenter {
         floodFolder.configuration = rules.flood
         if case let .fold(source, count) = floodFolder.admit(notice, at: now) {
             foldedIDs[notice.id] = notice
-            showSummary(source: source, count: count, like: notice, rules: rules, now: now)
+            showSummary(source: source, count: count, like: notice, now: now)
             return
         }
 
-        present(notice, profile: rules.profile(for: notice))
+        present(notice, set: rules.style(for: notice))
     }
 
     /// A state change the host broadcast. Anything but `unread` takes the
@@ -244,16 +247,18 @@ public final class NoticePresentationCenter {
             else { continue }
             var shown = entry.notice
             shown.urgency = urgency
-            let profile = rules.profile(for: entry.notice, effectiveUrgency: urgency)
-            if profile.style == entry.profile.style {
-                presenters[profile.style]?.replace(
-                    oldID: id, with: shown, profile: profile, actions: cardActions(for: id))
-            } else {
-                presenters[entry.profile.style]?.remove(id: id)
-                presenters[profile.style]?.show(shown, profile: profile, actions: cardActions(for: id))
+            let set = rules.style(for: entry.notice, effectiveUrgency: urgency)
+            let styles = hand(shown, set: set, replacing: id, from: entry.styles)
+            guard !styles.isEmpty else {
+                // Escalated into a set that shows nothing: drawn nowhere now.
+                entries[id] = nil
+                order.removeAll { $0 == id }
+                evaluatedIDs.insert(id)
+                continue
             }
             var escalated = entry
-            escalated.profile = profile
+            escalated.set = set
+            escalated.styles = styles
             escalated.escalated = true
             entries[id] = escalated
         }
@@ -287,9 +292,10 @@ public final class NoticePresentationCenter {
             return
         }
         if case .reply = action.kind {
-            // Crawl and system draw no field: the history is where it can
-            // be answered.
-            if presenters[entry.profile.style]?.focusReply(id: id) != true {
+            // The first style that draws a field takes it. Crawl and system
+            // draw none: with only those, the history is where it can be
+            // answered.
+            if !entry.styles.contains(where: { presenters[$0]?.focusReply(id: id) == true }) {
                 handler.showHistory()
             }
             return
@@ -331,6 +337,9 @@ public final class NoticePresentationCenter {
         if entry.isSummary {
             dismiss(id)
         } else {
+            // A set that turned snoozing off offers no control; a stray call
+            // (a shortcut, a stale card) changes nothing.
+            guard entry.set.snooze.isSnoozable else { return }
             userDismiss(id)
             let until = option.until(now: clock(), calendar: calendar)
             handler.snooze(id, until: until)
@@ -402,85 +411,107 @@ public final class NoticePresentationCenter {
 
     // MARK: Presenting
 
-    private func present(_ notice: Notice, profile: NoticeProfile) {
-        guard profile.style != .none || profile.forwardToSystem else {
+    private func present(_ notice: Notice, set: NoticeStyleSet) {
+        let styles = hand(notice, set: set, replacing: nil, from: [])
+        guard !styles.isEmpty else {
             evaluatedIDs.insert(notice.id)
             return
         }
-        entries[notice.id] = Entry(notice: notice, profile: profile, presentedAt: clock())
+        entries[notice.id] = Entry(notice: notice, set: set, styles: styles, presentedAt: clock())
         order.append(notice.id)
-        let actions = cardActions(for: notice.id)
-        if profile.style != .none {
-            presenters[profile.style]?.show(notice, profile: profile, actions: actions)
-        }
-        if Self.forwards(profile) {
-            presenters[.system]?.show(notice, profile: profile, actions: actions)
-        }
         rearmEscalation()
     }
 
-    private func replace(oldID: String, existing: Entry, with notice: Notice, profile: NoticeProfile) {
-        let actions = cardActions(for: notice.id)
+    private func replace(oldID: String, existing: Entry, with notice: Notice, set: NoticeStyleSet) {
         entries[oldID] = nil
         order.removeAll { $0 == oldID }
         if oldID != notice.id {
             replacedIDs.insert(oldID)
         }
-        // The slot's `presentedAt` carries over, but the escalation clock
-        // runs from `max(timestamp, presentedAt)`, the later of the two. A
-        // key replacement carries a newer timestamp, so it restarts the clock
-        // from the replacement's timestamp; a refresh with an unchanged
-        // timestamp keeps the clock running from when the slot was filled.
-        entries[notice.id] = Entry(notice: notice, profile: profile, presentedAt: existing.presentedAt)
-        order.append(notice.id)
-        if profile.style == existing.profile.style {
-            presenters[profile.style]?.replace(oldID: oldID, with: notice, profile: profile, actions: actions)
+        let styles = hand(notice, set: set, replacing: oldID, from: existing.styles)
+        if styles.isEmpty {
+            evaluatedIDs.insert(notice.id)
         } else {
-            presenters[existing.profile.style]?.remove(id: oldID)
-            presenters[profile.style]?.show(notice, profile: profile, actions: actions)
-        }
-        // The system copy follows: the old one goes, and the new one is
-        // posted if the new profile forwards.
-        if Self.forwards(existing.profile) {
-            presenters[.system]?.remove(id: oldID)
-        }
-        if Self.forwards(profile) {
-            presenters[.system]?.show(notice, profile: profile, actions: actions)
+            // The slot's `presentedAt` carries over, but the escalation clock
+            // runs from `max(timestamp, presentedAt)`, the later of the two. A
+            // key replacement carries a newer timestamp, so it restarts the
+            // clock from the replacement's timestamp; a refresh with an
+            // unchanged timestamp keeps the clock running from when the slot
+            // was filled.
+            entries[notice.id] = Entry(notice: notice, set: set, styles: styles, presentedAt: existing.presentedAt)
+            order.append(notice.id)
         }
         rearmEscalation()
     }
 
-    /// Whether a profile also posts to the system presenter, beside its own style.
-    private static func forwards(_ profile: NoticeProfile) -> Bool {
-        profile.forwardToSystem && profile.style != .system
+    /// Puts `notice` up in every style of `set`, one presenter call per style.
+    /// With `oldID`, it takes over that notice's presentation: a style in both
+    /// `previous` and the set is replaced in place, one only in `previous` is
+    /// removed, and one only in the set is shown. Returns the styles used.
+    private func hand(
+        _ notice: Notice, set: NoticeStyleSet, replacing oldID: String?, from previous: [NoticeProfile.Style]
+    ) -> [NoticeProfile.Style] {
+        let groups = Self.groups(set)
+        let styles = groups.map(\.style)
+        if let oldID {
+            for style in previous where !styles.contains(style) {
+                presenters[style]?.remove(id: oldID)
+            }
+        }
+        let actions = cardActions(for: notice.id, set: set)
+        for group in groups {
+            if let oldID, previous.contains(group.style) {
+                presenters[group.style]?.replace(oldID: oldID, with: notice, profiles: group.items, actions: actions)
+            } else {
+                presenters[group.style]?.show(notice, profiles: group.items, actions: actions)
+            }
+        }
+        return styles
     }
 
-    private func showSummary(source: String, count: Int, like notice: Notice, rules: NoticeRoutingRules, now: Date) {
+    /// The set's items by style, in the order each style first appears, each
+    /// stamped with the set's dismiss.
+    private static func groups(
+        _ set: NoticeStyleSet
+    ) -> [(style: NoticeProfile.Style, items: [NoticeProfile])] {
+        var groups: [(style: NoticeProfile.Style, items: [NoticeProfile])] = []
+        for item in set.presentedItems {
+            if let index = groups.firstIndex(where: { $0.style == item.style }) {
+                groups[index].items.append(item)
+            } else {
+                groups.append((item.style, [item]))
+            }
+        }
+        return groups
+    }
+
+    /// A flood summary is one toast, bottom right, that never times out and
+    /// cannot be snoozed, whatever the folded notices' own set says.
+    private static let summarySet = NoticeStyleSet(
+        items: [NoticeProfile(style: .toast, position: .bottomRight)],
+        snooze: SnoozeSettings(isEnabled: false, options: []))
+
+    private func showSummary(source: String, count: Int, like notice: Notice, now: Date) {
         let id = "flood:\(source)"
         let summary = Notice(
             id: id, timestamp: now, source: source, title: "\(count) from \(source)",
             body: "Click to see them in history.", app: notice.app, level: .info, urgency: .fyi)
-        var profile = rules.profile(for: notice)
-        profile.style = .toast
-        profile.autoDismiss = nil
-        profile.forwardToSystem = false
-        let actions = cardActions(for: id, summary: true)
-
-        if entries[id] != nil {
-            entries[id] = Entry(notice: summary, profile: profile, presentedAt: now, isSummary: true)
-            order.removeAll { $0 == id }
-            order.append(id)
-            presenters[.toast]?.replace(oldID: id, with: summary, profile: profile, actions: actions)
+        let set = Self.summarySet
+        let actions = cardActions(for: id, set: set, summary: true)
+        let wasShown = entries[id] != nil
+        entries[id] = Entry(notice: summary, set: set, styles: [.toast], presentedAt: now, isSummary: true)
+        order.removeAll { $0 == id }
+        order.append(id)
+        if wasShown {
+            presenters[.toast]?.replace(oldID: id, with: summary, profiles: set.presentedItems, actions: actions)
         } else {
-            entries[id] = Entry(notice: summary, profile: profile, presentedAt: now, isSummary: true)
-            order.append(id)
-            presenters[.toast]?.show(summary, profile: profile, actions: actions)
+            presenters[.toast]?.show(summary, profiles: set.presentedItems, actions: actions)
         }
     }
 
     /// Off screen everywhere. Every presenter is told, tracked or not, because
-    /// a notice that escalated or was forwarded may be on more than one, and a
-    /// presenter may hold a card this center has already forgotten.
+    /// a notice's set may span several, and a presenter may hold a card this
+    /// center has already forgotten.
     private func dismiss(_ id: String) {
         entries[id] = nil
         order.removeAll { $0 == id }
@@ -514,17 +545,20 @@ public final class NoticePresentationCenter {
         handler.respond(id, actionID: action.id, text: text)
     }
 
-    private func cardActions(for id: String, summary: Bool = false) -> NoticeCardActions {
+    private func cardActions(for id: String, set: NoticeStyleSet, summary: Bool = false) -> NoticeCardActions {
         var snooze: (@MainActor (SnoozeOption) -> Void)?
         var archive: (@MainActor () -> Void)?
         if !summary {
-            snooze = { [weak self] option in self?.snooze(id: id, option: option) }
+            if set.snooze.isSnoozable {
+                snooze = { [weak self] option in self?.snooze(id: id, option: option) }
+            }
             archive = { [weak self] in self?.archive(id: id) }
         }
         return NoticeCardActions(
             act: { [weak self] in self?.act(id: id) },
             respond: { [weak self] actionID, text in self?.respond(id: id, actionID: actionID, text: text) },
             snooze: snooze,
+            snoozeOptions: set.snooze.options,
             archive: archive,
             close: { [weak self] in self?.close(id: id) })
     }

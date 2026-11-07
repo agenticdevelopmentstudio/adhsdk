@@ -7,11 +7,17 @@ final class ToastStackLayoutTests: XCTestCase {
     private let visible = CGRect(x: 0, y: 0, width: 1000, height: 800)
     private let card = CGSize(width: 300, height: 80)
 
-    func testTopRightStacksDownward() {
-        let frames = ToastStackLayout.frames(count: 2, cardSize: card, in: visible, position: .topRight)
+    func testTopLeftStacksDownward() {
+        let frames = ToastStackLayout.frames(count: 2, cardSize: card, in: visible, position: .topLeft)
         XCTAssertEqual(frames.count, 2)
-        XCTAssertEqual(frames[0], CGRect(x: 688, y: 708, width: 300, height: 80))
-        XCTAssertEqual(frames[1], CGRect(x: 688, y: 620, width: 300, height: 80))
+        XCTAssertEqual(frames[0], CGRect(x: 12, y: 708, width: 300, height: 80))
+        XCTAssertEqual(frames[1], CGRect(x: 12, y: 620, width: 300, height: 80))
+    }
+
+    func testBottomRightStacksUpward() {
+        let frames = ToastStackLayout.frames(count: 2, cardSize: card, in: visible, position: .bottomRight)
+        XCTAssertEqual(frames[0], CGRect(x: 688, y: 12, width: 300, height: 80))
+        XCTAssertEqual(frames[1], CGRect(x: 688, y: 100, width: 300, height: 80))
     }
 
     func testBottomCenterStacksUpward() {
@@ -73,19 +79,16 @@ final class ScreenSelectorTests: XCTestCase {
 
     func testEmptyScreenListYieldsNothing() {
         for selection in NoticeProfile.ScreenSelection.allCases {
-            XCTAssertTrue(ScreenSelector.screens(for: selection, all: [], main: nil, mouse: .zero).isEmpty)
+            XCTAssertTrue(ScreenSelector.screens(for: selection, all: [], main: nil).isEmpty)
         }
     }
 
     func testAllAndMainUseTheGivenScreens() {
         let screens = NSScreen.screens
         guard let main = NSScreen.main ?? screens.first else { return }
-        XCTAssertEqual(ScreenSelector.screens(for: .all, all: screens, main: main, mouse: .zero), screens)
-        XCTAssertEqual(ScreenSelector.screens(for: .main, all: screens, main: main, mouse: .zero), [main])
-        let inside = CGPoint(x: main.frame.midX, y: main.frame.midY)
-        XCTAssertEqual(ScreenSelector.screens(for: .cursor, all: screens, main: main, mouse: inside), [main])
-        // A pointer off every screen falls back to the main one.
-        let nowhere = CGPoint(x: -1_000_000, y: -1_000_000)
-        XCTAssertEqual(ScreenSelector.screens(for: .cursor, all: screens, main: main, mouse: nowhere), [main])
+        XCTAssertEqual(ScreenSelector.screens(for: .all, all: screens, main: main), screens)
+        XCTAssertEqual(ScreenSelector.screens(for: .main, all: screens, main: main), [main])
+        // No main screen falls back to the first one.
+        XCTAssertEqual(ScreenSelector.screens(for: .main, all: screens, main: nil), [screens[0]])
     }
 }

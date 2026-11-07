@@ -15,7 +15,7 @@ protocol SystemNotificationPosting: AnyObject {
     func removePending(withIdentifiers identifiers: [String])
 }
 
-/// The `system` style, and `forwardToSystem`: the notice goes to macOS's own
+/// The `system` style item of a set: the notice goes to macOS's own
 /// Notification Center as a banner, under the notice's id, so it can be
 /// withdrawn when the notice is acted on anywhere else. Clicking the banner
 /// acts on the notice, like clicking its card; clearing it closes the notice.
@@ -70,7 +70,9 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
 
     // MARK: NoticePresenter
 
-    public func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    /// One banner per notice, however many system items the set holds.
+    public func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
+        guard !profiles.isEmpty else { return }
         start()
         if !authorized {
             authorized = true
@@ -89,9 +91,9 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
         poster.removeDelivered(withIdentifiers: [id])
     }
 
-    public func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    public func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         remove(id: oldID)
-        show(notice, profile: profile, actions: actions)
+        show(notice, profiles: profiles, actions: actions)
     }
 
     // MARK: Taps

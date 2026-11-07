@@ -37,7 +37,7 @@ class CardStackPresenter: NoticePresenter {
     private(set) var shownIDs: [String] = []
     private var placements: [String: [Placement]] = [:]
     /// The screen selection each shown notice was placed with, so a replace
-    /// can tell "the selection changed" from "the pointer moved displays".
+    /// can tell "the selection changed" from "the displays changed".
     private var selections: [String: NoticeProfile.ScreenSelection] = [:]
     private var model = CardStackModel()
     private var pills: [StackKey: Pill] = [:]
@@ -78,13 +78,16 @@ class CardStackPresenter: NoticePresenter {
 
     // MARK: NoticePresenter
 
-    func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    /// Draws `profiles[0]` only: one card per notice per screen.
+    func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         if placements[notice.id] != nil {
             remove(id: notice.id)
         }
-        let hideFromSharing = rules().hideFromScreenSharing
+        guard let profile = profiles.first else { return }
+        let rules = rules()
+        let hideFromSharing = rules.hideFromScreenSharing
         var made: [Placement] = []
-        for displayID in displays(profile.screens) {
+        for displayID in displays(rules.screens) {
             let key = StackKey(displayID: displayID, position: profile.position)
             let panel = NoticePanel(layer: profile.layer, hideFromSharing: hideFromSharing)
             let card = NoticeCardView(notice: notice, actions: actions, style: cardStyle)
@@ -101,7 +104,7 @@ class CardStackPresenter: NoticePresenter {
         }
         guard !made.isEmpty else { return }
         placements[notice.id] = made
-        selections[notice.id] = profile.screens
+        selections[notice.id] = rules.screens
         shownIDs.append(notice.id)
         for key in Set(made.map(\.key)) {
             layout(key)
@@ -121,18 +124,23 @@ class CardStackPresenter: NoticePresenter {
         closeOrphanedPills()
     }
 
-    func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
+        guard let profile = profiles.first else {
+            remove(id: oldID)
+            return
+        }
+        let selection = rules().screens
         // In place only while the card would land exactly where it stands:
-        // same position, same layer, same screen *selection*. An escalation
-        // from `.main` to `.cursor`, say, moves it. The selection is compared,
-        // not the screens it resolves to right now: a `.cursor` card must not
-        // jump just because the pointer has since moved to another display.
+        // same position, same layer, same screen *selection*. Changing the
+        // setting from `.main` to `.all`, say, moves it. The selection is
+        // compared, not the displays it resolves to right now: a display
+        // coming or going is `screensDidChange`'s business, not a replace's.
         guard let existing = placements[oldID],
-              selections[oldID] == profile.screens,
+              selections[oldID] == selection,
               existing.allSatisfy({ $0.key.position == profile.position && $0.panel.level == level(profile) })
         else {
             remove(id: oldID)
-            show(notice, profile: profile, actions: actions)
+            show(notice, profiles: profiles, actions: actions)
             return
         }
         placements[oldID] = nil
@@ -146,7 +154,7 @@ class CardStackPresenter: NoticePresenter {
         }
         let touched = model.replace(oldID, with: notice.id)
         placements[notice.id] = existing
-        selections[notice.id] = profile.screens
+        selections[notice.id] = selection
         if let index = shownIDs.firstIndex(of: oldID) {
             shownIDs[index] = notice.id
         }

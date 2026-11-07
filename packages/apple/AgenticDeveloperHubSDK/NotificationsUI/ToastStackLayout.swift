@@ -38,7 +38,7 @@ public enum ToastStackLayout {
         let growsDown: Bool
         var cursor: CGFloat
         switch position {
-        case .topLeft, .topCenter, .topRight:
+        case .topLeft, .topCenter:
             growsDown = true
             cursor = visible.maxY - margin
         case .center:
@@ -59,7 +59,7 @@ public enum ToastStackLayout {
             switch position {
             case .topLeft, .bottomLeft:
                 originX = visible.minX + margin
-            case .topRight, .bottomRight:
+            case .bottomRight:
                 originX = visible.maxX - margin - size.width
             case .topCenter, .bottomCenter, .center:
                 originX = visible.midX - size.width / 2

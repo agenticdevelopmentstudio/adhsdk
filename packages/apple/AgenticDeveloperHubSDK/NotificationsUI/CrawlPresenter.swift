@@ -18,7 +18,7 @@ public final class CrawlPresenter: NoticePresenter {
 
         init(_ position: NoticeProfile.Position) {
             switch position {
-            case .topLeft, .topCenter, .topRight: self = .top
+            case .topLeft, .topCenter: self = .top
             case .center, .bottomLeft, .bottomCenter, .bottomRight: self = .bottom
             }
         }
@@ -114,8 +114,10 @@ public final class CrawlPresenter: NoticePresenter {
 
     // MARK: NoticePresenter
 
-    public func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    /// Draws `profiles[0]` only: one crawl item per notice.
+    public func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         items.removeValue(forKey: notice.id)?.countdown.stop()
+        guard let profile = profiles.first else { return }
         let (keys, frames) = placement(for: profile)
         guard !keys.isEmpty else {
             apply(model.remove(notice.id), layer: profile.layer, frames: frames)
@@ -139,9 +141,10 @@ public final class CrawlPresenter: NoticePresenter {
     /// In place where it can be: strips the old and new notice share keep
     /// its slot; a change of edge or of screens moves it, closing any strip
     /// left empty.
-    public func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
-        guard var item = items[oldID] else {
-            show(notice, profile: profile, actions: actions)
+    public func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
+        guard var item = items[oldID], let profile = profiles.first else {
+            remove(id: oldID)
+            show(notice, profiles: profiles, actions: actions)
             return
         }
         let (keys, frames) = placement(for: profile)
@@ -166,7 +169,7 @@ public final class CrawlPresenter: NoticePresenter {
     private func placement(for profile: NoticeProfile) -> ([StripKey], [StripKey: CGRect]) {
         let edge = Edge(profile.position)
         var frames: [StripKey: CGRect] = [:]
-        let keys = screens(profile.screens).map { screen in
+        let keys = screens(rules().screens).map { screen in
             let key = StripKey(displayID: screen.displayID, edge: edge)
             frames[key] = screen.visibleFrame
             return key
@@ -223,7 +226,7 @@ public final class CrawlPresenter: NoticePresenter {
         guard let strip = strips[key] else { return }
         strip.view.setNotices(model.ids(on: key).compactMap { items[$0]?.notice })
         strip.elapsed = 0
-        strip.leftToRight = rules().crawlLeftToRight
+        strip.leftToRight = rules().crawl.leftToRight
         place(strip)
     }
 

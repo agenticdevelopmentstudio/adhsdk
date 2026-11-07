@@ -37,11 +37,14 @@ final class RecordingPresenter: NoticePresenter {
     private(set) var focusedReplies: [String] = []
     private(set) var actions: [String: NoticeCardActions] = [:]
     private(set) var notices: [String: Notice] = [:]
+    /// The items each id was last shown or replaced with.
+    private(set) var profiles: [String: [NoticeProfile]] = [:]
     /// Whether this presenter draws a reply field (crawl and system do not).
     var hasReplyField = true
 
-    func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         shown.append(notice)
+        self.profiles[notice.id] = profiles
         shownIDs.append(notice.id)
         self.actions[notice.id] = actions
         notices[notice.id] = notice
@@ -52,8 +55,9 @@ final class RecordingPresenter: NoticePresenter {
         shownIDs.removeAll { $0 == id }
     }
 
-    func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         replaced.append((oldID, notice.id))
+        self.profiles[notice.id] = profiles
         if let index = shownIDs.firstIndex(of: oldID) {
             shownIDs[index] = notice.id
         } else {

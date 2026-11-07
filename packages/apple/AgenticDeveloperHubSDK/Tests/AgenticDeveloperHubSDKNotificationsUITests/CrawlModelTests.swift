@@ -93,13 +93,8 @@ final class CrawlPresenterTests: XCTestCase {
     private var screens: [NoticeScreen] = []
     private var rules = NoticeRoutingRules.defaults
 
-    private func profile(_ position: NoticeProfile.Position) -> NoticeProfile {
-        var profile = NoticeRoutingRules.defaults.profiles[.fyi]!
-        profile.style = .crawl
-        profile.position = position
-        profile.screens = .all
-        profile.autoDismiss = nil
-        return profile
+    private func profiles(_ position: NoticeProfile.Position) -> [NoticeProfile] {
+        [NoticeProfile(style: .crawl, position: position)]
     }
 
     private func makePresenter(_ windowing: RecordingWindowing) -> CrawlPresenter {
@@ -112,12 +107,12 @@ final class CrawlPresenterTests: XCTestCase {
         screens = [testScreen(1)]
         let windowing = RecordingWindowing()
         let presenter = makePresenter(windowing)
-        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.topRight), actions: .inert)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles(.topLeft), actions: .inert)
         XCTAssertEqual(windowing.presented.count, 1)
         XCTAssertTrue(presenter.isAnimating)
 
         presenter.replace(
-            oldID: "a", with: Notice(id: "a2", source: "ci", title: "a2"), profile: profile(.bottomRight),
+            oldID: "a", with: Notice(id: "a2", source: "ci", title: "a2"), profiles: profiles(.bottomRight),
             actions: .inert)
         XCTAssertEqual(presenter.shownIDs, ["a2"])
         XCTAssertEqual(windowing.presented.count, 2)
@@ -131,17 +126,17 @@ final class CrawlPresenterTests: XCTestCase {
 
     func testStripCachesDirectionAndRestartsOnNewContent() throws {
         screens = [testScreen(1)]
-        rules.crawlLeftToRight = true
+        rules.crawl.leftToRight = true
         let presenter = makePresenter(RecordingWindowing())
-        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.bottomLeft), actions: .inert)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles(.bottomLeft), actions: .inert)
         let key = CrawlPresenter.StripKey(displayID: 1, edge: .bottom)
         XCTAssertEqual(presenter.leftToRight(of: key), true)
         presenter.advance(by: 2)
         XCTAssertEqual(try XCTUnwrap(presenter.elapsed(of: key)), 2, accuracy: 0.001)
 
-        rules.crawlLeftToRight = false
+        rules.crawl.leftToRight = false
         XCTAssertEqual(presenter.leftToRight(of: key), true, "read once per refresh, not per frame")
-        presenter.show(Notice(id: "b", source: "ci", title: "b"), profile: profile(.bottomLeft), actions: .inert)
+        presenter.show(Notice(id: "b", source: "ci", title: "b"), profiles: profiles(.bottomLeft), actions: .inert)
         XCTAssertEqual(presenter.elapsed(of: key), 0, "new content starts its pass over")
         XCTAssertEqual(presenter.leftToRight(of: key), false)
         presenter.remove(id: "a")
@@ -152,7 +147,7 @@ final class CrawlPresenterTests: XCTestCase {
         screens = [testScreen(1)]
         let windowing = RecordingWindowing()
         let presenter = makePresenter(windowing)
-        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.bottomCenter), actions: .inert)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles(.bottomCenter), actions: .inert)
         let panel = try XCTUnwrap(windowing.presented.first)
         XCTAssertEqual(panel.frame.width, 1512)
 

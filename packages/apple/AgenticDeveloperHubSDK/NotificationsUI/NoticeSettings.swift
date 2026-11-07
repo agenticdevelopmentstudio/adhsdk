@@ -16,7 +16,7 @@ public enum NoticeSettings {
     static let migratedMarkerKey = "notice_routing_migrated_v1"
 
     /// Carries a host's retired "deliver notifications" boolean into the
-    /// rules, once: a stored `true` turns on system forwarding for `fyi`. The
+    /// rules, once: a stored `true` adds a system item to `fyi`'s set. The
     /// legacy key is removed either way, and a marker keeps a stale value that
     /// reappears later from undoing the user's choice.
     public static func migrateLegacyDeliverSetting(

@@ -71,10 +71,10 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
         }
     }
 
-    /// An urgency's own profile, as the user set it: never bent by an
+    /// An urgency's own style set, as the user set it: never bent by an
     /// override, which a sample notice could match.
-    static func baseProfile(for urgency: Notice.Urgency, in rules: NoticeRoutingRules) -> NoticeProfile {
-        rules.profiles[urgency] ?? NoticeRoutingRules.defaultProfile(for: urgency)
+    static func baseStyle(for urgency: Notice.Urgency, in rules: NoticeRoutingRules) -> NoticeStyleSet {
+        rules.styles[urgency] ?? NoticeRoutingRules.defaultStyle(for: urgency)
     }
 
     static func describe(_ override: NoticeRoutingRules.Override) -> String {
@@ -82,7 +82,14 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
         if let source = override.source { match.append("source \(source)") }
         if let category = override.category { match.append("category \(category)") }
         if let urgency = override.urgency { match.append(title(for: urgency)) }
-        return "\(match.joined(separator: ", ")) → \(styleTitle(override.profile.style))"
+        return "\(match.joined(separator: ", ")) → \(targetTitle(override.target))"
+    }
+
+    static func targetTitle(_ target: NoticeRoutingRules.Override.Target) -> String {
+        switch target {
+        case .style(let urgency): "\(title(for: urgency)) style"
+        case .hide: "Don't show"
+        }
     }
 
     static func styleTitle(_ style: NoticeProfile.Style) -> String {
@@ -92,7 +99,6 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
         case .fullScreen: "Full screen"
         case .alert: "Alert"
         case .system: "Notification Center"
-        case .none: "Don't show"
         }
     }
 
@@ -100,7 +106,6 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
         switch position {
         case .topLeft: "Top left"
         case .topCenter: "Top center"
-        case .topRight: "Top right"
         case .center: "Center"
         case .bottomLeft: "Bottom left"
         case .bottomCenter: "Bottom center"
@@ -111,7 +116,6 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
     static func screensTitle(_ screens: NoticeProfile.ScreenSelection) -> String {
         switch screens {
         case .main: "Main screen"
-        case .cursor: "Screen with the pointer"
         case .all: "Every screen"
         }
     }

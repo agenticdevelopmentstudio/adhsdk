@@ -78,9 +78,9 @@ final class NotificationBehaviorSettingsPanel: ComposableSettings.SettingsPanelV
                 controls.mutate { $0.hotkeysEnabled = isOn }
             }))
         group.addSettingSubview(controls.row("Crawl direction", controls.popup(
-            [false, true], selected: rules.crawlLeftToRight,
+            [false, true], selected: rules.crawl.leftToRight,
             title: { $0 ? "Left to right" : "Right to left" },
-            onChange: { leftToRight in controls.mutate { $0.crawlLeftToRight = leftToRight } })))
+            onChange: { leftToRight in controls.mutate { $0.crawl.leftToRight = leftToRight } })))
         return group
     }
 

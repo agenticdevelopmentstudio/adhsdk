@@ -74,10 +74,10 @@ final class NoticePresentationCenterTests: XCTestCase {
 
         XCTAssertEqual(env.toast.shownIDs, ["soon"])
         XCTAssertEqual(env.alert.shownIDs, ["now"])
-        XCTAssertEqual(env.center.presentedStyle(of: "soon"), .toast)
-        XCTAssertEqual(env.center.presentedStyle(of: "now"), .alert)
+        XCTAssertEqual(env.center.presentedStyles(of: "soon"), [.toast])
+        XCTAssertEqual(env.center.presentedStyles(of: "now"), [.alert])
         // No fullScreen presenter is registered, yet the routing is recorded.
-        XCTAssertEqual(env.center.presentedStyle(of: "emergency"), .fullScreen)
+        XCTAssertEqual(env.center.presentedStyles(of: "emergency"), [.fullScreen])
         XCTAssertEqual(env.center.newestShownID, "emergency")
     }
 
@@ -90,7 +90,7 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertEqual(env.toast.replaced.map(\.old), ["run"])
         XCTAssertEqual(env.toast.replaced.map(\.new), ["pass"])
         XCTAssertEqual(env.toast.shownIDs, ["pass", "other"])
-        XCTAssertNil(env.center.presentedStyle(of: "run"))
+        XCTAssertEqual(env.center.presentedStyles(of: "run"), [])
         XCTAssertEqual(env.center.newestShownID, "pass")
     }
 
@@ -306,7 +306,7 @@ final class NoticePresentationCenterTests: XCTestCase {
     /// primary action is a reply opens the history, where it can be answered.
     func testActingOnAReplyWithoutAFieldOpensHistory() {
         var rules = NoticeRoutingRules.defaults
-        rules.profiles[.soon]?.style = .crawl
+        rules.styles[.soon]?.items = [NoticeProfile(style: .crawl)]
         let env = harness(rules: rules)
         let crawl = RecordingPresenter()
         crawl.hasReplyField = false
@@ -328,7 +328,7 @@ final class NoticePresentationCenterTests: XCTestCase {
     func testSetPresenterRegistersAStyle() {
         let crawl = RecordingPresenter()
         var rules = NoticeRoutingRules.defaults
-        rules.profiles[.soon]?.style = .crawl
+        rules.styles[.soon]?.items = [NoticeProfile(style: .crawl)]
         let routed = harness(rules: rules)
         routed.center.setPresenter(crawl, for: .crawl)
         routed.center.receive(notice("a", urgency: .soon, at: routed.clock))
@@ -368,7 +368,7 @@ final class NoticePresentationCenterTests: XCTestCase {
         env.center.tick()
         XCTAssertEqual(env.toast.removed, ["a"])
         XCTAssertEqual(env.alert.shownIDs, ["a"])
-        XCTAssertEqual(env.center.presentedStyle(of: "a"), .alert)
+        XCTAssertEqual(env.center.presentedStyles(of: "a"), [.alert])
 
         env.clock.now.addTimeInterval(1000)
         env.center.tick()
@@ -403,12 +403,16 @@ final class NoticePresentationCenterTests: XCTestCase {
         return (env, system)
     }
 
-    private func rules(_ edit: (inout NoticeProfile) -> Void, for urgency: Notice.Urgency) -> NoticeRoutingRules {
+    private func rules(_ edit: (inout NoticeStyleSet) -> Void, for urgency: Notice.Urgency) -> NoticeRoutingRules {
         var rules = NoticeRoutingRules.defaults
-        var profile = rules.profile(for: Notice(source: "x", title: "x", urgency: urgency))
-        edit(&profile)
-        rules.profiles[urgency] = profile
+        var set = rules.style(for: Notice(source: "x", title: "x", urgency: urgency))
+        edit(&set)
+        rules.styles[urgency] = set
         return rules
+    }
+
+    private static func addSystem(_ set: inout NoticeStyleSet) {
+        set.items.append(NoticeProfile(style: .system))
     }
 
     func testReconcileDoesNotResurrectACardTheUserJustActedOn() {
@@ -469,8 +473,8 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertEqual(env.toast.shownIDs, ["a"], "absent once, so a later active copy is real")
     }
 
-    func testForwardToSystemShowsOnBothPresenters() {
-        let (env, system) = harnessWithSystem(rules: rules({ $0.forwardToSystem = true }, for: .soon))
+    func testSystemItemShowsOnBothPresenters() {
+        let (env, system) = harnessWithSystem(rules: rules(Self.addSystem, for: .soon))
         env.center.receive(notice("a", at: env.clock))
         XCTAssertEqual(env.toast.shownIDs, ["a"])
         XCTAssertEqual(system.shownIDs, ["a"])
@@ -479,17 +483,15 @@ final class NoticePresentationCenterTests: XCTestCase {
     }
 
     func testReplaceByKeyUpdatesTheSystemPresenter() {
-        let (env, system) = harnessWithSystem(rules: rules({ $0.forwardToSystem = true }, for: .soon))
+        let (env, system) = harnessWithSystem(rules: rules(Self.addSystem, for: .soon))
         env.center.receive(notice("run", key: "build", at: env.clock))
         env.center.receive(notice("pass", key: "build", at: env.clock))
-        XCTAssertTrue(system.removed.contains("run"))
+        XCTAssertEqual(system.replaced.map(\.old), ["run"], "the system item stayed in the set, so it is replaced")
         XCTAssertEqual(system.shownIDs, ["pass"])
     }
 
-    func testReplaceIntoAProfileThatDoesNotForwardLeavesTheSystemPresenter() {
-        var rules = rules({ $0.forwardToSystem = true }, for: .soon)
-        rules.profiles[.fyi]?.forwardToSystem = false
-        let (env, system) = harnessWithSystem(rules: rules)
+    func testReplaceIntoASetWithoutASystemItemLeavesTheSystemPresenter() {
+        let (env, system) = harnessWithSystem(rules: rules(Self.addSystem, for: .soon))
         env.center.receive(notice("run", urgency: .soon, key: "build", at: env.clock))
         env.center.receive(notice("pass", urgency: .fyi, key: "build", at: env.clock))
         XCTAssertTrue(system.shownIDs.isEmpty)
@@ -562,8 +564,8 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertFalse(env.toast.shownIDs.contains("flood:ci"))
     }
 
-    func testNoneStyleNoticeIsNotRecountedIntoAFalseFlood() {
-        var rules = rules({ $0.style = .none }, for: .fyi)
+    func testEmptySetNoticeIsNotRecountedIntoAFalseFlood() {
+        var rules = rules({ $0.items = [] }, for: .fyi)
         rules.flood = .init(threshold: 2, window: 60)
         let env = harness(rules: rules)
         let quiet = notice("q", urgency: .fyi, at: env.clock)
