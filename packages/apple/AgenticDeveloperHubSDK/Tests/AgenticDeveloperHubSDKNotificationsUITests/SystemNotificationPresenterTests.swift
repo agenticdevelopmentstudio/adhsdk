@@ -25,7 +25,7 @@ private final class ControlledCenter: SystemNotificationPosting {
     func removeDelivered(withIdentifiers identifiers: [String]) {}
     func removePending(withIdentifiers identifiers: [String]) {}
 
-    func answerAuthorization(granted: Bool) { answer?(granted, nil) }
+    func answerAuthorization(granted: Bool, error: Error? = nil) { answer?(granted, error) }
 }
 
 @MainActor
@@ -87,5 +87,42 @@ final class SystemNotificationPresenterTests: XCTestCase {
         center.answerAuthorization(granted: true)
         show("b", on: presenter)
         XCTAssertEqual(center.posted, ["a", "b"], "a failed add does not stop later posts")
+    }
+
+    func testAuthorizationErrorIsNotADenial() {
+        let center = ControlledCenter()
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        var denials = 0
+        presenter.onAuthorizationDenied = { denials += 1 }
+        show("a", on: presenter)
+        center.answerAuthorization(granted: false, error: NSError(domain: "test", code: 2))
+        XCTAssertEqual(denials, 0)
+        XCTAssertEqual(center.posted, [], "the queue is dropped")
+
+        show("b", on: presenter)
+        XCTAssertEqual(center.authorizationRequests, 2, "the next show asks again")
+        center.answerAuthorization(granted: true)
+        XCTAssertEqual(center.posted, ["b"])
+        XCTAssertEqual(denials, 0)
+    }
+
+    func testRemoveWhilePendingNeverPosts() {
+        let center = ControlledCenter()
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        show("a", on: presenter)
+        show("b", on: presenter)
+        presenter.remove(id: "a")
+        center.answerAuthorization(granted: true)
+        XCTAssertEqual(center.posted, ["b"])
+    }
+
+    func testReplaceWhilePendingPostsOnlyTheNewOne() {
+        let center = ControlledCenter()
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        show("a", on: presenter)
+        presenter.replace(
+            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profiles: [profile], actions: .inert)
+        center.answerAuthorization(granted: true)
+        XCTAssertEqual(center.posted, ["b"])
     }
 }

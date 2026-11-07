@@ -126,7 +126,11 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
             poster.requestAuthorization { [weak self] granted, error in
                 guard let self else { return }
                 if let error {
+                    // Not an answer: drop what is queued, but stay undecided so
+                    // the next show asks again, and say nothing about "off".
                     logger.error("Authorization request failed: \(error.localizedDescription, privacy: .public)")
+                    abandon()
+                    return
                 }
                 logger.info("Authorization \(granted ? "granted" : "denied", privacy: .public)")
                 if granted { grant() } else { deny() }
@@ -141,12 +145,24 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
         pending.forEach(add)
     }
 
-    /// Drops what is queued and tells the host, the first time only.
-    private func deny() {
-        authorization = .denied
+    /// Drops everything queued or tracked.
+    private func dropQueued() {
         queue = []
         shownIDs = []
         actions = [:]
+    }
+
+    /// The authorization request itself failed: forget the queue, ask again on
+    /// the next show.
+    private func abandon() {
+        authorization = .unknown
+        dropQueued()
+    }
+
+    /// Drops what is queued and tells the host, the first time only.
+    private func deny() {
+        authorization = .denied
+        dropQueued()
         guard !deniedReported else { return }
         deniedReported = true
         onAuthorizationDenied?()
