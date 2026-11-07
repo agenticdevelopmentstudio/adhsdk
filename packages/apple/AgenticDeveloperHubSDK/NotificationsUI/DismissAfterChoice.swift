@@ -66,6 +66,11 @@ enum DismissAfterChoice: Equatable {
         return TimeInterval(value)
     }
 
+    /// Seconds as the Seconds field shows them: "12" for 12, "12.5" for 12.5.
+    static func secondsText(_ seconds: TimeInterval) -> String {
+        seconds.rounded() == seconds ? "\(Int(seconds))" : "\(seconds)"
+    }
+
     private static func secondsTitle(_ seconds: TimeInterval) -> String {
         "\(Int(seconds)) seconds"
     }

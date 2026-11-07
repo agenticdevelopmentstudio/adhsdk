@@ -8,6 +8,8 @@ import AgenticDeveloperHubSDKNotifications
 final class NotificationStyleSetPanelTests: XCTestCase {
 
     private var store = makeTestStore()
+    /// The window the panel sits in, so its editor has a window to sheet on.
+    private var window: NSWindow?
 
     override func setUp() async throws {
         try await super.setUp()
@@ -18,7 +20,26 @@ final class NotificationStyleSetPanelTests: XCTestCase {
     private func makePanel(_ urgency: Notice.Urgency = .soon) -> NotificationStyleSetPanel {
         let panel = NotificationStyleSetPanel(urgency: urgency, handler: RecordingHandler(), store: store)
         panel.loadViewIfNeeded()
+        let host = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 900),
+            styleMask: [.titled], backing: .buffered, defer: true)
+        host.contentView = panel.view
+        window = host
         return panel
+    }
+
+    private func encoded() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        return try encoder.encode(storedRules(store))
+    }
+
+    private func rowTexts(_ panel: NotificationStyleSetPanel) -> [String] {
+        let table = panel.itemsTable.tableView
+        return (0..<table.numberOfRows).map { row in
+            let cell = table.view(atColumn: 0, row: row, makeIfNecessary: true)
+            return (cell as? NSTableCellView)?.textField?.stringValue ?? ""
+        }
     }
 
     private func set(_ urgency: Notice.Urgency = .soon) -> NoticeStyleSet {
@@ -44,6 +65,85 @@ final class NotificationStyleSetPanelTests: XCTestCase {
         XCTAssertNotNil(panel.activeEditor)
         XCTAssertEqual(panel.activeEditor?.draft.style, .toast)
         XCTAssertEqual(panel.itemsTable.tableView.numberOfRows, 2)
+    }
+
+    // MARK: Edit flow
+
+    func testPlusThenAlertThenDoneStoresAnAlertAndUpdatesTheRow() throws {
+        let panel = makePanel()
+        panel.itemsTable.press(0)
+        let editor = try XCTUnwrap(panel.activeEditor)
+        choose("Alert", in: editor.stylePopup)
+        fire(editor.doneButton)
+        let items = set().items
+        XCTAssertEqual(items.count, 2)
+        XCTAssertEqual(items.last?.style, .alert)
+        XCTAssertEqual(rowTexts(panel).last, NotificationStylesSettingsPanel.describe(try XCTUnwrap(items.last)))
+        XCTAssertTrue(try XCTUnwrap(rowTexts(panel).last).hasPrefix("Alert"))
+        XCTAssertNil(panel.activeEditor)
+    }
+
+    func testEditingAnExistingRowThenCancelLeavesTheStoreByteIdentical() throws {
+        seed { $0.items = [NoticeProfile(style: .toast), NoticeProfile(style: .crawl)] }
+        let panel = makePanel()
+        let before = try encoded()
+        let table = panel.itemsTable.tableView
+        table.selectRowIndexes([1], byExtendingSelection: false)
+        table.sendAction(table.doubleAction, to: table.target)
+        let editor = try XCTUnwrap(panel.activeEditor, "double-click opens the editor")
+        XCTAssertEqual(editor.draft.style, .crawl)
+        choose("Full Screen", in: editor.stylePopup)
+        fire(editor.cancelButton)
+        XCTAssertEqual(try encoded(), before)
+        XCTAssertNil(panel.activeEditor)
+    }
+
+    func testReturnOnASelectedRowOpensTheEditor() throws {
+        seed { $0.items = [NoticeProfile(style: .toast), NoticeProfile(style: .system)] }
+        let panel = makePanel()
+        panel.itemsTable.tableView.selectRowIndexes([1], byExtendingSelection: false)
+        panel.itemsTable.tableView.onReturn?()
+        XCTAssertEqual(try XCTUnwrap(panel.activeEditor).draft.style, .system)
+    }
+
+    func testReturnWithNothingSelectedOpensNothing() {
+        let panel = makePanel()
+        panel.itemsTable.tableView.onReturn?()
+        XCTAssertNil(panel.activeEditor)
+    }
+
+    func testEditorDoneKeepsTheEditAsANewItemWhenTheRowChangedUnderIt() throws {
+        seed { $0.items = [NoticeProfile(style: .toast), NoticeProfile(style: .crawl)] }
+        let panel = makePanel()
+        panel.itemsTable.tableView.selectRowIndexes([0], byExtendingSelection: false)
+        panel.itemsTable.tableView.onReturn?()
+        let editor = try XCTUnwrap(panel.activeEditor)
+        // The set changes while the sheet is open: row 0 is now a different item.
+        seed { $0.items = [NoticeProfile(style: .system), NoticeProfile(style: .crawl)] }
+        choose("Alert", in: editor.stylePopup)
+        fire(editor.doneButton)
+        XCTAssertEqual(set().items.map(\.style), [.system, .crawl, .alert])
+    }
+
+    func testNoWindowMeansNoEditor() {
+        let panel = NotificationStyleSetPanel(urgency: .soon, handler: RecordingHandler(), store: store)
+        panel.loadViewIfNeeded()
+        panel.itemsTable.press(0)
+        XCTAssertNil(panel.activeEditor)
+    }
+
+    func testFractionalCustomSecondsShowAsStored() {
+        seed { $0.autoDismiss = 12.5 }
+        let panel = makePanel()
+        XCTAssertEqual(panel.customSecondsField.stringValue, "12.5")
+        XCTAssertEqual(DismissAfterChoice.secondsText(12), "12")
+    }
+
+    func testChoosingAPresetHidesTheSecondsField() {
+        seed { $0.autoDismiss = 12 }
+        let panel = makePanel()
+        choose("8 seconds", in: panel.dismissAfterPopup)
+        XCTAssertTrue(panel.customSecondsRow.isHidden)
     }
 
     func testMinusRemovesSelectedAndIsDisabledWithoutSelection() {
@@ -83,14 +183,10 @@ final class NotificationStyleSetPanelTests: XCTestCase {
 
     func testTableFillsTheHeightThePanelLeaves() {
         let panel = makePanel()
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 700, height: 900),
-            styleMask: [.titled], backing: .buffered, defer: true)
-        window.contentView = panel.view
         panel.view.layoutSubtreeIfNeeded()
         let height = panel.itemsTable.scrollView.frame.height
         XCTAssertGreaterThan(height, NotificationItemsTable.minimumTableHeight + 100, "grows with the panel")
-        window.setContentSize(NSSize(width: 700, height: 300))
+        window?.setContentSize(NSSize(width: 700, height: 300))
         panel.view.layoutSubtreeIfNeeded()
         XCTAssertGreaterThanOrEqual(
             panel.itemsTable.scrollView.frame.height, NotificationItemsTable.minimumTableHeight)

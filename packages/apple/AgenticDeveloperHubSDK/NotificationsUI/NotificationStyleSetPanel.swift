@@ -113,7 +113,7 @@ final class NotificationStyleSetPanel: ComposableSettings.SettingsPanelViewContr
             onChange: { [weak self] choice in self?.dismissChosen(choice) })
         group.addSettingSubview(controls.row("Dismiss after", dismissPopup))
 
-        secondsField.stringValue = "\(Int(customSeconds))"
+        secondsField.stringValue = DismissAfterChoice.secondsText(customSeconds)
         secondsField.alignment = .right
         secondsField.widthAnchor.constraint(equalToConstant: 70).isActive = true
         secondsField.target = self
@@ -153,6 +153,7 @@ final class NotificationStyleSetPanel: ComposableSettings.SettingsPanelViewContr
         switch choice {
         case .preset(let seconds):
             secondsRow.isHidden = true
+            secondsField.stringValue = DismissAfterChoice.secondsText(customSeconds)
             edit { $0.autoDismiss = seconds }
         case .custom:
             // Revealing the field stores nothing: only a valid number does.
@@ -162,11 +163,11 @@ final class NotificationStyleSetPanel: ComposableSettings.SettingsPanelViewContr
 
     @objc private func secondsCommitted() {
         guard let seconds = DismissAfterChoice.customSeconds(from: secondsField.stringValue) else {
-            secondsField.stringValue = "\(Int(customSeconds))"
+            secondsField.stringValue = DismissAfterChoice.secondsText(customSeconds)
             return
         }
         customSeconds = seconds
-        secondsField.stringValue = "\(Int(seconds))"
+        secondsField.stringValue = DismissAfterChoice.secondsText(seconds)
         edit { $0.autoDismiss = seconds }
     }
 
@@ -210,20 +211,26 @@ final class NotificationStyleSetPanel: ComposableSettings.SettingsPanelViewContr
     }
 
     private func openEditor(row: Int) {
-        guard set.items.indices.contains(row) else { return }
+        guard set.items.indices.contains(row), let window = view.window else { return }
+        let opened = set.items[row]
         let editor = NotificationItemEditor(
-            item: set.items[row], controls: controls,
+            item: opened, store: controls.store,
             onDone: { [weak self] item in
                 self?.edit { set in
-                    guard set.items.indices.contains(row) else { return }
-                    set.items[row] = item
+                    // Overwrite only the row the editor opened; if the list
+                    // changed under the sheet, keep the edit as a new item.
+                    if set.items.indices.contains(row), set.items[row] == opened {
+                        set.items[row] = item
+                    } else {
+                        set.items.append(item)
+                    }
                 }
                 self?.reloadItems()
                 self?.activeEditor = nil
             },
             onCancel: { [weak self] in self?.activeEditor = nil })
         activeEditor = editor
-        if let window = view.window { editor.present(on: window) }
+        editor.present(on: window)
     }
 }
 

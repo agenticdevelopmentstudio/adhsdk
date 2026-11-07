@@ -18,7 +18,7 @@ final class NotificationItemEditorTests: XCTestCase {
 
     private func makeEditor(_ item: NoticeProfile) -> NotificationItemEditor {
         let editor = NotificationItemEditor(
-            item: item, controls: NoticeRulesControls(store: makeTestStore()),
+            item: item, store: makeTestStore(),
             onDone: { [unowned self] in done.append($0) },
             onCancel: { [unowned self] in cancelled += 1 })
         editor.loadViewIfNeeded()

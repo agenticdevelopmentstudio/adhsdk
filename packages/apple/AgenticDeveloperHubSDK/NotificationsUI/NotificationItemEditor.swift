@@ -1,4 +1,5 @@
 import AppKit
+import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKNotifications
 
 /// The sheet that edits one item of a style set. Works on a draft: Done hands
@@ -38,12 +39,13 @@ final class NotificationItemEditor: NSViewController {
 
     init(
         item: NoticeProfile,
-        controls: NoticeRulesControls,
+        store: SettingsStore,
         onDone: @escaping (NoticeProfile) -> Void,
         onCancel: @escaping () -> Void = {}
     ) {
         self.draft = item
-        self.controls = controls
+        // Its own controls: their targets live and die with this editor.
+        self.controls = NoticeRulesControls(store: store)
         self.onDone = onDone
         self.onCancel = onCancel
         self.doneButton = NSButton(title: "Done", target: nil, action: nil)

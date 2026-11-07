@@ -150,11 +150,4 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
     private static func percent(_ fraction: Double) -> String {
         "\(Int((fraction * 100).rounded())) %"
     }
-
-    static func screensTitle(_ screens: NoticeProfile.ScreenSelection) -> String {
-        switch screens {
-        case .main: "Main Screen"
-        case .all: "All Screens"
-        }
-    }
 }
