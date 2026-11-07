@@ -374,5 +374,14 @@ final class ToastStackBorderView: NSView, Themeable {
         layer?.borderColor = palette.nsColor(.outline).cgColor
     }
 
+    /// A light/dark flip repaints the border even when no theme notification
+    /// follows it.
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            applyTheme(resolvedThemeScope.palette)
+        }
+    }
+
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }

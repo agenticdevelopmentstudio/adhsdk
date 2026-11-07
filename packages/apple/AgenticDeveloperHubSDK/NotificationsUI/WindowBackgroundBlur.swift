@@ -42,7 +42,8 @@ private struct WindowServerBlurFunctions: Sendable {
     let setRadius: SetBlurRadius
 
     static let shared: WindowServerBlurFunctions? = {
-        let handle = dlopen(nil, RTLD_NOW)
+        // RTLD_DEFAULT: global lookup, no handle to leak.
+        let handle = UnsafeMutableRawPointer(bitPattern: -2)
         guard let connection = dlsym(handle, "CGSMainConnectionID"),
               let setRadius = dlsym(handle, "CGSSetWindowBackgroundBlurRadius")
         else { return nil }

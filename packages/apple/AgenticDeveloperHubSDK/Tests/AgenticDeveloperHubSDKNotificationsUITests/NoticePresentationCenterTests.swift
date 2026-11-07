@@ -341,6 +341,13 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertEqual(Set(center.presenters.keys), [.toast, .alert, .crawl, .fullScreen, .system])
     }
 
+    func testStandardUsesTheInjectedSystemPresenter() {
+        let system = SystemNotificationPresenter()
+        let center = NoticePresentationCenter.standard(
+            handler: RecordingHandler(), rules: { .defaults }, filter: { NoticeFilter() }, systemPresenter: system)
+        XCTAssertTrue(center.presenters[.system] === system)
+    }
+
     func testReconcileRemovesStaleAndAddsMissing() {
         let env = harness()
         let first = notice("a", at: env.clock)

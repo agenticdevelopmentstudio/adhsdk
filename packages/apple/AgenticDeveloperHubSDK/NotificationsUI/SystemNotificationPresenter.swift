@@ -42,11 +42,12 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     private var queue: [UNNotificationRequest] = []
     private var deniedReported = false
     private var started = false
+    private nonisolated(unsafe) var activeObserver: NSObjectProtocol?
     private let logger = Logger(
         subsystem: "com.agentic-cookbook.AgenticDeveloperHubSDK", category: "SystemNotificationPresenter")
 
-    /// Called once per launch when Notification Center is off for the host
-    /// app, so the host can say so.
+    /// Called once per denial episode when Notification Center is off for the
+    /// host app, so the host can say so.
     public var onAuthorizationDenied: (@MainActor () -> Void)?
 
     /// The category every banner is posted under. It asks for the dismiss
@@ -82,6 +83,35 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
         guard !started else { return }
         started = true
         poster.becomeDelegate()
+        activeObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.appBecameActive() }
+        }
+    }
+
+    deinit {
+        if let activeObserver { NotificationCenter.default.removeObserver(activeObserver) }
+    }
+
+    /// Back from System Settings, perhaps: a denial may have been lifted.
+    func appBecameActive() {
+        guard authorization == .denied else { return }
+        recheckDenial(then: nil)
+    }
+
+    /// Asks the Notification Center again while denied. If it is no longer
+    /// denied, the episode ends (a later denial reports again) and `reshow`
+    /// runs. Nothing is requested and nothing is reported here.
+    private func recheckDenial(then reshow: (@MainActor () -> Void)?) {
+        poster.isAuthorizationDenied { [weak self] denied in
+            guard let self, !denied else { return }
+            if authorization == .denied {
+                authorization = .unknown
+                deniedReported = false
+            }
+            reshow?()
+        }
     }
 
     // MARK: NoticePresenter
@@ -90,7 +120,12 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     public func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         guard !profiles.isEmpty else { return }
         start()
-        if authorization == .denied { return }
+        if authorization == .denied {
+            // Denial is a cached answer, not a final one: the user may have
+            // turned Notification Center back on since.
+            recheckDenial { [weak self] in self?.show(notice, profiles: profiles, actions: actions) }
+            return
+        }
         shownIDs.removeAll { $0 == notice.id }
         shownIDs.append(notice.id)
         self.actions[notice.id] = actions

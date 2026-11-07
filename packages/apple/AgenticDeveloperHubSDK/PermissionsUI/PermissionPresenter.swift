@@ -7,6 +7,10 @@ import AgenticDeveloperHubSDKPermissions
 /// when the permission is already granted and the user wants it back.
 @MainActor
 public enum PermissionPresenter {
+    /// Opens a System Settings pane. A seam, so tests observe the URL instead
+    /// of launching System Settings.
+    static var openURL: @MainActor (URL) -> Void = { NSWorkspace.shared.open($0) }
+
     /// - Parameter shownAs: the status the caller's control was offering to act
     ///   on. Passed in rather than re-read here: a re-read can disagree with
     ///   what the user actually pressed — they revoked the permission in System
@@ -25,7 +29,7 @@ public enum PermissionPresenter {
         // have ended at, which is what the row's "Open Settings" title promises.
         if status == .granted {
             if let pane = permission.settingsPaneURL {
-                NSWorkspace.shared.open(pane)
+                openURL(pane)
             } else {
                 // No pane does not mean nowhere to go. `.keychain` is an ACL on
                 // one keychain item, and Keychain Access is the app that edits
@@ -53,7 +57,7 @@ public enum PermissionPresenter {
             // of a grant ends where the button's title already promises.
             guard await checker.request(permission) != .granted else { return }
             guard let pane = permission.settingsPaneURL else { return }
-            NSWorkspace.shared.open(pane)
+            openURL(pane)
         case .notifications, .location, .microphone, .screenCapture:
             // These can always be asked — the system owns the dialog and puts it
             // up whatever else is or isn't running — so an undetermined answer
@@ -65,13 +69,13 @@ public enum PermissionPresenter {
             // way back and the button has to reach it.
             guard await checker.request(permission) == .denied else { return }
             guard let pane = permission.settingsPaneURL else { return }
-            NSWorkspace.shared.open(pane)
+            openURL(pane)
         case .fullDiskAccess:
             // Another binary holds this grant and only System Settings can make
             // it, so the button is always the handoff — whatever the status.
             // Asking first would only re-read a file the helper writes.
             guard let pane = permission.settingsPaneURL else { return }
-            NSWorkspace.shared.open(pane)
+            openURL(pane)
         case .keychain(let service):
             // Asking for this one *is* a read of the item, which gives it a
             // third outcome the permissions above do not have: the item was not

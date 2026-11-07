@@ -43,6 +43,15 @@ extension NoticeRoutingRules {
         }
     }
 
+    /// One entry of the legacy `profiles` map; a malformed one reads as nil
+    /// instead of failing the whole map.
+    private struct LossyLegacyProfile: Decodable {
+        var profile: LegacyProfile?
+        init(from decoder: Decoder) throws {
+            profile = try? LegacyProfile(from: decoder)
+        }
+    }
+
     private struct LegacyOverride: Decodable {
         var source: String?
         var category: String?
@@ -55,8 +64,9 @@ extension NoticeRoutingRules {
     static func decodeLegacy(from decoder: Decoder) throws -> Legacy? {
         let container = try decoder.container(keyedBy: LegacyKeys.self)
         guard !container.contains(.styles),
-              let profiles = try container.decodeIfPresent([String: LegacyProfile].self, forKey: .profiles)
+              let lossy = try container.decodeIfPresent([String: LossyLegacyProfile].self, forKey: .profiles)
         else { return nil }
+        let profiles = lossy.compactMapValues(\.profile)
 
         var styles: [Notice.Urgency: NoticeStyleSet] = [:]
         var urgencyProfiles: [LegacyProfile] = []
@@ -87,7 +97,9 @@ extension NoticeRoutingRules {
     private static func target(
         for profile: LegacyProfile, in styles: [Notice.Urgency: NoticeStyleSet]
     ) -> Override.Target {
-        guard let style = NoticeProfile.Style(rawValue: profile.style) else { return .hide }
+        if profile.style == "none" { return .hide }
+        // A style this build does not know is still a style: `fyi`, not hidden.
+        guard let style = NoticeProfile.Style(rawValue: profile.style) else { return .style(.fyi) }
         let match = Notice.Urgency.allCases.first { styles[$0]?.items.first?.style == style }
         return .style(match ?? .fyi)
     }

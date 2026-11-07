@@ -180,11 +180,13 @@ class CardStackPresenter: NoticePresenter {
             show(notice, profiles: profiles, actions: actions)
             return
         }
-        placements[oldID] = nil
-        selections[oldID] = nil
+        // Before `oldID` is released: while its cards still hold their stacks
+        // open, removing the incoming id cannot close a window they live in.
         if oldID != notice.id {
             remove(id: notice.id)
         }
+        placements[oldID] = nil
+        selections[oldID] = nil
         for placement in existing {
             placement.card.update(notice: notice, actions: actions)
             placement.card.startAutoDismiss(

@@ -108,19 +108,24 @@ public final class NoticePresentationCenter {
     /// A center with every style the SDK draws: toast and alert, plus crawl,
     /// full screen and the system's own Notification Center. What a host
     /// normally wants; the plain initializer leaves the last three to it.
+    /// - Parameter systemPresenter: a host that must start the system presenter
+    ///   itself (to be the Notification Center delegate early) passes its own,
+    ///   so no second one is built and thrown away.
     public static func standard(
         handler: NoticeActionHandler,
         rules: @escaping @MainActor () -> NoticeRoutingRules,
         filter: @escaping @MainActor () -> NoticeFilter,
         focus: NoticeFocusMonitor = NeverFocused(),
         systemSound: @escaping @MainActor () -> Bool = { true },
+        systemPresenter: SystemNotificationPresenter? = nil,
         untilBackStore: UserDefaults? = .standard
     ) -> NoticePresentationCenter {
         let center = NoticePresentationCenter(
             handler: handler, rules: rules, filter: filter, focus: focus, untilBackStore: untilBackStore)
         center.setPresenter(CrawlPresenter(rules: rules), for: .crawl)
         center.setPresenter(FullScreenPresenter(rules: rules), for: .fullScreen)
-        center.setPresenter(SystemNotificationPresenter(playsSound: systemSound), for: .system)
+        center.setPresenter(
+            systemPresenter ?? SystemNotificationPresenter(playsSound: systemSound), for: .system)
         return center
     }
 

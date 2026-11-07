@@ -107,6 +107,22 @@ final class NoticeStyleSetTests: XCTestCase {
         XCTAssertEqual(decoded.styles[.fyi]?.items.map(\.style), [.crawl])
     }
 
+    func testALegacyOverrideWithAnUnknownStylePointsAtFyiNotHide() throws {
+        let decoded = try rules("""
+            {"profiles":{"fyi":{"style":"crawl"}},
+            "overrides":[{"source":"ci","profile":{"style":"banner"}}]}
+            """)
+        XCTAssertEqual(decoded.overrides, [.init(source: "ci", target: .style(.fyi))])
+    }
+
+    func testOneMalformedLegacyProfileDropsOnlyItself() throws {
+        let decoded = try rules("""
+            {"profiles":{"fyi":{"style":"crawl"},"now":{"position":"center"}}}
+            """)
+        XCTAssertEqual(decoded.styles[.fyi]?.items.map(\.style), [.crawl])
+        XCTAssertEqual(decoded.styles[.now], NoticeRoutingRules.defaults.styles[.now])
+    }
+
     func testAnUnknownColorSourceReadsAsTheFieldsDefaultAndTheRulesSurvive() throws {
         let decoded = try rules("""
             {"styles":{"emergency":{"items":[{"style":"fullScreen",

@@ -71,6 +71,21 @@ final class CardStackPresenterTests: XCTestCase {
         presenter.remove(id: "b")
     }
 
+    func testKeyedReplaceOntoAnIdAlreadyShownKeepsTheStackOpen() {
+        let presenter = presenter()
+        let profiles = [toast(.bottomRight)]
+        presenter.show(notice("a"), profiles: profiles, actions: .inert)
+        presenter.show(notice("b"), profiles: profiles, actions: .inert)
+        let windowsBefore = presenter.stackWindowCount
+        let panelOfA = presenter.panels(of: "a")
+        presenter.replace(oldID: "a", with: notice("b"), profiles: profiles, actions: .inert)
+        XCTAssertEqual(presenter.shownIDs, ["b"])
+        XCTAssertEqual(presenter.panels(of: "b").count, 1)
+        XCTAssertTrue(presenter.panels(of: "b").first === panelOfA.first, "a's card carries the new notice")
+        XCTAssertEqual(presenter.stackWindowCount, windowsBefore, "the stack the card lives in stays open")
+        presenter.remove(id: "b")
+    }
+
     func testReplaceWithAnotherSetOfPositionsRebuilds() {
         let presenter = presenter()
         presenter.show(notice("a"), profiles: [toast(.bottomRight), toast(.topLeft)], actions: .inert)

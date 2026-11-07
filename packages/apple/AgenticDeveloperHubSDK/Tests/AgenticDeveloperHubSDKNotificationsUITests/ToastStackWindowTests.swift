@@ -318,4 +318,16 @@ final class ToastStackWindowTests: XCTestCase {
     private func toast(_ position: NoticeProfile.Position) -> NoticeProfile {
         NoticeProfile(style: .toast, position: position)
     }
+
+    func testBorderRepaintsOnAnAppearanceFlip() {
+        let border = ToastStackBorderView()
+        border.layer?.borderColor = nil
+        border.appearance = NSAppearance(named: .darkAqua)
+        border.viewDidChangeEffectiveAppearance()
+        XCTAssertNotNil(border.layer?.borderColor, "the flip re-resolves the outline")
+        border.layer?.borderColor = nil
+        border.appearance = NSAppearance(named: .aqua)
+        border.viewDidChangeEffectiveAppearance()
+        XCTAssertNotNil(border.layer?.borderColor)
+    }
 }

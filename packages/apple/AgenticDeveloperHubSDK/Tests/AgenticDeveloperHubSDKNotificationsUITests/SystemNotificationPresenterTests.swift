@@ -59,12 +59,13 @@ final class SystemNotificationPresenterTests: XCTestCase {
         presenter.onAuthorizationDenied = { denials += 1 }
         show("a", on: presenter)
         center.answerAuthorization(granted: false)
+        center.denied = true
         XCTAssertEqual(center.posted, [])
         XCTAssertEqual(denials, 1)
 
         show("b", on: presenter)
         XCTAssertEqual(center.posted, [])
-        XCTAssertEqual(denials, 1, "once per launch")
+        XCTAssertEqual(denials, 1, "once per denial episode")
     }
 
     func testAlreadyDeniedSettingsDropsWithoutAsking() {
@@ -77,6 +78,51 @@ final class SystemNotificationPresenterTests: XCTestCase {
         XCTAssertEqual(denials, 1)
         XCTAssertEqual(center.authorizationRequests, 0)
         XCTAssertEqual(center.posted, [])
+    }
+
+    func testDenialLiftedLaterPostsAgainAndReportsOncePerEpisode() {
+        let center = ControlledCenter()
+        center.denied = true
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        var denials = 0
+        presenter.onAuthorizationDenied = { denials += 1 }
+        show("a", on: presenter)
+        show("b", on: presenter)
+        XCTAssertEqual(denials, 1)
+        XCTAssertEqual(center.posted, [])
+
+        center.denied = false
+        show("c", on: presenter)
+        XCTAssertEqual(center.authorizationRequests, 1, "granted state is re-resolved through the normal path")
+        center.answerAuthorization(granted: true)
+        XCTAssertEqual(center.posted, ["c"])
+        XCTAssertEqual(denials, 1)
+    }
+
+    func testBecomingActiveClearsALiftedDenial() {
+        let center = ControlledCenter()
+        center.denied = true
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        presenter.onAuthorizationDenied = {}
+        show("a", on: presenter)
+        center.denied = false
+        presenter.appBecameActive()
+        XCTAssertEqual(center.authorizationRequests, 0, "becoming active asks nothing")
+        show("b", on: presenter)
+        XCTAssertEqual(center.authorizationRequests, 1)
+    }
+
+    func testStillDeniedOnRecheckStaysSilent() {
+        let center = ControlledCenter()
+        center.denied = true
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        var denials = 0
+        presenter.onAuthorizationDenied = { denials += 1 }
+        show("a", on: presenter)
+        presenter.appBecameActive()
+        show("b", on: presenter)
+        XCTAssertEqual(denials, 1)
+        XCTAssertEqual(center.authorizationRequests, 0)
     }
 
     func testAddErrorIsLoggedNotFatal() {
