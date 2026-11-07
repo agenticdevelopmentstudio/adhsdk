@@ -15,9 +15,11 @@ import AgenticDeveloperHubSDKCoreUI
 ///
 /// Registered only in debug builds (`.browserLog`); the log it shows is
 /// recorded in every build. The pane remembers one thing, the node id of the
-/// browser pane it follows, and finds that pane through its window each time
-/// it needs it, so a layout restored in any order finds its target once both
-/// are on screen. A target that is gone shows an empty list.
+/// browser pane it follows, and looks for that pane in its window whenever it
+/// has none: when it appears, when it is pointed at one, and on every reload.
+/// A layout restored in any order therefore finds its target once the target's
+/// content is loaded and the log next reloads or reappears. A target that is
+/// discarded is let go, so the list empties and the title drops its name.
 @MainActor
 public final class BrowserLogPaneViewController: NSViewController {
 
@@ -37,6 +39,9 @@ public final class BrowserLogPaneViewController: NSViewController {
     /// Re-made when the target rebuilds its web view.
     private var titleObservation: NSKeyValueObservation?
     private weak var observedWebView: NSView?
+    /// The title last announced through `onPaneTitleChange`, so a reload that
+    /// changes nothing announces nothing.
+    private var announcedTitle: String?
 
     let tableView = NSTableView()
     private let scrollView = NSScrollView()
@@ -89,16 +94,16 @@ public final class BrowserLogPaneViewController: NSViewController {
     /// Finds the target in the window when it is not already attached.
     func resolveTarget() {
         guard let nodeID = targetNodeID else { return attach(nil) }
-        if let target, target.paneContext.paneNodeID == nodeID { return }
+        if let target, target.paneContext.paneNodeID == nodeID, !target.isDiscarded { return }
         attach(Self.browserPane(nodeID: nodeID, in: viewIfLoaded?.window))
     }
 
-    /// The browser pane on `nodeID` among `window`'s panes.
+    /// The live browser pane on `nodeID` among `window`'s panes.
     static func browserPane(nodeID: UUID, in window: NSWindow?) -> BrowserPaneViewController? {
         guard let controller = window?.windowController as? ComposableTabsWindowController else { return nil }
         return controller.allPanes().lazy
             .compactMap { $0.contentViewController as? BrowserPaneViewController }
-            .first { $0.paneContext.paneNodeID == nodeID }
+            .first { $0.paneContext.paneNodeID == nodeID && !$0.isDiscarded }
     }
 
     /// Follows `pane`'s log. Internal so a test can attach a pane that is in
@@ -110,7 +115,7 @@ public final class BrowserLogPaneViewController: NSViewController {
         subscription = pane?.eventLog.changes
             .throttle(for: .milliseconds(100), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] in self?.reload() }
-        reload()
+        refresh()
     }
 
     // MARK: - View
@@ -173,13 +178,32 @@ public final class BrowserLogPaneViewController: NSViewController {
         return visible.maxY >= tableView.bounds.height - tableView.rowHeight - tableView.intercellSpacing.height
     }
 
+    /// Catches up with the target's log: lets go of a discarded target, looks
+    /// again for a missing one, then redraws.
     func reload() {
+        if target?.isDiscarded == true { return attach(nil) }
+        if target == nil, let nodeID = targetNodeID,
+           let found = Self.browserPane(nodeID: nodeID, in: viewIfLoaded?.window) {
+            return attach(found)
+        }
+        refresh()
+    }
+
+    /// Redraws the list and announces the title if it changed.
+    private func refresh() {
         followTitle()
-        onPaneTitleChange?()
+        announceTitleIfChanged()
         guard isViewLoaded else { return }
         let follow = isFollowingTail
         tableView.reloadData()
         if follow, tableView.numberOfRows > 0 { tableView.scrollRowToVisible(tableView.numberOfRows - 1) }
+    }
+
+    private func announceTitleIfChanged() {
+        let title = paneTitle
+        guard title != announcedTitle else { return }
+        announcedTitle = title
+        onPaneTitleChange?()
     }
 
     /// Re-observes the target's page title whenever its web view changes.
@@ -192,7 +216,7 @@ public final class BrowserLogPaneViewController: NSViewController {
         guard webView !== observedWebView else { return }
         observedWebView = webView
         titleObservation = webView.observe(\.title, options: [.new]) { [weak self] _, _ in
-            MainActor.assumeIsolated { self?.onPaneTitleChange?() }
+            MainActor.assumeIsolated { self?.announceTitleIfChanged() }
         }
     }
 
