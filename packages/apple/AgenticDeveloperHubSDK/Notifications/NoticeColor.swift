@@ -22,9 +22,9 @@ public struct NoticeColor: Codable, Sendable, Equatable {
 
     public init(source: Source, red: Double = 0, green: Double = 0, blue: Double = 0) {
         self.source = source
-        self.red = Self.unit(red)
-        self.green = Self.unit(green)
-        self.blue = Self.unit(blue)
+        self.red = red.clamped(to: 0...1)
+        self.green = green.clamped(to: 0...1)
+        self.blue = blue.clamped(to: 0...1)
     }
 
     public static let system = NoticeColor(source: .system)
@@ -39,16 +39,30 @@ public struct NoticeColor: Codable, Sendable, Equatable {
     }
 
     /// Missing components read as 0, so a stored `{"source":"theme"}` loads.
+    /// A missing or unknown source reads as `.system`; a field with its own
+    /// default reads through `decodeNoticeColorIfPresent(forKey:default:)`.
     public init(from decoder: Decoder) throws {
+        self = try Self.decode(from: decoder, fallback: .system)
+    }
+
+    /// `fallback` stands in for a missing or unknown source, so a source a
+    /// later build adds costs only this color, never the value holding it.
+    static func decode(from decoder: Decoder, fallback: Source) throws -> NoticeColor {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(
-            source: try container.decode(Source.self, forKey: .source),
+        return NoticeColor(
+            source: try container.decodeIfPresent(String.self, forKey: .source)
+                .flatMap(Source.init(rawValue:)) ?? fallback,
             red: try container.decodeIfPresent(Double.self, forKey: .red) ?? 0,
             green: try container.decodeIfPresent(Double.self, forKey: .green) ?? 0,
             blue: try container.decodeIfPresent(Double.self, forKey: .blue) ?? 0)
     }
+}
 
-    private static func unit(_ value: Double) -> Double {
-        min(max(value, 0), 1)
+extension KeyedDecodingContainer {
+    /// The color at `key`, or `fallback` when the key is absent or null. An
+    /// unknown stored source reads as `fallback`'s source: the field's default.
+    func decodeNoticeColorIfPresent(forKey key: Key, default fallback: NoticeColor) throws -> NoticeColor {
+        guard contains(key), try !decodeNil(forKey: key) else { return fallback }
+        return try NoticeColor.decode(from: superDecoder(forKey: key), fallback: fallback.source)
     }
 }

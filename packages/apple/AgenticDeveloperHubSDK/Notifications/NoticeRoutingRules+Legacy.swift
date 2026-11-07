@@ -70,7 +70,7 @@ extension NoticeRoutingRules {
         }
         let allMain = !urgencyProfiles.isEmpty && urgencyProfiles.allSatisfy { $0.screens == "main" }
 
-        let overrides = try container.decodeIfPresent([LegacyOverride].self, forKey: .overrides) ?? []
+        let overrides = try container.decodeLossyArrayIfPresent([LegacyOverride].self, forKey: .overrides) ?? []
         return Legacy(
             styles: styles,
             overrides: overrides.map { old in
