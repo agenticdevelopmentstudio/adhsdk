@@ -69,6 +69,92 @@ public enum BrowserAutoplayPolicy: String, Codable, Sendable, CaseIterable {
     }
 }
 
+/// Whether the page receives keyboard input.
+public enum BrowserInputPolicy: String, Codable, Sendable, CaseIterable {
+    case allow
+    case block
+
+    public var label: String {
+        switch self {
+        case .allow: "Allowed"
+        case .block: "Blocked"
+        }
+    }
+}
+
+/// When the pane reports the pointer to the page.
+public enum BrowserPointerTracking: String, Codable, Sendable, CaseIterable {
+    case always
+    case whenFocused
+    case never
+
+    public var label: String {
+        switch self {
+        case .always: "Always"
+        case .whenFocused: "Only while the page has focus"
+        case .never: "Never"
+        }
+    }
+}
+
+/// How much of the browser the agent may see and drive.
+public enum BrowserAgentAccess: String, Codable, Sendable, CaseIterable {
+    case hidden
+    case readOnly
+    case full
+
+    public var label: String {
+        switch self {
+        case .hidden: "Hidden from the agent"
+        case .readOnly: "Read only"
+        case .full: "Full control"
+        }
+    }
+}
+
+/// Whether the agent keeps driving the browser while the user has paused it.
+public enum BrowserAgentWhilePaused: String, Codable, Sendable, CaseIterable {
+    case allowed
+    case paused
+
+    public var label: String {
+        switch self {
+        case .allowed: "Agent may still drive"
+        case .paused: "Agent pauses too"
+        }
+    }
+}
+
+/// Which cookie and site-data store a browser pane shares.
+public enum BrowserStorageJar: String, Codable, Sendable, CaseIterable {
+    case global
+    case worktree
+    case pane
+
+    public var label: String {
+        switch self {
+        case .global: "Shared by all browser panes"
+        case .worktree: "Shared within this worktree"
+        case .pane: "This pane only"
+        }
+    }
+}
+
+/// Which third-party content a page may load.
+public enum BrowserThirdPartyContent: String, Codable, Sendable, CaseIterable {
+    case allow
+    case blockScripts
+    case blockAll
+
+    public var label: String {
+        switch self {
+        case .allow: "Allowed"
+        case .blockScripts: "Block third-party scripts"
+        case .blockAll: "Block all third-party content"
+        }
+    }
+}
+
 // MARK: - Keys
 
 /// The browser pane's settings. Every key starts with `browser.`, which is
@@ -110,6 +196,32 @@ extension UserSettings {
     public static let browserDownloadDirectory = UserSetting<String>("browser.download_directory", default: "")
     public static let browserAsksDownloadLocation = UserSetting<Bool>("browser.asks_download_location", default: false)
 
+    // Session privacy
+    public static let browserPrivacyKeyboard = UserSetting<BrowserInputPolicy>(
+        "browser.privacy.keyboard", default: .allow
+    )
+    public static let browserPrivacyMouse = UserSetting<BrowserInputPolicy>("browser.privacy.mouse", default: .allow)
+    public static let browserPrivacyPointerTracking = UserSetting<BrowserPointerTracking>(
+        "browser.privacy.pointer_tracking", default: .always
+    )
+    public static let browserPrivacyDragAndDrop = UserSetting<Bool>("browser.privacy.drag_and_drop", default: true)
+    public static let browserPrivacyHideActivation = UserSetting<Bool>(
+        "browser.privacy.hide_activation", default: false
+    )
+    public static let browserPrivacyAgentAccess = UserSetting<BrowserAgentAccess>(
+        "browser.privacy.agent_access", default: .full
+    )
+    public static let browserPrivacyAgentWhilePaused = UserSetting<BrowserAgentWhilePaused>(
+        "browser.privacy.agent_while_paused", default: .allowed
+    )
+    public static let browserPrivacyStorageJar = UserSetting<BrowserStorageJar>(
+        "browser.privacy.storage_jar", default: .pane
+    )
+    public static let browserPrivacyThirdPartyContent = UserSetting<BrowserThirdPartyContent>(
+        "browser.privacy.third_party_content", default: .allow
+    )
+    public static let browserPrivacyConsoleCapture = UserSetting<Bool>("browser.privacy.console_capture", default: true)
+
     // Developer
     public static let browserWebInspectorEnabled = UserSetting<Bool>("browser.web_inspector_enabled", default: false)
 
@@ -142,11 +254,31 @@ public enum BrowserSettings {
         UserSettings.browserUpgradesToHTTPS, UserSettings.browserLockdownMode,
         UserSettings.browserAutoplay, UserSettings.browserAllowsAirPlay, UserSettings.browserMediaCapture,
         UserSettings.browserDownloadDirectory, UserSettings.browserAsksDownloadLocation,
-        UserSettings.browserWebInspectorEnabled
+        UserSettings.browserWebInspectorEnabled,
+        UserSettings.browserPrivacyKeyboard, UserSettings.browserPrivacyMouse,
+        UserSettings.browserPrivacyPointerTracking, UserSettings.browserPrivacyDragAndDrop,
+        UserSettings.browserPrivacyHideActivation, UserSettings.browserPrivacyAgentAccess,
+        UserSettings.browserPrivacyAgentWhilePaused, UserSettings.browserPrivacyStorageJar,
+        UserSettings.browserPrivacyThirdPartyContent, UserSettings.browserPrivacyConsoleCapture
     ]
 
     /// The names of every browser key, for a test to hold the list to.
     public static var allKeyNames: [String] { allKeys.map(\.name) }
+
+    /// Read only when the web view is built, so changing one rebuilds it.
+    public static let constructionTimeKeyNames: Set<String> = [
+        UserSettings.browserPrivacyStorageJar.name,
+        UserSettings.browserUpgradesToHTTPS.name,
+        UserSettings.browserAllowsAirPlay.name,
+        UserSettings.browserAutoplay.name,
+        UserSettings.browserPrivacyConsoleCapture.name,
+        UserSettings.browserPrivateBrowsing.name
+    ]
+
+    /// Cannot be overridden per pane, so it is only ever read from the global settings.
+    public static let globalOnlyKeyNames: Set<String> = [
+        UserSettings.browserPrivateBrowsing.name
+    ]
 
     /// Puts every browser setting back to its default by removing the stored
     /// value, so what the default *is* stays declared in one place.

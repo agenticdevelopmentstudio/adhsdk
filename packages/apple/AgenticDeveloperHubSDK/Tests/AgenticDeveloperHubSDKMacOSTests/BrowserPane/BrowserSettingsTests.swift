@@ -21,11 +21,32 @@ final class BrowserSettingsTests: XCTestCase {
 
     func testEveryBrowserKeyIsNamedUnderTheBrowserPrefix() {
         let names = BrowserSettings.allKeyNames
-        XCTAssertEqual(names.count, 19)
+        XCTAssertEqual(names.count, 29)
         XCTAssertEqual(Set(names).count, names.count, "no two settings share a key")
         for name in names {
             XCTAssertTrue(name.hasPrefix("browser."), "\(name) is not a browser key")
         }
+    }
+
+    func testPrivacyDefaults() {
+        let store = makeStore()
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyKeyboard), .allow)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyMouse), .allow)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyPointerTracking), .always)
+        XCTAssertTrue(store.get(UserSettings.browserPrivacyDragAndDrop))
+        XCTAssertFalse(store.get(UserSettings.browserPrivacyHideActivation))
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyAgentAccess), .full)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyAgentWhilePaused), .allowed)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyStorageJar), .pane)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyThirdPartyContent), .allow)
+        XCTAssertTrue(store.get(UserSettings.browserPrivacyConsoleCapture))
+    }
+
+    func testResetRemovesPrivacyValues() {
+        let store = makeStore()
+        store.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
+        BrowserSettings.reset(in: store)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyStorageJar), .pane)
     }
 
     // MARK: - Reset
