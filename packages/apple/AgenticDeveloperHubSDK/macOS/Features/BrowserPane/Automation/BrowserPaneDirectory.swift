@@ -8,14 +8,21 @@ public struct BrowserPaneHandle {
     public let project: String
     public let tab: String
     public let automation: BrowserAutomation
-    /// Which engine draws the pane. Every tool drives either the same way;
-    /// `browser_list` reports it so a model can tell the panes apart.
-    public let engine: BrowserEngineKind
+    /// The pane's Agent access setting, as it stood when the handle was made.
+    /// The tool set takes a fresh handle once a call is dequeued, so a change
+    /// made while the call waited is the one that counts.
+    public let access: BrowserAgentAccess
+    /// Whether the pane's events are paused **and** its settings pause the
+    /// agent too (`agent_while_paused == .paused`). A paused pane whose
+    /// settings let the agent keep driving reads `false` here.
+    public let isPausedForAgent: Bool
 
-    public init(id: String, project: String, tab: String, automation: BrowserAutomation,
-                engine: BrowserEngineKind = .safari) {
+    public init(
+        id: String, project: String, tab: String, automation: BrowserAutomation,
+        access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false
+    ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
-        self.engine = engine
+        self.access = access; self.isPausedForAgent = isPausedForAgent
     }
 
     public var title: String { automation.currentTitle }
@@ -36,4 +43,15 @@ public protocol BrowserPaneDirectory: AnyObject {
     /// Opens a Browser pane on `engine` beside the caller's pane (or in the
     /// front window when nil / unknown) and returns it.
     func openBrowserPane(besidePane paneID: String?, engine: BrowserEngineKind) throws -> BrowserPaneHandle
+}
+
+extension BrowserPaneDirectory {
+    /// The handles the agent may know about: every pane but those whose
+    /// Agent access is `hidden`. A directory applies it to everything it
+    /// lists or finds by id, so a hidden pane is not listed, not the default
+    /// target and not reachable by id. The rule lives here rather than in
+    /// each app's directory so every directory hides the same panes.
+    public static func visible(_ handles: [BrowserPaneHandle]) -> [BrowserPaneHandle] {
+        handles.filter { $0.access != .hidden }
+    }
 }

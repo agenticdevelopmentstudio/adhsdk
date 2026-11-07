@@ -146,6 +146,28 @@ final class BrowserPaneTests: XCTestCase {
         XCTAssertEqual(paneB.webView.pageZoom, 1.0)
     }
 
+    // MARK: - Agent access
+
+    func testAgentAccessAndPauseReadThePanesOwnSettings() {
+        let fallback = makeSettings()
+        let overrides = LayeredSettingsStore(
+            overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
+            fallback: fallback
+        )
+        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: overrides)
+        XCTAssertEqual(pane.agentAccess, .full)
+        overrides.set(.readOnly, for: UserSettings.browserPrivacyAgentAccess)
+        XCTAssertEqual(pane.agentAccess, .readOnly)
+        XCTAssertEqual(fallback.get(UserSettings.browserPrivacyAgentAccess), .full)
+
+        overrides.set(.paused, for: UserSettings.browserPrivacyAgentWhilePaused)
+        XCTAssertFalse(pane.isPausedForAgent, "not paused, so the agent is not held off")
+        pane.isEventsPaused = true
+        XCTAssertTrue(pane.isPausedForAgent)
+        overrides.set(.allowed, for: UserSettings.browserPrivacyAgentWhilePaused)
+        XCTAssertFalse(pane.isPausedForAgent, "paused, but the agent may still drive")
+    }
+
     // MARK: - Naming itself
 
     func testAPaneOnNothingIsCalledSafari() {

@@ -66,6 +66,18 @@ public final class BrowserPaneViewController: NSViewController {
     public let paneContext: BrowserPaneContext
     /// The pane's own layered settings, when the factory built it with one.
     public var paneSettings: LayeredSettingsStore? { settings as? LayeredSettingsStore }
+    /// Whether the user has paused this pane's events (Pause Events, spec
+    /// section 7). Never set yet: the gear item that sets it comes with Pause
+    /// Events itself.
+    public internal(set) var isEventsPaused = false
+    /// The pane's effective Agent access, read from its own layered settings
+    /// so a per-pane override counts.
+    public var agentAccess: BrowserAgentAccess { settings.get(UserSettings.browserPrivacyAgentAccess) }
+    /// Whether the agent is held off this pane: its events are paused and its
+    /// Agent while paused setting says the agent pauses too.
+    public var isPausedForAgent: Bool {
+        isEventsPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
+    }
     private let history: BrowserHistoryStore?
     /// The data store's controls, for the store the web view is on now.
     private var siteData: BrowserSiteData
