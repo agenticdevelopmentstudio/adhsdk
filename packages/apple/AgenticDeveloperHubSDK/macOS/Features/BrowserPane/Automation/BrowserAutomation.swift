@@ -196,6 +196,9 @@ public final class BrowserAutomation: NSObject {
 
     private var gateHeld = false
     private var gateWaiters: [CheckedContinuation<Void, Never>] = []
+    /// How many calls are waiting at the gate. For tests: how a test knows a
+    /// call is queued, rather than sleeping and hoping it is.
+    var queuedCallCount: Int { gateWaiters.count }
 
     private func acquireGate() async {
         guard gateHeld else {
