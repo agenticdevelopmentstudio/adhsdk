@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bucketDetail, bucketLabel, formatVital, siteReportFor, withSite } from "./dashboard-format";
+import { bucketDetail, bucketLabel, formatVital, listedSites, siteReportFor, withSite } from "./dashboard-format";
 
 describe("bucket labels", () => {
   it("label in UTC: a day on long ranges, an hour on 24h", () => {
@@ -15,6 +15,18 @@ describe("formatVital", () => {
     expect(formatVital("lcp", 2400)).toBe("2.4s");
     expect(formatVital("inp", 180)).toBe("180ms");
     expect(formatVital("cls", 0.1)).toBe("0.10");
+  });
+});
+
+describe("listedSites", () => {
+  it("is the server's list when the read has one", () => {
+    expect(listedSites({ views: { sites: ["a.com", "b.com"] } })).toEqual(["a.com", "b.com"]);
+  });
+
+  it("is null, not a throw, before a read and from a backend older than views", () => {
+    expect(listedSites(undefined)).toBeNull();
+    expect(listedSites({})).toBeNull();
+    expect(listedSites({ views: {} })).toBeNull();
   });
 });
 

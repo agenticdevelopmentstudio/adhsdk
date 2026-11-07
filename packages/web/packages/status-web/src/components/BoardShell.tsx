@@ -10,7 +10,7 @@ import { useConfigStatus } from "../hooks/use-config-status";
 import { useStatusUser } from "../hooks/useStatusUser";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
 import { useAnalyticsDashboard, useErrorsDashboard } from "../hooks/use-dashboards";
-import { withSite } from "../lib/dashboard-format";
+import { listedSites, withSite } from "../lib/dashboard-format";
 import { plural } from "../lib/format";
 import { headlineFor } from "../lib/overview";
 import type { AnalyticsRange } from "../telemetry/dashboard-types";
@@ -285,7 +285,7 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
 
   // Errors' list works as Analytics' does below, with no range: its per-site figures are 30 days.
   const errorsQuery = useErrorsDashboard({ enabled: topic === "errors" });
-  const errorsListed = errorsQuery.data?.views.sites ?? null;
+  const errorsListed = listedSites(errorsQuery.data);
   const errorsSite = topic === "errors" ? errorsSiteFromPath(path) : null;
   const errorSiteNames = useMemo(() => withSite(errorsListed ?? [], errorsSite), [errorsListed, errorsSite]);
 
@@ -320,7 +320,7 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
   // query the view reads, so one request) and holds the range it is read for.
   const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>(DEFAULT_ANALYTICS_RANGE);
   const analyticsQuery = useAnalyticsDashboard(analyticsRange, { enabled: topic === "analytics" });
-  const analyticsListed = analyticsQuery.data?.views.sites ?? null;
+  const analyticsListed = listedSites(analyticsQuery.data);
   const urlSite = topic === "analytics" ? analyticsSiteFromPath(path) : null;
   // The server lists the sites. A deep-linked site with nothing in this range stays on the list,
   // rather than leaving a page with no row to say what it is showing.
