@@ -9,12 +9,35 @@ var ENTITIES = {
   lt: "<",
   gt: ">",
   quot: '"',
-  "#39": "'",
   apos: "'",
-  nbsp: " "
+  nbsp: " ",
+  mdash: "\u2014",
+  ndash: "\u2013",
+  hellip: "\u2026",
+  lsquo: "\u2018",
+  rsquo: "\u2019",
+  ldquo: "\u201C",
+  rdquo: "\u201D",
+  laquo: "\xAB",
+  raquo: "\xBB",
+  middot: "\xB7",
+  bull: "\u2022",
+  times: "\xD7",
+  larr: "\u2190",
+  rarr: "\u2192",
+  copy: "\xA9",
+  reg: "\xAE",
+  trade: "\u2122"
 };
+function decodeEntity(entity, body) {
+  if (body[0] === "#") {
+    const code = body[1] === "x" || body[1] === "X" ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+    return Number.isInteger(code) && code > 0 && code <= 1114111 ? String.fromCodePoint(code) : entity;
+  }
+  return ENTITIES[body] ?? entity;
+}
 function plainText(html) {
-  return html.replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39|apos|nbsp);/g, (_, name) => ENTITIES[name] ?? "").replace(/\s+/g, " ").trim();
+  return html.replace(/<[^>]*>/g, "").replace(/&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g, decodeEntity).replace(/\s+/g, " ").trim();
 }
 function slugOf(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");

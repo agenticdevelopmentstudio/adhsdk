@@ -67,21 +67,47 @@ export interface GlossaryTerm extends DocSection {
 }
 
 const HEADING = /^\s*<h3(?:\s[^>]*)?>([\s\S]*?)<\/h3>\s*$/;
+/** The named entities markdown renderers write. Numeric references are decoded in general. */
 const ENTITIES: Record<string, string> = {
   amp: "&",
   lt: "<",
   gt: ">",
   quot: '"',
-  "#39": "'",
   apos: "'",
   nbsp: " ",
+  mdash: "\u2014",
+  ndash: "\u2013",
+  hellip: "\u2026",
+  lsquo: "\u2018",
+  rsquo: "\u2019",
+  ldquo: "\u201c",
+  rdquo: "\u201d",
+  laquo: "\u00ab",
+  raquo: "\u00bb",
+  middot: "\u00b7",
+  bull: "\u2022",
+  times: "\u00d7",
+  larr: "\u2190",
+  rarr: "\u2192",
+  copy: "\u00a9",
+  reg: "\u00ae",
+  trade: "\u2122",
 };
+
+/** One entity as its character. One this does not know is left as written, never deleted. */
+function decodeEntity(entity: string, body: string): string {
+  if (body[0] === "#") {
+    const code = body[1] === "x" || body[1] === "X" ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+    return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : entity;
+  }
+  return ENTITIES[body] ?? entity;
+}
 
 /** Markup as the words a reader sees. */
 export function plainText(html: string): string {
   return html
     .replace(/<[^>]*>/g, "")
-    .replace(/&(amp|lt|gt|quot|#39|apos|nbsp);/g, (_, name: string) => ENTITIES[name] ?? "")
+    .replace(/&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g, decodeEntity)
     .replace(/\s+/g, " ")
     .trim();
 }
