@@ -157,14 +157,43 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         let value: [String: Any]
     }
 
+    /// How long a DevTools call may go unanswered. A browser that is never
+    /// created — a pane with no window, Chromium gone — would otherwise leave
+    /// the call, and the automation gate it holds, waiting forever.
+    static let devToolsTimeout: TimeInterval = 30
+
+    /// Resumes its continuation once: with the reply, or with the timeout,
+    /// whichever comes first. Both arrive on the main thread.
+    @MainActor
+    private final class PendingReply {
+        private var continuation: CheckedContinuation<DevToolsReply, Error>?
+        init(_ continuation: CheckedContinuation<DevToolsReply, Error>) { self.continuation = continuation }
+        func finish(_ result: Result<DevToolsReply, Error>) {
+            continuation?.resume(with: result)
+            continuation = nil
+        }
+    }
+
     private func send(_ method: String, _ params: [String: Any] = [:]) async throws -> [String: Any] {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<DevToolsReply, Error>) in
+        guard ChromiumRuntime.shared.isRunning else {
+            throw BrowserAutomationError.script("Chrome is not running, so \(method) cannot be sent")
+        }
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<DevToolsReply, Error>) in
+            let pending = PendingReply(continuation)
             browserView.sendDevToolsMethod(method, params: params) { result, error in
-                if let result {
-                    continuation.resume(returning: DevToolsReply(value: result))
-                } else {
-                    let message = error?.localizedDescription ?? "\(method) failed"
-                    continuation.resume(throwing: BrowserAutomationError.script(message))
+                MainActor.assumeIsolated {
+                    if let result {
+                        pending.finish(.success(DevToolsReply(value: result)))
+                    } else {
+                        let message = error?.localizedDescription ?? "\(method) failed"
+                        pending.finish(.failure(BrowserAutomationError.script(message)))
+                    }
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.devToolsTimeout) {
+                MainActor.assumeIsolated {
+                    pending.finish(.failure(BrowserAutomationError.script(
+                        "Chrome did not answer \(method) within \(Int(Self.devToolsTimeout)) seconds")))
                 }
             }
         }.value
