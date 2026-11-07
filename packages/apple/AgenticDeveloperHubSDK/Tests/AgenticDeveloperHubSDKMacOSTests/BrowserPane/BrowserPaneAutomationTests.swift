@@ -25,13 +25,25 @@ final class BrowserPaneAutomationTests: XCTestCase {
             .count
     }
 
-    /// Whether the console message handler is registered: WebKit raises on a
-    /// second handler under a name still registered, so only call this where
-    /// the answer is expected to be no.
-    private func assertNoConsoleHandler(_ webView: WKWebView) {
-        let controller = webView.configuration.userContentController
-        controller.add(BrowserConsoleLog(), name: BrowserConsoleLog.handlerName)
-        controller.removeScriptMessageHandler(forName: BrowserConsoleLog.handlerName)
+    /// Whether the console message handler is registered, asked of a page:
+    /// a registered handler is visible to the page world as
+    /// `window.webkit.messageHandlers.<name>`. Loads a small page into
+    /// `webView` to ask on. Safe either way, unlike adding a second handler,
+    /// which raises an exception that takes the whole test bundle down.
+    private func hasConsoleHandler(_ webView: WKWebView) async -> Bool? {
+        loads += 1
+        let marker = "handler-\(loads)"
+        webView.loadHTMLString("<meta name=\"test-load\" content=\"\(marker)\">", baseURL: nil)
+        let ready = "document.readyState === 'complete' && "
+            + "document.querySelector('meta[name=test-load]')?.content === '\(marker)'"
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            if (try? await webView.evaluateJavaScript(ready) as? Bool) == true, !webView.isLoading { break }
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+        let probe = "!!(window.webkit && window.webkit.messageHandlers"
+            + " && window.webkit.messageHandlers['\(BrowserConsoleLog.handlerName)'])"
+        return try? await webView.evaluateJavaScript(probe) as? Bool
     }
 
     private var loads = 0
@@ -86,49 +98,64 @@ final class BrowserPaneAutomationTests: XCTestCase {
         settings.set(false, for: UserSettings.browserPrivacyConsoleCapture)
         let off = makePane(settings: settings)
         XCTAssertEqual(consoleScriptCount(off.webView), 0)
-        assertNoConsoleHandler(off.webView)
+        let offHandler = await hasConsoleHandler(off.webView)
+        XCTAssertEqual(offHandler, false)
         XCTAssertFalse(off.automation.isConsoleCaptureOn)
         await load("<script>console.warn('unheard')</script>", into: off)
         XCTAssertTrue(off.consoleLog.messages(level: nil).isEmpty)
 
         let captured = makePane()
         XCTAssertEqual(consoleScriptCount(captured.webView), 1)
+        let onHandler = await hasConsoleHandler(captured.webView)
+        XCTAssertEqual(onHandler, true)
         XCTAssertTrue(captured.automation.isConsoleCaptureOn)
     }
 
     /// `makeConfiguration` registers the handler only when told to.
-    func testConfigurationRegistersTheHandlerOnlyWithCapture() {
+    func testConfigurationRegistersTheHandlerOnlyWithCapture() async {
         let settings = makeSettings()
         let jar = BrowserPaneViewController.resolveJar(settings: settings, context: .detached, label: "t")
         let off = BrowserPaneViewController.makeConfiguration(
             settings: settings, consoleLog: BrowserConsoleLog(), jar: jar, capturesConsole: false
         )
         XCTAssertTrue(off.userContentController.userScripts.isEmpty)
-        off.userContentController.add(BrowserConsoleLog(), name: BrowserConsoleLog.handlerName)
-        off.userContentController.removeScriptMessageHandler(forName: BrowserConsoleLog.handlerName)
+        let offHandler = await hasConsoleHandler(WKWebView(frame: .zero, configuration: off))
+        XCTAssertEqual(offHandler, false)
+
+        let consoleLog = BrowserConsoleLog()
+        let capturing = BrowserPaneViewController.makeConfiguration(
+            settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: true
+        )
+        XCTAssertTrue(capturing.userContentController.userScripts.isEmpty, "scripts belong to installUserScripts()")
+        let onHandler = await hasConsoleHandler(WKWebView(frame: .zero, configuration: capturing))
+        XCTAssertEqual(onHandler, true)
+        capturing.userContentController.removeScriptMessageHandler(forName: BrowserConsoleLog.handlerName)
     }
 
     /// Console capture is read when a web view is built, never live: a change
     /// waits for the rebuild, which applies it to the script, the handler and
     /// the automation together.
-    func testConsoleCaptureAppliesAtRebuild() {
+    func testConsoleCaptureAppliesAtRebuild() async {
         let settings = makeSettings()
         let pane = makePane(settings: settings)
         let automation = pane.automation
         XCTAssertTrue(automation.isConsoleCaptureOn)
 
         settings.set(false, for: UserSettings.browserPrivacyConsoleCapture)
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        try? await Task.sleep(nanoseconds: 50_000_000)
         XCTAssertEqual(consoleScriptCount(pane.webView), 1, "not live: the current web view keeps its hook")
 
         pane.rebuildWebView()
         XCTAssertEqual(consoleScriptCount(pane.webView), 0)
-        assertNoConsoleHandler(pane.webView)
+        let offHandler = await hasConsoleHandler(pane.webView)
+        XCTAssertEqual(offHandler, false)
         XCTAssertFalse(automation.isConsoleCaptureOn, "the retargeted automation follows the rebuild")
 
         settings.set(true, for: UserSettings.browserPrivacyConsoleCapture)
         pane.rebuildWebView()
         XCTAssertEqual(consoleScriptCount(pane.webView), 1)
+        let onHandler = await hasConsoleHandler(pane.webView)
+        XCTAssertEqual(onHandler, true)
         XCTAssertTrue(automation.isConsoleCaptureOn)
     }
 
