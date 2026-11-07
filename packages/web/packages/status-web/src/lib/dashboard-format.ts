@@ -27,6 +27,15 @@ export function formatVital(vital: Vital, value: number): string {
 }
 
 /**
+ * The site list a dashboard read sends for the board's rail, or null while there is none to show:
+ * no read yet, or a backend older than `views` that sends none (a staggered deploy, a rollback),
+ * which must leave the rail empty rather than throw during render.
+ */
+export function listedSites(body: { views?: { sites?: string[] } } | undefined): string[] | null {
+  return body?.views?.sites ?? null;
+}
+
+/**
  * Places one name into the server's alphabetical site list. Only for a site the URL names that the
  * server's list does not have (a deep link to a site with no data yet), so the reader still sees
  * it selected; the list itself comes from the server already in order.
