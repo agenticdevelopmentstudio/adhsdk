@@ -98,6 +98,10 @@ public final class BrowserPaneViewController: NSViewController {
     private(set) var activationShield: BrowserActivationShield
     /// What the page wrote to `console.*` since the last navigation.
     public let consoleLog = BrowserConsoleLog()
+    /// What this pane delivered to its page, withheld from it, and did around
+    /// it (spec section 12). In memory only, and recorded in every build; only
+    /// debug builds have a pane that shows it.
+    public let eventLog = BrowserEventLog()
     /// The jar the current web view was built on.
     private(set) var resolvedJar: ResolvedJar
     /// Whether the current web view captures the page console: read once,
@@ -156,6 +160,10 @@ public final class BrowserPaneViewController: NSViewController {
             if driving { BrowserPaneFocus.shared.note(self) }
             self.drivenBadge.setDriven(driving)
         }
+        automation.onAction = { [weak self] name, succeeded in
+            self?.eventLog.record(
+                channel: "agent", event: name, decision: .info, detail: succeeded ? "succeeded" : "failed")
+        }
         builtAutomation = automation
         return automation
     }
@@ -175,6 +183,12 @@ public final class BrowserPaneViewController: NSViewController {
     private var themedUnderPageColor: NSColor?
     /// The window's first responder, followed while the pane is on screen.
     private var firstResponderObservation: NSKeyValueObservation?
+    /// Whether the page held first responder at the last change, so the log
+    /// records the page gaining and losing it rather than every move between
+    /// two controls outside it.
+    private var pageHeldFirstResponder: Bool?
+    /// The pane's window's key and occlusion notifications, for the log.
+    private var windowObservers: [NSObjectProtocol] = []
     private var cancellables: Set<AnyCancellable> = []
     private var downloads: [WKDownload] = []
     /// The history row for the page on screen, so a title that arrives after
@@ -238,6 +252,9 @@ public final class BrowserPaneViewController: NSViewController {
     private func wireWebView() {
         webView.navigationDelegate = self
         webView.uiDelegate = self
+        (webView as? BrowserWebView)?.onInputDecision = { [weak self] channel, event, delivered, synthesized, detail in
+            self?.recordInput(channel, event, delivered: delivered, synthesized: synthesized, detail: detail)
+        }
         webView.allowsBackForwardNavigationGestures = true
         webView.keepPaintingUnderQuietPresentation()
         webView.observeTheme { [weak self] _, palette in
@@ -520,6 +537,10 @@ public final class BrowserPaneViewController: NSViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] key in
                 guard let self else { return }
+                // A pane's layered store publishes its own overrides and only
+                // the shared changes no override hides, so every key here is
+                // one that took effect on this pane.
+                self.eventLog.record(channel: "settings", event: "changed", decision: .info, detail: key)
                 self.applyLiveSettings()
                 if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
@@ -605,6 +626,7 @@ public final class BrowserPaneViewController: NSViewController {
         builtAutomation?.isConsoleCaptureOn = capturesConsole
         applyCookiePolicy()
         observeSettings()
+        eventLog.record(channel: "settings", event: "rebuild", decision: .info, detail: jar.jar?.rawValue ?? "private")
 
         guard isViewLoaded else { return }
         installPageHost()
@@ -708,14 +730,46 @@ public final class BrowserPaneViewController: NSViewController {
         super.viewDidAppear()
         BrowserPaneFocus.shared.note(self)
         observeFirstResponder()
+        observeWindow()
     }
 
     private func observeFirstResponder() {
         firstResponderObservation = view.window?.observe(\.firstResponder, options: [.new]) { [weak self] window, _ in
             MainActor.assumeIsolated {
-                guard let self, let responder = window.firstResponder as? NSView,
-                      responder === self.webView || responder.isDescendant(of: self.webView) else { return }
+                guard let self else { return }
+                let responder = window.firstResponder as? NSView
+                let pageHolds = responder.map { $0 === self.webView || $0.isDescendant(of: self.webView) } ?? false
+                if pageHolds != self.pageHeldFirstResponder {
+                    self.pageHeldFirstResponder = pageHolds
+                    self.eventLog.record(
+                        channel: "window", event: "firstResponder", decision: .info,
+                        detail: pageHolds ? "page" : "outside the page")
+                }
+                guard pageHolds else { return }
                 BrowserPaneFocus.shared.note(self)
+            }
+        }
+    }
+
+    /// Follows the window's key and occlusion state into the log: both
+    /// decide what the page can tell about its own focus and visibility.
+    private func observeWindow() {
+        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        windowObservers = []
+        guard let window = view.window else { return }
+        let center = NotificationCenter.default
+        let events: [(Notification.Name, String)] = [
+            (NSWindow.didBecomeKeyNotification, "becameKey"),
+            (NSWindow.didResignKeyNotification, "resignedKey"),
+            (NSWindow.didChangeOcclusionStateNotification, "occlusion")
+        ]
+        windowObservers = events.map { name, event in
+            center.addObserver(forName: name, object: window, queue: .main) { [weak self, weak window] _ in
+                MainActor.assumeIsolated {
+                    let visible = window?.occlusionState.contains(.visible) == true
+                    let detail = event == "occlusion" ? (visible ? "visible" : "occluded") : ""
+                    self?.eventLog.record(channel: "window", event: event, decision: .info, detail: detail)
+                }
             }
         }
     }
@@ -723,6 +777,19 @@ public final class BrowserPaneViewController: NSViewController {
     public override func viewDidDisappear() {
         super.viewDidDisappear()
         firstResponderObservation = nil
+        pageHeldFirstResponder = nil
+        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        windowObservers = []
+    }
+
+    /// One gate decision into the log. A withheld event the agent sent says
+    /// so, since that only happens while the agent is paused too.
+    private func recordInput(
+        _ channel: BrowserInputChannel, _ event: String, delivered: Bool, synthesized: Bool, detail: String
+    ) {
+        let decision: BrowserEventLogEntry.Decision = !delivered ? .withheld : synthesized ? .synthesized : .delivered
+        let shown = synthesized && !delivered ? (detail.isEmpty ? "agent" : "agent " + detail) : detail
+        eventLog.record(channel: channel.rawValue, event: event, decision: decision, detail: shown)
     }
 
     private func configureButton(_ button: NSButton, symbol: String, label: String, action: Selector) {
@@ -921,6 +988,7 @@ extension BrowserPaneViewController {
         refreshInputGate()
         refreshActivationShield()
         pausedBadge.setPaused(paused)
+        eventLog.record(channel: "pane", event: paused ? "pause" : "unpause", decision: .info)
     }
 }
 
@@ -979,6 +1047,8 @@ extension BrowserPaneViewController: PaneContentTeardown {
     public func paneContentWillBeDiscarded() {
         detachWebView()
         paneContext.jars?.endUse(by: self)
+        // A log pane following this one shows an empty list once it is gone.
+        eventLog.clear()
     }
 
     /// Lets go of the current web view: shared by a discarded pane and by a
@@ -1043,16 +1113,31 @@ extension BrowserPaneViewController: WKNavigationDelegate {
     /// previous page's row.
     public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         currentVisitID = nil
+        recordNavigation("start")
         onNavigationStart?()
     }
 
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         consoleLog.clear()
         rememberAddress()
+        recordNavigation("commit")
     }
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         recordVisit()
+        recordNavigation("finish")
+    }
+
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        guard (error as NSError).code != NSURLErrorCancelled else { return }
+        recordNavigation("fail", error: error)
+    }
+
+    /// A navigation into the log, by host: a path or query can carry a token.
+    private func recordNavigation(_ event: String, error: Error? = nil) {
+        var detail = webView.url?.host ?? ""
+        if let error { detail += (detail.isEmpty ? "" : " ") + "error \((error as NSError).code)" }
+        eventLog.record(channel: "navigation", event: event, decision: .info, detail: detail)
     }
 
     public func webView(
@@ -1062,6 +1147,7 @@ extension BrowserPaneViewController: WKNavigationDelegate {
     ) {
         // A cancelled load is the next navigation starting, not a failure.
         guard (error as NSError).code != NSURLErrorCancelled else { return }
+        recordNavigation("fail", error: error)
         logger.error("browser pane failed to load: \(error.localizedDescription, privacy: .public)")
     }
 }
@@ -1073,6 +1159,12 @@ extension BrowserPaneViewController: WKDownloadDelegate {
     private func adopt(_ download: WKDownload) {
         download.delegate = self
         downloads.append(download)
+        recordDownload("start", download)
+    }
+
+    private func recordDownload(_ event: String, _ download: WKDownload) {
+        eventLog.record(
+            channel: "download", event: event, decision: .info, detail: download.originalRequest?.url?.host ?? "")
     }
 
     /// A file name that does not collide with one already in `directory`:
@@ -1134,6 +1226,7 @@ extension BrowserPaneViewController: WKDownloadDelegate {
 
     public func downloadDidFinish(_ download: WKDownload) {
         downloads.removeAll { $0 === download }
+        recordDownload("finish", download)
         // The host says which site it came from; the path and query can carry
         // a token or a name, and stay out of the public log.
         let host = download.originalRequest?.url?.host ?? ""
@@ -1143,6 +1236,7 @@ extension BrowserPaneViewController: WKDownloadDelegate {
     public func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
         downloads.removeAll { $0 === download }
         guard (error as NSError).code != NSURLErrorCancelled else { return }
+        recordDownload("fail", download)
         logger.error("browser download failed: \(error.localizedDescription, privacy: .public)")
     }
 }
@@ -1183,6 +1277,11 @@ extension BrowserPaneViewController: WKUIDelegate {
     /// not the user's. Outside an action the same dismissal applies, since the
     /// pane shows no dialogs of its own; the answer is just not reported.
     private func reportDialog(_ kind: BrowserDialog.Kind, _ message: String) {
+        // The message is the page's words and stays out of the log.
+        let reported = builtAutomation?.isActionInFlight == true
+        eventLog.record(
+            channel: "dialog", event: kind.rawValue, decision: .withheld,
+            detail: reported ? "dismissed, reported to the agent" : "dismissed")
         guard automation.isActionInFlight else { return }
         automation.dialogRaised(kind: kind, message: message)
     }
@@ -1216,18 +1315,32 @@ extension BrowserPaneViewController: WKUIDelegate {
         initiatedBy frame: WKFrameInfo,
         type: WKMediaCaptureType
     ) async -> WKPermissionDecision {
-        switch settings.get(UserSettings.browserMediaCapture) {
-        case .allow: return .grant
-        case .deny: return .deny
-        case .ask: break
-        }
-        guard let window = view.window else { return .prompt }
         let device = switch type {
         case .camera: "camera"
         case .microphone: "microphone"
         case .cameraAndMicrophone: "camera and microphone"
         @unknown default: "camera or microphone"
         }
+        eventLog.record(channel: "permission", event: "request", decision: .info, detail: "\(origin.host) \(device)")
+        let decision = await decideMediaCapture(origin: origin, device: device)
+        let answer = switch decision {
+        case .grant: "granted"
+        case .deny: "denied"
+        case .prompt: "left to WebKit"
+        @unknown default: "unknown"
+        }
+        eventLog.record(
+            channel: "permission", event: "decision", decision: .info, detail: "\(origin.host) \(device) \(answer)")
+        return decision
+    }
+
+    private func decideMediaCapture(origin: WKSecurityOrigin, device: String) async -> WKPermissionDecision {
+        switch settings.get(UserSettings.browserMediaCapture) {
+        case .allow: return .grant
+        case .deny: return .deny
+        case .ask: break
+        }
+        guard let window = view.window else { return .prompt }
         let alert = NSAlert()
         alert.messageText = "\(origin.host) wants to use your \(device)."
         alert.informativeText = "Browser settings decide whether sites ask, are always allowed, or never are."

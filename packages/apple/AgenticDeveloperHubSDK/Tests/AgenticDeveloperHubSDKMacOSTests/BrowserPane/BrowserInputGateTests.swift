@@ -86,7 +86,9 @@ final class BrowserInputGateTests: XCTestCase {
         gate.keyboard = .block
         webView.gate = gate
         var decisions: [(BrowserInputChannel, String, Bool, Bool)] = []
-        webView.onInputDecision = { decisions.append(($0, $1, $2, $3)) }
+        webView.onInputDecision = { channel, event, delivered, synthesized, _ in
+            decisions.append((channel, event, delivered, synthesized))
+        }
         webView.gatedPaste(nil)
         XCTAssertEqual(decisions.count, 1)
         XCTAssertEqual(decisions.first?.0, .keyboard)
@@ -102,7 +104,9 @@ final class BrowserInputGateTests: XCTestCase {
         gate.keyboard = .block
         webView.gate = gate
         var decisions: [(BrowserInputChannel, String, Bool, Bool)] = []
-        webView.onInputDecision = { decisions.append(($0, $1, $2, $3)) }
+        webView.onInputDecision = { channel, event, delivered, synthesized, _ in
+            decisions.append((channel, event, delivered, synthesized))
+        }
         return (webView, { decisions })
     }
 
