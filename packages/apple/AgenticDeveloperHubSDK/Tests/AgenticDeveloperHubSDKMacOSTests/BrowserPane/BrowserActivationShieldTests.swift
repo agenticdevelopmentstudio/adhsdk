@@ -310,43 +310,76 @@ final class BrowserActivationShieldTests: XCTestCase {
         XCTAssertEqual(lifted, "false,true", "the shim's own lift ran, the page's did not")
     }
 
-    /// The record is per document: a frame whose first navigation away from
-    /// its initial about:blank keeps its Window gets the document-start copy
-    /// on the new document, instead of being taken for shielded already.
-    func testAReusedWindowsNewDocumentIsShielded() async throws {
-        let webView = try await loadedWebView("<p>outer</p>")
-        let shield = BrowserActivationShield(webView: webView)
-        shield.apply(active: true)
-        webView.configuration.userContentController.addUserScript(try XCTUnwrap(shield.userScript))
-        let made = try await webView.evaluateJavaScript("""
-        (function () {
-          var frame = document.createElement('iframe');
-          frame.id = 'late';
-          document.body.appendChild(frame);
-          return String(frames.length);
-        })()
-        """) as? String
-        XCTAssertEqual(made, "1")
-        // The immediate run, again, reaches the frame on its initial document.
-        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.source))
-        let first = try await webView.evaluateJavaScript(
-            "frames[0].__reuseMark = 'kept'; typeof frames[0].__adkActivationShield"
-        ) as? String
-        XCTAssertEqual(first, "function")
+    /// The record is per document. A window whose record names another
+    /// document — what a reused Window keeps after its document is replaced
+    /// — has that record lifted and its current document shielded, rather
+    /// than being taken for shielded already.
+    ///
+    /// WebKit gives no reliable way to reuse a frame's Window from a test,
+    /// so the stale record is made by hand: frames[1] is lifted, then given
+    /// frames[0]'s record, which names frames[0]'s document. Lifting that
+    /// stale record runs frames[0]'s lift — the record's owner — which is
+    /// how the test sees the stale path ran; a second raise restores
+    /// frames[0], as the next document-start copy or raise would.
+    func testAStaleRecordIsLiftedAndTheCurrentDocumentShielded() async throws {
+        let webView = try await loadedWebView(
+            "<iframe srcdoc='<p>zero</p>'></iframe><iframe srcdoc='<p>one</p>'></iframe>")
+        let ready = try await waitFor("""
+            String(frames.length === 2
+              && frames[0].document.readyState === 'complete'
+              && frames[1].document.readyState === 'complete')
+            """, toBe: "true", in: webView)
+        XCTAssertEqual(ready, "true", "both srcdoc frames loaded")
+        let raise = try XCTUnwrap(BrowserActivationShield.source)
 
-        _ = try await webView.evaluateJavaScript(
-            "document.getElementById('late').srcdoc = '<p>inner</p>'; true")
-        let navigated = try await waitFor(
-            "String(frames[0].document.body !== null && frames[0].document.body.textContent === 'inner')",
-            toBe: "true", in: webView)
-        guard navigated == "true" else { throw XCTSkip("the frame did not navigate in this test host") }
-        let reused = try await webView.evaluateJavaScript("String(frames[0].__reuseMark)") as? String
-        guard reused == "kept" else {
-            throw XCTSkip("WebKit made a new Window for the frame here, so reuse cannot be observed")
+        // Hidden-descriptor state of a frame's current document: "shielded"
+        // when the shim's own descriptor is on it, "plain" when not.
+        func state(_ index: Int) -> String {
+            "(Object.getOwnPropertyDescriptor(frames[\(index)].document, 'hidden') ? 'shielded' : 'plain')"
         }
-        let answer = try await waitFor(
-            "String(Object.getOwnPropertyDescriptor(frames[0].document, 'hidden') !== undefined)",
-            toBe: "true", in: webView)
-        XCTAssertEqual(answer, "true", "the new document in the reused Window is shielded")
+
+        _ = try await webView.evaluateJavaScript(raise)
+        let raised = try await webView.evaluateJavaScript(
+            "[\(state(0)), \(state(1))].join(',')") as? String
+        XCTAssertEqual(raised, "shielded,shielded")
+
+        // Lift frames[1] alone through its own record, then hand it
+        // frames[0]'s record: a valid record that names another document.
+        let staged = try await webView.evaluateJavaScript("""
+            (function () {
+              frames[1].__adkActivationShield('test').lift();
+              var lifted = \(state(1));
+              var stale = frames[0].__adkActivationShield;
+              Object.defineProperty(frames[1], '__adkActivationShield',
+                { configurable: true, enumerable: false, writable: false, value: stale });
+              window.__staleRecord = stale;
+              return [lifted,
+                      String(frames[1].__adkActivationShield('t').doc === frames[0].document)].join(',');
+            })()
+            """) as? String
+        XCTAssertEqual(staged, "plain,true",
+                       "frames[1] is lifted and holds a record naming frames[0]'s document")
+
+        _ = try await webView.evaluateJavaScript(raise)
+        let afterRaise = try await webView.evaluateJavaScript("""
+            [\(state(1)),
+             String(typeof frames[1].__adkActivationShield === 'function'
+                    && frames[1].__adkActivationShield !== window.__staleRecord),
+             String(frames[1].__adkActivationShield('t').doc === frames[1].document),
+             String(frames[1].document.hidden), frames[1].document.visibilityState,
+             \(state(0)), typeof frames[0].__adkActivationShield].join(',')
+            """) as? String
+        XCTAssertEqual(afterRaise,
+                       "shielded,true,true,false,visible,plain,undefined",
+                       "frames[1]'s current document is shielded under a fresh record; "
+                       + "the stale record's lift ran, which took frames[0]'s shim off")
+
+        _ = try await webView.evaluateJavaScript(raise)
+        let again = try await webView.evaluateJavaScript("""
+            [\(state(0)), String(frames[0].__adkActivationShield('t').doc === frames[0].document),
+             \(state(1)), String(frames[1].__adkActivationShield('t').doc === frames[1].document)].join(',')
+            """) as? String
+        XCTAssertEqual(again, "shielded,true,shielded,true",
+                       "a further raise shields frames[0] again and leaves frames[1] as it was")
     }
 }
