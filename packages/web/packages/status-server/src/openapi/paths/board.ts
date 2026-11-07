@@ -56,6 +56,14 @@ export const boardSchemas: Schemas = {
       branch: nul('string'),
       errorText: nul('string'),
       since: { type: 'string' },
+      deployment: {
+        type: 'object',
+        required: ['id', 'createdAt'],
+        properties: { id: { type: 'string' }, createdAt: { type: 'string' } },
+        description:
+          'Deploy problems (failed, stuck) only: the deployment the board judged — the standing failure ' +
+          'or the wedged retry. Absent on every other problem.',
+      },
     },
   },
   // ActivityRow (src/board/types.ts) — one row of the Activity feed.

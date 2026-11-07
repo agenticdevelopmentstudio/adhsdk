@@ -374,20 +374,65 @@ describe("buildReport — ported digest rules", () => {
     expect(report.sections.monitor!.byStatus).toEqual({ degraded: 1, down: 1 });
   });
 
-  it("a deploy failure fixed by a later build is not failing", () => {
+  it("failing deploys are the board's failed deploy problems, newest build first", () => {
+    const problems = [
+      problem({ target: "a", name: "a", deployment: { id: "d1", createdAt: "2026-11-06T09:00:00Z" } }),
+      problem({
+        target: "b",
+        name: "b",
+        environment: "staging",
+        branch: "staging",
+        commitMessage: "fix: thing\nbody",
+        errorText: "Type error\nstack",
+        sourceUrl: "https://vercel.com/x/b",
+        deployment: { id: "d2", createdAt: "2026-11-06T10:00:00Z" },
+      }),
+      // Stuck is not failed; a problem with no deployment is not a deploy.
+      problem({ target: "c", state: "stuck", deployment: { id: "d3", createdAt: "2026-11-06T11:00:00Z" } }),
+      problem({ target: "s", source: "http", state: "down", severity: "critical" }),
+    ];
+    const report = build({ monitor: ok({ ...MONITOR, problems }) });
+    const failing = report.sections.deploys!.failing;
+    expect(failing.map((d) => d.id)).toEqual(["d2", "d1"]);
+    expect(failing[0]).toEqual({
+      id: "d2",
+      platform: "vercel",
+      project: "b",
+      tier: "staging",
+      branch: "staging",
+      createdAt: "2026-11-06T10:00:00Z",
+      commit: "fix: thing",
+      error: "Type error",
+      url: "https://vercel.com/x/b",
+    });
+  });
+
+  it("the feed's newest row does not decide what is failing", () => {
+    // The board holds d1's failure. In the feed a NEWER canceled row sits on its target,
+    // and a failed preview the board ignores is the newest row of another; neither moves
+    // the list, and a failure the feed no longer holds at all is still listed.
     const live = {
       ...LIVE,
       deployments: [
-        deployment({ id: "d2", status: "success", createdAt: "2026-11-06T11:00:00Z" }),
-        deployment({ id: "d1", status: "failed", errorText: "boom", createdAt: "2026-11-06T10:00:00Z" }),
-        deployment({ id: "d3", tier: "staging", status: "failed", errorText: "Type error\nstack", createdAt: "2026-11-06T09:00:00Z" }),
+        deployment({ id: "d9", status: "canceled", createdAt: "2026-11-06T11:30:00Z" }),
+        deployment({ id: "d1", status: "failed", createdAt: "2026-11-06T10:00:00Z" }),
+        deployment({ id: "pv", projectName: "pv", providerProjectId: "ppv", environment: null, tier: null, status: "failed", createdAt: "2026-11-06T11:40:00Z" }),
       ],
     };
-    const report = build({ deploys: ok({ live }) });
-    const failing = report.sections.deploys!.failing;
-    expect(failing.map((d) => d.id)).toEqual(["d3"]);
-    expect(failing[0]!.error).toBe("Type error");
+    const problems = [
+      problem({ target: "zork", deployment: { id: "d1", createdAt: "2026-11-06T10:00:00Z" } }),
+      problem({ target: "old", name: "old", deployment: { id: "d0", createdAt: "2026-11-01T10:00:00Z" } }),
+    ];
+    const report = build({ monitor: ok({ ...MONITOR, problems }), deploys: ok({ live }) });
+    expect(report.sections.deploys!.failing.map((d) => d.id)).toEqual(["d1", "d0"]);
     expect(report.sections.deploys!.deployTargets).toBe(2);
+  });
+
+  it("with no board to read, nothing is listed as failing and a note says why", () => {
+    const live = { ...LIVE, deployments: [deployment({ id: "d1", status: "failed" })] };
+    const report = build({ monitor: { ok: false, error: "monitor down" }, deploys: ok({ live }) });
+    expect(report.sections.deploys!.failing).toEqual([]);
+    expect(report.coverage.deploys.notes).toContain("failing deploys come from the board, which could not be read");
   });
 
   it("an unconfirmed in-flight deploy is not counted as in flight (the /live demotion)", () => {
@@ -655,15 +700,13 @@ describe("buildReport — rules the server adds", () => {
   });
 
   it("failing deploys carry their log tail or why there is none", () => {
-    const live = {
-      ...LIVE,
-      deployments: [
-        deployment({ id: "a", status: "failed", projectName: "a", providerProjectId: "pa" }),
-        deployment({ id: "b", status: "failed", projectName: "b", providerProjectId: "pb" }),
-      ],
-    };
+    const problems = [
+      problem({ target: "a", name: "a", deployment: { id: "a", createdAt: "2026-11-06T10:00:00Z" } }),
+      problem({ target: "b", name: "b", deployment: { id: "b", createdAt: "2026-11-06T09:00:00Z" } }),
+    ];
     const report = build({
-      deploys: ok({ live, logs: { a: { tail: ["x", "y"], lines: 9 }, b: { error: "no build log" } } }),
+      monitor: ok({ ...MONITOR, problems }),
+      deploys: ok({ live: LIVE, logs: { a: { tail: ["x", "y"], lines: 9 }, b: { error: "no build log" } } }),
     });
     const byId = Object.fromEntries(report.sections.deploys!.failing.map((d) => [d.id, d]));
     expect(byId.a).toMatchObject({ logTail: ["x", "y"], logLines: 9 });

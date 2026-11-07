@@ -11,7 +11,7 @@ import { ANALYTICS_RANGES } from '../telemetry/dashboard/ranges';
 import { loadRuntimeErrorsReport } from '../telemetry/runtime-errors';
 import {
   buildReport,
-  newestPerTarget,
+  failingDeployProblems,
   type DeployLogTail,
   type MonitorInput,
   type ReportInputs,
@@ -198,19 +198,22 @@ async function settled<T extends { refreshing: boolean }>(
   return read();
 }
 
-async function deploysWithLogs(sources: ReportSources, logs: boolean): Promise<ReportInputs['deploys']> {
+/** The logs follow the board's failing list (failingDeployProblems), so they read the builds the report lists. */
+async function deploysWithLogs(
+  sources: ReportSources,
+  logs: boolean,
+  monitor: Promise<ReportInputs['monitor']>,
+): Promise<ReportInputs['deploys']> {
   const live = await soft(SOURCE_TIMEOUT_MS, 'deploy feed', () => sources.live());
   if (!live.ok || !logs) return live.ok ? { ok: true, data: { live: live.data } } : live;
-  const failing = newestPerTarget(live.data.deployments)
-    .filter((d) => d.status === 'failed')
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    .slice(0, LOG_DEPLOY_CAP);
+  const board = await monitor;
+  const ids = board.ok ? failingDeployProblems(board.data.problems).slice(0, LOG_DEPLOY_CAP).map((p) => p.deployment.id) : [];
   const tails = await Promise.all(
-    failing.map(async (d) => {
+    ids.map(async (id) => {
       try {
-        return [d.id, await within(LOG_TIMEOUT_MS + 1_000, 'build log read', () => sources.deployLog(d.id))] as const;
+        return [id, await within(LOG_TIMEOUT_MS + 1_000, 'build log read', () => sources.deployLog(id))] as const;
       } catch (err) {
-        return [d.id, { error: message(err) }] as const;
+        return [id, { error: message(err) }] as const;
       }
     }),
   );
@@ -223,9 +226,10 @@ export async function gatherReport(
   now: () => Date = () => new Date(),
 ): Promise<ReportResponse> {
   const waitMs = params.wait * 1000;
+  const monitorRead = soft(SOURCE_TIMEOUT_MS, 'monitor read', () => sources.monitor());
   const [monitor, deploys, integrations, errors, runtimeErrors, analytics, uptime] = await Promise.all([
-    soft(SOURCE_TIMEOUT_MS, 'monitor read', () => sources.monitor()),
-    deploysWithLogs(sources, params.logs),
+    monitorRead,
+    deploysWithLogs(sources, params.logs, monitorRead),
     soft(SOURCE_TIMEOUT_MS, 'integrations check', () => sources.integrations()),
     soft(waitMs + SOURCE_TIMEOUT_MS, 'errors dashboard', () =>
       settled(() => sources.dashboards.errors(), (ms) => sources.dashboards.settleErrors(ms), waitMs),

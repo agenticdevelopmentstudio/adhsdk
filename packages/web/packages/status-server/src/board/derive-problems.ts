@@ -261,6 +261,8 @@ export function deployProblems(facts: BoardFacts, nowMs: number, index?: RosterI
       branch: d.branch,
       errorText: d.errorText,
       since: problemSince(onset.get(target), d.createdAtMs),
+      // Off the judged row, like branch and errorText: the build this problem is about.
+      deployment: { id: d.deploymentId, createdAt: new Date(d.createdAtMs).toISOString() },
     });
   }
   return out;

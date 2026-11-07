@@ -56,6 +56,8 @@ export interface Problem {
   errorText: string | null;
   /** ISO time the problem began — from the ledger when known, else first observation. */
   since: string;
+  /** Deploy problems (failed, stuck) only: the deployment the board judged. */
+  deployment?: { id: string; createdAt: string };
 }
 
 /** One row of the Activity feed — a RECORD of something that happened. */

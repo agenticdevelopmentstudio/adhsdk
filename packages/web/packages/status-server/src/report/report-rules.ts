@@ -259,7 +259,29 @@ export function newestPerTarget<D extends DeploymentDTO>(deployments: D[]): D[] 
   return [...latest.values()];
 }
 
-export function digestDeploys(input: DeploysInput): Digest<DeploysReportSection> {
+/** A board deploy problem, which always names the deployment it judged. */
+export type DeployProblem = Problem & { deployment: NonNullable<Problem['deployment']> };
+
+/**
+ * The deploys the board holds as failed: its deploy problems in state `failed`, newest build
+ * first. This is the board's per-target verdict. The newest row of the `/live` feed is not: it
+ * may be a canceled or queued build that proves nothing, a preview the board ignores, or
+ * missing because newer rows across the fleet pushed the failure out of the feed's window.
+ */
+export function failingDeployProblems(problems: readonly Problem[]): DeployProblem[] {
+  return problems
+    .filter((p): p is DeployProblem => p.state === 'failed' && p.deployment !== undefined)
+    .sort(
+      (a, b) =>
+        Date.parse(b.deployment.createdAt) - Date.parse(a.deployment.createdAt) || byText(a.deployment.id, b.deployment.id),
+    );
+}
+
+/**
+ * `boardProblems` is the monitor source's problem list, or null when it could not be read:
+ * then the failing list is empty and a note says why, rather than guessing from the feed.
+ */
+export function digestDeploys(input: DeploysInput, boardProblems: readonly Problem[] | null): Digest<DeploysReportSection> {
   const { live } = input;
   const notes: string[] = [];
   const unconfigured: string[] = [];
@@ -272,22 +294,20 @@ export function digestDeploys(input: DeploysInput): Digest<DeploysReportSection>
   }
 
   const latest = newestPerTarget(live.deployments);
-  const failing: FailingDeploy[] = latest
-    .filter((d) => d.status === 'failed')
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    .map((d) => {
+  if (boardProblems === null) notes.push('failing deploys come from the board, which could not be read');
+  const failing: FailingDeploy[] = failingDeployProblems(boardProblems ?? []).map((p) => {
       const out: FailingDeploy = {
-        id: d.id,
-        platform: d.platform,
-        project: d.projectName,
-        tier: d.tier ?? null,
-        branch: d.branch ?? null,
-        createdAt: d.createdAt,
-        commit: firstLine(d.commitMessage, 80),
-        error: firstLine(d.errorText),
-        url: d.url ?? null,
+        id: p.deployment.id,
+        platform: p.source,
+        project: p.name,
+        tier: p.environment,
+        branch: p.branch,
+        createdAt: p.deployment.createdAt,
+        commit: firstLine(p.commitMessage, 80),
+        error: firstLine(p.errorText),
+        url: p.sourceUrl,
       };
-      const log = input.logs?.[d.id];
+      const log = input.logs?.[p.deployment.id];
       if (log && 'error' in log) out.logError = log.error;
       else if (log) {
         out.logTail = log.tail;
@@ -607,7 +627,7 @@ export function buildReport(inputs: ReportInputs): ReportResponse {
   };
   const digested: Digested = {
     monitor: digestOr(inputs.monitor, (d) => digestMonitor(d, ctx)),
-    deploys: digestOr(inputs.deploys, digestDeploys),
+    deploys: digestOr(inputs.deploys, (d) => digestDeploys(d, inputs.monitor.ok ? inputs.monitor.data.problems : null)),
     integrations: digestOr(inputs.integrations, digestIntegrations),
     errors: digestOr(inputs.errors, digestErrors),
     runtimeErrors: digestOr(inputs.runtimeErrors, digestRuntimeErrors),

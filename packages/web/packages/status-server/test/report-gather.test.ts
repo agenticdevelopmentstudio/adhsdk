@@ -1,5 +1,6 @@
 import { HTTPException } from "hono/http-exception";
 import { describe, expect, it, vi } from "vitest";
+import type { Problem } from "../src/board";
 import type { LiveDeploymentDTO, LiveSnapshot } from "../src/monitor/live-types";
 import {
   gatherReport,
@@ -72,6 +73,39 @@ function failed(id: string, createdAt: string): LiveDeploymentDTO {
     phaseConfirmedAt: createdAt,
     effectiveStatus: "failed",
   } as LiveDeploymentDTO;
+}
+
+/** The board's failed deploy problem for `failed(id, createdAt)`'s row. */
+function failedProblem(id: string, createdAt: string): Problem {
+  return {
+    target: `vercel|p-${id}|`,
+    source: "vercel",
+    name: id,
+    environment: "production",
+    severity: "major",
+    state: "failed",
+    statusCode: null,
+    detail: null,
+    sourceUrl: null,
+    liveUrl: null,
+    commitHash: null,
+    commitMessage: null,
+    commitRepo: null,
+    branch: "main",
+    errorText: "boom",
+    since: createdAt,
+    deployment: { id, createdAt },
+  };
+}
+
+/** A monitor read whose board holds these problems. */
+function monitorWith(problems: Problem[]): ReportSources["monitor"] {
+  return async () => ({
+    snapshot: { generatedAt: "x", overall: "healthy", services: [], openIssues: [] },
+    problems,
+    lastCycleAt: "2026-11-06T11:59:00Z",
+    stale: false,
+  });
 }
 
 const LIVE: LiveSnapshot = {
@@ -222,12 +256,14 @@ describe("gatherReport", () => {
   });
 
   it("logs=1 attaches the log tail of at most five failing deploys, newest first", async () => {
-    const deployments = Array.from({ length: 7 }, (_, i) => failed(`d${i}`, `2026-11-06T0${i}:00:00Z`));
+    const problems = Array.from({ length: 7 }, (_, i) => failedProblem(`d${i}`, `2026-11-06T0${i}:00:00.000Z`));
     const deployLog = vi.fn(async (id: string) =>
       id === "d6" ? { error: "no build log for vercel (or no token)" } : logTail(Array.from({ length: 60 }, (_, n) => `${id} ${n}`).join("\n")),
     );
-    const report = await gatherReport(sources({ live: async () => ({ ...LIVE, deployments }), deployLog }), params({ logs: true }), NOW);
+    // The feed holds none of them: the logs follow the board, not the feed.
+    const report = await gatherReport(sources({ monitor: monitorWith(problems), deployLog }), params({ logs: true }), NOW);
     expect(deployLog).toHaveBeenCalledTimes(LOG_DEPLOY_CAP);
+    expect(deployLog.mock.calls.map(([id]) => id)).toEqual(["d6", "d5", "d4", "d3", "d2"]);
     const failing = report.sections.deploys!.failing;
     expect(failing.map((d) => d.id)).toEqual(["d6", "d5", "d4", "d3", "d2", "d1", "d0"]);
     expect(failing[0]).toMatchObject({ logError: "no build log for vercel (or no token)" });
@@ -240,14 +276,22 @@ describe("gatherReport", () => {
 
   it("without logs no build log is read", async () => {
     const deployLog = vi.fn(async () => ({ error: "x" }));
-    await gatherReport(sources({ live: async () => ({ ...LIVE, deployments: [failed("a", "2026-11-06T01:00:00Z")] }), deployLog }), params(), NOW);
+    await gatherReport(
+      sources({
+        monitor: monitorWith([failedProblem("a", "2026-11-06T01:00:00Z")]),
+        live: async () => ({ ...LIVE, deployments: [failed("a", "2026-11-06T01:00:00Z")] }),
+        deployLog,
+      }),
+      params(),
+      NOW,
+    );
     expect(deployLog).not.toHaveBeenCalled();
   });
 
   it("a log read that throws becomes that deploy's logError", async () => {
     const report = await gatherReport(
       sources({
-        live: async () => ({ ...LIVE, deployments: [failed("a", "2026-11-06T01:00:00Z")] }),
+        monitor: monitorWith([failedProblem("a", "2026-11-06T01:00:00Z")]),
         deployLog: async () => {
           throw new Error("socket hang up");
         },

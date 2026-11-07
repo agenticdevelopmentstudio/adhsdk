@@ -349,6 +349,8 @@ describe("deployProblems — a build in flight is not a verdict", () => {
     // rather than the retry's. Anything else re-opens it in the ledger.
     expect(retrying).toEqual(alone);
     expect(retrying[0].commitHash).toBe("bad0bad");
+    // And it names the failed build, not the retry, as the deployment it judged.
+    expect(retrying[0].deployment).toEqual({ id: failed.deploymentId, createdAt: new Date(failed.createdAtMs).toISOString() });
   });
 
   it("the retry SUCCEEDING is what clears it — the concluded row supersedes the failure", () => {
@@ -390,6 +392,14 @@ describe("deployProblems — a build in flight is not a verdict", () => {
     expect(p[0]!.state).toBe("stuck");
     expect(p[0]!.branch).toBe("staging");
     expect(p[0]!.errorText).toBeNull();
+  });
+
+  it("a deploy problem names the deployment it judged: the failure, or the wedged retry", () => {
+    const wedged = retry({ createdAtMs: NOW - STUCK_DEPLOY_MS - 1 });
+    const [stuck] = deployProblems(facts({ deploys: [failed], inFlightDeploys: [wedged] }), NOW);
+    expect(stuck!.deployment).toEqual({ id: wedged.deploymentId, createdAt: new Date(wedged.createdAtMs).toISOString() });
+    const [failing] = deployProblems(facts({ deploys: [failed] }), NOW);
+    expect(failing!.deployment!.id).toBe(failed.deploymentId);
   });
 
   it("an in-flight row OLDER than the verdict is a corpse and decides nothing", () => {
