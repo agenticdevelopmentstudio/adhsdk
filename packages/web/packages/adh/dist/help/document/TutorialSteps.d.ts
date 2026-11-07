@@ -5,7 +5,7 @@
  * the first time. A step made of several actions lists them as sub-steps, each with an indented
  * box of its own: ticking the step ticks them all, and ticking the last of them ticks the step and
  * moves on. Progress is kept in this browser's localStorage per tutorial, so a reader who
- * comes back finds their place.
+ * comes back finds their place, and a tick in one tab shows in another.
  *
  * Its own tsup entry, imported by package path from the server DocumentDetail, so its
  * 'use client' marks this module only.
