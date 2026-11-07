@@ -13,6 +13,7 @@ export function TermBlock({
   term,
   href,
   anchor = false,
+  arrived = false,
   children,
 }: {
   term: { id: string; titleHtml: string; html: readonly string[] };
@@ -20,6 +21,8 @@ export function TermBlock({
   href?: string;
   /** Whether the block carries the term's id, so `#<term id>` scrolls to it. */
   anchor?: boolean;
+  /** Whether a link just arrived at this term, which outlines it. */
+  arrived?: boolean;
   /** Anything to show under the definition, such as the tutorials that use the term. */
   children?: ReactNode;
 }) {
@@ -27,6 +30,7 @@ export function TermBlock({
   return (
     <div
       id={anchor ? term.id : undefined}
+      data-arrived={arrived || undefined}
       className="doc-term scroll-mt-6 flex flex-col gap-2 rounded-md border border-apt-border bg-apt-surface px-4 py-3.5"
     >
       <dt className="text-[1.1rem] font-[650] leading-snug text-apt-gold">
