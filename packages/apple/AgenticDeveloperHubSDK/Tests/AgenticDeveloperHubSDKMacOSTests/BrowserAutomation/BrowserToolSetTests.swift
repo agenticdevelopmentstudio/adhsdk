@@ -10,6 +10,7 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
     var beside: [String: String] = [:]      // caller pane id -> browser pane id
     var lastUsed: String?
     var opened: [String?] = []
+    var openedEngines: [BrowserEngineKind] = []
     var openFails = false
     let pages: [String: OffscreenWebView]
 
@@ -19,11 +20,12 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
     func browserPane(id: String) -> BrowserPaneHandle? { panes.first { $0.id == id } }
     func browserPane(besidePane paneID: String) -> BrowserPaneHandle? { beside[paneID].flatMap(browserPane(id:)) }
     func lastUsedBrowserPane() -> BrowserPaneHandle? { lastUsed.flatMap(browserPane(id:)) }
-    func openBrowserPane(besidePane paneID: String?) throws -> BrowserPaneHandle {
+    func openBrowserPane(besidePane paneID: String?, engine: BrowserEngineKind) throws -> BrowserPaneHandle {
         opened.append(paneID)
+        openedEngines.append(engine)
         if openFails { throw BrowserAutomationError.openRefused }
         let page = OffscreenWebView()
-        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))
+        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), engine: engine)
         panes.append(handle)
         return handle
     }
@@ -73,6 +75,7 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(rows.map { $0["id"] as? String }, ["A", "B"])
         XCTAssertEqual(rows.map { $0["title"] as? String }, ["Alpha", "Beta"])
         XCTAssertEqual(rows.map { $0["is_default"] as? Bool }, [false, true])
+        XCTAssertEqual(rows.map { $0["engine"] as? String }, ["safari", "safari"])
     }
 
     func testDefaultPaneIsBesideCallerThenLastUsedThenFirst() async {
@@ -110,7 +113,26 @@ final class BrowserToolSetTests: XCTestCase {
         let reply = await call("browser_open", ["url": "about:blank"], caller: "term-1")
         XCTAssertFalse(reply.isError, reply.content)
         XCTAssertEqual(directory.opened, ["term-1"])
+        XCTAssertEqual(directory.openedEngines, [.safari])
         XCTAssertTrue(reply.content.contains("new-2"))
+    }
+
+    /// Chrome is one argument away and otherwise the same open: the engine
+    /// is the only difference a model sees, and browser_list reports it.
+    func testOpenTakesTheEngine() async throws {
+        let reply = await call("browser_open", ["url": "about:blank", "engine": "chrome"], caller: "term-1")
+        XCTAssertFalse(reply.isError, reply.content)
+        XCTAssertEqual(directory.openedEngines, [.chrome])
+        let list = await call("browser_list")
+        let rows = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(list.content.utf8)) as? [[String: Any]])
+        XCTAssertEqual(rows.last?["engine"] as? String, "chrome")
+    }
+
+    func testOpenRefusesAnUnknownEngine() async {
+        let reply = await call("browser_open", ["url": "about:blank", "engine": "gecko"])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "browser_open engine must be safari or chrome, not gecko")
+        XCTAssertTrue(directory.opened.isEmpty)
     }
 
     /// The URL is optional: with none given the pane opens on the Home Page

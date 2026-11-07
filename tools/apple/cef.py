@@ -17,10 +17,21 @@ every later build only checks stamps.
         source and cmake is not assumed), and stage `DIR/include/...` and a
         `DIR/lib/libcef_dll_wrapper.a` holding every requested architecture.
         A target compiles against `DIR` (`#include "include/cef_app.h"`).
-    cef.py embed   --frameworks DIR --archs "$ARCHS" [--sign IDENTITY]
+    cef.py embed   --frameworks DIR --state DIR --archs "$ARCHS"
+                   --helper-name NAME --bundle-id ID [--sign IDENTITY]
         Copy `Chromium Embedded Framework.framework` into an app's
-        Frameworks directory (one architecture copied, two merged with lipo)
-        and sign it when an identity is given.
+        Frameworks directory (one architecture copied, two merged with lipo),
+        compile `Chromium/Helper/ChromiumHelperMain.mm` once per architecture,
+        and build the five helper apps Chromium starts its subprocesses from
+        beside it: `NAME.app` and `NAME (GPU|Renderer|Plugin|Alerts).app`,
+        identified `ID.helper[.gpu|.renderer|.plugin|.alerts]`. Everything is
+        signed, inside out, when an identity is given; a real identity also
+        gets the hardened runtime and each helper the entitlements Chromium's
+        process needs. Its stamps and work directories go in `--state`, never
+        in the bundle: codesign refuses an app whose Frameworks directory holds
+        anything that is not signed code. Give it a directory on the same
+        volume as the bundle (`$DERIVED_FILE_DIR/CEF`), so a finished copy is
+        moved into place in one rename.
     cef.py version
         Print the pinned version.
 
@@ -38,6 +49,7 @@ import filecmp
 import hashlib
 import json
 import os
+import plistlib
 import re
 import shutil
 import subprocess
@@ -234,7 +246,9 @@ def stage(dest: Path, archs: list[str]) -> None:
         merged.unlink()
     else:
         merged.replace(staged)
-    (dest / "VERSION").write_text(pin()["version"] + "\n")
+    # Not "VERSION": `dest` is on the header search path, and on a
+    # case-insensitive disk that file is what `#include <version>` finds.
+    (dest / "cef-version.txt").write_text(pin()["version"] + "\n")
 
 
 def is_macho(path: Path) -> bool:
@@ -285,16 +299,26 @@ def merge_frameworks(sources: list[Path], dest: Path) -> None:
                 shutil.copy2(path, target)
 
 
-def embed(frameworks_dir: Path, archs: list[str], identity: str | None) -> None:
+def embed(frameworks_dir: Path, state_dir: Path, archs: list[str], identity: str | None,
+          helper_name: str, bundle_id: str) -> None:
+    state_dir.mkdir(parents=True, exist_ok=True)
+    embed_framework(frameworks_dir, state_dir, archs, identity)
+    embed_helpers(frameworks_dir, state_dir, archs, identity, helper_name, bundle_id)
+
+
+def embed_framework(frameworks_dir: Path, state_dir: Path, archs: list[str],
+                    identity: str | None) -> None:
     sources = [fetch_distribution(arch) / "Release" / FRAMEWORK for arch in archs]
     version = pin()["version"]
     target = frameworks_dir / FRAMEWORK
-    stamp = frameworks_dir / f".{FRAMEWORK}.stamp"
-    wanted = json.dumps({"version": version, "archs": archs, "identity": identity or ""})
+    stamp = state_dir / f"{FRAMEWORK}.stamp"
+    wanted = json.dumps({"version": version, "archs": archs, "identity": identity or "",
+                         "target": str(target), "layout": "versioned"})
     if target.is_dir() and stamp.exists() and stamp.read_text() == wanted:
         return
     frameworks_dir.mkdir(parents=True, exist_ok=True)
-    building = frameworks_dir / f".{FRAMEWORK}.building"
+    stamp.unlink(missing_ok=True)
+    building = state_dir / f"{FRAMEWORK}.building"
     if building.exists():
         shutil.rmtree(building)
     if len(sources) == 1:
@@ -302,9 +326,10 @@ def embed(frameworks_dir: Path, archs: list[str], identity: str | None) -> None:
     else:
         building.mkdir()
         merge_frameworks(sources, building)
+    make_versioned(building)
     if identity:
         # Inside out: the bundled dylibs first, then the framework itself.
-        for dylib in sorted((building / "Libraries").glob("*.dylib")):
+        for dylib in sorted((building / "Versions" / "A" / "Libraries").glob("*.dylib")):
             codesign(dylib, identity)
         codesign(building, identity)
     if target.exists():
@@ -313,10 +338,162 @@ def embed(frameworks_dir: Path, archs: list[str], identity: str | None) -> None:
     stamp.write_text(wanted)
 
 
-def codesign(path: Path, identity: str) -> None:
-    command = ["codesign", "--force", "--sign", identity, "--options", "runtime"]
+def make_versioned(framework: Path) -> None:
+    """Turn CEF's flat framework (binary, `Libraries/` and `Resources/` at the
+    top, `Info.plist` in `Resources/`) into the versioned layout every macOS
+    framework has: everything in `Versions/A`, and symlinks at the top through
+    `Versions/Current`. Xcode's product validation refuses the flat shape,
+    since a shallow bundle keeps its Info.plist at the top, and codesign seals
+    a versioned one properly. Electron ships Chromium's framework the same way.
+    Nothing loads it by anything but the top-level path, which the symlinks
+    keep: `cef_load_library` and the helper's `CefScopedLibraryLoader` both
+    open `<framework>/Chromium Embedded Framework`."""
+    stale_signature = framework / "_CodeSignature"
+    if stale_signature.exists():
+        shutil.rmtree(stale_signature)
+    version = framework / "Versions" / "A"
+    entries = sorted(entry.name for entry in framework.iterdir() if entry.name != "Versions")
+    version.mkdir(parents=True)
+    for name in entries:
+        (framework / name).rename(version / name)
+    (framework / "Versions" / "Current").symlink_to("A")
+    for name in entries:
+        (framework / name).symlink_to(f"Versions/Current/{name}")
+
+
+HELPER_SOURCE = TOOLKIT / "packages/apple/AgenticDeveloperHubSDK/Chromium/Helper/ChromiumHelperMain.mm"
+# Bumped when the helper's compile or link flags change.
+HELPER_RECIPE = "1"
+HELPER_COMPILE_FLAGS = [
+    "-x", "objective-c++", "-D__STDC_CONSTANT_MACROS", "-D__STDC_FORMAT_MACROS",
+    "-DNDEBUG", "-DCEF_USE_SANDBOX", "-O2", "-mmacosx-version-min=13.0",
+    "-fno-strict-aliasing", "-fstack-protector", "-funwind-tables", "-fvisibility=hidden",
+    "-fno-exceptions", "-fno-rtti", "-fno-threadsafe-statics", "-fobjc-call-cxx-cdtors",
+    "-fvisibility-inlines-hidden", "-std=c++20",
+]
+# CEF_STANDARD_LIBS in cmake/cef_variables.cmake.
+HELPER_LINK_FLAGS = ["-lpthread", "-framework", "AppKit", "-framework", "Cocoa", "-framework", "IOSurface"]
+# (bundle name suffix, bundle identifier suffix), as CEF_HELPER_APP_SUFFIXES
+# lists them. Chromium finds each variant by appending the name suffix to the
+# base helper's name, so these strings are a contract with Chromium.
+HELPER_VARIANTS = [
+    ("", ""),
+    (" (Alerts)", ".alerts"),
+    (" (GPU)", ".gpu"),
+    (" (Plugin)", ".plugin"),
+    (" (Renderer)", ".renderer"),
+]
+# What each helper needs under the hardened runtime: V8 JITs in every process,
+# and the GPU and plugin processes load code Chromium did not sign.
+HELPER_ENTITLEMENTS = {
+    "": ["com.apple.security.cs.allow-jit"],
+    ".alerts": ["com.apple.security.cs.allow-jit"],
+    ".renderer": ["com.apple.security.cs.allow-jit"],
+    ".gpu": ["com.apple.security.cs.allow-jit",
+             "com.apple.security.cs.allow-unsigned-executable-memory",
+             "com.apple.security.cs.disable-library-validation"],
+    ".plugin": ["com.apple.security.cs.allow-jit",
+                "com.apple.security.cs.allow-unsigned-executable-memory",
+                "com.apple.security.cs.disable-library-validation"],
+}
+
+
+def build_helper_executable(arch: str) -> Path:
+    """The helper executable for `arch`, compiled once per pinned version,
+    recipe and source."""
+    version = pin()["version"]
+    dist_root = fetch_distribution(arch)
+    wrapper = build_wrapper(arch)
+    out = arch_dir(version, arch) / "helper"
+    executable = out / "ChromiumHelper"
+    stamp = out / "helper.complete"
+    wanted = f"{HELPER_RECIPE} {sha1(HELPER_SOURCE)}"
+    if executable.exists() and stamp.exists() and stamp.read_text().strip() == wanted:
+        return executable
+    out.mkdir(parents=True, exist_ok=True)
+    print(f"cef.py: compiling the Chromium helper ({arch})", file=sys.stderr)
+    command = ["xcrun", "clang++", "-arch", arch, "-isysroot", sdk_path(), "-I", str(dist_root),
+               *HELPER_COMPILE_FLAGS, str(HELPER_SOURCE),
+               # `-x` applies to every later input; the library is not source.
+               "-x", "none", str(wrapper), *HELPER_LINK_FLAGS,
+               "-o", str(executable)]
+    done = subprocess.run(command, capture_output=True, text=True)
+    if done.returncode != 0:
+        fail(f"helper compile failed:\n{done.stderr}")
+    stamp.write_text(wanted + "\n")
+    return executable
+
+
+def helper_info(executable_name: str, identifier: str) -> dict:
+    return {
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleDisplayName": executable_name,
+        "CFBundleExecutable": executable_name,
+        "CFBundleIdentifier": identifier,
+        "CFBundleInfoDictionaryVersion": "6.0",
+        "CFBundleName": executable_name,
+        "CFBundlePackageType": "APPL",
+        "CFBundleShortVersionString": pin()["version"].split("+")[0],
+        "CFBundleVersion": pin()["version"].split("+")[0],
+        "LSEnvironment": {"MallocNanoZone": "0"},
+        "LSFileQuarantineEnabled": True,
+        "LSMinimumSystemVersion": "13.0",
+        "LSUIElement": "1",
+        "NSSupportsAutomaticGraphicsSwitching": True,
+    }
+
+
+def embed_helpers(frameworks_dir: Path, state_dir: Path, archs: list[str], identity: str | None,
+                  helper_name: str, bundle_id: str) -> None:
+    executables = [build_helper_executable(arch) for arch in archs]
+    stamp = state_dir / "Chromium Helpers.stamp"
+    wanted = json.dumps({
+        "recipe": HELPER_RECIPE, "version": pin()["version"], "archs": archs,
+        "identity": identity or "", "name": helper_name, "bundle_id": bundle_id,
+        "executables": [sha1(e) for e in executables], "target": str(frameworks_dir),
+    })
+    bundles = [frameworks_dir / f"{helper_name}{suffix}.app" for suffix, _ in HELPER_VARIANTS]
+    if stamp.exists() and stamp.read_text() == wanted and all(b.is_dir() for b in bundles):
+        return
+    frameworks_dir.mkdir(parents=True, exist_ok=True)
+    stamp.unlink(missing_ok=True)
+    work = Path(tempfile.mkdtemp(dir=state_dir, prefix="helpers."))
+    try:
+        merged = work / "ChromiumHelper"
+        if len(executables) == 1:
+            shutil.copy2(executables[0], merged)
+        else:
+            subprocess.run(["xcrun", "lipo", "-create", *map(str, executables), "-output", str(merged)],
+                           check=True)
+        for (suffix, id_suffix), bundle in zip(HELPER_VARIANTS, bundles):
+            name = f"{helper_name}{suffix}"
+            building = work / f"{name}.app"
+            macos = building / "Contents" / "MacOS"
+            macos.mkdir(parents=True)
+            shutil.copy2(merged, macos / name)
+            with (building / "Contents" / "Info.plist").open("wb") as handle:
+                plistlib.dump(helper_info(name, f"{bundle_id}.helper{id_suffix}"), handle)
+            if identity:
+                entitlements = work / f"entitlements{id_suffix or '.base'}.plist"
+                with entitlements.open("wb") as handle:
+                    plistlib.dump({key: True for key in HELPER_ENTITLEMENTS[id_suffix]}, handle)
+                codesign(building, identity, entitlements)
+            if bundle.exists():
+                shutil.rmtree(bundle)
+            building.replace(bundle)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    stamp.write_text(wanted)
+
+
+def codesign(path: Path, identity: str, entitlements: Path | None = None) -> None:
+    """Ad hoc (`-`) signs plainly, as Xcode signs a Debug build; a real
+    identity adds the hardened runtime, which notarization requires."""
+    command = ["codesign", "--force", "--sign", identity]
     if identity != "-":
-        command.append("--timestamp=none")
+        command += ["--options", "runtime", "--timestamp=none"]
+    if entitlements is not None:
+        command += ["--entitlements", str(entitlements)]
     done = subprocess.run([*command, str(path)], capture_output=True, text=True)
     if done.returncode != 0:
         fail(f"codesign {path.name} failed: {done.stderr.strip()}")
@@ -332,8 +509,11 @@ def main(argv: list[str] | None = None) -> int:
     stage_parser.add_argument("--archs", required=True)
     embed_parser = commands.add_parser("embed")
     embed_parser.add_argument("--frameworks", required=True, type=Path)
+    embed_parser.add_argument("--state", required=True, type=Path)
     embed_parser.add_argument("--archs", required=True)
     embed_parser.add_argument("--sign")
+    embed_parser.add_argument("--helper-name", required=True)
+    embed_parser.add_argument("--bundle-id", required=True)
     commands.add_parser("version")
     args = parser.parse_args(argv)
     if args.command == "version":
@@ -344,7 +524,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "stage":
         stage(args.dest, normalize_archs(args.archs))
     elif args.command == "embed":
-        embed(args.frameworks, normalize_archs(args.archs), args.sign or None)
+        embed(args.frameworks, args.state, normalize_archs(args.archs), args.sign or None,
+              args.helper_name, args.bundle_id)
     return 0
 
 

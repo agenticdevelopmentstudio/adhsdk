@@ -68,7 +68,8 @@ open class WebBrowserPaneViewController: NSViewController {
     let settings: SettingsStore
     private let history: BrowserHistoryStore?
     private let fallbackHomeURL: URL
-    private let engineName: String
+    /// Which engine draws the page; what the model tools report and open by.
+    public let engineKind: BrowserEngineKind
     private let minimizedSymbol: String
     private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
@@ -105,7 +106,8 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// - Parameters:
     ///   - engine: What renders the page. The pane becomes its delegate.
-    ///   - engineName: What the pane calls itself while it shows nothing.
+    ///   - engineKind: Which engine `engine` is, for the model tools, and the
+    ///     name the pane calls itself while it shows nothing.
     ///   - minimizedSymbol: The SF Symbol a minimized pane shows.
     ///   - store: Where the pane remembers its address between launches.
     ///   - settings: The browser settings the pane honours.
@@ -114,7 +116,7 @@ open class WebBrowserPaneViewController: NSViewController {
     ///     Home Page setting is blank.
     public init(
         engine: BrowserEngine,
-        engineName: String,
+        engineKind: BrowserEngineKind,
         minimizedSymbol: String,
         store: PaneStateStore,
         settings: SettingsStore,
@@ -122,7 +124,7 @@ open class WebBrowserPaneViewController: NSViewController {
         homeURL: URL
     ) {
         self.engine = engine
-        self.engineName = engineName
+        self.engineKind = engineKind
         self.minimizedSymbol = minimizedSymbol
         self.store = store
         self.settings = settings
@@ -465,7 +467,7 @@ extension WebBrowserPaneViewController: PaneTitleProviding {
     public var paneTitle: String {
         if let title = engine.title, !title.isEmpty { return title }
         if let host = engine.url?.host, !host.isEmpty { return host }
-        return engineName
+        return engineKind.displayName
     }
 }
 

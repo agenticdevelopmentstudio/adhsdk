@@ -8,9 +8,14 @@ public struct BrowserPaneHandle {
     public let project: String
     public let tab: String
     public let automation: BrowserAutomation
+    /// Which engine draws the pane. Every tool drives either the same way;
+    /// `browser_list` reports it so a model can tell the panes apart.
+    public let engine: BrowserEngineKind
 
-    public init(id: String, project: String, tab: String, automation: BrowserAutomation) {
+    public init(id: String, project: String, tab: String, automation: BrowserAutomation,
+                engine: BrowserEngineKind = .safari) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
+        self.engine = engine
     }
 
     public var title: String { automation.currentTitle }
@@ -28,7 +33,7 @@ public protocol BrowserPaneDirectory: AnyObject {
     func browserPane(besidePane paneID: String) -> BrowserPaneHandle?
     /// The Browser pane most recently active, if still open.
     func lastUsedBrowserPane() -> BrowserPaneHandle?
-    /// Opens a Browser pane beside the caller's pane (or in the front
-    /// window when nil / unknown) and returns it.
-    func openBrowserPane(besidePane paneID: String?) throws -> BrowserPaneHandle
+    /// Opens a Browser pane on `engine` beside the caller's pane (or in the
+    /// front window when nil / unknown) and returns it.
+    func openBrowserPane(besidePane paneID: String?, engine: BrowserEngineKind) throws -> BrowserPaneHandle
 }

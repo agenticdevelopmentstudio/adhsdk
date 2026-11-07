@@ -7,6 +7,11 @@ public struct BrowserDialog: Sendable, Equatable {
     public enum Kind: String, Sendable { case alert, confirm, prompt }
     public var kind: Kind
     public var message: String
+
+    public init(kind: Kind, message: String) {
+        self.kind = kind
+        self.message = message
+    }
 }
 
 /// What changed because of one action.
