@@ -35,7 +35,7 @@ export interface DocSection {
 }
 /** One action within a step: an item of the step's numbered list. */
 export interface Substep {
-    /** `<step id>/<n>`, n counting from 1. */
+    /** `<step id>/<slug of the item's first words>`, deduped within the step. */
     id: string;
     /** The item's rendered HTML. */
     html: string;
