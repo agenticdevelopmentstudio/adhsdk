@@ -1,7 +1,7 @@
 import Foundation
 
 /// The snooze choices a notice offers.
-public enum SnoozeOption: Sendable, Equatable, CaseIterable {
+public enum SnoozeOption: String, Codable, Sendable, Equatable, CaseIterable {
     case fiveMinutes
     case fifteenMinutes
     case oneHour

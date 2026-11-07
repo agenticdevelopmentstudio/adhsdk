@@ -2,16 +2,20 @@ import AppKit
 import AgenticDeveloperHubSDKMacOS
 import AgenticDeveloperHubSDKNotifications
 
-/// The snooze choices as a menu, one item per `SnoozeOption` in its declared
-/// order. Each item's target is retained by the item itself (as its
+/// The snooze choices as a menu, one item per offered `SnoozeOption` in its
+/// declared order. Each item's target is retained by the item itself (as its
 /// `representedObject`), since `NSMenuItem.target` is weak.
 @MainActor
 public enum SnoozeMenu {
 
-    public static func make(_ onSelect: @escaping @MainActor (SnoozeOption) -> Void) -> NSMenu {
+    /// `options` is what the notice's style set offers; the rest are left out.
+    public static func make(
+        options: [SnoozeOption] = SnoozeOption.allCases,
+        _ onSelect: @escaping @MainActor (SnoozeOption) -> Void
+    ) -> NSMenu {
         let menu = NSMenu(title: "Snooze")
         menu.autoenablesItems = false
-        for option in SnoozeOption.allCases {
+        for option in SnoozeOption.allCases where options.contains(option) {
             let target = ClosureMenuItemTarget(action: { onSelect(option) })
             let item = NSMenuItem(
                 title: option.title,

@@ -35,7 +35,7 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
             snooze: { recorder.snoozes.append($0) }, archive: {}, close: { recorder.closes.append(id) })
     }
 
-    private let profile = NoticeRoutingRules.defaults.profiles[.emergency]!
+    private let profile = NoticeRoutingRules.defaults.styles[.emergency]!.items[0]
 
     // MARK: Full screen
 
@@ -82,8 +82,8 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
     func testRemovingTheKeyFullScreenHandsKeyToTheNextOne() throws {
         let windowing = RecordingWindowing()
         let presenter = fullScreen(windowing) { [testScreen(1)] }
-        presenter.show(Notice(id: "a", source: "pager", title: "a"), profile: profile, actions: .inert)
-        presenter.show(Notice(id: "b", source: "pager", title: "b"), profile: profile, actions: .inert)
+        presenter.show(Notice(id: "a", source: "pager", title: "a"), profiles: [profile], actions: .inert)
+        presenter.show(Notice(id: "b", source: "pager", title: "b"), profiles: [profile], actions: .inert)
         let panelA = try XCTUnwrap(presenter.panels(for: "a").first)
         let panelB = try XCTUnwrap(presenter.panels(for: "b").first)
         XCTAssertTrue(windowing.keyed.last === panelB, "the newest takes the keyboard")
@@ -103,7 +103,7 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         let windowing = RecordingWindowing()
         var screens = [testScreen(1)]
         let presenter = fullScreen(windowing) { screens }
-        presenter.show(Notice(id: "a", source: "pager", title: "a"), profile: profile, actions: .inert)
+        presenter.show(Notice(id: "a", source: "pager", title: "a"), profiles: [profile], actions: .inert)
         let panel = try XCTUnwrap(presenter.panels(for: "a").first)
         XCTAssertEqual(panel.frame, screens[0].frame)
         screens = [testScreen(1, width: 2560)]
@@ -136,7 +136,7 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         let presenter = SystemNotificationPresenter(poster: poster, playsSound: { false })
         let notice = Notice(
             id: "n1", source: "ci", title: "Build failed", body: "3 tests red", category: "builds")
-        presenter.show(notice, profile: profile, actions: .inert)
+        presenter.show(notice, profiles: [profile], actions: .inert)
 
         XCTAssertEqual(poster.authorizationRequests, 1)
         let request = try XCTUnwrap(poster.posted.first)
@@ -147,7 +147,8 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         XCTAssertNil(request.content.sound)
         XCTAssertEqual(presenter.shownIDs, ["n1"])
 
-        presenter.show(Notice(id: "n2", source: "ci", title: "x", subtitle: "own"), profile: profile, actions: .inert)
+        presenter.show(
+            Notice(id: "n2", source: "ci", title: "x", subtitle: "own"), profiles: [profile], actions: .inert)
         XCTAssertEqual(poster.posted.last?.content.subtitle, "own", "a notice's own subtitle wins")
         XCTAssertEqual(poster.authorizationRequests, 1, "authorization is asked once")
     }
@@ -155,11 +156,11 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
     func testSystemPresenterRemoveAndReplace() {
         let poster = FakePoster()
         let presenter = SystemNotificationPresenter(poster: poster, playsSound: { true })
-        presenter.show(Notice(id: "a", source: "ci", title: "running"), profile: profile, actions: .inert)
+        presenter.show(Notice(id: "a", source: "ci", title: "running"), profiles: [profile], actions: .inert)
         XCTAssertNotNil(poster.posted.last?.content.sound)
 
         presenter.replace(
-            oldID: "a", with: Notice(id: "b", source: "ci", title: "passed"), profile: profile, actions: .inert)
+            oldID: "a", with: Notice(id: "b", source: "ci", title: "passed"), profiles: [profile], actions: .inert)
         XCTAssertEqual(poster.removed, [["a"]])
         XCTAssertEqual(poster.posted.last?.identifier, "b")
         XCTAssertEqual(presenter.shownIDs, ["b"])
@@ -181,7 +182,7 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
     func testRemoveWithdrawsPendingAndDelivered() {
         let poster = FakePoster()
         let presenter = SystemNotificationPresenter(poster: poster, playsSound: { false })
-        presenter.show(Notice(id: "a", source: "ci", title: "x"), profile: profile, actions: .inert)
+        presenter.show(Notice(id: "a", source: "ci", title: "x"), profiles: [profile], actions: .inert)
         XCTAssertEqual(
             poster.posted.last?.content.categoryIdentifier, SystemNotificationPresenter.categoryIdentifier,
             "the category asks for the dismiss callback")
@@ -194,7 +195,7 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         let poster = FakePoster()
         let presenter = SystemNotificationPresenter(poster: poster, playsSound: { false })
         let recorder = Recorder()
-        presenter.show(Notice(id: "a", source: "ci", title: "x"), profile: profile, actions: actions(recorder))
+        presenter.show(Notice(id: "a", source: "ci", title: "x"), profiles: [profile], actions: actions(recorder))
         presenter.handleDismiss(identifier: "a")
         XCTAssertEqual(recorder.closes, ["a"], "a banner the user cleared leaves the newest-shown order")
         presenter.handleDismiss(identifier: "unknown")
@@ -205,7 +206,7 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         let poster = FakePoster()
         let presenter = SystemNotificationPresenter(poster: poster, playsSound: { false })
         let recorder = Recorder()
-        presenter.show(Notice(id: "a", source: "ci", title: "x"), profile: profile, actions: actions(recorder))
+        presenter.show(Notice(id: "a", source: "ci", title: "x"), profiles: [profile], actions: actions(recorder))
         presenter.handleTap(identifier: "a")
         XCTAssertEqual(recorder.acts, ["a"])
 
@@ -214,57 +215,55 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
     }
 }
 
-/// Finding 7: `replace` keeps a card in place only when the new profile puts
+/// Finding 7: `replace` keeps a card in place only when the rules still put
 /// it on the same screens.
 @MainActor
 final class CardStackReplaceTests: XCTestCase {
 
+    private var rules = NoticeRoutingRules.defaults
+
     // Fake display ids with no NSScreen: layout orders their panels out, so
     // nothing reaches the real screen.
     private func presenter() -> ToastPresenter {
-        let presenter = ToastPresenter(rules: { .defaults }, showHistory: {})
+        let presenter = ToastPresenter(rules: { [unowned self] in rules }, showHistory: {})
         presenter.displays = { selection in
             switch selection {
             case .main: [1]
-            case .cursor: [2]
             case .all: [1, 2]
             }
         }
         return presenter
     }
 
-    private func profile(_ screens: NoticeProfile.ScreenSelection) -> NoticeProfile {
-        NoticeProfile(
-            style: .toast, position: .topRight, screens: screens, layer: .floating,
-            autoDismiss: nil, forwardToSystem: false)
-    }
+    private let profiles = [NoticeProfile(style: .toast, position: .bottomRight)]
 
     private let actions = NoticeCardActions(
         act: {}, respond: { _, _ in }, snooze: nil, archive: nil, close: {})
 
     func testReplaceOntoOtherScreensMovesTheCard() {
+        rules.screens = .main
         let presenter = presenter()
-        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.main), actions: actions)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles, actions: actions)
         XCTAssertEqual(presenter.displayIDs(of: "a"), [1])
 
+        rules.screens = .all
         presenter.replace(
-            oldID: "a", with: Notice(id: "a", source: "ci", title: "a"), profile: profile(.cursor),
-            actions: actions)
+            oldID: "a", with: Notice(id: "a", source: "ci", title: "a"), profiles: profiles, actions: actions)
 
-        XCTAssertEqual(presenter.displayIDs(of: "a"), [2])
+        XCTAssertEqual(Set(presenter.displayIDs(of: "a")), [1, 2])
         XCTAssertEqual(presenter.shownIDs, ["a"])
         presenter.remove(id: "a")
     }
 
     func testReplaceOntoTheSameScreensStaysInPlace() {
+        rules.screens = .all
         let presenter = presenter()
-        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.all), actions: actions)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles, actions: actions)
         let before = presenter.panels(of: "a")
         XCTAssertEqual(before.count, 2)
 
         presenter.replace(
-            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profile: profile(.all),
-            actions: actions)
+            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profiles: profiles, actions: actions)
 
         XCTAssertEqual(Set(presenter.displayIDs(of: "b")), [1, 2])
         XCTAssertEqual(presenter.displayIDs(of: "a"), [])
@@ -273,21 +272,31 @@ final class CardStackReplaceTests: XCTestCase {
         presenter.remove(id: "b")
     }
 
-    func testReplaceKeepsACursorCardInPlaceWhenThePointerChangedDisplays() {
+    func testReplaceKeepsACardInPlaceWhenTheSameSelectionResolvesToOtherDisplays() {
+        rules.screens = .main
         let presenter = presenter()
-        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.cursor), actions: actions)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles, actions: actions)
         let before = presenter.panels(of: "a")
-        XCTAssertEqual(presenter.displayIDs(of: "a"), [2])
+        XCTAssertEqual(presenter.displayIDs(of: "a"), [1])
 
-        // The pointer moves to display 3; the selection is still `.cursor`.
+        // The main screen is now display 3; the selection is still `.main`.
         presenter.displays = { _ in [3] }
         presenter.replace(
-            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profile: profile(.cursor),
-            actions: actions)
+            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profiles: profiles, actions: actions)
 
         assertSamePanels(before, presenter.panels(of: "b"))
-        XCTAssertEqual(presenter.displayIDs(of: "b"), [2], "the card stays where it was shown")
+        XCTAssertEqual(presenter.displayIDs(of: "b"), [1], "the card stays where it was shown")
         presenter.remove(id: "b")
+    }
+
+    func testReplaceWithNoProfilesRemovesTheCard() {
+        let presenter = presenter()
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles, actions: actions)
+        presenter.replace(
+            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profiles: [], actions: actions)
+        XCTAssertTrue(presenter.shownIDs.isEmpty)
+        XCTAssertEqual(presenter.displayIDs(of: "a"), [])
+        XCTAssertEqual(presenter.displayIDs(of: "b"), [])
     }
 
     private func assertSamePanels(

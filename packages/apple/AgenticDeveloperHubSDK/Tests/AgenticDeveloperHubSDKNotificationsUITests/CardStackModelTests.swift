@@ -4,105 +4,105 @@ import AgenticDeveloperHubSDKNotifications
 
 final class CardStackModelTests: XCTestCase {
 
-    private let mainTopRight = CardStackModel.StackKey(displayID: 1, position: .topRight)
-    private let sideTopRight = CardStackModel.StackKey(displayID: 2, position: .topRight)
+    private let mainBottomRight = CardStackModel.StackKey(displayID: 1, position: .bottomRight)
+    private let sideBottomRight = CardStackModel.StackKey(displayID: 2, position: .bottomRight)
     private let mainCenter = CardStackModel.StackKey(displayID: 1, position: .center)
 
     func testInsertPutsNewestFirstPerKey() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("b", in: mainTopRight)
+        model.insert("a", in: mainBottomRight)
+        model.insert("b", in: mainBottomRight)
         model.insert("c", in: mainCenter)
-        XCTAssertEqual(model.ids(in: mainTopRight), ["b", "a"])
+        XCTAssertEqual(model.ids(in: mainBottomRight), ["b", "a"])
         XCTAssertEqual(model.ids(in: mainCenter), ["c"])
     }
 
     func testInsertingAnIDTwiceInOneKeyMovesItToTheFront() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("b", in: mainTopRight)
-        model.insert("a", in: mainTopRight)
-        XCTAssertEqual(model.ids(in: mainTopRight), ["a", "b"])
+        model.insert("a", in: mainBottomRight)
+        model.insert("b", in: mainBottomRight)
+        model.insert("a", in: mainBottomRight)
+        XCTAssertEqual(model.ids(in: mainBottomRight), ["a", "b"])
     }
 
     func testRemoveReportsEveryKeyItLeftAndDropsEmptyKeys() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("a", in: sideTopRight)
-        model.insert("b", in: sideTopRight)
-        XCTAssertEqual(model.remove("a"), [mainTopRight, sideTopRight])
-        XCTAssertEqual(model.ids(in: sideTopRight), ["b"])
-        XCTAssertFalse(model.keys.contains(mainTopRight))
+        model.insert("a", in: mainBottomRight)
+        model.insert("a", in: sideBottomRight)
+        model.insert("b", in: sideBottomRight)
+        XCTAssertEqual(model.remove("a"), [mainBottomRight, sideBottomRight])
+        XCTAssertEqual(model.ids(in: sideBottomRight), ["b"])
+        XCTAssertFalse(model.keys.contains(mainBottomRight))
         XCTAssertEqual(model.remove("missing"), [])
     }
 
     func testReplaceKeepsThePositionInEveryKey() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("b", in: mainTopRight)
-        model.insert("a", in: sideTopRight)
-        XCTAssertEqual(model.replace("a", with: "z"), [mainTopRight, sideTopRight])
-        XCTAssertEqual(model.ids(in: mainTopRight), ["b", "z"])
-        XCTAssertEqual(model.ids(in: sideTopRight), ["z"])
+        model.insert("a", in: mainBottomRight)
+        model.insert("b", in: mainBottomRight)
+        model.insert("a", in: sideBottomRight)
+        XCTAssertEqual(model.replace("a", with: "z"), [mainBottomRight, sideBottomRight])
+        XCTAssertEqual(model.ids(in: mainBottomRight), ["b", "z"])
+        XCTAssertEqual(model.ids(in: sideBottomRight), ["z"])
     }
 
     func testReplaceWithAnIDAlreadyStackedLeavesOneCopy() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("b", in: mainTopRight)
+        model.insert("a", in: mainBottomRight)
+        model.insert("b", in: mainBottomRight)
         model.replace("a", with: "b")
-        XCTAssertEqual(model.ids(in: mainTopRight), ["b"])
+        XCTAssertEqual(model.ids(in: mainBottomRight), ["b"])
     }
 
     func testKeysContainingAnID() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("a", in: sideTopRight)
+        model.insert("a", in: mainBottomRight)
+        model.insert("a", in: sideBottomRight)
         model.insert("b", in: mainCenter)
-        XCTAssertEqual(Set(model.keys(containing: "a")), [mainTopRight, sideTopRight])
+        XCTAssertEqual(Set(model.keys(containing: "a")), [mainBottomRight, sideBottomRight])
         XCTAssertEqual(model.keys(containing: "missing"), [])
     }
 
     func testSplitShowsTheNewestUpToTheLimitAndCountsTheRest() {
         var model = CardStackModel()
         for id in ["a", "b", "c", "d", "e", "f"] {
-            model.insert(id, in: mainTopRight)
+            model.insert(id, in: mainBottomRight)
         }
-        let split = model.split(mainTopRight, limit: 4)
+        let split = model.split(mainBottomRight, limit: 4)
         XCTAssertEqual(split.visible, ["f", "e", "d", "c"])
         XCTAssertEqual(split.hidden, ["b", "a"])
         XCTAssertEqual(split.pillCount, 2)
 
-        let roomy = model.split(mainTopRight, limit: 10)
+        let roomy = model.split(mainBottomRight, limit: 10)
         XCTAssertEqual(roomy.hidden, [])
         XCTAssertEqual(roomy.pillCount, 0)
     }
 
     func testSplitTreatsALimitBelowOneAsOne() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("b", in: mainTopRight)
-        XCTAssertEqual(model.split(mainTopRight, limit: 0).visible, ["b"])
-        XCTAssertEqual(model.split(sideTopRight, limit: 4).visible, [])
+        model.insert("a", in: mainBottomRight)
+        model.insert("b", in: mainBottomRight)
+        XCTAssertEqual(model.split(mainBottomRight, limit: 0).visible, ["b"])
+        XCTAssertEqual(model.split(sideBottomRight, limit: 4).visible, [])
     }
 
     func testMoveRehomesAnIDKeepingItsRecency() {
         var model = CardStackModel()
-        model.insert("old", in: sideTopRight)
-        model.insert("a", in: mainTopRight)
-        model.insert("new", in: sideTopRight)
-        model.move("old", from: sideTopRight, to: mainTopRight)
-        XCTAssertEqual(model.ids(in: mainTopRight), ["a", "old"])
-        XCTAssertEqual(model.ids(in: sideTopRight), ["new"])
+        model.insert("old", in: sideBottomRight)
+        model.insert("a", in: mainBottomRight)
+        model.insert("new", in: sideBottomRight)
+        model.move("old", from: sideBottomRight, to: mainBottomRight)
+        XCTAssertEqual(model.ids(in: mainBottomRight), ["a", "old"])
+        XCTAssertEqual(model.ids(in: sideBottomRight), ["new"])
     }
 
     func testMoveOntoAKeyThatAlreadyHoldsTheIDLeavesOneCopy() {
         var model = CardStackModel()
-        model.insert("a", in: mainTopRight)
-        model.insert("a", in: sideTopRight)
-        model.move("a", from: sideTopRight, to: mainTopRight)
-        XCTAssertEqual(model.ids(in: mainTopRight), ["a"])
-        XCTAssertEqual(model.keys(containing: "a"), [mainTopRight])
+        model.insert("a", in: mainBottomRight)
+        model.insert("a", in: sideBottomRight)
+        model.move("a", from: sideBottomRight, to: mainBottomRight)
+        XCTAssertEqual(model.ids(in: mainBottomRight), ["a"])
+        XCTAssertEqual(model.keys(containing: "a"), [mainBottomRight])
     }
 
     func testRekeyingForAVanishedDisplay() {

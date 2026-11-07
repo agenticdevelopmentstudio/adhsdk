@@ -17,7 +17,7 @@ final class NotificationOverridesSettingsPanel: ComposableSettings.SettingsPanel
     private let newOverrideSource = ThemedTextField()
     private let newOverrideCategory = ThemedTextField()
     private var newOverrideUrgency: Notice.Urgency?
-    private var newOverrideStyle: NoticeProfile.Style = .toast
+    private var newOverrideTarget: NoticeRoutingRules.Override.Target = .style(.fyi)
 
     init(store: SettingsStore) {
         self.controls = NoticeRulesControls(store: store)
@@ -54,11 +54,11 @@ final class NotificationOverridesSettingsPanel: ComposableSettings.SettingsPanel
         let urgencyPopup = controls.popup(
             urgencies, selected: nil, title: { $0.map(Styles.title(for:)) ?? "Any urgency" },
             onChange: { [weak self] urgency in self?.newOverrideUrgency = urgency })
+        let targets = Notice.Urgency.allCases.map(NoticeRoutingRules.Override.Target.style) + [.hide]
         let stylePopup = controls.popup(
-            NoticeProfile.Style.allCases, selected: .toast, title: Styles.styleTitle
-        ) { [weak self] style in
-            self?.newOverrideStyle = style
-        }
+            targets, selected: .style(.fyi),
+            title: { $0 == .hide ? Styles.targetTitle($0) : "Use " + Styles.targetTitle($0) },
+            onChange: { [weak self] target in self?.newOverrideTarget = target })
         let add = controls.button("Add") { [weak self] in self?.addOverride() }
         group.addSettingSubview(NSView.makeSettingsRow([
             newOverrideSource, newOverrideCategory, urgencyPopup, stylePopup, add
@@ -95,16 +95,14 @@ final class NotificationOverridesSettingsPanel: ComposableSettings.SettingsPanel
         let source = newOverrideSource.stringValue.trimmingCharacters(in: .whitespaces)
         let category = newOverrideCategory.stringValue.trimmingCharacters(in: .whitespaces)
         let urgency = newOverrideUrgency
-        let style = newOverrideStyle
+        let target = newOverrideTarget
         guard !source.isEmpty || !category.isEmpty || urgency != nil else { return }
         controls.mutate { rules in
-            var profile = Styles.baseProfile(for: urgency ?? .fyi, in: rules)
-            profile.style = style
             rules.overrides.append(.init(
                 source: source.isEmpty ? nil : source,
                 category: category.isEmpty ? nil : category,
                 urgency: urgency,
-                profile: profile))
+                target: target))
         }
         newOverrideSource.stringValue = ""
         newOverrideCategory.stringValue = ""

@@ -322,7 +322,7 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
 
     @objc private func snoozeClicked(_ sender: NSButton) {
         guard let snooze = actions.snooze else { return }
-        let menu = SnoozeMenu.make { option in snooze(option) }
+        let menu = SnoozeMenu.make(options: actions.snoozeOptions) { option in snooze(option) }
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 4), in: sender)
     }
 

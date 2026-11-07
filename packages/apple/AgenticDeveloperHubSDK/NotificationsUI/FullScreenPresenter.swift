@@ -73,13 +73,15 @@ public final class FullScreenPresenter: NoticePresenter {
 
     // MARK: NoticePresenter
 
-    public func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+    /// Draws `profiles[0]` only: one full screen per notice, on `rules().screens`.
+    public func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         if placements[notice.id] != nil {
             remove(id: notice.id)
         }
+        guard let profile = profiles.first else { return }
         let hideFromSharing = rules().hideFromScreenSharing
         var made: [Placement] = []
-        for screen in screens(profile.screens) {
+        for screen in screens(rules().screens) {
             let panel = Self.makePanel(frame: screen.frame, layer: profile.layer, hideFromSharing: hideFromSharing)
             let view = FullScreenNoticeView(notice: notice, actions: actions)
             panel.contentView = view
@@ -111,9 +113,10 @@ public final class FullScreenPresenter: NoticePresenter {
         }
     }
 
-    public func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
-        guard placements[oldID] != nil else {
-            show(notice, profile: profile, actions: actions)
+    public func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
+        guard placements[oldID] != nil, !profiles.isEmpty else {
+            remove(id: oldID)
+            show(notice, profiles: profiles, actions: actions)
             return
         }
         if oldID != notice.id {
