@@ -14,11 +14,11 @@ import AppKit
 public final class BrowserPaneFocus {
     public static let shared = BrowserPaneFocus()
 
-    public private(set) weak var lastFocused: BrowserPaneViewController?
+    public private(set) weak var lastFocused: WebBrowserPaneViewController?
 
     public init() {}
 
-    public func note(_ pane: BrowserPaneViewController) {
+    public func note(_ pane: WebBrowserPaneViewController) {
         lastFocused = pane
     }
 }

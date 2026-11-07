@@ -1,5 +1,6 @@
 // swiftlint:disable line_length identifier_name
 import AppKit
+import Combine
 import WebKit
 
 public struct BrowserDialog: Sendable, Equatable {
@@ -86,14 +87,15 @@ private final class Resumer<Value> {
     }
 }
 
-/// Drives one `WKWebView` on behalf of a model.
+/// Drives one page on behalf of a model, through whichever engine renders it.
 @MainActor
 public final class BrowserAutomation: NSObject {
     public static let defaultTimeout: TimeInterval = 10
     public static let maximumTimeout: TimeInterval = 60
     public static let maximumScreenshotSide: CGFloat = 1568
 
-    public let webView: WKWebView
+    /// The page being driven.
+    public let driver: BrowserPageDriver
     public let console: BrowserConsoleLog
 
     public private(set) var isActionInFlight = false
@@ -101,16 +103,15 @@ public final class BrowserAutomation: NSObject {
 
     private var driveDepth = 0
     private var pendingDialog: BrowserDialog?
-    private var loadObservation: NSKeyValueObservation?
+    private var loadObservation: AnyCancellable?
     private var navigationsStarted = 0
     private var navigationsFinished = 0
 
-    public init(webView: WKWebView, console: BrowserConsoleLog) {
-        self.webView = webView
+    public init(driver: BrowserPageDriver, console: BrowserConsoleLog) {
+        self.driver = driver
         self.console = console
         super.init()
-        self.loadObservation = webView.observe(\.isLoading, options: [.new]) { [weak self] _, change in
-            let started = change.newValue == true
+        self.loadObservation = driver.loadingChanges.sink { [weak self] started in
             Task { @MainActor in
                 guard let self else { return }
                 if started { self.navigationsStarted += 1 } else { self.navigationsFinished += 1 }
@@ -118,8 +119,13 @@ public final class BrowserAutomation: NSObject {
         }
     }
 
-    public var currentURL: String { webView.url?.absoluteString ?? "about:blank" }
-    public var currentTitle: String { webView.title ?? "" }
+    /// Drives a bare web view whose delegates are someone else's.
+    public convenience init(webView: WKWebView, console: BrowserConsoleLog) {
+        self.init(driver: WebKitPageDriver(webView: webView), console: console)
+    }
+
+    public var currentURL: String { driver.url?.absoluteString ?? "about:blank" }
+    public var currentTitle: String { driver.title ?? "" }
 
     /// Whether this URL is one a model may drive. Local files are never
     /// driven: the user's own disk is not the model's to read through a pane.
@@ -204,7 +210,7 @@ public final class BrowserAutomation: NSObject {
 
     private func call(_ function: String, _ ordered: KeyValuePairs<String, Any> = [:]) async throws -> Any? {
         try ensureDrivable()
-        try await BrowserSnapshotRuntime.install(in: webView)
+        try await driver.installAutomationRuntime()
         // Positional order matters to the JS functions, so keep the caller's order.
         let names = ordered.map(\.key)
         var arguments: [String: Any] = [:]
@@ -212,8 +218,7 @@ public final class BrowserAutomation: NSObject {
         let body = "return window.__adkitchen.\(function)(\(names.joined(separator: ", ")))"
         let raw: Any?
         do {
-            raw = try await webView.callAsyncJavaScript(
-                body, arguments: arguments, in: nil, contentWorld: BrowserSnapshotRuntime.world)
+            raw = try await driver.callAsyncFunction(body: body, arguments: arguments, world: .automation)
         } catch {
             throw BrowserAutomationError.script(error.localizedDescription)
         }
@@ -353,7 +358,7 @@ public final class BrowserAutomation: NSObject {
         try await act {
             if native {
                 let r = try await self.rect(ref: ref, generation: generation)
-                try self.nativeClick(atViewportX: r.midX, viewportY: r.midY)
+                try await self.nativeClick(atViewportX: r.midX, viewportY: r.midY)
             } else {
                 _ = try await self.call("click", ["ref": ref, "gen": generation])
             }
@@ -410,7 +415,7 @@ public final class BrowserAutomation: NSObject {
     public func clickAt(x: Double, y: Double) async throws -> BrowserActionDelta {
         guard let frame = lastScreenshot else { throw BrowserAutomationError.noScreenshot }
         let point = frame.viewportPoint(imageX: x, imageY: y)
-        return try await act { try self.nativeClick(atViewportX: point.x, viewportY: point.y) }
+        return try await act { try await self.nativeClick(atViewportX: point.x, viewportY: point.y) }
     }
 
     /// Runs `expression` as the body `return (<expression>);` of an async
@@ -442,7 +447,7 @@ public final class BrowserAutomation: NSObject {
                 }
                 Task { @MainActor in
                     do {
-                        let value = try await self.webView.callAsyncJavaScript(body, arguments: [:], in: nil, contentWorld: .page)
+                        let value = try await self.driver.callAsyncFunction(body: body, arguments: [:], world: .page)
                         once.finish(.success(Self.renderJSON(value)))
                     } catch {
                         once.finish(.failure(error))
@@ -499,11 +504,11 @@ public final class BrowserAutomation: NSObject {
     }
 
     public func navigate(to url: URL) async throws -> BrowserActionDelta {
-        try await act { self.webView.load(URLRequest(url: url)) }
+        try await act { self.driver.load(url) }
     }
 
-    public func goBack() async throws -> BrowserActionDelta { try await act { self.webView.goBack() } }
-    public func goForward() async throws -> BrowserActionDelta { try await act { self.webView.goForward() } }
+    public func goBack() async throws -> BrowserActionDelta { try await act { self.driver.goBack() } }
+    public func goForward() async throws -> BrowserActionDelta { try await act { self.driver.goForward() } }
 
     /// Runs one action and gathers its delta: arm the mutation counter and
     /// navigation counters, act, wait 300 ms, read what moved.
@@ -518,10 +523,10 @@ public final class BrowserAutomation: NSObject {
         var delta = BrowserActionDelta()
         delta.dialog = pendingDialog
         pendingDialog = nil
-        if navigationsStarted > startedBefore || webView.isLoading {
+        if navigationsStarted > startedBefore || driver.isLoading {
             let deadline = Date().addingTimeInterval(Self.defaultTimeout)
-            while webView.isLoading && Date() < deadline { try await Task.sleep(nanoseconds: 100_000_000) }
-            if webView.isLoading { delta.pending = true } else { delta.navigated = navigationsFinished > finishedBefore }
+            while driver.isLoading && Date() < deadline { try await Task.sleep(nanoseconds: 100_000_000) }
+            if driver.isLoading { delta.pending = true } else { delta.navigated = navigationsFinished > finishedBefore }
             lastSnapshotLines = nil
             // A back or forward can land on a local file the pane once
             // showed. Nothing below may run against it, the runtime least of
@@ -558,11 +563,11 @@ public final class BrowserAutomation: NSObject {
             case .text(let t): satisfied = (try? await call("hasText", ["needle": t]) as? Bool) ?? false
             case .ref(let r, let g): satisfied = (try? await call("isVisible", ["ref": r, "gen": g]) as? Bool) ?? false
             case .url(let u): satisfied = currentURL.contains(u)
-            case .load: satisfied = !webView.isLoading && webView.url != nil
+            case .load: satisfied = !driver.isLoading && driver.url != nil
             case .idle:
                 let m = (try? await call("mutations") as? Int) ?? -2
                 if m != lastMutations { lastMutations = m; idleSince = Date() }
-                satisfied = !webView.isLoading && idleSince.map { Date().timeIntervalSince($0) >= 0.5 } == true
+                satisfied = !driver.isLoading && idleSince.map { Date().timeIntervalSince($0) >= 0.5 } == true
             }
             if satisfied { return BrowserWaitResult(satisfied: true, url: currentURL, title: currentTitle) }
             try await Task.sleep(nanoseconds: 100_000_000)
@@ -595,46 +600,44 @@ public final class BrowserAutomation: NSObject {
         return context.makeImage()
     }
 
-    /// How long `takeSnapshot` may take before the screenshot is given up.
+    /// How long the engine's snapshot may take before the screenshot is given up.
     public static let screenshotTimeout: TimeInterval = 10
 
     /// Refuses a pane whose view is in no window or in one that is not
-    /// visible, and gives up after `screenshotTimeout`: a pane WebKit has
-    /// stopped painting can otherwise leave `takeSnapshot` without an answer.
+    /// visible, and gives up after `screenshotTimeout`: a pane the engine has
+    /// stopped painting can otherwise leave the snapshot without an answer.
     /// Occlusion is deliberately not checked — a quiet-presentation window is
     /// occluded by design and still screenshots.
     public func screenshot(ref: String?, generation: Int?) async throws -> Data {
-        guard let window = webView.window, window.isVisible else { throw BrowserAutomationError.notOnScreen }
-        let configuration = WKSnapshotConfiguration()
-        let zoom = webView.pageZoom
+        guard let window = driver.view.window, window.isVisible else { throw BrowserAutomationError.notOnScreen }
         // The viewport, or the element's rect, in CSS pixels: what the image shows.
-        var shown = CGRect(x: 0, y: 0, width: webView.bounds.width / zoom, height: webView.bounds.height / zoom)
+        var shown = CGRect(origin: .zero, size: driver.viewportSize)
+        var clip: CGRect?
         if let ref, let generation {
             shown = try await rect(ref: ref, generation: generation)
-            configuration.rect = CGRect(x: shown.minX * zoom, y: shown.minY * zoom,
-                                        width: shown.width * zoom, height: shown.height * zoom)
+            clip = shown
         }
-        let once = Resumer<NSImage>()
+        let once = Resumer<CGImage>()
         let timeout = Self.screenshotTimeout
-        let image: NSImage = try await withCheckedThrowingContinuation { c in
+        let driver = self.driver
+        let full: CGImage = try await withCheckedThrowingContinuation { c in
             once.continuation = c
             once.timer = Task { @MainActor in
                 try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
                 guard !Task.isCancelled else { return }
                 once.finish(.failure(BrowserAutomationError.screenshotTimedOut))
             }
-            webView.takeSnapshot(with: configuration) { image, error in
-                MainActor.assumeIsolated {
-                    if let image {
-                        once.finish(.success(image))
-                    } else {
-                        once.finish(.failure(BrowserAutomationError.script(error?.localizedDescription ?? "snapshot failed")))
-                    }
+            Task { @MainActor in
+                do {
+                    once.finish(.success(try await driver.snapshot(cssRect: clip)))
+                } catch let error as BrowserAutomationError {
+                    once.finish(.failure(error))
+                } catch {
+                    once.finish(.failure(BrowserAutomationError.script(error.localizedDescription)))
                 }
             }
         }
-        guard let full = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              let cg = Self.capped(full, side: Self.maximumScreenshotSide),
+        guard let cg = Self.capped(full, side: Self.maximumScreenshotSide),
               let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
             throw BrowserAutomationError.script("could not encode the screenshot")
         }
@@ -644,22 +647,11 @@ public final class BrowserAutomation: NSObject {
         return png
     }
 
-    /// Mouse down/up through the web view's own responder methods, so WebKit
-    /// handles it as a real click. The point is viewport CSS pixels: the web
-    /// view's bounds are the viewport, so a page coordinate would be off by
-    /// the scroll offset on any page that has scrolled.
-    private func nativeClick(atViewportX x: Double, viewportY y: Double) throws {
-        guard let window = webView.window else { throw BrowserAutomationError.noWindow }
-        let zoom = webView.pageZoom
-        var point = NSPoint(x: x * zoom, y: y * zoom)
-        if !webView.isFlipped { point.y = webView.bounds.height - point.y }
-        let inWindow = webView.convert(point, to: nil)
-        for (type, number) in [(NSEvent.EventType.leftMouseDown, 1), (.leftMouseUp, 2)] {
-            guard let event = NSEvent.mouseEvent(
-                with: type, location: inWindow, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
-                windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1) else { continue }
-            if type == .leftMouseDown { webView.mouseDown(with: event) } else { webView.mouseUp(with: event) }
-        }
+    /// A real click at a viewport point in CSS pixels, through the engine.
+    /// Viewport, not page, coordinates: a page coordinate would be off by the
+    /// scroll offset on any page that has scrolled.
+    private func nativeClick(atViewportX x: Double, viewportY y: Double) async throws {
+        try await driver.nativeClick(atViewportX: x, viewportY: y)
     }
 }
 // swiftlint:enable line_length identifier_name

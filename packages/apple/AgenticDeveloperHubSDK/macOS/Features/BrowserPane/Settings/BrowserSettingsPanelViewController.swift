@@ -10,24 +10,26 @@ import WebKit
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
 
-/// Settings panel for the Browser pane: a topic list on the left — General,
-/// History, Cookies and Site Data, Privacy and Security, Media and
-/// Permissions, Downloads, Developer, Reset — and the chosen topic's controls
-/// on the right, the shape the Language Servers panel has.
+/// Settings panel for the browser panes: a topic list on the left — General,
+/// History, Cookies, Media and Permissions, Downloads, Safari, Chrome, Reset —
+/// and the chosen topic's controls on the right, the shape the Language
+/// Servers panel has. Safari and Chrome hold what only that engine has; every
+/// other topic applies to both.
 ///
 /// Every row here binds to the app's shared settings (`UserSettings.shared`):
 /// a row's view model reads through `UserSetting`, which mirrors the shared
-/// store and no other, and that is the store `BrowserPaneViewController`
-/// follows. The panel's own writes — choosing a download folder, putting it
+/// store and no other, and that is the store `WebBrowserPaneViewController`
+/// follows, and so does the Chromium engine. The panel's own writes — choosing a download folder, putting it
 /// back, Reset — go through `settings`, the shared store by default, so a
-/// test can hand in an in-memory one and watch them land. The two things
-/// that are not settings, the visit history and WebKit's site data, are
-/// handed in for the same reason: they are stores with files behind them
+/// test can hand in an in-memory one and watch them land. The things that
+/// are not settings — the visit history, WebKit's site data, Chromium's
+/// cookie jar and version — are handed in for the same reason: they are stores with files behind them
 /// (`dependency-injection`).
 ///
-/// **Every setting shown is one the pane honours.** The ones WebKit fixes when
-/// a web view is created say "new browser panes" in their explanation, so the
-/// panel never promises an effect the open pane cannot deliver
+/// **Every setting shown is one the panes honour.** The ones an engine fixes
+/// when a pane is created say so in their explanation, and the ones Chromium
+/// reads when it starts say "the next time the app opens", so the panel never
+/// promises an effect an open pane cannot deliver
 /// (`principle-of-least-astonishment`).
 @MainActor
 public final class BrowserSettingsPanelViewController: ComposableSettings.SettingsPanelSplitViewController {
@@ -35,6 +37,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     private let history: BrowserHistoryStore?
     private let siteData: BrowserSiteData
     private let settings: SettingsStore
+    private let chrome: BrowserEngineMaintenance?
 
     /// - Parameters:
     ///   - history: where the pane records visits; `nil` means the host records
@@ -43,14 +46,18 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     ///     shares. A test hands in a non-persistent one.
     ///   - settings: where the panel's own buttons write. The app's shared
     ///     store by default, which is the one the rows bind to either way.
+    ///   - chrome: the Chromium engine's maintenance, from the host that links
+    ///     it; `nil` leaves the Chrome topic out.
     public init(
         history: BrowserHistoryStore?,
         siteData: BrowserSiteData = BrowserSiteData(),
-        settings: SettingsStore = UserSettings.shared
+        settings: SettingsStore = UserSettings.shared,
+        chrome: BrowserEngineMaintenance? = nil
     ) {
         self.history = history
         self.siteData = siteData
         self.settings = settings
+        self.chrome = chrome
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Web Browser",
             icon: NSImage(systemSymbolName: "globe", accessibilityDescription: nil)
@@ -66,19 +73,25 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         ComposableSettings.PanelHelp(topics: [
             .init(
                 title: "Web Browser",
-                body: "The Browser pane is a web browser inside a project window: an address "
-                    + "bar over a page. These topics decide how its pages load, what it "
-                    + "remembers about where you have been, what sites may keep and do, "
-                    + "and where downloads land. Pick a topic on the left."
+                body: "The Safari Web Browser and Chrome Web Browser panes are web "
+                    + "browsers inside a project window: an address bar over a page, "
+                    + "drawn by WebKit or by Chromium. These topics decide how their pages "
+                    + "load, what they remember about where you have been, what sites may "
+                    + "keep and do, and where downloads land. Safari and Chrome hold what "
+                    + "only that browser has; every other topic applies to both. Pick a "
+                    + "topic on the left."
             ),
             .init(
                 title: "When a Change Takes Effect",
                 body: "Most settings apply to every open browser pane as you change them. "
-                    + "A few are fixed by WebKit when a pane is created — private "
-                    + "browsing, the HTTPS upgrade, autoplay and AirPlay — and those say "
-                    + "so beside the control: they apply to browser panes opened after "
+                    + "A few are fixed when a pane is created — private browsing, the "
+                    + "HTTPS upgrade, autoplay and AirPlay in Safari panes; private "
+                    + "browsing, minimum font size and autoplay in Chrome panes — and "
+                    + "those say so beside the control: they apply to panes opened after "
                     + "the change. JavaScript and Lockdown Mode apply to the next page a "
-                    + "pane loads."
+                    + "Safari pane loads. Chromium reads the remote debugging port and "
+                    + "hardware acceleration once, when it starts, so those apply the "
+                    + "next time the app opens."
             )
         ])
     }
@@ -89,31 +102,32 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     /// terms are listed here as well, from the same declarations the topics
     /// use (`dry`).
     public override var searchKeywords: [String] {
-        BrowserGeneralPanel.keywords + BrowserHistoryPanel.keywords + BrowserSiteDataPanel.keywords
-            + BrowserPrivacyPanel.keywords + BrowserMediaPanel.keywords + BrowserDownloadsPanel.keywords
-            + BrowserDeveloperPanel.keywords + BrowserResetPanel.keywords
+        BrowserGeneralPanel.keywords + BrowserHistoryPanel.keywords + BrowserCookiesPanel.keywords
+            + BrowserMediaPanel.keywords + BrowserDownloadsPanel.keywords + SafariBrowserTopicPanel.keywords
+            + (chrome == nil ? [] : ChromeBrowserTopicPanel.keywords) + BrowserResetPanel.keywords
     }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
         addPanel(BrowserGeneralPanel())
         addPanel(BrowserHistoryPanel(history: history))
-        addPanel(BrowserSiteDataPanel(siteData: siteData))
-        addPanel(BrowserPrivacyPanel())
+        addPanel(BrowserCookiesPanel())
         addPanel(BrowserMediaPanel())
         addPanel(BrowserDownloadsPanel(settings: settings))
-        addPanel(BrowserDeveloperPanel())
+        addPanel(SafariBrowserTopicPanel(siteData: siteData))
+        if let chrome { addPanel(ChromeBrowserTopicPanel(engine: chrome)) }
         addPanel(BrowserResetPanel(settings: settings))
     }
 }
 
 // MARK: - Topic
 
-/// One topic of the Browser panel. Every topic is listed by a title and a
-/// symbol and is never made from a coder, so that is said once here rather
-/// than eight times over (`dry`).
+/// One topic of the Web Browser panel. Every topic is listed by a title and
+/// a symbol and is never made from a coder, so that is said once here rather
+/// than eight times over (`dry`). Internal rather than private so the
+/// engine topics, in their own file, are made the same way.
 @MainActor
-private class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController {
+class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController {
 
     init(title: String, symbol: String) {
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
@@ -151,17 +165,18 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
                     + "to open panes at once. Minimum font size stops a page using text "
                     + "smaller than this many points; zero lets the page decide. "
                     + "JavaScript off applies to the next page each pane loads, and most "
-                    + "of the web stops working without it. Block pop-up windows refuses "
-                    + "a window a page opens on its own; a link that opens a new window "
+                    + "of the web stops working without it; in a Chrome pane it applies at once. "
+                    + "Block pop-up windows refuses a window a page opens on its own; a link that opens a new window "
                     + "still loads, in the same pane."
             ),
             .init(
                 title: "User Agent",
-                body: "The name the browser gives sites. Blank uses WebKit's own, which is "
-                    + "what Safari sends. A custom string applies to pages loaded after "
-                    + "the change. Some sites serve a different page to a browser they "
-                    + "do not recognise, which is the reason to change it and the reason "
-                    + "to leave it alone."
+                body: "The name the browser gives sites. Blank uses each engine's own: "
+                    + "WebKit's, which is what Safari sends, in Safari panes, and "
+                    + "Chromium's, which is what Chrome sends, in Chrome panes. A custom "
+                    + "string applies to pages loaded after the change. Some sites "
+                    + "serve a different page to a browser they do not recognise, which "
+                    + "is the reason to change it and the reason to leave it alone."
             )
         ])
     }
@@ -242,7 +257,7 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
         let agent = ComposableSettings.ViewModel<String>(
             title: "Custom user agent",
             setting: UserSettings.browserCustomUserAgent,
-            explanation: "Blank sends WebKit's own. Applies to pages loaded after the change."
+            explanation: "Blank sends each browser's own. Applies to pages loaded after the change."
         )
         let field = ComposableSettings.TextEditView(with: agent)
         field.textField.placeholderString = "Default"
@@ -293,7 +308,7 @@ private final class BrowserHistoryPanel: BrowserTopicPanel {
                     + "Select one and press − to forget it. Clear History forgets every "
                     + "visit at once; it does not touch cookies or site data, which "
                     + "have their own topic. The pages a pane can go back to are "
-                    + "WebKit's own and are not listed here."
+                    + "the browser engine's own and are not listed here."
             )
         ])
     }
@@ -457,69 +472,37 @@ private final class BrowserHistoryPanel: BrowserTopicPanel {
     }
 }
 
-// MARK: - Cookies and site data
+// MARK: - Cookies
 
 @MainActor
-private final class BrowserSiteDataPanel: BrowserTopicPanel {
+private final class BrowserCookiesPanel: BrowserTopicPanel {
 
-    private let siteData: BrowserSiteData
-    private var table: ComposableSettings.EditableTableCard?
-    private var records: [WKWebsiteDataRecord] = []
-    /// The read in flight. One at a time: a Refresh pressed twice, or a
-    /// removal landing while a read is out, must not let the older answer
-    /// arrive last and show rows that are already gone.
-    private var reloadTask: Task<Void, Never>?
-
-    init(siteData: BrowserSiteData) {
-        self.siteData = siteData
-        super.init(title: "Cookies and Site Data", symbol: "tray.full")
+    init() {
+        super.init(title: "Cookies", symbol: "tray.full")
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
                 title: "Cookies",
-                body: "Accept cookies is WebKit's one switch for whether sites may set "
-                    + "cookies at all; there is no first-party-only middle, because WebKit "
-                    + "offers none. Off, most sites cannot keep you signed in. Private "
-                    + "browsing gives each new browser pane a store of its own that is "
-                    + "thrown away when the pane closes — nothing it visits lands in the "
-                    + "list below. It applies to panes opened after the change; a pane "
-                    + "already open keeps the store it was made with."
-            ),
-            .init(
-                title: "Site Data",
-                body: "Everything WebKit is keeping for sites the browser has visited, one "
-                    + "row per site: cookies, local storage, caches, service workers and "
-                    + "the rest, named in the second column. Select a site and press − to "
-                    + "remove what it kept, which signs you out of it. Remove All clears "
-                    + "every site at once. Refresh re-reads the list, since pages write "
-                    + "while it is open. Browsing history is separate and has its own "
-                    + "topic."
+                body: "Accept cookies decides whether sites may set cookies at all, in "
+                    + "Safari and Chrome panes alike; there is no first-party-only middle. "
+                    + "Off, most sites cannot keep you signed in. Private browsing gives "
+                    + "each new browser pane a store of its own that is thrown away when "
+                    + "the pane closes, so nothing it visits is kept. It applies to panes "
+                    + "opened after the change; a pane already open keeps the store it "
+                    + "was made with. What each browser has already kept is listed and "
+                    + "removed from its own topic, Safari or Chrome."
             )
         ])
     }
 
-    static let keywords: [String] = [
-        "cookies", "site data", "local storage", "cache", "private browsing", "incognito", "sign out"
-    ]
+    static let keywords: [String] = ["cookies", "private browsing", "incognito", "sign out"]
 
     override var searchKeywords: [String] { Self.keywords }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        settingsView.addGroup(makeCookiesGroup())
-        let table = makeTable()
-        self.table = table
-        settingsView.addGroup(table)
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        reload()
-    }
-
-    private func makeCookiesGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Cookies")
 
         let accepts = ComposableSettings.ViewModel<Bool>(
@@ -528,7 +511,7 @@ private final class BrowserSiteDataPanel: BrowserTopicPanel {
             explanation: "Off, sites cannot keep you signed in."
         )
         let acceptsView = ComposableSettings.CheckboxView(with: accepts)
-        _ = acceptsView.toggle.accessibilityID("settings.browser.site-data.accept-cookies")
+        _ = acceptsView.toggle.accessibilityID("settings.browser.cookies.accept-cookies")
         group.addSettingSubview(acceptsView)
 
         let privateBrowsing = ComposableSettings.ViewModel<Bool>(
@@ -537,141 +520,8 @@ private final class BrowserSiteDataPanel: BrowserTopicPanel {
             explanation: "New browser panes keep nothing once closed. Applies to panes opened after the change."
         )
         let privateView = ComposableSettings.CheckboxView(with: privateBrowsing)
-        _ = privateView.toggle.accessibilityID("settings.browser.site-data.private-browsing")
+        _ = privateView.toggle.accessibilityID("settings.browser.cookies.private-browsing")
         group.addSettingSubview(privateView)
-
-        return group
-    }
-
-    private func makeTable() -> ComposableSettings.EditableTableCard {
-        let table = ComposableSettings.EditableTableCard(
-            title: "Site Data",
-            columns: [
-                .init(id: "site", title: "Site", width: 220),
-                .init(id: "kinds", title: "Data", width: 340)
-            ],
-            emptyMessage: "No site data stored.",
-            visibleRows: 10,
-            accessibilityPrefix: "settings.browser.site-data.sites"
-        )
-        table.addButton.isHidden = true
-        table.onRemove = { [weak self] rowID in
-            guard let self, let record = self.records.first(where: { $0.displayName == rowID }) else { return }
-            Task {
-                await self.siteData.remove([record])
-                self.reload()
-            }
-        }
-        table.addFooterButton(
-            title: "Remove All…", identifier: "settings.browser.site-data.remove-all"
-        ) { [weak self] in
-            self?.removeAll()
-        }
-        table.addFooterButton(title: "Refresh", identifier: "settings.browser.site-data.refresh") { [weak self] in
-            self?.reload()
-        }
-        return table
-    }
-
-    private func removeAll() {
-        ComposableSettings.Alerts.confirmDestructive(
-            "Remove all site data?",
-            detail: "Cookies, caches and storage for every site are removed, and you are signed out everywhere. "
-                + "History is not affected.",
-            actionTitle: "Remove All",
-            on: view.window
-        ) { [weak self] confirmed in
-            guard let self, confirmed else { return }
-            Task {
-                await self.siteData.removeAll()
-                self.reload()
-            }
-        }
-    }
-
-    private func reload() {
-        reloadTask?.cancel()
-        reloadTask = Task {
-            let records = await siteData.records()
-            guard !Task.isCancelled else { return }
-            self.records = records
-            table?.setRows(records.map { record in
-                ComposableSettings.EditableTableRow(id: record.displayName, cells: [
-                    "site": .text(record.displayName),
-                    "kinds": .text(BrowserSiteData.labels(for: record))
-                ])
-            })
-        }
-    }
-}
-
-// MARK: - Privacy and security
-
-@MainActor
-private final class BrowserPrivacyPanel: BrowserTopicPanel {
-
-    init() {
-        super.init(title: "Privacy and Security", symbol: "lock.shield")
-    }
-
-    override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Protection",
-                body: "Warn about fraudulent websites asks WebKit to check each page "
-                    + "against Apple's list of known phishing and malware sites and show "
-                    + "a warning page in place of a match. Upgrade to HTTPS loads a site "
-                    + "WebKit knows supports HTTPS over HTTPS even when the address said "
-                    + "http; it applies to browser panes opened after the change. "
-                    + "Lockdown Mode is the same restricted mode Safari offers: certain "
-                    + "web technologies, fonts and media formats are refused, which "
-                    + "breaks some sites in exchange for a smaller attack surface. It "
-                    + "applies to the next page each pane loads."
-            ),
-            .init(
-                title: "What Is Not Here",
-                body: "There is no Do Not Track switch, because WebKit sends no such "
-                    + "header and the sites that honoured it have largely stopped. "
-                    + "Passwords are not saved by the browser pane; the system keychain "
-                    + "is not involved."
-            )
-        ])
-    }
-
-    static let keywords: [String] = ["privacy", "security", "fraud", "phishing", "https", "lockdown mode", "tracking"]
-
-    override var searchKeywords: [String] { Self.keywords }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        let group = ComposableSettings.GroupView(withTitle: "Protection")
-
-        let fraud = ComposableSettings.ViewModel<Bool>(
-            title: "Warn about fraudulent websites",
-            setting: UserSettings.browserFraudWarning
-        )
-        let fraudView = ComposableSettings.CheckboxView(with: fraud)
-        _ = fraudView.toggle.accessibilityID("settings.browser.privacy.fraud-warning")
-        group.addSettingSubview(fraudView)
-
-        let https = ComposableSettings.ViewModel<Bool>(
-            title: "Upgrade known sites to HTTPS",
-            setting: UserSettings.browserUpgradesToHTTPS,
-            explanation: "Applies to browser panes opened after the change."
-        )
-        let httpsView = ComposableSettings.CheckboxView(with: https)
-        _ = httpsView.toggle.accessibilityID("settings.browser.privacy.upgrade-https")
-        group.addSettingSubview(httpsView)
-
-        let lockdown = ComposableSettings.ViewModel<Bool>(
-            title: "Lockdown Mode",
-            setting: UserSettings.browserLockdownMode,
-            explanation: "Refuses some web technologies for a smaller attack surface. "
-                + "Applies to the next page each pane loads."
-        )
-        let lockdownView = ComposableSettings.CheckboxView(with: lockdown)
-        _ = lockdownView.toggle.accessibilityID("settings.browser.privacy.lockdown")
-        group.addSettingSubview(lockdownView)
 
         settingsView.addGroup(group)
     }
@@ -692,9 +542,9 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
                 title: "Playback",
                 body: "Autoplay decides whether a page may start video or audio without a "
                     + "click: allowed, only without sound (the usual browser default — a "
-                    + "muted video plays, one with sound waits), or never. AirPlay lets a "
-                    + "page's video offer the AirPlay control. Both are fixed when a "
-                    + "browser pane is created and apply to panes opened after the change."
+                    + "muted video plays, one with sound waits), or never. It is fixed "
+                    + "when a browser pane is created and applies to panes opened after "
+                    + "the change. AirPlay is Safari's alone and is in the Safari topic."
             ),
             .init(
                 title: "Camera and Microphone",
@@ -708,7 +558,7 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
     }
 
     static let keywords: [String] = [
-        "autoplay", "video", "audio", "airplay", "camera", "microphone", "permissions", "webcam"
+        "autoplay", "video", "audio", "camera", "microphone", "permissions", "webcam"
     ]
 
     override var searchKeywords: [String] { Self.keywords }
@@ -731,15 +581,6 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
         let autoplayView = ComposableSettings.PopupMenuChoiceView(viewModel: autoplay)
         _ = autoplayView.popUpButton.accessibilityID("settings.browser.media.autoplay")
         group.addSettingSubview(autoplayView)
-
-        let airPlay = ComposableSettings.ViewModel<Bool>(
-            title: "Allow AirPlay",
-            setting: UserSettings.browserAllowsAirPlay,
-            explanation: "Applies to browser panes opened after the change."
-        )
-        let airPlayView = ComposableSettings.CheckboxView(with: airPlay)
-        _ = airPlayView.toggle.accessibilityID("settings.browser.media.airplay")
-        group.addSettingSubview(airPlayView)
 
         return group
     }
@@ -846,47 +687,6 @@ private final class BrowserDownloadsPanel: BrowserTopicPanel {
     }
 }
 
-// MARK: - Developer
-
-@MainActor
-private final class BrowserDeveloperPanel: BrowserTopicPanel {
-
-    init() {
-        super.init(title: "Developer", symbol: "hammer")
-    }
-
-    override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Web Inspector",
-                body: "Safari's Web Inspector, attached to a browser pane's page. With it "
-                    + "on, right-click a page and choose Inspect Element, or open Safari's "
-                    + "Develop menu and find this app under your Mac's name. Off is the "
-                    + "default because an inspectable page is one any process with "
-                    + "Safari's privileges can read."
-            )
-        ])
-    }
-
-    static let keywords: [String] = ["developer", "web inspector", "inspect element", "devtools", "debug"]
-
-    override var searchKeywords: [String] { Self.keywords }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        let group = ComposableSettings.GroupView(withTitle: "Web Inspector")
-        let inspector = ComposableSettings.ViewModel<Bool>(
-            title: "Allow Web Inspector",
-            setting: UserSettings.browserWebInspectorEnabled,
-            explanation: "Right-click a page and choose Inspect Element."
-        )
-        let inspectorView = ComposableSettings.CheckboxView(with: inspector)
-        _ = inspectorView.toggle.accessibilityID("settings.browser.developer.inspector")
-        group.addSettingSubview(inspectorView)
-        settingsView.addGroup(group)
-    }
-}
-
 // MARK: - Reset
 
 @MainActor
@@ -903,7 +703,8 @@ private final class BrowserResetPanel: BrowserTopicPanel {
         ComposableSettings.PanelHelp(topics: [
             .init(
                 title: "Reset",
-                body: "Puts every setting in the Browser topics back to its default — the "
+                body: "Puts every setting in the Web Browser topics, Safari's and Chrome's "
+                    + "included, back to its default — the "
                     + "value each control shows on a fresh install. Settings only: "
                     + "history and site data are kept, and are cleared from their own "
                     + "topics. Open browser panes pick up the defaults the same way they "

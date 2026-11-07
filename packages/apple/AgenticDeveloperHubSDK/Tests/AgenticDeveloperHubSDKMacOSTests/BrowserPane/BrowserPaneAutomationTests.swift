@@ -6,12 +6,12 @@ import AgenticDeveloperHubSDKCore
 @MainActor
 final class BrowserPaneAutomationTests: XCTestCase {
 
-    private func makePane() -> BrowserPaneViewController {
+    private func makePane() -> SafariBrowserPaneViewController {
         let settings = UserSettings(
             with: InMemorySettingsStorageProvider(),
             secureSettingsProvider: InMemorySecureSettingsStorageProvider()
         )
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         _ = pane.view
         return pane
     }
@@ -27,7 +27,7 @@ final class BrowserPaneAutomationTests: XCTestCase {
     /// changes on every load tells this page from the one before it.
     private func load(
         _ html: String,
-        into pane: BrowserPaneViewController,
+        into pane: SafariBrowserPaneViewController,
         until: () -> Bool = { true }
     ) async {
         loads += 1

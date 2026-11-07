@@ -7,16 +7,17 @@ import AppKit
 import AgenticDeveloperHubSDKCore
 
 extension ComposableTabsViewID {
-    /// A pane holding a web browser. The raw value is persisted in
-    /// `layout_nodes`, so it is a storage format: changing it orphans every
-    /// saved layout that holds a browser.
+    /// A pane holding the Safari Web Browser. It was the only browser when
+    /// this was named, which is why it is not "browser.safari". The raw value
+    /// is persisted in `layout_nodes`, so it is a storage format: changing it
+    /// orphans every saved layout that holds one.
     public static let browser = ComposableTabsViewID("browser")
 }
 
 extension ComposableTabsViewRegistry {
 
-    /// Registers the browser pane: an address bar over a web view, reopening
-    /// on the page it was last on.
+    /// Registers the Safari Web Browser pane: an address bar over WebKit,
+    /// reopening on the page it was last on.
     ///
     /// The same shape as `registerTerminal(preferredAxis:)`, so a host adds a
     /// browser the way it adds a shell — one call, no factory to write.
@@ -35,22 +36,22 @@ extension ComposableTabsViewRegistry {
     @MainActor
     public func registerBrowser(
         preferredAxis: ComposableTabsAxis,
-        homeURL: URL = BrowserPaneViewController.blankPage,
+        homeURL: URL = WebBrowserPaneViewController.blankPage,
         settings: SettingsStore = UserSettings.shared,
         history: BrowserHistoryStore? = nil
     ) {
         register(
             .browser,
             descriptor: .init(
-                displayName: "Browser",
-                symbolName: "globe",
+                displayName: "Safari Web Browser",
+                symbolName: "safari",
                 preferredAxis: preferredAxis,
                 // Room for the address bar's three buttons plus an address
                 // worth reading, and for a page laid out for a narrow window.
                 minimumThickness: 360
             )
         ) { context in
-            BrowserPaneViewController(
+            SafariBrowserPaneViewController(
                 store: context.makeStateStore(prefix: "browser."),
                 settings: settings,
                 history: history,
