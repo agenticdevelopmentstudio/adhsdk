@@ -100,7 +100,7 @@ export function OverviewTab(): ReactElement {
   const { envs, all: allEnvNames, toggle: toggleEnv } = useEnvFilter();
   const allEnvs = envs.size === allEnvNames.length;
   const scopeEnvs = useMemo(() => (allEnvs ? null : [...envs]), [allEnvs, envs]);
-  const { board, reason: boardReason, error: boardError } = useBoard({ environments: scopeEnvs });
+  const { board, reason: boardReason, scopePending, error: boardError } = useBoard({ environments: scopeEnvs });
   const uptimeQuery = useUptime(90);
   // The monitor's own health — a failed/degraded self-check surfaces here on the
   // default wallboard (not just the Details tab) so a broken monitor can't hide.
@@ -491,7 +491,16 @@ export function OverviewTab(): ReactElement {
         {banners}
         <div className="adh-snap-scroll">
           <section className="adh-snap-pane adh-snap-hero">
-            <BigIndicator state={indicator.state} count={indicator.count} sublabel={sublabel} extra={<OverviewStats uptimePercent={uptimePercent} uptimeTone={uptimeTone} span={span} onSpanChange={setSpan} />} />
+            {scopePending ? (
+              // The board on screen was judged over the previous environment choice; its
+              // headline would be a verdict about environments the reader just left.
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 20, width: "100%" }}>
+                <div style={{ fontSize: 18, color: PALETTE.muted }}>Updating for the selected environments…</div>
+                <div style={{ width: "100%" }}><OverviewStats uptimePercent={uptimePercent} uptimeTone={uptimeTone} span={span} onSpanChange={setSpan} /></div>
+              </div>
+            ) : (
+              <BigIndicator state={indicator.state} count={indicator.count} sublabel={sublabel} extra={<OverviewStats uptimePercent={uptimePercent} uptimeTone={uptimeTone} span={span} onSpanChange={setSpan} />} />
+            )}
           </section>
           <section className="adh-snap-pane" style={{ display: "flex", flexDirection: "column", gap: 12, padding: 12 }}>
             {problemsPanel("0 1 auto", "45%")}

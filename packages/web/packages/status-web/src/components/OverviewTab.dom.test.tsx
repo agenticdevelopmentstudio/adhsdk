@@ -410,3 +410,51 @@ describe("OverviewTab — Recent Activity 'in progress or failed only' filter", 
     expect(order()).toEqual(["b1", "d1", "q1", "q2"]);
   });
 });
+
+// Review finding f11: changing the environment filter keeps the previous board on screen
+// until the scoped read lands. Its lists are unscoped and filter correctly, but its
+// headline was judged over the environments the reader just left, so the hero must not
+// show it as this view's verdict meanwhile.
+describe("OverviewTab — headline while a new environment scope loads (f11)", () => {
+  it("the mobile hero drops the previous scope's verdict until the scoped read lands", async () => {
+    mobile.current = true;
+    window.localStorage?.clear();
+    const unscoped = {
+      generatedAt: new Date().toISOString(),
+      dataAsOfMs: Date.now(),
+      ...verdicts(),
+      indicator: "operational",
+      problems: [],
+      activity: [],
+      monitoredTargets: [],
+    };
+    const ok = (b: unknown) => new Response(JSON.stringify(b), { status: 200, headers: { "content-type": "application/json" } });
+    let releaseScoped: (r: Response) => void = () => {};
+    vi.stubGlobal("fetch", vi.fn((url: string) => String(url).includes("environments=")
+      ? new Promise<Response>((resolve) => { releaseScoped = resolve; })
+      : Promise.resolve(ok(unscoped))));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <OverviewTab />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText(/ALL SYSTEMS OPERATIONAL/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Recent Activity options" }));
+    fireEvent.click(await screen.findByRole("checkbox", { name: "testing" }));
+
+    expect(await screen.findByText(/Updating for the selected environments/i)).toBeTruthy();
+    expect(screen.queryByText(/ALL SYSTEMS OPERATIONAL/i)).toBeNull();
+
+    // The scoped read lands with its own verdict, and that is what the hero shows.
+    releaseScoped(ok({
+      ...unscoped,
+      scope: { environments: ["production", "staging"], indicator: "outage", problemCount: 2, endpoints: { total: 0, healthy: 0 } },
+    }));
+    expect(await screen.findByText("2 PROBLEMS")).toBeTruthy();
+    expect(screen.queryByText(/Updating for the selected environments/i)).toBeNull();
+    expect(screen.queryByText(/ALL SYSTEMS OPERATIONAL/i)).toBeNull();
+    window.localStorage?.clear();
+  });
+});

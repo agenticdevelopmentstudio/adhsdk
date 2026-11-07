@@ -56,6 +56,14 @@ export interface UseBoardResult {
    *  a second way to ask one question, which is the shape that caused the three-round
    *  bug above. A caller wanting the spinner tests `reason === "loading"`. */
   reason: BoardUnavailableReason | null;
+  /**
+   * True while `board` is the PREVIOUS environment choice's read, kept on screen until
+   * the new choice's own read lands. Its `problems` are unscoped, so lists filtered from
+   * it are still right; its `scope` (indicator, problem count, "N/M healthy") was judged
+   * over the old environments and must not be shown as this view's headline. Always
+   * false when `board` is null.
+   */
+  scopePending: boolean;
   error: Error | null;
   refetch: () => void;
 }
@@ -116,6 +124,7 @@ export function useBoard(opts: { environments?: readonly string[] | null } = {})
   return {
     board: reason == null ? data : null,
     reason,
+    scopePending: reason == null && q.isPlaceholderData,
     error: (q.error as Error | null) ?? null,
     refetch: () => void q.refetch(),
   };
