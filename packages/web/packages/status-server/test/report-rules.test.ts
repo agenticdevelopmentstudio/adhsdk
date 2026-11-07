@@ -524,6 +524,30 @@ describe("buildReport — rules the server adds", () => {
     expect(report.sections.integrations!.checks[0]!.detail).toBe("missed");
   });
 
+  it("an integration in error is a finding even when it reports itself unconfigured", () => {
+    // checkCloudflare with a token but no discoverable account, and the fallback for a check
+    // that threw, both say configured:false with state 'error'; the board shows them red.
+    const integrations: IntegrationsResponse = {
+      generatedAt: "x",
+      overall: "error",
+      selfCheck: null,
+      checks: [
+        {
+          id: "cloudflare", label: "Cloudflare", configured: false, ok: false, state: "error",
+          detail: "CLOUDFLARE_ACCOUNT_ID not set and could not auto-discover", missingEnv: ["CLOUDFLARE_ACCOUNT_ID"],
+        },
+        { id: "stats-store", label: "Stats store", configured: false, ok: false, state: "error", detail: "boom" },
+      ],
+    };
+    const report = build({ integrations: ok(integrations) });
+    expect(report.findings).toEqual([
+      { severity: "major", source: "integration:cloudflare", title: "Cloudflare integration error", detail: "CLOUDFLARE_ACCOUNT_ID not set and could not auto-discover" },
+      { severity: "major", source: "integration:stats-store", title: "Stats store integration error", detail: "boom" },
+    ]);
+    expect(report.coverage.integrations.unconfigured).toBeUndefined();
+    expect(report.verdict).toBe("degraded");
+  });
+
   it("runtime errors: fatal or a frequent 5xx is major, majors are listed first, and the rest is counted", () => {
     const groups = [
       ...Array.from({ length: 20 }, (_, i) => group({ key: `m${i}`, status: 404, level: "error", count: 50 })),
