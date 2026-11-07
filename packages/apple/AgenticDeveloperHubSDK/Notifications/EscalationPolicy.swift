@@ -20,16 +20,25 @@ public struct EscalationPolicy: Codable, Sendable, Equatable {
         }
     }
 
-    /// The urgency to present at, once the notice's age (from its timestamp)
-    /// reaches the threshold; nil before that, or when the step is off.
-    public func escalated(_ notice: Notice, now: Date) -> Notice.Urgency? {
+    /// Where the escalation clock starts: the notice's timestamp, or `since`
+    /// (when it went on screen) if that is later. A backlog notice drawn an
+    /// hour after it was posted gets its full threshold on screen.
+    private static func start(of notice: Notice, since: Date?) -> Date {
+        guard let since else { return notice.timestamp }
+        return max(notice.timestamp, since)
+    }
+
+    /// The urgency to present at, once the notice has been waiting the
+    /// threshold (counted from `since` when later than its timestamp); nil
+    /// before that, or when the step is off.
+    public func escalated(_ notice: Notice, since: Date? = nil, now: Date) -> Notice.Urgency? {
         guard let step = step(for: notice),
-              now.timeIntervalSince(notice.timestamp) >= step.after else { return nil }
+              now.timeIntervalSince(Self.start(of: notice, since: since)) >= step.after else { return nil }
         return step.to
     }
 
     /// When `escalated` will first answer non-nil, or nil if it never will.
-    public func nextCheck(for notice: Notice) -> Date? {
-        step(for: notice).map { notice.timestamp.addingTimeInterval($0.after) }
+    public func nextCheck(for notice: Notice, since: Date? = nil) -> Date? {
+        step(for: notice).map { Self.start(of: notice, since: since).addingTimeInterval($0.after) }
     }
 }

@@ -48,4 +48,21 @@ final class EscalationPolicyTests: XCTestCase {
             XCTAssertNil(policy.nextCheck(for: notice(urgency)))
         }
     }
+
+    func testSinceMovesTheClockStartLater() {
+        let policy = EscalationPolicy()
+        let soon = notice(.soon)
+        let shown = posted.addingTimeInterval(3600)
+        XCTAssertNil(policy.escalated(soon, since: shown, now: shown.addingTimeInterval(899)))
+        XCTAssertEqual(policy.escalated(soon, since: shown, now: shown.addingTimeInterval(900)), .now)
+        XCTAssertEqual(policy.nextCheck(for: soon, since: shown), shown.addingTimeInterval(900))
+    }
+
+    func testSinceBeforeTheTimestampCountsFromTheTimestamp() {
+        let policy = EscalationPolicy()
+        let soon = notice(.soon)
+        let earlier = posted.addingTimeInterval(-3600)
+        XCTAssertNil(policy.escalated(soon, since: earlier, now: posted.addingTimeInterval(899)))
+        XCTAssertEqual(policy.nextCheck(for: soon, since: earlier), posted.addingTimeInterval(900))
+    }
 }

@@ -213,3 +213,60 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         XCTAssertEqual(recorder.acts, ["a"], "a banner this presenter no longer tracks does nothing")
     }
 }
+
+/// Finding 7: `replace` keeps a card in place only when the new profile puts
+/// it on the same screens.
+@MainActor
+final class CardStackReplaceTests: XCTestCase {
+
+    // Fake display ids with no NSScreen: layout orders their panels out, so
+    // nothing reaches the real screen.
+    private func presenter() -> ToastPresenter {
+        let presenter = ToastPresenter(rules: { .defaults }, showHistory: {})
+        presenter.displays = { selection in
+            switch selection {
+            case .main: [1]
+            case .cursor: [2]
+            case .all: [1, 2]
+            }
+        }
+        return presenter
+    }
+
+    private func profile(_ screens: NoticeProfile.ScreenSelection) -> NoticeProfile {
+        NoticeProfile(
+            style: .toast, position: .topRight, screens: screens, layer: .floating,
+            autoDismiss: nil, forwardToSystem: false)
+    }
+
+    private let actions = NoticeCardActions(
+        act: {}, respond: { _, _ in }, snooze: nil, archive: nil, close: {})
+
+    func testReplaceOntoOtherScreensMovesTheCard() {
+        let presenter = presenter()
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.main), actions: actions)
+        XCTAssertEqual(presenter.displayIDs(of: "a"), [1])
+
+        presenter.replace(
+            oldID: "a", with: Notice(id: "a", source: "ci", title: "a"), profile: profile(.cursor),
+            actions: actions)
+
+        XCTAssertEqual(presenter.displayIDs(of: "a"), [2])
+        XCTAssertEqual(presenter.shownIDs, ["a"])
+        presenter.remove(id: "a")
+    }
+
+    func testReplaceOntoTheSameScreensStaysInPlace() {
+        let presenter = presenter()
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profile: profile(.all), actions: actions)
+
+        presenter.replace(
+            oldID: "a", with: Notice(id: "b", source: "ci", title: "b"), profile: profile(.all),
+            actions: actions)
+
+        XCTAssertEqual(Set(presenter.displayIDs(of: "b")), [1, 2])
+        XCTAssertEqual(presenter.displayIDs(of: "a"), [])
+        XCTAssertEqual(presenter.shownIDs, ["b"])
+        presenter.remove(id: "b")
+    }
+}

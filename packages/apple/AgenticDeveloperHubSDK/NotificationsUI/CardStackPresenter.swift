@@ -40,6 +40,12 @@ class CardStackPresenter: NoticePresenter {
     private var pills: [StackKey: Pill] = [:]
     private var screenObserver: NSObjectProtocol?
 
+    /// The displays a screen selection resolves to right now. Internal so a
+    /// test can stand in fixed displays for the live ones.
+    var displays: @MainActor (NoticeProfile.ScreenSelection) -> [UInt32] = { selection in
+        ScreenSelector.current(for: selection).map(\.noticeDisplayID)
+    }
+
     init(
         rules: @escaping @MainActor () -> NoticeRoutingRules,
         cardStyle: NoticeCardView.Style,
@@ -75,8 +81,8 @@ class CardStackPresenter: NoticePresenter {
         }
         let hideFromSharing = rules().hideFromScreenSharing
         var made: [Placement] = []
-        for screen in ScreenSelector.current(for: profile.screens) {
-            let key = StackKey(displayID: screen.noticeDisplayID, position: profile.position)
+        for displayID in displays(profile.screens) {
+            let key = StackKey(displayID: displayID, position: profile.position)
             let panel = NoticePanel(layer: profile.layer, hideFromSharing: hideFromSharing)
             let card = NoticeCardView(notice: notice, actions: actions, style: cardStyle)
             card.onHoverChange = { [weak self, weak card] hovered in
@@ -111,8 +117,12 @@ class CardStackPresenter: NoticePresenter {
     }
 
     func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+        // In place only while the card would land exactly where it stands:
+        // same position, same layer, same set of screens. An escalation from
+        // `.main` to `.cursor`, say, moves it.
         guard let existing = placements[oldID],
-              existing.allSatisfy({ $0.key.position == profile.position && $0.panel.level == level(profile) })
+              existing.allSatisfy({ $0.key.position == profile.position && $0.panel.level == level(profile) }),
+              Set(existing.map(\.key.displayID)) == Set(displays(profile.screens))
         else {
             remove(id: oldID)
             show(notice, profile: profile, actions: actions)
@@ -134,6 +144,11 @@ class CardStackPresenter: NoticePresenter {
         for key in touched {
             layout(key)
         }
+    }
+
+    /// The displays a notice's cards are on, for tests.
+    func displayIDs(of id: String) -> [UInt32] {
+        placements[id]?.map(\.key.displayID) ?? []
     }
 
     @discardableResult
