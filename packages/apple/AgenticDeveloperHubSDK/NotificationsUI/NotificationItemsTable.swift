@@ -114,6 +114,7 @@ final class NotificationItemsTable: NSObject, NSTableViewDataSource, NSTableView
     }
 
     /// Runs the action of a +/− segment: 0 adds, 1 removes the selection.
+    /// Its own entry point because a momentary NSSegmentedControl ignores a programmatic `selectedSegment`.
     func press(_ segment: Int) {
         switch segment {
         case 0: onAdd?()
@@ -125,7 +126,7 @@ final class NotificationItemsTable: NSObject, NSTableViewDataSource, NSTableView
     }
 
     @objc private func rowDoubleClicked() {
-        let row = tableView.clickedRow
+        let row = tableView.clickedRow >= 0 ? tableView.clickedRow : (tableView.selectedRowIndexes.first ?? -1)
         if row >= 0 { onEdit?(row) }
     }
 

@@ -112,7 +112,11 @@ public final class NoticeRulesControls {
     ) -> NSView {
         let current = get()
         let well = NSColorWell()
-        well.color = NSColor(srgbRed: current.red, green: current.green, blue: current.blue, alpha: 1)
+        // System and Theme carry no color of their own; seed the well with a
+        // visible neutral gray so switching to Custom starts from something.
+        well.color = current.source == .custom
+            ? NSColor(srgbRed: current.red, green: current.green, blue: current.blue, alpha: 1)
+            : NSColor(srgbRed: 0.5, green: 0.5, blue: 0.5, alpha: 1)
         well.isEnabled = current.source == .custom
         well.widthAnchor.constraint(equalToConstant: 44).isActive = true
         func custom() -> NoticeColor {
