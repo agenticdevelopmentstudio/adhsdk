@@ -671,11 +671,26 @@ public final class BrowserAutomation: NSObject {
         return png
     }
 
-    /// A real click at a viewport point in CSS pixels, through the engine.
-    /// Viewport, not page, coordinates: a page coordinate would be off by the
-    /// scroll offset on any page that has scrolled.
-    private func nativeClick(atViewportX x: Double, viewportY y: Double) async throws {
-        try await driver.nativeClick(atViewportX: x, viewportY: y)
+    /// Mouse down/up through the web view's own responder methods, so WebKit
+    /// handles it as a real click. The point is viewport CSS pixels: the web
+    /// view's bounds are the viewport, so a page coordinate would be off by
+    /// the scroll offset on any page that has scrolled.
+    private func nativeClick(atViewportX x: Double, viewportY y: Double) throws {
+        guard let window = webView.window else { throw BrowserAutomationError.noWindow }
+        let zoom = webView.pageZoom
+        var point = NSPoint(x: x * zoom, y: y * zoom)
+        if !webView.isFlipped { point.y = webView.bounds.height - point.y }
+        let inWindow = webView.convert(point, to: nil)
+        for (type, number) in [(NSEvent.EventType.leftMouseDown, 1), (.leftMouseUp, 2)] {
+            guard let event = NSEvent.mouseEvent(
+                with: type, location: inWindow, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1) else { continue }
+            let deliver = {
+                if type == .leftMouseDown { self.webView.mouseDown(with: event) } else { self.webView.mouseUp(with: event) }
+            }
+            // Marked as the agent's, so a gate that blocks the user's mouse still lets it through.
+            if let gated = webView as? BrowserWebView { gated.deliveringAutomationInput(deliver) } else { deliver() }
+        }
     }
 }
 // swiftlint:enable line_length identifier_name

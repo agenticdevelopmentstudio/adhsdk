@@ -161,9 +161,11 @@ public final class BrowserPaneViewController: NSViewController {
     /// What a new pane jar is named before its page has a title.
     static let untitledLabel = "Browser"
 
-    /// Task 5 swaps in the browser's own web view subclass here.
+    /// The one place a web view is made, for the first and for every rebuild,
+    /// so every page the pane shows sits behind an input gate
+    /// (`refreshInputGate`, reached from `wireWebView` via `applyLiveSettings`).
     private static func makeWebView(configuration: WKWebViewConfiguration) -> WKWebView {
-        LiveResizingWebView(frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: configuration)
+        BrowserWebView(frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: configuration)
     }
 
     /// Everything a new web view needs from the pane before it shows a page.
@@ -268,9 +270,19 @@ public final class BrowserPaneViewController: NSViewController {
         return configuration
     }
 
+    /// Recomputes the web view's input gate from the pane's settings and its
+    /// pause state. The one place the gate is built, so a settings change, a
+    /// pause change and a rebuilt web view (through `wireWebView`) all land on
+    /// the same answer. Only the web view is gated; the pane's address bar and
+    /// chrome never are. Not paused until Pause Events (section 7) exists.
+    private func refreshInputGate() {
+        (webView as? BrowserWebView)?.gate = BrowserInputGate(settings: settings, isPaused: false)
+    }
+
     /// Every setting WebKit lets change under a page, applied from the store.
     /// Called once at construction and again whenever a browser key changes.
     private func applyLiveSettings() {
+        refreshInputGate()
         let zoom = settings.get(UserSettings.browserPageZoom)
         let zoomRange = BrowserSettings.pageZoomRange
         webView.pageZoom = min(max(zoom, zoomRange.lowerBound), zoomRange.upperBound)
