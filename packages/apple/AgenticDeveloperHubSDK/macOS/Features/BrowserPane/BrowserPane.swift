@@ -15,6 +15,11 @@ extension ComposableTabsViewID {
 
 extension ComposableTabsViewRegistry {
 
+    /// The prefix every browser pane files its state under. Storage format,
+    /// like the view id: the jar reconciler reads a closed pane's storage-jar
+    /// override from the database by it, so the two must spell it once.
+    public nonisolated static let browserStatePrefix = "browser."
+
     /// Registers the browser pane: an address bar over a web view, reopening
     /// on the page it was last on.
     ///
@@ -50,7 +55,7 @@ extension ComposableTabsViewRegistry {
                 minimumThickness: 360
             )
         ) { context in
-            let state = context.makeStateStore(prefix: "browser.")
+            let state = context.makeStateStore(prefix: Self.browserStatePrefix)
             // Each pane answers from its own overrides first, then from the
             // shared settings, so one pane's zoom never moves another's.
             let layered = LayeredSettingsStore(
@@ -66,7 +71,10 @@ extension ComposableTabsViewRegistry {
                     paneNodeID: context.nodeID,
                     projectID: context.project.id,
                     projectName: context.project.displayName,
-                    worktreePath: context.workingDirectory.standardizedFileURL.path
+                    worktreePath: context.workingDirectory.standardizedFileURL.path,
+                    // One registry per database, so the reconciler sees every
+                    // jar held by every window's panes.
+                    jars: BrowserJarRegistry.shared(for: context.project.database)
                 )
             )
         }

@@ -140,7 +140,7 @@ final class ProjectDatabaseWorkingDirectoryTests: XCTestCase {
         try writeV3Database(at: path, repoID: repoID, nodeID: nodeID, tabID: tabID)
 
         let database = try ProjectDatabase(path: path)
-        XCTAssertEqual(try database.schemaVersion(), 4)
+        XCTAssertEqual(try database.schemaVersion(), ProjectDatabase.currentSchemaVersion)
 
         let loaded = try database.loadTabs(repoID: repoID)
         XCTAssertEqual(loaded.tabs.map(\.id), [tabID])
@@ -149,7 +149,7 @@ final class ProjectDatabaseWorkingDirectoryTests: XCTestCase {
 
         // Idempotency: opening the already-migrated file again must not fail.
         let reopened = try ProjectDatabase(path: path)
-        XCTAssertEqual(try reopened.schemaVersion(), 4)
+        XCTAssertEqual(try reopened.schemaVersion(), ProjectDatabase.currentSchemaVersion)
     }
 
     /// The crash window migration 4 used to leave open: the app was killed
@@ -169,7 +169,7 @@ final class ProjectDatabaseWorkingDirectoryTests: XCTestCase {
             at: path, repoID: repoID, nodeID: nodeID, tabID: tabID, withWorkingDirectoryColumn: true)
 
         let database = try ProjectDatabase(path: path)
-        XCTAssertEqual(try database.schemaVersion(), 4)
+        XCTAssertEqual(try database.schemaVersion(), ProjectDatabase.currentSchemaVersion)
 
         let loaded = try database.loadTabs(repoID: repoID)
         XCTAssertEqual(loaded.tabs.map(\.id), [tabID])

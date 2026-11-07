@@ -93,7 +93,9 @@ public final class BrowserAutomation: NSObject {
     public static let maximumTimeout: TimeInterval = 60
     public static let maximumScreenshotSide: CGFloat = 1568
 
-    public let webView: WKWebView
+    /// The page being driven. Replaced, never mutated, when the pane rebuilds
+    /// its web view onto another storage jar — see `retarget(to:)`.
+    public private(set) var webView: WKWebView
     public let console: BrowserConsoleLog
 
     public private(set) var isActionInFlight = false
@@ -109,7 +111,20 @@ public final class BrowserAutomation: NSObject {
         self.webView = webView
         self.console = console
         super.init()
-        self.loadObservation = webView.observe(\.isLoading, options: [.new]) { [weak self] _, change in
+        observeLoading()
+    }
+
+    /// Points the automation at a new web view: the pane's handle, the model's
+    /// tools and the drive badge all reach the page through this one object,
+    /// so a pane that swaps its web view moves them all by moving this.
+    public func retarget(to webView: WKWebView) {
+        guard webView !== self.webView else { return }
+        self.webView = webView
+        observeLoading()
+    }
+
+    private func observeLoading() {
+        loadObservation = webView.observe(\.isLoading, options: [.new]) { [weak self] _, change in
             let started = change.newValue == true
             Task { @MainActor in
                 guard let self else { return }
