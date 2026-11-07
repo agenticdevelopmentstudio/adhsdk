@@ -313,6 +313,12 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
         countdown.setPaused(hovered, for: .peerHover)
     }
 
+    /// The pointer is somewhere in this card's stack window: every card in the
+    /// stack holds still together.
+    func setStackHovered(_ hovered: Bool) {
+        countdown.setPaused(hovered, for: .stackHover)
+    }
+
     // MARK: Events
 
     @objc private func actionButtonClicked(_ sender: NSButton) {

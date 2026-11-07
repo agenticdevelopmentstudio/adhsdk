@@ -16,7 +16,7 @@ import AgenticDeveloperHubSDKNotifications
 /// Spotlight takes typing without stealing the frontmost app. It also means
 /// nothing waits on `NSApp.activate()`, which is only a request on macOS 14
 /// and later.
-public final class NoticePanel: NSPanel {
+public class NoticePanel: NSPanel {
 
     public let takesFocus: Bool
 
@@ -112,7 +112,8 @@ public final class NoticePanel: NSPanel {
     /// `false` means the window server refused (an inactive agent app, a panel
     /// off screen), and no resign notification will ever follow. A seam, so
     /// tests never make a real window key.
-    var takeKey: @MainActor (NoticePanel, @escaping @MainActor @Sendable (Bool) -> Void) -> Void = { panel, done in
+    typealias KeyTaker = @MainActor (NoticePanel, @escaping @MainActor @Sendable (Bool) -> Void) -> Void
+    final var takeKey: KeyTaker = { panel, done in
         panel.makeKey()
         RunLoop.main.perform(inModes: [.default]) {
             MainActor.assumeIsolated { done(panel.isKeyWindow) }
@@ -121,7 +122,7 @@ public final class NoticePanel: NSPanel {
 
     /// How `relinquishKey()` returns key. A seam, so tests never reorder a
     /// real window.
-    var handOffKey: @MainActor (NoticePanel) -> Void = { panel in
+    final var handOffKey: @MainActor (NoticePanel) -> Void = { panel in
         guard panel.isKeyWindow else { return }
         panel.orderOut(nil)
         panel.orderFrontRegardless()

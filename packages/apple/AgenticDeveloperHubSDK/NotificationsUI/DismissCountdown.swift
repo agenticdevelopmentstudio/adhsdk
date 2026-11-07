@@ -46,6 +46,8 @@ final class DismissCountdown {
         case hover
         /// The pointer is over the same notice on another screen.
         case peerHover
+        /// The pointer is over this card's stack window, on a card or off it.
+        case stackHover
         /// The card is in a stack's overflow, so nobody can see it.
         case hidden
         /// The user is typing a reply on this card.
