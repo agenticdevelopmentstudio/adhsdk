@@ -14,12 +14,15 @@ private struct Subject {
     let stub: StubURLProtocol.Stub
     let sleeps: SleepLog
 
-    init(_ replies: [StubURLProtocol.Reply], token: String = "tok") {
+    /// The default pacer never holds a call back, so only backoffs reach `sleeps`.
+    init(_ replies: [StubURLProtocol.Reply], token: String = "tok",
+         pacer: GmailQuotaPacer = GmailQuotaPacer(unitsPerSecond: 1_000_000, burstUnits: 1_000_000)) {
         let stub = StubURLProtocol.stub(replies)
         let sleeps = SleepLog()
         self.stub = stub
         self.sleeps = sleeps
-        api = GmailRESTClient(session: stub.session, sleep: { await sleeps.record($0) }, accessToken: { token })
+        api = GmailRESTClient(session: stub.session, sleep: { await sleeps.record($0) }, pacer: pacer,
+                              accessToken: { token })
     }
 
     init(status: Int = 200, body: Data, token: String = "tok") {
@@ -160,14 +163,75 @@ private let unavailable = StubURLProtocol.Reply.http(
         #expect(await subject.sleeps.slept == [.seconds(1), .seconds(2), .seconds(4), .seconds(8)])
     }
 
-    @Test func retriesStopAfterFourAndTheLastErrorSurfaces() async throws {
+    @Test func retriesStopAfterSixAndTheLastErrorSurfaces() async throws {
         let subject = Subject([unavailable])
         defer { subject.stub.unregister() }
         await #expect(throws: IntegrationError.gmail(status: 503, message: "Backend Error")) {
             _ = try await subject.api.profile()
         }
-        #expect(subject.requests.count == 5)
-        #expect(await subject.sleeps.slept == [.seconds(1), .seconds(2), .seconds(4), .seconds(8)])
+        #expect(subject.requests.count == 7)
+        #expect(await subject.sleeps.slept
+            == [.seconds(1), .seconds(2), .seconds(4), .seconds(8), .seconds(16), .seconds(32)])
+    }
+
+    /// The shape of body Gmail sent when the first sync of a real account went over the
+    /// per-user quota.
+    @Test func aRateLimit403IsRetried() async throws {
+        let quota = StubURLProtocol.Reply.http(status: 403, body: Data(#"""
+            {"error":{"code":403,"message":"Quota exceeded for quota metric 'Total Query Cost'",
+              "errors":[{"message":"Quota exceeded","domain":"usageLimits","reason":"rateLimitExceeded"}],
+              "status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo",
+              "reason":"RATE_LIMIT_EXCEEDED"}]}}
+            """#.utf8))
+        let subject = Subject([quota, .http(status: 200, body: profileBody)])
+        defer { subject.stub.unregister() }
+        _ = try await subject.api.profile()
+        #expect(subject.requests.count == 2)
+        #expect(await subject.sleeps.slept == [.seconds(1)])
+    }
+
+    @Test func aResourceExhausted403CountsAsRateLimited() {
+        let body = Data(#"{"error":{"code":403,"message":"Slow down","status":"RESOURCE_EXHAUSTED"}}"#.utf8)
+        #expect(GmailRESTClient.isRateLimited(403, body))
+        #expect(!GmailRESTClient.isRateLimited(400, body))
+    }
+
+    @Test func aPermission403IsNotRetried() async {
+        let denied = StubURLProtocol.Reply.http(status: 403, body: Data(#"""
+            {"error":{"code":403,"message":"Insufficient Permission",
+              "errors":[{"reason":"insufficientPermissions"}],"status":"PERMISSION_DENIED"}}
+            """#.utf8))
+        let subject = Subject([denied])
+        defer { subject.stub.unregister() }
+        await #expect(throws: IntegrationError.gmail(status: 403, message: "Insufficient Permission")) {
+            _ = try await subject.api.profile()
+        }
+        #expect(subject.requests.count == 1)
+        #expect(await subject.sleeps.slept.isEmpty)
+    }
+
+    // MARK: - Pacing
+
+    @Test func eachCallWaitsForTheQuotaItCosts() async throws {
+        let instant = ContinuousClock.now
+        // 5 units a second with no burst and a stopped clock: the 1-unit profile call waits
+        // 0.2 s, and the 2-unit history call after it 0.2 + 0.4 s.
+        let pacer = GmailQuotaPacer(unitsPerSecond: 5, burstUnits: 0, now: { instant })
+        let history = Data(#"{"historyId":"9"}"#.utf8)
+        let subject = Subject([.http(status: 200, body: profileBody), .http(status: 200, body: history)],
+                              pacer: pacer)
+        defer { subject.stub.unregister() }
+        _ = try await subject.api.profile()
+        _ = try await subject.api.history(startHistoryId: "7", pageToken: nil)
+        #expect(await subject.sleeps.slept == [.milliseconds(200), .milliseconds(600)])
+    }
+
+    @Test func theBurstAllowanceGoesOutWithoutWaiting() async {
+        let instant = ContinuousClock.now
+        let pacer = GmailQuotaPacer(unitsPerSecond: 10, burstUnits: 10, now: { instant })
+        #expect(await pacer.reserve(5) == .zero)
+        #expect(await pacer.reserve(5) == .zero)
+        #expect(await pacer.reserve(5) == .milliseconds(500))
     }
 
     @Test func backoffIsCappedAt32Seconds() {

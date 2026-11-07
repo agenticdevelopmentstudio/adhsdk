@@ -896,6 +896,7 @@
 		3AD14306A9B22422723C64ED /* HubScriptCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0620753AB7337024F73174DC /* HubScriptCommands.swift */; };
 		3AFC2FA4A1E46ABF8BDD6EE1 /* GitProcessBottleneckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCD69671F525F3E65FE5F4 /* GitProcessBottleneckTests.swift */; };
 		3B11DEF2425E20741FA19666 /* TestDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F79E971CC44B2BFCAE973D /* TestDefaults.swift */; };
+		3B1C67008EBDB0E7D11AFF7F /* GmailSettingsAccountErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88291AE9DCD4CBFF726D455F /* GmailSettingsAccountErrorTests.swift */; };
 		3B469D3FED24AA3D431C84F6 /* PointingHandButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F78C32BC10DF50DD9D5B89 /* PointingHandButton.swift */; };
 		3B470E821EF5D8C759230FBA /* ADKDIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B70EE87D8EFE90BAB54E0832 /* ADKDIdentifiers.swift */; };
 		3B499F0FE8CDA08BD98801D1 /* SystemMonitorEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6546194A4DD6075950519ED5 /* SystemMonitorEngine.swift */; };
@@ -3082,6 +3083,7 @@
 		EC67B717CE3C762F2D6B0271 /* WorkTrackingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 470C7CB7EA1578F8E2138BC8 /* WorkTrackingController.swift */; };
 		EC6A141B447768DBEC15F1E2 /* ModelCapability.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2B6D379F47B07BF4B4937C /* ModelCapability.swift */; };
 		EC78E7D93C788DBA24995951 /* MCPHTTPEndpointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9DC1007B72748241ACBB41 /* MCPHTTPEndpointTests.swift */; };
+		EC91CA4E367078BCDDB707F8 /* GmailQuotaPacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB9BA6C1F422E8C1DA74397 /* GmailQuotaPacer.swift */; };
 		ECB423F83CD3351A0658401B /* WebviewSchemeHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 860DECCFA33E3255662D8EDA /* WebviewSchemeHandlerTests.swift */; };
 		ECB58B1083AE05557E98B1DE /* GmailRESTClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7123F36F6CDB3739CAC4FF /* GmailRESTClientTests.swift */; };
 		ECCCD4CF6ADE6881F0E4A3EC /* QuietWindowPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C243733C7582C0C2A9C11759 /* QuietWindowPresentation.swift */; };
@@ -7115,6 +7117,7 @@
 		880C6F5814DB7DFA5A55C115 /* ChatStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStatus.swift; sourceTree = "<group>"; };
 		881A45FD2B6E5A6487D1C7AC /* SemanticPalette+PlatformAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SemanticPalette+PlatformAppearance.swift"; sourceTree = "<group>"; };
 		8824BB28D925748842198610 /* OlyloSchemaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OlyloSchemaTests.swift; sourceTree = "<group>"; };
+		88291AE9DCD4CBFF726D455F /* GmailSettingsAccountErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailSettingsAccountErrorTests.swift; sourceTree = "<group>"; };
 		88373850124217B527448A43 /* AppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceController.swift; sourceTree = "<group>"; };
 		883CA59FA4ADE5F49AF0BCD0 /* ImportedTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedTitleTests.swift; sourceTree = "<group>"; };
 		885AEAE97C3707AC340B4013 /* MarkdownTextPaneInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextPaneInputTests.swift; sourceTree = "<group>"; };
@@ -7324,6 +7327,7 @@
 		9E9B3F631CE073E1D1B571CF /* HubWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubWorkspace.swift; sourceTree = "<group>"; };
 		9E9D37F1CBF5AE36C246B320 /* PartnerJobsEditorModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerJobsEditorModelTests.swift; sourceTree = "<group>"; };
 		9EB4AA8E7187010DC5EF4DB6 /* NSImageSymbolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImageSymbolTests.swift; sourceTree = "<group>"; };
+		9EB9BA6C1F422E8C1DA74397 /* GmailQuotaPacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailQuotaPacer.swift; sourceTree = "<group>"; };
 		9EBCA27A60E63D3CDC9CBBC9 /* SystemWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowManager.swift; sourceTree = "<group>"; };
 		9ED0F2867584C040498E3EDE /* PinnedEndsLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedEndsLine.swift; sourceTree = "<group>"; };
 		9ED3F72B943BB4881515640C /* GmailSyncWorkerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailSyncWorkerTests.swift; sourceTree = "<group>"; };
@@ -9348,6 +9352,7 @@
 		1A6587834F289EE475D49C87 /* Integrations */ = {
 			isa = PBXGroup;
 			children = (
+				88291AE9DCD4CBFF726D455F /* GmailSettingsAccountErrorTests.swift */,
 				DEEE6A3A712C9662182BF133 /* GmailSettingsModelTests.swift */,
 				81B5EBC1AB74B25E1282A0B6 /* ScriptedMailService.swift */,
 			);
@@ -11519,6 +11524,7 @@
 			children = (
 				ECC4458926D29CE7271D66B4 /* GmailAPI.swift */,
 				AAED6EACE1697166326E33B6 /* GmailMessageParser.swift */,
+				9EB9BA6C1F422E8C1DA74397 /* GmailQuotaPacer.swift */,
 				90AB9E4B48B1FD028E456A8F /* GmailRESTClient.swift */,
 				0D47EDD231822570BDB4A43C /* GmailSyncWorker.swift */,
 			);
@@ -17591,6 +17597,7 @@
 				67DED517690F36074600C8BD /* GitRepoScannerTests.swift in Sources */,
 				308700A789E59E08A45BB5A9 /* GitSettingsPanelViewControllerTests.swift in Sources */,
 				5CB385CB791978987A443E8E /* GitStatusProviderRefreshTests.swift in Sources */,
+				3B1C67008EBDB0E7D11AFF7F /* GmailSettingsAccountErrorTests.swift in Sources */,
 				6F676AE24D94FE524249117A /* GmailSettingsModelTests.swift in Sources */,
 				24EF86B631CB613136167937 /* HelpContentTests.swift in Sources */,
 				6A9CAA77881925A715858B75 /* HelpDrawerControllerTests.swift in Sources */,
@@ -18226,6 +18233,7 @@
 			files = (
 				63CB5A143C7ED64DF78DF438 /* GmailAPI.swift in Sources */,
 				5C3977F2AC509A892E6CABE8 /* GmailMessageParser.swift in Sources */,
+				EC91CA4E367078BCDDB707F8 /* GmailQuotaPacer.swift in Sources */,
 				5B35011D4DE2588CBCC600B0 /* GmailRESTClient.swift in Sources */,
 				F8E43000CFB976764561F7D5 /* GmailSyncWorker.swift in Sources */,
 				8F2E27662643D7EFACF034F5 /* GoogleAuthorizer.swift in Sources */,

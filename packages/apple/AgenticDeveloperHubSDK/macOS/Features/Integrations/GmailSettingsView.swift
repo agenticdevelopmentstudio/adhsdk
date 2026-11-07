@@ -16,13 +16,37 @@ struct GmailSettingsView: View {
             oauthClientSection
             Divider()
             accountsSection
-            if let message = model.errorMessage {
-                Text(message).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
-            }
             Spacer(minLength: 0)
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Errors are shown as alerts, not inline text.
+        .onChange(of: model.errorMessage, initial: true) { _, message in
+            guard let message else { return }
+            Self.presentAlert(title: "Gmail", message: message) { model.dismissError() }
+        }
+        .onChange(of: model.accountError, initial: true) { _, alert in
+            guard let alert else { return }
+            Self.presentAlert(title: "\(alert.email) couldn't sync", message: alert.message) {
+                model.dismissAccountError()
+            }
+        }
+    }
+
+    /// Shows a warning alert, as a sheet on the key window when there is one, and runs
+    /// `onClose` when it is dismissed.
+    private static func presentAlert(title: String, message: String, onClose: @escaping @MainActor () -> Void) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        if let window = NSApp.keyWindow {
+            alert.beginSheetModal(for: window) { _ in MainActor.assumeIsolated { onClose() } }
+        } else {
+            alert.runModal()
+            onClose()
+        }
     }
 
     // MARK: - OAuth client
@@ -135,9 +159,6 @@ struct GmailSettingsView: View {
                     .padding(.horizontal, 6)
                     .background(.quaternary, in: Capsule())
             }
-            if account.status == .error, let lastError = account.lastError {
-                Text(lastError).font(.caption).foregroundStyle(.red)
-            }
             Text(GmailSettingsModel.lastSyncedText(account.lastSyncAt))
                 .font(.caption).foregroundStyle(.secondary)
         }
@@ -152,6 +173,9 @@ struct GmailSettingsView: View {
                 }
                 Button("Sync Now") { Task { await model.syncNow(accountId: account.id) } }
                     .disabled(model.busy)
+                if account.status == .error, account.lastError != nil {
+                    Button("Show Error") { model.showError(accountId: account.id) }
+                }
             }
             Toggle("Sync archived mail", isOn: binding(account, \.includeArchived))
             Toggle("Sync junk mail", isOn: binding(account, \.includeSpam))

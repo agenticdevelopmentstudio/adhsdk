@@ -13,6 +13,16 @@ public final class GmailSettingsModel: ObservableObject {
     @Published public private(set) var errorMessage: String?
     /// True while a browser sign-in (Add Account or Reconnect) is waiting for the user.
     @Published public private(set) var signingIn = false
+    /// An account's sync error the user has not seen yet. The view shows it as an alert and
+    /// calls `dismissAccountError()`; the account row carries only the "Error" badge.
+    @Published public private(set) var accountError: AccountErrorAlert?
+
+    /// One account's sync error, as the alert shows it.
+    public struct AccountErrorAlert: Equatable, Sendable {
+        public let accountId: String
+        public let email: String
+        public let message: String
+    }
 
     private let client: MailClient
     /// Calls in flight; `busy` is true while any is.
@@ -27,6 +37,10 @@ public final class GmailSettingsModel: ObservableObject {
     /// The newest settings the user chose, per account, kept until its sends finish — so a
     /// reload landing mid-send shows that choice rather than the service's previous value.
     private var latestSettings: [String: MailSyncSettings] = [:]
+    /// The error each account was last alerted about, so a reload does not alert again about
+    /// the same failure. An account leaves this once it is no longer in error, so a later
+    /// failure alerts even when its message is the same.
+    private var alertedErrors: [String: String] = [:]
 
     public init(client: MailClient) {
         self.client = client
@@ -85,6 +99,36 @@ public final class GmailSettingsModel: ObservableObject {
     /// Clears the error message without making a call.
     public func dismissError() {
         errorMessage = nil
+    }
+
+    /// Closes the account error alert, then raises the next account error not yet shown.
+    public func dismissAccountError() {
+        accountError = nil
+        raiseNextAccountError()
+    }
+
+    /// Shows the account's error again, on request ("Show Error").
+    public func showError(accountId: String) {
+        guard let account = accounts.first(where: { $0.id == accountId }),
+              account.status == .error, let message = account.lastError else { return }
+        alertedErrors[account.id] = message
+        accountError = AccountErrorAlert(accountId: account.id, email: account.email, message: message)
+    }
+
+    /// Forgets accounts that are no longer in error, then alerts about the first account error
+    /// not yet shown, unless an alert is already up.
+    private func raiseNextAccountError() {
+        let failing = Dictionary(uniqueKeysWithValues: accounts.compactMap { account in
+            account.status == .error ? account.lastError.map { (account.id, $0) } : nil
+        })
+        alertedErrors = alertedErrors.filter { failing[$0.key] != nil }
+        guard accountError == nil,
+              let account = accounts.first(where: { account in
+                  failing[account.id].map { alertedErrors[account.id] != $0 } ?? false
+              }),
+              let message = failing[account.id] else { return }
+        alertedErrors[account.id] = message
+        accountError = AccountErrorAlert(accountId: account.id, email: account.email, message: message)
     }
 
     /// Also the "Reconnect" flow: the service matches the account by email and reuses it.
@@ -229,5 +273,6 @@ public final class GmailSettingsModel: ObservableObject {
         if !accounts.contains(where: { $0.id == selectedAccountId }) {
             selectedAccountId = accounts.first?.id
         }
+        raiseNextAccountError()
     }
 }
