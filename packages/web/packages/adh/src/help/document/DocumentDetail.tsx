@@ -354,7 +354,8 @@ function TutorialPane({
 }) {
   const label = paneLabel(tutorial.part);
   // The API button is the Overview's: it opens the API explorer on the routes the card's `## API`
-  // names. A card whose API names no route has nothing to highlight, so it has no button.
+  // names, with that section's prose above it. A card whose API names no route has nothing to
+  // highlight, so it has no button, and its Overview shows the prose as a panel instead.
   const action =
     tutorial.part === "overview" && tutorial.api.length ? (
       <ApiButton
@@ -364,6 +365,7 @@ function TutorialPane({
         title={`API: ${card.name}`}
         highlight={tutorial.api}
         highlightLabel="This tutorial"
+        intro={<Blocks html={card.api} />}
       />
     ) : undefined;
   let body: ReactNode;
@@ -378,6 +380,7 @@ function TutorialPane({
             </Panel>
           ) : null}
           <Screenshots card={card} />
+          {tutorial.api.length ? null : <Api card={card} />}
           <Links card={card} title="References" />
           <Tech card={card} />
         </>
