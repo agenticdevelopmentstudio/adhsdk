@@ -459,12 +459,19 @@ extension DaemonDatabase {
     /// ``claudeProviderOfTimeRead`` so `turns_time` answers it; one scoped to
     /// sessions (`sessionScoped`) keeps `provider = ?` for `turns_session`.
     ///
-    /// `throughTurnId` keeps only turns with `id <= throughTurnId` (nil: all).
+    /// `throughTurnId` keeps only turns with `id <= throughTurnId`, and
+    /// `afterTurnId` only those with `id > afterTurnId` (nil: no bound).
     static func claudeTurnFilter(
-        since: Double?, until: Double?, toolName: String?, sessionScoped: Bool, throughTurnId: Int64? = nil
+        since: Double?, until: Double?, toolName: String?, sessionScoped: Bool, throughTurnId: Int64? = nil,
+        afterTurnId: Int64? = nil
     ) -> (conditions: [String], arguments: [any DatabaseValueConvertible]) {
         let ranged = since != nil || until != nil
-        var conditions = [ranged && !sessionScoped ? claudeProviderOfTimeRead : "provider = ?"]
+        // An id range alone must drive the read by rowid: given `provider = ?`
+        // the planner walks `turns_session` instead, i.e. every Claude turn on
+        // every chunk. The unary `+` takes the column off the index.
+        let idRanged = afterTurnId != nil && !ranged && !sessionScoped
+        var conditions = [ranged && !sessionScoped ? claudeProviderOfTimeRead
+                          : idRanged ? "+provider = ?" : "provider = ?"]
         var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name]
         if since != nil || until != nil {
             conditions.append("time >= ?")
@@ -486,6 +493,10 @@ extension DaemonDatabase {
             conditions.append("id <= ?")
             arguments.append(throughTurnId)
         }
+        if let afterTurnId {
+            conditions.append("id > ?")
+            arguments.append(afterTurnId)
+        }
         return (conditions, arguments)
     }
 
@@ -502,6 +513,8 @@ extension DaemonDatabase {
     ///   SQL, so a whole-history read never materialises every group.
     /// - `throughTurnId`: count only turns with `turns.id` at most this (nil: all)
     ///   — what a summary that has read the turns up to an id needs.
+    /// - `afterTurnId`: count only turns with `turns.id` above this (nil: all);
+    ///   with `throughTurnId` it bounds one chunk of a whole-store scan.
     /// - `deadline`: nil is the store's read deadline; a whole-store scan
     ///   (repricing) passes `DaemonDatabase.maintenanceReadDeadline`.
     public func claudeTurnTotals(
@@ -512,13 +525,14 @@ extension DaemonDatabase {
         groupBy: ClaudeTurnGrouping = .all,
         topKeys: Int? = nil,
         throughTurnId: Int64? = nil,
+        afterTurnId: Int64? = nil,
         deadline: Duration? = nil
     ) throws -> [ClaudeTurnTotals] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
         let filter = Self.claudeTurnFilter(
             since: since, until: until, toolName: toolName, sessionScoped: unique != nil,
-            throughTurnId: throughTurnId)
+            throughTurnId: throughTurnId, afterTurnId: afterTurnId)
         let keySQL: String
         switch groupBy {
         case .all: keySQL = "'all'"

@@ -217,6 +217,15 @@ final class ClaudeInsightReadsTests: XCTestCase {
 
         let scoped = DaemonDatabase.claudeTurnFilter(since: 1, until: 2, toolName: nil, sessionScoped: true)
         XCTAssertEqual(scoped.conditions.first, "provider = ?", "a session-scoped read keeps the session index")
+
+        // A chunk of a whole-store scan seeks its id range, never the session index.
+        let chunk = DaemonDatabase.claudeTurnFilter(
+            since: nil, until: nil, toolName: nil, sessionScoped: false, throughTurnId: 20, afterTurnId: 10)
+        let chunkPlan = try plan(
+            "SELECT session_id, COUNT(*) FROM turns WHERE \(chunk.conditions.joined(separator: " AND ")) "
+                + "GROUP BY session_id", chunk.arguments)
+        XCTAssertTrue(chunkPlan.contains("PRIMARY KEY"), chunkPlan)
+        XCTAssertFalse(chunkPlan.contains("turns_session"), chunkPlan)
     }
 
     // MARK: - No store

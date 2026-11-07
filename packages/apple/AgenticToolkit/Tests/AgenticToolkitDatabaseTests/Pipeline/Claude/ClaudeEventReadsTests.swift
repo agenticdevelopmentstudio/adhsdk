@@ -489,6 +489,30 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(try database.metricsForSession(sessionId: "s1")?.totalCostUsd, 1)
     }
 
+    func testRepricingInChunksSumsASessionSpreadAcrossThem() throws {
+        try turn("a", "s1", "2026-06-01T12:00:00Z", input: 1000, output: 2000)
+        try turn("b", "s2", "2026-06-01T12:01:00Z", output: 700)
+        try turn("c", "s1", "2026-06-01T12:02:00Z", model: "claude-opus-4-1", output: 500)
+        try turn("d", "s1", "2026-06-01T12:03:00Z", output: 30)
+        try storeCost(999, session: "s1", in: database)
+        try storeCost(999, session: "s2", in: database)
+
+        // One turn per chunk: s1's three turns land in three different reads.
+        database.repriceSessionMetricsIfNeeded(chunkTurns: 1)
+
+        func sonnet(input: Int = 0, output: Int) -> Double {
+            TranscriptPricing.cost(model: "claude-sonnet-4-6", inputTokens: input, outputTokens: output,
+                                   cacheReadTokens: 0, cacheCreationTokens: 0, cacheCreation1hTokens: 0)
+        }
+        let opus = TranscriptPricing.cost(model: "claude-opus-4-1", inputTokens: 0, outputTokens: 500,
+                                          cacheReadTokens: 0, cacheCreationTokens: 0, cacheCreation1hTokens: 0)
+        XCTAssertEqual(try XCTUnwrap(try database.metricsForSession(sessionId: "s1")).totalCostUsd,
+                       sonnet(input: 1000, output: 2000) + opus + sonnet(output: 30), accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(try database.metricsForSession(sessionId: "s2")).totalCostUsd,
+                       sonnet(output: 700), accuracy: 1e-9)
+        XCTAssertEqual(try database.setting(for: Self.pricingRevisionKey), String(TranscriptPricing.revision))
+    }
+
     // MARK: - Trimmed turns
 
     /// Every total of a session's metrics, cost to the nanodollar.
