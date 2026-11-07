@@ -364,6 +364,10 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   double _zoomFactor;
   BOOL _creating;
   BOOL _closed;
+  /// Self, held while Chromium creates the browser: `SetAsChild` takes the
+  /// parent unretained, and creation finishes on a later turn of the loop,
+  /// so a pane closed in between would otherwise hand CEF a freed view.
+  ADHChromiumBrowserView* _retainedWhileCreating;
 }
 
 - (instancetype)initWithFrame:(NSRect)frame options:(ADHChromiumBrowserOptions*)options {
@@ -406,6 +410,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
     return;
   }
   _creating = YES;
+  _retainedWhileCreating = self;
   _client = new ADHBrowserClient(self);
 
   NSRect bounds = self.bounds;
@@ -436,6 +441,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   if (!CefBrowserHost::CreateBrowser(windowInfo, _client, CefString(), settings, nullptr, context)) {
     [ADHChromiumRuntime.shared browserDidClose];
     _creating = NO;
+    _retainedWhileCreating = nil;
     _client = nullptr;
     [self failPendingWithDescription:@"Chromium could not create a browser"];
   }
@@ -443,8 +449,13 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
 
 - (void)browserDidOpen:(CefRefPtr<CefBrowser>)browser {
   _creating = NO;
+  // Released at the end of this method, not here: the view may be closing.
+  ADHChromiumBrowserView* retained = _retainedWhileCreating;
+  _retainedWhileCreating = nil;
+  (void)retained;
   if (_closed) {
     browser->GetHost()->CloseBrowser(true);
+    _client->Detach();
     return;
   }
   _browser = browser;
@@ -470,6 +481,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   _devToolsRegistration = nullptr;
   _browser = nullptr;
   _creating = NO;
+  _retainedWhileCreating = nil;
   [self failPendingWithDescription:@"The Chrome pane closed"];
 }
 
