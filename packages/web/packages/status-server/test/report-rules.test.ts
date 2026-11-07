@@ -349,11 +349,28 @@ describe("buildReport — ported digest rules", () => {
     expect(report.verdict).toBe("degraded");
   });
 
-  it("a down service without an issue is critical", () => {
+  it("a down endpoint is critical through the board's problem", () => {
     const snapshot = { ...SNAPSHOT, services: [service({ slug: "s", name: "Shop", status: "down", error: "timeout" })] };
-    const report = build({ monitor: ok({ ...MONITOR, snapshot }) });
+    const down = problem({ target: "s", source: "http", name: "Shop", severity: "critical", state: "down", detail: "timeout" });
+    const report = build({ monitor: ok({ ...MONITOR, snapshot, problems: [down] }) });
     expect(report.verdict).toBe("down");
-    expect(report.findings[0]).toMatchObject({ severity: "critical", source: "monitor:http", title: "Shop production: down", detail: "timeout" });
+    expect(report.findings).toHaveLength(1);
+    expect(report.findings[0]).toMatchObject({ severity: "critical", source: "monitor:http", title: "Shop production: http down", detail: "timeout" });
+  });
+
+  it("a non-healthy service the board holds back is counted, not a finding", () => {
+    // monitorHttp off reads 'down'; a slow probe inside its confirm window reads 'degraded'.
+    const snapshot = {
+      ...SNAPSHOT,
+      services: [
+        service({ slug: "off", name: "Off", status: "down", error: "timeout" }),
+        service({ slug: "slow", name: "Slow", status: "degraded" }),
+      ],
+    };
+    const report = build({ monitor: ok({ ...MONITOR, snapshot }) });
+    expect(report.findings).toEqual([]);
+    expect(report.verdict).toBe("healthy");
+    expect(report.sections.monitor!.byStatus).toEqual({ degraded: 1, down: 1 });
   });
 
   it("a deploy failure fixed by a later build is not failing", () => {
@@ -613,7 +630,7 @@ describe("buildReport — rules the server adds", () => {
     const report = build({
       uptime: ok({ days: 7, overallUptimePercent: null, overallUptimeTone: "unknown", services: [{ slug: "s", name: "Shop", uptimePercent: 90, totalChecks: 1 } as UptimeResponse["services"][number]] }),
       integrations: { ok: false, error: "x" },
-      monitor: ok({ ...MONITOR, snapshot: { ...SNAPSHOT, services: [service({ status: "down" })] } }),
+      monitor: ok({ ...MONITOR, problems: [problem({ target: "s", source: "http", severity: "critical", state: "down" })] }),
     });
     expect(report.findings.map((f) => [f.severity, f.source])).toEqual([
       ["critical", "monitor:http"],

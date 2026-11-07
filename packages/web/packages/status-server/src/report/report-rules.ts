@@ -203,17 +203,10 @@ export function digestMonitor(input: MonitorInput, ctx: MonitorContext): Digest<
     );
   }
 
-  // An unhealthy service the fold has not (yet) opened a problem for.
-  const covered = new Set(problems.map((p) => p.target));
-  for (const s of snapshot.services) {
-    if (s.status === 'healthy' || s.status === 'unknown' || covered.has(s.slug)) continue;
-    findings.push(
-      finding(s.status === 'down' ? 'critical' : 'major', 'monitor:http', `${words(s.name, s.environment)}: ${s.status}`, {
-        detail: s.error,
-        link: s.url,
-      }),
-    );
-  }
+  // Board problems are the only monitor findings. A non-healthy service with no problem is
+  // one the board holds back on purpose (monitorHttp off, a degraded probe not yet past its
+  // confirm window); raising it here would grade it before, and harder than, the board does.
+  // section.byStatus still counts it.
 
   if (input.stale) {
     const detail = input.lastCycleAt
