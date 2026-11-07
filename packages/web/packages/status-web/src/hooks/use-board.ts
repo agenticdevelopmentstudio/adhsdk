@@ -81,7 +81,7 @@ export function useBoard(opts: { environments?: readonly string[] | null } = {})
     // rather than flashing the loading panel on every filter toggle.
     placeholderData: keepPreviousData,
     // The server says how often to re-read it — the same number its `staleAt` assumes.
-    refetchInterval: (query) => query.state.data?.freshness.pollIntervalMs ?? FIRST_POLL_MS,
+    refetchInterval: (query) => query.state.data?.freshness?.pollIntervalMs ?? FIRST_POLL_MS,
     // Fix Round 2 item 5: matches useLiveSnapshot's own `retry: 1` (use-live-snapshot.ts),
     // the sibling feed that gates the SAME OverviewTab loading screen. Board and live
     // already poll on their own cadence regardless, so React
@@ -102,11 +102,13 @@ export function useBoard(opts: { environments?: readonly string[] | null } = {})
   // fails — so the client's clock is compared to the server's deadline, and an
   // unparseable deadline fails closed. All of it folds into `board === null` here, in
   // one place, so no consumer can render a verdict off a board that cannot back one.
+  // A board from a backend older than `freshness` carries no deadline at all: it reads as
+  // stale (no deadline parses), the same fail-closed path as an unreadable one.
   const nowMs = useNow();
   const data = q.data ?? null;
   const reason: BoardUnavailableReason | null =
     data == null ? (q.isLoading ? "loading" : "unavailable")
-    : !(nowMs <= Date.parse(data.freshness.staleAt)) ? "stale"
+    : !(nowMs <= Date.parse(data.freshness?.staleAt ?? "")) ? "stale"
     : data.freshness.state === "current" ? null
     : data.freshness.state === "no-data" ? "no-data"
     : "frozen";

@@ -27,8 +27,9 @@ export function usePortfolioIndicator(): PortfolioIndicator {
   // fresh, so a healthy monitor is unaffected. This is a DIFFERENT fact from the
   // board's own staleness below: the live transport and the board poll fail
   // independently, and either one alone going stale is real information the other
-  // can't stand in for.
-  const stale = store.snapshot != null && store.snapshot.freshness.state !== "fresh";
+  // can't stand in for. A snapshot from a backend older than `freshness` gives no
+  // verdict, and no verdict is not "fresh": it reads as stale, so the pill says unknown.
+  const stale = store.snapshot != null && store.snapshot.freshness?.state !== "fresh";
   // `board === null`, not a `polling` test and not a deletion: this means "nothing
   // has come back yet, do not claim a colour" — and the thing that must now have
   // come back is the board. Without it the pill would render a false green

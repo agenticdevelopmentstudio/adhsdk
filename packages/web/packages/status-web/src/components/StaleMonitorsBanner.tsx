@@ -53,8 +53,9 @@ export function StaleMonitorsBanner(): ReactElement | null {
   const [pending, setPending] = useState<Row | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const stale = store.snapshot?.staleMonitors.monitors ?? [];
-  const thresholdDays = store.snapshot?.staleMonitors.thresholdDays ?? 0;
+  // A backend older than `staleMonitors` sends none: nothing to offer, not a crash.
+  const stale = store.snapshot?.staleMonitors?.monitors ?? [];
+  const thresholdDays = store.snapshot?.staleMonitors?.thresholdDays ?? 0;
 
   const rows: Row[] = stale.map((m) => {
     const host = hostOf(m.url) || m.url;

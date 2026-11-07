@@ -140,6 +140,20 @@ describe("useBoard", () => {
 });
 
 describe("useBoard — folding staleness into null (Fix Round 3 item 1)", () => {
+  it("a board from a backend older than `freshness` reads as stale instead of throwing", async () => {
+    const { freshness: _gone, ...older } = board;
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(older), {
+      status: 200, headers: { "content-type": "application/json" },
+    })));
+
+    const { result } = renderHook(() => useBoard(), { wrapper });
+    await waitFor(() => expect(result.current.reason).not.toBe("loading"));
+
+    expect(result.current.board).toBeNull();
+    expect(result.current.reason).toBe("stale");
+    expect(result.current.error).toBeNull();
+  });
+
   it("a stale-but-present board reads as null, with reason \"stale\" — a successful fetch is not the same as a current one", async () => {
     const staleBoard: Board = {
       ...board,
