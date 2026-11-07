@@ -101,4 +101,11 @@ struct PermissionMetadataTests {
                 == "Lets a helper read data other apps keep, such as Notification Center's history."
         )
     }
+
+    /// The notifications row is shared by every host, so its explanation must
+    /// not describe one host's notifications (it once spoke of "sessions").
+    @Test("Notifications explanation names no host's own events")
+    func testNotificationsExplanationIsHostNeutral() {
+        #expect(Permission.notifications.explanation == "Lets this app show its notifications in Notification Center.")
+    }
 }

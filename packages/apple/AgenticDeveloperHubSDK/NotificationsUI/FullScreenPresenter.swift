@@ -26,6 +26,7 @@ public final class FullScreenPresenter: NoticePresenter {
     private let rules: @MainActor () -> NoticeRoutingRules
     private let windowing: NoticeWindowing
     private let screens: NoticeScreenProvider
+    private let blur: WindowBackgroundBlur
     public private(set) var shownIDs: [String] = []
     private var placements: [String: [Placement]] = [:]
     private var screenObserver: NSObjectProtocol?
@@ -38,11 +39,13 @@ public final class FullScreenPresenter: NoticePresenter {
     init(
         rules: @escaping @MainActor () -> NoticeRoutingRules,
         windowing: NoticeWindowing,
-        screens: @escaping NoticeScreenProvider
+        screens: @escaping NoticeScreenProvider,
+        blur: WindowBackgroundBlur = .live
     ) {
         self.rules = rules
         self.windowing = windowing
         self.screens = screens
+        self.blur = blur
         screenObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -85,7 +88,8 @@ public final class FullScreenPresenter: NoticePresenter {
         var made: [Placement] = []
         for screen in screens(rules().screens) {
             let panel = Self.makePanel(frame: screen.frame, layer: profile.layer, hideFromSharing: hideFromSharing)
-            let view = FullScreenNoticeView(notice: notice, actions: actions, appearance: profile.fullScreen)
+            let view = FullScreenNoticeView(
+                notice: notice, actions: actions, appearance: profile.fullScreen, blur: blur)
             panel.contentView = view
             made.append(Placement(displayID: screen.displayID, panel: panel, view: view))
         }
@@ -94,6 +98,8 @@ public final class FullScreenPresenter: NoticePresenter {
         shownIDs.append(notice.id)
         for placement in made {
             windowing.present(placement.panel)
+            // The panel has a window-server window only once it is ordered in.
+            placement.view.paintBackdrop()
         }
         // The newest one, on the first screen, takes the keyboard.
         if let first = made.first {
@@ -152,10 +158,11 @@ public final class FullScreenPresenter: NoticePresenter {
     }
 }
 
-/// The backdrop and the card centered on it. The backdrop is two layers: a
-/// blur (an `NSVisualEffectView` whose `alphaValue` is how much of the blur
-/// shows, since macOS offers no radius) and a tint over it. The view is the
-/// panel's first responder, so Esc reaches it.
+/// The backdrop and the card centered on it. The backdrop is a blur of what
+/// is behind the panel, then a tint over it. The blur is the window server's
+/// per-window radius (`WindowBackgroundBlur`); where that is unavailable it
+/// falls back to an `NSVisualEffectView`, which can only blur fully or not at
+/// all. The view is the panel's first responder, so Esc reaches it.
 @MainActor
 final class FullScreenNoticeView: NSView {
 
@@ -164,6 +171,9 @@ final class FullScreenNoticeView: NSView {
     private let tintView = NSView()
     private var actions: NoticeCardActions
     private var backdrop: NoticeProfile.FullScreenAppearance
+    private let blur: WindowBackgroundBlur
+    /// The radius last set on the window, or nil while the fallback view blurs.
+    private(set) var appliedBlurRadius: Int?
     private var palette: SemanticPalette = ThemePaletteObserver.currentPalette
     private var observer: ThemePaletteObserver?
 
@@ -171,9 +181,15 @@ final class FullScreenNoticeView: NSView {
     /// item's opacity.
     var tintLayer: CALayer { tintView.layer ?? CALayer() }
 
-    init(notice: Notice, actions: NoticeCardActions, appearance: NoticeProfile.FullScreenAppearance = .init()) {
+    init(
+        notice: Notice,
+        actions: NoticeCardActions,
+        appearance: NoticeProfile.FullScreenAppearance = .init(),
+        blur: WindowBackgroundBlur = .live
+    ) {
         self.actions = actions
         self.backdrop = appearance
+        self.blur = blur
         card = NoticeCardView(notice: notice, actions: actions, style: .alert)
         super.init(frame: .zero)
         blurView.material = .fullScreenUI
@@ -216,8 +232,24 @@ final class FullScreenNoticeView: NSView {
         paintBackdrop()
     }
 
-    private func paintBackdrop() {
-        blurView.alphaValue = backdrop.blur
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        paintBackdrop()
+    }
+
+    /// Sets the blur and the tint from the appearance. The radius needs the
+    /// panel's window-server window, which exists once it is ordered in.
+    func paintBackdrop() {
+        let radius = WindowBackgroundBlur.radius(for: backdrop.blur)
+        if let window, window.windowNumber > 0, blur.apply(window, radius) {
+            appliedBlurRadius = radius
+            blurView.isHidden = true
+        } else {
+            appliedBlurRadius = nil
+            // All or nothing: below an alpha of 1 the window server drops it.
+            blurView.isHidden = radius == 0
+            blurView.alphaValue = 1
+        }
         let color = backdrop.color.resolved(system: .black, themeRole: .windowBackground, palette: palette)
         tintView.layer?.backgroundColor = color.withAlphaComponent(backdrop.opacity).cgColor
     }

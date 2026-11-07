@@ -1,6 +1,7 @@
 import AppKit
 import XCTest
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKMacOS
 import AgenticDeveloperHubSDKNotifications
 @testable import AgenticDeveloperHubSDKNotificationsUI
 
@@ -190,6 +191,55 @@ final class NotificationStyleSetPanelTests: XCTestCase {
         panel.view.layoutSubtreeIfNeeded()
         XCTAssertGreaterThanOrEqual(
             panel.itemsTable.scrollView.frame.height, NotificationItemsTable.minimumTableHeight)
+    }
+
+    /// In the real host, the panel sits in a `PanelScrollView`, and the height
+    /// left over goes to the list alone: the other cards stay their natural
+    /// height and the panel does not scroll past the viewport.
+    func testInAScrollHostOnlyTheListTakesTheSpareHeight() throws {
+        let (panel, scroll) = makeScrollHostedPanel(height: 1475)
+        let groups = panel.view.subviews.flatMap(\.subviews).compactMap { $0 as? ComposableSettings.GroupView }
+        XCTAssertEqual(groups.count, 3)
+        for group in groups {
+            XCTAssertFalse(group.hasAmbiguousLayout, "where the spare height goes is decided, not left to chance")
+        }
+        for group in [groups[0], groups[2]] {
+            XCTAssertEqual(group.frame.height, group.fittingSize.height, accuracy: 1, "not stretched")
+        }
+        XCTAssertGreaterThan(
+            panel.itemsTable.scrollView.frame.height, NotificationItemsTable.minimumTableHeight + 200)
+        XCTAssertEqual(panel.view.frame.height, scroll.contentView.bounds.height, accuracy: 1, "no scroll")
+    }
+
+    /// A viewport shorter than the content scrolls; nothing is squashed below
+    /// its minimum to fit.
+    func testInAShortScrollHostThePanelScrolls() throws {
+        let (panel, scroll) = makeScrollHostedPanel(height: 300)
+        XCTAssertEqual(scroll.contentView.bounds.height, 300, accuracy: 1, "the panel never resizes the window")
+        XCTAssertGreaterThan(panel.view.frame.height, scroll.contentView.bounds.height + 1)
+        // At its minimum: the list's pull must not stretch it once the viewport
+        // bound is broken. (`fittingSize` would include that pull, so no oracle there.)
+        XCTAssertEqual(
+            panel.itemsTable.scrollView.frame.height,
+            NotificationItemsTable.minimumTableHeight + NotificationItemsTable.footerHeight,
+            accuracy: 1, "no runaway pull")
+        XCTAssertGreaterThanOrEqual(
+            panel.itemsTable.scrollView.frame.height, NotificationItemsTable.minimumTableHeight)
+    }
+
+    private func makeScrollHostedPanel(
+        height: CGFloat
+    ) -> (NotificationStyleSetPanel, ComposableSettings.PanelScrollView) {
+        let panel = NotificationStyleSetPanel(urgency: .soon, handler: RecordingHandler(), store: store)
+        let scroll = ComposableSettings.PanelScrollView()
+        let host = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 1100, height: height),
+            styleMask: [.titled], backing: .buffered, defer: true)
+        host.contentView = scroll
+        window = host
+        scroll.setContent(panel.view)
+        host.contentView?.layoutSubtreeIfNeeded()
+        return (panel, scroll)
     }
 
     func testRowsDescribeEachItem() {

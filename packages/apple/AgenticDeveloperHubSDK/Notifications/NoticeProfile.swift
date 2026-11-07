@@ -29,7 +29,7 @@ public struct NoticeProfile: Codable, Sendable, Equatable {
 
     /// How a full-screen item draws its backdrop: a blur, then a tint over it.
     public struct FullScreenAppearance: Codable, Sendable, Equatable {
-        /// 0...1: how much of the blurred view shows. macOS has no blur radius.
+        /// 0...1: the blur radius, as a fraction of the largest the presenter draws.
         public var blur: Double
         public var color: NoticeColor
         /// 0...1: the tint's opacity. 0.55 black is the classic dim.

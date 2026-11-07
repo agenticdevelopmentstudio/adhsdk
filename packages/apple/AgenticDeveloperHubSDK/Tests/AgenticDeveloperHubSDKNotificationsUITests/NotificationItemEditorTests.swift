@@ -79,4 +79,39 @@ final class NotificationItemEditorTests: XCTestCase {
         XCTAssertEqual(editor.draft.fullScreen.blur, 0.25, accuracy: 0.001)
         XCTAssertEqual(editor.draft.fullScreen.opacity, 0.4, accuracy: 0.001)
     }
+
+    /// "Blur" is narrower than "Opacity"; the two sliders still start and end
+    /// at the same x, so they read as one column.
+    func testFullScreenSlidersLineUp() {
+        let editor = makeEditor(NoticeProfile(style: .fullScreen))
+        let window = NSWindow(contentViewController: editor)
+        window.layoutIfNeeded()
+        editor.view.layoutSubtreeIfNeeded()
+        let blur = editor.blurSlider.convert(editor.blurSlider.bounds, to: nil)
+        let opacity = editor.opacitySlider.convert(editor.opacitySlider.bounds, to: nil)
+        XCTAssertFalse(editor.view.hasAmbiguousLayout)
+        XCTAssertGreaterThan(blur.width, 0)
+        XCTAssertEqual(blur.minX, opacity.minX, accuracy: 0.5)
+        XCTAssertEqual(blur.maxX, opacity.maxX, accuracy: 0.5)
+    }
+
+    /// Picking a style with fewer rows shrinks the sheet to them, rather than
+    /// leaving the taller style's height as empty space under the buttons.
+    func testSheetFitsTheRowsTheStyleShows() throws {
+        let editor = makeEditor(NoticeProfile(style: .toast))
+        let window = NSWindow(contentViewController: editor)
+        func height() throws -> CGFloat {
+            window.layoutIfNeeded()
+            return try XCTUnwrap(window.contentView).frame.height
+        }
+        choose(NotificationStylesSettingsPanel.styleTitle(.fullScreen), in: editor.stylePopup)
+        let tall = try height()
+        XCTAssertEqual(tall, editor.view.fittingSize.height, accuracy: 0.5)
+        choose(NotificationStylesSettingsPanel.styleTitle(.system), in: editor.stylePopup)
+        let short = try height()
+        XCTAssertLessThan(short, tall)
+        XCTAssertEqual(short, editor.view.fittingSize.height, accuracy: 0.5)
+        choose(NotificationStylesSettingsPanel.styleTitle(.fullScreen), in: editor.stylePopup)
+        XCTAssertEqual(try height(), tall, accuracy: 0.5)
+    }
 }

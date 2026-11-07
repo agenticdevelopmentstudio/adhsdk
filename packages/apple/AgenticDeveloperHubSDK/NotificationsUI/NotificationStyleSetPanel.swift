@@ -81,13 +81,48 @@ final class NotificationStyleSetPanel: ComposableSettings.SettingsPanelViewContr
             },
             placement: .leading))
         addGroup(test)
-        // The item list takes the height the panel leaves.
-        let fill = itemsGroup.bottomAnchor.constraint(
-            equalTo: settingsView.bottomAnchor,
-            constant: -ComposableSettings.SettingsLayout.default[.panelInset])
-        fill.priority = .defaultHigh
-        fill.isActive = true
+        // The item list is the one thing that wants to grow, so the height the
+        // panel leaves goes to it and never to a gap inside another card. It
+        // pulls below `fitViewport`, so it can only fill the viewport, not
+        // stretch the panel past it.
+        let grow = table.scrollView.heightAnchor.constraint(equalToConstant: 100_000)
+        grow.priority = Self.growPriority
+        grow.isActive = true
         reloadItems()
+    }
+
+    /// The list's pull toward more height: just above the group stacks'
+    /// hugging, which it has to beat, and far below `fitViewportPriority`.
+    static let growPriority = NSLayoutConstraint.Priority(260)
+    /// Keeps the panel at the viewport's height while its content fits; the
+    /// content's required minimums still make it taller, and then it scrolls.
+    /// Below `windowSizeStayPut`, so the panel never resizes the window, and
+    /// far enough above `growPriority` that, once broken, the pull still
+    /// cannot stretch the panel (close priorities trade off against each other).
+    static let fitViewportPriority = NSLayoutConstraint.Priority(490)
+
+    private weak var fittedClip: NSClipView?
+    private var fitViewport: NSLayoutConstraint?
+
+    override func viewWillLayout() {
+        super.viewWillLayout()
+        fitToViewport()
+    }
+
+    /// Bounds the panel to its scroll host's viewport. A `PanelScrollView`
+    /// only says "at least the viewport", which leaves the list's pull
+    /// nothing to stop at.
+    private func fitToViewport() {
+        let clip = view.enclosingScrollView?.contentView
+        guard clip !== fittedClip else { return }
+        fitViewport?.isActive = false
+        fitViewport = nil
+        fittedClip = clip
+        guard let clip else { return }
+        let fit = view.heightAnchor.constraint(equalTo: clip.heightAnchor)
+        fit.priority = Self.fitViewportPriority
+        fit.isActive = true
+        fitViewport = fit
     }
 
     private var set: NoticeStyleSet { Styles.baseStyle(for: urgency, in: controls.rules) }

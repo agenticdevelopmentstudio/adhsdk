@@ -568,6 +568,7 @@
 		1E87CBF2E8287D2656332442 /* WebviewPanelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5436EC7CE0FA8AE6AE09FB /* WebviewPanelOptions.swift */; };
 		1E996EABC9B064964B9C0D61 /* ThemeManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F71573CC678D030438C993E3 /* ThemeManagerTests.swift */; };
 		1EB22AF851BBAFE5EB20978C /* RouteRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27169E8E622467B9ED58D7D8 /* RouteRequest.swift */; };
+		1ECA0AE2B07B232F49D7C49D /* WindowBackgroundBlur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5103B7E6FB58CE0D7500B8A8 /* WindowBackgroundBlur.swift */; };
 		1ED937EDE7D2A17336D527D5 /* QuickNoteWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9EC779AC9F331DE774207C /* QuickNoteWindowController.swift */; };
 		1EEF89A3FA5D52F65E3D4F76 /* PathViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCA4BEDFC22DB6ED8FF8F495 /* PathViewTests.swift */; };
 		1F008E4C03D999B5911B02F1 /* SnippetStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065CF22F6849F6D26CB3E778 /* SnippetStoreTests.swift */; };
@@ -6908,6 +6909,7 @@
 		50D210E12145234D2186BCCE /* AppUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdater.swift; sourceTree = "<group>"; };
 		50ED407BF825DAEA6355D99C /* PermissionPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionPresenter.swift; sourceTree = "<group>"; };
 		50F84BA997221AC07F1F749E /* ExtensionInputBoxPresenting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionInputBoxPresenting.swift; sourceTree = "<group>"; };
+		5103B7E6FB58CE0D7500B8A8 /* WindowBackgroundBlur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowBackgroundBlur.swift; sourceTree = "<group>"; };
 		51147616BBF875EB7923138C /* MCPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPClient.swift; sourceTree = "<group>"; };
 		513419BAE155807C9329C31F /* ExtensionUpdateCheckTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionUpdateCheckTests.swift; sourceTree = "<group>"; };
 		513E5802F71C7115CCB52D99 /* NotificationsUITestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsUITestDoubles.swift; sourceTree = "<group>"; };
@@ -14797,6 +14799,7 @@
 				03243C49E5F4EA89CD879FBF /* ToastStackGeometry.swift */,
 				27F6AF3CEC09A0A588A41906 /* ToastStackLayout.swift */,
 				DD35BA95F188E32A7DD3DE12 /* ToastStackWindow.swift */,
+				5103B7E6FB58CE0D7500B8A8 /* WindowBackgroundBlur.swift */,
 			);
 			path = NotificationsUI;
 			sourceTree = "<group>";
@@ -20724,6 +20727,7 @@
 				2BFDB3B9EC402527E7E320BD /* ToastStackGeometry.swift in Sources */,
 				B1E69E8C3B5C526264395E38 /* ToastStackLayout.swift in Sources */,
 				4D18EC0C90B92F4D65F07CC3 /* ToastStackWindow.swift in Sources */,
+				1ECA0AE2B07B232F49D7C49D /* WindowBackgroundBlur.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

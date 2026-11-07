@@ -127,6 +127,10 @@ final class NotificationItemEditor: NSViewController {
         for row in [styleRow, positionRow, layerRow] + fullScreenRows {
             row.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
         }
+        // Each slider fills from the end of its own label, and "Blur" is
+        // narrower than "Opacity"; start both at the same x so they read as
+        // one column. The row spacer takes up the difference.
+        opacitySlider.leadingAnchor.constraint(equalTo: blurSlider.leadingAnchor).isActive = true
         stack.setCustomSpacing(20, after: fullScreenRows[2])
         buttons.setHuggingPriority(.defaultLow, for: .horizontal)
     }
@@ -137,6 +141,18 @@ final class NotificationItemEditor: NSViewController {
         positionRow.isHidden = !(style == .toast || style == .alert)
         layerRow.isHidden = style == .fullScreen || style == .system
         for row in fullScreenRows { row.isHidden = style != .fullScreen }
+        fitWindowToRows()
+    }
+
+    /// A window only grows to fit required content; it never gives height
+    /// back. So once rows hide, set its height to what is left, or the taller
+    /// style's height stays as empty space under the buttons.
+    private func fitWindowToRows() {
+        guard let window = view.window else { return }
+        let height = view.fittingSize.height
+        let size = window.contentLayoutRect.size
+        guard abs(size.height - height) > 0.5 else { return }
+        window.setContentSize(NSSize(width: size.width, height: height))
     }
 
     // MARK: Sheet

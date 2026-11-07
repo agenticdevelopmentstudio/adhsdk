@@ -83,7 +83,7 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         -> FullScreenPresenter {
         _ = NSApplication.shared
         return FullScreenPresenter(
-            rules: { .defaults }, windowing: windowing, screens: { _ in screens() })
+            rules: { .defaults }, windowing: windowing, screens: { _ in screens() }, blur: .unavailable)
     }
 
     func testRemovingTheKeyFullScreenHandsKeyToTheNextOne() throws {

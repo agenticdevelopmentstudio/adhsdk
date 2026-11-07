@@ -121,7 +121,7 @@ extension Permission {
         case .accessibility:
             "Required to discover and activate terminal windows for your sessions."
         case .notifications:
-            "Allows notifications when sessions start, end, or become stale."
+            "Lets this app show its notifications in Notification Center."
         case .automation(let targetBundleID):
             "Needed to find, raise and open windows in \(name(targetBundleID))."
         case .location:
