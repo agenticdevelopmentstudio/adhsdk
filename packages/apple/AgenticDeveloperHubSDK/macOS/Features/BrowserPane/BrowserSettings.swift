@@ -131,6 +131,11 @@ public enum BrowserStorageJar: String, Codable, Sendable, CaseIterable {
     case worktree
     case pane
 
+    /// The setting's key, spelled once for `UserSettings.browserPrivacyStorageJar`
+    /// and for the project database's upgrade step, which runs off the main
+    /// actor and cannot read the setting object itself.
+    public static let settingName = "browser.privacy.storage_jar"
+
     public var label: String {
         switch self {
         case .global: "Shared by all browser panes"
@@ -215,7 +220,7 @@ extension UserSettings {
         "browser.privacy.agent_while_paused", default: .allowed
     )
     public static let browserPrivacyStorageJar = UserSetting<BrowserStorageJar>(
-        "browser.privacy.storage_jar", default: .pane
+        BrowserStorageJar.settingName, default: .pane
     )
     public static let browserPrivacyThirdPartyContent = UserSetting<BrowserThirdPartyContent>(
         "browser.privacy.third_party_content", default: .allow

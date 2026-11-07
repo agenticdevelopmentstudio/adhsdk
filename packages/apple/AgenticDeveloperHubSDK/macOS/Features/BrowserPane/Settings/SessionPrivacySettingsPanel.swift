@@ -165,9 +165,7 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
         let group = ComposableSettings.GroupView(withTitle: "Focus and visibility")
         addSwitch(
             "Hide focus and visibility changes", UserSettings.browserPrivacyHideActivation,
-            id: "hide-activation",
-            explanation: "Best-effort. Applies from the next page load.",
-            to: group
+            id: "hide-activation", to: group
         )
         return group
     }
@@ -201,7 +199,7 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
         let console = UserSettings.browserPrivacyConsoleCapture
         addSwitch(
             "Capture page console", console, id: "console-capture",
-            explanation: "Page scripts can see the hook. " + binding.constructionNote(for: console.name),
+            explanation: binding.constructionNote(for: console.name),
             to: group
         )
         return group

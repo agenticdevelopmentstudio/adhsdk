@@ -361,6 +361,10 @@ public final class ProjectDatabase {
     /// database left between these statements and the version row recording
     /// them re-runs them on the next launch, and must not fail
     /// (`idempotency`).
+    ///
+    /// Browser panes already in the file keep the shared store
+    /// (`keepExistingBrowserPanesOnTheSharedJar`), so an upgrade signs no one
+    /// out; panes made afterwards get the setting's default, a jar of their own.
     private func migration005_browserJars() throws {
         try execute("""
             CREATE TABLE IF NOT EXISTS browser_jars (
@@ -381,6 +385,7 @@ public final class ProjectDatabase {
             CREATE UNIQUE INDEX IF NOT EXISTS idx_browser_jars_pane
             ON browser_jars(pane_node_id) WHERE pane_node_id IS NOT NULL
         """)
+        try keepExistingBrowserPanesOnTheSharedJar()
         try execute("INSERT INTO schema_migrations (version) VALUES (5)")
     }
 

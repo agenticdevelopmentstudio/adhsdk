@@ -56,31 +56,35 @@ public final class BrowserActivationShield {
         return text
     }()
 
-    /// Chosen once per launch and written into every copy of the script, so
-    /// the copies — the document-start one, the immediate raise and the lift
-    /// — recognise each other's record on a window, and a value the page put
-    /// under the same name is not taken for one (see the script).
-    private static let token = UUID().uuidString
+    /// Chosen per shield, so per web view, and written into every copy of
+    /// the script this shield hands out — the document-start one, the
+    /// immediate raise and the lift — so they recognise each other's record
+    /// on a window, and a value the page put under the same name is not
+    /// taken for one (see the script). The page can read it, so it must
+    /// never be shared: one token across web views would be an identifier
+    /// every page in every jar could send home, linking the jars (spec
+    /// section 4). A rebuilt web view gets a new shield and a new token.
+    let token = UUID().uuidString
 
-    private static func script(mode: String) -> String? {
-        template?
+    private func script(mode: String) -> String? {
+        Self.template?
             .replacingOccurrences(of: "__ADK_SHIELD_TOKEN__", with: token)
             .replacingOccurrences(of: "__ADK_SHIELD_MODE__", with: mode)
     }
 
     /// The script that shields: the document-start user script, and the
     /// immediate run when the shield goes up over a page already showing.
-    static let source: String? = script(mode: "raise")
+    private(set) lazy var source: String? = script(mode: "raise")
 
     /// The same script set to take the shim off every frame the immediate
     /// run can reach, when the shield comes down. A window the shim never
     /// reached has no record, and is left as it is.
-    static let liftSource: String? = script(mode: "lift")
+    private(set) lazy var liftSource: String? = script(mode: "lift")
 
     private weak var webView: WKWebView?
     /// Whether the shield is up.
     public private(set) var isActive = false
-    private lazy var builtUserScript: WKUserScript? = Self.source.map {
+    private lazy var builtUserScript: WKUserScript? = source.map {
         WKUserScript(source: $0, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
     }
 
@@ -104,7 +108,7 @@ public final class BrowserActivationShield {
         // A Debug build under quiet presentation holds detection off for its
         // screenshots; lowering the shield must not undo that.
         webView.setWindowOcclusionDetectionEnabled(!active && !webView.keepsPaintingUnderQuietPresentation)
-        guard webView.url != nil, let source = active ? Self.source : Self.liftSource else { return }
+        guard webView.url != nil, let source = active ? source : liftSource else { return }
         webView.evaluateJavaScript(source, in: nil, in: .page) { result in
             if case .failure(let error) = result {
                 let reason = error.localizedDescription

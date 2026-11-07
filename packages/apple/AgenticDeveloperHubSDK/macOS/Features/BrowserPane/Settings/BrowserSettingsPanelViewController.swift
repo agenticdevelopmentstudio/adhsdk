@@ -174,8 +174,10 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     }
 
     /// The name a pane's current jar goes by in the sheet. Private browsing
-    /// is a store the pane alone has, so it reads as the pane's own.
+    /// is a store the pane alone has, so it reads as the pane's own, and so
+    /// does a jar that failed closed onto a non-persistent store.
     static func jarLabel(for pane: BrowserPaneViewController) -> String {
+        guard !pane.resolvedJar.isFallback else { return "This Pane" }
         switch pane.resolvedJar.jar {
         case .global:
             return "All Browser Panes"
