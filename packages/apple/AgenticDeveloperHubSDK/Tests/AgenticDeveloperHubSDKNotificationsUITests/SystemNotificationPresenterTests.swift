@@ -10,10 +10,26 @@ private final class ControlledCenter: SystemNotificationPosting {
     var posted: [String] = []
     var addError: Error?
     var authorizationRequests = 0
+    /// Holds `isAuthorizationDenied` answers until `releaseDeniedAnswers()`.
+    var holdDeniedAnswers = false
+    private var heldDeniedAnswers: [@MainActor (Bool) -> Void] = []
     private var answer: (@MainActor (Bool, Error?) -> Void)?
 
     func becomeDelegate() {}
-    func isAuthorizationDenied(_ completion: @escaping @MainActor (Bool) -> Void) { completion(denied) }
+    func isAuthorizationDenied(_ completion: @escaping @MainActor (Bool) -> Void) {
+        if holdDeniedAnswers {
+            heldDeniedAnswers.append(completion)
+        } else {
+            completion(denied)
+        }
+    }
+
+    func releaseDeniedAnswers() {
+        holdDeniedAnswers = false
+        let held = heldDeniedAnswers
+        heldDeniedAnswers = []
+        held.forEach { $0(denied) }
+    }
     func requestAuthorization(_ completion: @escaping @MainActor (Bool, Error?) -> Void) {
         authorizationRequests += 1
         answer = completion
@@ -123,6 +139,39 @@ final class SystemNotificationPresenterTests: XCTestCase {
         show("b", on: presenter)
         XCTAssertEqual(denials, 1)
         XCTAssertEqual(center.authorizationRequests, 0)
+    }
+
+    /// A notice closed while the recheck's answer is out never comes back.
+    func testRemoveDuringRecheckNeverPosts() {
+        let center = ControlledCenter()
+        center.denied = true
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        presenter.onAuthorizationDenied = {}
+        show("a", on: presenter)
+        center.denied = false
+        center.holdDeniedAnswers = true
+        show("c", on: presenter)
+        presenter.remove(id: "c")
+        center.releaseDeniedAnswers()
+        XCTAssertEqual(center.authorizationRequests, 0, "nothing left to show, so nothing is asked")
+        XCTAssertEqual(center.posted, [])
+    }
+
+    /// Lifted, then turned off again: a new episode, reported again.
+    func testReDenialAfterALiftReportsAgain() {
+        let center = ControlledCenter()
+        center.denied = true
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        var denials = 0
+        presenter.onAuthorizationDenied = { denials += 1 }
+        show("a", on: presenter)
+        XCTAssertEqual(denials, 1)
+
+        center.denied = false
+        show("b", on: presenter)
+        center.answerAuthorization(granted: false)
+        XCTAssertEqual(denials, 2, "a denial after a lift is a new episode")
+        XCTAssertEqual(center.posted, [])
     }
 
     func testAddErrorIsLoggedNotFatal() {

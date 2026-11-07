@@ -41,6 +41,8 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     /// Requests that arrived before the authorization answer.
     private var queue: [UNNotificationRequest] = []
     private var deniedReported = false
+    /// Notices shown while denied, waiting on the recheck's answer.
+    private var awaitingRecheck: Set<String> = []
     private var started = false
     private nonisolated(unsafe) var activeObserver: NSObjectProtocol?
     private let logger = Logger(
@@ -101,16 +103,17 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     }
 
     /// Asks the Notification Center again while denied. If it is no longer
-    /// denied, the episode ends (a later denial reports again) and `reshow`
-    /// runs. Nothing is requested and nothing is reported here.
-    private func recheckDenial(then reshow: (@MainActor () -> Void)?) {
+    /// denied, the episode ends (a later denial reports again). `answered`
+    /// gets whether it was lifted. Nothing is requested and nothing is
+    /// reported here.
+    private func recheckDenial(then answered: (@MainActor (_ lifted: Bool) -> Void)?) {
         poster.isAuthorizationDenied { [weak self] denied in
-            guard let self, !denied else { return }
-            if authorization == .denied {
+            guard let self else { return }
+            if !denied, authorization == .denied {
                 authorization = .unknown
                 deniedReported = false
             }
-            reshow?()
+            answered?(!denied)
         }
     }
 
@@ -123,7 +126,13 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
         if authorization == .denied {
             // Denial is a cached answer, not a final one: the user may have
             // turned Notification Center back on since.
-            recheckDenial { [weak self] in self?.show(notice, profiles: profiles, actions: actions) }
+            // The answer is asynchronous; a notice closed while it is out
+            // must not come back as a banner.
+            awaitingRecheck.insert(notice.id)
+            recheckDenial { [weak self] lifted in
+                guard let self, awaitingRecheck.remove(notice.id) != nil, lifted else { return }
+                show(notice, profiles: profiles, actions: actions)
+            }
             return
         }
         shownIDs.removeAll { $0 == notice.id }
@@ -214,6 +223,7 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     }
 
     public func remove(id: String) {
+        awaitingRecheck.remove(id)
         guard actions.removeValue(forKey: id) != nil else { return }
         queue.removeAll { $0.identifier == id }
         shownIDs.removeAll { $0 == id }
