@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDK
+import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKNotifications
 
 /// Full screen: a dimmed window over each selected screen with the notice's
@@ -8,7 +9,8 @@ import AgenticDeveloperHubSDKNotifications
 /// to an app they can no longer see. Its panel is still non-activating: it
 /// becomes key without activating the host app, so it never depends on
 /// `NSApp.activate()`, which macOS 14 and later treat as a request. Esc
-/// snoozes it for five minutes. It never times out.
+/// snoozes it (five minutes if the set offers that, else its first option),
+/// or closes it when the set cannot be snoozed. It never times out.
 ///
 /// With several up at once the newest has the keyboard; when it goes, the
 /// newest one left takes it back.
@@ -83,7 +85,7 @@ public final class FullScreenPresenter: NoticePresenter {
         var made: [Placement] = []
         for screen in screens(rules().screens) {
             let panel = Self.makePanel(frame: screen.frame, layer: profile.layer, hideFromSharing: hideFromSharing)
-            let view = FullScreenNoticeView(notice: notice, actions: actions)
+            let view = FullScreenNoticeView(notice: notice, actions: actions, appearance: profile.fullScreen)
             panel.contentView = view
             made.append(Placement(displayID: screen.displayID, panel: panel, view: view))
         }
@@ -114,7 +116,7 @@ public final class FullScreenPresenter: NoticePresenter {
     }
 
     public func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
-        guard placements[oldID] != nil, !profiles.isEmpty else {
+        guard placements[oldID] != nil, let profile = profiles.first else {
             remove(id: oldID)
             show(notice, profiles: profiles, actions: actions)
             return
@@ -124,7 +126,7 @@ public final class FullScreenPresenter: NoticePresenter {
         }
         guard let existing = placements.removeValue(forKey: oldID) else { return }
         for placement in existing {
-            placement.view.update(notice: notice, actions: actions)
+            placement.view.update(notice: notice, actions: actions, appearance: profile.fullScreen)
         }
         placements[notice.id] = existing
         if let index = shownIDs.firstIndex(of: oldID) {
@@ -150,20 +152,44 @@ public final class FullScreenPresenter: NoticePresenter {
     }
 }
 
-/// The dimmed backdrop with the card centered on it. It is the panel's first
-/// responder, so Esc reaches it.
+/// The backdrop and the card centered on it. The backdrop is two layers: a
+/// blur (an `NSVisualEffectView` whose `alphaValue` is how much of the blur
+/// shows, since macOS offers no radius) and a tint over it. The view is the
+/// panel's first responder, so Esc reaches it.
 @MainActor
 final class FullScreenNoticeView: NSView {
 
     let card: NoticeCardView
+    let blurView = NSVisualEffectView()
+    private let tintView = NSView()
     private var actions: NoticeCardActions
+    private var backdrop: NoticeProfile.FullScreenAppearance
+    private var palette: SemanticPalette = ThemePaletteObserver.currentPalette
+    private var observer: ThemePaletteObserver?
 
-    init(notice: Notice, actions: NoticeCardActions) {
+    /// The tint's layer, whose `backgroundColor` is the resolved color at the
+    /// item's opacity.
+    var tintLayer: CALayer { tintView.layer ?? CALayer() }
+
+    init(notice: Notice, actions: NoticeCardActions, appearance: NoticeProfile.FullScreenAppearance = .init()) {
         self.actions = actions
+        self.backdrop = appearance
         card = NoticeCardView(notice: notice, actions: actions, style: .alert)
         super.init(frame: .zero)
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.55).cgColor
+        blurView.material = .fullScreenUI
+        blurView.blendingMode = .behindWindow
+        blurView.state = .active
+        tintView.wantsLayer = true
+        for layerView in [blurView, tintView] {
+            layerView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(layerView)
+            NSLayoutConstraint.activate([
+                layerView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                layerView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                layerView.topAnchor.constraint(equalTo: topAnchor),
+                layerView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            ])
+        }
         addSubview(card)
         NSLayoutConstraint.activate([
             card.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -172,15 +198,28 @@ final class FullScreenNoticeView: NSView {
         setAccessibilityElement(true)
         setAccessibilityRole(.group)
         setAccessibilityLabel(notice.title)
+        // Paints now, then follows the live theme, for a Theme color.
+        observer = ThemePaletteObserver(host: self) { [weak self] palette in
+            self?.palette = palette
+            self?.paintBackdrop()
+        }
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    func update(notice: Notice, actions: NoticeCardActions) {
+    func update(notice: Notice, actions: NoticeCardActions, appearance: NoticeProfile.FullScreenAppearance) {
         self.actions = actions
+        self.backdrop = appearance
         card.update(notice: notice, actions: actions)
         setAccessibilityLabel(notice.title)
+        paintBackdrop()
+    }
+
+    private func paintBackdrop() {
+        blurView.alphaValue = backdrop.blur
+        let color = backdrop.color.resolved(system: .black, themeRole: .windowBackground, palette: palette)
+        tintView.layer?.backgroundColor = color.withAlphaComponent(backdrop.opacity).cgColor
     }
 
     override var acceptsFirstResponder: Bool { true }
@@ -189,12 +228,12 @@ final class FullScreenNoticeView: NSView {
 
     /// Esc, through the responder chain.
     override func cancelOperation(_ sender: Any?) {
-        snoozeBriefly()
+        dismissWithEscape()
     }
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 {
-            snoozeBriefly()
+            dismissWithEscape()
         } else {
             super.keyDown(with: event)
         }
@@ -204,7 +243,16 @@ final class FullScreenNoticeView: NSView {
     /// accident; only the card acts.
     override func mouseDown(with event: NSEvent) {}
 
-    private func snoozeBriefly() {
-        actions.snooze?(.fiveMinutes)
+    /// Esc snoozes for five minutes when the set offers that, else for the
+    /// first option it does offer; a set that cannot be snoozed closes.
+    private func dismissWithEscape() {
+        let options = actions.snoozeOptions
+        guard let snooze = actions.snooze,
+              let option = options.contains(.fiveMinutes) ? SnoozeOption.fiveMinutes : options.first
+        else {
+            actions.close()
+            return
+        }
+        snooze(option)
     }
 }

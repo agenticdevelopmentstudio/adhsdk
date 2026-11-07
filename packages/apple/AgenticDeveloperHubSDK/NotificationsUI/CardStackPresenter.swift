@@ -4,9 +4,9 @@ import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKNotifications
 
 /// The engine under the toast and alert presenters: each notice becomes one
-/// card in its own `NoticePanel` on every screen its profile selects, and the
-/// cards on one screen at one position form a stack laid out by
-/// `ToastStackLayout`, newest nearest the anchor.
+/// card in its own `NoticePanel` per position its set asks for, on every
+/// screen the rules select, and the cards on one screen at one position form
+/// a stack laid out by `ToastStackLayout`, newest nearest the anchor.
 ///
 /// A stack shows at most `visibleLimit` cards; the rest are hidden behind a
 /// "+N more" pill that opens the history, and their countdowns hold until they
@@ -78,29 +78,40 @@ class CardStackPresenter: NoticePresenter {
 
     // MARK: NoticePresenter
 
-    /// Draws `profiles[0]` only: one card per notice per screen.
+    /// The items this presenter draws from a set's items of its style.
+    /// Toasts draw one per distinct position (the first of two at the same
+    /// position wins); an alert overrides this to draw only the first item.
+    func drawn(_ profiles: [NoticeProfile]) -> [NoticeProfile] {
+        var seen: Set<NoticeProfile.Position> = []
+        return profiles.filter { seen.insert($0.position).inserted }
+    }
+
+    /// One card per drawn item per screen.
     func show(_ notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
         if placements[notice.id] != nil {
             remove(id: notice.id)
         }
-        guard let profile = profiles.first else { return }
+        let profiles = drawn(profiles)
+        guard !profiles.isEmpty else { return }
         let rules = rules()
         let hideFromSharing = rules.hideFromScreenSharing
         var made: [Placement] = []
-        for displayID in displays(rules.screens) {
-            let key = StackKey(displayID: displayID, position: profile.position)
-            let panel = NoticePanel(layer: profile.layer, hideFromSharing: hideFromSharing)
-            let card = NoticeCardView(notice: notice, actions: actions, style: cardStyle)
-            card.onHoverChange = { [weak self, weak card] hovered in
-                guard let self, let card else { return }
-                self.hoverChanged(on: card, hovered: hovered)
+        for profile in profiles {
+            for displayID in displays(rules.screens) {
+                let key = StackKey(displayID: displayID, position: profile.position)
+                let panel = NoticePanel(layer: profile.layer, hideFromSharing: hideFromSharing)
+                let card = NoticeCardView(notice: notice, actions: actions, style: cardStyle)
+                card.onHoverChange = { [weak self, weak card] hovered in
+                    guard let self, let card else { return }
+                    self.hoverChanged(on: card, hovered: hovered)
+                }
+                panel.contentView = card
+                // Hidden until a layout puts it in its stack's visible prefix.
+                card.setInOverflow(true)
+                card.startAutoDismiss(after: autoDismiss(for: profile))
+                made.append(Placement(key: key, panel: panel, card: card))
+                model.insert(notice.id, in: key)
             }
-            panel.contentView = card
-            // Hidden until a layout puts it in its stack's visible prefix.
-            card.setInOverflow(true)
-            card.startAutoDismiss(after: autoDismiss(for: profile))
-            made.append(Placement(key: key, panel: panel, card: card))
-            model.insert(notice.id, in: key)
         }
         guard !made.isEmpty else { return }
         placements[notice.id] = made
@@ -125,19 +136,27 @@ class CardStackPresenter: NoticePresenter {
     }
 
     func replace(oldID: String, with notice: Notice, profiles: [NoticeProfile], actions: NoticeCardActions) {
-        guard let profile = profiles.first else {
+        let profiles = drawn(profiles)
+        guard !profiles.isEmpty else {
             remove(id: oldID)
             return
         }
         let selection = rules().screens
-        // In place only while the card would land exactly where it stands:
-        // same position, same layer, same screen *selection*. Changing the
-        // setting from `.main` to `.all`, say, moves it. The selection is
-        // compared, not the displays it resolves to right now: a display
-        // coming or going is `screensDidChange`'s business, not a replace's.
+        func profile(at position: NoticeProfile.Position) -> NoticeProfile? {
+            profiles.first { $0.position == position }
+        }
+        // In place only while every card would land exactly where it stands:
+        // the same positions, the same layer at each, the same screen
+        // *selection*. Changing the setting from `.main` to `.all`, say, moves
+        // them. The selection is compared, not the displays it resolves to
+        // right now: a display coming or going is `screensDidChange`'s
+        // business, not a replace's.
         guard let existing = placements[oldID],
               selections[oldID] == selection,
-              existing.allSatisfy({ $0.key.position == profile.position && $0.panel.level == level(profile) })
+              Set(existing.map(\.key.position)) == Set(profiles.map(\.position)),
+              existing.allSatisfy({ placement in
+                  profile(at: placement.key.position).map { level($0) == placement.panel.level } ?? false
+              })
         else {
             remove(id: oldID)
             show(notice, profiles: profiles, actions: actions)
@@ -150,7 +169,8 @@ class CardStackPresenter: NoticePresenter {
         }
         for placement in existing {
             placement.card.update(notice: notice, actions: actions)
-            placement.card.startAutoDismiss(after: autoDismiss(for: profile))
+            placement.card.startAutoDismiss(
+                after: profile(at: placement.key.position).flatMap { autoDismiss(for: $0) })
         }
         let touched = model.replace(oldID, with: notice.id)
         placements[notice.id] = existing

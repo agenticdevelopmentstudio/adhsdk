@@ -23,11 +23,16 @@ public protocol NoticePresenter: AnyObject {
     /// another way to answer.
     @discardableResult
     func focusReply(id: String) -> Bool
+    /// The routing rules changed: restyle or move what is already on screen
+    /// where the presenter reads them live (the crawl does).
+    func rulesDidChange()
 }
 
 public extension NoticePresenter {
     @discardableResult
     func focusReply(id: String) -> Bool { false }
+
+    func rulesDidChange() {}
 
     /// One item: the common case, and what previews and tests reach for.
     func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
