@@ -5,7 +5,7 @@ import AgenticDeveloperHubSDKMacOS
 import AgenticDeveloperHubSDKNotifications
 
 /// "Styles": only the list of styles — one topic per urgency (FYI,
-/// Eventually, Soon, Now, Emergency), each a `NotificationStylePanel` with
+/// Eventually, Soon, Now, Emergency), each a `NotificationStyleSetPanel` with
 /// the same set of properties. Nested under `NotificationsSettingsTopicPanel`;
 /// everything that is not one urgency's style lives in a sibling topic there.
 ///
@@ -14,11 +14,11 @@ import AgenticDeveloperHubSDKNotifications
 public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsPanelSplitViewController {
 
     /// One panel per urgency, in `Notice.Urgency.allCases` order.
-    let urgencyPanels: [NotificationStylePanel]
+    let urgencyPanels: [NotificationStyleSetPanel]
 
     public init(handler: NoticeActionHandler, store: SettingsStore = UserSettings.shared) {
         self.urgencyPanels = Notice.Urgency.allCases.map {
-            NotificationStylePanel(urgency: $0, handler: handler, store: store)
+            NotificationStyleSetPanel(urgency: $0, handler: handler, store: store)
         }
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Styles",
@@ -34,7 +34,7 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
     }
 
     /// The panel for `urgency`.
-    func panel(for urgency: Notice.Urgency) -> NotificationStylePanel? {
+    func panel(for urgency: Notice.Urgency) -> NotificationStyleSetPanel? {
         urgencyPanels.first { $0.urgency == urgency }
     }
 
@@ -96,7 +96,7 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
         switch style {
         case .toast: "Toast"
         case .crawl: "Crawl"
-        case .fullScreen: "Full screen"
+        case .fullScreen: "Full Screen"
         case .alert: "Alert"
         case .system: "Notification Center"
         }
@@ -104,19 +104,57 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
 
     static func positionTitle(_ position: NoticeProfile.Position) -> String {
         switch position {
-        case .topLeft: "Top left"
-        case .topCenter: "Top center"
+        case .topLeft: "Top Left"
+        case .topCenter: "Top Center"
         case .center: "Center"
-        case .bottomLeft: "Bottom left"
-        case .bottomCenter: "Bottom center"
-        case .bottomRight: "Bottom right"
+        case .bottomLeft: "Bottom Left"
+        case .bottomCenter: "Bottom Center"
+        case .bottomRight: "Bottom Right"
         }
+    }
+
+    static func layerTitle(_ layer: NoticeProfile.Layer) -> String {
+        layer == .floating ? "Floating" : "Normal"
+    }
+
+    static func symbol(for style: NoticeProfile.Style) -> String {
+        switch style {
+        case .toast: "rectangle.bottomhalf.inset.filled"
+        case .alert: "exclamationmark.triangle"
+        case .crawl: "arrow.left.and.right"
+        case .fullScreen: "arrow.up.left.and.arrow.down.right"
+        case .system: "bell"
+        }
+    }
+
+    /// One item's line in the list, e.g. "Toast · Bottom Right · Floating",
+    /// "Full Screen · Blur 60 % · System 55 %" or "Notification Center".
+    static func describe(_ item: NoticeProfile) -> String {
+        let name = styleTitle(item.style)
+        switch item.style {
+        case .toast, .alert:
+            return [name, positionTitle(item.position), layerTitle(item.layer)].joined(separator: " · ")
+        case .crawl:
+            return [name, layerTitle(item.layer)].joined(separator: " · ")
+        case .fullScreen:
+            let look = item.fullScreen
+            return [
+                name, "Blur \(percent(look.blur))",
+                "\(NoticeRulesControls.title(for: look.color.source)) \(percent(look.opacity))"
+            ].joined(separator: " · ")
+        case .system:
+            return name
+        }
+    }
+
+    private static func percent(_ fraction: Double) -> String {
+        "\(Int((fraction * 100).rounded())) %"
     }
 
     static func screensTitle(_ screens: NoticeProfile.ScreenSelection) -> String {
         switch screens {
-        case .main: "Main screen"
-        case .all: "Every screen"
+        case .main: "Main Screen"
+        case .all: "All Screens"
         }
     }
 }

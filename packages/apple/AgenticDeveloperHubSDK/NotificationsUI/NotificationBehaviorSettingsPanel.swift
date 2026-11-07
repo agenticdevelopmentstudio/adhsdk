@@ -5,7 +5,7 @@ import AgenticDeveloperHubSDKMacOS
 import AgenticDeveloperHubSDKNotifications
 
 /// Notifications › Behavior: the toast stack, escalation and flood
-/// thresholds, screen sharing, hotkeys, the crawl's direction and Focus —
+/// thresholds, screen sharing, hotkeys and Focus —
 /// everything about presentation that is not one urgency's style.
 @MainActor
 final class NotificationBehaviorSettingsPanel: ComposableSettings.SettingsPanelViewController {
@@ -23,7 +23,7 @@ final class NotificationBehaviorSettingsPanel: ComposableSettings.SettingsPanelV
     required init?(coder: NSCoder) { fatalError() }
 
     override var searchKeywords: [String] {
-        ["stack", "escalation", "flood", "screen sharing", "hotkeys", "crawl", "focus"]
+        ["stack", "escalation", "flood", "screen sharing", "hotkeys", "focus"]
     }
 
     override func viewDidLoad() {
@@ -77,10 +77,6 @@ final class NotificationBehaviorSettingsPanel: ComposableSettings.SettingsPanelV
             rules.hotkeysEnabled) { isOn in
                 controls.mutate { $0.hotkeysEnabled = isOn }
             }))
-        group.addSettingSubview(controls.row("Crawl direction", controls.popup(
-            [false, true], selected: rules.crawl.leftToRight,
-            title: { $0 ? "Left to right" : "Right to left" },
-            onChange: { leftToRight in controls.mutate { $0.crawl.leftToRight = leftToRight } })))
         return group
     }
 
