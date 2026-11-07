@@ -179,24 +179,26 @@ extension EventStore {
 
     private func trimRows(olderThan cutoff: Double, maxTurnId: Int64?, batch: Int,
                           until end: ContinuousClock.Instant) throws -> EventStoreTrimResult {
-        let limit = max(1, batch)
+        var limit = max(1, batch)
         var result = EventStoreTrimResult(finished: false)
         var ranBatch = false
 
         /// Runs `sql` (bound to `arguments` + the limit) until a batch deletes fewer
         /// than `limit` rows; false when the deadline stopped it first. With `batchWork`,
-        /// that runs instead of `sql` and returns the rows it deleted.
+        /// that runs instead of `sql`, given the batch size, and returns the rows it deleted.
         func drain(_ sql: String, _ arguments: StatementArguments,
                    into field: WritableKeyPath<EventStoreTrimResult, Int>,
-                   batchWork: ((Database) throws -> Int)? = nil) throws -> Bool {
+                   batchWork: ((Database, Int) throws -> Int)? = nil) throws -> Bool {
             while true {
                 if ranBatch && ContinuousClock.now >= end { return false }
                 let deleted: Int
                 do {
-                    deleted = try pool.write(deadline: nil) { conn -> Int in
-                        if let batchWork { return try batchWork(conn) }
-                        try conn.execute(sql: sql, arguments: arguments + [limit])
-                        return conn.changesCount
+                    deleted = try Self.shrinkingOnDeadline(&limit) { size in
+                        try pool.write(deadline: nil) { conn -> Int in
+                            if let batchWork { return try batchWork(conn, size) }
+                            try conn.execute(sql: sql, arguments: arguments + [size])
+                            return conn.changesCount
+                        }
                     }
                 } catch {
                     throw EventStoreTrimFailure(partial: result, underlying: error)
@@ -229,8 +231,8 @@ extension EventStore {
                 """, [provider, cutoff], into: \.messages) else { return result }
         }
 
-        guard try drain("", [], into: \.turns, batchWork: { conn in
-            try Self.foldAndDeleteTurns(olderThan: cutoff, maxTurnId: maxTurnId, limit: limit, conn)
+        guard try drain("", [], into: \.turns, batchWork: { conn, size in
+            try Self.foldAndDeleteTurns(olderThan: cutoff, maxTurnId: maxTurnId, limit: size, conn)
         }) else { return result }
 
         // The untimed rows of sessions that ended before the cutoff.
@@ -246,8 +248,8 @@ extension EventStore {
                   ON s.provider = m.provider AND s.session_id = m.session_id
                 WHERE m.time <= 0 AND \(Self.endedBefore) LIMIT ?)
             """, [cutoff], into: \.messages) else { return result }
-        guard try drain("", [], into: \.turns, batchWork: { conn in
-            try Self.foldAndDeleteTurns(untimedOfSessionsEndedBefore: cutoff, limit: limit, conn)
+        guard try drain("", [], into: \.turns, batchWork: { conn, size in
+            try Self.foldAndDeleteTurns(untimedOfSessionsEndedBefore: cutoff, limit: size, conn)
         }) else { return result }
 
         guard try drain("""
@@ -265,6 +267,26 @@ extension EventStore {
 
         result.finished = true
         return result
+    }
+
+    /// The smallest batch `shrinkingOnDeadline` halves down to.
+    static let minimumTrimBatch = 25
+
+    /// Runs one batch of `limit` rows; a batch ejected by the write deadline rolled
+    /// back whole, so it is run again at half the size, down to
+    /// ``minimumTrimBatch``, and `limit` keeps the size that went through for the
+    /// rest of the pass. Every deleted row updates each of the table's indexes, and
+    /// on a slow disk that a replay is also writing, 500 of them could run past the
+    /// deadline, which failed the stage and left the pass unfinished. A batch at the
+    /// minimum that still runs out throws the deadline error.
+    static func shrinkingOnDeadline(_ limit: inout Int, _ body: (Int) throws -> Int) throws -> Int {
+        while true {
+            do {
+                return try body(limit)
+            } catch BoundedDatabaseError.deadlineExceeded where limit > minimumTrimBatch {
+                limit = max(minimumTrimBatch, limit / 2)
+            }
+        }
     }
 
     /// One batch of the turns stage, inside the caller's write transaction: picks the

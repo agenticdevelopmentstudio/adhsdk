@@ -55,6 +55,30 @@ final class EventStoreTrimTests: XCTestCase {
 
     // MARK: - trim
 
+    /// A batch ejected by the write deadline is run again at half the size, and the
+    /// size that went through is kept; at the minimum the deadline error is thrown.
+    func testABatchThatRunsOutOfTimeIsRetriedSmaller() throws {
+        var limit = 500
+        var tried: [Int] = []
+        let deleted = try EventStore.shrinkingOnDeadline(&limit) { size in
+            tried.append(size)
+            if size > 100 { throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000) }
+            return size
+        }
+        XCTAssertEqual(tried, [500, 250, 125, 62])
+        XCTAssertEqual(deleted, 62)
+        XCTAssertEqual(limit, 62)
+
+        var floor = 50
+        XCTAssertThrowsError(try EventStore.shrinkingOnDeadline(&floor) { _ in
+            throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)
+        }) { error in
+            XCTAssertEqual(error as? BoundedDatabaseError,
+                           .deadlineExceeded(lane: "write", elapsedMs: 60_000))
+        }
+        XCTAssertEqual(floor, EventStore.minimumTrimBatch)
+    }
+
     func testTrimDeletesExactlyTheRowsOlderThanTheCutoff() throws {
         let store = try makeStore()
         var batch = NormalizedBatch()
