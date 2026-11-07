@@ -87,6 +87,21 @@ describe('parts', () => {
     expect(terms[2]!.text).toBe('No tutorial & nothing else, though Second is prose.')
   })
 
+  it('finds a Tutorials line written in bold or with attributes on its paragraph', () => {
+    const terms = glossaryOf(
+      [
+        '<h3>Bold</h3>', '<p>One.</p>', '<p><strong>Tutorials:</strong> <a href="/tutorials/first">First</a></p>',
+        '<h3>Classed</h3>', '<p>Two.</p>', '<p class="x">Tutorials: <a href="/tutorials/second">Second</a></p>',
+      ],
+      '/tutorials',
+      new Set(['first', 'second']),
+    )
+    expect(terms.map((t) => [t.id, t.tutorials, t.html])).toEqual([
+      ['bold', ['first'], ['<p>One.</p>']],
+      ['classed', ['second'], ['<p>Two.</p>']],
+    ])
+  })
+
   it('makes the items of a step\'s first numbered list its sub-steps', () => {
     const section = {
       id: 'go',

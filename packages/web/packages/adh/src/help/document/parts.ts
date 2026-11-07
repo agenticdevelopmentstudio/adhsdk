@@ -170,8 +170,14 @@ export function tutorialLinks(html: string, base: string, known: ReadonlySet<str
   return out;
 }
 
-/** A term's closing paragraph that names its tutorials: `Tutorials: [One](/tutorials/one), …`. */
-const TUTORIALS_LINE = /^\s*<p>\s*Tutorials:/;
+/**
+ * Whether a block is a term's closing paragraph that names its tutorials:
+ * `Tutorials: [One](/tutorials/one), …`. Read by its words, so `**Tutorials:**` or a paragraph
+ * with attributes counts as well.
+ */
+function isTutorialsLine(block: string): boolean {
+  return /^\s*<p[\s>]/.test(block) && plainText(block).startsWith("Tutorials:");
+}
 
 /**
  * The glossary's terms, read from its card's description. A term's tutorials are the links in its
@@ -186,7 +192,7 @@ export function glossaryOf(
 ): GlossaryTerm[] {
   const { sections } = sectionsOf(description);
   return sections.map((section) => {
-    const line = [...section.html].reverse().find((block) => TUTORIALS_LINE.test(block));
+    const line = [...section.html].reverse().find(isTutorialsLine);
     const html = section.html.filter((block) => block !== line);
     return {
       ...section,

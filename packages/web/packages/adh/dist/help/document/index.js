@@ -86,11 +86,13 @@ function tutorialLinks(html, base, known) {
   }
   return out;
 }
-var TUTORIALS_LINE = /^\s*<p>\s*Tutorials:/;
+function isTutorialsLine(block) {
+  return /^\s*<p[\s>]/.test(block) && plainText(block).startsWith("Tutorials:");
+}
 function glossaryOf(description, base, tutorialIds) {
   const { sections } = sectionsOf(description);
   return sections.map((section) => {
-    const line = [...section.html].reverse().find((block) => TUTORIALS_LINE.test(block));
+    const line = [...section.html].reverse().find(isTutorialsLine);
     const html = section.html.filter((block) => block !== line);
     return {
       ...section,
