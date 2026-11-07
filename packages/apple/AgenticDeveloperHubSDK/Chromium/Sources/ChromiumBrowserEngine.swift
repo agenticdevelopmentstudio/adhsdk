@@ -42,7 +42,9 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     private var appliedScriptsDisabled: Bool?
     /// The automation world of the current document; a navigation discards it.
     private var automationContext: Int?
-    private var wasLoading = false
+    /// Whether the main frame is loading. Chromium's own loading flag covers
+    /// every frame, so an iframe would read as a navigation.
+    private var mainFrameLoading = false
 
     public init(settings: SettingsStore) {
         self.settings = settings
@@ -71,7 +73,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     public var view: NSView { browserView }
     public var url: URL? { browserView.address.flatMap(URL.init(string:)) }
     public var title: String? { browserView.pageTitle }
-    public var isLoading: Bool { browserView.isLoading }
+    public var isLoading: Bool { mainFrameLoading }
     public var canGoBack: Bool { browserView.canGoBack }
     public var canGoForward: Bool { browserView.canGoForward }
     public var loadingChanges: AnyPublisher<Bool, Never> { loadingSubject.eraseToAnyPublisher() }
@@ -291,29 +293,40 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         delegate?.browserEngineTitleDidChange(self)
     }
 
-    /// Chromium reports loading and history together; the pane hears a
-    /// navigation start only when loading begins, as WebKit tells it.
+    /// Chromium reports loading and history together, for every frame; only
+    /// the history is read here. Loading and navigation follow the main
+    /// frame's own load, below.
     public func chromiumBrowserViewLoadingStateDidChange(_ view: ChromiumBrowserView) {
         delegate?.browserEngineHistoryDidChange(self)
-        guard view.isLoading != wasLoading else { return }
-        wasLoading = view.isLoading
-        loadingSubject.send(view.isLoading)
-        if view.isLoading { delegate?.browserEngineDidStartNavigation(self) }
+        // A stopped or superseded load ends with neither a load end nor a
+        // reported error; a browser loading nothing has no main frame loading.
+        if !view.isLoading { setMainFrameLoading(false) }
     }
 
-    /// Chromium's load start is the commit: the document is the new one.
+    private func setMainFrameLoading(_ loading: Bool) {
+        guard loading != mainFrameLoading else { return }
+        mainFrameLoading = loading
+        loadingSubject.send(loading)
+    }
+
+    /// Chromium's main-frame load start is both the navigation's start and
+    /// its commit: the document is the new one.
     public func chromiumBrowserViewDidStartMainFrameLoad(_ view: ChromiumBrowserView) {
+        setMainFrameLoading(true)
+        delegate?.browserEngineDidStartNavigation(self)
         automationContext = nil
         delegate?.browserEngineDidCommitNavigation(self)
     }
 
     public func chromiumBrowserViewDidFinishMainFrameLoad(_ view: ChromiumBrowserView) {
+        setMainFrameLoading(false)
         delegate?.browserEngineDidFinishNavigation(self)
     }
 
     public func chromiumBrowserView(
         _ view: ChromiumBrowserView, didFailLoadWithMessage message: String, address: String
     ) {
+        setMainFrameLoading(false)
         logger.error("chrome pane failed to load: \(message, privacy: .public)")
     }
 
