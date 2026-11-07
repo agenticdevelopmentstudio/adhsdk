@@ -31,6 +31,10 @@ public struct BrowserPaneHandle {
 
 /// How the tool set finds Browser panes. The app supplies the real one over
 /// its windows; tests supply a fake.
+///
+/// Finding a pane, and opening one, change nothing on screen: the tool set
+/// first checks the pane's Agent access, and only a call that passes asks
+/// for `revealBrowserPane(id:)`. A refused call must leave no trace.
 @MainActor
 public protocol BrowserPaneDirectory: AnyObject {
     /// Every open Browser pane, front window first.
@@ -43,6 +47,14 @@ public protocol BrowserPaneDirectory: AnyObject {
     /// Opens a Browser pane beside the caller's pane (or in the front
     /// window when nil / unknown) and returns it.
     func openBrowserPane(besidePane paneID: String?) throws -> BrowserPaneHandle
+    /// Puts the pane's project on screen, for a call about to drive it: a
+    /// screenshot of an ordered-out window fails, and a pane driven there is
+    /// one nobody can see. Called only after the call's access check passed.
+    func revealBrowserPane(id: String)
+    /// Closes a Browser pane, the way its close button would. Used for a pane
+    /// `openBrowserPane` made whose settings refuse the agent, so a refused
+    /// open leaves nothing behind. Looks among every pane, hidden ones too.
+    func closeBrowserPane(id: String)
 }
 
 extension BrowserPaneDirectory {

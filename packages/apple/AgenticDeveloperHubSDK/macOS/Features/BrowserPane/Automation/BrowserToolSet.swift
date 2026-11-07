@@ -23,8 +23,6 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     static let readOnlyRefusal =
         "This browser pane is read only for the agent (Settings > Session Privacy > Agent access)."
     static let pausedRefusal = "This browser pane's events are paused, and its settings pause the agent too."
-    static let hiddenRefusal =
-        "This browser pane is hidden from the agent (Settings > Session Privacy > Agent access)."
 
     private let directory: any BrowserPaneDirectory
     private let settings: SettingsStore
@@ -181,8 +179,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// actually runs. The handle is looked up again here rather than taken
     /// from before the queue: the user may make the pane read only, pause it,
     /// hide it or close it while the call waits. `browserPanes()` is the
-    /// lookup because it only reads; `browserPane(id:)` reveals the pane's
-    /// project, which a refused call must not do.
+    /// lookup because it is the plain list of what the agent may see.
     @MainActor
     private func requireSwitches(for name: String, paneID: String) throws {
         try requireSwitches(for: name)
@@ -195,10 +192,12 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// The pane's Agent access and pause state against the tool: a pane
     /// paused for the agent refuses every tool, a read-only one every tool
     /// that is not a read. A hidden pane reaches here only straight from
-    /// `openBrowserPane`, the one path that does not go through `visible`.
+    /// `openBrowserPane`, the one path that does not go through `visible`,
+    /// and is answered as a pane that does not exist, so the refusal says
+    /// nothing a hidden pane would not.
     @MainActor
     private func requireAccess(for name: String, on pane: BrowserPaneHandle) throws {
-        if pane.access == .hidden { throw ToolError(sentence: Self.hiddenRefusal) }
+        if pane.access == .hidden { throw ToolError(sentence: "pane \(pane.id) was closed; call browser_list") }
         if pane.isPausedForAgent { throw ToolError(sentence: Self.pausedRefusal) }
         if pane.access == .readOnly, !Self.readToolNames.contains(name) {
             throw ToolError(sentence: Self.readOnlyRefusal)
@@ -228,7 +227,17 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         if name == "browser_open" {
             let url = args.optionalString("url") == nil ? openWithoutURLPage() : try args.url("url")
             let pane = try directory.openBrowserPane(besidePane: caller)
-            try requireAccess(for: name, on: pane)
+            // A pane whose settings refuse the agent (a hidden, read-only or
+            // paused default) is closed again at once and the open refused
+            // with the same sentence as any other refused open, so neither
+            // the pane nor the reason is left behind or named.
+            do {
+                try requireAccess(for: name, on: pane)
+            } catch {
+                directory.closeBrowserPane(id: pane.id)
+                throw BrowserAutomationError.openRefused
+            }
+            directory.revealBrowserPane(id: pane.id)
             return try await pane.automation.drive {
                 try self.requireSwitches(for: name, paneID: pane.id)
                 let delta = try await pane.automation.navigate(to: url)
@@ -237,8 +246,11 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         }
         let pane = try resolvePane(args, caller: caller)
         // Refused at once when the pane already refuses, rather than after
-        // waiting behind other callers; checked again once dequeued.
+        // waiting behind other callers; checked again once dequeued. The
+        // pane's project is put on screen only once access has passed, so a
+        // refused call changes nothing the user can see.
         try requireAccess(for: name, on: pane)
+        directory.revealBrowserPane(id: pane.id)
         let automation = pane.automation
         return try await automation.drive {
             try self.requireSwitches(for: name, paneID: pane.id)

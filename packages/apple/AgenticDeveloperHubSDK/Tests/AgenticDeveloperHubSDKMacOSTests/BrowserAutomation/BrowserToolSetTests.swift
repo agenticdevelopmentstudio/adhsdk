@@ -11,6 +11,12 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
     var lastUsed: String?
     var opened: [String?] = []
     var openFails = false
+    /// The Agent access a pane this directory opens comes with.
+    var openAccess: BrowserAgentAccess = .full
+    /// Every pane id the tool set asked to reveal, in order.
+    var revealed: [String] = []
+    /// Every pane id the tool set asked to close, in order.
+    var closed: [String] = []
     let pages: [String: OffscreenWebView]
 
     init(pages: [String: OffscreenWebView]) { self.pages = pages }
@@ -23,9 +29,14 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
         opened.append(paneID)
         if openFails { throw BrowserAutomationError.openRefused }
         let page = OffscreenWebView()
-        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))
+        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), access: openAccess)
         panes.append(handle)
         return handle
+    }
+    func revealBrowserPane(id: String) { revealed.append(id) }
+    func closeBrowserPane(id: String) {
+        closed.append(id)
+        panes.removeAll { $0.id == id }
     }
 }
 
@@ -378,22 +389,73 @@ final class BrowserToolSetTests: XCTestCase {
     }
 
     /// The handle is read again once the call is dequeued: a pane made read
-    /// only while the call waited refuses it.
+    /// only while the call waited refuses it. The click is seen waiting at
+    /// the gate before access changes, so it passed the check before the
+    /// queue, and the refusal can only come from the check after it.
     func testAccessChangedWhileQueuedRefusesTheQueuedCall() async throws {
         let automation = directory.panes[0].automation
-        let directory = self.directory!
-        let readOnly = handle("A", access: .readOnly)
+        let (release, releaser) = AsyncStream.makeStream(of: Void.self)
         let held = Task { @MainActor in
             try await automation.drive {
-                try await Task.sleep(nanoseconds: 300_000_000)
-                directory.panes[0] = readOnly
+                for await _ in release { break }
             }
         }
-        try await Task.sleep(nanoseconds: 50_000_000)
-        let reply = await call("browser_click", ["pane_id": "A", "ref": "e1", "generation": 1])
+        try await waitUntil("the holder has the gate") { automation.isActionInFlight }
+        let click = Task { await self.call("browser_click", ["pane_id": "A", "ref": "e1", "generation": 1]) }
+        try await waitUntil("the click is queued") { automation.queuedCallCount == 1 }
+        directory.panes[0] = handle("A", access: .readOnly)
+        releaser.yield()
+        releaser.finish()
         _ = try await held.value
+        let reply = await click.value
         XCTAssertTrue(reply.isError)
         XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).")
+        XCTAssertEqual(directory.revealed, ["A"], "revealed once, when the click passed the check before the queue")
+    }
+
+    /// Yields the main actor until `condition` holds; fails after a bounded
+    /// number of turns rather than hanging.
+    private func waitUntil(_ what: String, _ condition: () -> Bool) async throws {
+        for _ in 0..<10_000 {
+            if condition() { return }
+            await Task.yield()
+        }
+        XCTFail("never: \(what)")
+        throw CancellationError()
+    }
+
+    /// A refused call reveals nothing: neither the read-only pane named by
+    /// id, nor the paused one reached as the default, nor the one beside the
+    /// caller. A call that passes reveals its pane.
+    func testRefusedCallRevealsNothing() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B", pausedForAgent: true)]
+        directory.beside["term-1"] = "A"
+        directory.lastUsed = "B"
+        let byID = await call("browser_click", ["pane_id": "A", "ref": "e1", "generation": 1])
+        XCTAssertTrue(byID.isError)
+        let beside = await call("browser_press_key", ["key": "Enter"], caller: "term-1")
+        XCTAssertTrue(beside.isError)
+        let lastUsed = await call("browser_snapshot")
+        XCTAssertTrue(lastUsed.isError)
+        XCTAssertEqual(directory.revealed, [])
+        let allowed = await call("browser_snapshot", ["pane_id": "A"])
+        XCTAssertFalse(allowed.isError, allowed.content)
+        XCTAssertEqual(directory.revealed, ["A"])
+    }
+
+    /// An open whose new pane refuses the agent closes that pane again and
+    /// says only that the open was refused, whatever the reason.
+    func testRefusedOpenLeavesNoPane() async {
+        for access in [BrowserAgentAccess.hidden, .readOnly] {
+            directory.openAccess = access
+            let before = directory.panes.map(\.id)
+            let reply = await call("browser_open", ["url": "https://example.test/"], caller: "term-1")
+            XCTAssertTrue(reply.isError, "\(access)")
+            XCTAssertEqual(reply.content, "could not open a Browser pane beside that pane", "\(access)")
+            XCTAssertEqual(directory.panes.map(\.id), before, "\(access)")
+            XCTAssertEqual(directory.revealed, [], "\(access)")
+        }
+        XCTAssertEqual(directory.closed.count, 2)
     }
 
     func testListPanesReportsAccess() async {
