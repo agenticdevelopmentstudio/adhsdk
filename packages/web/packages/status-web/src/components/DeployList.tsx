@@ -6,6 +6,7 @@ import { platformGlyph, deployStatusColor, deployStatusLabel } from "../lib/depl
 import { shortSha } from "../lib/format";
 import { timeAgo } from "../lib/time-ago";
 import { useNow } from "../hooks/use-now";
+import { shownDeployStatus } from "../lib/deploy-view";
 
 import { COLORS, PALETTE, TINT } from "../lib/colors";
 export interface DeployListProps {
@@ -19,9 +20,9 @@ export function DeployList({ deploys }: DeployListProps): ReactElement | null {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0, overflow: "hidden" }}>
       {deploys.map((d) => {
-        // The server's `effectiveStatus`: an in-flight deploy nothing has re-confirmed
-        // already reads "unknown" there, so this never asserts building on nothing.
-        const status: DeployStatus = d.effectiveStatus;
+        // The server's `effectiveStatus`, aged on this clock against the server's own
+        // `unconfirmedAt`, so a snapshot that stops arriving never asserts building forever.
+        const status: DeployStatus = shownDeployStatus(d, nowMs);
         const isIssue = status === "failed" || status === "building";
         const color = deployStatusColor(status);
         const label = deployStatusLabel(status);

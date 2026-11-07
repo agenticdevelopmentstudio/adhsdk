@@ -13,7 +13,7 @@ import type { BuildPhase, DeployPhase } from '../monitor/deploy-status';
 import { deployEventsSince } from '../monitor/live-buffer';
 import { providerDeployToDTO, type ProviderDeploy } from '../monitor/provider-deploy';
 import { deployTargetKey, endpointDeploys, platformCanon, summarizeByPlatform } from '../monitor/overview';
-import { effectiveDeployStatus, liveFreshness, staleMonitorsView } from '../monitor/live-view';
+import { deployUnconfirmedAt, effectiveDeployStatus, liveFreshness, staleMonitorsView } from '../monitor/live-view';
 import { deployProjectKey } from '@adh-sdk/deploy-platform/canon';
 import { envFromProject } from '../monitor/deploy-view';
 import { hostOf } from '../monitor/url';
@@ -363,6 +363,7 @@ export async function buildLiveSnapshot(storage: Storage, config: StatusConfig):
   const deployments = rawDeployments.map((d) => ({
     ...d,
     effectiveStatus: effectiveDeployStatus(d, nowMs, probeIntervalMs),
+    unconfirmedAt: deployUnconfirmedAt(d, nowMs, probeIntervalMs),
   }));
   const staleProd = staleProdFromBoard(problems);
   const providers = await providerHealth(storage, config, problems);

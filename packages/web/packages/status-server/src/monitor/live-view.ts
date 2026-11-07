@@ -82,6 +82,24 @@ export function deployUnconfirmed(
   return nowMs - confirmed > unconfirmedWindowMs(probeIntervalMs);
 }
 
+/**
+ * When an in-flight deploy's phase stops being believed: its confirmation plus the window.
+ * Null for a settled deploy, and for one already unconfirmed (its status says so already).
+ *
+ * The snapshot is judged when it is built, and a client can go on showing it long after —
+ * the monitor stalls, or the stream stalls while it still looks connected. This deadline
+ * lets the display stop asserting "building" on its own clock without knowing the window.
+ */
+export function deployUnconfirmedAt(
+  d: Pick<DeploymentDTO, "status" | "phaseConfirmedAt" | "createdAt">,
+  nowMs: number,
+  probeIntervalMs?: number | null,
+): string | null {
+  if (!IN_FLIGHT.includes(d.status) || deployUnconfirmed(d, nowMs, probeIntervalMs)) return null;
+  const confirmed = Date.parse(d.phaseConfirmedAt || d.createdAt);
+  return new Date(confirmed + unconfirmedWindowMs(probeIntervalMs)).toISOString();
+}
+
 /** The status a view should show for a deploy: its own, or "unknown" once an in-flight
  *  phase is no longer confirmed — the same demotion the activity feed applies. */
 export function effectiveDeployStatus(

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   deployUnconfirmed,
+  deployUnconfirmedAt,
   effectiveDeployStatus,
   liveFreshness,
   selectStaleMonitors,
@@ -120,6 +121,20 @@ describe("deployUnconfirmed / effectiveDeployStatus", () => {
     const slow = 6 * 60_000;
     expect(deployUnconfirmed(d, confirmedMs + UNCONFIRMED_AFTER_MS + 1, slow)).toBe(false);
     expect(deployUnconfirmed(d, confirmedMs + 30 * 60_000 + 1, slow)).toBe(true);
+  });
+  it("publishes the deadline a display ages an in-flight deploy against, on the same window", () => {
+    const d = deploy({ phaseConfirmedAt: confirmed });
+    const at = deployUnconfirmedAt(d, confirmedMs);
+    expect(at).toBe(new Date(confirmedMs + UNCONFIRMED_AFTER_MS).toISOString());
+    // The deadline and the server's own verdict agree on either side of it.
+    expect(effectiveDeployStatus(d, Date.parse(at!))).toBe("building");
+    expect(effectiveDeployStatus(d, Date.parse(at!) + 1)).toBe("unknown");
+    expect(deployUnconfirmedAt(d, confirmedMs, 6 * 60_000)).toBe(new Date(confirmedMs + 30 * 60_000).toISOString());
+  });
+  it("has no deadline for a settled deploy, or for one already demoted", () => {
+    expect(deployUnconfirmedAt(deploy({ status: "success" }), confirmedMs)).toBeNull();
+    expect(deployUnconfirmedAt(deploy({ phaseConfirmedAt: confirmed }), confirmedMs + UNCONFIRMED_AFTER_MS + 1)).toBeNull();
+    expect(deployUnconfirmedAt(deploy({ phaseConfirmedAt: "", createdAt: "nope" }), confirmedMs)).toBeNull();
   });
 });
 

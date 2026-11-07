@@ -8,6 +8,7 @@ import { useBoard } from "../hooks/use-board";
 import { useIntegrations } from "../hooks/use-integrations";
 import type { UptimeDay } from "../types";
 import { timeAgo } from "../lib/time-ago";
+import { shownPlatformSummary } from "../lib/deploy-view";
 import { useNow } from "../hooks/use-now";
 import { KpiStrip } from "./KpiStrip";
 import { SelfCheckBanner } from "./SelfCheckBanner";
@@ -68,7 +69,8 @@ export function Dashboard(): ReactElement {
   const counts = status.data?.counts ?? { up: 0, degraded: 0, down: 0, total: 0 };
 
   const nowMs = useNow();
-  const platforms = store.snapshot?.platformSummary ?? [];
+  // Aged on this clock against the server's deadlines, like each DeployList row.
+  const platforms = (store.snapshot?.platformSummary ?? []).map((p) => shownPlatformSummary(p, nowMs));
   // The strip's TWO board-derived facts, both from `board` and both null together —
   // Fix Round 2 item C7: the headline verdict used to come from /api/status while the
   // incident count came from the board, so the most prominent element on the page could

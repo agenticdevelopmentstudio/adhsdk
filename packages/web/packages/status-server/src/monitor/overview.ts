@@ -1,11 +1,14 @@
 import type { DeploymentDTO } from "./types";
 import { platformCanon, deployTargetKey, PLATFORM_ORDER } from "@adh-sdk/deploy-platform/canon";
-import { deployUnconfirmed } from "./live-view";
+import { deployUnconfirmed, deployUnconfirmedAt } from "./live-view";
 
 export interface PlatformSummary {
   platform: string;
   ready: number;
   building: number;
+  /** When each deploy counted in `building` stops being believed (`deployUnconfirmedAt`):
+   *  a display still showing this snapshot drops it from `building` once its time passes. */
+  buildingUnconfirmedAt: string[];
   failed: number;
   total: number;
 }
@@ -26,13 +29,17 @@ export function summarizeByPlatform(deploys: DeploymentDTO[], nowMs: number, pro
   for (const d of deploys) {
     let entry = map.get(d.platform);
     if (!entry) {
-      entry = { platform: d.platform, ready: 0, building: 0, failed: 0, total: 0 };
+      entry = { platform: d.platform, ready: 0, building: 0, buildingUnconfirmedAt: [], failed: 0, total: 0 };
       map.set(d.platform, entry);
     }
     entry.total++;
     if (deployUnconfirmed(d, nowMs, probeIntervalMs)) continue; // stale in-flight → total only
     if (d.status === "success") entry.ready++;
-    else if (d.status === "building" || d.status === "queued") entry.building++;
+    else if (d.status === "building" || d.status === "queued") {
+      entry.building++;
+      const until = deployUnconfirmedAt(d, nowMs, probeIntervalMs);
+      if (until) entry.buildingUnconfirmedAt.push(until);
+    }
     else if (d.status === "failed") entry.failed++;
     // canceled: counted in total only
   }

@@ -26,6 +26,9 @@ export interface LiveServiceDTO extends ServiceStatusDTO, EndpointDeploys {
  *  cadence-scaled window (`effectiveDeployStatus`). Judged against `generatedAt`. */
 export interface LiveDeploymentDTO extends DeploymentDTO {
   effectiveStatus: DeployStatus;
+  /** ISO time after which a display still showing this snapshot must read an in-flight
+   *  `effectiveStatus` as "unknown" (`deployUnconfirmedAt`). Null when it never lapses. */
+  unconfirmedAt: string | null;
 }
 
 /** A Vercel project whose LIVE production deploy is errored/behind (already filtered to stale). */

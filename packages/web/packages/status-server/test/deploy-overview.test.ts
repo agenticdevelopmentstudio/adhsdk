@@ -82,6 +82,8 @@ describe("summarizeByPlatform", () => {
       platform: "vercel",
       ready: 1,
       building: 2,
+      // Each building deploy's deadline, so a display can drop it once that passes.
+      buildingUnconfirmedAt: [new Date(NOW + 10 * 60_000).toISOString(), new Date(NOW + 10 * 60_000).toISOString()],
       failed: 1,
       total: 5,
     });
