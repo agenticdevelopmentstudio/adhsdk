@@ -30,20 +30,27 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
     static let scopes = ["openid", "email", "https://www.googleapis.com/auth/gmail.modify"]
 
     private let timeout: Duration
+    private let successURL: URL?
     private let now: @Sendable () -> Date
 
-    public init(timeout: Duration = .seconds(300), now: @escaping @Sendable () -> Date = Date.init) {
+    /// - Parameter successURL: where the browser is sent once Google redirects back with the
+    ///   code — typically the host app's own URL scheme, so the browser hands the person back to
+    ///   the app. Without one, the browser shows a plain "Return to the app" page.
+    public init(timeout: Duration = .seconds(300), successURL: URL? = nil,
+                now: @escaping @Sendable () -> Date = Date.init) {
         self.timeout = timeout
+        self.successURL = successURL
         self.now = now
     }
 
     public func signIn(config: GoogleOAuthClientConfig) async throws -> GoogleCredential {
         let box = SessionBox()
         let now = self.now
+        let successURL = self.successURL
         return try await withSignInDeadline(
             timeout: timeout,
             cancel: { await box.cancel() },
-            operation: { try await Self.run(config: config, box: box, now: now) })
+            operation: { try await Self.run(config: config, successURL: successURL, box: box, now: now) })
     }
 
     /// The credential a finished sign-in yields. Google normally reports the access token's
@@ -78,12 +85,12 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
 
     @MainActor
     private static func run(
-        config: GoogleOAuthClientConfig, box: SessionBox, now: @Sendable () -> Date
+        config: GoogleOAuthClientConfig, successURL: URL?, box: SessionBox, now: @Sendable () -> Date
     ) async throws -> GoogleCredential {
         guard let authURL = URL(string: authorizationEndpoint), let tokenURL = URL(string: tokenEndpoint) else {
             throw IntegrationError.signInFailed("invalid Google endpoints")
         }
-        let handler = OIDRedirectHTTPHandler(successURL: nil)
+        let handler = OIDRedirectHTTPHandler(successURL: successURL)
         box.handler = handler
         // startHTTPListener returns nil on a bind failure, but Swift imports it as non-null and
         // would trap. Calling it through the runtime (a nil error out-parameter is tolerated)
