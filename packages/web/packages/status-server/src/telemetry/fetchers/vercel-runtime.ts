@@ -28,6 +28,13 @@ import {
 // sample of it. A read that could not be whole says so (`complete: false`): a query that hit the
 // page cap, or one Vercel answered with excluded intervals. A read that failed returns `ok: false`
 // and the store keeps the snapshot it had. PURE w.r.t. storage.
+//
+// The endpoint is not in Vercel's published OpenAPI spec. Its rules here were measured against
+// the live API on 2026-11-07, and each one, broken, is a 400 that fails every read:
+//   - `teamId` must be a team. A user id is refused, so with no VERCEL_TEAM_ID the owner is the
+//     account's `defaultTeamId` (every personal account is a team now), never its user id.
+//   - `scope.projectIds` holds at most {@link MAX_SCOPE_PROJECTS}, so each query runs per chunk.
+//   - `timestamp` is not a selectable field, but every event carries it anyway.
 
 export interface VercelRuntimeOptions {
   /** How long the whole read may take. */
@@ -41,10 +48,12 @@ export interface VercelRuntimeOptions {
 const OVERALL_BUDGET_MS = 45_000;
 const MAX_PAGES = 10;
 export const MAX_PAGE_SIZE = 1000;
+/** The most project ids one events query may scope to. */
+export const MAX_SCOPE_PROJECTS = 20;
 const QUERY_REASON = { "x-vercel-observability-query-reason": "adh-status/runtime-errors" };
 
+// No `timestamp`: Vercel refuses it in `select` and returns it on every event regardless.
 const LOG_SELECT = [
-  "timestamp",
   "projectId",
   "deploymentId",
   "requestId",
@@ -56,7 +65,6 @@ const LOG_SELECT = [
   "domain",
 ];
 const RESPONSE_SELECT = [
-  "timestamp",
   "projectId",
   "deploymentId",
   "requestId",
@@ -145,12 +153,41 @@ async function runQuery(
   }
 }
 
-/** Whose events these are: the team, or, with no team configured, the token's own account. */
+/**
+ * One query across every project, a chunk of {@link MAX_SCOPE_PROJECTS} at a time and one chunk
+ * after another. It is whole only if every chunk was; the page cap applies per chunk.
+ */
+async function runScopedQuery(
+  env: VercelEnv,
+  ownerId: string,
+  projectIds: string[],
+  range: { start: string; end: string },
+  query: Query,
+  maxPages: number,
+  signal: AbortSignal,
+): Promise<QueryResult> {
+  const events: RawRuntimeEvent[] = [];
+  let whole = true;
+  for (let i = 0; i < projectIds.length; i += MAX_SCOPE_PROJECTS) {
+    const chunk = projectIds.slice(i, i + MAX_SCOPE_PROJECTS);
+    const res = await runQuery(env, ownerId, chunk, range, query, maxPages, signal);
+    events.push(...res.events);
+    if (!res.whole) whole = false;
+  }
+  return { events, whole };
+}
+
+/**
+ * Whose events these are: the configured team, or else the token's account's default team. The
+ * events API takes only a team id; a user id is refused (see the header).
+ */
 async function ownerIdOf(env: VercelEnv, signal: AbortSignal): Promise<string> {
   if (env.VERCEL_TEAM_ID) return env.VERCEL_TEAM_ID;
-  const body = (await vercelGet(env, "/v2/user", {}, signal)) as { user?: { id?: unknown } };
-  const id = body.user?.id;
-  if (typeof id !== "string" || id === "") throw new Error("Vercel /v2/user: no user id");
+  const body = (await vercelGet(env, "/v2/user", {}, signal)) as { user?: { defaultTeamId?: unknown } };
+  const id = body.user?.defaultTeamId;
+  if (typeof id !== "string" || id === "") {
+    throw new Error("Vercel /v2/user: no defaultTeamId, and VERCEL_TEAM_ID is unset");
+  }
   return id;
 }
 
@@ -179,7 +216,7 @@ export function vercelRuntimeFetcher(env: VercelEnv, opts: VercelRuntimeOptions 
         };
         const ids = [...projects.keys()];
         // One after the other, not at once: they share the token's quota with the deploy poll.
-        const logs = await runQuery(
+        const logs = await runScopedQuery(
           env,
           ownerId,
           ids,
@@ -188,7 +225,7 @@ export function vercelRuntimeFetcher(env: VercelEnv, opts: VercelRuntimeOptions 
           maxPages,
           signal,
         );
-        const responses = await runQuery(
+        const responses = await runScopedQuery(
           env,
           ownerId,
           ids,

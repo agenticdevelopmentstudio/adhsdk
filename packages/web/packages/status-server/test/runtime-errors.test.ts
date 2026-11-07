@@ -277,6 +277,8 @@ type EventAnswer =
 interface FakeVercel {
   projects: unknown[];
   user?: string;
+  /** `/v2/user`'s `defaultTeamId`: the team every account's personal scope now is. */
+  defaultTeam?: string;
   events: Record<string, EventAnswer>;
   /** Answer 413 result_too_large to any page asked for with a limit above this. */
   maxLimit?: number;
@@ -289,6 +291,7 @@ interface EventsCall {
     event: string;
     scope: { ownerId: string; projectIds: string[] };
     timeRange: { start: string; end: string };
+    select: string[];
     filter: string;
     limit: number;
     cursor?: string;
@@ -302,15 +305,24 @@ function fakeVercel(v: FakeVercel) {
     const url = new URL(String(input));
     paths.push(url.pathname);
     if (url.pathname === "/v9/projects") return Response.json({ projects: v.projects, pagination: { next: null } });
-    if (url.pathname === "/v2/user") return Response.json({ user: { id: v.user } });
+    if (url.pathname === "/v2/user") {
+      return Response.json({ user: { id: v.user, ...(v.defaultTeam ? { defaultTeamId: v.defaultTeam } : {}) } });
+    }
     if (url.pathname === "/v1/observability/events" && init?.method === "POST") {
       const body = JSON.parse(String(init.body)) as EventsCall["body"];
       const headers = new Headers(init.headers);
-      events.push({
-        teamId: url.searchParams.get("teamId"),
-        reason: headers.get("x-vercel-observability-query-reason"),
-        body,
-      });
+      const teamId = url.searchParams.get("teamId");
+      events.push({ teamId, reason: headers.get("x-vercel-observability-query-reason"), body });
+      // The rules the live API enforces (measured 2026-11-07), each a 400 that fails the whole read.
+      if (!teamId?.startsWith("team_")) {
+        return Response.json({ error: { code: "bad_request", message: "A valid teamId query parameter is required." } }, { status: 400 });
+      }
+      if (body.scope.projectIds.length > 20) {
+        return Response.json({ error: { code: "invalid_request", issues: [{ path: "scope.projectIds" }] } }, { status: 400 });
+      }
+      if (body.select.includes("timestamp")) {
+        return Response.json({ error: { code: "invalid_request", issues: [{ path: "select.0" }] } }, { status: 400 });
+      }
       if (v.maxLimit !== undefined && body.limit > v.maxLimit) {
         return Response.json({ error: { code: "result_too_large" } }, { status: 413 });
       }
@@ -408,10 +420,46 @@ describe("vercelRuntimeFetcher", () => {
     }
   });
 
-  it("uses the token's own account when no team is configured", async () => {
-    const { events } = fakeVercel({ projects: [project("p1", "a-production")], user: "user_9", events: {} });
+  it("uses the account's default team when no team is configured, never the user id", async () => {
+    const { events } = fakeVercel({
+      projects: [project("p1", "a-production")],
+      user: "user_9",
+      defaultTeam: "team_9",
+      events: {},
+    });
     expect(await fetcher({}, { VERCEL_API_TOKEN: "tok" }).fetch()).toMatchObject({ ok: true, complete: true });
-    expect(events[0]).toMatchObject({ teamId: "user_9", body: { scope: { ownerId: "user_9" } } });
+    expect(events[0]).toMatchObject({ teamId: "team_9", body: { scope: { ownerId: "team_9" } } });
+  });
+
+  it("fails, asking no events, when no team is configured and the account has no default team", async () => {
+    const { events } = fakeVercel({ projects: [project("p1", "a-production")], user: "user_9", events: {} });
+    expect(await fetcher({}, { VERCEL_API_TOKEN: "tok" }).fetch()).toEqual({ ok: false, items: [] });
+    expect(events).toEqual([]);
+  });
+
+  it("asks about at most 20 projects per query and reads every project", async () => {
+    const ids = Array.from({ length: 45 }, (_, i) => `p${i}`);
+    const { events } = fakeVercel({
+      projects: ids.map((id) => project(id, `${id}-production`)),
+      events: {
+        "vercel.log": { pages: [[logEvent("1", { projectId: "p0" })]] },
+        "vercel.proxy_response": { pages: [[responseEvent("2", 503, { projectId: "p44" })]] },
+      },
+    });
+    const res = await fetcher().fetch();
+    expect(res).toMatchObject({ ok: true, complete: true });
+    for (const name of ["vercel.log", "vercel.proxy_response"]) {
+      const scopes = events.filter((c) => c.body.event === name).map((c) => c.body.scope.projectIds);
+      expect(scopes.map((s) => s.length)).toEqual([20, 20, 5]);
+      expect(scopes.flat()).toEqual(ids);
+    }
+  });
+
+  it("never selects timestamp, which Vercel refuses but returns on every event", async () => {
+    const { events } = fakeVercel({ projects: [project("p1", "a-production")], events: {} });
+    await fetcher().fetch();
+    expect(events).toHaveLength(2);
+    for (const call of events) expect(call.body.select).not.toContain("timestamp");
   });
 
   it("asks nothing more when there is no production project", async () => {

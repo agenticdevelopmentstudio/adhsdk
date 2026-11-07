@@ -76,7 +76,10 @@ describe('dashboard routes, with no provider configured', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('no-store');
     const body = await parse(res);
-    expect(Object.keys(body).sort()).toEqual(['generatedAt', 'groups', 'total', 'window']);
+    expect(Object.keys(body).sort()).toEqual(['complete', 'generatedAt', 'groups', 'readAt', 'total', 'window']);
+    // Never read: no read time, and nothing is known to be missing from the (empty) snapshot.
+    expect(body.readAt).toBeNull();
+    expect(body.complete).toBe(true);
     expect(body.window).toBe('24h');
     expect(body.total).toBe(0);
     expect(body.groups).toEqual([]);
