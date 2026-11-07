@@ -117,6 +117,15 @@ public final class BrowserPaneViewController: NSViewController {
     /// (`BrowserSettings.constructionSnapshot`), so closing the settings
     /// sheet can tell whether the pane still matches them.
     private(set) var builtConstructionSettings: [String: String]
+    /// The construction-time settings in effect when the pane's settings
+    /// sheet opened; `nil` while no sheet is up. Closing the sheet rebuilds
+    /// only for what changed since then, so a global change made earlier —
+    /// which an open pane does not follow (spec sections 3 and 4) — is never
+    /// applied by a Done that changed nothing.
+    private(set) var settingsSheetSnapshot: [String: String]?
+    /// Whether the pane's settings sheet is up. While it is, a jar change
+    /// waits for the sheet to close rather than rebuilding under it.
+    var isSettingsSheetOpen: Bool { settingsSheetSnapshot != nil }
     /// The Third-Party Content value last asked of the current web view, so
     /// an unrelated browser key change does not compile the rules again.
     /// `nil` on a web view that has been asked for nothing yet.
@@ -570,7 +579,10 @@ public final class BrowserPaneViewController: NSViewController {
     /// its own, not private — moves too, when the jar it would now resolve to
     /// is not the one it is on. A pane's own jar override is applied by its
     /// settings sheet, not here: the sheet decides when a rebuild is due.
+    /// While the sheet is up nothing moves — not even a dropped override —
+    /// and the sheet's close compares what changed (spec section 4).
     private func storageJarSettingDidChange() {
+        guard !isSettingsSheetOpen else { return }
         guard resolvedJar.jar != nil else { return }
         if paneSettings?.hasOverride(UserSettings.browserPrivacyStorageJar) == true { return }
         guard needsRebuildForJar() else { return }
@@ -1033,25 +1045,53 @@ extension BrowserPaneViewController: PaneMenuProviding {
     }
 
     /// Whether the settings WebKit fixes at construction now resolve to
-    /// anything other than `snapshot` — a change made in the pane's sheet, or
-    /// one made globally since the web view was built that the pane follows.
+    /// anything other than `snapshot`.
     func needsRebuild(after snapshot: [String: String]) -> Bool {
         BrowserSettings.constructionSnapshot(in: settings) != snapshot
     }
 
-    /// The pane's settings sheet, over the pane's own settings layer. When
-    /// it closes, a construction-time setting that no longer matches the web
-    /// view rebuilds it (spec section 3).
-    @objc func showPaneSettings() {
-        guard view.window != nil else { return }
+    /// Whether `settings` — the values the settings sheet shows — put this
+    /// pane on a store no other pane uses: private browsing, or a pane jar
+    /// the registry can make. Answers for the jar the sheet now shows, not
+    /// the one the web view was built on, so the Accept cookies row is never
+    /// offered as an override that would not apply after the close.
+    func wouldOwnDataStore(under settings: SettingsStore) -> Bool {
+        if settings.get(UserSettings.browserPrivateBrowsing) { return true }
+        guard settings.get(UserSettings.browserPrivacyStorageJar) == .pane,
+              let jars = paneContext.jars else { return false }
+        return jars.canIsolate(.pane, context: paneContext)
+    }
+
+    /// The pane's settings sheet, ready to present: its construction-time
+    /// values are recorded now, and its close rebuilds the web view for
+    /// whatever of them changed while it was up (spec section 3). `nil` for a
+    /// pane with no settings layer of its own. Internal so a test can drive
+    /// open and close without a window.
+    func makePaneSettingsSheet() -> BrowserPaneSettingsSheetController? {
         guard let sheet = BrowserPaneSettingsSheetController(pane: self, history: history) else {
             logger.info("browser pane settings requested, but the pane has no settings layer of its own")
+            return nil
+        }
+        settingsSheetSnapshot = BrowserSettings.constructionSnapshot(in: settings)
+        sheet.onClose = { [weak self] in self?.paneSettingsSheetDidClose() }
+        return sheet
+    }
+
+    /// The sheet has gone: rebuild if a construction-time value differs from
+    /// what it was when the sheet opened.
+    private func paneSettingsSheetDidClose() {
+        guard let snapshot = settingsSheetSnapshot else { return }
+        settingsSheetSnapshot = nil
+        guard !isDiscarded else { return }
+        if needsRebuild(after: snapshot) { rebuildWebView() }
+    }
+
+    @objc func showPaneSettings() {
+        guard view.window != nil else {
+            logger.info("browser pane settings requested, but the pane is in no window to present a sheet on")
             return
         }
-        sheet.onClose = { [weak self] in
-            guard let self, !self.isDiscarded else { return }
-            if self.needsRebuild(after: self.builtConstructionSettings) { self.rebuildWebView() }
-        }
+        guard let sheet = makePaneSettingsSheet() else { return }
         presentAsSheet(sheet)
     }
 

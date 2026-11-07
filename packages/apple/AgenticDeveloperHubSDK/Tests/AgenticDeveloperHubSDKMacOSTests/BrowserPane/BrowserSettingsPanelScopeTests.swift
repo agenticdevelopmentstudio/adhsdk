@@ -177,7 +177,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         let sharedPanel = makePanel(settings: global, scope: .pane(sharedLayer, sharedPane))
         let sharedRow = try row(UserSettings.browserAcceptsCookies, in: sharedPanel)
         XCTAssertFalse(sharedRow.row.isEnabled)
-        XCTAssertNil(sharedRow.row.marker)
+        XCTAssertEqual(sharedRow.row.marker?.isShowingOverride, false)
         XCTAssertFalse(sharedRow.model.value, "shows the global value")
         XCTAssertEqual(sharedPanel.siteDataTitle, "Cookies and Site Data — All Browser Panes")
 
@@ -234,7 +234,6 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertFalse(pane.needsRebuild(after: pane.builtConstructionSettings))
         XCTAssertFalse(pane.capturesConsole)
 
-        // The sheet hands its close to the pane, which rebuilds then.
         let sheet = try XCTUnwrap(BrowserPaneSettingsSheetController(pane: pane, history: nil))
         XCTAssertEqual(sheet.title, "Settings for \(pane.paneTitle)")
         let unlayered = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: global)
@@ -250,5 +249,153 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertFalse(titles.contains("Cookies and Site Data"))
         let privacy = try XCTUnwrap(titles.firstIndex(of: "Privacy and Security"))
         XCTAssertEqual(titles[privacy + 1], "Session Privacy", "Session Privacy follows Privacy and Security")
+    }
+
+    // MARK: - The sheet's open and close
+
+    func testSheetCloseRebuildsForAChangeMadeWhileOpen() throws {
+        let global = makeSettings()
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        let built = pane.webView
+
+        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
+        XCTAssertTrue(pane.isSettingsSheetOpen)
+        layered.set(false, for: UserSettings.browserPrivacyConsoleCapture)
+        settle()
+        XCTAssertTrue(pane.webView === built, "nothing is rebuilt while the sheet is up")
+
+        sheet.finish()
+
+        XCTAssertFalse(pane.webView === built, "closing the sheet rebuilds the pane")
+        XCTAssertFalse(pane.capturesConsole)
+        XCTAssertFalse(pane.isSettingsSheetOpen)
+    }
+
+    func testSheetCloseIgnoresGlobalChangesMadeBeforeItOpened() throws {
+        let global = makeSettings()
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        let built = pane.webView
+        // Global construction-time changes an open pane does not follow.
+        global.set(false, for: UserSettings.browserPrivacyConsoleCapture)
+        global.set(true, for: UserSettings.browserPrivateBrowsing)
+        settle()
+        XCTAssertTrue(pane.webView === built)
+
+        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
+        sheet.finish()
+
+        XCTAssertTrue(pane.webView === built, "a Done that changed nothing rebuilds nothing")
+        XCTAssertTrue(pane.capturesConsole)
+        XCTAssertEqual(pane.resolvedJar.jar, .pane, "still on its jar, not moved to private browsing")
+    }
+
+    func testJarChangeInTheSheetWaitsForItToClose() throws {
+        let global = makeSettings()
+        global.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
+        let layered = makeLayered(over: global)
+        layered.set(BrowserStorageJar.pane, for: UserSettings.browserPrivacyStorageJar)
+        let pane = try makePane(settings: layered)
+        XCTAssertEqual(pane.resolvedJar.jar, .pane)
+        let built = pane.webView
+
+        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
+        _ = sheet.view
+        sheet.panels.panels.forEach { _ = $0.view }
+        let useGlobal = try XCTUnwrap(sheet.panels.binding.buttons["settings.browser.reset.use-global"])
+        useGlobal.wasPressedCallback?()
+        settle()
+
+        XCTAssertFalse(layered.hasOverride(UserSettings.browserPrivacyStorageJar))
+        XCTAssertTrue(pane.webView === built, "the jar does not move under an open sheet")
+        XCTAssertEqual(pane.resolvedJar.jar, .pane)
+
+        sheet.finish()
+
+        XCTAssertFalse(pane.webView === built)
+        XCTAssertEqual(pane.resolvedJar.jar, .global, "the close applies the jar change")
+    }
+
+    func testSheetClosesOncePerPresentation() throws {
+        let layered = makeLayered(over: makeSettings())
+        let pane = try makePane(settings: layered)
+        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
+        let paneClose = sheet.onClose
+        var closes = 0
+        sheet.onClose = { closes += 1; paneClose?() }
+
+        sheet.finish()
+        sheet.finish(dismissing: false)
+
+        XCTAssertEqual(closes, 1)
+        XCTAssertFalse(pane.isSettingsSheetOpen)
+    }
+
+    func testAcceptCookiesLockFollowsTheJarTheSheetShows() throws {
+        let global = makeSettings()
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
+        _ = sheet.view
+        sheet.panels.panels.forEach { _ = $0.view }
+        let cookies = try row(UserSettings.browserAcceptsCookies, in: sheet.panels)
+        let marker = try XCTUnwrap(cookies.row.marker)
+        let toggle = try XCTUnwrap(cookies.row.view as? ComposableSettings.CheckboxView).toggle
+        XCTAssertTrue(cookies.row.isEnabled)
+
+        cookies.model.settingObserver.value = false
+        settle()
+        XCTAssertTrue(marker.isShowingOverride)
+
+        // Choosing the shared jar locks the row at once, hiding an override
+        // the pane would ignore there, though the pane has not moved yet.
+        layered.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
+        settle()
+        XCTAssertEqual(pane.resolvedJar.jar, .pane)
+        XCTAssertFalse(cookies.row.isEnabled)
+        XCTAssertFalse(toggle.isEnabled)
+        XCTAssertFalse(marker.isShowingOverride)
+        XCTAssertTrue(cookies.model.value, "shows the global value")
+        layered.removeOverride(UserSettings.browserAcceptsCookies)
+        cookies.model.settingObserver.value = false
+        XCTAssertFalse(layered.hasOverride(UserSettings.browserAcceptsCookies), "a locked row writes nothing")
+
+        // Back to the pane's own jar, and it may be overridden again.
+        layered.set(BrowserStorageJar.pane, for: UserSettings.browserPrivacyStorageJar)
+        settle()
+        XCTAssertTrue(cookies.row.isEnabled)
+        XCTAssertTrue(toggle.isEnabled)
+        sheet.finish()
+    }
+
+    // MARK: - Session Privacy
+
+    func testSessionPrivacyGroupsAndRows() throws {
+        let panel = makePanel(settings: makeSettings())
+        let keys: Set<String> = [
+            UserSettings.browserPrivacyKeyboard.name, UserSettings.browserPrivacyMouse.name,
+            UserSettings.browserPrivacyPointerTracking.name, UserSettings.browserPrivacyDragAndDrop.name,
+            UserSettings.browserPrivacyHideActivation.name, UserSettings.browserPrivacyAgentAccess.name,
+            UserSettings.browserPrivacyAgentWhilePaused.name, UserSettings.browserPrivacyStorageJar.name,
+            UserSettings.browserPrivacyThirdPartyContent.name, UserSettings.browserPrivacyConsoleCapture.name
+        ]
+        let layout = panel.binding.rows
+            .filter { keys.contains($0.name) }
+            .map { "\($0.group ?? "-") / \($0.model?.title ?? "-")" }
+
+        // Spec section 10, in order.
+        XCTAssertEqual(layout, [
+            "Input / Keyboard",
+            "Input / Mouse and scrolling",
+            "Input / Pointer tracking",
+            "Input / Drag and drop",
+            "Focus and visibility / Hide focus and visibility changes",
+            "Agent Partner / Agent access",
+            "Agent Partner / Agent while paused",
+            "Storage / Cookie and storage jar",
+            "Scripts / Third-party content",
+            "Scripts / Capture page console"
+        ])
     }
 }
