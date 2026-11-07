@@ -121,6 +121,15 @@ describe('parts', () => {
     ])
   })
 
+  it('keeps a method to its own block, strips a fragment, and reads a method and path in one code', () => {
+    expect(
+      apiRoutesOf([
+        '<p>Send a <code>POST</code> request.</p>',
+        '<p>The list is at <code>/x#top</code>, and <code>GET /auth/me</code> says who you are.</p>',
+      ]),
+    ).toEqual([{ path: '/x' }, { method: 'GET', path: '/auth/me' }])
+  })
+
   it('matches a term when every word typed is in its name or definition', () => {
     const term = { title: 'Feature', text: 'Part of an ecosystem' }
     expect(termMatches(term, '')).toBe(true)

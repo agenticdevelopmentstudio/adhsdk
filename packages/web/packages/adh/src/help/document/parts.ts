@@ -221,14 +221,25 @@ const METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 /**
  * The routes a card's `## API` names, in order. content-buildr wants a method in code of its own,
  * so the prose reads "a `GET` or `PUT` of `/ecosystem/client-auth/{id}`": each method code waits
- * for the next code that starts with `/`, and is that route's method. A path with no method
- * before it stands for every method on that path. A query string is not part of the route.
+ * for the next code that starts with `/` in the same block, and is that route's method. A code
+ * span may also hold both, as `GET /auth/me`. A path with no method before it stands for every
+ * method on that path. A query string or fragment is not part of the route.
  */
 export function apiRoutesOf(blocks: readonly string[]): ApiRoute[] {
   const out: ApiRoute[] = [];
   const seen = new Set<string>();
-  let pending: string[] = [];
+  const add = (methods: readonly (string | undefined)[], text: string): void => {
+    const path = text.split(/[?#]/)[0] ?? text;
+    for (const method of methods) {
+      const key = `${method ?? "*"} ${path}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(method ? { method, path } : { path });
+    }
+  };
   for (const block of blocks) {
+    // A method names the route after it in its own sentence; it never reaches into the next block.
+    let pending: string[] = [];
     for (const match of block.matchAll(/<code>([\s\S]*?)<\/code>/g)) {
       const text = plainText(match[1] ?? "");
       const upper = text.toUpperCase();
@@ -236,15 +247,14 @@ export function apiRoutesOf(blocks: readonly string[]): ApiRoute[] {
         pending.push(upper);
         continue;
       }
-      if (!text.startsWith("/")) continue;
-      const path = text.split("?")[0] ?? text;
-      const methods: (string | undefined)[] = pending.length ? pending : [undefined];
-      for (const method of methods) {
-        const key = `${method ?? "*"} ${path}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(method ? { method, path } : { path });
+      const both = /^([A-Za-z]+)\s+(\/\S*)$/.exec(text);
+      if (both && METHODS.has(both[1]!.toUpperCase())) {
+        add([both[1]!.toUpperCase()], both[2]!);
+        pending = [];
+        continue;
       }
+      if (!text.startsWith("/")) continue;
+      add(pending.length ? pending : [undefined], text);
       pending = [];
     }
   }
