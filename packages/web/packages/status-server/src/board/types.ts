@@ -448,10 +448,14 @@ export interface ActivityRow {
    * The server's judgements of this row against the CURRENT problems (`board/view.ts`),
    * set on every row `GET /board` and `GET /activity` serve and absent only inside the
    * fold. `unresolved`: a build/deploy still in flight, or failed in a run a live problem
-   * still carries. `running`: in flight and past the queue. `buildInFlight`: a build row
-   * queued or building, what the build-progress bar counts.
+   * still carries. `heldOpenBy`: for such a failure, the onsets (`Problem.since`) of the live
+   * problems on its target that carry it, so a display holding the row after a later read
+   * keeps it unresolved only while one of them is still on the board; empty otherwise.
+   * `running`: in flight and past the queue. `buildInFlight`: a build row queued or
+   * building, what the build-progress bar counts.
    */
   unresolved?: boolean;
+  heldOpenBy?: string[];
   running?: boolean;
   buildInFlight?: boolean;
 }

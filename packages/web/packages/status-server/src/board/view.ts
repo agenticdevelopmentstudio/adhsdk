@@ -112,9 +112,21 @@ export function boardFreshness(
 export function isUnresolvedActivity(a: ActivityRow, problems: readonly Problem[]): boolean {
   if (a.step === null) return false;
   if (a.tone === "progress") return true;
-  if (a.tone !== "bad") return false;
+  return heldOpenBy(a, problems).length > 0;
+}
+
+/**
+ * The live problems that keep a FAILED build or deploy row unresolved, by their onset
+ * (`Problem.since`): those on the row's target whose run had begun by the time it failed.
+ * Empty for any other row. Published on the row so that a display holding the row longer
+ * than the read that judged it (a paged-in or retained history row) can tell when every one
+ * of those problems has since cleared, by looking each up in the current board, without
+ * re-deriving the rule above.
+ */
+export function heldOpenBy(a: ActivityRow, problems: readonly Problem[]): string[] {
+  if (a.step === null || a.tone !== "bad") return [];
   const at = Date.parse(a.at);
-  return problems.some((p) => p.target === a.target && Date.parse(p.since) <= at);
+  return problems.filter((p) => p.target === a.target && Date.parse(p.since) <= at).map((p) => p.since);
 }
 
 /**
@@ -130,11 +142,12 @@ export function isBuildInFlight(a: ActivityRow): boolean {
   return a.kind === "deploy" && a.step === "build" && a.tone === "progress";
 }
 
-/** Stamp each row with the three judgements above, against the current problems. */
+/** Stamp each row with the judgements above, against the current problems. */
 export function withAttention(rows: readonly ActivityRow[], problems: readonly Problem[]): ActivityRow[] {
   return rows.map((a) => ({
     ...a,
     unresolved: isUnresolvedActivity(a, problems),
+    heldOpenBy: heldOpenBy(a, problems),
     running: isRunningActivity(a),
     buildInFlight: isBuildInFlight(a),
   }));

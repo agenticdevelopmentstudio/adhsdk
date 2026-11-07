@@ -885,6 +885,13 @@
             "type": "boolean",
             "description": "A build/deploy row still in flight, or a failure a live problem on its target still carries (board/view.ts isUnresolvedActivity). Judged against the problems at the time of the read."
           },
+          "heldOpenBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "For a failure that is unresolved, the since of each live problem on its target that carries it (board/view.ts heldOpenBy); empty for every other row. A row held past this read stays unresolved only while a problem with that target and since is still on the board."
+          },
           "running": {
             "type": "boolean",
             "description": "A build/deploy in flight and past the queue (board/view.ts isRunningActivity)"

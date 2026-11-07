@@ -7,6 +7,7 @@ import {
   boardDataFreshness,
   boardFreshness,
   isUnresolvedActivity,
+  heldOpenBy,
   isRunningActivity,
   isBuildInFlight,
   withAttention,
@@ -188,14 +189,35 @@ describe("isBuildInFlight — what the build-progress bar counts", () => {
   });
 });
 
+describe("heldOpenBy — the problems a later read can look up", () => {
+  it("names every live problem on the target whose run had begun by the failure", () => {
+    const earlier = problem({ since: "2026-10-30T11:00:00.000Z" });
+    const later = problem({ since: "2026-10-30T13:00:00.000Z" });
+    const elsewhere = problem({ target: "vercel:other", since: "2026-10-30T10:00:00.000Z" });
+    expect(heldOpenBy(row(), [earlier, later, elsewhere])).toEqual(["2026-10-30T11:00:00.000Z"]);
+  });
+
+  it("is empty for a row that is not a failed build or deploy", () => {
+    expect(heldOpenBy(row({ tone: "progress", verb: "building" }), [problem()])).toEqual([]);
+    expect(heldOpenBy(row({ tone: "good", verb: "built" }), [problem()])).toEqual([]);
+    expect(heldOpenBy(row({ kind: "probe", step: null }), [problem()])).toEqual([]);
+  });
+
+  it("agrees with isUnresolvedActivity on every failure", () => {
+    for (const problems of [[], [problem()], [problem({ since: "2026-10-30T13:00:00.000Z" })]]) {
+      expect(heldOpenBy(row(), problems).length > 0).toBe(isUnresolvedActivity(row(), problems));
+    }
+  });
+});
+
 describe("withAttention", () => {
-  it("stamps every row with all three judgements against the given problems", () => {
+  it("stamps every row with all its judgements against the given problems", () => {
     const rows = [row(), row({ id: "q", tone: "progress", verb: "queued" }), row({ id: "g", tone: "good", verb: "built" })];
     const out = withAttention(rows, [problem()]);
-    expect(out.map((r) => [r.id, r.unresolved, r.running, r.buildInFlight])).toEqual([
-      ["r", true, false, false],
-      ["q", true, false, true],
-      ["g", false, false, false],
+    expect(out.map((r) => [r.id, r.unresolved, r.heldOpenBy, r.running, r.buildInFlight])).toEqual([
+      ["r", true, ["2026-10-30T12:00:00.000Z"], false, false],
+      ["q", true, [], false, true],
+      ["g", false, [], false, false],
     ]);
     // Pure: the input rows are not mutated.
     expect(rows[0]!.unresolved).toBeUndefined();
