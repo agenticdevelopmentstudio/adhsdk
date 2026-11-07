@@ -1,4 +1,6 @@
 import XCTest
+import AppKit
+import WebKit
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
@@ -56,6 +58,41 @@ final class BrowserInputGateTests: XCTestCase {
         gate.pointer = .whenFocused
         XCTAssertTrue(gate.allows(.pointer, synthesized: false, pageHasFocus: true))
         XCTAssertFalse(gate.allows(.pointer, synthesized: false, pageHasFocus: false))
+    }
+
+    func testBlockedKeyboardDisablesEditActions() {
+        let webView = BrowserWebView(frame: NSRect(x: 0, y: 0, width: 100, height: 100),
+                                     configuration: WKWebViewConfiguration())
+        var gate = BrowserInputGate.open
+        gate.keyboard = .block
+        webView.gate = gate
+        XCTAssertEqual(BrowserWebView.gatedEditActions.count, 8)
+        for action in BrowserWebView.gatedEditActions {
+            let item = NSMenuItem(title: "", action: action, keyEquivalent: "")
+            XCTAssertFalse(webView.validateUserInterfaceItem(item), "\(action)")
+            XCTAssertTrue(webView.responds(to: action), "\(action)")
+        }
+
+        webView.gate = .open
+        let undo = #selector(BrowserWebView.gatedUndo(_:))
+        XCTAssertFalse(webView.responds(to: undo), "an open gate leaves undo: to the window")
+        XCTAssertTrue(webView.responds(to: #selector(NSText.paste(_:))))
+    }
+
+    func testBlockedEditActionIsDroppedAndReported() {
+        let webView = BrowserWebView(frame: NSRect(x: 0, y: 0, width: 100, height: 100),
+                                     configuration: WKWebViewConfiguration())
+        var gate = BrowserInputGate.open
+        gate.keyboard = .block
+        webView.gate = gate
+        var decisions: [(BrowserInputChannel, String, Bool, Bool)] = []
+        webView.onInputDecision = { decisions.append(($0, $1, $2, $3)) }
+        webView.gatedPaste(nil)
+        XCTAssertEqual(decisions.count, 1)
+        XCTAssertEqual(decisions.first?.0, .keyboard)
+        XCTAssertEqual(decisions.first?.1, "paste:")
+        XCTAssertEqual(decisions.first?.2, false)
+        XCTAssertEqual(decisions.first?.3, false)
     }
 
     func testGateReadsSettings() {
