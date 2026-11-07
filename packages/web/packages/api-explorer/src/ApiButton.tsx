@@ -25,6 +25,8 @@ export interface ApiButtonProps extends ApiBrowserProps {
   buttonClassName?: string
   /** Dialog heading; defaults to "API reference". */
   title?: string
+  /** What the host page says about these endpoints, shown under the heading, above the browser. */
+  intro?: React.ReactNode
 }
 
 /**
@@ -38,6 +40,7 @@ export function ApiButton({
   size = 'xs',
   buttonClassName,
   title,
+  intro,
   ...browserProps
 }: ApiButtonProps) {
   const [open, setOpen] = useState(false)
@@ -59,6 +62,11 @@ export function ApiButton({
               ? ` The endpoints under ${browserProps.highlightLabel ?? 'Highlighted'} are the ones this page uses.`
               : null}
           </DialogDescription>
+          {intro ? (
+            <div className="mt-2 flex max-h-40 flex-col gap-2 overflow-y-auto text-sm text-apt-text" data-testid="api-intro">
+              {intro}
+            </div>
+          ) : null}
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-hidden">
           {open && (

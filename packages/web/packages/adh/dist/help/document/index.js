@@ -647,7 +647,8 @@ function TutorialPane({
       size: "sm",
       title: `API: ${card.name}`,
       highlight: tutorial.api,
-      highlightLabel: "This tutorial"
+      highlightLabel: "This tutorial",
+      intro: /* @__PURE__ */ jsx2(Blocks, { html: card.api })
     }
   ) : void 0;
   let body;
@@ -657,6 +658,7 @@ function TutorialPane({
         /* @__PURE__ */ jsx2(Blurb, { card }),
         tutorial.lead.length ? /* @__PURE__ */ jsx2(Panel, { title: descriptionTitle, icon: BookOpenText, hue: "blue", children: /* @__PURE__ */ jsx2(Blocks, { html: tutorial.lead }) }) : null,
         /* @__PURE__ */ jsx2(Screenshots, { card }),
+        tutorial.api.length ? null : /* @__PURE__ */ jsx2(Api, { card }),
         /* @__PURE__ */ jsx2(Links, { card, title: "References" }),
         /* @__PURE__ */ jsx2(Tech, { card })
       ] });
