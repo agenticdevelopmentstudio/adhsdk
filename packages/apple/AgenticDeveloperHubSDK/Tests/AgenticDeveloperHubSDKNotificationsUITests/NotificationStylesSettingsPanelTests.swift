@@ -1,5 +1,6 @@
 import AppKit
 import XCTest
+import AgenticDeveloperHubSDKMacOS
 import AgenticDeveloperHubSDKNotifications
 @testable import AgenticDeveloperHubSDKNotificationsUI
 
@@ -22,8 +23,9 @@ final class NotificationStylesSettingsPanelTests: XCTestCase {
     func testSendTestGoesThroughTheHandler() {
         _ = NSApplication.shared
         let handler = RecordingHandler()
-        let panel = NotificationStylesSettingsPanel(handler: handler)
-        panel.sendTest(.now)
+        let styles = NotificationStylesSettingsPanel(handler: handler)
+        guard let panel = styles.panel(for: .now) else { return XCTFail("no Now style") }
+        panel.sendTest()
         XCTAssertEqual(handler.calls.count, 1)
         guard case .sendTest = handler.calls.first else {
             return XCTFail("expected sendTest, got \(handler.calls)")
@@ -31,17 +33,56 @@ final class NotificationStylesSettingsPanelTests: XCTestCase {
         XCTAssertEqual(panel.lastSentTest?.urgency, .now)
     }
 
-    func testPanelListsEveryUrgencyAndTheUnavailableFocusRow() {
+    /// Styles is only the list of styles: one topic per urgency, in order,
+    /// each with the same set of properties and its own Send test.
+    func testStylesIsOnlyOneTopicPerUrgency() {
         _ = NSApplication.shared
-        let panel = NotificationStylesSettingsPanel(handler: RecordingHandler())
-        panel.loadViewIfNeeded()
-        let text = Self.strings(in: panel.view).joined(separator: "\n")
-        for urgency in Notice.Urgency.allCases {
-            XCTAssertTrue(text.contains(NotificationStylesSettingsPanel.title(for: urgency)), "\(urgency)")
+        let styles = NotificationStylesSettingsPanel(handler: RecordingHandler())
+        styles.loadViewIfNeeded()
+        XCTAssertEqual(styles.descriptor.title, "Styles")
+        XCTAssertEqual(
+            styles.panels.map(\.descriptor.title),
+            Notice.Urgency.allCases.map(NotificationStylesSettingsPanel.title(for:)))
+        var rowSets: [[String]] = []
+        for panel in styles.urgencyPanels {
+            panel.loadViewIfNeeded()
+            let text = Self.strings(in: panel.view)
+            XCTAssertEqual(Self.buttons(in: panel.view, titled: "Send test").count, 1, "\(panel.urgency)")
+            XCTAssertFalse(text.contains("Overrides"), "\(panel.urgency)")
+            XCTAssertFalse(text.contains("Stacks, escalation and floods"), "\(panel.urgency)")
+            rowSets.append(text.filter(Self.propertyLabels.contains))
         }
-        XCTAssertTrue(text.contains("Unavailable — needs the Focus Status entitlement"))
-        XCTAssertEqual(Self.buttons(in: panel.view, titled: "Send test").count, Notice.Urgency.allCases.count)
+        for rows in rowSets {
+            XCTAssertEqual(rows, Self.propertyLabels, "every style has the same properties")
+        }
     }
+
+    /// The Notifications topic lists the host's General first, then the
+    /// shared Styles, Overrides and Behavior; what is not a style lives
+    /// outside Styles.
+    func testNotificationsTopicHoldsGeneralStylesOverridesAndBehavior() {
+        _ = NSApplication.shared
+        let general = ComposableSettings.SettingsPanelViewController(
+            with: ComposableSettings.SettingsPanelDescriptor(title: "General"))
+        let topic = NotificationsSettingsTopicPanel(general: general, handler: RecordingHandler())
+        topic.loadViewIfNeeded()
+        XCTAssertEqual(topic.descriptor.title, "Notifications")
+        XCTAssertEqual(topic.panels.map(\.descriptor.title), ["General", "Styles", "Overrides", "Behavior"])
+        XCTAssertTrue(topic.panels.first === general)
+
+        topic.behavior.loadViewIfNeeded()
+        let behavior = Self.strings(in: topic.behavior.view).joined(separator: "\n")
+        XCTAssertTrue(behavior.contains("Stacks, escalation and floods"))
+        XCTAssertTrue(behavior.contains("Sharing and keyboard"))
+        XCTAssertTrue(behavior.contains("Unavailable — needs the Focus Status entitlement"))
+
+        topic.overrides.loadViewIfNeeded()
+        XCTAssertEqual(Self.buttons(in: topic.overrides.view, titled: "Add").count, 1)
+    }
+
+    private static let propertyLabels = [
+        "Style", "Position", "Screens", "Layer", "Dismiss after", "Also post to Notification Center"
+    ]
 
     /// An urgency's row shows that urgency's own profile: an override that
     /// happens to match the sample notice must not leak into it.
