@@ -7,20 +7,33 @@
  * the first time. A step made of several actions lists them as sub-steps, each with an indented
  * box of its own: ticking the step ticks them all, and ticking the last of them ticks the step and
  * moves on. Progress is kept in this browser's localStorage per tutorial, so a reader who
- * comes back finds their place.
+ * comes back finds their place, and a tick in one tab shows in another.
  *
  * Its own tsup entry, imported by package path from the server DocumentDetail, so its
  * 'use client' marks this module only.
  */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from 'react'
 import { StatCard } from '@adh-sdk/ui/blocks'
 import { Button } from '@adh-sdk/ui/components/button'
 import { Checkbox } from '@adh-sdk/ui/components/checkbox'
 import type { TutorialStep } from './parts'
 import { progressKey, readProgress, startOf, stepsDone, toggle, type TutorialProgress } from './progress'
 
+/*
+ * The saved progress as an external store, read through useSyncExternalStore. Every value this
+ * page writes, or hears another tab write, is kept in `memory` as well as localStorage, so the
+ * pane keeps working, unsaved, when storage is blocked (a private window, site data cleared).
+ */
+const memory = new Map<string, string | null>()
+const listeners = new Map<string, Set<() => void>>()
+
+function notify(key: string): void {
+  for (const listener of listeners.get(key) ?? []) listener()
+}
+
 function load(key: string): string | null {
+  if (memory.has(key)) return memory.get(key) ?? null
   try {
     return window.localStorage.getItem(key)
   } catch {
@@ -29,10 +42,29 @@ function load(key: string): string | null {
 }
 
 function save(key: string, progress: TutorialProgress): void {
+  const raw = JSON.stringify(progress)
+  memory.set(key, raw)
   try {
-    window.localStorage.setItem(key, JSON.stringify(progress))
+    window.localStorage.setItem(key, raw)
   } catch {
-    // Storage blocked (a private window, site data cleared): the pane still works, unsaved.
+    // Blocked: `memory` holds it for this page.
+  }
+  notify(key)
+}
+
+function subscribe(key: string, listener: () => void): () => void {
+  const set = listeners.get(key) ?? new Set()
+  listeners.set(key, set)
+  set.add(listener)
+  const fromAnotherTab = (event: StorageEvent) => {
+    if (event.key !== key) return
+    memory.set(key, event.newValue)
+    listener()
+  }
+  window.addEventListener('storage', fromAnotherTab)
+  return () => {
+    set.delete(listener)
+    window.removeEventListener('storage', fromAnotherTab)
   }
 }
 
@@ -48,20 +80,26 @@ export function TutorialSteps({
   icon?: ReactNode
 }) {
   const key = progressKey(tutorialId)
-  // The first render is the starting state on the server and the client alike, and the saved
-  // progress replaces it once mounted, so the two renders never disagree.
-  const [progress, setProgress] = useState<TutorialProgress>(() => startOf(steps))
+  // The server, and the client while hydrating, render the starting state; React then re-renders
+  // with the saved progress, so the two renders never disagree. The client snapshot is cached by
+  // the raw stored string, so an unchanged store returns the same object and renders nothing.
+  const serverProgress = useMemo(() => startOf(steps), [steps])
+  const readSaved = useMemo(() => {
+    let cache: { raw: string | null; value: TutorialProgress } | null = null
+    return () => {
+      const raw = load(key)
+      if (!cache || cache.raw !== raw) cache = { raw, value: readProgress(raw, steps) }
+      return cache.value
+    }
+  }, [key, steps])
+  const listen = useCallback((listener: () => void) => subscribe(key, listener), [key])
+  const progress = useSyncExternalStore(listen, readSaved, () => serverProgress)
   const follow = useRef(false)
   const rows = useRef(new Map<string, HTMLLIElement>())
-
-  useEffect(() => {
-    setProgress(readProgress(load(key), steps))
-  }, [key, steps])
 
   const update = useCallback(
     (next: TutorialProgress, scroll: boolean) => {
       follow.current = scroll
-      setProgress(next)
       save(key, next)
     },
     [key],

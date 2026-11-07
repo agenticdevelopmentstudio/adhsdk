@@ -3,7 +3,7 @@
 "use client";
 
 // src/help/document/TutorialSteps.tsx
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { StatCard } from "@adh-sdk/ui/blocks";
 import { Button } from "@adh-sdk/ui/components/button";
 import { Checkbox } from "@adh-sdk/ui/components/checkbox";
@@ -70,7 +70,13 @@ function toggle(progress, steps, id, checked) {
 
 // src/help/document/TutorialSteps.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
+var memory = /* @__PURE__ */ new Map();
+var listeners = /* @__PURE__ */ new Map();
+function notify(key) {
+  for (const listener of listeners.get(key) ?? []) listener();
+}
 function load(key) {
+  if (memory.has(key)) return memory.get(key) ?? null;
   try {
     return window.localStorage.getItem(key);
   } catch {
@@ -78,10 +84,28 @@ function load(key) {
   }
 }
 function save(key, progress) {
+  const raw = JSON.stringify(progress);
+  memory.set(key, raw);
   try {
-    window.localStorage.setItem(key, JSON.stringify(progress));
+    window.localStorage.setItem(key, raw);
   } catch {
   }
+  notify(key);
+}
+function subscribe(key, listener) {
+  const set = listeners.get(key) ?? /* @__PURE__ */ new Set();
+  listeners.set(key, set);
+  set.add(listener);
+  const fromAnotherTab = (event) => {
+    if (event.key !== key) return;
+    memory.set(key, event.newValue);
+    listener();
+  };
+  window.addEventListener("storage", fromAnotherTab);
+  return () => {
+    set.delete(listener);
+    window.removeEventListener("storage", fromAnotherTab);
+  };
 }
 function TutorialSteps({
   tutorialId,
@@ -90,16 +114,22 @@ function TutorialSteps({
   icon
 }) {
   const key = progressKey(tutorialId);
-  const [progress, setProgress] = useState(() => startOf(steps));
+  const serverProgress = useMemo(() => startOf(steps), [steps]);
+  const readSaved = useMemo(() => {
+    let cache = null;
+    return () => {
+      const raw = load(key);
+      if (!cache || cache.raw !== raw) cache = { raw, value: readProgress(raw, steps) };
+      return cache.value;
+    };
+  }, [key, steps]);
+  const listen = useCallback((listener) => subscribe(key, listener), [key]);
+  const progress = useSyncExternalStore(listen, readSaved, () => serverProgress);
   const follow = useRef(false);
   const rows = useRef(/* @__PURE__ */ new Map());
-  useEffect(() => {
-    setProgress(readProgress(load(key), steps));
-  }, [key, steps]);
   const update = useCallback(
     (next, scroll) => {
       follow.current = scroll;
-      setProgress(next);
       save(key, next);
     },
     [key]
