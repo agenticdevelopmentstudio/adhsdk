@@ -119,7 +119,11 @@ function sources(over: Partial<ReportSources> = {}): ReportSources {
     live: async () => LIVE,
     deployLog: async () => ({ error: "unused" }),
     integrations: async () => ({ generatedAt: "x", overall: "ok", checks: [], selfCheck: null }),
-    runtimeErrors: async () => ({ configured: false, report: { generatedAt: "x", window: "24h", total: 0, groups: [] } }),
+    runtimeErrors: async () => ({
+      configured: false,
+      report: { generatedAt: "x", window: "24h", readAt: null, complete: true, total: 0, groups: [] },
+      failing: null,
+    }),
     uptime: async (days) => ({ days, services: [], overallUptimePercent: null, overallUptimeTone: "unknown" }),
     ...over,
   };

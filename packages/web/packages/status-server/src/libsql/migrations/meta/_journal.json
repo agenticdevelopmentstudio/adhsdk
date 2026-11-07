@@ -141,6 +141,13 @@
       "when": 1793986488033,
       "tag": "0019_long_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1794013196491,
+      "tag": "0020_runtime_errors_snapshot",
+      "breakpoints": true
     }
   ]
 }

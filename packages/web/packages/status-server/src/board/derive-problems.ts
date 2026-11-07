@@ -345,7 +345,7 @@ const PLATFORM_STATUS_URL: Partial<Record<IssueSource, string>> = {
  */
 const PLATFORM_UNREACHABLE_COST: Partial<Record<IssueSource, string>> = {
   glitchtip: "application errors can't be monitored — the error rows below are frozen at their last poll",
-  "vercel-runtime": "server-side runtime errors can't be read — the runtime error groups are frozen at their last poll",
+  "vercel-runtime": "server-side runtime errors can't be read — the runtime error groups shown are from the last read that worked",
 };
 
 /**

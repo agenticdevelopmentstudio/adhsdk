@@ -30,13 +30,15 @@ export class VercelRateLimited extends Error {}
  * at once, so after one 429 the rest would otherwise keep firing at a throttled API, and each of
  * their 429s pushes the cooldown, which the deploy poll also honors, further out.
  *
- * `signal` adds to the per-call timeout; it does not replace it.
+ * `signal` adds to the per-call timeout; it does not replace it. `init` makes it a POST of a JSON
+ * body, with any extra headers.
  */
 export async function vercelRequest(
   env: VercelEnv,
   path: string,
   params: Record<string, string>,
   signal?: AbortSignal,
+  init: { json?: unknown; headers?: Record<string, string> } = {},
 ): Promise<Response> {
   const cooling = rateLimitedUntil("vercel");
   if (cooling) throw new VercelRateLimited(`Vercel rate limited until ${new Date(cooling).toISOString()}`);
@@ -44,29 +46,52 @@ export async function vercelRequest(
   if (env.VERCEL_TEAM_ID) url.searchParams.set("teamId", env.VERCEL_TEAM_ID);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   const timeout = AbortSignal.timeout(CALL_TIMEOUT_MS);
+  const post = init.json !== undefined;
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${env.VERCEL_API_TOKEN}` },
+    method: post ? "POST" : "GET",
+    headers: {
+      Authorization: `Bearer ${env.VERCEL_API_TOKEN}`,
+      ...(post ? { "Content-Type": "application/json" } : {}),
+      ...init.headers,
+    },
+    ...(post ? { body: JSON.stringify(init.json) } : {}),
     signal: signal ? AbortSignal.any([timeout, signal]) : timeout,
   });
   if (res.status === 429) {
     noteRateLimited("vercel", res.headers.get("retry-after"));
     throw new VercelRateLimited("Vercel rate limited");
   }
-  if (!res.ok) throw new Error(`Vercel ${path} HTTP ${res.status}`);
+  if (!res.ok) throw new VercelHttpError(path, res.status, await res.text().catch(() => ""));
   return res;
 }
 
+/** A Vercel call that answered with an error status other than 429. */
+export class VercelHttpError extends Error {
+  constructor(
+    readonly path: string,
+    readonly status: number,
+    readonly body: string,
+  ) {
+    super(`Vercel ${path} HTTP ${status}`);
+  }
+}
+
 /** {@link vercelRequest}, parsed as JSON. */
-export async function vercelGet(env: VercelEnv, path: string, params: Record<string, string>): Promise<unknown> {
-  return (await vercelRequest(env, path, params)).json();
+export async function vercelGet(
+  env: VercelEnv,
+  path: string,
+  params: Record<string, string>,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  return (await vercelRequest(env, path, params, signal)).json();
 }
 
 /** Every project the token can see, walking the pages. */
-export async function listProjects(env: VercelEnv): Promise<ListedProject[]> {
+export async function listProjects(env: VercelEnv, signal?: AbortSignal): Promise<ListedProject[]> {
   const out: ListedProject[] = [];
   let until: string | undefined;
   for (let page = 0; page < MAX_PROJECT_PAGES; page++) {
-    const body = (await vercelGet(env, "/v9/projects", { limit: "100", ...(until ? { until } : {}) })) as {
+    const body = (await vercelGet(env, "/v9/projects", { limit: "100", ...(until ? { until } : {}) }, signal)) as {
       projects?: ListedProject[];
       pagination?: { next?: number | null };
     };

@@ -98,5 +98,10 @@
     "tag": "0019_long_frightful_four",
     "when": 1793986488033,
     "sha256": "2f370ec12fc9904c5e7704b4b5c57c1ac82897859c113ad4c2fd3f13d3f86c69"
+  },
+  {
+    "tag": "0020_runtime_errors_snapshot",
+    "when": 1794013196491,
+    "sha256": "68b5574250fde3213616feccd7bd70c8e407efb56fa823f56b672c257cce0802"
   }
 ]

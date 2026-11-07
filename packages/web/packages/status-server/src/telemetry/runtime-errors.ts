@@ -1,21 +1,22 @@
 import { createHash } from "node:crypto";
 import type { RuntimeErrorsStore } from "../storage/ports";
-import type { RuntimeErrorGroup, RuntimeErrorsReport, RuntimeLogEntry } from "./types";
+import type { RuntimeErrorGroup, RuntimeErrorsRead, RuntimeErrorsReport, RuntimeLogEntry } from "./types";
 
 // The rules for Vercel runtime errors, kept apart from the fetcher (network) and the store (SQL)
-// so each is testable alone: which log lines count, how they group, how a re-read is told apart
-// from new lines, and how the report is ordered. The store and the route both call these, so
-// there is one copy of each rule.
+// so each is testable alone: which events count, how they group, and how the report is ordered.
+// The store and the route both call these, so there is one copy of each rule.
+//
+// Each read asks Vercel's Observability events API for the last 24 hours and the store REPLACES
+// its groups with the result, so a group's count is its count in that window and nothing has to
+// be deduplicated across reads.
 
-/** How long a group lives after it was last seen. */
-export const RUNTIME_ERROR_RETENTION_MS = 7 * 24 * 60 * 60_000;
-/** The window `GET /errors/runtime` reports. */
+/** The window one read covers, and `GET /errors/runtime` reports. */
 export const RUNTIME_ERROR_WINDOW_MS = 24 * 60 * 60_000;
 /** At most this many groups in a report; `total` still counts them all. */
 export const RUNTIME_ERROR_REPORT_CAP = 200;
 const MESSAGE_MAX = 200;
 
-/** Vercel's log levels, worst first. The store's SQL ranks levels from this same list. */
+/** Vercel's log levels, worst first. */
 export const RUNTIME_LEVELS = ["fatal", "error", "warning", "info", "debug", "trace"] as const;
 const LEVEL_RANK: Record<string, number> = Object.fromEntries(
   RUNTIME_LEVELS.map((level, i) => [level, RUNTIME_LEVELS.length - 1 - i]),
@@ -23,7 +24,7 @@ const LEVEL_RANK: Record<string, number> = Object.fromEntries(
 
 /** Higher is worse. An unknown level sorts below every known one. */
 export function levelRank(level: string | null | undefined): number {
-  return LEVEL_RANK[level ?? ""] ?? -1;
+  return Object.hasOwn(LEVEL_RANK, level ?? "") ? LEVEL_RANK[level ?? ""]! : -1;
 }
 
 /** The worse of two levels. */
@@ -31,51 +32,86 @@ export function worseLevel(a: string, b: string): string {
   return levelRank(b) > levelRank(a) ? b : a;
 }
 
-/** One raw line of the runtime-logs stream, as Vercel sends it. */
-export interface RawRuntimeLog {
+/** Where an event's project id points: its name and the domain people call it by. */
+export interface RuntimeProject {
+  name: string;
+  domain: string | null;
+}
+
+/** One `vercel.log` or `vercel.proxy_response` event, with the fields the fetcher selects. */
+export interface RawRuntimeEvent {
+  timestamp?: unknown;
+  projectId?: unknown;
+  deploymentId?: unknown;
+  requestId?: unknown;
+  requestPath?: unknown;
+  requestMethod?: unknown;
+  domain?: unknown;
+  requestHostname?: unknown;
+  // vercel.log
+  source?: unknown;
   level?: unknown;
   message?: unknown;
-  requestMethod?: unknown;
-  requestPath?: unknown;
-  responseStatusCode?: unknown;
-  rowId?: unknown;
-  source?: unknown;
-  timestampInMs?: unknown;
-  domain?: unknown;
+  // vercel.proxy_response
+  httpStatus?: unknown;
 }
 
 const str = (v: unknown): string | null => (typeof v === "string" && v !== "" ? v : null);
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
+const cleanPath = (v: unknown): string | null => {
+  const path = str(v);
+  return path === null ? null : path.split(/[?#]/)[0] || "/";
+};
+
 /**
- * The line as an entry, or null if it is not an error worth keeping: an `error`/`fatal` line, or
- * any line that answered 5xx. A line without a `rowId` or timestamp is dropped too, since it could
- * never be counted exactly once.
+ * The fields every event shares, or null if it can't be placed: no timestamp, or a project that
+ * is not one of `projects` (a staging or testing project's own production environment).
  */
-export function toRuntimeEntry(
-  raw: RawRuntimeLog,
-  at: { project: string; deploymentId: string; domain: string | null },
+function common(raw: RawRuntimeEvent, projects: ReadonlyMap<string, RuntimeProject>) {
+  const timestampMs = Date.parse(str(raw.timestamp) ?? "");
+  const projectId = str(raw.projectId);
+  const project = projectId !== null && projects.has(projectId) ? projects.get(projectId)! : null;
+  if (!Number.isFinite(timestampMs) || project === null) return null;
+  return {
+    project: project.name,
+    deploymentId: str(raw.deploymentId) ?? "",
+    domain: str(raw.domain) ?? project.domain ?? str(raw.requestHostname),
+    requestId: str(raw.requestId),
+    timestampMs,
+    method: str(raw.requestMethod),
+    path: cleanPath(raw.requestPath),
+  };
+}
+
+/** A `vercel.log` event as an entry: kept when it is an `error` or `fatal` line. */
+export function logEventToEntry(
+  raw: RawRuntimeEvent,
+  projects: ReadonlyMap<string, RuntimeProject>,
 ): RuntimeLogEntry | null {
   const level = str(raw.level) ?? "info";
-  const status = num(raw.responseStatusCode);
-  if (level !== "error" && level !== "fatal" && !(status !== null && status >= 500)) return null;
-  const rowId = str(raw.rowId);
-  const timestampMs = num(raw.timestampInMs);
-  if (rowId === null || timestampMs === null) return null;
-  const path = str(raw.requestPath);
+  if (level !== "error" && level !== "fatal") return null;
+  const at = common(raw, projects);
+  if (!at) return null;
   return {
-    project: at.project,
-    deploymentId: at.deploymentId,
-    domain: str(raw.domain) ?? at.domain,
-    rowId,
-    timestampMs,
+    ...at,
     level,
     source: str(raw.source) ?? "unknown",
-    method: str(raw.requestMethod),
-    path: path === null ? null : path.split(/[?#]/)[0] || "/",
-    status: status !== null && status > 0 ? status : null,
+    status: null,
     message: typeof raw.message === "string" ? raw.message : "",
   };
+}
+
+/** A `vercel.proxy_response` event as an entry: kept when it answered 5xx. */
+export function responseEventToEntry(
+  raw: RawRuntimeEvent,
+  projects: ReadonlyMap<string, RuntimeProject>,
+): RuntimeLogEntry | null {
+  const status = num(raw.httpStatus);
+  if (status === null || status < 500) return null;
+  const at = common(raw, projects);
+  if (!at) return null;
+  return { ...at, level: "error", source: "response", status, message: `HTTP ${status}` };
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -117,54 +153,10 @@ export function groupIdentity(e: RuntimeLogEntry): {
   return { key, path, message };
 }
 
-/**
- * Where reading a deployment's stream got to: the newest timestamp counted, and the rowIds
- * counted AT that timestamp (several lines can share a millisecond).
- */
-export interface RuntimeCursor {
-  lastTimestampMs: number;
-  lastRowIds: string[];
-}
-
-/**
- * The entries a re-read has not counted yet. Anything older than the cursor was counted, and so
- * was anything at its timestamp whose rowId it holds. Duplicate rowIds within the batch count
- * once.
- */
-export function unseenEntries(entries: RuntimeLogEntry[], cursor: RuntimeCursor | undefined): RuntimeLogEntry[] {
-  const seenAtEdge = new Set(cursor?.lastRowIds ?? []);
-  const inBatch = new Set<string>();
-  return entries.filter((e) => {
-    if (cursor && e.timestampMs < cursor.lastTimestampMs) return false;
-    if (cursor && e.timestampMs === cursor.lastTimestampMs && seenAtEdge.has(e.rowId)) return false;
-    if (inBatch.has(e.rowId)) return false;
-    inBatch.add(e.rowId);
-    return true;
-  });
-}
-
-/** The cursor after counting `entries` on top of `prev`. */
-export function advanceCursor(prev: RuntimeCursor | undefined, entries: RuntimeLogEntry[]): RuntimeCursor | undefined {
-  let ts = prev?.lastTimestampMs ?? -Infinity;
-  let ids = new Set(prev?.lastRowIds ?? []);
-  for (const e of entries) {
-    if (e.timestampMs > ts) {
-      ts = e.timestampMs;
-      ids = new Set([e.rowId]);
-    } else if (e.timestampMs === ts) ids.add(e.rowId);
-  }
-  return ts === -Infinity ? prev : { lastTimestampMs: ts, lastRowIds: [...ids] };
-}
-
-/** What one batch adds to each group: the store merges this into what it holds. */
-export type RuntimeGroupDelta = Omit<RuntimeErrorGroup, "firstSeen" | "lastSeen"> & {
-  firstSeenMs: number;
-  lastSeenMs: number;
-};
-
-/** Fold entries into per-group deltas. The newest line supplies deployment, domain and sample. */
-export function groupRuntimeEntries(entries: RuntimeLogEntry[]): RuntimeGroupDelta[] {
-  const groups = new Map<string, RuntimeGroupDelta>();
+/** Fold one read's entries into its groups. The newest event supplies deployment, domain and sample. */
+export function groupRuntimeEntries(entries: RuntimeLogEntry[]): RuntimeErrorGroup[] {
+  type Acc = Omit<RuntimeErrorGroup, "firstSeen" | "lastSeen"> & { firstSeenMs: number; lastSeenMs: number };
+  const groups = new Map<string, Acc>();
   for (const e of entries) {
     const { key, path, message } = groupIdentity(e);
     const g = groups.get(key);
@@ -183,7 +175,7 @@ export function groupRuntimeEntries(entries: RuntimeLogEntry[]): RuntimeGroupDel
         count: 1,
         firstSeenMs: e.timestampMs,
         lastSeenMs: e.timestampMs,
-        sampleRowId: e.rowId,
+        sampleRequestId: e.requestId,
       });
       continue;
     }
@@ -194,10 +186,14 @@ export function groupRuntimeEntries(entries: RuntimeLogEntry[]): RuntimeGroupDel
       g.lastSeenMs = e.timestampMs;
       g.deploymentId = e.deploymentId;
       g.domain = e.domain ?? g.domain;
-      g.sampleRowId = e.rowId;
+      g.sampleRequestId = e.requestId ?? g.sampleRequestId;
     }
   }
-  return [...groups.values()];
+  return [...groups.values()].map(({ firstSeenMs, lastSeenMs, ...g }) => ({
+    ...g,
+    firstSeen: new Date(firstSeenMs).toISOString(),
+    lastSeen: new Date(lastSeenMs).toISOString(),
+  }));
 }
 
 /** Report order: worst level first, then most frequent, then most recent. */
@@ -210,80 +206,32 @@ export function compareRuntimeGroups(a: RuntimeErrorGroup, b: RuntimeErrorGroup)
   );
 }
 
-/** The 24h report over stored groups (any order, any age). */
-export function runtimeErrorsReport(groups: RuntimeErrorGroup[], nowMs: number): RuntimeErrorsReport {
-  const since = nowMs - RUNTIME_ERROR_WINDOW_MS;
-  const inWindow = groups.filter((g) => Date.parse(g.lastSeen) >= since).sort(compareRuntimeGroups);
+/**
+ * The report over the stored snapshot. The groups are NOT re-windowed against `nowMs`: they are
+ * the 24 hours before `read.readAtMs`, and `readAt` says so, so a reader whose reads are failing
+ * sees old groups dated as old rather than watching them quietly disappear.
+ */
+export function runtimeErrorsReport(
+  groups: RuntimeErrorGroup[],
+  read: RuntimeErrorsRead | null,
+  nowMs: number,
+): RuntimeErrorsReport {
+  const sorted = [...groups].sort(compareRuntimeGroups);
   return {
     generatedAt: new Date(nowMs).toISOString(),
     window: "24h",
-    total: inWindow.length,
-    groups: inWindow.slice(0, RUNTIME_ERROR_REPORT_CAP),
+    readAt: read ? new Date(read.readAtMs).toISOString() : null,
+    complete: read?.complete ?? true,
+    total: sorted.length,
+    groups: sorted.slice(0, RUNTIME_ERROR_REPORT_CAP),
   };
 }
 
-/** The 24h report, read from the store: what `GET /errors/runtime` and the dashboard serve. */
+/** The report, read from the store: what `GET /errors/runtime` and the dashboard serve. */
 export async function loadRuntimeErrorsReport(
-  store: Pick<RuntimeErrorsStore, "load">,
+  store: Pick<RuntimeErrorsStore, "load" | "lastRead">,
   nowMs: number = Date.now(),
 ): Promise<RuntimeErrorsReport> {
-  return runtimeErrorsReport(await store.load({ sinceMs: nowMs - RUNTIME_ERROR_WINDOW_MS }), nowMs);
-}
-
-/**
- * Read a newline-delimited JSON stream, handing each parsed line to `onLine`, until the stream
- * ends or `signal` aborts. A line split across chunks is joined; a line that is not JSON is
- * skipped. Abort is the normal end for a stream that stays open, so it resolves (with
- * `aborted: true`) rather than throwing; any other read failure throws.
- */
-export async function readJsonLines(
-  body: ReadableStream<Uint8Array>,
-  signal: AbortSignal,
-  onLine: (value: unknown) => void,
-): Promise<{ aborted: boolean }> {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  const emit = (line: string): void => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-    try {
-      onLine(JSON.parse(trimmed));
-    } catch {
-      // Not JSON (a keep-alive, a truncated tail): skip it.
-    }
-  };
-  // The underlying stream may not watch the signal itself, so cancel the reader on abort: that
-  // settles a pending `read()` either way.
-  const onAbort = (): void => {
-    reader.cancel().catch(() => {});
-  };
-  if (signal.aborted) onAbort();
-  else signal.addEventListener("abort", onAbort, { once: true });
-  try {
-    for (;;) {
-      let chunk: Awaited<ReturnType<typeof reader.read>>;
-      try {
-        chunk = await reader.read();
-      } catch (err) {
-        if (signal.aborted) return { aborted: true };
-        throw err;
-      }
-      if (chunk.done) break;
-      buffer += decoder.decode(chunk.value, { stream: true });
-      let nl: number;
-      while ((nl = buffer.indexOf("\n")) >= 0) {
-        emit(buffer.slice(0, nl));
-        buffer = buffer.slice(nl + 1);
-      }
-      if (signal.aborted) return { aborted: true };
-    }
-    // On abort the reader reports `done` with the tail possibly cut mid-line: drop that tail.
-    if (signal.aborted) return { aborted: true };
-    emit(buffer + decoder.decode());
-    return { aborted: false };
-  } finally {
-    signal.removeEventListener("abort", onAbort);
-    reader.releaseLock();
-  }
+  const [groups, read] = await Promise.all([store.load(), store.lastRead()]);
+  return runtimeErrorsReport(groups, read, nowMs);
 }

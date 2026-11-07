@@ -7,7 +7,6 @@ import { selfCheckView } from "./self-check";
 import type { CheckState, IntegrationCheck, IntegrationsResponse } from "./types";
 import { vercelConfigured, type StatusConfig } from "../config/port";
 import { PLATFORM_UNREACHABLE_POLLS } from "./issue-sources";
-import { RUNTIME_ERROR_WINDOW_MS } from "../telemetry/runtime-errors";
 
 export type { IntegrationCheck };
 
@@ -314,40 +313,47 @@ async function checkPosthog(config: StatusConfig): Promise<IntegrationCheck> {
 }
 
 /**
- * Vercel runtime logs. Reading them means holding a stream open for seconds per deployment, so
- * this does NOT probe: it reports what the monitor cycle's own read recorded (the
- * `vercel-runtime` platform observation, with its failure streak) and what it stored. The token
- * itself is probed by the `vercel` check.
+ * Vercel runtime errors. A read is two paged queries over a day of events, so this does NOT
+ * probe: it reports what the monitor cycle's own read recorded (the `vercel-runtime` platform
+ * observation, with its failure streak) and what it stored. The token itself is probed by the
+ * `vercel` check.
+ *
+ * Failures are debounced like every other platform: one failed read in a row is a blip (a 429
+ * cooldown, a slow answer) and the stored snapshot still stands, so it stays green and says so.
+ * Only {@link PLATFORM_UNREACHABLE_POLLS} in a row turn it red.
  */
 async function checkVercelRuntime(storage: Storage, config: StatusConfig, nowMs: number): Promise<IntegrationCheck> {
   const id = "vercel-runtime";
   const label = "Vercel runtime logs";
   if (!vercelConfigured(config)) return missingWarn(id, label, ["VERCEL_API_TOKEN"]);
   const fact = (await storage.board.readPlatformFacts()).find((p) => p.source === "vercel-runtime");
-  if (!fact || !fact.configured) {
+  const read = await storage.telemetry.runtimeErrors.lastRead();
+  if (!fact || !fact.configured || !read) {
     return { id, label, configured: true, ok: false, state: "warn", detail: "first runtime-log read pending" };
   }
-  const ago = timeAgo(new Date(fact.sampledAtMs).toISOString(), nowMs);
+  const readAgo = timeAgo(new Date(read.readAtMs).toISOString(), nowMs);
+  const groups = await storage.telemetry.runtimeErrors.load();
+  const noun = groups.length === 1 ? "group" : "groups";
+  const snapshot = `${groups.length} runtime error ${noun} in the 24h before the read ${readAgo} ago`;
   if (!fact.ok) {
     const failing = fact.streak >= PLATFORM_UNREACHABLE_POLLS;
+    const failedAgo = timeAgo(new Date(fact.sampledAtMs).toISOString(), nowMs);
     return {
       id,
       label,
       configured: true,
-      ok: false,
-      state: failing ? "error" : "warn",
-      detail: `last read failed ${ago} ago (${fact.streak} in a row)`,
+      ok: !failing,
+      state: failing ? "error" : "ok",
+      detail: `last read failed ${failedAgo} ago (${fact.streak} in a row) · ${snapshot}`,
     };
   }
-  const groups = await storage.telemetry.runtimeErrors.load({ sinceMs: nowMs - RUNTIME_ERROR_WINDOW_MS });
-  const noun = groups.length === 1 ? "group" : "groups";
   return {
     id,
     label,
     configured: true,
     ok: true,
-    state: "ok",
-    detail: `last read ${ago} ago · ${groups.length} runtime error ${noun} in the last 24h`,
+    state: read.complete ? "ok" : "warn",
+    detail: read.complete ? snapshot : `${snapshot} · the read was cut short, so there may be more`,
   };
 }
 

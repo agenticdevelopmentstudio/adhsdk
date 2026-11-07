@@ -218,7 +218,15 @@ function analyticsDashboard(): AnalyticsDashboardResponse {
 
 const RUNTIME: RuntimeErrorsInput = {
   configured: true,
-  report: { generatedAt: "2026-11-06T11:59:00Z", window: "24h", total: 0, groups: [] },
+  report: {
+    generatedAt: "2026-11-06T11:59:00Z",
+    window: "24h",
+    readAt: "2026-11-06T11:50:00Z",
+    complete: true,
+    total: 0,
+    groups: [],
+  },
+  failing: null,
 };
 
 const UPTIME: UptimeResponse = {
@@ -278,7 +286,7 @@ function group(over: Partial<RuntimeErrorGroup>): RuntimeErrorGroup {
     count: 1,
     firstSeen: "2026-11-06T10:00:00Z",
     lastSeen: "2026-11-06T11:00:00Z",
-    sampleRowId: null,
+    sampleRequestId: null,
     ...over,
   };
 }
@@ -395,7 +403,7 @@ describe("buildReport — ported digest rules", () => {
     });
     const glitch = report.findings.filter((f) => f.source === "glitchtip");
     expect(glitch).toHaveLength(ERROR_ISSUE_CAP + 1); // + the "N more" line
-    expect(glitch.some((f) => f.title === "6 more active GlitchTip issues not listed")).toBe(true);
+    expect(glitch.find((f) => f.title === "6 more active GlitchTip issues not listed")!.severity).toBe("minor");
     expect(report.findings[0]).toMatchObject({ severity: "major", title: "api: Fatal" });
     expect(report.sections.errors!.active).toHaveLength(21);
     expect(report.sections.errors!.active[0]!.id).toBe("f");
@@ -492,7 +500,7 @@ describe("buildReport — rules the server adds", () => {
       group({ key: "5xx", status: 503, count: 5 }),
       group({ key: "rare5xx", status: 500, count: 4 }),
     ];
-    const report = build({ runtimeErrors: ok({ configured: true, report: { ...RUNTIME.report, total: 30, groups } }) });
+    const report = build({ runtimeErrors: ok({ ...RUNTIME, report: { ...RUNTIME.report, total: 30, groups } }) });
     const runtime = report.findings.filter((f) => f.source === "vercel-runtime");
     expect(runtime).toHaveLength(RUNTIME_GROUP_CAP + 1);
     expect(runtime.filter((f) => f.severity === "major").map((f) => f.title)).toEqual([
@@ -504,6 +512,50 @@ describe("buildReport — rules the server adds", () => {
     );
     expect(report.sections.runtimeErrors!.groups).toHaveLength(23);
     expect(report.verdict).toBe("degraded");
+  });
+
+  it("a cap that hides a fatal GlitchTip issue is itself major", () => {
+    const fatal = Array.from({ length: ERROR_ISSUE_CAP + 2 }, (_, n) =>
+      issue({ id: String(n), title: `Fatal ${n}`, level: "fatal", count: 100 - n }),
+    );
+    const base = errorsDashboard();
+    const report = build({
+      errors: ok(errorsDashboard({ issues: section({ ...base.sections.issues.data!, issues: fatal }) })),
+    });
+    const more = report.findings.find((f) => f.title === "2 more active GlitchTip issues not listed")!;
+    expect(more.severity).toBe("major");
+  });
+
+  it("a cap that hides a major runtime group is itself major", () => {
+    const groups = Array.from({ length: RUNTIME_GROUP_CAP + 3 }, (_, i) =>
+      group({ key: `f${i}`, level: "fatal", status: null }),
+    );
+    const report = build({ runtimeErrors: ok({ ...RUNTIME, report: { ...RUNTIME.report, total: groups.length, groups } }) });
+    const more = report.findings.find((f) => f.title === "3 more Vercel runtime error groups not listed")!;
+    expect(more.severity).toBe("major");
+  });
+
+  it("runtime errors are dated by the read, not by the report", () => {
+    const report = build();
+    expect(report.coverage.runtimeErrors.updatedAt).toBe("2026-11-06T11:50:00Z");
+    expect(report.coverage.runtimeErrors.notes).toBeUndefined();
+    expect(report.sections.runtimeErrors).toMatchObject({ readAt: "2026-11-06T11:50:00Z", complete: true });
+  });
+
+  it("a cut-short, failing or missing runtime read is a note", () => {
+    const cut = build({ runtimeErrors: ok({ ...RUNTIME, report: { ...RUNTIME.report, complete: false } }) });
+    expect(cut.coverage.runtimeErrors.notes).toEqual([
+      "vercel runtime read was cut short; there may be more groups than listed",
+    ]);
+    const failing = build({
+      runtimeErrors: ok({ ...RUNTIME, failing: { streak: 2, atMs: Date.parse("2026-11-06T11:55:00Z") } }),
+    });
+    expect(failing.coverage.runtimeErrors.notes).toEqual([
+      "last 2 vercel runtime reads failed (latest 2026-11-06T11:55:00.000Z); these groups are from the read at 2026-11-06T11:50:00Z",
+    ]);
+    const never = build({ runtimeErrors: ok({ ...RUNTIME, report: { ...RUNTIME.report, readAt: null } }) });
+    expect(never.coverage.runtimeErrors.notes).toEqual(["vercel runtime errors not read yet"]);
+    expect(never.coverage.runtimeErrors.updatedAt).toBeNull();
   });
 
   it("runtime errors with no Vercel token are unconfigured, not a gap", () => {

@@ -128,6 +128,10 @@ export interface ErrorsReportSection {
 
 export interface RuntimeErrorsReportSection {
   window: '24h';
+  /** When the groups were read from Vercel; null before the first read. */
+  readAt: string | null;
+  /** False when that read was cut short, so there may be more groups. */
+  complete: boolean;
   /** Groups seen in the window; `groups` may be capped below it. */
   total: number;
   /** Worst level first, then most frequent. */

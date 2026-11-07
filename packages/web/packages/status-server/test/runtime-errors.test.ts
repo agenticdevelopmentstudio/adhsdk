@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { _resetProviderCooldowns, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 import {
-  advanceCursor,
   groupIdentity,
   groupRuntimeEntries,
   loadRuntimeErrorsReport,
+  logEventToEntry,
   normalizePath,
-  readJsonLines,
+  responseEventToEntry,
   runtimeErrorsReport,
   RUNTIME_ERROR_REPORT_CAP,
-  toRuntimeEntry,
-  unseenEntries,
+  RUNTIME_ERROR_WINDOW_MS,
   worseLevel,
+  type RuntimeProject,
 } from "../src/telemetry/runtime-errors";
 import { vercelRuntimeFetcher } from "../src/telemetry/fetchers/vercel-runtime";
 import { collectTelemetry } from "../src/telemetry/server";
@@ -22,32 +22,23 @@ import { runIntegrationsCheck, _resetSelfCheckStability } from "../src/monitor/i
 import { freshDb } from "./helpers/db";
 import { testConfig } from "./helpers/config";
 
-const enc = new TextEncoder();
 const NOW = Date.parse("2026-11-06T12:00:00.000Z");
-const AT = { project: "site-production", deploymentId: "dpl_1", domain: "site.example.com" };
-
-/** A stream that hands out `chunks` and then, unless `close`, stays open forever. */
-function streamOf(chunks: string[], close = true): ReadableStream<Uint8Array> {
-  return new ReadableStream<Uint8Array>({
-    start(controller) {
-      for (const c of chunks) controller.enqueue(enc.encode(c));
-      if (close) controller.close();
-    },
-  });
-}
+const PROJECTS: ReadonlyMap<string, RuntimeProject> = new Map([
+  ["prj_site", { name: "site-production", domain: "site.example.com" }],
+]);
 
 function entry(over: Partial<RuntimeLogEntry> = {}): RuntimeLogEntry {
   return {
     project: "site-production",
     deploymentId: "dpl_1",
     domain: "site.example.com",
-    rowId: "r1",
+    requestId: "req_1",
     timestampMs: NOW - 60_000,
     level: "error",
-    source: "serverless",
+    source: "function",
     method: "GET",
     path: "/api/posts/123",
-    status: 500,
+    status: null,
     message: "boom\nat handler (index.js:1)",
     ...over,
   };
@@ -59,75 +50,77 @@ function group(over: Partial<RuntimeErrorGroup> = {}): RuntimeErrorGroup {
     project: "p",
     deploymentId: "d",
     domain: null,
-    source: "serverless",
+    source: "function",
     method: "GET",
     path: "/",
-    status: 500,
+    status: null,
     level: "error",
     message: "m",
     count: 1,
     firstSeen: new Date(NOW - 60_000).toISOString(),
     lastSeen: new Date(NOW - 60_000).toISOString(),
-    sampleRowId: null,
+    sampleRequestId: null,
     ...over,
   };
 }
 
-describe("readJsonLines", () => {
-  it("joins a line split across chunks, skips non-JSON, and reads the unterminated tail", async () => {
-    const seen: unknown[] = [];
-    const res = await readJsonLines(
-      streamOf(['{"a":1}\n{"b"', ':2}\nnot json\n\n', '{"c":3}']),
-      new AbortController().signal,
-      (v) => seen.push(v),
-    );
-    expect(res).toEqual({ aborted: false });
-    expect(seen).toEqual([{ a: 1 }, { b: 2 }, { c: 3 }]);
+const iso = (ms: number) => new Date(ms).toISOString();
+
+describe("logEventToEntry", () => {
+  const raw = {
+    timestamp: iso(NOW),
+    projectId: "prj_site",
+    deploymentId: "dpl_1",
+    requestId: "req_1",
+    source: "function",
+    message: "m",
+  };
+
+  it("keeps error and fatal lines, dated and placed by the event", () => {
+    expect(logEventToEntry({ ...raw, level: "error" }, PROJECTS)).toMatchObject({
+      level: "error",
+      project: "site-production",
+      domain: "site.example.com",
+      requestId: "req_1",
+      timestampMs: NOW,
+      status: null,
+    });
+    expect(logEventToEntry({ ...raw, level: "fatal" }, PROJECTS)?.level).toBe("fatal");
   });
 
-  it("ends a stream that stays open when the budget runs out, dropping the cut tail", async () => {
-    const seen: unknown[] = [];
-    const res = await readJsonLines(streamOf(['{"a":1}\n{"b":'], false), AbortSignal.timeout(30), (v) =>
-      seen.push(v),
-    );
-    expect(res).toEqual({ aborted: true });
-    expect(seen).toEqual([{ a: 1 }]);
+  it("drops lower levels, undated events, and projects that are not production", () => {
+    expect(logEventToEntry({ ...raw, level: "warning" }, PROJECTS)).toBeNull();
+    expect(logEventToEntry({ ...raw, level: undefined }, PROJECTS)).toBeNull();
+    expect(logEventToEntry({ ...raw, level: "error", timestamp: "x" }, PROJECTS)).toBeNull();
+    expect(logEventToEntry({ ...raw, level: "error", projectId: "prj_staging" }, PROJECTS)).toBeNull();
   });
 
-  it("returns at once on an already-aborted signal", async () => {
-    const ac = new AbortController();
-    ac.abort();
-    const res = await readJsonLines(streamOf([], false), ac.signal, () => {});
-    expect(res).toEqual({ aborted: true });
+  it("strips the query and fragment, and prefers the event's own domain", () => {
+    const e = logEventToEntry(
+      { ...raw, level: "error", requestPath: "/a/b?token=x#frag", requestMethod: "POST", domain: "other.example.com" },
+      PROJECTS,
+    )!;
+    expect(e).toMatchObject({ path: "/a/b", method: "POST", domain: "other.example.com" });
+    expect(logEventToEntry({ ...raw, level: "error", requestPath: "?q=1" }, PROJECTS)?.path).toBe("/");
   });
 });
 
-describe("toRuntimeEntry", () => {
-  const raw = { rowId: "r1", timestampInMs: NOW, source: "serverless", message: "m" };
+describe("responseEventToEntry", () => {
+  const raw = { timestamp: iso(NOW), projectId: "prj_site", requestId: "req_9", requestPath: "/api/x" };
 
-  it("keeps error and fatal lines, and any 5xx", () => {
-    expect(toRuntimeEntry({ ...raw, level: "error" }, AT)?.level).toBe("error");
-    expect(toRuntimeEntry({ ...raw, level: "fatal" }, AT)?.level).toBe("fatal");
-    expect(toRuntimeEntry({ ...raw, level: "info", responseStatusCode: 502 }, AT)?.status).toBe(502);
+  it("keeps 5xx responses as error entries", () => {
+    expect(responseEventToEntry({ ...raw, httpStatus: 503 }, PROJECTS)).toMatchObject({
+      level: "error",
+      source: "response",
+      status: 503,
+      message: "HTTP 503",
+      requestId: "req_9",
+    });
   });
 
-  it("drops info/warning lines below 500, and lines it could not count once", () => {
-    expect(toRuntimeEntry({ ...raw, level: "warning", responseStatusCode: 404 }, AT)).toBeNull();
-    expect(toRuntimeEntry({ ...raw, level: "info" }, AT)).toBeNull();
-    expect(toRuntimeEntry({ ...raw, level: "error", rowId: undefined }, AT)).toBeNull();
-    expect(toRuntimeEntry({ ...raw, level: "error", timestampInMs: "x" }, AT)).toBeNull();
-  });
-
-  it("strips the query and fragment, and reads status 0 as none", () => {
-    const e = toRuntimeEntry(
-      { ...raw, level: "error", requestPath: "/a/b?token=x#frag", requestMethod: "POST", responseStatusCode: 0 },
-      AT,
-    )!;
-    expect(e).toMatchObject({ path: "/a/b", method: "POST", status: null, domain: "site.example.com" });
-    expect(toRuntimeEntry({ ...raw, level: "error", requestPath: "?q=1" }, AT)?.path).toBe("/");
-    expect(toRuntimeEntry({ ...raw, level: "error", domain: "other.example.com" }, AT)?.domain).toBe(
-      "other.example.com",
-    );
+  it("drops anything below 500 and anything without a status", () => {
+    expect(responseEventToEntry({ ...raw, httpStatus: 404 }, PROJECTS)).toBeNull();
+    expect(responseEventToEntry(raw, PROJECTS)).toBeNull();
   });
 });
 
@@ -144,7 +137,7 @@ describe("grouping", () => {
 
   it("keys on the normalized path and the first message line, stably", () => {
     const a = groupIdentity(entry({ path: "/api/posts/1", message: "boom\nstack a" }));
-    const b = groupIdentity(entry({ path: "/api/posts/2", message: "boom\nstack b", rowId: "r2" }));
+    const b = groupIdentity(entry({ path: "/api/posts/2", message: "boom\nstack b", requestId: "req_2" }));
     expect(a.key).toBe(b.key);
     expect(a.key).toMatch(/^[0-9a-f]{32}$/);
     expect(a).toMatchObject({ path: "/api/posts/:id", message: "boom" });
@@ -152,58 +145,51 @@ describe("grouping", () => {
     expect(groupIdentity(entry({ message: "x".repeat(300) })).message).toHaveLength(200);
   });
 
-  it("folds a batch: counts, worst level, and the newest line's deployment and sample", () => {
+  it("folds a read: counts, worst level, and the newest event's deployment and sample", () => {
     const [g, ...rest] = groupRuntimeEntries([
-      entry({ rowId: "r1", timestampMs: 1_000, level: "error", deploymentId: "dpl_old" }),
-      entry({ rowId: "r2", timestampMs: 3_000, level: "error", deploymentId: "dpl_new" }),
-      entry({ rowId: "r3", timestampMs: 2_000, level: "fatal", deploymentId: "dpl_old" }),
+      entry({ requestId: "r1", timestampMs: 1_000, level: "error", deploymentId: "dpl_old" }),
+      entry({ requestId: "r2", timestampMs: 3_000, level: "error", deploymentId: "dpl_new" }),
+      entry({ requestId: "r3", timestampMs: 2_000, level: "fatal", deploymentId: "dpl_old" }),
     ]);
     expect(rest).toEqual([]);
     expect(g).toMatchObject({
       count: 3,
       level: "fatal",
-      firstSeenMs: 1_000,
-      lastSeenMs: 3_000,
+      firstSeen: iso(1_000),
+      lastSeen: iso(3_000),
       deploymentId: "dpl_new",
-      sampleRowId: "r2",
+      sampleRequestId: "r2",
     });
     expect(worseLevel("error", "mystery")).toBe("error");
   });
 });
 
-describe("the per-deployment high-water mark", () => {
-  it("counts a re-read once, including lines that share the edge millisecond", () => {
-    const first = [entry({ rowId: "a", timestampMs: 10 }), entry({ rowId: "b", timestampMs: 20 })];
-    const cursor = advanceCursor(undefined, unseenEntries(first, undefined));
-    expect(cursor).toEqual({ lastTimestampMs: 20, lastRowIds: ["b"] });
-
-    const again = [...first, entry({ rowId: "c", timestampMs: 20 }), entry({ rowId: "d", timestampMs: 30 })];
-    const unseen = unseenEntries(again, cursor);
-    expect(unseen.map((e) => e.rowId)).toEqual(["c", "d"]);
-    expect(advanceCursor(cursor, unseen)).toEqual({ lastTimestampMs: 30, lastRowIds: ["d"] });
-    expect(advanceCursor(cursor, [])).toEqual(cursor);
-    expect(advanceCursor(undefined, [])).toBeUndefined();
-  });
-
-  it("counts a rowId repeated inside one batch once", () => {
-    expect(unseenEntries([entry({ rowId: "a" }), entry({ rowId: "a" })], undefined)).toHaveLength(1);
-  });
-});
-
 describe("runtimeErrorsReport", () => {
-  it("keeps the last 24h, worst level first, then most frequent, and caps the list", () => {
-    const old = group({ key: "old", lastSeen: new Date(NOW - 25 * 3_600_000).toISOString() });
+  it("orders worst level first, then most frequent, caps the list, and dates it by the read", () => {
     const fatal = group({ key: "fatal", level: "fatal", count: 1 });
     const many = group({ key: "many", count: 9 });
     const few = group({ key: "few", count: 2 });
-    const r = runtimeErrorsReport([old, few, many, fatal], NOW);
-    expect(r).toMatchObject({ generatedAt: new Date(NOW).toISOString(), window: "24h", total: 3 });
+    const r = runtimeErrorsReport([few, many, fatal], { readAtMs: NOW - 5 * 60_000, complete: false }, NOW);
+    expect(r).toMatchObject({
+      generatedAt: iso(NOW),
+      window: "24h",
+      readAt: iso(NOW - 5 * 60_000),
+      complete: false,
+      total: 3,
+    });
     expect(r.groups.map((g) => g.key)).toEqual(["fatal", "many", "few"]);
 
     const lots = Array.from({ length: RUNTIME_ERROR_REPORT_CAP + 5 }, (_, i) => group({ key: `g${i}` }));
-    const capped = runtimeErrorsReport(lots, NOW);
-    expect(capped.total).toBe(RUNTIME_ERROR_REPORT_CAP + 5);
+    const capped = runtimeErrorsReport(lots, null, NOW);
+    expect(capped).toMatchObject({ total: RUNTIME_ERROR_REPORT_CAP + 5, readAt: null, complete: true });
     expect(capped.groups).toHaveLength(RUNTIME_ERROR_REPORT_CAP);
+  });
+
+  it("does not age groups out against the clock: an old read stays, dated as old", () => {
+    const old = group({ lastSeen: iso(NOW - 3 * RUNTIME_ERROR_WINDOW_MS) });
+    const r = runtimeErrorsReport([old], { readAtMs: NOW - 2 * RUNTIME_ERROR_WINDOW_MS, complete: true }, NOW);
+    expect(r.total).toBe(1);
+    expect(r.readAt).toBe(iso(NOW - 2 * RUNTIME_ERROR_WINDOW_MS));
   });
 });
 
@@ -211,58 +197,53 @@ describe("the runtime-errors store", () => {
   // Whole seconds: the timestamp columns store seconds.
   const t = (minutesAgo: number) => NOW - minutesAgo * 60_000;
 
-  it("upserts on the group key, merges the worst level, and a re-read adds nothing", async () => {
+  it("has no read before the first save", async () => {
     const store = createLibsqlStorage(await freshDb()).telemetry.runtimeErrors;
-    const batch = [
-      entry({ rowId: "a", timestampMs: t(30), path: "/api/posts/1" }),
-      entry({ rowId: "b", timestampMs: t(20), path: "/api/posts/2" }),
+    expect(await store.lastRead()).toBeNull();
+    expect(await store.load()).toEqual([]);
+  });
+
+  it("each save replaces the snapshot and records the read", async () => {
+    const store = createLibsqlStorage(await freshDb()).telemetry.runtimeErrors;
+    const read = [
+      entry({ requestId: "a", timestampMs: t(30), path: "/api/posts/1" }),
+      entry({ requestId: "b", timestampMs: t(20), path: "/api/posts/2" }),
     ];
-    await store.save(batch, { nowMs: NOW });
-    await store.save(batch, { nowMs: NOW });
-    let [g, ...rest] = await store.load();
+    await store.save(read, { nowMs: NOW });
+    // The same window read again is the same answer, not twice the count.
+    await store.save(read, { nowMs: NOW });
+    const [g, ...rest] = await store.load();
     expect(rest).toEqual([]);
     expect(g).toMatchObject({
       project: "site-production",
       path: "/api/posts/:id",
       message: "boom",
-      level: "error",
       count: 2,
-      firstSeen: new Date(t(30)).toISOString(),
-      lastSeen: new Date(t(20)).toISOString(),
-      sampleRowId: "b",
+      firstSeen: iso(t(30)),
+      lastSeen: iso(t(20)),
+      sampleRequestId: "b",
     });
+    expect(await store.lastRead()).toEqual({ readAtMs: NOW, complete: true });
 
-    // A later read of a NEW deployment adds to the same group and moves its sample.
-    await store.save([entry({ rowId: "c", timestampMs: t(10), level: "fatal", deploymentId: "dpl_2" })], {
-      nowMs: NOW,
-    });
-    // An older, lower-level line on the first deployment does not lower the level or the sample.
-    await store.save([...batch, entry({ rowId: "z", timestampMs: t(15), level: "error" })], { nowMs: NOW });
-    [g] = await store.load();
-    expect(g).toMatchObject({
-      count: 4,
-      level: "fatal",
-      deploymentId: "dpl_2",
-      sampleRowId: "c",
-      firstSeen: new Date(t(30)).toISOString(),
-      lastSeen: new Date(t(10)).toISOString(),
-    });
+    // A later read without that error leaves nothing of it behind.
+    await store.save([entry({ message: "other", timestampMs: t(1) })], { nowMs: NOW + 60_000, complete: false });
+    expect((await store.load()).map((x) => x.message)).toEqual(["other"]);
+    expect(await store.lastRead()).toEqual({ readAtMs: NOW + 60_000, complete: false });
+
+    // An empty read is an answer too: no errors in the window.
+    await store.save([], { nowMs: NOW + 120_000 });
+    expect(await store.load()).toEqual([]);
+    expect(await store.lastRead()).toEqual({ readAtMs: NOW + 120_000, complete: true });
   });
 
-  it("prunes groups past the 7-day retention, ignores stale lines, and filters by sinceMs", async () => {
+  it("stores more groups than one insert holds", async () => {
     const store = createLibsqlStorage(await freshDb()).telemetry.runtimeErrors;
-    const day = 24 * 60;
-    await store.save([entry({ rowId: "a", timestampMs: t(6 * day), message: "aging" })], { nowMs: NOW });
-    await store.save([entry({ rowId: "b", timestampMs: t(8 * day), message: "too old" })], { nowMs: NOW });
-    expect((await store.load()).map((g) => g.message)).toEqual(["aging"]);
-
-    await store.save([entry({ rowId: "c", timestampMs: t(5), message: "fresh" })], { nowMs: NOW + 2 * day * 60_000 });
-    expect((await store.load()).map((g) => g.message)).toEqual(["fresh"]);
-    expect(await store.load({ sinceMs: NOW })).toEqual([]);
-
+    const many = Array.from({ length: 450 }, (_, i) => entry({ message: `err ${i}`, timestampMs: t(5) }));
+    await store.save(many, { nowMs: NOW });
+    expect(await store.load()).toHaveLength(450);
     const report = await loadRuntimeErrorsReport(store, NOW);
-    expect(report.total).toBe(1);
-    expect(report.groups[0]?.message).toBe("fresh");
+    expect(report).toMatchObject({ total: 450, readAt: iso(NOW), complete: true });
+    expect(report.groups).toHaveLength(RUNTIME_ERROR_REPORT_CAP);
   });
 });
 
@@ -270,134 +251,237 @@ describe("the runtime-errors store", () => {
 
 const ENV = { VERCEL_API_TOKEN: "tok", VERCEL_TEAM_ID: "team_1" };
 
+type EventAnswer =
+  | { pages: unknown[][]; excluded?: boolean; noCursor?: boolean }
+  | { status: number; body?: string };
+
 interface FakeVercel {
   projects: unknown[];
-  deployments?: Record<string, string | undefined>;
-  logs: Record<string, { lines: unknown[]; open?: boolean } | number>;
+  user?: string;
+  events: Record<string, EventAnswer>;
+  /** Answer 413 result_too_large to any page asked for with a limit above this. */
+  maxLimit?: number;
+}
+
+interface EventsCall {
+  teamId: string | null;
+  reason: string | null;
+  body: {
+    event: string;
+    scope: { ownerId: string; projectIds: string[] };
+    timeRange: { start: string; end: string };
+    filter: string;
+    limit: number;
+    cursor?: string;
+  };
 }
 
 function fakeVercel(v: FakeVercel) {
-  const calls: string[] = [];
-  const fetch = vi.fn(async (input: URL | string) => {
+  const paths: string[] = [];
+  const events: EventsCall[] = [];
+  const fetch = vi.fn(async (input: URL | string, init?: RequestInit) => {
     const url = new URL(String(input));
-    calls.push(url.pathname);
+    paths.push(url.pathname);
     if (url.pathname === "/v9/projects") return Response.json({ projects: v.projects, pagination: { next: null } });
-    if (url.pathname === "/v6/deployments") {
-      const uid = v.deployments?.[url.searchParams.get("projectId") ?? ""];
-      return Response.json({ deployments: uid ? [{ uid }] : [] });
-    }
-    const m = /^\/v1\/projects\/([^/]+)\/deployments\/([^/]+)\/runtime-logs$/.exec(url.pathname);
-    if (m) {
-      const answer = v.logs[m[2]!];
-      if (answer === undefined) return new Response("not found", { status: 404 });
-      if (typeof answer === "number") return new Response("", { status: answer, headers: { "retry-after": "60" } });
-      const body = answer.lines.map((l) => JSON.stringify(l) + "\n");
-      return new Response(streamOf(body, !answer.open), { status: 200 });
+    if (url.pathname === "/v2/user") return Response.json({ user: { id: v.user } });
+    if (url.pathname === "/v1/observability/events" && init?.method === "POST") {
+      const body = JSON.parse(String(init.body)) as EventsCall["body"];
+      const headers = new Headers(init.headers);
+      events.push({
+        teamId: url.searchParams.get("teamId"),
+        reason: headers.get("x-vercel-observability-query-reason"),
+        body,
+      });
+      if (v.maxLimit !== undefined && body.limit > v.maxLimit) {
+        return Response.json({ error: { code: "result_too_large" } }, { status: 413 });
+      }
+      const answer = v.events[body.event];
+      if (!answer) return Response.json({ events: [], pagination: { hasMore: false, nextCursor: null } });
+      if ("status" in answer) {
+        return new Response(answer.body ?? "", { status: answer.status, headers: { "retry-after": "60" } });
+      }
+      const page = body.cursor ? Number(body.cursor) : 0;
+      const more = page + 1 < answer.pages.length;
+      return Response.json({
+        events: answer.pages[page] ?? [],
+        pagination: { hasMore: more, nextCursor: more && !answer.noCursor ? String(page + 1) : null },
+        meta: answer.excluded ? { excludedIntervals: [{ start: iso(NOW - 3_600_000), end: iso(NOW) }] } : {},
+      });
     }
     return new Response("unexpected", { status: 500 });
   });
   vi.stubGlobal("fetch", fetch);
-  return { fetch, calls };
+  return { fetch, paths, events };
 }
 
-const project = (id: string, name: string, production?: string) => ({
+const project = (id: string, name: string) => ({
   id,
   name,
-  targets: { production: { id: production ?? null, alias: [`${name}.example.com`] } },
+  targets: { production: { id: null, alias: [`${name}.example.com`] } },
 });
-const line = (rowId: string, over: Record<string, unknown> = {}) => ({
-  rowId,
-  timestampInMs: NOW - 1_000,
-  level: "error",
-  source: "serverless",
+const logEvent = (requestId: string, over: Record<string, unknown> = {}) => ({
+  timestamp: iso(NOW - 1_000),
+  projectId: "p1",
+  deploymentId: "dpl_a",
+  requestId,
   requestMethod: "GET",
   requestPath: "/api/x",
-  responseStatusCode: 500,
+  source: "function",
+  level: "error",
   message: "boom",
   ...over,
 });
+const responseEvent = (requestId: string, httpStatus: number, over: Record<string, unknown> = {}) => ({
+  timestamp: iso(NOW - 2_000),
+  projectId: "p1",
+  deploymentId: "dpl_a",
+  requestId,
+  requestMethod: "GET",
+  requestPath: "/api/y",
+  httpStatus,
+  requestHostname: "a-production.example.com",
+  ...over,
+});
+const fetcher = (opts: Parameters<typeof vercelRuntimeFetcher>[1] = {}, env: typeof ENV | { VERCEL_API_TOKEN: string } = ENV) =>
+  vercelRuntimeFetcher(env, { now: () => NOW, ...opts });
 
 describe("vercelRuntimeFetcher", () => {
-  beforeEach(() => _resetProviderCooldowns());
+  let errors: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    _resetProviderCooldowns();
+    errors = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
   afterEach(() => {
     vi.unstubAllGlobals();
     _resetProviderCooldowns();
+    errors.mockRestore();
   });
 
   it("asks nothing without a token", async () => {
-    const { fetch } = fakeVercel({ projects: [], logs: {} });
+    const { fetch } = fakeVercel({ projects: [], events: {} });
     expect(await vercelRuntimeFetcher({}).fetch()).toEqual({ ok: true, items: [] });
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("reads each production project's current deployment and keeps only errors and 5xx", async () => {
-    const { calls } = fakeVercel({
-      projects: [project("p1", "a-production", "dpl_a"), project("p2", "b-production"), project("p3", "a-staging", "dpl_s")],
-      deployments: { p2: "dpl_b" },
-      logs: {
-        dpl_a: { lines: [line("1"), line("2", { level: "info", responseStatusCode: 200 })] },
-        dpl_b: { lines: [line("3", { level: "info", responseStatusCode: 503 })], open: true },
+  it("asks for the last 24h of production errors and 5xx, and keeps production projects only", async () => {
+    const { events } = fakeVercel({
+      projects: [project("p1", "a-production"), project("p3", "a-staging")],
+      events: {
+        "vercel.log": { pages: [[logEvent("1"), logEvent("2", { projectId: "p3" })]] },
+        "vercel.proxy_response": { pages: [[responseEvent("3", 503)]] },
       },
     });
-    const res = await vercelRuntimeFetcher(ENV, { deploymentBudgetMs: 50 }).fetch();
-    expect(res.ok).toBe(true);
-    expect(res.complete).toBe(true);
-    expect(res.items.map((e) => [e.project, e.deploymentId, e.rowId, e.status])).toEqual([
-      ["a-production", "dpl_a", "1", 500],
-      ["b-production", "dpl_b", "3", 503],
+    const res = await fetcher().fetch();
+    expect(res).toMatchObject({ ok: true, complete: true });
+    expect(res.items.map((e) => [e.project, e.requestId, e.source, e.status])).toEqual([
+      ["a-production", "1", "function", null],
+      ["a-production", "3", "response", 503],
     ]);
-    expect(res.items[0]?.domain).toBe("a-production.example.com");
-    // The staging project is never read.
-    expect(calls.some((p) => p.includes("dpl_s"))).toBe(false);
+    expect(res.items[1]?.domain).toBe("a-production.example.com");
+
+    expect(events.map((c) => c.body.event)).toEqual(["vercel.log", "vercel.proxy_response"]);
+    for (const call of events) {
+      expect(call.teamId).toBe("team_1");
+      expect(call.reason).toBeTruthy();
+      expect(call.body.scope).toEqual({ ownerId: "team_1", projectIds: ["p1"] });
+      expect(call.body.timeRange).toEqual({ start: iso(NOW - RUNTIME_ERROR_WINDOW_MS), end: iso(NOW) });
+      expect(call.body.filter).toContain('environment:"production"');
+    }
   });
 
-  it("stays ok with one project failing, and is not complete", async () => {
-    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
-    fakeVercel({
-      projects: [project("p1", "a-production", "dpl_a"), project("p2", "b-production", "dpl_b")],
-      logs: { dpl_a: { lines: [line("1")] }, dpl_b: 500 },
+  it("uses the token's own account when no team is configured", async () => {
+    const { events } = fakeVercel({ projects: [project("p1", "a-production")], user: "user_9", events: {} });
+    expect(await fetcher({}, { VERCEL_API_TOKEN: "tok" }).fetch()).toMatchObject({ ok: true, complete: true });
+    expect(events[0]).toMatchObject({ teamId: "user_9", body: { scope: { ownerId: "user_9" } } });
+  });
+
+  it("asks nothing more when there is no production project", async () => {
+    const { events } = fakeVercel({ projects: [project("p3", "a-staging")], events: {} });
+    expect(await fetcher().fetch()).toEqual({ ok: true, items: [], complete: true });
+    expect(events).toEqual([]);
+  });
+
+  it("follows the cursor to the end of the window", async () => {
+    const { events } = fakeVercel({
+      projects: [project("p1", "a-production")],
+      events: { "vercel.log": { pages: [[logEvent("1")], [logEvent("2")], [logEvent("3")]] } },
     });
-    const res = await vercelRuntimeFetcher(ENV).fetch();
-    expect(res).toMatchObject({ ok: true, complete: false });
-    expect(res.items).toHaveLength(1);
-    errors.mockRestore();
+    const res = await fetcher().fetch();
+    expect(res).toMatchObject({ ok: true, complete: true });
+    expect(res.items.map((e) => e.requestId)).toEqual(["1", "2", "3"]);
+    expect(events.filter((c) => c.body.event === "vercel.log").map((c) => c.body.cursor)).toEqual([
+      undefined,
+      "1",
+      "2",
+    ]);
   });
 
-  it("fails when every project fails", async () => {
-    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
-    fakeVercel({ projects: [project("p1", "a-production", "dpl_a")], logs: { dpl_a: 500 } });
-    expect(await vercelRuntimeFetcher(ENV).fetch()).toEqual({ ok: false, items: [] });
-    errors.mockRestore();
+  it("is not complete at the page cap, with excluded intervals, or with no cursor to follow", async () => {
+    const pages = [[logEvent("1")], [logEvent("2")], [logEvent("3")]];
+    fakeVercel({ projects: [project("p1", "a-production")], events: { "vercel.log": { pages } } });
+    const capped = await fetcher({ maxPages: 2 }).fetch();
+    expect(capped).toMatchObject({ ok: true, complete: false });
+    expect(capped.items).toHaveLength(2);
+
+    fakeVercel({ projects: [project("p1", "a-production")], events: { "vercel.log": { pages: [[logEvent("1")]], excluded: true } } });
+    expect(await fetcher().fetch()).toMatchObject({ ok: true, complete: false });
+
+    fakeVercel({ projects: [project("p1", "a-production")], events: { "vercel.log": { pages, noCursor: true } } });
+    const stuck = await fetcher().fetch();
+    expect(stuck).toMatchObject({ ok: true, complete: false });
+    expect(stuck.items).toHaveLength(1);
+  });
+
+  it("halves the page size when a page is too large, and keeps it", async () => {
+    const { events } = fakeVercel({
+      projects: [project("p1", "a-production")],
+      maxLimit: 300,
+      events: { "vercel.log": { pages: [[logEvent("1")], [logEvent("2")]] } },
+    });
+    const res = await fetcher().fetch();
+    expect(res).toMatchObject({ ok: true, complete: true });
+    expect(events.filter((c) => c.body.event === "vercel.log").map((c) => c.body.limit)).toEqual([
+      1000, 500, 250, 250,
+    ]);
+  });
+
+  it("fails on any other error, so the store keeps what it had", async () => {
+    fakeVercel({
+      projects: [project("p1", "a-production")],
+      events: { "vercel.proxy_response": { status: 500 } },
+    });
+    expect(await fetcher().fetch()).toEqual({ ok: false, items: [] });
   });
 
   it("fails on a 429, records the shared cooldown, and then asks nothing while it lasts", async () => {
-    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { fetch } = fakeVercel({ projects: [project("p1", "a-production", "dpl_a")], logs: { dpl_a: 429 } });
-    expect(await vercelRuntimeFetcher(ENV).fetch()).toEqual({ ok: false, items: [] });
+    const { fetch } = fakeVercel({ projects: [project("p1", "a-production")], events: { "vercel.log": { status: 429 } } });
+    expect(await fetcher().fetch()).toEqual({ ok: false, items: [] });
     expect(rateLimitedUntil("vercel")).not.toBeNull();
 
     fetch.mockClear();
-    expect(await vercelRuntimeFetcher(ENV).fetch()).toEqual({ ok: false, items: [] });
+    expect(await fetcher().fetch()).toEqual({ ok: false, items: [] });
     expect(fetch).not.toHaveBeenCalled();
-    errors.mockRestore();
   });
 
-  it("ends at the overall budget without failing", async () => {
-    fakeVercel({
-      projects: [project("p1", "a-production", "dpl_a")],
-      logs: { dpl_a: { lines: [line("1")], open: true } },
-    });
+  it("fails at the overall deadline, the project list included", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        (_input: unknown, init?: RequestInit) =>
+          new Promise<Response>((_, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(init.signal!.reason));
+          }),
+      ),
+    );
     const started = Date.now();
-    const res = await vercelRuntimeFetcher(ENV, { deploymentBudgetMs: 10_000, overallBudgetMs: 50 }).fetch();
+    expect(await fetcher({ overallBudgetMs: 50 }).fetch()).toEqual({ ok: false, items: [] });
     expect(Date.now() - started).toBeLessThan(5_000);
-    expect(res).toMatchObject({ ok: true, complete: true });
-    expect(res.items.map((e) => e.rowId)).toEqual(["1"]);
   });
 });
 
 // --- collectTelemetry + the integrations check ----------------------------------------------
 
-describe("Vercel runtime logs in the cycle and the self-check", () => {
+describe("Vercel runtime errors in the cycle and the self-check", () => {
   const saved: Record<string, string | undefined> = {};
   const KEYS = [
     "VERCEL_API_TOKEN",
@@ -438,15 +522,15 @@ describe("Vercel runtime logs in the cycle and the self-check", () => {
 
   it("is a missing-env warning without a token, and records the feature as off", async () => {
     const storage = createLibsqlStorage(await freshDb());
-    const fetcher = vi.fn(async () => ({ ok: true as const, items: [] }));
-    await collectTelemetry(storage, testConfig(), { runtimeErrors: { fetch: fetcher } });
-    expect(fetcher).not.toHaveBeenCalled();
+    const fetch = vi.fn(async () => ({ ok: true as const, items: [] }));
+    await collectTelemetry(storage, testConfig(), { runtimeErrors: { fetch } });
+    expect(fetch).not.toHaveBeenCalled();
     const fact = (await storage.board.readPlatformFacts()).find((p) => p.source === "vercel-runtime");
     expect(fact).toMatchObject({ configured: false });
     expect(await runtimeCheck(storage)).toMatchObject({ configured: false, state: "warn" });
   });
 
-  it("is pending before the first read, ok after one, and red after two failed reads in a row", async () => {
+  it("is pending before the first read, ok after one, still ok after one failure, and red after two", async () => {
     process.env.VERCEL_API_TOKEN = "tok";
     const storage = createLibsqlStorage(await freshDb());
     expect(await runtimeCheck(storage)).toMatchObject({ state: "warn", detail: "first runtime-log read pending" });
@@ -457,17 +541,29 @@ describe("Vercel runtime logs in the cycle and the self-check", () => {
     });
     const ok = await runtimeCheck(storage);
     expect(ok).toMatchObject({ configured: true, ok: true, state: "ok" });
-    expect(ok?.detail).toMatch(/1 runtime error group in the last 24h$/);
+    expect(ok?.detail).toMatch(/^1 runtime error group in the 24h before the read/);
 
     const failing = fixed({ ok: false, items: [] });
     await collectTelemetry(storage, testConfig(), { runtimeErrors: failing });
-    expect(await runtimeCheck(storage)).toMatchObject({ state: "warn", ok: false });
+    // One failure is a blip: the snapshot still stands.
+    const blip = await runtimeCheck(storage);
+    expect(blip).toMatchObject({ state: "ok", ok: true });
+    expect(blip?.detail).toMatch(/\(1 in a row\) · 1 runtime error group/);
     await collectTelemetry(storage, testConfig(), { runtimeErrors: failing });
     const red = await runtimeCheck(storage);
     expect(red).toMatchObject({ state: "error", ok: false });
-    expect(red?.detail).toMatch(/\(2 in a row\)$/);
+    expect(red?.detail).toMatch(/\(2 in a row\)/);
     // The groups read before the outage are kept.
     expect(await storage.telemetry.runtimeErrors.load()).toHaveLength(1);
+  });
+
+  it("warns when the read was cut short", async () => {
+    process.env.VERCEL_API_TOKEN = "tok";
+    const storage = createLibsqlStorage(await freshDb());
+    await collectTelemetry(storage, testConfig(), { runtimeErrors: fixed({ ok: true, items: [], complete: false }) });
+    const check = await runtimeCheck(storage);
+    expect(check).toMatchObject({ state: "warn", ok: true });
+    expect(check?.detail).toMatch(/cut short/);
   });
 
   it("survives a fetcher that throws", async () => {

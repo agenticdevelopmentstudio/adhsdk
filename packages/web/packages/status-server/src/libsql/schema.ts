@@ -443,10 +443,11 @@ export const analyticsMetrics = sqliteTable(
   ],
 );
 
-// Vercel runtime errors (error/fatal log lines and 5xx responses of each production project's
-// current production deployment), grouped by project, source, method, normalized path, status
-// and first message line. `key` is the hash of those, so a poll upserts. A group not seen for
-// 7 days is pruned. The grouping and counting rules live in `telemetry/runtime-errors.ts`.
+// Vercel runtime errors (error/fatal log lines and 5xx responses in each production project's
+// production environment), grouped by project, source, method, normalized path, status and
+// first message line. `key` is the hash of those. A SNAPSHOT: each successful read of the last
+// 24 hours replaces every row, and `runtime_error_reads` says when. The grouping rules live in
+// `telemetry/runtime-errors.ts`.
 export const runtimeErrors = sqliteTable(
   "runtime_errors",
   {
@@ -463,19 +464,18 @@ export const runtimeErrors = sqliteTable(
     count: integer("count").notNull().default(0),
     firstSeen: integer("first_seen", { mode: "timestamp" }).notNull(),
     lastSeen: integer("last_seen", { mode: "timestamp" }).notNull(),
-    sampleRowId: text("sample_row_id"),
+    sampleRequestId: text("sample_request_id"), // the newest event's Vercel request id
   },
   (t) => [index("idx_runtime_errors_last_seen").on(t.lastSeen)],
 );
 
-// Where counting got to in each deployment's runtime-log stream, so re-reading lines already
-// counted adds nothing: the newest line's timestamp (ms) and the rowIds counted AT it.
-export const runtimeLogCursors = sqliteTable("runtime_log_cursors", {
-  deploymentId: text("deployment_id").primaryKey(),
-  project: text("project").notNull(),
-  lastTimestampMs: integer("last_timestamp_ms").notNull(),
-  lastRowIds: text("last_row_ids", { mode: "json" }).$type<string[]>().notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(now),
+// The read `runtime_errors` is a snapshot of: one row (id 1), replaced with the groups. A failed
+// read writes nothing, so `read_at` falling behind is how a reader sees the snapshot is old.
+export const runtimeErrorReads = sqliteTable("runtime_error_reads", {
+  id: integer("id").primaryKey(),
+  readAt: integer("read_at", { mode: "timestamp_ms" }).notNull(),
+  // false: the read stopped before the start of its window, so counts are a floor
+  complete: integer("complete", { mode: "boolean" }).notNull(),
 });
 
 // --- User auth (self-enclosed; no central auth server) -----------------------

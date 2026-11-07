@@ -105,7 +105,13 @@ const sections = object({
     }),
   ),
   runtimeErrors: nullable(
-    object({ window: { type: 'string', enum: ['24h'] }, total: num, groups: list(ref('RuntimeErrorGroup')) }),
+    object({
+      window: { type: 'string', enum: ['24h'] },
+      readAt: { type: ['string', 'null'], format: 'date-time' },
+      complete: { type: 'boolean' },
+      total: num,
+      groups: list(ref('RuntimeErrorGroup')),
+    }),
   ),
   analytics: nullable(
     object({

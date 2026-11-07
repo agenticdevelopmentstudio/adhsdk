@@ -62,7 +62,7 @@ export const dashboardSchemas: Schemas = {
     count: num,
     firstSeen: str,
     lastSeen: str,
-    sampleRowId: nullableStr,
+    sampleRequestId: nullableStr,
   }),
   VitalsRow: object({ host: str, samples: num, lcp: nullableNum, inp: nullableNum, cls: nullableNum, fcp: nullableNum }),
   ErrorIssue: object({
@@ -95,6 +95,8 @@ export const dashboardSchemas: Schemas = {
   RuntimeErrorsReport: object({
     generatedAt: str,
     window: { type: 'string', enum: ['24h'] },
+    readAt: nullableStr,
+    complete: bool,
     total: num,
     groups: list(ref('RuntimeErrorGroup')),
   }),
@@ -358,7 +360,7 @@ export const dashboardPaths: Paths = {
         'frequent. `total` counts every group in the window; `groups` is capped at 200.',
       security: BEARER,
       responses: {
-        200: okJson('Groups last seen in the window', ref('RuntimeErrorsReport')),
+        200: okJson('The groups of the latest whole read of the 24 hours before it', ref('RuntimeErrorsReport')),
         ...errors(401),
       },
     },
