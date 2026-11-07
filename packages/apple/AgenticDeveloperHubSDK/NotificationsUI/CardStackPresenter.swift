@@ -206,6 +206,9 @@ class CardStackPresenter: NoticePresenter {
         placements[id]?.map(\.key.displayID) ?? []
     }
 
+    /// How many stack windows are open, for tests.
+    var stackWindowCount: Int { stackWindows.count }
+
     /// The panels a notice's cards live in, for tests that tell an in-place
     /// replace from a remove-and-show.
     func panels(of id: String) -> [NoticePanel] {

@@ -33,6 +33,16 @@ final class ToastStackWindow: NoticePanel {
     private var lastVisible: CGRect = .zero
     private var dragOrigin: NSPoint?
     private var dragMouse: NSPoint = .zero
+    /// A layout that arrived mid-drag, applied when the drag ends so it never
+    /// snaps the window out from under the pointer.
+    private var pendingArrangement: (views: [NSView], visible: CGRect)?
+    private var pendingHide: Task<Void, Never>?
+
+    /// How long after the pointer leaves before the chrome starts to fade.
+    var hideDelay: TimeInterval = 0.4
+
+    /// Where the pointer is, in screen coordinates. A seam, so tests place it.
+    var mouseLocation: () -> NSPoint = { NSEvent.mouseLocation }
 
     init(
         position: NoticeProfile.Position,
@@ -74,6 +84,11 @@ final class ToastStackWindow: NoticePanel {
     /// Puts `views` (newest first) in the window and sizes it to them,
     /// anchored at its position on `visible` and moved by the saved offset.
     func arrange(views: [NSView], visible: CGRect) {
+        guard dragOrigin == nil else {
+            pendingArrangement = (views, visible)
+            return
+        }
+        pendingArrangement = nil
         for view in self.views where !views.contains(where: { $0 === view }) {
             view.removeFromSuperview()
         }
@@ -110,16 +125,38 @@ final class ToastStackWindow: NoticePanel {
         chrome.setResetAvailable(!ToastStackGeometry.offset(of: frame, from: anchoredFrame).isZero)
         applyHover()
         display()
+        syncHover()
     }
 
     // MARK: Hover
 
-    /// The pointer entered or left the window: the chrome comes or goes, and
-    /// every card's countdown holds or carries on.
+    /// The pointer entered or left the window: the chrome comes at once and
+    /// goes `hideDelay` later, and every card's countdown holds or carries on.
     func setHovered(_ hovered: Bool) {
         isHovered = hovered
         applyHover()
-        setChromeVisible(hovered, animated: true)
+        pendingHide?.cancel()
+        pendingHide = nil
+        if hovered {
+            setChromeVisible(true, animated: true)
+        } else {
+            let delay = hideDelay
+            pendingHide = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(delay))
+                guard !Task.isCancelled else { return }
+                self?.pendingHide = nil
+                self?.setChromeVisible(false, animated: true)
+            }
+        }
+    }
+
+    /// A window that moved or resized under a still pointer gets no enter or
+    /// exit event: compare the pointer with the frame instead.
+    private func syncHover() {
+        let inside = frame.contains(mouseLocation())
+        if inside != isHovered {
+            setHovered(inside)
+        }
     }
 
     private func applyHover() {
@@ -129,6 +166,9 @@ final class ToastStackWindow: NoticePanel {
     }
 
     func setChromeVisible(_ visible: Bool, animated: Bool = true) {
+        // A direct call overrides a fade that was waiting its turn.
+        pendingHide?.cancel()
+        pendingHide = nil
         isChromeVisible = visible
         chrome.setVisible(visible, animated: animated)
     }
@@ -155,6 +195,10 @@ final class ToastStackWindow: NoticePanel {
         offsets[position.rawValue] = offset.isZero ? nil : offset
         store.set(offsets, for: NoticeSettings.toastStackOffsets)
         chrome.setResetAvailable(!offset.isZero)
+        if let pending = pendingArrangement {
+            arrange(views: pending.views, visible: pending.visible)
+        }
+        syncHover()
         onOffsetChange?()
     }
 
@@ -207,7 +251,7 @@ final class ToastStackChromeView: NSView {
     var onReset: (() -> Void)?
 
     private let position: NoticeProfile.Position
-    private let backdrop = ThemedBox(fill: .surface, stroke: .outline, cornerRadius: 10)
+    private let border = ToastStackBorderView()
     private let barFill = ThemedBox(fill: .elevatedSurface, stroke: nil, cornerRadius: 9)
     private let caption = ThemedLabel(role: .secondaryText, textRole: .caption, weight: .semibold)
     private var wantsVisible = false
@@ -227,7 +271,7 @@ final class ToastStackChromeView: NSView {
         resetButton.target = self
         resetButton.action = #selector(resetClicked)
         resetButton.isHidden = true
-        addSubview(backdrop)
+        addSubview(border)
         addSubview(bar)
         bar.addSubview(barFill)
         bar.addSubview(caption)
@@ -239,7 +283,7 @@ final class ToastStackChromeView: NSView {
 
     override func layout() {
         super.layout()
-        backdrop.frame = bounds
+        border.frame = bounds
         bar.frame = ToastStackGeometry.barArea(inWindowSize: bounds.size, position: position)
         barFill.frame = bar.bounds.insetBy(dx: 1, dy: 1)
         let captionSize = caption.fittingSize
@@ -253,7 +297,7 @@ final class ToastStackChromeView: NSView {
         resetButton.isHidden = !available
     }
 
-    /// Fades in over 0.15 s and out over 0.4 s. Fully out, it stops drawing,
+    /// Fades over 0.15 s either way. Fully out, it stops drawing,
     /// so it stops receiving the mouse.
     func setVisible(_ visible: Bool, animated: Bool) {
         wantsVisible = visible
@@ -266,7 +310,7 @@ final class ToastStackChromeView: NSView {
             return
         }
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = visible ? 0.15 : 0.4
+            context.duration = 0.15
             animator().alphaValue = visible ? 1 : 0
         }, completionHandler: { [weak self] in
             MainActor.assumeIsolated {
@@ -294,9 +338,41 @@ final class ToastStackBarView: NSView {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    override func mouseDown(with event: NSEvent) { onDragBegan?(NSEvent.mouseLocation) }
+    /// Where the event is on screen, from the bar's own window so the point
+    /// stays right while that window moves under the drag.
+    private func screenPoint(of event: NSEvent) -> NSPoint {
+        window?.convertPoint(toScreen: event.locationInWindow) ?? NSEvent.mouseLocation
+    }
 
-    override func mouseDragged(with event: NSEvent) { onDragged?(NSEvent.mouseLocation) }
+    override func mouseDown(with event: NSEvent) { onDragBegan?(screenPoint(of: event)) }
+
+    override func mouseDragged(with event: NSEvent) { onDragged?(screenPoint(of: event)) }
 
     override func mouseUp(with event: NSEvent) { onDragEnded?() }
+}
+
+/// The chrome's outline: a 1 pt `.outline` border with a 10 pt corner radius
+/// and no fill, so nothing but the line itself is drawn, and it never takes
+/// the mouse.
+@MainActor
+final class ToastStackBorderView: NSView, Themeable {
+
+    private var observer: ThemePaletteObserver?
+
+    init() {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 10
+        layer?.borderWidth = 1
+        observer = ThemePaletteObserver(host: self) { [weak self] palette in self?.applyTheme(palette) }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    func applyTheme(_ palette: SemanticPalette) {
+        layer?.borderColor = palette.nsColor(.outline).cgColor
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
