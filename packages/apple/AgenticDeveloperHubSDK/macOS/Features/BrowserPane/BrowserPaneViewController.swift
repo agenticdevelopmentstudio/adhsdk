@@ -102,6 +102,9 @@ public final class BrowserPaneViewController: NSViewController {
     /// it (spec section 12). In memory only, and recorded in every build; only
     /// debug builds have a pane that shows it.
     public let eventLog = BrowserEventLog()
+    /// Whether the pane has left the layout for good
+    /// (`paneContentWillBeDiscarded`), so a log pane stops following it.
+    public private(set) var isDiscarded = false
     /// The jar the current web view was built on.
     private(set) var resolvedJar: ResolvedJar
     /// Whether the current web view captures the page console: read once,
@@ -1047,7 +1050,9 @@ extension BrowserPaneViewController: PaneContentTeardown {
     public func paneContentWillBeDiscarded() {
         detachWebView()
         paneContext.jars?.endUse(by: self)
-        // A log pane following this one shows an empty list once it is gone.
+        // A log pane following this one lets it go on the change this sends:
+        // its list empties and its title drops this pane's name.
+        isDiscarded = true
         eventLog.clear()
     }
 
@@ -1280,7 +1285,7 @@ extension BrowserPaneViewController: WKUIDelegate {
         // The message is the page's words and stays out of the log.
         let reported = builtAutomation?.isActionInFlight == true
         eventLog.record(
-            channel: "dialog", event: kind.rawValue, decision: .withheld,
+            channel: "dialog", event: kind.rawValue, decision: .info,
             detail: reported ? "dismissed, reported to the agent" : "dismissed")
         guard automation.isActionInFlight else { return }
         automation.dialogRaised(kind: kind, message: message)

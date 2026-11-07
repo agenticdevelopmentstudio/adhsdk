@@ -68,9 +68,29 @@ public final class BrowserEventLog {
     static let coalescingWindow: TimeInterval = 0.5
 
     public let capacity: Int
-    public private(set) var entries: [BrowserEventLogEntry] = []
+
+    /// The lines, oldest first. Assembled from the ring on each read, which
+    /// only the log pane does, a few times a second at most.
+    public var entries: [BrowserEventLogEntry] {
+        guard storage.count == capacity, head > 0 else { return storage }
+        return Array(storage[head...] + storage[..<head])
+    }
+
     /// Fires after every change to `entries`.
     public let changes: AnyPublisher<Void, Never>
+
+    /// The ring: grows to `capacity`, then each new line overwrites the slot
+    /// at `head`, the oldest.
+    private var storage: [BrowserEventLogEntry] = []
+    private var head = 0
+    /// How many lines were ever appended since the last clear. A line's
+    /// sequence number is its position in that count; while it is still in
+    /// the ring its slot is `sequence % capacity`.
+    private var appended = 0
+    /// The newest keyboard keyDown line, by sequence number, so an input
+    /// method's later text call can be folded into it even when a keyUp or a
+    /// pointer move was recorded in between.
+    private var lastKeyDown: Int?
 
     private let subject = PassthroughSubject<Void, Never>()
     private let now: () -> Date
@@ -84,9 +104,18 @@ public final class BrowserEventLog {
         changes = subject.eraseToAnyPublisher()
     }
 
-    /// Appends a line, or folds the event into the last one when it is the
-    /// same flood event (a count) or the input method's second report of the
-    /// keystroke the last line already holds (no new line, no count).
+    /// Appends a line, or folds the event into an earlier one:
+    ///
+    /// - a flood event (`coalescedEvents`) identical to the last line, detail
+    ///   included, adds to that line's count. The line takes the newest
+    ///   event's date, so its Time is when the run last fired, and the
+    ///   window slides with the run.
+    /// - an input method's text call (`textInputEvents`) is the second report
+    ///   of a keystroke whose keyDown line, a printable key with the same
+    ///   decision, is less than `coalescingWindow` old. It adds nothing, not
+    ///   even a count. A named key's keyDown (Return, Tab, …) never absorbs
+    ///   one, so Dictation or the character viewer inserting text just after
+    ///   a Return still gets its own line.
     public func record(
         channel: String,
         event: String,
@@ -94,29 +123,53 @@ public final class BrowserEventLog {
         detail: String = ""
     ) {
         let date = now()
-        if let last = entries.last, date.timeIntervalSince(last.date) <= Self.coalescingWindow {
-            if Self.coalescedEvents.contains(event), last.channel == channel, last.event == event,
-               last.decision == decision {
-                entries[entries.count - 1].count += 1
-                entries[entries.count - 1].date = date
+        if Self.coalescedEvents.contains(event), let slot = slot(of: appended - 1) {
+            let last = storage[slot]
+            if date.timeIntervalSince(last.date) <= Self.coalescingWindow, last.channel == channel,
+               last.event == event, last.decision == decision, last.detail == detail {
+                storage[slot].count += 1
+                storage[slot].date = date
                 subject.send()
                 return
             }
-            if Self.textInputEvents.contains(event), last.channel == channel, last.event == "keyDown",
-               last.decision == decision {
+        }
+        if Self.textInputEvents.contains(event), let sequence = lastKeyDown, let slot = slot(of: sequence) {
+            let keyDown = storage[slot]
+            if date.timeIntervalSince(keyDown.date) <= Self.coalescingWindow, keyDown.channel == channel,
+               keyDown.decision == decision, keyDown.detail.hasSuffix("character") {
                 return
             }
         }
-        entries.append(BrowserEventLogEntry(
-            date: date, channel: channel, event: event, decision: decision, detail: detail))
-        if entries.count > capacity { entries.removeFirst(entries.count - capacity) }
+        append(BrowserEventLogEntry(date: date, channel: channel, event: event, decision: decision, detail: detail))
+        if event == "keyDown" { lastKeyDown = appended - 1 }
         subject.send()
     }
 
+    /// Empties the log. Always announces itself, even when already empty,
+    /// because a pane being discarded relies on it to tell its log pane.
     public func clear() {
-        guard !entries.isEmpty else { return }
-        entries.removeAll()
+        storage.removeAll(keepingCapacity: true)
+        head = 0
+        appended = 0
+        lastKeyDown = nil
         subject.send()
+    }
+
+    private func append(_ entry: BrowserEventLogEntry) {
+        if storage.count < capacity {
+            storage.append(entry)
+        } else {
+            storage[head] = entry
+            head = (head + 1) % capacity
+        }
+        appended += 1
+    }
+
+    /// The slot holding the line with `sequence`, or nil once it has been
+    /// overwritten (or never was).
+    private func slot(of sequence: Int) -> Int? {
+        guard sequence >= 0, sequence < appended, sequence >= appended - storage.count else { return nil }
+        return sequence % capacity
     }
 
     // MARK: - Key detail
