@@ -319,7 +319,10 @@ export function digestIntegrations(data: IntegrationsResponse): Digest<Integrati
   const findings: Finding[] = [];
   for (const check of data.checks) {
     const label = check.label || check.id;
-    if (!check.configured) {
+    // State first: a check that says 'error' is broken, configured or not. checkCloudflare
+    // returns configured:false + error when the account can't be discovered, and so does the
+    // fallback for a check that threw. An unset integration is configured:false + warn.
+    if (!check.configured && check.state !== 'error') {
       const missing = check.missingEnv ?? [];
       unconfigured.push(missing.length ? `${label} (unset: ${missing.join(', ')})` : label);
       continue;
