@@ -70,14 +70,19 @@ public final class NoticeHotkeys {
         }
     }
 
-    /// Turns the hotkeys on or off (the settings switch). Idempotent. A
-    /// hotkey the system refuses is logged and listed in
-    /// `unavailableCommands`; the rest still work.
+    /// Turns the hotkeys on or off (the settings switch). A hotkey the
+    /// system refuses is logged and listed in `unavailableCommands`; the rest
+    /// still work. Enabling again while already on retries only the refused
+    /// ones (another app may have let go of the combination), so an accepted
+    /// hotkey is never registered twice; with nothing refused it does nothing.
     public func setEnabled(_ enabled: Bool) {
-        guard enabled != isEnabled else { return }
         if enabled {
+            let pending = isEnabled
+                ? Self.bindings.filter { unavailableCommands.contains($0.command) }
+                : Self.bindings
+            guard !pending.isEmpty else { return }
             var refused: [Command] = []
-            for binding in Self.bindings {
+            for binding in pending {
                 let command = binding.command
                 let handler: @MainActor () -> Void = { [weak self] in self?.perform(command) }
                 let registered = registrar.register(
@@ -88,9 +93,11 @@ public final class NoticeHotkeys {
                 }
             }
             unavailableCommands = refused
-            isEnabled = refused.count < Self.bindings.count
+            isEnabled = isEnabled || refused.count < pending.count
         } else {
-            registrar.unregisterAll()
+            if isEnabled {
+                registrar.unregisterAll()
+            }
             unavailableCommands = []
             isEnabled = false
         }

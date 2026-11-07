@@ -49,8 +49,12 @@ public final class NoticePanel: NSPanel {
     /// Applies the "hide from screen sharing" setting to the notice panels
     /// already on screen, so changing it takes effect without waiting for the
     /// next notice. New panels read it from the rules when they are built.
-    /// Windows that are not notice panels are left alone.
-    public static func applyHideFromSharing(_ hide: Bool, to windows: [NSWindow] = NSApp.windows) {
+    /// Windows that are not notice panels are left alone. The default reads
+    /// `NSApplication.shared`, not `NSApp`: `NSApp` is nil until something
+    /// creates the shared application, and a host may call this that early.
+    public static func applyHideFromSharing(
+        _ hide: Bool, to windows: [NSWindow] = NSApplication.shared.windows
+    ) {
         for case let panel as NoticePanel in windows {
             panel.sharingType = hide ? .none : .readOnly
         }
