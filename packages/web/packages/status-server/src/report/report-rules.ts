@@ -172,7 +172,10 @@ export function issueKeys(openIssues: CompactSnapshot['openIssues']): Map<string
 }
 
 interface MonitorContext {
-  /** The GlitchTip issue list was read, so it lists the errors the board summarizes per project. */
+  /**
+   * The GlitchTip issue list is current (see glitchtipListCurrent), so it lists the errors the
+   * board summarizes per project and the board's errors problems would count them twice.
+   */
   glitchtipListed: boolean;
   /** Provider health from the deploys source, when it was read. */
   providers: LiveSnapshot['providers'] | null;
@@ -364,6 +367,17 @@ export function activeIssueOrder(a: ErrorIssue, b: ErrorIssue): number {
 }
 
 const siteTrouble = (r: SiteHealthRow): number => (r.errors ?? 0) + (r.failures ?? 0);
+
+/**
+ * True only when the GlitchTip issue list can stand in for the board's per-project errors
+ * problems: it was read, its last refresh did not fail, no refresh was still running at the
+ * deadline, and it was read to the end. A cached list from before a new crash would otherwise
+ * hide that crash from every finding.
+ */
+export function glitchtipListCurrent(data: ErrorsDashboardResponse): boolean {
+  const { issues } = data.sections;
+  return issues.data !== null && issues.error === null && !data.refreshing && issues.data.summary.complete;
+}
 
 export function digestErrors(data: ErrorsDashboardResponse): Digest<ErrorsReportSection> {
   const notes: string[] = [];
@@ -588,7 +602,7 @@ function digestOr<T, S>(read: SourceRead<T>, fn: (data: T) => Digest<S>): Digest
 
 export function buildReport(inputs: ReportInputs): ReportResponse {
   const ctx: MonitorContext = {
-    glitchtipListed: inputs.errors.ok && inputs.errors.data.sections.issues.data !== null,
+    glitchtipListed: inputs.errors.ok && glitchtipListCurrent(inputs.errors.data),
     providers: inputs.deploys.ok ? inputs.deploys.data.live.providers : null,
   };
   const digested: Digested = {
