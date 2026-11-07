@@ -113,6 +113,10 @@ public final class BrowserPaneViewController: NSViewController {
     /// never install the script without its handler or the handler without
     /// its script. A construction-time setting; a change waits for a rebuild.
     private(set) var capturesConsole: Bool
+    /// The construction-time settings the current web view was built with
+    /// (`BrowserSettings.constructionSnapshot`), so closing the settings
+    /// sheet can tell whether the pane still matches them.
+    private(set) var builtConstructionSettings: [String: String]
     /// The Third-Party Content value last asked of the current web view, so
     /// an unrelated browser key change does not compile the rules again.
     /// `nil` on a web view that has been asked for nothing yet.
@@ -228,6 +232,7 @@ public final class BrowserPaneViewController: NSViewController {
         )
         self.resolvedJar = jar
         self.capturesConsole = capturesConsole
+        self.builtConstructionSettings = BrowserSettings.constructionSnapshot(in: settings)
         self.siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
         webView = Self.makeWebView(configuration: configuration)
         activationShield = BrowserActivationShield(webView: webView)
@@ -617,6 +622,7 @@ public final class BrowserPaneViewController: NSViewController {
         )
         resolvedJar = jar
         self.capturesConsole = capturesConsole
+        builtConstructionSettings = BrowserSettings.constructionSnapshot(in: settings)
         // What the old web view captured is not this one's to report.
         if !capturesConsole { consoleLog.clear() }
         jarLabel = jar.jarID == nil ? nil : label
@@ -1026,9 +1032,27 @@ extension BrowserPaneViewController: PaneMenuProviding {
         setEventsPaused(!isEventsPaused)
     }
 
-    /// The pane's settings sheet. Not built yet, so nothing is presented.
+    /// Whether the settings WebKit fixes at construction now resolve to
+    /// anything other than `snapshot` — a change made in the pane's sheet, or
+    /// one made globally since the web view was built that the pane follows.
+    func needsRebuild(after snapshot: [String: String]) -> Bool {
+        BrowserSettings.constructionSnapshot(in: settings) != snapshot
+    }
+
+    /// The pane's settings sheet, over the pane's own settings layer. When
+    /// it closes, a construction-time setting that no longer matches the web
+    /// view rebuilds it (spec section 3).
     @objc func showPaneSettings() {
-        logger.info("browser pane settings requested; the sheet is not built yet")
+        guard view.window != nil else { return }
+        guard let sheet = BrowserPaneSettingsSheetController(pane: self, history: history) else {
+            logger.info("browser pane settings requested, but the pane has no settings layer of its own")
+            return
+        }
+        sheet.onClose = { [weak self] in
+            guard let self, !self.isDiscarded else { return }
+            if self.needsRebuild(after: self.builtConstructionSettings) { self.rebuildWebView() }
+        }
+        presentAsSheet(sheet)
     }
 
     @objc func showBrowserLog() {

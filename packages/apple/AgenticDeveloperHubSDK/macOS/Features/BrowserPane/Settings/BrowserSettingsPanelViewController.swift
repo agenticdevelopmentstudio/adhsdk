@@ -10,47 +10,62 @@ import WebKit
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
 
-/// Settings panel for the Browser pane: a topic list on the left — General,
-/// History, Cookies and Site Data, Privacy and Security, Media and
-/// Permissions, Downloads, Developer, Reset — and the chosen topic's controls
-/// on the right, the shape the Language Servers panel has.
+/// Which settings a Browser panel shows and writes (spec section 3).
 ///
-/// Every row here binds to the app's shared settings (`UserSettings.shared`):
-/// a row's view model reads through `UserSetting`, which mirrors the shared
-/// store and no other, and that is the store `BrowserPaneViewController`
-/// follows. The panel's own writes — choosing a download folder, putting it
-/// back, Reset — go through `settings`, the shared store by default, so a
-/// test can hand in an in-memory one and watch them land. The two things
-/// that are not settings, the visit history and WebKit's site data, are
-/// handed in for the same reason: they are stores with files behind them
-/// (`dependency-injection`).
+/// - `global`: the app's shared browser settings, in the Settings window.
+/// - `pane`: one browser pane's own layer over them, in the pane's settings
+///   sheet. Writes land in the layer; the global settings are never touched.
+public enum BrowserSettingsScope {
+    case global
+    case pane(LayeredSettingsStore, BrowserPaneViewController)
+}
+
+/// Settings panel for the Browser pane: a topic list on the left — General,
+/// History, Cookies and Site Data, Privacy and Security, Session Privacy,
+/// Media and Permissions, Downloads, Developer, Reset — and the chosen topic's
+/// controls on the right, the shape the Language Servers panel has.
+///
+/// **One panel definition serves both scopes** (`dry`). Every row reads and
+/// writes through `ViewModel(title:get:set:)` over the scope's store — the
+/// store handed in as `settings` in global scope, the pane's
+/// `LayeredSettingsStore` in pane scope — so the Settings window and a pane's
+/// sheet are the same rows over different stores. The two things that are not
+/// settings, the visit history and WebKit's site data, are handed in for the
+/// same reason: they are stores with files behind them (`dependency-injection`).
 ///
 /// **Every setting shown is one the pane honours.** The ones WebKit fixes when
-/// a web view is created say "new browser panes" in their explanation, so the
-/// panel never promises an effect the open pane cannot deliver
-/// (`principle-of-least-astonishment`).
+/// a web view is created say so in their explanation — "new browser panes" in
+/// global scope, "when this sheet closes" in pane scope, where closing the
+/// sheet rebuilds the pane — so the panel never promises an effect the open
+/// pane cannot deliver (`principle-of-least-astonishment`).
 @MainActor
 public final class BrowserSettingsPanelViewController: ComposableSettings.SettingsPanelSplitViewController {
 
     private let history: BrowserHistoryStore?
     private let siteData: BrowserSiteData
-    private let settings: SettingsStore
+    /// Every row's store and the bookkeeping behind its override marker.
+    /// Internal so a test can reach the rows without pixels.
+    let binding: BrowserSettingsBinding
 
     /// - Parameters:
     ///   - history: where the pane records visits; `nil` means the host records
     ///     none, and the History topic says so.
-    ///   - siteData: WebKit's persistent store, which every non-private pane
-    ///     shares. A test hands in a non-persistent one.
-    ///   - settings: where the panel's own buttons write. The app's shared
-    ///     store by default, which is the one the rows bind to either way.
+    ///   - siteData: WebKit's persistent store, the global jar. Global scope
+    ///     only: in pane scope the topic lists the pane's own data store. A
+    ///     test hands in a non-persistent one.
+    ///   - settings: the store global-scope rows read and write. The app's
+    ///     shared store by default. Unused in pane scope, whose store is the
+    ///     pane's layer.
+    ///   - scope: the Settings window's `.global`, or one pane's sheet.
     public init(
         history: BrowserHistoryStore?,
         siteData: BrowserSiteData = BrowserSiteData(),
-        settings: SettingsStore = UserSettings.shared
+        settings: SettingsStore = UserSettings.shared,
+        scope: BrowserSettingsScope = .global
     ) {
         self.history = history
         self.siteData = siteData
-        self.settings = settings
+        self.binding = BrowserSettingsBinding(settings: settings, scope: scope)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Web Browser",
             icon: NSImage(systemSymbolName: "globe", accessibilityDescription: nil)
@@ -63,24 +78,51 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
 
     /// Shown while no topic is selected; each topic carries its own.
     public override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
+        var topics: [ComposableSettings.PanelHelp.Topic] = [
             .init(
                 title: "Web Browser",
-                body: "The Browser pane is a web browser inside a project window: an address "
-                    + "bar over a page. These topics decide how its pages load, what it "
-                    + "remembers about where you have been, what sites may keep and do, "
-                    + "and where downloads land. Pick a topic on the left."
-            ),
-            .init(
-                title: "When a Change Takes Effect",
-                body: "Most settings apply to every open browser pane as you change them. "
-                    + "A few are fixed by WebKit when a pane is created — private "
-                    + "browsing, the HTTPS upgrade, autoplay and AirPlay — and those say "
-                    + "so beside the control: they apply to browser panes opened after "
-                    + "the change. JavaScript and Lockdown Mode apply to the next page a "
-                    + "pane loads."
+                body: binding.isPaneScope
+                    ? "These are the settings of one browser pane. Each starts as the global "
+                        + "browser setting from the Settings window, and a change made here "
+                        + "applies to this pane alone. Pick a topic on the left."
+                    : "The Browser pane is a web browser inside a project window: an address "
+                        + "bar over a page. These topics decide how its pages load, what it "
+                        + "remembers about where you have been, what sites may keep and do, "
+                        + "and where downloads land. Pick a topic on the left."
             )
-        ])
+        ]
+        if binding.isPaneScope {
+            topics.append(.init(
+                title: "Overrides",
+                body: "A setting changed here overrides the global one for this pane, and its "
+                    + "row shows a small dot in the accent colour for as long as it does. "
+                    + "Right-click the row and choose Use Global Setting to drop the override; "
+                    + "the row then follows the Settings window again. Reset clears every "
+                    + "override of the pane at once. Private browsing is global only, and "
+                    + "Accept cookies can be overridden only while the pane has a jar of "
+                    + "its own, because under a shared jar it would change every pane on "
+                    + "that jar."
+            ))
+        }
+        topics.append(.init(
+            title: "When a Change Takes Effect",
+            body: binding.isPaneScope
+                ? "Most settings apply to the pane as you change them. Those WebKit fixes "
+                    + "when a web view is made — the cookie and storage jar, the HTTPS "
+                    + "upgrade, autoplay, AirPlay and console capture — apply when this "
+                    + "sheet closes: the pane rebuilds its web view and reloads its page, "
+                    + "and anything the old page had half done is lost. JavaScript and "
+                    + "Lockdown Mode apply to the next page the pane loads."
+                : "Most settings apply to every open browser pane as you change them. A few "
+                    + "are fixed by WebKit when a pane is created — private browsing, the "
+                    + "HTTPS upgrade, autoplay, AirPlay and console capture — and those say "
+                    + "so beside the control: they apply to browser panes opened after the "
+                    + "change. The cookie and storage jar is the exception: every open pane "
+                    + "that follows the global value moves to the new jar at once, "
+                    + "reloading its page. JavaScript and Lockdown Mode apply to the next "
+                    + "page a pane loads."
+        ))
+        return ComposableSettings.PanelHelp(topics: topics)
     }
 
     /// The topics are built when this view loads, and settings search reads
@@ -90,32 +132,314 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     /// use (`dry`).
     public override var searchKeywords: [String] {
         BrowserGeneralPanel.keywords + BrowserHistoryPanel.keywords + BrowserSiteDataPanel.keywords
-            + BrowserPrivacyPanel.keywords + BrowserMediaPanel.keywords + BrowserDownloadsPanel.keywords
+            + BrowserPrivacyPanel.keywords + SessionPrivacySettingsPanel.keywords
+            + BrowserMediaPanel.keywords + BrowserDownloadsPanel.keywords
             + BrowserDeveloperPanel.keywords + BrowserResetPanel.keywords
     }
 
+    /// A pane's sheet has no remembered geometry to restore, and a divider
+    /// dragged in a transient dialog is a setting nobody asked to keep — the
+    /// project settings sheet's reasoning.
+    public override var contentSizedSidebar: Bool { binding.isPaneScope }
+
     public override func viewDidLoad() {
         super.viewDidLoad()
-        addPanel(BrowserGeneralPanel())
-        addPanel(BrowserHistoryPanel(history: history))
-        addPanel(BrowserSiteDataPanel(siteData: siteData))
-        addPanel(BrowserPrivacyPanel())
-        addPanel(BrowserMediaPanel())
-        addPanel(BrowserDownloadsPanel(settings: settings))
-        addPanel(BrowserDeveloperPanel())
-        addPanel(BrowserResetPanel(settings: settings))
+        addPanel(BrowserGeneralPanel(binding: binding))
+        addPanel(BrowserHistoryPanel(history: history, binding: binding))
+        addPanel(BrowserSiteDataPanel(
+            title: siteDataTitle,
+            siteData: paneSiteData ?? siteData,
+            binding: binding
+        ))
+        addPanel(BrowserPrivacyPanel(binding: binding))
+        addPanel(SessionPrivacySettingsPanel(binding: binding))
+        addPanel(BrowserMediaPanel(binding: binding))
+        addPanel(BrowserDownloadsPanel(binding: binding))
+        addPanel(BrowserDeveloperPanel(binding: binding))
+        addPanel(BrowserResetPanel(binding: binding))
+    }
+
+    // MARK: Cookies topic, by scope
+
+    /// "Global Cookies and Site Data" in the Settings window, which lists the
+    /// global jar only; in a pane's sheet, the jar that pane is on.
+    var siteDataTitle: String {
+        guard let pane = binding.pane else { return "Global Cookies and Site Data" }
+        return "Cookies and Site Data — \(Self.jarLabel(for: pane))"
+    }
+
+    /// The pane's own data store, whichever jar it resolved to.
+    private var paneSiteData: BrowserSiteData? {
+        binding.pane.map { BrowserSiteData(dataStore: $0.webView.configuration.websiteDataStore) }
+    }
+
+    /// The name a pane's current jar goes by in the sheet. Private browsing
+    /// is a store the pane alone has, so it reads as the pane's own.
+    static func jarLabel(for pane: BrowserPaneViewController) -> String {
+        switch pane.resolvedJar.jar {
+        case .global:
+            return "All Browser Panes"
+        case .worktree:
+            guard let path = pane.paneContext.worktreePath, !path.isEmpty else { return "This Worktree" }
+            return (path as NSString).lastPathComponent
+        case .pane, nil:
+            return "This Pane"
+        }
+    }
+}
+
+// MARK: - Binding
+
+/// One row the binding knows about: what it shows, how to make it re-read its
+/// store, and in pane scope whether the pane overrides it.
+@MainActor
+final class BrowserSettingsRow {
+    /// The setting's key name.
+    let name: String
+    /// The row's view model; `nil` for a row that is not a model (the
+    /// download folder's value row).
+    let model: ComposableSettings.AbstractViewModel?
+    let view: NSView
+    /// False for a row shown disabled with the global value.
+    let isEnabled: Bool
+    /// The override dot, in pane scope, on a row that can be overridden.
+    let marker: OverrideMarker?
+    let refresh: () -> Void
+    let hasOverride: () -> Bool
+
+    init(
+        name: String,
+        model: ComposableSettings.AbstractViewModel?,
+        view: NSView,
+        isEnabled: Bool,
+        marker: OverrideMarker?,
+        refresh: @escaping () -> Void,
+        hasOverride: @escaping () -> Bool
+    ) {
+        self.name = name
+        self.model = model
+        self.view = view
+        self.isEnabled = isEnabled
+        self.marker = marker
+        self.refresh = refresh
+        self.hasOverride = hasOverride
+    }
+}
+
+/// What every topic of the Browser panel binds through: the scope's store,
+/// the view models over it, and — in pane scope — the override marker on each
+/// row and which rows are locked to the global value (spec section 3).
+///
+/// One object rather than each topic deciding for itself, so "how a row
+/// behaves in pane scope" is answered in one place (`dry`), and a topic only
+/// says which setting a row shows.
+@MainActor
+final class BrowserSettingsBinding {
+
+    let scope: BrowserSettingsScope
+    /// Where rows read and write: `settings` in global scope, the pane's
+    /// layer in pane scope.
+    let store: SettingsStore
+    private(set) var rows: [BrowserSettingsRow] = []
+    /// Buttons by accessibility identifier, so a test can press one.
+    private(set) var buttons: [String: ComposableSettings.ButtonViewModel] = [:]
+    private var cancellables: Set<AnyCancellable> = []
+
+    init(settings: SettingsStore, scope: BrowserSettingsScope) {
+        self.scope = scope
+        switch scope {
+        case .global: store = settings
+        case .pane(let layered, _): store = layered
+        }
+        observeChanges()
+    }
+
+    var layered: LayeredSettingsStore? {
+        if case .pane(let layered, _) = scope { return layered }
+        return nil
+    }
+
+    var pane: BrowserPaneViewController? {
+        if case .pane(_, let pane) = scope { return pane }
+        return nil
+    }
+
+    var isPaneScope: Bool { pane != nil }
+
+    /// The rows for one setting.
+    func rows(named name: String) -> [BrowserSettingsRow] {
+        rows.filter { $0.name == name }
+    }
+
+    /// Whether, in pane scope, the row for `name` shows the global value and
+    /// takes no edits: a global-only setting, or Accept cookies while the
+    /// pane's store is shared with other panes. Private browsing counts as the
+    /// pane's own store: nothing else is on it.
+    func isLocked(_ name: String) -> Bool {
+        guard let pane else { return false }
+        if BrowserSettings.globalOnlyKeyNames.contains(name) { return true }
+        if name == UserSettings.browserAcceptsCookies.name { return !pane.resolvedJar.isOwnedByPane }
+        return false
+    }
+
+    // MARK: Explanations
+
+    /// What a construction-time row says about when it takes effect.
+    func constructionNote(for name: String) -> String {
+        if isPaneScope { return "Applies when this sheet closes: the pane reloads its page." }
+        if name == UserSettings.browserPrivacyStorageJar.name {
+            return "Open browser panes that follow this setting move to the new jar, reloading their page."
+        }
+        return "Applies to browser panes opened after the change."
+    }
+
+    // MARK: View models
+
+    /// Reads and writes for `key`. A locked row reads the global value and
+    /// drops writes, so it cannot create the override it is locked against.
+    private func accessors<Value: Codable & Sendable>(
+        _ key: UserSetting<Value>
+    ) -> (get: () -> Value, set: (Value) -> Void) {
+        let store = self.store
+        if isLocked(key.name), let fallback = layered?.fallback {
+            return ({ fallback.get(key) }, { _ in })
+        }
+        return ({ store.get(key) }, { store.set($0, for: key) })
+    }
+
+    func model<Value: Codable & Sendable>(
+        _ title: String, _ key: UserSetting<Value>, explanation: String? = nil
+    ) -> ComposableSettings.ViewModel<Value> {
+        let access = accessors(key)
+        return ComposableSettings.ViewModel(title: title, get: access.get, set: access.set, explanation: explanation)
+    }
+
+    func choice<Value: Codable & Sendable & Equatable>(
+        _ title: String,
+        _ key: UserSetting<Value>,
+        choices: [ComposableSettings.ChoiceViewModel<Value>.Choice],
+        explanation: String? = nil
+    ) -> ComposableSettings.ChoiceViewModel<Value> {
+        let access = accessors(key)
+        return ComposableSettings.ChoiceViewModel(
+            title: title, choices: choices, get: access.get, set: access.set, explanation: explanation
+        )
+    }
+
+    func range<Value: Codable & Sendable & Comparable>(
+        _ title: String,
+        _ key: UserSetting<Value>,
+        bounds: ClosedRange<Value>,
+        explanation: String? = nil
+    ) -> ComposableSettings.RangeViewModel<Value> {
+        let access = accessors(key)
+        return ComposableSettings.RangeViewModel(
+            title: title, minValue: bounds.lowerBound, maxValue: bounds.upperBound,
+            get: access.get, set: access.set, explanation: explanation
+        )
+    }
+
+    // MARK: Rows
+
+    /// Adds `view`, the row for `key`, to `group`: disabled when locked, and
+    /// in pane scope with an override marker and its "Use Global Setting" menu.
+    func add<Value: Codable & Sendable>(
+        _ view: NSView,
+        model: ComposableSettings.ViewModel<Value>,
+        key: UserSetting<Value>,
+        to group: ComposableSettings.GroupView
+    ) {
+        add(view, name: key.name, model: model, to: group, refresh: {
+            // Only some row views install a refresh handler; the slider
+            // follows `onChange` alone.
+            if model.refreshHandler != nil {
+                model.refresh()
+            } else {
+                model.onChange?(model.value)
+            }
+        }, hasOverride: { [weak self] in
+            self?.layered?.hasOverride(key) ?? false
+        }, revert: { [weak self] in
+            self?.layered?.removeOverride(key)
+        })
+    }
+
+    /// The general form, for a row that is not a view model's.
+    func add(
+        _ view: NSView,
+        name: String,
+        model: ComposableSettings.AbstractViewModel?,
+        to group: ComposableSettings.GroupView,
+        refresh: @escaping () -> Void,
+        hasOverride: @escaping () -> Bool,
+        revert: @escaping () -> Void
+    ) {
+        group.addSettingSubview(view)
+        let locked = isLocked(name)
+        if locked { Self.disableControls(in: view) }
+        var marker: OverrideMarker?
+        if isPaneScope, !locked {
+            let dot = OverrideMarker(revert: revert)
+            group.setRowDecoration(leadingAccessory: dot, contextMenu: dot.rowMenu, for: view)
+            dot.show(overridden: hasOverride())
+            marker = dot
+        }
+        rows.append(BrowserSettingsRow(
+            name: name, model: model, view: view, isEnabled: !locked, marker: marker,
+            refresh: refresh, hasOverride: hasOverride
+        ))
+    }
+
+    /// Records a button so a test can press it the way a click would.
+    func register(_ button: ComposableSettings.ButtonViewModel, as identifier: String) {
+        buttons[identifier] = button
+    }
+
+    private static func disableControls(in view: NSView) {
+        if let control = view as? NSControl { control.isEnabled = false }
+        view.subviews.forEach(disableControls(in:))
+    }
+
+    // MARK: Following the store
+
+    /// Re-reads a row whenever its setting changes — an edit elsewhere, an
+    /// override dropped from the menu, Reset — and keeps its marker in step.
+    /// `ClosureSettingObserver` announces only its own writes, so the store's
+    /// `changes` is what tells a row the value under it moved. In pane scope
+    /// the global store is followed too, for the locked rows, which read it
+    /// directly.
+    private func observeChanges() {
+        var publishers = [store.changes]
+        if let fallback = layered?.fallback { publishers.append(fallback.changes) }
+        Publishers.MergeMany(publishers)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] name in
+                MainActor.assumeIsolated { self?.settingDidChange(name) }
+            }
+            .store(in: &cancellables)
+    }
+
+    func settingDidChange(_ name: String) {
+        for row in rows(named: name) {
+            row.refresh()
+            row.marker?.show(overridden: row.hasOverride())
+        }
     }
 }
 
 // MARK: - Topic
 
 /// One topic of the Browser panel. Every topic is listed by a title and a
-/// symbol and is never made from a coder, so that is said once here rather
-/// than eight times over (`dry`).
+/// symbol, binds through the panel's `BrowserSettingsBinding` and is never
+/// made from a coder, so that is said once here rather than nine times over
+/// (`dry`). Internal so the Session Privacy topic can live in its own file.
 @MainActor
-private class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController {
+class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController {
 
-    init(title: String, symbol: String) {
+    let binding: BrowserSettingsBinding
+
+    init(title: String, symbol: String, binding: BrowserSettingsBinding) {
+        self.binding = binding
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: title,
             icon: NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
@@ -131,8 +455,8 @@ private class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController 
 @MainActor
 private final class BrowserGeneralPanel: BrowserTopicPanel {
 
-    init() {
-        super.init(title: "General", symbol: "gearshape")
+    init(binding: BrowserSettingsBinding) {
+        super.init(title: "General", symbol: "gearshape", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
@@ -181,79 +505,69 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
 
     private func makeHomeGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Home Page")
-        let home = ComposableSettings.ViewModel<String>(
-            title: "Address",
-            setting: UserSettings.browserHomePage,
+        let home = binding.model(
+            "Address", UserSettings.browserHomePage,
             explanation: "Blank opens an empty page. A host without a scheme gets https:// in front."
         )
         let field = ComposableSettings.TextEditView(with: home)
         field.textField.placeholderString = "example.com"
         _ = field.textField.accessibilityID("settings.browser.general.home-page")
-        group.addSettingSubview(field)
+        binding.add(field, model: home, key: UserSettings.browserHomePage, to: group)
         return group
     }
 
     private func makePageGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Page")
 
-        let zoom = ComposableSettings.RangeViewModel<Double>(
-            title: "Zoom",
-            setting: UserSettings.browserPageZoom,
-            minValue: BrowserSettings.pageZoomRange.lowerBound,
-            maxValue: BrowserSettings.pageZoomRange.upperBound
-        )
+        let zoom = binding.range("Zoom", UserSettings.browserPageZoom, bounds: BrowserSettings.pageZoomRange)
         let zoomView = ComposableSettings.CaptionedSliderView(viewModel: zoom) { "\(Int(($0 * 100).rounded()))%" }
         _ = zoomView.slider.accessibilityID("settings.browser.general.zoom")
-        group.addSettingSubview(zoomView)
+        binding.add(zoomView, model: zoom, key: UserSettings.browserPageZoom, to: group)
 
-        let fontSize = ComposableSettings.RangeViewModel<Int>(
-            title: "Minimum font size",
-            setting: UserSettings.browserMinimumFontSize,
-            minValue: BrowserSettings.minimumFontSizeRange.lowerBound,
-            maxValue: BrowserSettings.minimumFontSizeRange.upperBound,
+        let fontSize = binding.range(
+            "Minimum font size", UserSettings.browserMinimumFontSize,
+            bounds: BrowserSettings.minimumFontSizeRange,
             explanation: "In points. Zero lets each page choose its own."
         )
         let fontView = ComposableSettings.IntegerFieldView(viewModel: fontSize)
         _ = fontView.textField.accessibilityID("settings.browser.general.minimum-font-size")
-        group.addSettingSubview(fontView)
+        binding.add(fontView, model: fontSize, key: UserSettings.browserMinimumFontSize, to: group)
 
-        let javaScript = ComposableSettings.ViewModel<Bool>(
-            title: "Enable JavaScript",
-            setting: UserSettings.browserJavaScriptEnabled,
+        let javaScript = binding.model(
+            "Enable JavaScript", UserSettings.browserJavaScriptEnabled,
             explanation: "Applies to the next page each pane loads."
         )
         let javaScriptView = ComposableSettings.CheckboxView(with: javaScript)
         _ = javaScriptView.toggle.accessibilityID("settings.browser.general.javascript")
-        group.addSettingSubview(javaScriptView)
+        binding.add(javaScriptView, model: javaScript, key: UserSettings.browserJavaScriptEnabled, to: group)
 
-        let popups = ComposableSettings.ViewModel<Bool>(
-            title: "Block pop-up windows",
-            setting: UserSettings.browserBlocksPopups
-        )
+        let popups = binding.model("Block pop-up windows", UserSettings.browserBlocksPopups)
         let popupsView = ComposableSettings.CheckboxView(with: popups)
         _ = popupsView.toggle.accessibilityID("settings.browser.general.block-popups")
-        group.addSettingSubview(popupsView)
+        binding.add(popupsView, model: popups, key: UserSettings.browserBlocksPopups, to: group)
 
         return group
     }
 
     private func makeUserAgentGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "User Agent")
-        let agent = ComposableSettings.ViewModel<String>(
-            title: "Custom user agent",
-            setting: UserSettings.browserCustomUserAgent,
+        let agent = binding.model(
+            "Custom user agent", UserSettings.browserCustomUserAgent,
             explanation: "Blank sends WebKit's own. Applies to pages loaded after the change."
         )
         let field = ComposableSettings.TextEditView(with: agent)
         field.textField.placeholderString = "Default"
         _ = field.textField.accessibilityID("settings.browser.general.user-agent")
-        group.addSettingSubview(field)
+        binding.add(field, model: agent, key: UserSettings.browserCustomUserAgent, to: group)
         return group
     }
 }
 
 // MARK: - History
 
+/// The visit history is one store for the whole app, so in pane scope this
+/// topic shows only "Record history", which a pane may override; the list and
+/// its clear buttons act globally and stay in the Settings window.
 @MainActor
 private final class BrowserHistoryPanel: BrowserTopicPanel {
 
@@ -266,21 +580,34 @@ private final class BrowserHistoryPanel: BrowserTopicPanel {
     /// have an older answer land after a newer one.
     private var reloadTask: Task<Void, Never>?
 
-    init(history: BrowserHistoryStore?) {
+    init(history: BrowserHistoryStore?, binding: BrowserSettingsBinding) {
         self.history = history
-        super.init(title: "History", symbol: "clock.arrow.circlepath")
+        super.init(title: "History", symbol: "clock.arrow.circlepath", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Recording",
-                body: "With recording on, every page a browser pane finishes loading is "
-                    + "written down: its address, its title and when. Off, nothing new is "
-                    + "written and what is already recorded stays until you clear it. Keep "
-                    + "visits for decides how long a visit is kept: anything older is "
-                    + "forgotten the next time a browser pane opens."
-            ),
+        let recording = ComposableSettings.PanelHelp.Topic(
+            title: "Recording",
+            body: "With recording on, every page a browser pane finishes loading is "
+                + "written down: its address, its title and when. Off, nothing new is "
+                + "written and what is already recorded stays until you clear it. Keep "
+                + "visits for decides how long a visit is kept: anything older is "
+                + "forgotten the next time a browser pane opens."
+        )
+        if binding.isPaneScope {
+            return ComposableSettings.PanelHelp(topics: [
+                recording,
+                .init(
+                    title: "One History",
+                    body: "Every browser pane records into the same history, so how long "
+                        + "visits are kept, the list of visits and Clear History are in the "
+                        + "Settings window's Browser topics. Here you decide only whether "
+                        + "this pane records."
+                )
+            ])
+        }
+        return ComposableSettings.PanelHelp(topics: [
+            recording,
             .init(
                 title: "Visits",
                 body: "How many visits are recorded, and a search over them — type part "
@@ -305,6 +632,7 @@ private final class BrowserHistoryPanel: BrowserTopicPanel {
     override func viewDidLoad() {
         super.viewDidLoad()
         settingsView.addGroup(makeRecordingGroup())
+        guard !binding.isPaneScope else { return }
         settingsView.addGroup(makeVisitsGroup())
         let table = makeTable()
         self.table = table
@@ -313,32 +641,33 @@ private final class BrowserHistoryPanel: BrowserTopicPanel {
 
     override func viewWillAppear() {
         super.viewWillAppear()
+        guard !binding.isPaneScope else { return }
         reload()
     }
 
     private func makeRecordingGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Recording")
 
-        let records = ComposableSettings.ViewModel<Bool>(
-            title: "Record history",
-            setting: UserSettings.browserRecordsHistory,
+        let records = binding.model(
+            "Record history", UserSettings.browserRecordsHistory,
             explanation: history == nil
                 ? "This app has no history store, so nothing is recorded whatever this says."
                 : nil
         )
         let recordsView = ComposableSettings.CheckboxView(with: records)
         _ = recordsView.toggle.accessibilityID("settings.browser.history.record")
-        group.addSettingSubview(recordsView)
+        binding.add(recordsView, model: records, key: UserSettings.browserRecordsHistory, to: group)
 
-        let retention = ComposableSettings.ChoiceViewModel<BrowserHistoryRetention>(
-            title: "Keep visits for",
-            setting: UserSettings.browserHistoryRetention,
+        guard !binding.isPaneScope else { return group }
+
+        let retention = binding.choice(
+            "Keep visits for", UserSettings.browserHistoryRetention,
             choices: BrowserHistoryRetention.allCases.map { .init(label: $0.label, value: $0) },
             explanation: "Older visits are forgotten when a browser pane opens."
         )
         let retentionView = ComposableSettings.PopupMenuChoiceView(viewModel: retention)
         _ = retentionView.popUpButton.accessibilityID("settings.browser.history.retention")
-        group.addSettingSubview(retentionView)
+        binding.add(retentionView, model: retention, key: UserSettings.browserHistoryRetention, to: group)
 
         return group
     }
@@ -459,6 +788,8 @@ private final class BrowserHistoryPanel: BrowserTopicPanel {
 
 // MARK: - Cookies and site data
 
+/// In global scope, the global jar ("Global Cookies and Site Data"); in pane
+/// scope, whichever jar the pane is on, named in the title.
 @MainActor
 private final class BrowserSiteDataPanel: BrowserTopicPanel {
 
@@ -470,9 +801,9 @@ private final class BrowserSiteDataPanel: BrowserTopicPanel {
     /// arrive last and show rows that are already gone.
     private var reloadTask: Task<Void, Never>?
 
-    init(siteData: BrowserSiteData) {
+    init(title: String, siteData: BrowserSiteData, binding: BrowserSettingsBinding) {
         self.siteData = siteData
-        super.init(title: "Cookies and Site Data", symbol: "tray.full")
+        super.init(title: title, symbol: "tray.full", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
@@ -481,16 +812,24 @@ private final class BrowserSiteDataPanel: BrowserTopicPanel {
                 title: "Cookies",
                 body: "Accept cookies is WebKit's one switch for whether sites may set "
                     + "cookies at all; there is no first-party-only middle, because WebKit "
-                    + "offers none. Off, most sites cannot keep you signed in. Private "
-                    + "browsing gives each new browser pane a store of its own that is "
-                    + "thrown away when the pane closes — nothing it visits lands in the "
-                    + "list below. It applies to panes opened after the change; a pane "
+                    + "offers none. Off, most sites cannot keep you signed in. It belongs "
+                    + "to the jar, not the pane, so in a pane's settings it can be changed "
+                    + "only while the pane has a jar of its own. Private browsing gives "
+                    + "each new browser pane a store of its own that is thrown away when "
+                    + "the pane closes. It is set for all browser panes in the Settings "
+                    + "window, and applies to panes opened after the change; a pane "
                     + "already open keeps the store it was made with."
             ),
             .init(
                 title: "Site Data",
-                body: "Everything WebKit is keeping for sites the browser has visited, one "
-                    + "row per site: cookies, local storage, caches, service workers and "
+                body: (binding.isPaneScope
+                    ? "Everything WebKit is keeping for sites in this pane's jar, named in "
+                        + "the topic's title — all browser panes, this worktree's panes, or "
+                        + "this pane alone. "
+                    : "Everything WebKit is keeping in the global jar, the one shared by "
+                        + "all browser panes; the jars of a worktree or a single pane are "
+                        + "listed in the project window's settings. ")
+                    + "One row per site: cookies, local storage, caches, service workers and "
                     + "the rest, named in the second column. Select a site and press − to "
                     + "remove what it kept, which signs you out of it. Remove All clears "
                     + "every site at once. Refresh re-reads the list, since pages write "
@@ -522,23 +861,21 @@ private final class BrowserSiteDataPanel: BrowserTopicPanel {
     private func makeCookiesGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Cookies")
 
-        let accepts = ComposableSettings.ViewModel<Bool>(
-            title: "Accept cookies",
-            setting: UserSettings.browserAcceptsCookies,
+        let accepts = binding.model(
+            "Accept cookies", UserSettings.browserAcceptsCookies,
             explanation: "Off, sites cannot keep you signed in."
         )
         let acceptsView = ComposableSettings.CheckboxView(with: accepts)
         _ = acceptsView.toggle.accessibilityID("settings.browser.site-data.accept-cookies")
-        group.addSettingSubview(acceptsView)
+        binding.add(acceptsView, model: accepts, key: UserSettings.browserAcceptsCookies, to: group)
 
-        let privateBrowsing = ComposableSettings.ViewModel<Bool>(
-            title: "Private browsing",
-            setting: UserSettings.browserPrivateBrowsing,
+        let privateBrowsing = binding.model(
+            "Private browsing", UserSettings.browserPrivateBrowsing,
             explanation: "New browser panes keep nothing once closed. Applies to panes opened after the change."
         )
         let privateView = ComposableSettings.CheckboxView(with: privateBrowsing)
         _ = privateView.toggle.accessibilityID("settings.browser.site-data.private-browsing")
-        group.addSettingSubview(privateView)
+        binding.add(privateView, model: privateBrowsing, key: UserSettings.browserPrivateBrowsing, to: group)
 
         return group
     }
@@ -576,7 +913,9 @@ private final class BrowserSiteDataPanel: BrowserTopicPanel {
     private func removeAll() {
         ComposableSettings.Alerts.confirmDestructive(
             "Remove all site data?",
-            detail: "Cookies, caches and storage for every site are removed, and you are signed out everywhere. "
+            detail: (binding.isPaneScope
+                ? "Cookies, caches and storage for every site in this jar are removed, and you are signed out of them. "
+                : "Cookies, caches and storage for every site are removed, and you are signed out everywhere. ")
                 + "History is not affected.",
             actionTitle: "Remove All",
             on: view.window
@@ -610,8 +949,8 @@ private final class BrowserSiteDataPanel: BrowserTopicPanel {
 @MainActor
 private final class BrowserPrivacyPanel: BrowserTopicPanel {
 
-    init() {
-        super.init(title: "Privacy and Security", symbol: "lock.shield")
+    init(binding: BrowserSettingsBinding) {
+        super.init(title: "Privacy and Security", symbol: "lock.shield", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
@@ -622,7 +961,7 @@ private final class BrowserPrivacyPanel: BrowserTopicPanel {
                     + "against Apple's list of known phishing and malware sites and show "
                     + "a warning page in place of a match. Upgrade to HTTPS loads a site "
                     + "WebKit knows supports HTTPS over HTTPS even when the address said "
-                    + "http; it applies to browser panes opened after the change. "
+                    + "http; WebKit fixes it when a pane's web view is made. "
                     + "Lockdown Mode is the same restricted mode Safari offers: certain "
                     + "web technologies, fonts and media formats are refused, which "
                     + "breaks some sites in exchange for a smaller attack surface. It "
@@ -633,7 +972,9 @@ private final class BrowserPrivacyPanel: BrowserTopicPanel {
                 body: "There is no Do Not Track switch, because WebKit sends no such "
                     + "header and the sites that honoured it have largely stopped. "
                     + "Passwords are not saved by the browser pane; the system keychain "
-                    + "is not involved."
+                    + "is not involved. What a page can see of you — keyboard, mouse, "
+                    + "focus, the agent, cookie jars and third-party scripts — is in "
+                    + "Session Privacy."
             )
         ])
     }
@@ -646,32 +987,27 @@ private final class BrowserPrivacyPanel: BrowserTopicPanel {
         super.viewDidLoad()
         let group = ComposableSettings.GroupView(withTitle: "Protection")
 
-        let fraud = ComposableSettings.ViewModel<Bool>(
-            title: "Warn about fraudulent websites",
-            setting: UserSettings.browserFraudWarning
-        )
+        let fraud = binding.model("Warn about fraudulent websites", UserSettings.browserFraudWarning)
         let fraudView = ComposableSettings.CheckboxView(with: fraud)
         _ = fraudView.toggle.accessibilityID("settings.browser.privacy.fraud-warning")
-        group.addSettingSubview(fraudView)
+        binding.add(fraudView, model: fraud, key: UserSettings.browserFraudWarning, to: group)
 
-        let https = ComposableSettings.ViewModel<Bool>(
-            title: "Upgrade known sites to HTTPS",
-            setting: UserSettings.browserUpgradesToHTTPS,
-            explanation: "Applies to browser panes opened after the change."
+        let https = binding.model(
+            "Upgrade known sites to HTTPS", UserSettings.browserUpgradesToHTTPS,
+            explanation: binding.constructionNote(for: UserSettings.browserUpgradesToHTTPS.name)
         )
         let httpsView = ComposableSettings.CheckboxView(with: https)
         _ = httpsView.toggle.accessibilityID("settings.browser.privacy.upgrade-https")
-        group.addSettingSubview(httpsView)
+        binding.add(httpsView, model: https, key: UserSettings.browserUpgradesToHTTPS, to: group)
 
-        let lockdown = ComposableSettings.ViewModel<Bool>(
-            title: "Lockdown Mode",
-            setting: UserSettings.browserLockdownMode,
+        let lockdown = binding.model(
+            "Lockdown Mode", UserSettings.browserLockdownMode,
             explanation: "Refuses some web technologies for a smaller attack surface. "
                 + "Applies to the next page each pane loads."
         )
         let lockdownView = ComposableSettings.CheckboxView(with: lockdown)
         _ = lockdownView.toggle.accessibilityID("settings.browser.privacy.lockdown")
-        group.addSettingSubview(lockdownView)
+        binding.add(lockdownView, model: lockdown, key: UserSettings.browserLockdownMode, to: group)
 
         settingsView.addGroup(group)
     }
@@ -682,8 +1018,8 @@ private final class BrowserPrivacyPanel: BrowserTopicPanel {
 @MainActor
 private final class BrowserMediaPanel: BrowserTopicPanel {
 
-    init() {
-        super.init(title: "Media and Permissions", symbol: "play.rectangle")
+    init(binding: BrowserSettingsBinding) {
+        super.init(title: "Media and Permissions", symbol: "play.rectangle", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
@@ -694,7 +1030,9 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
                     + "click: allowed, only without sound (the usual browser default — a "
                     + "muted video plays, one with sound waits), or never. AirPlay lets a "
                     + "page's video offer the AirPlay control. Both are fixed when a "
-                    + "browser pane is created and apply to panes opened after the change."
+                    + "browser pane's web view is made: in the Settings window they apply "
+                    + "to panes opened after the change, and in a pane's settings when "
+                    + "the sheet closes."
             ),
             .init(
                 title: "Camera and Microphone",
@@ -722,38 +1060,35 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
     private func makePlaybackGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Playback")
 
-        let autoplay = ComposableSettings.ChoiceViewModel<BrowserAutoplayPolicy>(
-            title: "Autoplay",
-            setting: UserSettings.browserAutoplay,
+        let autoplay = binding.choice(
+            "Autoplay", UserSettings.browserAutoplay,
             choices: BrowserAutoplayPolicy.allCases.map { .init(label: $0.label, value: $0) },
-            explanation: "Applies to browser panes opened after the change."
+            explanation: binding.constructionNote(for: UserSettings.browserAutoplay.name)
         )
         let autoplayView = ComposableSettings.PopupMenuChoiceView(viewModel: autoplay)
         _ = autoplayView.popUpButton.accessibilityID("settings.browser.media.autoplay")
-        group.addSettingSubview(autoplayView)
+        binding.add(autoplayView, model: autoplay, key: UserSettings.browserAutoplay, to: group)
 
-        let airPlay = ComposableSettings.ViewModel<Bool>(
-            title: "Allow AirPlay",
-            setting: UserSettings.browserAllowsAirPlay,
-            explanation: "Applies to browser panes opened after the change."
+        let airPlay = binding.model(
+            "Allow AirPlay", UserSettings.browserAllowsAirPlay,
+            explanation: binding.constructionNote(for: UserSettings.browserAllowsAirPlay.name)
         )
         let airPlayView = ComposableSettings.CheckboxView(with: airPlay)
         _ = airPlayView.toggle.accessibilityID("settings.browser.media.airplay")
-        group.addSettingSubview(airPlayView)
+        binding.add(airPlayView, model: airPlay, key: UserSettings.browserAllowsAirPlay, to: group)
 
         return group
     }
 
     private func makeCaptureGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Camera and Microphone")
-        let capture = ComposableSettings.ChoiceViewModel<BrowserMediaCapturePolicy>(
-            title: "When a page asks",
-            setting: UserSettings.browserMediaCapture,
+        let capture = binding.choice(
+            "When a page asks", UserSettings.browserMediaCapture,
             choices: BrowserMediaCapturePolicy.allCases.map { .init(label: $0.label, value: $0) }
         )
         let captureView = ComposableSettings.PopupMenuChoiceView(viewModel: capture)
         _ = captureView.popUpButton.accessibilityID("settings.browser.media.capture")
-        group.addSettingSubview(captureView)
+        binding.add(captureView, model: capture, key: UserSettings.browserMediaCapture, to: group)
         return group
     }
 }
@@ -764,12 +1099,9 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
 private final class BrowserDownloadsPanel: BrowserTopicPanel {
 
     private let folderRow = ComposableSettings.ValueRowView(title: "Folder")
-    private let settings: SettingsStore
-    private var cancellables: Set<AnyCancellable> = []
 
-    init(settings: SettingsStore) {
-        self.settings = settings
-        super.init(title: "Downloads", symbol: "arrow.down.circle")
+    init(binding: BrowserSettingsBinding) {
+        super.init(title: "Downloads", symbol: "arrow.down.circle", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
@@ -793,9 +1125,16 @@ private final class BrowserDownloadsPanel: BrowserTopicPanel {
     override func viewDidLoad() {
         super.viewDidLoad()
         let group = ComposableSettings.GroupView(withTitle: "Location")
+        let key = UserSettings.browserDownloadDirectory
 
         _ = folderRow.valueLabel.accessibilityID("settings.browser.downloads.folder")
-        group.addSettingSubview(folderRow)
+        binding.add(folderRow, name: key.name, model: nil, to: group, refresh: { [weak self] in
+            self?.showFolder()
+        }, hasOverride: { [weak binding] in
+            binding?.layered?.hasOverride(key) ?? false
+        }, revert: { [weak binding] in
+            binding?.layered?.removeOverride(key)
+        })
 
         let choose = ComposableSettings.ButtonViewModel(title: "Choose Folder…") { [weak self] in
             self?.chooseFolder()
@@ -805,33 +1144,35 @@ private final class BrowserDownloadsPanel: BrowserTopicPanel {
         group.addSettingSubview(chooseView)
 
         let useDefault = ComposableSettings.ButtonViewModel(title: "Use Downloads Folder") { [weak self] in
-            self?.settings.remove(UserSettings.browserDownloadDirectory)
+            self?.useDownloadsFolder()
         }
         let useDefaultView = ComposableSettings.ButtonView(viewModel: useDefault, placement: .leading)
         _ = useDefaultView.button.accessibilityID("settings.browser.downloads.use-default")
         group.addSettingSubview(useDefaultView)
 
-        let asks = ComposableSettings.ViewModel<Bool>(
-            title: "Ask where to save each file",
-            setting: UserSettings.browserAsksDownloadLocation
-        )
+        let asks = binding.model("Ask where to save each file", UserSettings.browserAsksDownloadLocation)
         let asksView = ComposableSettings.CheckboxView(with: asks)
         _ = asksView.toggle.accessibilityID("settings.browser.downloads.ask")
-        group.addSettingSubview(asksView)
+        binding.add(asksView, model: asks, key: UserSettings.browserAsksDownloadLocation, to: group)
 
         settingsView.addGroup(group)
-
-        settings.changes
-            .filter { $0 == UserSettings.browserDownloadDirectory.name }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.showFolder() }
-            .store(in: &cancellables)
         showFolder()
     }
 
     private func showFolder() {
-        folderRow.value = (BrowserSettings.downloadDirectory(in: settings).path as NSString)
+        folderRow.value = (BrowserSettings.downloadDirectory(in: binding.store).path as NSString)
             .abbreviatingWithTildeInPath
+    }
+
+    /// Globally, forgetting the folder is what puts Downloads back. In a pane
+    /// the blank value is written instead: forgetting would drop the override
+    /// and hand the pane whatever folder the global setting names.
+    private func useDownloadsFolder() {
+        if binding.isPaneScope {
+            binding.store.set("", for: UserSettings.browserDownloadDirectory)
+        } else {
+            binding.store.remove(UserSettings.browserDownloadDirectory)
+        }
     }
 
     private func chooseFolder() {
@@ -841,7 +1182,7 @@ private final class BrowserDownloadsPanel: BrowserTopicPanel {
             message: "Downloads from browser panes are saved here."
         ) { [weak self] url in
             guard let url else { return }
-            self?.settings.set(url.path, for: UserSettings.browserDownloadDirectory)
+            self?.binding.store.set(url.path, for: UserSettings.browserDownloadDirectory)
         }
     }
 }
@@ -851,8 +1192,8 @@ private final class BrowserDownloadsPanel: BrowserTopicPanel {
 @MainActor
 private final class BrowserDeveloperPanel: BrowserTopicPanel {
 
-    init() {
-        super.init(title: "Developer", symbol: "hammer")
+    init(binding: BrowserSettingsBinding) {
+        super.init(title: "Developer", symbol: "hammer", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
@@ -875,56 +1216,78 @@ private final class BrowserDeveloperPanel: BrowserTopicPanel {
     override func viewDidLoad() {
         super.viewDidLoad()
         let group = ComposableSettings.GroupView(withTitle: "Web Inspector")
-        let inspector = ComposableSettings.ViewModel<Bool>(
-            title: "Allow Web Inspector",
-            setting: UserSettings.browserWebInspectorEnabled,
+        let inspector = binding.model(
+            "Allow Web Inspector", UserSettings.browserWebInspectorEnabled,
             explanation: "Right-click a page and choose Inspect Element."
         )
         let inspectorView = ComposableSettings.CheckboxView(with: inspector)
         _ = inspectorView.toggle.accessibilityID("settings.browser.developer.inspector")
-        group.addSettingSubview(inspectorView)
+        binding.add(inspectorView, model: inspector, key: UserSettings.browserWebInspectorEnabled, to: group)
         settingsView.addGroup(group)
     }
 }
 
 // MARK: - Reset
 
+/// Globally, every browser setting back to its default. In a pane, every
+/// override dropped, so the pane follows the global settings again.
 @MainActor
 private final class BrowserResetPanel: BrowserTopicPanel {
 
-    private let settings: SettingsStore
+    static let useGlobalIdentifier = "settings.browser.reset.use-global"
 
-    init(settings: SettingsStore) {
-        self.settings = settings
-        super.init(title: "Reset", symbol: "arrow.counterclockwise")
+    init(binding: BrowserSettingsBinding) {
+        super.init(title: "Reset", symbol: "arrow.counterclockwise", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Reset",
-                body: "Puts every setting in the Browser topics back to its default — the "
-                    + "value each control shows on a fresh install. Settings only: "
-                    + "history and site data are kept, and are cleared from their own "
-                    + "topics. Open browser panes pick up the defaults the same way they "
-                    + "pick up any other change."
-            )
+            binding.isPaneScope
+                ? .init(
+                    title: "Use Global Settings",
+                    body: "Drops every setting this pane overrides, so each topic shows the "
+                        + "global value from the Settings window again and follows it from "
+                        + "then on. Overrides that WebKit fixes when a web view is made — the "
+                        + "jar, the HTTPS upgrade, autoplay, AirPlay, console capture — take "
+                        + "effect when this sheet closes, by rebuilding the pane."
+                )
+                : .init(
+                    title: "Reset",
+                    body: "Puts every setting in the Browser topics back to its default — the "
+                        + "value each control shows on a fresh install. Settings only: "
+                        + "history and site data are kept, and are cleared from their own "
+                        + "topics. Open browser panes pick up the defaults the same way they "
+                        + "pick up any other change; a pane's own overrides are kept."
+                )
         ])
     }
 
-    static let keywords: [String] = ["reset", "defaults", "restore"]
+    static let keywords: [String] = ["reset", "defaults", "restore", "use global settings"]
 
     override var searchKeywords: [String] { Self.keywords }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         let group = ComposableSettings.GroupView(withTitle: "Reset")
-        let reset = ComposableSettings.ButtonViewModel(title: "Reset Browser Settings…") { [weak self] in
-            self?.confirmReset()
+        if let layered = binding.layered {
+            // Nothing is lost that the Settings window does not still hold,
+            // so this one does not ask first.
+            let useGlobal = ComposableSettings.ButtonViewModel(title: "Use Global Settings for This Pane") {
+                layered.removeAllOverrides(withPrefix: "browser.")
+            }
+            let useGlobalView = ComposableSettings.ButtonView(viewModel: useGlobal, placement: .leading)
+            _ = useGlobalView.button.accessibilityID(Self.useGlobalIdentifier)
+            binding.register(useGlobal, as: Self.useGlobalIdentifier)
+            group.addSettingSubview(useGlobalView)
+        } else {
+            let reset = ComposableSettings.ButtonViewModel(title: "Reset Browser Settings…") { [weak self] in
+                self?.confirmReset()
+            }
+            let resetView = ComposableSettings.ButtonView(viewModel: reset, placement: .leading)
+            _ = resetView.button.accessibilityID("settings.browser.reset.reset")
+            binding.register(reset, as: "settings.browser.reset.reset")
+            group.addSettingSubview(resetView)
         }
-        let resetView = ComposableSettings.ButtonView(viewModel: reset, placement: .leading)
-        _ = resetView.button.accessibilityID("settings.browser.reset.reset")
-        group.addSettingSubview(resetView)
         settingsView.addGroup(group)
     }
 
@@ -936,7 +1299,7 @@ private final class BrowserResetPanel: BrowserTopicPanel {
             on: view.window
         ) { [weak self] confirmed in
             guard let self, confirmed else { return }
-            BrowserSettings.reset(in: self.settings)
+            BrowserSettings.reset(in: self.binding.store)
         }
     }
 }

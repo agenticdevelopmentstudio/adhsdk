@@ -280,6 +280,18 @@ public enum BrowserSettings {
         UserSettings.browserPrivateBrowsing.name
     ]
 
+    /// What `store` holds for every construction-time key, each described as
+    /// text so keys of different types compare in one dictionary. A pane
+    /// keeps the snapshot it was built with; a later snapshot that differs is
+    /// a web view that no longer matches its settings.
+    static func constructionSnapshot(in store: SettingsStore) -> [String: String] {
+        var snapshot: [String: String] = [:]
+        for key in allKeys where constructionTimeKeyNames.contains(key.name) {
+            snapshot[key.name] = key.describe(in: store)
+        }
+        return snapshot
+    }
+
     /// Puts every browser setting back to its default by removing the stored
     /// value, so what the default *is* stays declared in one place.
     public static func reset(in store: SettingsStore) {
@@ -321,8 +333,11 @@ public enum BrowserSettings {
 protocol BrowserSettingKey {
     var name: String { get }
     func remove(from store: SettingsStore)
+    /// The value `store` resolves for this key, as text.
+    func describe(in store: SettingsStore) -> String
 }
 
 extension UserSetting: BrowserSettingKey {
     func remove(from store: SettingsStore) { store.remove(self) }
+    func describe(in store: SettingsStore) -> String { String(describing: store.get(self)) }
 }
