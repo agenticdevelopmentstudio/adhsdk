@@ -45,6 +45,10 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     /// Whether the main frame is loading. Chromium's own loading flag covers
     /// every frame, so an iframe would read as a navigation.
     private var mainFrameLoading = false
+    /// A main-frame load has started and its commit is still to be told:
+    /// Chromium reports the load start before the new address, and a commit
+    /// heard first would remember the page being left.
+    private var commitPending = false
 
     public init(settings: SettingsStore) {
         self.settings = settings
@@ -287,6 +291,13 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
 
     public func chromiumBrowserViewAddressDidChange(_ view: ChromiumBrowserView) {
         delegate?.browserEngineAddressDidChange(self)
+        commitIfPending()
+    }
+
+    private func commitIfPending() {
+        guard commitPending else { return }
+        commitPending = false
+        delegate?.browserEngineDidCommitNavigation(self)
     }
 
     public func chromiumBrowserViewTitleDidChange(_ view: ChromiumBrowserView) {
@@ -309,16 +320,18 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         loadingSubject.send(loading)
     }
 
-    /// Chromium's main-frame load start is both the navigation's start and
-    /// its commit: the document is the new one.
+    /// Chromium's main-frame load start is the navigation's start, and the
+    /// document is the new one. The commit is told when the new address
+    /// arrives, or at the load's end for a load that keeps its address.
     public func chromiumBrowserViewDidStartMainFrameLoad(_ view: ChromiumBrowserView) {
         setMainFrameLoading(true)
         delegate?.browserEngineDidStartNavigation(self)
         automationContext = nil
-        delegate?.browserEngineDidCommitNavigation(self)
+        commitPending = true
     }
 
     public func chromiumBrowserViewDidFinishMainFrameLoad(_ view: ChromiumBrowserView) {
+        commitIfPending()
         setMainFrameLoading(false)
         delegate?.browserEngineDidFinishNavigation(self)
     }
