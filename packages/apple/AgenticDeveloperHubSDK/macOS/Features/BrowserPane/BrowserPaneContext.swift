@@ -18,12 +18,23 @@ public struct BrowserPaneContext: Sendable {
     public let projectName: String
     /// The standardized path of the pane's working directory.
     public let worktreePath: String?
+    /// Where worktree and pane storage jars are found or made; `nil` puts
+    /// every jar setting on the shared store, which is what a pane without a
+    /// project database can honestly offer.
+    public let jars: BrowserJarRegistry?
 
-    public init(paneNodeID: UUID?, projectID: UUID?, projectName: String, worktreePath: String?) {
+    public init(
+        paneNodeID: UUID?,
+        projectID: UUID?,
+        projectName: String,
+        worktreePath: String?,
+        jars: BrowserJarRegistry? = nil
+    ) {
         self.paneNodeID = paneNodeID
         self.projectID = projectID
         self.projectName = projectName
         self.worktreePath = worktreePath
+        self.jars = jars
     }
 
     /// A pane that belongs to no project.

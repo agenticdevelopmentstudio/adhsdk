@@ -125,6 +125,10 @@ public final class ProjectWorkspace {
         self.arrangementSourceID = arrangementSourceID
     }
 
+    /// Posted on the main thread, with the workspace as its object, after
+    /// `persistTabs` has saved.
+    public nonisolated static let didPersistTabsNotification = Notification.Name("ProjectWorkspace.didPersistTabs")
+
     public var id: UUID { repo.id }
     public var displayName: String { repo.name }
     /// The repository's own folder — the root every pane defaults to.
@@ -243,9 +247,15 @@ public final class ProjectWorkspace {
     /// Persists the current tabs, which one is active, and the enabled edges.
     /// Called whenever a tab is added/removed/reordered, an edge is toggled, or
     /// the split layout inside a tab changes.
+    ///
+    /// Posts `didPersistTabsNotification` after a save that succeeded: a save
+    /// is the moment panes stop existing as far as the database is concerned,
+    /// so it is when work keyed to dead panes — the browser's storage jars —
+    /// can be collected, by whoever cares, without this class knowing them.
     public func persistTabs(_ tabs: [TabRecord], activeTabID: UUID?, enabledEdges: [Edge]) {
         do {
             try database.saveTabs(tabs, activeTabID: activeTabID, enabledEdges: enabledEdges, repoID: repo.id)
+            NotificationCenter.default.post(name: Self.didPersistTabsNotification, object: self)
         } catch {
             Self.logger.error("Failed to save project tabs: \(error.localizedDescription, privacy: .public)")
         }

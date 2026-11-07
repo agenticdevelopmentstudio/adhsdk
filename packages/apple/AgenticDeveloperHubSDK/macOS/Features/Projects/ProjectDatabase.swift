@@ -26,7 +26,7 @@ public final class ProjectDatabase {
     var database: OpaquePointer?
     public let databasePath: String
 
-    public static let currentSchemaVersion = 4
+    public static let currentSchemaVersion = 5
 
     /// `~/.<token>/Projects.db` — e.g. `~/.coffeegrinder/Projects.db`.
     ///
@@ -131,6 +131,9 @@ public final class ProjectDatabase {
             }
             if try schemaVersion() < 4 {
                 try migration004_tabWorkingDirectory()
+            }
+            if try schemaVersion() < 5 {
+                try migration005_browserJars()
             }
             try execute("COMMIT")
         } catch {
@@ -331,6 +334,54 @@ public final class ProjectDatabase {
             try execute("ALTER TABLE project_tabs ADD COLUMN working_directory TEXT")
         }
         try execute("INSERT INTO schema_migrations (version) VALUES (4)")
+    }
+
+    /// Version 5: the browser's storage jars — which `WKWebsiteDataStore`
+    /// identifier belongs to which worktree or pane.
+    ///
+    /// A table of its own rather than rows in `pane_state`, because a
+    /// worktree jar belongs to no single pane: it is shared by every browser
+    /// pane in that worktree's tabs and has to outlive any one of them. The
+    /// reconciler (`BrowserJarReconciler`) is what deletes rows, by asking
+    /// whether any pane still in a saved layout resolves to them.
+    ///
+    /// `repo_id` is deliberately not a foreign key into `git_repo`: a
+    /// cascade would drop the row while the WebKit store it names stayed on
+    /// disk, and the row is the only record of whose that store was. The
+    /// reconciler removes a jar no live pane resolves to, repo or no repo.
+    /// `pane_node_id` is not a foreign key into `layout_nodes` for the reason
+    /// `pane_state.node_id` is not: `saveTabs` rewrites that whole table.
+    ///
+    /// The two partial unique indexes are the find-or-insert's guarantee:
+    /// one worktree jar per repository and worktree path, one pane jar per
+    /// pane node, so two writers racing to create the same jar collide in
+    /// SQLite instead of each walking away with its own.
+    ///
+    /// `IF NOT EXISTS` throughout, in the style of the migrations above: a
+    /// database left between these statements and the version row recording
+    /// them re-runs them on the next launch, and must not fail
+    /// (`idempotency`).
+    private func migration005_browserJars() throws {
+        try execute("""
+            CREATE TABLE IF NOT EXISTS browser_jars (
+                id TEXT PRIMARY KEY,
+                kind TEXT NOT NULL CHECK(kind IN ('worktree','pane')),
+                repo_id TEXT NOT NULL,
+                worktree_path TEXT NOT NULL,
+                pane_node_id TEXT,
+                label TEXT NOT NULL DEFAULT '',
+                created_at REAL NOT NULL
+            )
+        """)
+        try execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_browser_jars_worktree
+            ON browser_jars(kind, repo_id, worktree_path) WHERE kind = 'worktree'
+        """)
+        try execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_browser_jars_pane
+            ON browser_jars(pane_node_id) WHERE pane_node_id IS NOT NULL
+        """)
+        try execute("INSERT INTO schema_migrations (version) VALUES (5)")
     }
 
     // MARK: - Repositories

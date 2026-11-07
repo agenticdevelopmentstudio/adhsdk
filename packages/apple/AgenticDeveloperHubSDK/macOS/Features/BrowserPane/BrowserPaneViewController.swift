@@ -67,16 +67,29 @@ public final class BrowserPaneViewController: NSViewController {
     /// The pane's own layered settings, when the factory built it with one.
     public var paneSettings: LayeredSettingsStore? { settings as? LayeredSettingsStore }
     private let history: BrowserHistoryStore?
-    private let siteData: BrowserSiteData
+    /// The data store's controls, for the store the web view is on now.
+    private var siteData: BrowserSiteData
     private let fallbackHomeURL: URL
     private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
+    private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
-    public let webView: WKWebView
+    /// The page. Replaced whole when the pane moves to another storage jar,
+    /// because WebKit fixes a web view's data store when it is made.
+    public private(set) var webView: WKWebView
     /// What the page wrote to `console.*` since the last navigation.
     public let consoleLog = BrowserConsoleLog()
+    /// The jar the current web view was built on.
+    private(set) var resolvedJar: ResolvedJar
+    /// What the jar's row was last named, so a title change writes only when
+    /// the name it would write is new.
+    private var jarLabel: String?
+    private var builtAutomation: BrowserAutomation?
     /// The driving seam a model reaches the pane through. Built on first
-    /// use so a pane nobody drives pays nothing for it.
-    public private(set) lazy var automation: BrowserAutomation = {
+    /// use so a pane nobody drives pays nothing for it, and moved to the new
+    /// web view on a rebuild, so a handle taken before it still drives the
+    /// page on screen.
+    public var automation: BrowserAutomation {
+        if let builtAutomation { return builtAutomation }
         let automation = BrowserAutomation(webView: webView, console: consoleLog)
         automation.onDriveStateChange = { [weak self] driving in
             guard let self else { return }
@@ -85,8 +98,12 @@ public final class BrowserPaneViewController: NSViewController {
             if driving { BrowserPaneFocus.shared.note(self) }
             self.drivenBadge.setDriven(driving)
         }
+        builtAutomation = automation
         return automation
-    }()
+    }
+    /// What holds the web view in the view hierarchy; replaced with it.
+    private var pageHost: NSView?
+    private weak var addressBar: NSView?
     let drivenBadge = BrowserDrivenBadge()
     let addressField = NSTextField()
     let backButton = NSButton()
@@ -128,10 +145,31 @@ public final class BrowserPaneViewController: NSViewController {
         self.settings = settings
         self.history = history
         self.fallbackHomeURL = homeURL
-        let configuration = Self.makeConfiguration(settings: settings, consoleLog: consoleLog)
+        let jar = Self.resolveJar(settings: settings, context: context, label: Self.untitledLabel)
+        let configuration = Self.makeConfiguration(settings: settings, consoleLog: consoleLog, jar: jar)
+        self.resolvedJar = jar
         self.siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
-        webView = LiveResizingWebView(frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: configuration)
+        webView = Self.makeWebView(configuration: configuration)
         super.init(nibName: nil, bundle: nil)
+        jarLabel = jar.jarID == nil ? nil : Self.untitledLabel
+        context.jars?.noteUse(of: jar.jarID, by: self)
+        wireWebView()
+        applyCookiePolicy()
+        observeSettings()
+    }
+
+    /// What a new pane jar is named before its page has a title.
+    static let untitledLabel = "Browser"
+
+    /// Task 5 swaps in the browser's own web view subclass here.
+    private static func makeWebView(configuration: WKWebViewConfiguration) -> WKWebView {
+        LiveResizingWebView(frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: configuration)
+    }
+
+    /// Everything a new web view needs from the pane before it shows a page.
+    /// One place, so the web view a rebuild makes is wired exactly as the
+    /// first one was (`dry`).
+    private func wireWebView() {
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true
@@ -142,8 +180,6 @@ public final class BrowserPaneViewController: NSViewController {
         }
         updatePageBackground()
         applyLiveSettings()
-        applyCookiePolicy()
-        observeSettings()
     }
 
     @available(*, unavailable)
@@ -165,19 +201,63 @@ public final class BrowserPaneViewController: NSViewController {
 
     // MARK: - Settings
 
+    /// The data store a pane is on, and which jar that is.
+    struct ResolvedJar {
+        let dataStore: WKWebsiteDataStore
+        /// `nil` for private browsing, which is no jar at all; `.global` for
+        /// a worktree or pane jar that could not be had.
+        let jar: BrowserStorageJar?
+        /// The `browser_jars` row, for a worktree or pane jar.
+        let jarID: UUID?
+
+        /// Whether this pane alone uses the store, so a policy set on it
+        /// changes no other pane.
+        var isOwnedByPane: Bool { jar == nil || jar == .pane }
+    }
+
+    /// Private browsing first — a store that lives only as long as the pane,
+    /// whatever jar is chosen — and otherwise the jar the setting names,
+    /// through the registry. With no registry there is nowhere to keep a
+    /// worktree or pane jar, so the pane is on the shared store.
+    static func resolveJar(settings: SettingsStore, context: BrowserPaneContext, label: String) -> ResolvedJar {
+        if settings.get(UserSettings.browserPrivateBrowsing) {
+            return ResolvedJar(dataStore: .nonPersistent(), jar: nil, jarID: nil)
+        }
+        let wanted = settings.get(UserSettings.browserPrivacyStorageJar)
+        guard let jars = context.jars else {
+            if wanted != .global {
+                logger.debug("browser pane has no jar registry; using the shared jar")
+            }
+            return ResolvedJar(dataStore: .default(), jar: .global, jarID: nil)
+        }
+        let resolution = jars.resolve(wanted, context: context, label: label)
+        return ResolvedJar(dataStore: resolution.dataStore, jar: resolution.jar, jarID: resolution.jarID)
+    }
+
     /// The configuration WebKit fixes when the web view is made. The settings
     /// read here take effect for the *next* browser pane, and the panel says
     /// so beside each of them.
-    static func makeConfiguration(settings: SettingsStore, consoleLog: BrowserConsoleLog) -> WKWebViewConfiguration {
+    static func makeConfiguration(
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        context: BrowserPaneContext = .detached
+    ) -> WKWebViewConfiguration {
+        makeConfiguration(
+            settings: settings,
+            consoleLog: consoleLog,
+            jar: resolveJar(settings: settings, context: context, label: untitledLabel)
+        )
+    }
+
+    static func makeConfiguration(
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        jar: ResolvedJar
+    ) -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
         configuration.userContentController.addUserScript(consoleLog.userScript)
         configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
-        // Private browsing is a data store that lives only as long as the
-        // pane; otherwise the default store, shared with every other browser
-        // pane, so a login in one pane is a login in the next.
-        configuration.websiteDataStore = settings.get(UserSettings.browserPrivateBrowsing)
-            ? .nonPersistent()
-            : .default()
+        configuration.websiteDataStore = jar.dataStore
         configuration.upgradeKnownHostsToHTTPS = settings.get(UserSettings.browserUpgradesToHTTPS)
         configuration.allowsAirPlayForMediaPlayback = settings.get(UserSettings.browserAllowsAirPlay)
         configuration.mediaTypesRequiringUserActionForPlayback = switch settings.get(UserSettings.browserAutoplay) {
@@ -206,15 +286,26 @@ public final class BrowserPaneViewController: NSViewController {
         preferences.isFraudulentWebsiteWarningEnabled = settings.get(UserSettings.browserFraudWarning)
     }
 
-    /// The cookie policy belongs to the data store, not the web view, and the
-    /// persistent store is shared by every non-private pane. The pane still
-    /// applies it, because a private pane's store has no other owner — but
+    /// The cookie policy belongs to the data store, not the web view, and a
+    /// global or worktree store is shared by other panes. The pane still
+    /// applies it, because a private or pane store has no other owner — but
     /// only when the cookie setting itself changes, not on every browser
     /// change: a zoom slider drag is not a reason for every open pane to
     /// rewrite the shared store's policy once per tick.
     private func applyCookiePolicy() {
-        let acceptsCookies = settings.get(UserSettings.browserAcceptsCookies)
+        let acceptsCookies = Self.acceptsCookies(settings: settings, ownsDataStore: resolvedJar.isOwnedByPane)
+        let siteData = siteData
         Task { await siteData.setAcceptsCookies(acceptsCookies) }
+    }
+
+    /// The cookie policy to put on the pane's store. A pane's own override
+    /// counts only on a store the pane alone uses; on a shared one it would
+    /// silently change every sibling's policy, so the shared value wins.
+    static func acceptsCookies(settings: SettingsStore, ownsDataStore: Bool) -> Bool {
+        if !ownsDataStore, let layered = settings as? LayeredSettingsStore {
+            return layered.fallback.get(UserSettings.browserAcceptsCookies)
+        }
+        return settings.get(UserSettings.browserAcceptsCookies)
     }
 
     private func observeSettings() {
@@ -222,10 +313,96 @@ public final class BrowserPaneViewController: NSViewController {
             .filter { $0.hasPrefix("browser.") }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] key in
-                self?.applyLiveSettings()
-                if key == UserSettings.browserAcceptsCookies.name { self?.applyCookiePolicy() }
+                guard let self else { return }
+                self.applyLiveSettings()
+                if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
+                if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
             }
             .store(in: &cancellables)
+        // A pane overriding the cookie setting hides the shared value's
+        // changes from `settings`, but on a shared store it is the shared
+        // value that applies, so it is followed here as well.
+        paneSettings?.fallback.changes
+            .filter { $0 == UserSettings.browserAcceptsCookies.name }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.applyCookiePolicy() }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - Storage jar
+
+    /// The shared jar setting moved. A pane following it — no override of
+    /// its own, not private — moves too, when the jar it would now resolve to
+    /// is not the one it is on. A pane's own jar override is applied by its
+    /// settings sheet, not here: the sheet decides when a rebuild is due.
+    private func storageJarSettingDidChange() {
+        guard resolvedJar.jar != nil else { return }
+        if paneSettings?.hasOverride(UserSettings.browserPrivacyStorageJar) == true { return }
+        guard needsRebuildForJar() else { return }
+        rebuildWebView()
+    }
+
+    /// Whether the jar setting now names a different store from the one the
+    /// web view is on. Answered without making a row: a jar not made yet is
+    /// a different one by definition.
+    func needsRebuildForJar() -> Bool {
+        let wanted = settings.get(UserSettings.browserPrivacyStorageJar)
+        guard let jars = paneContext.jars, wanted != .global,
+              jars.canIsolate(wanted, context: paneContext) else {
+            return resolvedJar.jar != .global
+        }
+        guard resolvedJar.jar == wanted else { return true }
+        return jars.jarID(for: wanted, context: paneContext) != resolvedJar.jarID
+    }
+
+    /// Throws the web view away and makes a new one on the jar the settings
+    /// resolve to now, on the page the old one was showing.
+    ///
+    /// WebKit fixes a web view's data store when it is made, so moving jars is
+    /// a new web view, not a property change. The old one is detached exactly
+    /// as a discarded pane's is, so it lets go of its store — WebKit will not
+    /// remove a store a web view still holds.
+    ///
+    /// Downloads in flight in the old web view are cancelled with it, as are
+    /// its back and forward history and any form a page had half filled in.
+    /// That is accepted rather than worked around: changing a pane's jar is
+    /// rare and deliberate, and carrying a download across two data stores
+    /// would hand one jar's session to another.
+    public func rebuildWebView() {
+        let shownURL = webView.url.flatMap { $0 == Self.blankPage ? nil : $0 }
+        let label = paneTitle
+        detachWebView()
+        webView.removeFromSuperview()
+        pageHost?.removeFromSuperview()
+        pageHost = nil
+
+        let jar = Self.resolveJar(settings: settings, context: paneContext, label: label)
+        let configuration = Self.makeConfiguration(settings: settings, consoleLog: consoleLog, jar: jar)
+        resolvedJar = jar
+        jarLabel = jar.jarID == nil ? nil : label
+        paneContext.jars?.noteUse(of: jar.jarID, by: self)
+        siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
+        webView = Self.makeWebView(configuration: configuration)
+        wireWebView()
+        builtAutomation?.retarget(to: webView)
+        applyCookiePolicy()
+        observeSettings()
+
+        guard isViewLoaded else { return }
+        installPageHost()
+        observeWebView()
+        if view.window != nil { observeFirstResponder() }
+        webView.load(URLRequest(url: shownURL ?? restorationURL))
+    }
+
+    /// Keeps the pane jar's row named after the page, so a list of jars says
+    /// what each was for after its pane is gone.
+    private func updateJarLabel() {
+        guard resolvedJar.jar == .pane, let jarID = resolvedJar.jarID, let jars = paneContext.jars else { return }
+        let label = paneTitle
+        guard label != jarLabel else { return }
+        jarLabel = label
+        jars.updateLabel(jarID: jarID, label: label)
     }
 
     /// Forgets visits older than the retention setting allows. Run as the
@@ -271,21 +448,31 @@ public final class BrowserPaneViewController: NSViewController {
         bar.edgeInsets = NSEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
         bar.translatesAutoresizingMaskIntoConstraints = false
 
+        root.addSubview(bar)
+        addressBar = bar
+        NSLayoutConstraint.activate([
+            bar.topAnchor.constraint(equalTo: root.topAnchor),
+            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            bar.trailingAnchor.constraint(equalTo: root.trailingAnchor)
+        ])
+        installPageHost()
+    }
+
+    /// Puts the current web view under the address bar.
+    private func installPageHost() {
+        guard let bar = addressBar else { return }
         // Held still while a shelf slides beside the pane: the page paints
         // behind its frame, so resized on every frame it trails the edge.
         let page = FrameHoldingView(content: webView, leadsWidthChanges: true)
         page.translatesAutoresizingMaskIntoConstraints = false
-        root.addSubview(bar)
-        root.addSubview(page)
+        view.addSubview(page)
         NSLayoutConstraint.activate([
-            bar.topAnchor.constraint(equalTo: root.topAnchor),
-            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            bar.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             page.topAnchor.constraint(equalTo: bar.bottomAnchor),
-            page.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            page.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            page.bottomAnchor.constraint(equalTo: root.bottomAnchor)
+            page.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            page.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            page.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        pageHost = page
     }
 
     public override func viewDidLoad() {
@@ -302,6 +489,10 @@ public final class BrowserPaneViewController: NSViewController {
     public override func viewDidAppear() {
         super.viewDidAppear()
         BrowserPaneFocus.shared.note(self)
+        observeFirstResponder()
+    }
+
+    private func observeFirstResponder() {
         firstResponderObservation = view.window?.observe(\.firstResponder, options: [.new]) { [weak self] window, _ in
             MainActor.assumeIsolated {
                 guard let self, let responder = window.firstResponder as? NSView,
@@ -350,6 +541,7 @@ public final class BrowserPaneViewController: NSViewController {
 
     private func titleDidChange() {
         onPaneTitleChange?()
+        updateJarLabel()
         guard let visitID = currentVisitID, let title = webView.title, !title.isEmpty else { return }
         file(title, againstVisit: visitID)
     }
@@ -489,8 +681,16 @@ extension BrowserPaneViewController: PaneContentTeardown {
 
     /// Stops the page, cancels its downloads and drops the delegates: a
     /// navigation or a transfer that completes into a discarded pane would
-    /// otherwise call back into it.
+    /// otherwise call back into it. The jar is released, so the reconciler
+    /// may collect it once the layout no longer holds the pane.
     public func paneContentWillBeDiscarded() {
+        detachWebView()
+        paneContext.jars?.endUse(by: self)
+    }
+
+    /// Lets go of the current web view: shared by a discarded pane and by a
+    /// rebuild, which discards the web view and keeps the pane.
+    func detachWebView() {
         observations.removeAll()
         firstResponderObservation = nil
         cancellables.removeAll()
