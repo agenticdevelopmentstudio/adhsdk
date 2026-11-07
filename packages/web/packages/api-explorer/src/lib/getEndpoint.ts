@@ -61,6 +61,25 @@ function shapeOf(path: string): string {
   return path.replace(/\{[^}]*\}/g, '{}')
 }
 
+// The endpoints on each path shape, in method order. Computed once, like the tag index.
+let _byShape: Map<string, EndpointMeta[]> | null = null
+
+function shapeIndex(): Map<string, EndpointMeta[]> {
+  if (!_byShape) {
+    _byShape = new Map()
+    for (const meta of Object.values(API_ENDPOINTS)) {
+      const shape = shapeOf(meta.path)
+      const list = _byShape.get(shape) ?? []
+      list.push(meta)
+      _byShape.set(shape, list)
+    }
+    for (const list of _byShape.values()) {
+      list.sort((a, b) => (METHOD_ORDER[a.method] ?? 9) - (METHOD_ORDER[b.method] ?? 9))
+    }
+  }
+  return _byShape
+}
+
 /**
  * The endpoints `matches` name, in the order they name them, each once. A match with a method is
  * that one endpoint; a match with no method is every endpoint on its path. A match the spec has
@@ -69,13 +88,10 @@ function shapeOf(path: string): string {
 export function matchEndpoints(matches: readonly EndpointMatch[]): EndpointMeta[] {
   const out: EndpointMeta[] = []
   const seen = new Set<string>()
-  const all = Object.values(API_ENDPOINTS)
   for (const match of matches) {
-    const shape = shapeOf(match.path)
     const method = match.method?.toUpperCase()
-    const hits = all
-      .filter((meta) => shapeOf(meta.path) === shape && (!method || meta.method === method))
-      .sort((a, b) => (METHOD_ORDER[a.method] ?? 9) - (METHOD_ORDER[b.method] ?? 9))
+    const onPath = shapeIndex().get(shapeOf(match.path)) ?? []
+    const hits = method ? onPath.filter((meta) => meta.method === method) : onPath
     for (const meta of hits) {
       if (seen.has(meta.key)) continue
       seen.add(meta.key)
