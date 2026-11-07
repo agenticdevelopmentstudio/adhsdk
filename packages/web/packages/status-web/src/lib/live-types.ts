@@ -30,6 +30,9 @@ export interface LiveServiceDTO extends ServiceStatusDTO, EndpointDeploys {
  *  its own, or "unknown" once an in-flight phase has gone unconfirmed too long. */
 export interface LiveDeploymentDTO extends DeploymentDTO {
   effectiveStatus: DeployStatus;
+  /** When a display still showing this snapshot must read an in-flight `effectiveStatus`
+   *  as "unknown"; null when it never lapses. The server sets it; the client compares. */
+  unconfirmedAt: string | null;
 }
 
 /** A Vercel project whose LIVE production deploy is errored/behind (already filtered to stale). */
@@ -64,6 +67,8 @@ export interface PlatformSummary {
   platform: string;
   ready: number;
   building: number;
+  /** When each deploy counted in `building` stops being believed; drop it once passed. */
+  buildingUnconfirmedAt: string[];
   failed: number;
   total: number;
 }

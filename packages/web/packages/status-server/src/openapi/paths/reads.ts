@@ -78,12 +78,18 @@ export const readsSchemas: Schemas = {
       ref('Deployment'),
       {
         type: 'object',
-        required: ['effectiveStatus'],
+        required: ['effectiveStatus', 'unconfirmedAt'],
         properties: {
           effectiveStatus: {
             type: 'string',
             description:
               "`status`, except an in-flight (building/queued) phase no poll has re-confirmed within the window reads 'unknown'",
+          },
+          unconfirmedAt: {
+            type: ['string', 'null'],
+            format: 'date-time',
+            description:
+              "When a display still showing this snapshot must read an in-flight effectiveStatus as 'unknown'; null when it never lapses",
           },
         },
       },
@@ -92,11 +98,16 @@ export const readsSchemas: Schemas = {
   // PlatformSummary (monitor/overview.ts) — one per-platform pill, in canonical platform order.
   PlatformSummary: {
     type: 'object',
-    required: ['platform', 'ready', 'building', 'failed', 'total'],
+    required: ['platform', 'ready', 'building', 'buildingUnconfirmedAt', 'failed', 'total'],
     properties: {
       platform: { type: 'string' },
       ready: { type: 'number' },
       building: { type: 'number' },
+      buildingUnconfirmedAt: {
+        type: 'array',
+        items: { type: 'string', format: 'date-time' },
+        description: 'When each deploy counted in building stops being believed; drop it from building once passed',
+      },
       failed: { type: 'number' },
       total: { type: 'number' },
     },
