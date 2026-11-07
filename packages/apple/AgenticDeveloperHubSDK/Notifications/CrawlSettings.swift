@@ -37,15 +37,11 @@ public struct CrawlSettings: Codable, Sendable, Equatable {
         self.edge = edge
         self.showsBackground = showsBackground
         self.background = background
-        self.backgroundOpacity = Self.clamp(backgroundOpacity, to: 0...1)
-        self.speed = Self.clamp(speed, to: Self.speedRange)
+        self.backgroundOpacity = backgroundOpacity.clamped(to: 0...1)
+        self.speed = speed.clamped(to: Self.speedRange)
         self.leftToRight = leftToRight
-        self.textSize = Self.clamp(textSize, to: Self.textSizeRange)
-        self.itemOpacity = Self.clamp(itemOpacity, to: Self.itemOpacityRange)
-    }
-
-    private static func clamp(_ value: Double, to range: ClosedRange<Double>) -> Double {
-        min(max(value, range.lowerBound), range.upperBound)
+        self.textSize = textSize.clamped(to: Self.textSizeRange)
+        self.itemOpacity = itemOpacity.clamped(to: Self.itemOpacityRange)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -61,7 +57,7 @@ public struct CrawlSettings: Codable, Sendable, Equatable {
                 ?? base.edge,
             showsBackground: try container.decodeIfPresent(Bool.self, forKey: .showsBackground)
                 ?? base.showsBackground,
-            background: try container.decodeIfPresent(NoticeColor.self, forKey: .background) ?? base.background,
+            background: try container.decodeNoticeColorIfPresent(forKey: .background, default: base.background),
             backgroundOpacity: try container.decodeIfPresent(Double.self, forKey: .backgroundOpacity)
                 ?? base.backgroundOpacity,
             speed: try container.decodeIfPresent(Double.self, forKey: .speed) ?? base.speed,

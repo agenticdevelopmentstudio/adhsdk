@@ -184,7 +184,9 @@ public struct NoticeRoutingRules: Codable, Sendable, Equatable {
                 decoded[urgency] = raw[urgency.rawValue] ?? Self.defaultStyle(for: urgency)
             }
             self.styles = decoded
-            self.overrides = try container.decodeIfPresent([Override].self, forKey: .overrides) ?? base.overrides
+            // An override this build can't read (an unknown target, say) is skipped.
+            self.overrides = try container.decodeLossyArrayIfPresent([Override].self, forKey: .overrides)
+                ?? base.overrides
             self.screens = try container.decodeIfPresent(String.self, forKey: .screens)
                 .flatMap(ScreenSelection.init(rawValue:)) ?? base.screens
             self.crawl = try container.decodeIfPresent(CrawlSettings.self, forKey: .crawl) ?? base.crawl

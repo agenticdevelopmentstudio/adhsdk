@@ -36,9 +36,9 @@ public struct NoticeProfile: Codable, Sendable, Equatable {
         public var opacity: Double
 
         public init(blur: Double = 0.6, color: NoticeColor = .system, opacity: Double = 0.55) {
-            self.blur = min(max(blur, 0), 1)
+            self.blur = blur.clamped(to: 0...1)
             self.color = color
-            self.opacity = min(max(opacity, 0), 1)
+            self.opacity = opacity.clamped(to: 0...1)
         }
 
         private enum CodingKeys: String, CodingKey {
@@ -50,7 +50,7 @@ public struct NoticeProfile: Codable, Sendable, Equatable {
             let base = FullScreenAppearance()
             self.init(
                 blur: try container.decodeIfPresent(Double.self, forKey: .blur) ?? base.blur,
-                color: try container.decodeIfPresent(NoticeColor.self, forKey: .color) ?? base.color,
+                color: try container.decodeNoticeColorIfPresent(forKey: .color, default: base.color),
                 opacity: try container.decodeIfPresent(Double.self, forKey: .opacity) ?? base.opacity)
         }
     }

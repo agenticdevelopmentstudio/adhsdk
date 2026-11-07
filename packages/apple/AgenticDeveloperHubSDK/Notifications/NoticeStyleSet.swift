@@ -35,10 +35,12 @@ public struct NoticeStyleSet: Codable, Sendable, Equatable {
         case items, autoDismiss, snooze
     }
 
+    /// An item this build can't read (an unknown style, say) is skipped; the
+    /// rest of the set, and of the rules holding it, survive.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            items: try container.decodeIfPresent([NoticeProfile].self, forKey: .items) ?? [],
+            items: try container.decodeLossyArrayIfPresent([NoticeProfile].self, forKey: .items) ?? [],
             autoDismiss: try container.decodeIfPresent(TimeInterval.self, forKey: .autoDismiss),
             snooze: try container.decodeIfPresent(SnoozeSettings.self, forKey: .snooze) ?? .init())
     }
