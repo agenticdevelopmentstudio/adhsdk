@@ -4,6 +4,7 @@ import { BarList } from "@adh-sdk/ui/blocks/bar-list";
 import { formatCount } from "@adh-sdk/ui/blocks/trend-chart";
 import { Stat, StatStrip } from "@adh-sdk/ui/components/stat";
 import { ANALYTICS_SOURCE_COLORS } from "../lib/colors";
+import { siteReportFor } from "../lib/dashboard-format";
 import type {
   AnalyticsRange,
   AnalyticsSectionData,
@@ -181,7 +182,7 @@ export function AnalyticsSitePage({
   refreshing,
   posthogUrl,
 }: AnalyticsSitePageProps): ReactElement {
-  const report = views.siteReports[site] ?? NO_REPORT;
+  const report = siteReportFor(views.siteReports, site, NO_REPORT);
   const failures = views.failures;
   const { posthog, vercel, health, pageviews, breakdowns, projects, vitals, empty } = report;
   const bothCharted = pageviews !== null && pageviews.posthog !== null && pageviews.vercel !== null;

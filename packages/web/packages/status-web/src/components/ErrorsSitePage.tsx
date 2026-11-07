@@ -5,7 +5,7 @@ import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-tab
 import { Stat, StatStrip } from "@adh-sdk/ui/components/stat";
 import { useNow } from "../hooks/use-now";
 import { SITE_ERROR_SERIES_COLORS } from "../lib/colors";
-import { bucketDetail, bucketLabel } from "../lib/dashboard-format";
+import { bucketDetail, bucketLabel, siteReportFor } from "../lib/dashboard-format";
 import type {
   DashboardSections,
   ErrorsSectionData,
@@ -45,7 +45,7 @@ const NO_REPORT: ErrorsSiteReport = { health: null, chart: null, errors: [], req
  */
 export function ErrorsSitePage({ site, sections, views, posthogOn, refreshing, posthogUrl }: ErrorsSitePageProps): ReactElement {
   const now = useNow();
-  const { health, chart, errors, requests, empty } = views.siteReports[site] ?? NO_REPORT;
+  const { health, chart, errors, requests, empty } = siteReportFor(views.siteReports, site, NO_REPORT);
   const failures = views.siteFailures;
   const truncated = sections.detail.data?.truncated ? TRUNCATED_NOTE : undefined;
 
