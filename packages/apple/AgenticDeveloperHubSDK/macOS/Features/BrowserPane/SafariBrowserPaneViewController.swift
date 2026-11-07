@@ -33,7 +33,7 @@ public final class SafariBrowserPaneViewController: WebBrowserPaneViewController
         self.webKitEngine = engine
         super.init(
             engine: engine,
-            engineName: "Safari",
+            engineKind: .safari,
             minimizedSymbol: "safari",
             store: store,
             settings: settings,

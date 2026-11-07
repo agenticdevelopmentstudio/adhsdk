@@ -292,6 +292,60 @@ targets:
       - sdk: ColorSync.framework
       - sdk: IOKit.framework
 
+  # The Chrome Web Browser pane, over the Chromium Embedded Framework. A mixed
+  # target: an Objective-C++ bridge (Chromium/Bridge, Chromium/Private) wraps
+  # CEF's C++ API so the Swift half (Chromium/Sources) sees plain
+  # Objective-C. `cef.py stage` puts CEF's headers and the
+  # libcef_dll_wrapper.a it compiles in $(BUILT_PRODUCTS_DIR)/CEF before the
+  # compile; CEF itself is loaded at runtime (cef_load_library), never linked,
+  # and a host embeds it and the helper bundles with `cef.py embed`.
+  AgenticDeveloperHubSDKChromium:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Chromium/Bridge
+        headerVisibility: public
+      - path: Chromium/Private
+        headerVisibility: project
+      - Chromium/Sources
+    preBuildScripts:
+      - name: Stage CEF
+        basedOnDependencyAnalysis: false
+        script: |
+          exec /usr/bin/python3 "$SRCROOT/../../../tools/apple/cef.py" stage \
+            --dest "$BUILT_PRODUCTS_DIR/CEF" --archs "$ARCHS"
+      - name: SwiftLint
+        basedOnDependencyAnalysis: false
+        script: |
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            export PATH="/opt/homebrew/bin:$PATH"
+          fi
+          if which swiftlint >/dev/null; then
+            swiftlint lint --quiet --strict
+          else
+            echo "warning: SwiftLint not installed; brew install swiftlint to enable"
+          fi
+    settings:
+      base:
+        DEFINES_MODULE: YES
+        CLANG_ENABLE_OBJC_ARC: YES
+        CLANG_CXX_LANGUAGE_STANDARD: c++20
+        GCC_ENABLE_CPP_RTTI: NO
+        GCC_ENABLE_CPP_EXCEPTIONS: NO
+        GCC_PREPROCESSOR_DEFINITIONS: "$(inherited) NDEBUG=1 CEF_USE_SANDBOX=1"
+        # A system path, so CEF's headers' warnings under Xcode's warning set
+        # stay CEF's and warnings-as-errors still holds for this target's own
+        # code. The module (the public headers) holds no C++.
+        SYSTEM_HEADER_SEARCH_PATHS: "$(inherited) $(BUILT_PRODUCTS_DIR)/CEF"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(BUILT_PRODUCTS_DIR)/CEF/lib"
+        OTHER_LDFLAGS: "$(inherited) -weak_framework AppIntents -lcef_dll_wrapper"
+    dependencies:
+      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKCoreUI
+      - target: AgenticDeveloperHubSDKCoreMacOS
+      - target: AgenticDeveloperHubSDKDatabase
+      - target: AgenticDeveloperHubSDKMacOS
+
   AgenticDeveloperHubSDKPermissionsUI:
     type: framework
     platform: macOS
@@ -1575,6 +1629,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKDisplays
       - AgenticDeveloperHubSDKScripting
       - AgenticDeveloperHubSDKMacOS
+      - AgenticDeveloperHubSDKChromium
       - AgenticDeveloperHubSDKSystemMonitor
       - AgenticDeveloperHubSDKSystemMonitorUI
       - AgenticDeveloperHubSDKDatabase
@@ -1622,6 +1677,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKDisplays
       - AgenticDeveloperHubSDKScripting
       - AgenticDeveloperHubSDKMacOS
+      - AgenticDeveloperHubSDKChromium
       - AIPluginKitTests
       - AgenticDeveloperHubSDKCoreMacOSTests
       - AgenticDeveloperHubSDKCoreTests
@@ -1658,6 +1714,19 @@ aggregateTargets:
       - AgenticDeveloperHubSDKActivityTests
 
 schemes:
+  AgenticDeveloperHubSDKChromium:
+    build:
+      targets:
+        AgenticDeveloperHubSDKChromium: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
   AgenticDeveloperHubSDKDatabase:
     build:
       targets:

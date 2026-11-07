@@ -90,6 +90,17 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             return text
         }
 
+        /// A browser engine by its raw value, Safari when not given. A name
+        /// that is no engine is an error, never a silent Safari.
+        func engine(_ key: String) throws -> BrowserEngineKind {
+            guard let name = optionalString(key) else { return .safari }
+            guard let engine = BrowserEngineKind(rawValue: name.lowercased()) else {
+                let names = BrowserEngineKind.allCases.map(\.rawValue).joined(separator: " or ")
+                throw ToolError(sentence: "\(tool) engine must be \(names), not \(name)")
+            }
+            return engine
+        }
+
         func int(_ key: String) throws -> Int {
             guard let number = optionalInt(key) else { throw ToolError(sentence: "\(tool) needs \(key)") }
             return number
@@ -185,7 +196,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         try requireSwitches(for: name)
         if name == "browser_open" {
             let url = args.optionalString("url") == nil ? openWithoutURLPage() : try args.url("url")
-            let pane = try directory.openBrowserPane(besidePane: caller)
+            let engine = try args.engine("engine")
+            let pane = try directory.openBrowserPane(besidePane: caller, engine: engine)
             return try await pane.automation.drive {
                 try self.requireSwitches(for: name)
                 let delta = try await pane.automation.navigate(to: url)
@@ -328,7 +340,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let rows: [[String: Any]] = panes.map { pane in
             [
                 "id": pane.id, "title": pane.title, "url": pane.url, "project": pane.project,
-                "tab": pane.tab, "is_default": pane.id == defaultID
+                "tab": pane.tab, "engine": pane.engine.rawValue, "is_default": pane.id == defaultID
             ]
         }
         let data = (try? JSONSerialization.data(withJSONObject: rows, options: [.sortedKeys])) ?? Data()
@@ -351,8 +363,11 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     }
 
     static let definitions: [ToolDefinition] = [
-        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, and which one is the default for this caller.", [:]),
-        tool("browser_open", "Open a new Browser pane beside the caller and load a URL (http or https), or the home page (else a blank page) when no URL is given.", ["url": ToolJSONSchema.string("The page to load; optional")]),
+        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, engine (safari or chrome), and which one is the default for this caller.", [:]),
+        tool("browser_open", "Open a new Browser pane beside the caller and load a URL (http or https), or the home page (else a blank page) when no URL is given. Every other tool drives a Safari pane and a Chrome pane the same way.", [
+            "url": ToolJSONSchema.string("The page to load; optional"),
+            "engine": ToolJSONSchema.string("safari (WebKit) or chrome (Chromium); optional, safari by default")
+        ]),
         tool("browser_navigate", "Load a URL in a Browser pane.", ["url": ToolJSONSchema.string("The page to load"), "pane_id": paneID], required: ["url"]),
         tool("browser_back", "Go back one page.", ["pane_id": paneID]),
         tool("browser_forward", "Go forward one page.", ["pane_id": paneID]),

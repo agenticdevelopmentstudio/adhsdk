@@ -86,12 +86,12 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
                 body: "Most settings apply to every open browser pane as you change them. "
                     + "A few are fixed when a pane is created — private browsing, the "
                     + "HTTPS upgrade, autoplay and AirPlay in Safari panes; private "
-                    + "browsing, minimum font size and autoplay in Chrome panes — and "
+                    + "browsing and minimum font size in Chrome panes — and "
                     + "those say so beside the control: they apply to panes opened after "
                     + "the change. JavaScript and Lockdown Mode apply to the next page a "
-                    + "Safari pane loads. Chromium reads the remote debugging port and "
-                    + "hardware acceleration once, when it starts, so those apply the "
-                    + "next time the app opens."
+                    + "Safari pane loads. Chromium reads autoplay, the remote debugging "
+                    + "port and hardware acceleration once, when it starts, so in Chrome "
+                    + "panes those apply the next time the app opens."
             )
         ])
     }
@@ -542,9 +542,12 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
                 title: "Playback",
                 body: "Autoplay decides whether a page may start video or audio without a "
                     + "click: allowed, only without sound (the usual browser default — a "
-                    + "muted video plays, one with sound waits), or never. It is fixed "
-                    + "when a browser pane is created and applies to panes opened after "
-                    + "the change. AirPlay is Safari's alone and is in the Safari topic."
+                    + "muted video plays, one with sound waits), or never. A Safari pane "
+                    + "fixes it when the pane is created, so it applies to Safari panes "
+                    + "opened after the change; Chromium reads it once when it starts, so "
+                    + "Chrome panes follow it the next time the app opens. Never in a "
+                    + "Chrome pane still lets a muted video play: Chromium has no policy "
+                    + "that stops one. AirPlay is Safari's alone and is in the Safari topic."
             ),
             .init(
                 title: "Camera and Microphone",
@@ -576,7 +579,8 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
             title: "Autoplay",
             setting: UserSettings.browserAutoplay,
             choices: BrowserAutoplayPolicy.allCases.map { .init(label: $0.label, value: $0) },
-            explanation: "Applies to browser panes opened after the change."
+            explanation: "Applies to Safari panes opened after the change, and to Chrome "
+                + "panes the next time the app opens."
         )
         let autoplayView = ComposableSettings.PopupMenuChoiceView(viewModel: autoplay)
         _ = autoplayView.popUpButton.accessibilityID("settings.browser.media.autoplay")

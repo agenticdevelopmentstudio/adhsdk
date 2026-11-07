@@ -4,7 +4,7 @@
     {
       "name": "apple-adt",
       "paths": [
-        "packages/apple/AgenticDeveloperHubSDK/"
+        "packages/apple/AgenticDeveloperHubSDK/SDK/"
       ],
       "depends_on": [],
       "shared": true,
@@ -249,6 +249,21 @@
       "holds": "AgenticDeveloperHubSDKMacOS. The feature-rich framework the host app, plugins, Whippet and Stenographer all consume."
     },
     {
+      "name": "apple-chromium",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/Chromium/"
+      ],
+      "depends_on": [
+        "apple-macos",
+        "apple-core",
+        "apple-coreui",
+        "apple-coremacos",
+        "apple-database"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKChromium. The Chrome Web Browser pane over the Chromium Embedded Framework: an Objective-C++ bridge (Bridge/, Private/) to CEF's C++ API, the BrowserEngine adapter and pane in Swift (Sources/), and the helper executable's source (Helper/, compiled by tools/apple/cef.py embed, not by the framework). CEF is pinned in Chromium/CEF.json."
+    },
+    {
       "name": "apple-htdv",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/HTDV/"
@@ -378,7 +393,8 @@
         "apple-systemmonitorui",
         "apple-adt",
         "apple-hubclient",
-        "apple-hubauth"
+        "apple-hubauth",
+        "apple-chromium"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

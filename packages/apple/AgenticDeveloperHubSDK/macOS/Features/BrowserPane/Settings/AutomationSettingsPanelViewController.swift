@@ -36,8 +36,11 @@ public final class AutomationSettingsPanelViewController: ComposableSettings.Set
         ComposableSettings.PanelHelp(topics: [
             .init(title: "Automation",
                   body: "A model — Claude Code in a terminal pane, or the app's own chat — can drive "
-                      + "the Browser pane: read the page, click, type, and take screenshots. "
-                      + "Browser says what it may do; Endpoint says how it connects.")
+                      + "the Safari Web Browser and Chrome Web Browser panes: read the page, click, "
+                      + "type, and take screenshots. Both panes answer to the same tools in the same "
+                      + "way; browser_open takes an engine, safari or chrome, and opens a Safari pane "
+                      + "when it is given none. Browser says what it may do; Endpoint says how it "
+                      + "connects.")
         ])
     }
 

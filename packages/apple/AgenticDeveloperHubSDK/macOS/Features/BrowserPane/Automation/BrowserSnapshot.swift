@@ -111,12 +111,15 @@ public enum BrowserSnapshotRenderer {
 public enum BrowserSnapshotRuntime {
     public static let version = 1
 
+    /// The automation world's name, for an engine that names worlds itself.
+    public static let worldName = "adkitchen.automation"
+
     /// The content world the runtime lives in, made once and kept. Every call
     /// must pass this same object: on macOS 26 a second `WKContentWorld.world(name:)`
     /// with the same name runs in a fresh world, so a runtime installed through
     /// one is invisible to a call made through the other.
     @MainActor
-    public static let world: WKContentWorld = .world(name: "adkitchen.automation")
+    public static let world: WKContentWorld = .world(name: worldName)
 
     public static var source: String {
         get throws {
