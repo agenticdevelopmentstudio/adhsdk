@@ -67,20 +67,45 @@ final class NotificationStylesSettingsPanelTests: XCTestCase {
         let topic = NotificationsSettingsTopicPanel(general: general, handler: RecordingHandler())
         topic.loadViewIfNeeded()
         XCTAssertEqual(topic.descriptor.title, "Notifications")
-        XCTAssertEqual(topic.panels.map(\.descriptor.title), ["General", "Styles", "Overrides", "Behavior"])
+        XCTAssertEqual(topic.panels.map(\.descriptor.title), ["General", "Styles", "Crawl", "Overrides", "Behavior"])
         XCTAssertTrue(topic.panels.first === general)
 
         topic.behavior.loadViewIfNeeded()
         let behavior = Self.strings(in: topic.behavior.view).joined(separator: "\n")
         XCTAssertTrue(behavior.contains("Stacks, escalation and floods"))
         XCTAssertTrue(behavior.contains("Sharing and keyboard"))
+        XCTAssertFalse(behavior.contains("Crawl direction"), "moved to the Crawl topic")
         XCTAssertTrue(behavior.contains("Unavailable — needs the Focus Status entitlement"))
         topic.overrides.loadViewIfNeeded()
         XCTAssertEqual(Self.buttons(in: topic.overrides.view, titled: "Add").count, 1)
     }
 
+    func testTopicOrderWithExtras() {
+        _ = NSApplication.shared
+        let general = ComposableSettings.SettingsPanelViewController(
+            with: ComposableSettings.SettingsPanelDescriptor(title: "General"))
+        let keyboard = ComposableSettings.SettingsPanelViewController(
+            with: ComposableSettings.SettingsPanelDescriptor(title: "Keyboard"))
+        let topic = NotificationsSettingsTopicPanel(
+            general: general, handler: RecordingHandler(), store: makeTestStore(), extraTopics: [keyboard])
+        topic.loadViewIfNeeded()
+        XCTAssertEqual(
+            topic.panels.map(\.descriptor.title),
+            ["General", "Styles", "Crawl", "Overrides", "Behavior", "Keyboard"])
+    }
+
+    func testOverrideTargetChoices() {
+        _ = NSApplication.shared
+        let panel = NotificationOverridesSettingsPanel(store: makeTestStore())
+        panel.loadViewIfNeeded()
+        XCTAssertEqual(
+            panel.targetPopup.itemTitles,
+            Notice.Urgency.allCases.map { "Use \(NotificationStylesSettingsPanel.title(for: $0)) style" }
+                + ["Don't show"])
+    }
+
     private static let propertyLabels = [
-        "Style", "Position", "Layer", "Dismiss after"
+        "Dismiss after", "Can be snoozed"
     ]
 
     /// An urgency's row shows that urgency's own style set: an override that

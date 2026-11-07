@@ -16,6 +16,8 @@ final class NotificationOverridesSettingsPanel: ComposableSettings.SettingsPanel
     private let overrideList = NSStackView()
     private let newOverrideSource = ThemedTextField()
     private let newOverrideCategory = ThemedTextField()
+    /// The target popup of the new-override row: "Use <Urgency> style" for each urgency, then "Don't show".
+    private(set) var targetPopup = NSPopUpButton()
     private var newOverrideUrgency: Notice.Urgency?
     private var newOverrideTarget: NoticeRoutingRules.Override.Target = .style(.fyi)
 
@@ -59,6 +61,7 @@ final class NotificationOverridesSettingsPanel: ComposableSettings.SettingsPanel
             targets, selected: .style(.fyi),
             title: { $0 == .hide ? Styles.targetTitle($0) : "Use " + Styles.targetTitle($0) },
             onChange: { [weak self] target in self?.newOverrideTarget = target })
+        targetPopup = stylePopup
         let add = controls.button("Add") { [weak self] in self?.addOverride() }
         group.addSettingSubview(NSView.makeSettingsRow([
             newOverrideSource, newOverrideCategory, urgencyPopup, stylePopup, add

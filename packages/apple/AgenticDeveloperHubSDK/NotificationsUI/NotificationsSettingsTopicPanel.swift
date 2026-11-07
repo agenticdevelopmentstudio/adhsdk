@@ -17,16 +17,21 @@ public final class NotificationsSettingsTopicPanel: ComposableSettings.SettingsP
 
     private let general: any ComposableSettingsPanel
     let styles: NotificationStylesSettingsPanel
+    let crawl: NotificationCrawlSettingsPanel
+    private let extraTopics: [ComposableSettings.SettingsPanelViewController]
     let overrides: NotificationOverridesSettingsPanel
     let behavior: NotificationBehaviorSettingsPanel
 
     public init(
         general: any ComposableSettingsPanel,
         handler: NoticeActionHandler,
-        store: SettingsStore = UserSettings.shared
+        store: SettingsStore = UserSettings.shared,
+        extraTopics: [ComposableSettings.SettingsPanelViewController] = []
     ) {
         self.general = general
         self.styles = NotificationStylesSettingsPanel(handler: handler, store: store)
+        self.crawl = NotificationCrawlSettingsPanel(store: store)
+        self.extraTopics = extraTopics
         self.overrides = NotificationOverridesSettingsPanel(store: store)
         self.behavior = NotificationBehaviorSettingsPanel(store: store)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
@@ -38,7 +43,7 @@ public final class NotificationsSettingsTopicPanel: ComposableSettings.SettingsP
     public required init?(coder: NSCoder) { fatalError() }
 
     /// The topics in sidebar order.
-    var topics: [any ComposableSettingsPanel] { [general, styles, overrides, behavior] }
+    var topics: [any ComposableSettingsPanel] { [general, styles, crawl, overrides, behavior] + extraTopics }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
