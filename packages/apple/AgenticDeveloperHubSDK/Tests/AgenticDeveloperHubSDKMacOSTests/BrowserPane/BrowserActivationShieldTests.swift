@@ -232,10 +232,18 @@ final class BrowserActivationShieldTests: XCTestCase {
     /// the main frame and its same-origin frames, without waiting for a load.
     func testLoweringTheShieldLiftsItFromTheLivePage() async throws {
         let webView = try await loadedWebView("<iframe srcdoc='<p>inner</p>'></iframe>")
+        let frameReady = try await waitFor(
+            "String(frames.length === 1 && frames[0].document.readyState === 'complete')",
+            toBe: "true", in: webView)
+        guard frameReady == "true" else { throw XCTSkip("the srcdoc frame did not load in this test host") }
         let shield = BrowserActivationShield(webView: webView)
         shield.apply(active: true)
-        let raised = try await waitFor("typeof window.__adkActivationShield", toBe: "function", in: webView)
-        XCTAssertEqual(raised, "function")
+        // Both halves are shielded before the lift, so the lift's answer for
+        // the frame below cannot pass because the frame was never reached.
+        let raised = try await waitFor(
+            "typeof window.__adkActivationShield + ',' + typeof frames[0].__adkActivationShield",
+            toBe: "function,function", in: webView)
+        XCTAssertEqual(raised, "function,function")
 
         shield.apply(active: false)
 
@@ -243,10 +251,11 @@ final class BrowserActivationShieldTests: XCTestCase {
         [typeof window.__adkActivationShield,
          String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined),
          String(Object.getOwnPropertyDescriptor(document, 'hasFocus') === undefined),
-         frames.length ? typeof frames[0].__adkActivationShield : 'undefined'].join(',')
+         typeof frames[0].__adkActivationShield,
+         String(Object.getOwnPropertyDescriptor(frames[0].document, 'hidden') === undefined)].join(',')
         """
-        let answer = try await waitFor(probe, toBe: "undefined,true,true,undefined", in: webView)
-        XCTAssertEqual(answer, "undefined,true,true,undefined")
+        let answer = try await waitFor(probe, toBe: "undefined,true,true,undefined,true", in: webView)
+        XCTAssertEqual(answer, "undefined,true,true,undefined,true")
 
         // The window-level events reach the page's listeners again.
         let seen = try await webView.evaluateJavaScript("""
@@ -267,11 +276,77 @@ final class BrowserActivationShieldTests: XCTestCase {
         let source = try XCTUnwrap(BrowserActivationShield.source)
         _ = try await webView.evaluateJavaScript(source)
         _ = try await webView.evaluateJavaScript(source)
-        _ = try await webView.evaluateJavaScript(BrowserActivationShield.liftSource)
+        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.liftSource))
         let answer = try await webView.evaluateJavaScript("""
         [typeof window.__adkActivationShield,
          String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined)].join(',')
         """) as? String
         XCTAssertEqual(answer, "undefined,true")
+    }
+
+    /// A value the page put under the shim's name first neither makes the
+    /// shield skip the window nor is run as the lift.
+    func testAPageDefinedRecordCannotSuppressOrHijackTheShield() async throws {
+        let webView = try await loadedWebView("<p>forged</p>")
+        _ = try await webView.evaluateJavaScript("""
+        window.__forgedLiftRan = false;
+        window.__adkActivationShield = function (challenge) {
+          return { proof: challenge + '|guess', doc: document,
+                   lift: function () { window.__forgedLiftRan = true; } };
+        };
+        true
+        """)
+        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.source))
+        let raised = try await webView.evaluateJavaScript("""
+        String(Object.getOwnPropertyDescriptor(document, 'hidden') !== undefined)
+        """) as? String
+        XCTAssertEqual(raised, "true", "the forged record did not make the shield skip the window")
+
+        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.liftSource))
+        let lifted = try await webView.evaluateJavaScript("""
+        [String(window.__forgedLiftRan),
+         String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined)].join(',')
+        """) as? String
+        XCTAssertEqual(lifted, "false,true", "the shim's own lift ran, the page's did not")
+    }
+
+    /// The record is per document: a frame whose first navigation away from
+    /// its initial about:blank keeps its Window gets the document-start copy
+    /// on the new document, instead of being taken for shielded already.
+    func testAReusedWindowsNewDocumentIsShielded() async throws {
+        let webView = try await loadedWebView("<p>outer</p>")
+        let shield = BrowserActivationShield(webView: webView)
+        shield.apply(active: true)
+        webView.configuration.userContentController.addUserScript(try XCTUnwrap(shield.userScript))
+        let made = try await webView.evaluateJavaScript("""
+        (function () {
+          var frame = document.createElement('iframe');
+          frame.id = 'late';
+          document.body.appendChild(frame);
+          return String(frames.length);
+        })()
+        """) as? String
+        XCTAssertEqual(made, "1")
+        // The immediate run, again, reaches the frame on its initial document.
+        _ = try await webView.evaluateJavaScript(try XCTUnwrap(BrowserActivationShield.source))
+        let first = try await webView.evaluateJavaScript(
+            "frames[0].__reuseMark = 'kept'; typeof frames[0].__adkActivationShield"
+        ) as? String
+        XCTAssertEqual(first, "function")
+
+        _ = try await webView.evaluateJavaScript(
+            "document.getElementById('late').srcdoc = '<p>inner</p>'; true")
+        let navigated = try await waitFor(
+            "String(frames[0].document.body !== null && frames[0].document.body.textContent === 'inner')",
+            toBe: "true", in: webView)
+        guard navigated == "true" else { throw XCTSkip("the frame did not navigate in this test host") }
+        let reused = try await webView.evaluateJavaScript("String(frames[0].__reuseMark)") as? String
+        guard reused == "kept" else {
+            throw XCTSkip("WebKit made a new Window for the frame here, so reuse cannot be observed")
+        }
+        let answer = try await waitFor(
+            "String(Object.getOwnPropertyDescriptor(frames[0].document, 'hidden') !== undefined)",
+            toBe: "true", in: webView)
+        XCTAssertEqual(answer, "true", "the new document in the reused Window is shielded")
     }
 }
