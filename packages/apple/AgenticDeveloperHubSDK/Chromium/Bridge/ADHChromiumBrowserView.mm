@@ -435,6 +435,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
     // An empty cache path keeps everything in memory, gone with the context.
     CefRequestContextSettings contextSettings;
     context = CefRequestContext::CreateContext(contextSettings, nullptr);
+    ADHApplyCookiePolicy(context);
   }
 
   [ADHChromiumRuntime.shared browserDidOpen];

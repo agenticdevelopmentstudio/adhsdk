@@ -61,8 +61,10 @@ NS_SWIFT_NAME(ChromiumRuntime) NS_SWIFT_UI_ACTOR
 /// app terminates.
 - (void)shutdown;
 
-/// Whether sites may read and write cookies in every Chrome pane. Read on
-/// Chromium's network thread for each cookie, so it applies at once.
+/// Whether sites may read and write cookies in every Chrome pane. Setting it
+/// writes the profile's default cookie setting, which covers script and
+/// service-worker access as well as requests, and every request's cookie
+/// filter reads it too, so it applies at once. Main thread only.
 @property (atomic) BOOL acceptsCookies;
 
 /// Removes every cookie of the shared profile.

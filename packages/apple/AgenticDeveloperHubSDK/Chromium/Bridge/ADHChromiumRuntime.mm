@@ -52,12 +52,20 @@ bool gPumping = false;
 std::atomic<bool> gRunning{false};
 /// The `-[NSApplication isHandlingSendEvent]` flag CEF reads.
 BOOL gHandlingSendEvent = NO;
+/// `acceptsCookies`, read by every request's cookie filter on the network
+/// thread.
+std::atomic<bool> gAcceptsCookies{true};
 
 class ADHCefApp : public CefApp, public CefBrowserProcessHandler {
  public:
   ADHCefApp(std::vector<std::pair<std::string, std::string>> switches) : switches_(std::move(switches)) {}
 
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
+
+  void OnContextInitialized() override {
+    // The global context takes settings only once it exists.
+    ADHApplyCookiePolicy(CefRequestContext::GetGlobalContext());
+  }
 
   void OnBeforeCommandLineProcessing(const CefString& process_type,
                                      CefRefPtr<CefCommandLine> command_line) override {
@@ -129,6 +137,25 @@ void ADHInstallApplicationProtocol(void) {
 
 }  // namespace
 
+void ADHApplyCookiePolicy(CefRefPtr<CefRequestContext> context) {
+  if (!context) {
+    return;
+  }
+  const bool accepts = gAcceptsCookies.load();
+  // The content setting is the store-wide switch; an in-memory (private)
+  // context refuses a default content setting, so the same default is also
+  // written as the profile preference it is stored in.
+  context->SetContentSetting(CefString(), CefString(), CEF_CONTENT_SETTING_TYPE_COOKIES,
+                             accepts ? CEF_CONTENT_SETTING_VALUE_ALLOW : CEF_CONTENT_SETTING_VALUE_BLOCK);
+  CefRefPtr<CefValue> value = CefValue::Create();
+  value->SetInt(accepts ? CEF_CONTENT_SETTING_VALUE_ALLOW : CEF_CONTENT_SETTING_VALUE_BLOCK);
+  CefString error;
+  if (context->CanSetPreference("profile.default_content_setting_values.cookies") &&
+      !context->SetPreference("profile.default_content_setting_values.cookies", value, error)) {
+    NSLog(@"Chromium refused the cookie preference: %s", error.ToString().c_str());
+  }
+}
+
 static void ADHPumpChromium(void) {
   if (gPumping || !gRunning.load()) {
     return;
@@ -180,11 +207,15 @@ static void ADHPumpChromium(void) {
                                     CHROME_VERSION_PATCH];
 }
 
-- (instancetype)init {
-  if ((self = [super init])) {
-    _acceptsCookies = YES;
+- (BOOL)acceptsCookies {
+  return gAcceptsCookies.load();
+}
+
+- (void)setAcceptsCookies:(BOOL)acceptsCookies {
+  gAcceptsCookies.store(acceptsCookies);
+  if (gRunning.load()) {
+    ADHApplyCookiePolicy(CefRequestContext::GetGlobalContext());
   }
-  return self;
 }
 
 - (BOOL)isRunning {
