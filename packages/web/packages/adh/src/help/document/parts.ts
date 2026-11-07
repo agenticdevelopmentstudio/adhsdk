@@ -53,6 +53,8 @@ export interface Substep {
 export interface TutorialStep extends DocSection {
   before: string[];
   substeps: Substep[];
+  /** The number the list's first item carries, from its `start` attribute; 1 when it has none. */
+  start: number;
   after: string[];
 }
 
@@ -120,6 +122,12 @@ export function sectionsOf(blocks: readonly string[]): { lead: string[]; section
 
 const ORDERED = /^\s*<ol(?:\s[^>]*)?>([\s\S]*)<\/ol>\s*$/;
 
+/** The number an `<ol>` block's first item carries. */
+function listStart(block: string): number {
+  const start = /^\s*<ol\s[^>]*\bstart="?(\d+)/.exec(block);
+  return start ? Number(start[1]) : 1;
+}
+
 /** The top-level items of a list's inner HTML, an item's own nested lists kept inside it. */
 export function listItems(inner: string): string[] {
   const items: string[] = [];
@@ -142,20 +150,40 @@ export function listItems(inner: string): string[] {
   return items;
 }
 
-/** A section as a tutorial step: its first numbered list of two or more items is its sub-steps. */
+/**
+ * A section as a tutorial step: its first numbered list of two or more items is its sub-steps.
+ * A code fence written between two items, not indented under the first, ends the list in
+ * markdown, and the items after it come out as a second `<ol start="N">` numbered on from the
+ * first. That second list is the same list, so it is read back in, and the blocks between the
+ * two belong to the item before them.
+ */
 export function stepOf(section: DocSection): TutorialStep {
-  for (let k = 0; k < section.html.length; k++) {
-    const list = ORDERED.exec(section.html[k] ?? "");
-    const items = list ? listItems(list[1] ?? "") : [];
+  const { html: blocks } = section;
+  for (let k = 0; k < blocks.length; k++) {
+    const block = blocks[k] ?? "";
+    const list = ORDERED.exec(block);
+    if (!list) continue;
+    const start = listStart(block);
+    const items = listItems(list[1] ?? "");
+    let end = k + 1;
+    for (let j = k + 1; j < blocks.length; j++) {
+      const next = ORDERED.exec(blocks[j] ?? "");
+      if (!next) continue;
+      if (!items.length || listStart(blocks[j] ?? "") !== start + items.length) break;
+      items[items.length - 1] += blocks.slice(end, j).join("");
+      items.push(...listItems(next[1] ?? ""));
+      end = j + 1;
+    }
     if (items.length < 2) continue;
     return {
       ...section,
-      before: section.html.slice(0, k),
+      before: blocks.slice(0, k),
       substeps: items.map((html, n) => ({ id: `${section.id}/${n + 1}`, html })),
-      after: section.html.slice(k + 1),
+      start,
+      after: blocks.slice(end),
     };
   }
-  return { ...section, before: section.html, substeps: [], after: [] };
+  return { ...section, before: blocks, substeps: [], start: 1, after: [] };
 }
 
 /** The ids of the tutorials `html` links to, from `/tutorials/<id>` links under `base`. */

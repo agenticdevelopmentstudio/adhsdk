@@ -48,6 +48,8 @@ export interface Substep {
 export interface TutorialStep extends DocSection {
     before: string[];
     substeps: Substep[];
+    /** The number the list's first item carries, from its `start` attribute; 1 when it has none. */
+    start: number;
     after: string[];
 }
 /** One term of the glossary. */
@@ -68,7 +70,13 @@ export declare function sectionsOf(blocks: readonly string[]): {
 };
 /** The top-level items of a list's inner HTML, an item's own nested lists kept inside it. */
 export declare function listItems(inner: string): string[];
-/** A section as a tutorial step: its first numbered list of two or more items is its sub-steps. */
+/**
+ * A section as a tutorial step: its first numbered list of two or more items is its sub-steps.
+ * A code fence written between two items, not indented under the first, ends the list in
+ * markdown, and the items after it come out as a second `<ol start="N">` numbered on from the
+ * first. That second list is the same list, so it is read back in, and the blocks between the
+ * two belong to the item before them.
+ */
 export declare function stepOf(section: DocSection): TutorialStep;
 /** The ids of the tutorials `html` links to, from `/tutorials/<id>` links under `base`. */
 export declare function tutorialLinks(html: string, base: string, known: ReadonlySet<string>): string[];
