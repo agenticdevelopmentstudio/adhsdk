@@ -167,7 +167,7 @@ struct MailBrowserModelTests {
             .fixture("Label_1", name: "Work", type: "user"), .fixture("SPAM")
         ]
         let boxes = MailBrowserModel.mailboxes(for: "a1", labels: labels)
-        #expect(boxes.map(\.title) == ["Inbox", "Sent", "All Mail", "Work", "Clients", "Junk", "Trash"])
+        #expect(boxes.map(\.title) == ["Inbox", "Sent", "All Mail", "Work", "Clients", "Spam", "Trash"])
         #expect(boxes.map(\.depth) == [0, 0, 0, 0, 1, 0, 0])
         #expect(boxes.first?.unread == 3)
     }

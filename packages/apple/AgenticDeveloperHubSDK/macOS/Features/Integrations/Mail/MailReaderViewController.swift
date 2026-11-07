@@ -18,6 +18,7 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
     private let date = NSTextField(labelWithString: "")
     private let remoteBar = NSStackView()
     private let header = NSStackView()
+    private let separator = NSBox()
     private let placeholder = NSTextField(labelWithString: "No message selected")
     private var webView: WKWebView!
     private var observers: Set<AnyCancellable> = []
@@ -71,7 +72,6 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
         header.setCustomSpacing(8, after: subject)
         header.setCustomSpacing(8, after: date)
 
-        let separator = NSBox()
         separator.boxType = .separator
         placeholder.textColor = .secondaryLabelColor
 
@@ -113,6 +113,7 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
         let isNew = message?.id != shownMessageId
         shownMessageId = message?.id
         header.isHidden = message == nil
+        separator.isHidden = message == nil
         webView.isHidden = message == nil
         placeholder.isHidden = message != nil
         guard let message else {

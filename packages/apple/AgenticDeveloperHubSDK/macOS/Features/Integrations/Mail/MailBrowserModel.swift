@@ -212,7 +212,7 @@ public final class MailBrowserModel: ObservableObject {
 
     private static let systemTitles = [
         "INBOX": "Inbox", "STARRED": "Starred", "IMPORTANT": "Important", "SENT": "Sent",
-        "DRAFT": "Drafts", "SPAM": "Junk", "TRASH": "Trash"
+        "DRAFT": "Drafts", "SPAM": "Spam", "TRASH": "Trash"
     ]
 
     // MARK: - Private
