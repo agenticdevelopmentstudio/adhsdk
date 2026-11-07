@@ -91,6 +91,15 @@ extension ComposableTabsViewRegistry {
             #endif
             return pane
         }
+        // The project settings sheet's Cookies and Site Data topic. Jars
+        // live in the project's own database, in the registry every browser
+        // pane over it shares, so the topic needs nothing else.
+        registerProjectSettingsTopic(for: .browser) { project in
+            ProjectBrowserJarsSettingsPanel(jars: ProjectBrowserJars(
+                provider: BrowserJarRegistry.shared(for: project.database),
+                repoID: project.id
+            ))
+        }
         #if DEBUG
         registerBrowserLog(preferredAxis: preferredAxis)
         #endif

@@ -99,10 +99,20 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
     let clearButton = NSButton(title: "Clear…", target: nil, action: nil)
     private let refreshButton = NSButton(title: "Refresh", target: nil, action: nil)
 
-    /// The site reads in flight. One at a time: a Refresh pressed twice, or a
-    /// removal landing while a read is out, must not let the older answer
-    /// arrive last and show sites that are already gone.
-    private var loadTask: Task<Void, Never>?
+    /// How the panel reads one jar's sites. A seam so a test can hold a read
+    /// open and decide when, and with what, it answers.
+    var readSites: @MainActor (BrowserSiteData) async -> [WKWebsiteDataRecord] = { await $0.records() }
+
+    /// The newest read asked for, per jar id. A read whose answer arrives
+    /// after a newer one was asked for is dropped, so an older answer can
+    /// never land last and show sites that are already gone. Per jar, so a
+    /// read of one jar — after a Remove or a Clear — never stops a read of
+    /// every jar from reaching the others.
+    private var readGenerations: [UUID: Int] = [:]
+
+    /// The read of every jar in flight. Only a newer read of every jar
+    /// cancels it; a read of one jar leaves it running.
+    private var fullLoadTask: Task<Void, Never>?
 
     private static let nameColumn = NSUserInterfaceItemIdentifier("name")
     private static let dataColumn = NSUserInterfaceItemIdentifier("data")
@@ -134,6 +144,11 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
         }
     }
 
+    /// A jar row's Data column once its sites are read.
+    static func siteCount(_ count: Int) -> String {
+        count == 1 ? "1 site" : "\(count) sites"
+    }
+
     // MARK: - Help
 
     override var helpContent: ComposableSettings.PanelHelp? {
@@ -162,7 +177,8 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
                 title: "Open Panes",
                 body: "A pane using a jar you clear keeps running and is not reloaded: the "
                     + "page on screen keeps what it already holds until it next talks to "
-                    + "its site or you navigate, and from then on it finds the jar empty. "
+                    + "its site or you navigate, and then finds the jar empty — though a "
+                    + "page still open may store new data straight away. "
                     + "A jar goes away by itself when the last pane using it is removed "
                     + "from the project; closing the window removes nothing."
             )
@@ -260,6 +276,7 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
     /// Separate from reading sites so the list of jars — a database read —
     /// is there at once, and so a test can check it without touching WebKit.
     func reloadJars() {
+        let selection = selectedSiteKey
         let expanded = Set(jarItems.filter { outlineView.isItemExpanded($0) }.map(\.record.id))
         let previous = Dictionary(uniqueKeysWithValues: jarItems.map { ($0.record.id, $0) })
         jarItems = jars.provider.records(repoID: jars.repoID).map { record in
@@ -275,42 +292,82 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
         for item in jarItems where expanded.contains(item.record.id) {
             outlineView.expandItem(item)
         }
-        updateButtons()
+        restoreSelection(selection)
     }
 
-    /// Reads every jar's sites, one jar after another, and returns the task
-    /// so a caller — a test — can wait for it.
+    /// Reads the sites of one jar, or of every jar one after another, and
+    /// returns the task so a caller — a test — can wait for it.
+    ///
+    /// Reads compose rather than cancel each other: each jar's answer is
+    /// applied only if no newer read of that jar was asked for meanwhile,
+    /// and it lands on whichever row carries that jar's id now — a Refresh
+    /// while a read was out rebuilds the rows, and the answer still belongs
+    /// on screen.
     @discardableResult
     func loadSites(of only: JarItem? = nil) -> Task<Void, Never> {
-        loadTask?.cancel()
         let targets = only.map { [$0] } ?? jarItems
+        let reads = targets.map { item -> (BrowserSiteData, UUID, Int) in
+            let generation = (readGenerations[item.record.id] ?? 0) + 1
+            readGenerations[item.record.id] = generation
+            return (item.siteData, item.record.id, generation)
+        }
+        if only == nil { fullLoadTask?.cancel() }
         let task = Task { [weak self] in
-            for item in targets {
-                let records = await item.siteData.records()
+            for (siteData, jarID, generation) in reads {
                 guard !Task.isCancelled, let self else { return }
-                self.apply(records, to: item)
+                let records = await self.readSites(siteData)
+                guard !Task.isCancelled else { return }
+                guard self.readGenerations[jarID] == generation else { continue }
+                self.apply(records, toJar: jarID)
             }
         }
-        loadTask = task
+        if only == nil { fullLoadTask = task }
         return task
     }
 
-    private func apply(_ records: [WKWebsiteDataRecord], to item: JarItem) {
-        let selectedSite = (outlineView.item(atRow: outlineView.selectedRow) as? SiteItem)?.record.displayName
+    private func apply(_ records: [WKWebsiteDataRecord], toJar jarID: UUID) {
+        guard let item = jarItems.first(where: { $0.record.id == jarID }) else { return }
+        let selection = selectedSiteKey
         item.sites = records.map { SiteItem(record: $0, jar: item) }
         item.hasLoadedSites = true
-        guard jarItems.contains(where: { $0 === item }) else { return }
         outlineView.reloadItem(item, reloadChildren: true)
-        if let selectedSite, let site = item.sites.first(where: { $0.record.displayName == selectedSite }) {
-            let row = outlineView.row(forItem: site)
-            if row >= 0 { outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false) }
+        restoreSelection(selection)
+    }
+
+    // MARK: - Selection
+
+    /// A selected site, named by its jar as well as its name: two jars can
+    /// both hold `github.com`, and Remove — which does not ask — must act on
+    /// the one the user picked.
+    struct SiteKey: Equatable {
+        let jarID: UUID
+        let displayName: String
+    }
+
+    var selectedSiteKey: SiteKey? {
+        guard let site = selectedItem as? SiteItem else { return nil }
+        return SiteKey(jarID: site.jar.record.id, displayName: site.record.displayName)
+    }
+
+    /// Puts the selection back on the same site of the same jar after a
+    /// reload, or clears it when that pair is gone — never onto a namesake
+    /// in another jar. A selected jar row is left to the outline.
+    private func restoreSelection(_ key: SiteKey?) {
+        defer { updateButtons() }
+        guard let key else { return }
+        let site = jarItems.first { $0.record.id == key.jarID }?
+            .sites.first { $0.record.displayName == key.displayName }
+        let row = site.map { outlineView.row(forItem: $0) } ?? -1
+        if row >= 0 {
+            outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        } else {
+            outlineView.deselectAll(nil)
         }
-        updateButtons()
     }
 
     // MARK: - Actions
 
-    private var selectedItem: Any? {
+    var selectedItem: Any? {
         let row = outlineView.selectedRow
         return row >= 0 ? outlineView.item(atRow: row) : nil
     }
@@ -418,10 +475,6 @@ extension ProjectBrowserJarsSettingsPanel: NSOutlineViewDataSource, NSOutlineVie
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
         updateButtons()
-    }
-
-    static func siteCount(_ count: Int) -> String {
-        count == 1 ? "1 site" : "\(count) sites"
     }
 
     private static func makeCell(identifier: NSUserInterfaceItemIdentifier) -> NSTableCellView {
