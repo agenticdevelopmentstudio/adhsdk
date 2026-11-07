@@ -10,14 +10,16 @@ import { BANNER_MONO, bannerBarStyle, bannerColor, type BannerTone } from "./ban
  * persisted probe) is the REAL freshness clock. The SERVER judges the lag and publishes
  * the verdict as `snapshot.freshness`; this banner renders it. The header/home status
  * sign (usePortfolioIndicator) reads the same field, so the two can't disagree. Inert
- * until a probe exists.
+ * until a probe exists, and inert against a backend older than `freshness`: with no
+ * verdict there is no pause to announce (the status sign still says unknown).
  */
 export function SnapshotStaleBanner(): ReactElement | null {
   const { snapshot } = useLiveSnapshot();
-  const lastCycleAt = snapshot?.freshness.asOf;
-  if (!snapshot || !lastCycleAt || snapshot.freshness.state === "fresh") return null;
+  const freshness = snapshot?.freshness;
+  const lastCycleAt = freshness?.asOf;
+  if (!snapshot || !freshness || !lastCycleAt || freshness.state === "fresh") return null;
 
-  const tone: BannerTone = snapshot.freshness.state === "very-stale" ? "red" : "amber";
+  const tone: BannerTone = freshness.state === "very-stale" ? "red" : "amber";
   const color = bannerColor(tone);
   return (
     <div role="status" style={bannerBarStyle(tone)}>

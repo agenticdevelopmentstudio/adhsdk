@@ -14,7 +14,7 @@ import { usePortfolioIndicator } from "./use-portfolio-indicator";
 // `use-board.dom.test.tsx`, alongside a test that this hook and `GlobalPanel` agree.
 
 const mockState = vi.hoisted(() => ({
-  snapshot: null as { lastCycleAt: string | null; generatedAt: string; probeIntervalMs?: number } | null,
+  snapshot: null as { generatedAt: string; freshness?: { state: string; asOf: string | null } } | null,
   offline: false,
   blind: false,
   board: null as { generatedAt: string; indicator: "operational" | "degraded" | "outage"; problems: unknown[] } | null,
@@ -53,6 +53,22 @@ describe("usePortfolioIndicator — trusts useBoard's null fold, doesn't re-deri
     // this hook still reads directly, and it's the same signal for all three
     // reasons `useBoard` can produce it.
     mockState.board = null;
+
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current.pillKey).toBe("unknown");
+  });
+
+  it("a snapshot with the server's fresh verdict leaves the board's verdict standing", () => {
+    mockState.board = { generatedAt: new Date().toISOString(), indicator: "operational", problems: [] };
+    mockState.snapshot = { generatedAt: new Date().toISOString(), freshness: { state: "fresh", asOf: null } };
+
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current.pillKey).toBe("ok");
+  });
+
+  it("a snapshot from a backend older than `freshness` reads as unknown instead of throwing", () => {
+    mockState.board = { generatedAt: new Date().toISOString(), indicator: "operational", problems: [] };
+    mockState.snapshot = { generatedAt: new Date().toISOString() };
 
     const { result } = renderHook(() => usePortfolioIndicator());
     expect(result.current.pillKey).toBe("unknown");

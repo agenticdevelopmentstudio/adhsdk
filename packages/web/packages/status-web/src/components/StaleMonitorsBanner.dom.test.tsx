@@ -9,15 +9,19 @@ const deleteEndpoint = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("../api/monitored-sites", () => ({ deleteEndpoint }));
 
 // The SERVER picks the retire candidates (`/live`'s `staleMonitors`); the banner renders them.
-const monitors = vi.hoisted(() => ({ current: [] as StaleMonitor[] }));
+const monitors = vi.hoisted(() => ({ current: [] as StaleMonitor[], older: false }));
 vi.mock("../hooks/use-live-snapshot", () => ({
-  useLiveSnapshot: () => ({ snapshot: { staleMonitors: { thresholdDays: 7, monitors: monitors.current } } }),
+  useLiveSnapshot: () => ({
+    // `older`: a snapshot from a backend that predates `staleMonitors`.
+    snapshot: monitors.older ? {} : { staleMonitors: { thresholdDays: 7, monitors: monitors.current } },
+  }),
 }));
 
 afterEach(() => {
   cleanup(); // no vitest globals → RTL's auto-cleanup never registers
   deleteEndpoint.mockClear();
   monitors.current = [];
+  monitors.older = false;
 });
 
 // jsdom has no ResizeObserver; the Popover primitive observes its content size.
@@ -59,6 +63,12 @@ const open = () =>
 // deleted by the backend cycle and never reaches this component at all.
 describe("StaleMonitorsBanner", () => {
   it("renders nothing when there is nothing to retire", () => {
+    const { container } = banner([]);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("renders nothing, rather than throwing, for a backend older than staleMonitors", () => {
+    monitors.older = true;
     const { container } = banner([]);
     expect(container.firstChild).toBeNull();
   });
