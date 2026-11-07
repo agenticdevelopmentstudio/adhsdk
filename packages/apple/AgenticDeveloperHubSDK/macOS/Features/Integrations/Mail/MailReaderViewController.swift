@@ -140,7 +140,7 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
         }
         // The message may have changed while the rules compiled.
         guard message.id == shownMessageId else { return }
-        webView.loadHTMLString(Self.document(for: message), baseURL: nil)
+        webView.loadHTMLString(Self.document(for: message, blockingRemote: !remoteAllowed), baseURL: nil)
     }
 
     @objc private func loadRemote() {
@@ -150,8 +150,20 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
         Task { await loadBody(message) }
     }
 
-    /// The HTML body as sent, or the text body escaped into a page that follows light and dark mode.
-    static func document(for message: MailMessage) -> String {
+    /// A policy that lets the page use only what it carries inline. It is the block itself,
+    /// not a backup: it holds even if the content rule list fails to compile.
+    static let blockRemotePolicy = "<meta http-equiv=\"Content-Security-Policy\" content=\""
+        + "default-src 'none'; img-src data: cid:; media-src data:; font-src data:; style-src 'unsafe-inline'\">"
+
+    /// The HTML body as sent, or the text body escaped into a page that follows light and dark
+    /// mode. With `blockingRemote`, the page starts with `blockRemotePolicy`; the HTML parser
+    /// places a leading `<meta>` in the head, and a policy the message brings itself can only
+    /// narrow this one.
+    static func document(for message: MailMessage, blockingRemote: Bool) -> String {
+        (blockingRemote ? blockRemotePolicy : "") + body(for: message)
+    }
+
+    private static func body(for message: MailMessage) -> String {
         if let html = message.bodyHtml, !html.isEmpty { return html }
         let text = message.bodyText ?? message.snippet
         let escaped = text
@@ -169,9 +181,12 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
 
     private static func remoteBlockingRules() async -> WKContentRuleList? {
         if let blockRemote { return blockRemote }
-        let rules = #"[{"trigger":{"url-filter":"^(https?|ftp|wss?)://"},"action":{"type":"block"}}]"#
+        // WebKit's content-blocker regex has no alternation (`a|b`), so one rule per scheme.
+        let rules = ["^https?://", "^wss?://", "^ftp://"]
+            .map { #"{"trigger":{"url-filter":"\#($0)"},"action":{"type":"block"}}"# }
+            .joined(separator: ",")
         let compiled = try? await WKContentRuleListStore.default().compileContentRuleList(
-            forIdentifier: "mail-reader-block-remote", encodedContentRuleList: rules)
+            forIdentifier: "mail-reader-block-remote", encodedContentRuleList: "[" + rules + "]")
         blockRemote = compiled
         return compiled
     }
