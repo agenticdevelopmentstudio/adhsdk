@@ -218,7 +218,10 @@ targets:
           - "UI/Settings"
           - "Scripting"
           - "Features/BrowserPane/Automation/BrowserSnapshot.js"
+          - "Features/BrowserPane/BrowserActivationShield.js"
       - path: macOS/Features/BrowserPane/Automation/BrowserSnapshot.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/BrowserActivationShield.js
         buildPhase: resources
     dependencies:
       - target: AgenticDeveloperHubSDKCore

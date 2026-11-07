@@ -76,6 +76,9 @@ public final class BrowserPaneViewController: NSViewController {
     /// The page. Replaced whole when the pane moves to another storage jar,
     /// because WebKit fixes a web view's data store when it is made.
     public private(set) var webView: WKWebView
+    /// Hides focus and visibility changes from the current web view's page;
+    /// made again with every web view.
+    private(set) var activationShield: BrowserActivationShield
     /// What the page wrote to `console.*` since the last navigation.
     public let consoleLog = BrowserConsoleLog()
     /// The jar the current web view was built on.
@@ -150,6 +153,7 @@ public final class BrowserPaneViewController: NSViewController {
         self.resolvedJar = jar
         self.siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
         webView = Self.makeWebView(configuration: configuration)
+        activationShield = BrowserActivationShield(webView: webView)
         super.init(nibName: nil, bundle: nil)
         jarLabel = jar.jarID == nil ? nil : Self.untitledLabel
         context.jars?.noteUse(of: jar.jarID, by: self)
@@ -181,7 +185,28 @@ public final class BrowserPaneViewController: NSViewController {
             self?.updatePageBackground()
         }
         updatePageBackground()
+        installUserScripts()
         applyLiveSettings()
+    }
+
+    /// Puts every user script the pane wants on the current web view's
+    /// controller: the console hook always, the activation shield's script
+    /// while the shield is up.
+    ///
+    /// The only place the pane adds or removes user scripts.
+    /// `WKUserContentController` cannot remove one script, only all of them,
+    /// so turning the shield off means putting back everything else, and that
+    /// is safe only while one function knows what "everything" is (`dry`).
+    /// The automation runtime is not a user script (it is evaluated into its
+    /// own content world on demand), so clearing the list does not touch it.
+    /// Scripts apply from the next page load.
+    private func installUserScripts() {
+        let controller = webView.configuration.userContentController
+        controller.removeAllUserScripts()
+        controller.addUserScript(consoleLog.userScript)
+        if let shieldScript = activationShield.userScript {
+            controller.addUserScript(shieldScript)
+        }
     }
 
     @available(*, unavailable)
@@ -238,7 +263,8 @@ public final class BrowserPaneViewController: NSViewController {
 
     /// The configuration WebKit fixes when the web view is made. The settings
     /// read here take effect for the *next* browser pane, and the panel says
-    /// so beside each of them.
+    /// so beside each of them. User scripts are not added here: the pane's
+    /// `installUserScripts()` owns them, so there is one owner to keep right.
     static func makeConfiguration(
         settings: SettingsStore,
         consoleLog: BrowserConsoleLog,
@@ -257,7 +283,6 @@ public final class BrowserPaneViewController: NSViewController {
         jar: ResolvedJar
     ) -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
-        configuration.userContentController.addUserScript(consoleLog.userScript)
         configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
         configuration.websiteDataStore = jar.dataStore
         configuration.upgradeKnownHostsToHTTPS = settings.get(UserSettings.browserUpgradesToHTTPS)
@@ -279,10 +304,23 @@ public final class BrowserPaneViewController: NSViewController {
         (webView as? BrowserWebView)?.gate = BrowserInputGate(settings: settings, isPaused: false)
     }
 
+    /// Raises or lowers the activation shield from the Hide Focus setting and
+    /// the pause state: up when either asks for it. The one place that answer
+    /// is computed, beside `refreshInputGate` for the same reasons. Not paused
+    /// until Pause Events (section 7) exists. When the shield's state moves,
+    /// the user scripts are put back so the next page load follows it.
+    private func refreshActivationShield() {
+        let isPaused = false
+        let wasActive = activationShield.isActive
+        activationShield.apply(active: settings.get(UserSettings.browserPrivacyHideActivation) || isPaused)
+        if activationShield.isActive != wasActive { installUserScripts() }
+    }
+
     /// Every setting WebKit lets change under a page, applied from the store.
     /// Called once at construction and again whenever a browser key changes.
     private func applyLiveSettings() {
         refreshInputGate()
+        refreshActivationShield()
         let zoom = settings.get(UserSettings.browserPageZoom)
         let zoomRange = BrowserSettings.pageZoomRange
         webView.pageZoom = min(max(zoom, zoomRange.lowerBound), zoomRange.upperBound)
@@ -395,6 +433,7 @@ public final class BrowserPaneViewController: NSViewController {
         paneContext.jars?.noteUse(of: jar.jarID, by: self)
         siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
         webView = Self.makeWebView(configuration: configuration)
+        activationShield = BrowserActivationShield(webView: webView)
         wireWebView()
         builtAutomation?.retarget(to: webView)
         applyCookiePolicy()
