@@ -14,6 +14,7 @@ import type {
 import {
   buildReport,
   ERROR_ISSUE_CAP,
+  glitchtipListCurrent,
   issueKeys,
   RUNTIME_GROUP_CAP,
   type MonitorInput,
@@ -466,6 +467,26 @@ describe("buildReport — rules the server adds", () => {
     const unlisted = build({ monitor: ok({ ...MONITOR, problems: [err] }), errors: { ok: false, error: "down" } });
     expect(unlisted.findings.map((f) => f.source)).toContain("monitor:glitchtip");
     expect(unlisted.findings.find((f) => f.source === "monitor:glitchtip")!.issueKey).toBeUndefined();
+  });
+
+  it("a GlitchTip list that is not current does not stand in for the board's error problem", () => {
+    // The cached list predates a new crash: a failed refresh, one still running at the deadline
+    // (every due read with wait=0), or a list not read to the end. The board's problem stays.
+    const err = problem({ target: "errors|web", source: "glitchtip", name: "web", environment: null, severity: "major", state: "erroring" });
+    const base = errorsDashboard();
+    const cached = base.sections.issues.data!;
+    const cases: Record<string, ErrorsDashboardResponse> = {
+      "failed refresh": errorsDashboard({ issues: { data: cached, error: "GlitchTip 500", updatedAt: "2026-11-06T09:00:00Z" } }),
+      "still refreshing": { ...base, refreshing: true },
+      "read partway": errorsDashboard({ issues: section({ ...cached, summary: { ...cached.summary, complete: false } }) }),
+    };
+    for (const [why, data] of Object.entries(cases)) {
+      expect(glitchtipListCurrent(data), why).toBe(false);
+      const report = build({ monitor: ok({ ...MONITOR, problems: [err] }), errors: ok(data) });
+      expect(report.findings.map((f) => f.source), why).toContain("monitor:glitchtip");
+      expect(report.verdict, why).toBe("degraded");
+    }
+    expect(glitchtipListCurrent(base)).toBe(true);
   });
 
   it("an unreachable provider is one major finding, not also its board problem", () => {
