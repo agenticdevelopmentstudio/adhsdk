@@ -138,7 +138,22 @@ export function messageHead(message: string): string {
   return (message.split(/\r?\n/)[0] ?? "").trim().slice(0, MESSAGE_MAX);
 }
 
-/** The grouping fields of an entry, and their stable hash. */
+/**
+ * A message head with the values that vary per occurrence taken out, so `Order 8231 not found`
+ * and `Order 8270 not found` are one error: id-like tokens (a UUID, a hex hash, a long mixed
+ * token — the path-segment test) read `:id`, and any run of digits (an id, a count, a duration,
+ * a timestamp part) reads `#`.
+ */
+export function messageShape(head: string): string {
+  return head
+    .replace(/[A-Za-z0-9_-]+/g, (tok) => (!/^\d+$/.test(tok) && isIdSegment(tok) ? ":id" : tok))
+    .replace(/\d+/g, "#");
+}
+
+/**
+ * The grouping fields of an entry, and their stable hash. The key uses the message's shape;
+ * `message` is the head as written, for a group to show as its sample.
+ */
 export function groupIdentity(e: RuntimeLogEntry): {
   key: string;
   path: string | null;
@@ -147,7 +162,7 @@ export function groupIdentity(e: RuntimeLogEntry): {
   const path = normalizePath(e.path);
   const message = messageHead(e.message);
   const key = createHash("sha256")
-    .update(JSON.stringify([e.project, e.source, e.method, path, e.status, message]))
+    .update(JSON.stringify([e.project, e.source, e.method, path, e.status, messageShape(message)]))
     .digest("hex")
     .slice(0, 32);
   return { key, path, message };
