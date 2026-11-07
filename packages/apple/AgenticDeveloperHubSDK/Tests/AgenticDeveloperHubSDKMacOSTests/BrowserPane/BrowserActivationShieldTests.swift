@@ -181,4 +181,97 @@ final class BrowserActivationShieldTests: XCTestCase {
         let seen = try await webView.evaluateJavaScript(probe) as? String
         XCTAssertEqual(seen, "field-focus")
     }
+
+    // MARK: - The live page (Pause Events, spec section 7)
+
+    /// Loads `html` into a fresh offscreen web view and waits for it, or
+    /// skips when this test host cannot load a page at all.
+    private func loadedWebView(_ html: String) async throws -> WKWebView {
+        let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
+        webView.loadHTMLString(html, baseURL: URL(string: "about:blank"))
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            let loaded = (try? await webView.evaluateJavaScript("document.readyState === 'complete'") as? Bool) ?? false
+            if loaded && !webView.isLoading { return webView }
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        throw XCTSkip("the offscreen web view did not load a page in this test host")
+    }
+
+    /// Polls `script` until it answers `expected` or five seconds pass, and
+    /// returns the last answer: the shield's immediate runs are asynchronous.
+    private func waitFor(_ script: String, toBe expected: String, in webView: WKWebView) async throws -> String? {
+        var answer: String?
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            answer = try await webView.evaluateJavaScript(script) as? String
+            if answer == expected { break }
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        return answer
+    }
+
+    /// The immediate run reaches a same-origin frame that is already loaded,
+    /// not only the main frame.
+    func testRaisingTheShieldReachesLoadedSameOriginFrames() async throws {
+        let webView = try await loadedWebView("<iframe srcdoc='<p>inner</p>'></iframe>")
+        let frameReady = try await waitFor(
+            "String(frames.length === 1 && frames[0].document.readyState === 'complete')",
+            toBe: "true", in: webView)
+        guard frameReady == "true" else { throw XCTSkip("the srcdoc frame did not load in this test host") }
+        let shield = BrowserActivationShield(webView: webView)
+
+        shield.apply(active: true)
+
+        let probe = "typeof frames[0].__adkActivationShield + ',' + frames[0].document.hidden"
+        let answer = try await waitFor(probe, toBe: "function,false", in: webView)
+        XCTAssertEqual(answer, "function,false")
+    }
+
+    /// Lowering the shield takes the shim off the page already showing, in
+    /// the main frame and its same-origin frames, without waiting for a load.
+    func testLoweringTheShieldLiftsItFromTheLivePage() async throws {
+        let webView = try await loadedWebView("<iframe srcdoc='<p>inner</p>'></iframe>")
+        let shield = BrowserActivationShield(webView: webView)
+        shield.apply(active: true)
+        let raised = try await waitFor("typeof window.__adkActivationShield", toBe: "function", in: webView)
+        XCTAssertEqual(raised, "function")
+
+        shield.apply(active: false)
+
+        let probe = """
+        [typeof window.__adkActivationShield,
+         String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined),
+         String(Object.getOwnPropertyDescriptor(document, 'hasFocus') === undefined),
+         frames.length ? typeof frames[0].__adkActivationShield : 'undefined'].join(',')
+        """
+        let answer = try await waitFor(probe, toBe: "undefined,true,true,undefined", in: webView)
+        XCTAssertEqual(answer, "undefined,true,true,undefined")
+
+        // The window-level events reach the page's listeners again.
+        let seen = try await webView.evaluateJavaScript("""
+        (function () {
+          var seen = [];
+          window.addEventListener('blur', function () { seen.push('window-blur'); });
+          window.dispatchEvent(new Event('blur'));
+          return seen.join(',');
+        })()
+        """) as? String
+        XCTAssertEqual(seen, "window-blur")
+    }
+
+    /// Raising twice over one document (the document-start copy, then the
+    /// immediate run) shields it once: one lift takes it all off.
+    func testASecondRunOverTheSameDocumentAddsNothing() async throws {
+        let webView = try await loadedWebView("<p>twice</p>")
+        let source = try XCTUnwrap(BrowserActivationShield.source)
+        _ = try await webView.evaluateJavaScript(source)
+        _ = try await webView.evaluateJavaScript(source)
+        _ = try await webView.evaluateJavaScript(BrowserActivationShield.liftSource)
+        let answer = try await webView.evaluateJavaScript("""
+        [typeof window.__adkActivationShield,
+         String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined)].join(',')
+        """) as? String
+        XCTAssertEqual(answer, "undefined,true")
+    }
 }
