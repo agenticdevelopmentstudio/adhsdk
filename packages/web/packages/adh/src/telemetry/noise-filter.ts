@@ -5,10 +5,12 @@
 // Every rule below is backed by real GlitchTip traffic (Nov 2026 triage,
 // docs/status-site/status-glitchtip-noise-and-scheduler.md in statussite):
 //   • bots           — HeadlessChrome / crawlers / scraping browsers run our pages in
-//                      broken JS engines and report the breakage as ours.
+//                      broken JS engines and report the breakage as ours. Known by the
+//                      user agent, or — for a scraper that spoofs Chrome's — by a frame
+//                      only its runtime has (Obscura: Deno's `ext:` modules and its
+//                      `<obscura:…>` bootstrap). One such frame is enough.
 //   • foreign code   — every frame is someone else's script: Vercel Analytics /
-//                      Speed Insights (`/<16 hex>/script.js`), a scraper's injected
-//                      bootstrap (`<obscura:…>`), or a browser extension.
+//                      Speed Insights (`/<16 hex>/script.js`) or a browser extension.
 //   • stale deploy   — ChunkLoadError: a tab opened before a deploy asks for a chunk the
 //                      new deploy no longer serves. The reload fixes it; nothing to fix.
 //   • network        — the browser's own "the request never completed" errors (offline,
@@ -26,11 +28,17 @@ type ExceptionValue = { type?: string; value?: string; stacktrace?: { frames?: F
 export type NoiseCandidate = { exception?: { values?: ExceptionValue[] } }
 export type NoiseEnvironment = { userAgent?: string; webdriver?: boolean }
 
-const BOT_USER_AGENT = /HeadlessChrome|\bbot\b|bot\/|crawler|spider|Lighthouse|PhantomJS|Puppeteer|Playwright|Obscura/i
+const BOT_USER_AGENT = /HeadlessChrome|\bbot\b|bot\/|crawler|spider|Lighthouse|PhantomJS|Puppeteer|Playwright|Obscura|Lightpanda/i
+
+/** Frames no real browser produces: their presence anywhere in the stack means a scraper
+ *  is running the page, whatever user agent it claims. */
+const SCRAPER_FRAME = [
+  /^<obscura:/, // Obscura scraping browser's injected bootstrap
+  /^ext:/, // Deno's internal modules (ext:core/01_core.js), which Obscura runs on
+]
 
 const FOREIGN_FRAME = [
   /\/[0-9a-f]{16}\/script\.js(?:[?#]|$)/, // Vercel Web Analytics / Speed Insights v2 hashed paths
-  /^<obscura:/, // Obscura scraping browser's injected bootstrap
   /^(?:chrome|moz|safari|safari-web)-extension:\/\//, // browser extensions
 ]
 
@@ -42,8 +50,15 @@ function frameSource(frame: Frame): string {
   return frame.abs_path || frame.filename || ''
 }
 
-function allFramesForeign(values: ExceptionValue[]): boolean {
-  const sources = values.flatMap((v) => v.stacktrace?.frames ?? []).map(frameSource).filter(Boolean)
+function frameSources(values: ExceptionValue[]): string[] {
+  return values.flatMap((v) => v.stacktrace?.frames ?? []).map(frameSource).filter(Boolean)
+}
+
+function anyFrameFromScraper(sources: string[]): boolean {
+  return sources.some((s) => SCRAPER_FRAME.some((re) => re.test(s)))
+}
+
+function allFramesForeign(sources: string[]): boolean {
   return sources.length > 0 && sources.every((s) => FOREIGN_FRAME.some((re) => re.test(s)))
 }
 
@@ -53,7 +68,9 @@ export function noiseReason(event: NoiseCandidate, env: NoiseEnvironment = {}): 
   if (env.userAgent && BOT_USER_AGENT.test(env.userAgent)) return 'bot'
 
   const values = event.exception?.values ?? []
-  if (allFramesForeign(values)) return 'foreign-code'
+  const sources = frameSources(values)
+  if (anyFrameFromScraper(sources)) return 'bot'
+  if (allFramesForeign(sources)) return 'foreign-code'
   if (values.some((v) => v.type === 'ChunkLoadError')) return 'stale-deploy'
   if (values.some((v) => v.type === 'TypeError' && NETWORK_FAILURE.test(v.value ?? ''))) return 'network'
   return null

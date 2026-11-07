@@ -21,6 +21,7 @@ describe('noiseReason', () => {
     'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0 Safari/537.36 360Spider',
     'Mozilla/5.0 (compatible; crawler)',
+    'Lightpanda/1.0', // headless scraping browser, cookbook SyntaxErrors of Nov 7
   ])('drops events from bot user agent %s', (userAgent) => {
     expect(noiseReason(OUR_BUG, { userAgent })).toBe('bot')
   })
@@ -37,10 +38,24 @@ describe('noiseReason', () => {
   it.each([
     'https://agenticdevelopercookbook.com/d512ddbf37368eeb/script.js', // Vercel Web Analytics
     '/e1e36be97a8decd2/script.js', // Speed Insights, as GlitchTip shows it
-    '<obscura:bootstrap>',
     'chrome-extension://abcdefghijklmnop/content.js',
   ])('drops errors thrown entirely inside foreign code: %s', (file) => {
     expect(noiseReason(exc('SyntaxError', 'Invalid or unexpected token', file), { userAgent: CHROME })).toBe('foreign-code')
+  })
+
+  // The Obscura scraper runs on Deno and spoofs a Chrome user agent; its stack mixes the
+  // runtime's own `ext:` modules and anonymous `<script>` frames in with its bootstrap.
+  it.each([
+    ['ext:core/01_core.js', '<script>', '<obscura:bootstrap>'],
+    ['ext:core/01_core.js', '<script>'],
+    ['<script>', '<obscura:bootstrap>', 'https://agenticpersonaregistry.com/_next/static/chunks/app.js'],
+  ])('drops an error whose stack runs through a scraper runtime: %j', (...files) => {
+    const err = exc('TypeError', "Cannot read properties of null (reading 'replace')", ...files)
+    expect(noiseReason(err, { userAgent: CHROME })).toBe('bot')
+  })
+
+  it('does not take an anonymous <script> frame alone for a scraper', () => {
+    expect(noiseReason(exc('TypeError', 'x is null', '<script>'), { userAgent: CHROME })).toBeNull()
   })
 
   it('keeps an error that passes through foreign code but has our frames too', () => {
