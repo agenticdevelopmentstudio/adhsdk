@@ -50,11 +50,24 @@ extension ComposableTabsViewRegistry {
                 minimumThickness: 360
             )
         ) { context in
-            BrowserPaneViewController(
-                store: context.makeStateStore(prefix: "browser."),
-                settings: settings,
+            let state = context.makeStateStore(prefix: "browser.")
+            // Each pane answers from its own overrides first, then from the
+            // shared settings, so one pane's zoom never moves another's.
+            let layered = LayeredSettingsStore(
+                overrides: PaneStateSettingsStorageProvider(store: state),
+                fallback: settings
+            )
+            return BrowserPaneViewController(
+                store: state,
+                settings: layered,
                 history: history,
-                homeURL: homeURL
+                homeURL: homeURL,
+                context: BrowserPaneContext(
+                    paneNodeID: context.nodeID,
+                    projectID: context.project.id,
+                    projectName: context.project.displayName,
+                    worktreePath: context.workingDirectory.standardizedFileURL.path
+                )
             )
         }
     }

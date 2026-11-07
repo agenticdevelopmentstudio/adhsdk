@@ -62,6 +62,10 @@ public final class BrowserPaneViewController: NSViewController {
 
     private let store: PaneStateStore
     private let settings: SettingsStore
+    /// Which project, worktree and node this pane belongs to.
+    public let paneContext: BrowserPaneContext
+    /// The pane's own layered settings, when the factory built it with one.
+    public var paneSettings: LayeredSettingsStore? { settings as? LayeredSettingsStore }
     private let history: BrowserHistoryStore?
     private let siteData: BrowserSiteData
     private let fallbackHomeURL: URL
@@ -111,12 +115,15 @@ public final class BrowserPaneViewController: NSViewController {
     ///   - history: Where visits are recorded; `nil` records nothing.
     ///   - homeURL: What a pane opens on when nothing is remembered *and* the
     ///     Home Page setting is blank.
+    ///   - context: The project, worktree and node the pane belongs to.
     public init(
         store: PaneStateStore,
         settings: SettingsStore = UserSettings.shared,
         history: BrowserHistoryStore? = nil,
-        homeURL: URL = BrowserPaneViewController.blankPage
+        homeURL: URL = BrowserPaneViewController.blankPage,
+        context: BrowserPaneContext = .detached
     ) {
+        self.paneContext = context
         self.store = store
         self.settings = settings
         self.history = history

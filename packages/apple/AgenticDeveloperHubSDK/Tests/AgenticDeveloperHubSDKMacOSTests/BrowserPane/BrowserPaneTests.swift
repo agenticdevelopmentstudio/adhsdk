@@ -128,6 +128,23 @@ final class BrowserPaneTests: XCTestCase {
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
     }
 
+    func testPaneOverrideAffectsOnlyThatPane() {
+        let fallback = makeSettings()
+        func layered() -> LayeredSettingsStore {
+            LayeredSettingsStore(
+                overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
+                fallback: fallback
+            )
+        }
+        let storeA = layered()
+        let paneA = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: storeA)
+        let paneB = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: layered())
+        storeA.set(2.0, for: UserSettings.browserPageZoom)
+        settle()
+        XCTAssertEqual(paneA.webView.pageZoom, 2.0)
+        XCTAssertEqual(paneB.webView.pageZoom, 1.0)
+    }
+
     // MARK: - Naming itself
 
     func testAPaneOnNothingIsCalledBrowser() {
