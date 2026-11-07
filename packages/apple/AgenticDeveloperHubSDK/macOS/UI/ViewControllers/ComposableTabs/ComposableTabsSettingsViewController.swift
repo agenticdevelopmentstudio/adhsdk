@@ -16,19 +16,20 @@ public final class ComposableTabsSettingsViewController: NSViewController {
 
     private let panels: ProjectSettingsSplitViewController
 
-    /// - Parameter browserJars: The project's browser jars, for the Cookies
-    ///   and Site Data topic. `nil` — a host that registers no browser pane,
-    ///   so no pane can have made a jar — leaves the topic out rather than
-    ///   showing a list that can never fill.
+    /// - Parameter topics: More topics, listed after the sheet's own Tabs
+    ///   topic — what the project's registered views contribute
+    ///   (`ComposableTabsViewRegistry.makeProjectSettingsTopics(for:)`). The
+    ///   sheet shows them without knowing what they are about, so a view's
+    ///   settings never need a change here (`open-closed`).
     public init(
         isEdgeEnabled: @escaping (Edge) -> Bool,
         setEdgeEnabled: @escaping (Edge, Bool) -> Void,
-        browserJars: ProjectBrowserJars? = nil
+        topics: [ComposableSettings.SettingsPanelViewController] = []
     ) {
         self.panels = ProjectSettingsSplitViewController(
             isEdgeEnabled: isEdgeEnabled,
             setEdgeEnabled: setEdgeEnabled,
-            browserJars: browserJars
+            topics: topics
         )
         super.init(nibName: nil, bundle: nil)
     }
@@ -84,7 +85,7 @@ public final class ComposableTabsSettingsViewController: NSViewController {
 private final class ProjectSettingsSplitViewController: ComposableSettings.SplitViewController {
 
     private let tabsPanel: ProjectTabsSettingsPanel
-    private let jarsPanel: ProjectBrowserJarsSettingsPanel?
+    private let topics: [ComposableSettings.SettingsPanelViewController]
 
     /// A sheet has no free edge for a drawer to slide out of, so this split
     /// presents its help in a popover off the help button instead.
@@ -93,13 +94,13 @@ private final class ProjectSettingsSplitViewController: ComposableSettings.Split
     init(
         isEdgeEnabled: @escaping (Edge) -> Bool,
         setEdgeEnabled: @escaping (Edge, Bool) -> Void,
-        browserJars: ProjectBrowserJars?
+        topics: [ComposableSettings.SettingsPanelViewController]
     ) {
         self.tabsPanel = ProjectTabsSettingsPanel(
             isEdgeEnabled: isEdgeEnabled,
             setEdgeEnabled: setEdgeEnabled
         )
-        self.jarsPanel = browserJars.map { ProjectBrowserJarsSettingsPanel(jars: $0) }
+        self.topics = topics
         super.init()
         self.sidebarTitle = "Project"
     }
@@ -115,7 +116,7 @@ private final class ProjectSettingsSplitViewController: ComposableSettings.Split
         super.viewDidLoad()
         helpPresenter = help
         addPanel(tabsPanel)
-        if let jarsPanel { addPanel(jarsPanel) }
+        topics.forEach(addPanel)
         selectPanel(at: 0)
     }
 }

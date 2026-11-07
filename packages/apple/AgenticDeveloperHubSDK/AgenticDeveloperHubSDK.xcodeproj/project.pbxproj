@@ -2088,6 +2088,7 @@
 		98A9F2D59FA817A868F21D6D /* ComposableTabsViewID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066533CECEFB621CFFFC5685 /* ComposableTabsViewID.swift */; };
 		98B12EF8C35B732BE00B4A0A /* MainThreadLanguageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A9341E1F2282E635EC800C /* MainThreadLanguageModels.swift */; };
 		98CC9343859C22C03D8AA7A1 /* InputActivityTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8ECE8662EA237236EE39911 /* InputActivityTrigger.swift */; };
+		98ECAE3AC87D7F14BB0AFE04 /* BrowserJarLabelGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0FE856CD88A87005E693D1 /* BrowserJarLabelGate.swift */; };
 		98F0F4F81F8F98D73E2DFAED /* ProjectWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472711BDA83A46ACA0186493 /* ProjectWorkspace.swift */; };
 		9907427969377D175B7DBD3F /* MockStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1612F36CBF59400D6EFCFBC7 /* MockStorage.swift */; };
 		9916527081331AD417E2918F /* ContributionRegistrationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0FB160019669DD0D82BD31C /* ContributionRegistrationsTests.swift */; };
@@ -6577,6 +6578,7 @@
 		5DB1FD111A0F13626F4E0816 /* ExcludedFilesSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExcludedFilesSettingsPanelViewController.swift; sourceTree = "<group>"; };
 		5DDC4C32257F729C0BE18801 /* TextSubstitutionFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSubstitutionFilterTests.swift; sourceTree = "<group>"; };
 		5DF6D0B04A0145045FE258BA /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
+		5E0FE856CD88A87005E693D1 /* BrowserJarLabelGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserJarLabelGate.swift; sourceTree = "<group>"; };
 		5E683952F6138FEB1ECAD62D /* ContextEventRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEventRecord.swift; sourceTree = "<group>"; };
 		5EB350E27557CCAE428EE874 /* PopupMenuChoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupMenuChoiceView.swift; sourceTree = "<group>"; };
 		5EBDA50BFA96299C85E57BF5 /* StenographerPreferenceDTOsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StenographerPreferenceDTOsTests.swift; sourceTree = "<group>"; };
@@ -11148,6 +11150,7 @@
 				837ABF01E03D029F13A85AB3 /* BrowserEventLog.swift */,
 				EAD7982D11635AAB962FFF82 /* BrowserHistoryStore.swift */,
 				536221673651E23898EECCD8 /* BrowserInputGate.swift */,
+				5E0FE856CD88A87005E693D1 /* BrowserJarLabelGate.swift */,
 				FBBF4E4BBEE492FD397FCDEB /* BrowserJarReconciler.swift */,
 				FA5EAEE7CCF68A286216D83D /* BrowserJarRegistry.swift */,
 				FFF765CB6A061629E23F1498 /* BrowserLogPaneViewController.swift */,
@@ -18743,6 +18746,7 @@
 				CCAF13FEDA6B52016CC8ED5A /* BrowserEventLog.swift in Sources */,
 				A829E466319A1B6C43DBBA06 /* BrowserHistoryStore.swift in Sources */,
 				E1B0C98FE9D781D75A42944A /* BrowserInputGate.swift in Sources */,
+				98ECAE3AC87D7F14BB0AFE04 /* BrowserJarLabelGate.swift in Sources */,
 				0D569CBB2BC824612EEF9362 /* BrowserJarReconciler.swift in Sources */,
 				E40B9B83FA29CCD6A8573876 /* BrowserJarRegistry.swift in Sources */,
 				F3A5A1230912764C73DC03B5 /* BrowserLogPaneViewController.swift in Sources */,
