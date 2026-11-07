@@ -136,7 +136,7 @@ def fetch_distribution(arch: str) -> Path:
     unpack = Path(tempfile.mkdtemp(dir=root, prefix="unpack."))
     try:
         with tarfile.open(archive) as tar:
-            tar.extractall(unpack, filter="tar")
+            extract_safely(tar, unpack)
         tops = [p for p in unpack.iterdir() if p.is_dir()]
         if len(tops) != 1:
             fail(f"{dist['file']} does not hold one top-level directory")
@@ -150,6 +150,29 @@ def fetch_distribution(arch: str) -> Path:
     archive.unlink()
     stamp.write_text(dist["sha1"] + "\n")
     return dist_root
+
+
+def extract_safely(tar: tarfile.TarFile, destination: Path) -> None:
+    """Unpacks `tar` into `destination`, refusing any member that would land
+    outside it. Python 3.12 (and the 3.8-3.11 security releases) do this with
+    `filter="tar"`; the /usr/bin/python3 Xcode's build phases run is 3.9.6,
+    which has no `filter`, so the same checks are made by hand there."""
+    if hasattr(tarfile, "data_filter"):
+        tar.extractall(destination, filter="tar")
+        return
+    root = destination.resolve()
+    for member in tar.getmembers():
+        target = (root / member.name).resolve()
+        if os.path.isabs(member.name) or (target != root and root not in target.parents):
+            fail(f"archive member {member.name!r} would land outside {root}")
+        if member.isdev():
+            fail(f"archive member {member.name!r} is a device file")
+        if member.issym() or member.islnk():
+            base = target.parent if member.issym() else root
+            link = (base / member.linkname).resolve()
+            if os.path.isabs(member.linkname) or (link != root and root not in link.parents):
+                fail(f"archive link {member.name!r} points outside {root}: {member.linkname!r}")
+    tar.extractall(destination)
 
 
 def wrapper_sources(dist_root: Path) -> list[Path]:
