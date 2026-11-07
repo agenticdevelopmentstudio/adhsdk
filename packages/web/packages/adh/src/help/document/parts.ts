@@ -96,17 +96,19 @@ export function slugOf(text: string): string {
 export function sectionsOf(blocks: readonly string[]): { lead: string[]; sections: DocSection[] } {
   const lead: string[] = [];
   const sections: DocSection[] = [];
-  const seen = new Map<string, number>();
+  const used = new Set<string>();
   for (const block of blocks) {
     const heading = HEADING.exec(block);
     if (heading) {
       const titleHtml = (heading[1] ?? "").trim();
       const title = plainText(titleHtml);
       const base = slugOf(title) || "section";
-      // Two sections with one title would share an id, and a saved step would then tick both.
-      const count = (seen.get(base) ?? 0) + 1;
-      seen.set(base, count);
-      sections.push({ id: count > 1 ? `${base}-${count}` : base, title, titleHtml, html: [] });
+      // Two sections must never share an id, or a saved step would tick both. The suffix is
+      // checked against every id given so far, since a title like "Save 2" claims "save-2" itself.
+      let id = base;
+      for (let n = 2; used.has(id); n++) id = `${base}-${n}`;
+      used.add(id);
+      sections.push({ id, title, titleHtml, html: [] });
     } else if (sections.length) {
       sections.at(-1)!.html.push(block);
     } else {

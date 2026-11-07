@@ -22,16 +22,17 @@ function slugOf(text) {
 function sectionsOf(blocks) {
   const lead = [];
   const sections = [];
-  const seen = /* @__PURE__ */ new Map();
+  const used = /* @__PURE__ */ new Set();
   for (const block of blocks) {
     const heading = HEADING.exec(block);
     if (heading) {
       const titleHtml = (heading[1] ?? "").trim();
       const title = plainText(titleHtml);
       const base = slugOf(title) || "section";
-      const count = (seen.get(base) ?? 0) + 1;
-      seen.set(base, count);
-      sections.push({ id: count > 1 ? `${base}-${count}` : base, title, titleHtml, html: [] });
+      let id = base;
+      for (let n = 2; used.has(id); n++) id = `${base}-${n}`;
+      used.add(id);
+      sections.push({ id, title, titleHtml, html: [] });
     } else if (sections.length) {
       sections.at(-1).html.push(block);
     } else {
