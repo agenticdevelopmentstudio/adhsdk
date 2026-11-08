@@ -264,6 +264,7 @@ public enum BrowserSettings {
     /// settings" means the browsing preferences; it must not turn model
     /// access back on for a user who turned it off, nor turn `browser_evaluate`
     /// off for one who turned it on. Those two are reset from their own panel.
+    /// The keys that are here for the same reason are in `keptByResetNames`.
     static let allKeys: [any BrowserSettingKey] = [
         UserSettings.browserHomePage, UserSettings.browserPageZoom, UserSettings.browserMinimumFontSize,
         UserSettings.browserJavaScriptEnabled, UserSettings.browserBlocksPopups,
@@ -319,10 +320,22 @@ public enum BrowserSettings {
         return snapshot
     }
 
-    /// Puts every browser setting back to its default by removing the stored
-    /// value, so what the default *is* stays declared in one place.
+    /// Browser keys a reset leaves as they are, for the automation switches'
+    /// reason: agent access and agent-while-paused would hand a pane the
+    /// user hid or made read only back to the model, and the storage jar
+    /// would move panes off their worktree jar, which the reconciler then
+    /// deletes — site data the reset promises not to touch.
+    public static let keptByResetNames: Set<String> = [
+        UserSettings.browserPrivacyAgentAccess.name,
+        UserSettings.browserPrivacyAgentWhilePaused.name,
+        UserSettings.browserPrivacyStorageJar.name
+    ]
+
+    /// Puts every browser setting but `keptByResetNames` back to its default
+    /// by removing the stored value, so what the default *is* stays declared
+    /// in one place.
     public static func reset(in store: SettingsStore) {
-        for key in allKeys { key.remove(from: store) }
+        for key in allKeys where !keptByResetNames.contains(key.name) { key.remove(from: store) }
     }
 
     /// The home page the setting names, or `nil` when it is blank or not an

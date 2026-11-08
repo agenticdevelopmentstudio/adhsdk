@@ -1181,7 +1181,8 @@ private final class BrowserResetPanel: BrowserTopicPanel {
     private func confirmReset() {
         ComposableSettings.Alerts.confirmDestructive(
             "Reset all Browser settings?",
-            detail: "Every Browser setting returns to its default. History and site data are not affected.",
+            detail: "Every Browser setting returns to its default, except agent access and storage. "
+                + "History and site data are not affected.",
             actionTitle: "Reset",
             on: view.window
         ) { [weak self] confirmed in

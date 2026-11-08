@@ -44,9 +44,24 @@ final class BrowserSettingsTests: XCTestCase {
 
     func testResetRemovesPrivacyValues() {
         let store = makeStore()
-        store.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
+        store.set(BrowserInputPolicy.block, for: UserSettings.browserPrivacyKeyboard)
+        store.set(true, for: UserSettings.browserPrivacyHideActivation)
         BrowserSettings.reset(in: store)
-        XCTAssertEqual(store.get(UserSettings.browserPrivacyStorageJar), .pane)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyKeyboard), .allow)
+        XCTAssertFalse(store.get(UserSettings.browserPrivacyHideActivation))
+    }
+
+    /// Reset must not hand the model back a pane the user hid or made read
+    /// only, nor move panes off their jar, which would delete its site data.
+    func testResetLeavesAgentAccessAndTheStorageJarAlone() {
+        let store = makeStore()
+        store.set(BrowserAgentAccess.hidden, for: UserSettings.browserPrivacyAgentAccess)
+        store.set(BrowserAgentWhilePaused.paused, for: UserSettings.browserPrivacyAgentWhilePaused)
+        store.set(BrowserStorageJar.worktree, for: UserSettings.browserPrivacyStorageJar)
+        BrowserSettings.reset(in: store)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyAgentAccess), .hidden)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyAgentWhilePaused), .paused)
+        XCTAssertEqual(store.get(UserSettings.browserPrivacyStorageJar), .worktree)
     }
 
     // MARK: - Reset
