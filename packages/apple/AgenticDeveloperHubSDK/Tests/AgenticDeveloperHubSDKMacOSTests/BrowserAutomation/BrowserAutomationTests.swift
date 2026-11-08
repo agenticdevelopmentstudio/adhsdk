@@ -498,6 +498,30 @@ final class BrowserAutomationTests: XCTestCase {
         _ = try await a.wait(for: .text("clicked"), timeout: 3)
     }
 
+    /// Read only access may not move the page: an element screenshot that
+    /// may not scroll refuses an element below the fold and leaves the page
+    /// where it was, and captures one in view without scrolling.
+    func testAnElementScreenshotThatMayNotScrollLeavesThePageAlone() async throws {
+        let (page, a) = await make(html: """
+            <button style="position:absolute;left:10px;top:10px;width:100px;height:40px">Top</button>
+            <button style="position:absolute;left:10px;top:4000px;width:100px;height:40px">Far</button>
+            """)
+        page.orderInOffscreen()
+        let snap = try await a.snapshot(.init())
+        do {
+            _ = try await a.screenshot(ref: "e2", generation: snap.generation, scrolls: false)
+            XCTFail("expected a refusal")
+        } catch let error as BrowserAutomationError {
+            XCTAssertEqual(error, .notInView("e2"))
+        }
+        let scrolledAfterRefusal = try await a.evaluate("window.scrollY")
+        XCTAssertEqual(scrolledAfterRefusal, "0")
+        let png = try await a.screenshot(ref: "e1", generation: snap.generation, scrolls: false)
+        XCTAssertNotNil(NSBitmapImageRep(data: png))
+        let scrolledAfterCapture = try await a.evaluate("window.scrollY")
+        XCTAssertEqual(scrolledAfterCapture, "0")
+    }
+
     func testClickAtWithoutAScreenshotIsASentence() async throws {
         let (_, a) = await make(html: "<button>Hi</button>")
         do {

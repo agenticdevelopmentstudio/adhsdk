@@ -267,7 +267,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         return try await automation.drive {
             try self.requireSwitches(for: name, paneID: pane.id)
             if let reply = try await self.dispatchNavigation(name, args, automation) { return reply }
-            if let reply = try await self.dispatchReading(name, args, automation) { return reply }
+            if let reply = try await self.dispatchReading(name, args, automation,
+                                                          mayScroll: pane.access != .readOnly) { return reply }
             if let reply = try await self.dispatchActions(name, args, automation) { return reply }
             throw ToolError(sentence: "unknown tool \(name)")
         }
@@ -299,8 +300,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     }
 
     @MainActor
+    /// `mayScroll` is false for a Read only pane: reading must not move the
+    /// page, so an element screenshot captures the element where it is.
     private func dispatchReading(
-        _ name: String, _ args: Arguments, _ automation: BrowserAutomation
+        _ name: String, _ args: Arguments, _ automation: BrowserAutomation, mayScroll: Bool
     ) async throws -> String? {
         switch name {
         case "browser_snapshot":
@@ -324,7 +327,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             return "satisfied\nurl: \(result.url)\ntitle: \(result.title)"
         case "browser_screenshot":
             let target = try args.optionalRefAndGeneration()
-            let png = try await automation.screenshot(ref: target.ref, generation: target.generation)
+            let png = try await automation.screenshot(ref: target.ref, generation: target.generation,
+                                                      scrolls: mayScroll)
             return "data:image/png;base64," + png.base64EncodedString()
         case "browser_console":
             guard automation.isConsoleCaptureOn else { return "Console capture is off for this pane." }

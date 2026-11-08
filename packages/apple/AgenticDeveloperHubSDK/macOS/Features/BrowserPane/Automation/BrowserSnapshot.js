@@ -533,9 +533,11 @@
     return { ok: true };
   }
 
-  function rect(ref, gen) {
+  // `scroll` false measures the element where it is: a read-only caller
+  // must not move the page.
+  function rect(ref, gen, scroll) {
     return withElement(ref, gen, (el) => {
-      el.scrollIntoView({ block: 'center', inline: 'center' });
+      if (scroll !== false) { el.scrollIntoView({ block: 'center', inline: 'center' }); }
       const r = el.getBoundingClientRect();
       return { x: r.left, y: r.top, width: r.width, height: r.height };
     });

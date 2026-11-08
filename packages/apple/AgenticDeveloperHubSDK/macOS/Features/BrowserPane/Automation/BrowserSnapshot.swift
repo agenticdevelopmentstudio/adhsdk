@@ -151,6 +151,9 @@ public enum BrowserAutomationError: Error, CustomStringConvertible, Equatable, S
     case noWindow
     case notOnScreen
     case screenshotTimedOut
+    /// An element screenshot that may not scroll, of an element outside the
+    /// viewport.
+    case notInView(String)
     /// `clickAt` before any screenshot: its coordinates are read off one.
     case noScreenshot
     case cspRefusesEvaluation
@@ -168,6 +171,8 @@ public enum BrowserAutomationError: Error, CustomStringConvertible, Equatable, S
         case .noWindow: return "the pane is not in a window"
         case .notOnScreen: return "the pane is not on screen"
         case .screenshotTimedOut: return "the screenshot timed out"
+        case .notInView(let ref):
+            return "\(ref) is outside the viewport, and this pane is read only, so it cannot be scrolled into view"
         case .noScreenshot:
             return "take a browser_screenshot first; browser_click_at reads its coordinates off that image"
         case .cspRefusesEvaluation: return "the page's Content Security Policy refuses evaluation"

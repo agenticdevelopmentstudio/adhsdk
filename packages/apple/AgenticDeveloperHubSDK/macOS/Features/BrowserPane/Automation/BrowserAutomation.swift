@@ -624,8 +624,9 @@ public final class BrowserAutomation: NSObject {
 
     // MARK: Geometry, screenshots, native events
 
-    private func rect(ref: String, generation: Int) async throws -> CGRect {
-        guard let r = try await call("rect", ["ref": ref, "gen": generation]) as? [String: Double] else {
+    private func rect(ref: String, generation: Int, scrolls: Bool = true) async throws -> CGRect {
+        guard let r = try await call("rect", ["ref": ref, "gen": generation, "scroll": scrolls])
+            as? [String: Double] else {
             throw BrowserAutomationError.script("no rect for \(ref)")
         }
         return CGRect(x: r["x"] ?? 0, y: r["y"] ?? 0, width: r["width"] ?? 0, height: r["height"] ?? 0)
@@ -655,13 +656,20 @@ public final class BrowserAutomation: NSObject {
     /// stopped painting can otherwise leave the snapshot without an answer.
     /// Occlusion is deliberately not checked — a quiet-presentation window is
     /// occluded by design and still screenshots.
-    public func screenshot(ref: String?, generation: Int?) async throws -> Data {
+    ///
+    /// An element is scrolled into view first unless `scrolls` is false (Agent
+    /// access Read only, which may not move the page); then the image is the
+    /// part of the element inside the viewport, and an element wholly outside
+    /// it is refused.
+    public func screenshot(ref: String?, generation: Int?, scrolls: Bool = true) async throws -> Data {
         guard let window = driver.view.window, window.isVisible else { throw BrowserAutomationError.notOnScreen }
         // The viewport, or the element's rect, in CSS pixels: what the image shows.
         var shown = CGRect(origin: .zero, size: driver.viewportSize)
         var clip: CGRect?
         if let ref, let generation {
-            shown = try await rect(ref: ref, generation: generation)
+            let element = try await rect(ref: ref, generation: generation, scrolls: scrolls)
+            shown = scrolls ? element : element.intersection(shown)
+            if shown.isNull || shown.isEmpty { throw BrowserAutomationError.notInView(ref) }
             clip = shown
         }
         let once = Resumer<CGImage>()
