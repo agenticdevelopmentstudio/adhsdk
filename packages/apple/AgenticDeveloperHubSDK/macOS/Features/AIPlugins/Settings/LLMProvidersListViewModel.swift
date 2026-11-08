@@ -3,7 +3,7 @@ import Combine
 import AIPluginKit
 import AgenticDeveloperHubSDKCore
 
-/// Backs the LLM Providers settings list: the ordered configurations, the row the
+/// Backs the AI Connections settings list: the ordered configurations, the row the
 /// editor is showing, and add/remove/rename against `UserSettings` + the
 /// per-configuration `AIProviderConfigStore`.
 @MainActor

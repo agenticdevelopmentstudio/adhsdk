@@ -5,7 +5,7 @@ import AIPluginKit
 
 /// The single owner of the "LLM provider configurations → daemon" contract.
 ///
-/// The LLM Providers pane edits the configuration list, the selection and each
+/// The AI Connections pane edits the configuration list, the selection and each
 /// configuration's model and fields. One set of observers lives here; on any
 /// change, at startup and on every daemon reconnect the whole registry (every
 /// configuration fully resolved, secrets read from the Keychain) is pushed

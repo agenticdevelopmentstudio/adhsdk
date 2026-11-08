@@ -725,7 +725,7 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
     private var noModelText: String {
         guard let row = currentRow() else { return "Select a provider to see the models it serves." }
         guard modelRows.isEmpty else { return "Select a model to see what it can do." }
-        return ModelChooserContent.supportsLiveModels(pluginIdentifier: row.available.pluginIdentifier)
+        return modelManager(for: row).hasLiveSource
             ? "This provider lists its models once it's configured and reachable."
             : "This provider doesn't publish a model list."
     }
@@ -738,30 +738,34 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
         "\(row.available.pluginIdentifier)|\(row.available.template.id)"
     }
 
-    /// The models to render for `row`: a live-fetched list if one is cached
-    /// (local/OpenAI-compatible providers, once `fetchLiveModelsIfNeeded` has
-    /// resolved), else the static snapshot baked into the descriptor.
-    private func resolvedModels(for row: ProviderPickerRow) -> [String] {
-        liveModelsByTemplate[cacheKey(for: row)] ?? row.available.template.models
+    /// The model manager for `row`'s template. The picker has no credentials (it
+    /// chooses a provider before one is configured), so a keyed source falls back
+    /// to its public catalog.
+    private func modelManager(for row: ProviderPickerRow) -> ProviderModelManager {
+        ProviderModelManager.forProvider(
+            pluginIdentifier: row.available.pluginIdentifier, template: row.available.template,
+            baseURL: nil, apiKey: nil)
     }
 
-    /// Kicks an async fetch of the real, live model list for OpenAI-shaped
-    /// providers (e.g. Ollama) so the models table stops showing the stale
-    /// static snapshot baked into the descriptor. No-op for remote providers
-    /// (`ModelChooserContent.supportsLiveModels` false), providers already
-    /// cached, or providers with no configured base URL yet. On success,
+    /// The models to render for `row`: the latest version of each, from the list
+    /// loaded this session if there is one, else the manager's cached (or the
+    /// descriptor's static) list.
+    private func resolvedModels(for row: ProviderPickerRow) -> [String] {
+        liveModelsByTemplate[cacheKey(for: row)] ?? modelManager(for: row).list.latestIDs
+    }
+
+    /// Loads `row`'s current model list once per picker session, so the models
+    /// table stops showing the static snapshot baked into the descriptor. No-op
+    /// for providers with no live source or already loaded. On success,
     /// re-renders only if the fetched row is still selected.
     private func fetchLiveModelsIfNeeded(for row: ProviderPickerRow) {
-        let id = row.available.pluginIdentifier
         let key = cacheKey(for: row)
-        guard ModelChooserContent.supportsLiveModels(pluginIdentifier: id),
-              liveModelsByTemplate[key] == nil else { return }
-        let baseURL = row.available.template.defaultValues["baseURL"] ?? ""
-        guard !baseURL.isEmpty else { return }
+        let manager = modelManager(for: row)
+        guard manager.hasLiveSource, liveModelsByTemplate[key] == nil else { return }
         Task { @MainActor in
-            let models = await OpenAIModelCatalog.fetch(baseURL: baseURL, apiKey: nil)
-            guard !models.isEmpty else { return }
-            liveModelsByTemplate[key] = models
+            let list = await manager.refresh()
+            guard !list.isEmpty else { return }
+            liveModelsByTemplate[key] = list.latestIDs
             if let cur = currentRow(), cacheKey(for: cur) == key { updateInfo(for: cur) }
         }
     }

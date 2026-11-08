@@ -302,6 +302,7 @@ public final class AIChatViewController: NSViewController, Themeable {
         chooseModelButton.setButtonType(.momentaryPushIn)
         chooseModelButton.target = self
         chooseModelButton.action = #selector(chooseModelAction)
+        chooseModelButton.setAccessibilityIdentifier("ai-chat.choose-model")
     }
 
     private func configureChoiceButtons() {
@@ -425,11 +426,15 @@ public final class AIChatViewController: NSViewController, Themeable {
     private func updateModelRow() {
         let template = selectedTemplate
         // Show the Model row's Choose button whenever the provider can offer a model:
-        // a live-fetch provider (Ollama etc.) always can, even though its static list
-        // is empty; others when they ship a list or already have a model chosen.
-        let offersModels = selectedConfiguration.map {
-            ModelChooserContent.supportsLiveModels(pluginIdentifier: $0.pluginIdentifier)
-        } ?? false
+        // a provider with a live list (Ollama, Anthropic, …) always can, even when its
+        // static list is empty; others when they ship a list or already have a model
+        // chosen.
+        var offersModels = false
+        if let config = selectedConfiguration, let template {
+            offersModels = ProviderModelManager.forProvider(
+                pluginIdentifier: config.pluginIdentifier, template: template,
+                baseURL: nil, apiKey: nil).hasLiveSource
+        }
         chooseModelButton.isEnabled = template != nil
             && (offersModels || !(template?.models.isEmpty ?? true) || !currentModel.isEmpty)
         modelValue.stringValue = currentModel.isEmpty ? "None chosen" : currentModel

@@ -2,7 +2,7 @@ import Foundation
 import AIPluginKit
 import AgenticDeveloperHubSDKCore
 
-/// First-run seeding of a default configuration so the LLM Providers list is not
+/// First-run seeding of a default configuration so the AI Connections list is not
 /// empty out of the box.
 ///
 /// Seeds a local Claude (CLI) provider — which needs no API key, since it

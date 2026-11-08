@@ -19,7 +19,7 @@ public final class AIPluginsCoordinator: AppFeature {
         AIProviderMigration.runIfNeeded(pluginManager: self.pluginManager)
         AIProviderMigration.renameRetiredPluginIdentifiers()
         // Seed a default provider when nothing migrated, so every coordinator-based
-        // host opens the LLM Providers panel populated (not empty). Idempotent.
+        // host opens the AI Connections panel populated (not empty). Idempotent.
         AIProviderDefaults.seedIfNeeded(pluginManager: self.pluginManager)
     }
 

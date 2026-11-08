@@ -6,7 +6,7 @@ import AgenticDeveloperHubSDKCoreUI
 /// caller's sentinel choices, bound to a `UserSetting<String>` holding the
 /// chosen value (a configuration id, or a sentinel's value).
 ///
-/// The registry is the daemon's — the one Stenographer's LLM Providers pane
+/// The registry is the daemon's — the one Stenographer's AI Connections pane
 /// pushed — not this process's plugin manager, which is why this is not the
 /// toolkit's `LLMPickerView`. There is no model row: the model is the daemon
 /// configuration's own. The list is read from the daemon at init and again each
