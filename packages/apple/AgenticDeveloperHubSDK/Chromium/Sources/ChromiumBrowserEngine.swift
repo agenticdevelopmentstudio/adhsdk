@@ -115,7 +115,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         if jar.isEphemeral { return "" }
         if jar.jar == .global { return nil }
         guard let jarID = jar.jarID else { return "" }
-        return ChromiumLauncher.jarsDirectory().appendingPathComponent(jarID.uuidString).path
+        return ChromiumLauncher.jarProfileDirectory(for: jarID).path
     }
 
     // MARK: - Page

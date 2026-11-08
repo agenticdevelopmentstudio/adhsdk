@@ -89,23 +89,35 @@ public enum ChromiumLauncher {
         return root.appendingPathComponent("Default")
     }
 
-    /// Where worktree and pane jars keep their Chromium profiles, one
-    /// directory per jar row, named by its id. Beside `Default`, inside the
-    /// root cache directory, where Chromium requires every profile to be.
-    public static func jarsDirectory() -> URL {
-        profileDirectory().deletingLastPathComponent().appendingPathComponent("Jars")
+    /// The root cache directory, `Default`'s parent: CEF's `root_cache_path`.
+    static func rootCacheDirectory() -> URL {
+        profileDirectory().deletingLastPathComponent()
     }
 
-    /// The jar directories under `jarsDirectory()`, as the reconciler sweeps
-    /// them: identifiers are the directories named by a UUID, and removing
-    /// one deletes it.
+    /// The prefix that marks a jar's profile among the root's children.
+    static let jarProfilePrefix = "Jar-"
+
+    /// Where a worktree or pane jar keeps its Chromium profile: a direct
+    /// child of the root cache directory, beside `Default`. CEF opens a disk
+    /// profile only at the root or one level below it; anywhere deeper it
+    /// falls back to an in-memory profile and nothing persists.
+    public static func jarProfileDirectory(for jarID: UUID) -> URL {
+        rootCacheDirectory().appendingPathComponent(jarProfilePrefix + jarID.uuidString)
+    }
+
+    /// The jar profiles beside `Default`, as the reconciler sweeps them:
+    /// identifiers are the `Jar-<uuid>` directories, and removing one
+    /// deletes it.
     static let jarStores = BrowserJarReconciler.DataStores(
         identifiers: {
-            let names = (try? FileManager.default.contentsOfDirectory(atPath: jarsDirectory().path)) ?? []
-            return names.compactMap(UUID.init(uuidString:))
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: rootCacheDirectory().path)) ?? []
+            return names.compactMap { name in
+                guard name.hasPrefix(jarProfilePrefix) else { return nil }
+                return UUID(uuidString: String(name.dropFirst(jarProfilePrefix.count)))
+            }
         },
         remove: { id in
-            let directory = jarsDirectory().appendingPathComponent(id.uuidString)
+            let directory = jarProfileDirectory(for: id)
             guard FileManager.default.fileExists(atPath: directory.path) else { return }
             try FileManager.default.removeItem(at: directory)
         }
