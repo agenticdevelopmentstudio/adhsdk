@@ -247,6 +247,18 @@
       "holds": "AgenticDeveloperHubSDKIntegrations. Third-party service integrations (Gmail): models, store, client, sync."
     },
     {
+      "name": "apple-desktop",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/Desktop/"
+      ],
+      "depends_on": [
+        "apple-core",
+        "apple-coreui"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKDesktop. The Desktop: App abstraction, icon layout, window management."
+    },
+    {
       "name": "apple-activity",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Activity/"
@@ -470,7 +482,8 @@
         "apple-hubauth",
         "apple-chromium",
         "apple-integrations",
-        "apple-menubar"
+        "apple-menubar",
+        "apple-desktop"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

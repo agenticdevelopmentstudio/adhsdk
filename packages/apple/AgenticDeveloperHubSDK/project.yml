@@ -931,6 +931,40 @@ targets:
       - package: GRDB
         product: GRDB
 
+  # The Desktop: App abstraction, icon layout, window management.
+  AgenticDeveloperHubSDKDesktop:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Desktop
+    dependencies:
+      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKCoreUI
+
+  AgenticDeveloperHubSDKDesktopTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKDesktopTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKDesktop
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCoreUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+
   # Activity capture and tracking, moved verbatim from Olylo's OlyloCore:
   # the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore),
   # the context-event model/store/triggers, the capture permission gate, and
@@ -1958,6 +1992,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubUI-macOS
       - AgenticDeveloperHubSDKActivity-macOS
       - AgenticDeveloperHubSDKIntegrations
+      - AgenticDeveloperHubSDKDesktop
 
   # The spec files this store under "macOS, iOS", and `AgenticDeveloperHubSDKMarkdown-iOS`
   # existed but was reachable from no aggregate and no scheme — so nothing ever
@@ -2042,6 +2077,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKActivityTests
       - AgenticDeveloperHubSDKIntegrations
       - AgenticDeveloperHubSDKIntegrationsTests
+      - AgenticDeveloperHubSDKDesktop
+      - AgenticDeveloperHubSDKDesktopTests
 
 schemes:
   AgenticDeveloperHubSDKChromium:
@@ -2203,6 +2240,23 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKMarkdownTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKDesktop:
+    build:
+      targets:
+        AgenticDeveloperHubSDKDesktop: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKDesktopTests
     profile:
       config: Release
     analyze:
