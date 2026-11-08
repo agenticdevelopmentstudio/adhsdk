@@ -237,7 +237,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         try requireSwitches(for: name)
         if name == "browser_open" {
             let url = args.optionalString("url") == nil ? openWithoutURLPage() : try args.url("url")
-            let pane = try directory.openBrowserPane(besidePane: caller)
+            let engine = try args.engine("engine")
+            let pane = try directory.openBrowserPane(besidePane: caller, engine: engine)
             // A pane whose settings refuse the agent (a hidden, read-only or
             // paused default) is closed again at once and the open refused
             // with the same sentence as any other refused open, so neither
@@ -399,7 +400,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let rows: [[String: Any]] = panes.map { pane in
             [
                 "id": pane.id, "title": pane.title, "url": pane.url, "project": pane.project,
-                "tab": pane.tab, "is_default": pane.id == defaultID, "access": Self.accessName(pane.access)
+                "tab": pane.tab, "engine": pane.engine.rawValue, "is_default": pane.id == defaultID,
+                "access": Self.accessName(pane.access)
             ]
         }
         let data = (try? JSONSerialization.data(withJSONObject: rows, options: [.sortedKeys])) ?? Data()
@@ -431,8 +433,11 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     }
 
     static let definitions: [ToolDefinition] = [
-        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, access (full, or read only: snapshot, find, text, console, screenshot and wait only), and which one is the default for this caller.", [:]),
-        tool("browser_open", "Open a new Browser pane beside the caller and load a URL (http or https), or the home page (else a blank page) when no URL is given.", ["url": ToolJSONSchema.string("The page to load; optional")]),
+        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, engine (safari or chrome), access (full, or read only: snapshot, find, text, console, screenshot and wait only), and which one is the default for this caller.", [:]),
+        tool("browser_open", "Open a new Browser pane beside the caller and load a URL (http or https), or the home page (else a blank page) when no URL is given. Every other tool drives a Safari pane and a Chrome pane the same way.", [
+            "url": ToolJSONSchema.string("The page to load; optional"),
+            "engine": ToolJSONSchema.string("safari (WebKit) or chrome (Chromium); optional, safari by default")
+        ]),
         tool("browser_navigate", "Load a URL in a Browser pane.", ["url": ToolJSONSchema.string("The page to load"), "pane_id": paneID], required: ["url"]),
         tool("browser_back", "Go back one page.", ["pane_id": paneID]),
         tool("browser_forward", "Go forward one page.", ["pane_id": paneID]),

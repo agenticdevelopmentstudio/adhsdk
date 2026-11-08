@@ -139,7 +139,7 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
         case .worktree:
             return "\(worktree) — worktree"
         case .pane:
-            let name = record.label.isEmpty ? BrowserPaneViewController.untitledLabel : record.label
+            let name = record.label.isEmpty ? WebBrowserPaneViewController.untitledLabel : record.label
             return "\(name) — \(worktree)"
         }
     }

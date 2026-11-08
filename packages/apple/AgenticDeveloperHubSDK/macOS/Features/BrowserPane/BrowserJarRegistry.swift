@@ -26,7 +26,11 @@ public final class BrowserJarRegistry {
     /// What a pane ends up with: the store, the jar it asked for, and the
     /// row naming it (`nil` for the global jar and for a fallback).
     public struct Resolution {
-        public let dataStore: WKWebsiteDataStore
+        /// The WebKit store, made when first asked for and every time after:
+        /// a Chrome pane reads only the jar and its row, and must never make
+        /// a WebKit store it does not use. A WebKit pane reads it once.
+        public var dataStore: WKWebsiteDataStore { makeDataStore() }
+        private let makeDataStore: () -> WKWebsiteDataStore
         /// The jar asked for. A worktree or pane jar that could not be made
         /// keeps its name here, with a non-persistent store and a
         /// `fallbackReason`: the pane is isolated, just not kept.
@@ -37,9 +41,10 @@ public final class BrowserJarRegistry {
         public let fallbackReason: String?
 
         public init(
-            dataStore: WKWebsiteDataStore, jar: BrowserStorageJar, jarID: UUID?, fallbackReason: String? = nil
+            dataStore: @autoclosure @escaping () -> WKWebsiteDataStore,
+            jar: BrowserStorageJar, jarID: UUID?, fallbackReason: String? = nil
         ) {
-            self.dataStore = dataStore
+            self.makeDataStore = dataStore
             self.jar = jar
             self.jarID = jarID
             self.fallbackReason = fallbackReason

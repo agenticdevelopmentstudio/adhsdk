@@ -33,12 +33,11 @@ public final class BrowserLogPaneViewController: NSViewController {
     /// The browser pane this log follows, by its layout node.
     public private(set) var targetNodeID: UUID?
     /// The live pane, when it has been found.
-    private(set) weak var target: BrowserPaneViewController?
+    private(set) weak var target: WebBrowserPaneViewController?
     private var subscription: AnyCancellable?
-    /// The target's page title, followed so the pane title keeps up with it.
-    /// Re-made when the target rebuilds its web view.
-    private var titleObservation: NSKeyValueObservation?
-    private weak var observedWebView: NSView?
+    /// The target's title, followed so the pane title keeps up with it.
+    private var titleObservation: NSObjectProtocol?
+    private weak var observedPane: WebBrowserPaneViewController?
     /// The title last announced through `onPaneTitleChange`, so a reload that
     /// changes nothing announces nothing.
     private var announcedTitle: String?
@@ -99,16 +98,16 @@ public final class BrowserLogPaneViewController: NSViewController {
     }
 
     /// The live browser pane on `nodeID` among `window`'s panes.
-    static func browserPane(nodeID: UUID, in window: NSWindow?) -> BrowserPaneViewController? {
+    static func browserPane(nodeID: UUID, in window: NSWindow?) -> WebBrowserPaneViewController? {
         guard let controller = window?.windowController as? ComposableTabsWindowController else { return nil }
         return controller.allPanes().lazy
-            .compactMap { $0.contentViewController as? BrowserPaneViewController }
+            .compactMap { $0.contentViewController as? WebBrowserPaneViewController }
             .first { $0.paneContext.paneNodeID == nodeID && !$0.isDiscarded }
     }
 
     /// Follows `pane`'s log. Internal so a test can attach a pane that is in
     /// no window.
-    func attach(_ pane: BrowserPaneViewController?) {
+    func attach(_ pane: WebBrowserPaneViewController?) {
         target = pane
         // A mouse flood records many times a second; the table catches up a
         // few times a second instead of once per event.
@@ -202,16 +201,16 @@ public final class BrowserLogPaneViewController: NSViewController {
         onPaneTitleChange?()
     }
 
-    /// Re-observes the target's page title whenever its web view changes.
+    /// Re-observes the target's title whenever the target changes.
     private func followTitle() {
-        guard let webView = target?.webView else {
-            titleObservation = nil
-            observedWebView = nil
-            return
-        }
-        guard webView !== observedWebView else { return }
-        observedWebView = webView
-        titleObservation = webView.observe(\.title, options: [.new]) { [weak self] _, _ in
+        guard target !== observedPane else { return }
+        if let titleObservation { NotificationCenter.default.removeObserver(titleObservation) }
+        titleObservation = nil
+        observedPane = target
+        guard let target else { return }
+        titleObservation = NotificationCenter.default.addObserver(
+            forName: WebBrowserPaneViewController.paneTitleDidChangeNotification, object: target, queue: .main
+        ) { [weak self] _ in
             MainActor.assumeIsolated { self?.announceTitleIfChanged() }
         }
     }
@@ -273,7 +272,7 @@ extension BrowserLogPaneViewController {
 
     /// Show Browser Log for `pane`: brings forward the log pane already
     /// following it in its window, or splits one off beside it.
-    public static func show(for pane: BrowserPaneViewController) {
+    public static func show(for pane: WebBrowserPaneViewController) {
         guard let nodeID = pane.paneContext.paneNodeID,
               let window = pane.viewIfLoaded?.window,
               let controller = window.windowController as? ComposableTabsWindowController else {

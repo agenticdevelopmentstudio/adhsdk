@@ -18,22 +18,31 @@ import AgenticDeveloperHubSDKMacOS
 ///
 /// What it honours, and when:
 ///
-/// - **Live:** zoom, the user agent, JavaScript, pop-up blocking, cookies and
-///   the DevTools menu item. The user agent and JavaScript go through the
-///   DevTools protocol (`Emulation`), which applies them to the open page.
-/// - **When the pane opens:** private browsing and the minimum font size,
-///   which Chromium fixes when a browser is created.
+/// - **Live:** zoom, the user agent, JavaScript, pop-up blocking, cookies,
+///   Third-Party Content and the DevTools menu item. The user agent and
+///   JavaScript go through the DevTools protocol (`Emulation`), which applies
+///   them to the open page; Third-Party Content applies from the next request.
+/// - **When the pane is built:** the jar and the minimum font size, which
+///   Chromium fixes when a browser is created, so a jar change rebuilds the
+///   engine.
 /// - **When Chromium starts:** autoplay, hardware acceleration and the remote
 ///   debugging port (`ChromiumLauncher`).
+///
+/// Session privacy, as the WebKit engine has it: the input gate is a local
+/// event monitor in front of Chromium's own views, since they are not this
+/// engine's to subclass; the activation shield is the same script, put on
+/// every new document over the DevTools protocol, with Chromium's focus
+/// emulation beside it.
 @MainActor
 public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
 
     public weak var delegate: BrowserEngineDelegate?
-    public let consoleLog = BrowserConsoleLog()
+    public let consoleLog: BrowserConsoleLog
 
     private let browserView: ChromiumBrowserView
     private let options: ChromiumBrowserOptions
     private let settings: SettingsStore
+    private let capturesConsole: Bool
     private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
     private let loadingSubject = PassthroughSubject<Bool, Never>()
     private var cancellables: Set<AnyCancellable> = []
@@ -50,10 +59,35 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     /// heard first would remember the page being left.
     private var commitPending = false
 
-    public init(settings: SettingsStore) {
+    // MARK: Session privacy state
+
+    public var inputGate: BrowserInputGate = .open
+    public var onInputDecision: ((BrowserInputChannel, String, Bool, Bool, String) -> Void)?
+    public private(set) var isActivationShieldActive = false
+    /// The shield script's token: one per engine, never shared, for the
+    /// reason `BrowserActivationShield.token` gives.
+    private let shieldToken = UUID().uuidString
+    /// The new-document script the raised shield added, to remove on lower.
+    private var shieldScriptIdentifier: String?
+    /// Raises and lowers in the order asked, each after the last has landed,
+    /// so a lower never misses the identifier of the raise before it.
+    private var shieldTask: Task<Void, Never>?
+    private var eventMonitor: Any?
+    /// Whether the mouse button now down went down on the page, so its drags
+    /// and its release follow it wherever the pointer goes.
+    private var mouseSequenceOnPage = false
+
+    public var heldLoadURL: URL? { nil }
+
+    public init(configuration: BrowserEngineConfiguration) {
+        let settings = configuration.settings
         self.settings = settings
+        consoleLog = configuration.consoleLog
+        capturesConsole = configuration.capturesConsole
         let options = ChromiumBrowserOptions()
-        options.privateBrowsing = settings.get(UserSettings.browserPrivateBrowsing)
+        options.cachePath = Self.cachePath(for: configuration.jar)
+        options.acceptsCookies = WebBrowserPaneViewController.acceptsCookies(
+            settings: settings, ownsDataStore: configuration.jar.isOwnedByPane)
         let fontRange = BrowserSettings.minimumFontSizeRange
         options.minimumFontSize = min(max(settings.get(UserSettings.browserMinimumFontSize),
                                           fontRange.lowerBound), fontRange.upperBound)
@@ -70,6 +104,18 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         if let startError { showFailure(startError) }
         applyLiveSettings()
         observeSettings()
+        installInputMonitor()
+    }
+
+    /// Where a jar's session lives: the shared profile for the global jar, a
+    /// store kept in memory for private browsing and for a jar that failed
+    /// closed, and a profile of its own, named by the jar's row, for a
+    /// worktree or pane jar.
+    static func cachePath(for jar: BrowserResolvedJar) -> String? {
+        if jar.isEphemeral { return "" }
+        if jar.jar == .global { return nil }
+        guard let jarID = jar.jarID else { return "" }
+        return ChromiumLauncher.jarsDirectory().appendingPathComponent(jarID.uuidString).path
     }
 
     // MARK: - Page
@@ -94,6 +140,10 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
 
     public func teardown() {
         cancellables.removeAll()
+        if let eventMonitor { NSEvent.removeMonitor(eventMonitor) }
+        eventMonitor = nil
+        shieldTask?.cancel()
+        onInputDecision = nil
         delegate = nil
         browserView.delegate = nil
         browserView.close()
@@ -124,7 +174,11 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         zoom = min(max(settings.get(UserSettings.browserPageZoom), range.lowerBound), range.upperBound)
         browserView.setZoomFactor(zoom)
         browserView.allowsDevTools = settings.get(UserSettings.browserChromeDevToolsEnabled)
-        ChromiumRuntime.shared.acceptsCookies = settings.get(UserSettings.browserAcceptsCookies)
+        browserView.thirdPartyBlocking = switch settings.get(UserSettings.browserPrivacyThirdPartyContent) {
+        case .allow: .none
+        case .blockScripts: .scripts
+        case .blockAll: .all
+        }
 
         let agent = settings.get(UserSettings.browserCustomUserAgent)
         if agent != appliedUserAgent {
@@ -307,6 +361,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     public func nativeClick(atViewportX viewportX: Double, viewportY: Double) async throws {
         guard browserView.window != nil else { throw BrowserAutomationError.noWindow }
         for type in ["mousePressed", "mouseReleased"] {
+            guard decide(.mouse, type, synthesized: true) else { continue }
             _ = try await send("Input.dispatchMouseEvent", [
                 "type": type, "x": viewportX, "y": viewportY, "button": "left", "clickCount": 1
             ])
@@ -373,6 +428,7 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
     }
 
     public func chromiumBrowserView(_ view: ChromiumBrowserView, didLogConsoleText text: String, level: String) {
+        guard capturesConsole else { return }
         consoleLog.record(BrowserConsoleMessage(level: level, text: text, timestamp: Date()))
     }
 
@@ -414,6 +470,10 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         }
     }
 
+    public func chromiumBrowserViewShouldAcceptDrag(_ view: ChromiumBrowserView) -> Bool {
+        decide(.dragAndDrop, "draggingEntered", synthesized: false)
+    }
+
     /// A pane has no windows to give a pop-up, so the address opens here, the
     /// way the Safari pane does it. With pop-ups blocked, only one the user
     /// clicked for opens; an address-less `window.open()` never does.
@@ -424,5 +484,194 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         guard let url = URL(string: address), !address.isEmpty,
               url != WebBrowserPaneViewController.blankPage else { return }
         load(url)
+    }
+}
+
+// MARK: - Session privacy
+
+extension ChromiumBrowserEngine {
+
+    public func applyCookiePolicy(acceptsCookies: Bool) {
+        browserView.acceptsCookies = acceptsCookies
+    }
+
+    /// Raises or lowers the shield on the page showing now and on every
+    /// document after it: the same script the WebKit engine installs, added
+    /// as a new-document script, run at once on the page already showing,
+    /// with Chromium's focus emulation so the page reads as focused even in a
+    /// window that is not key. A cross-origin frame already showing is
+    /// shielded from its next load.
+    public func setActivationShieldActive(_ active: Bool) {
+        guard active != isActivationShieldActive else { return }
+        isActivationShieldActive = active
+        let previous = shieldTask
+        shieldTask = Task { @MainActor [weak self] in
+            await previous?.value
+            guard let self, !Task.isCancelled else { return }
+            await self.applyShield(active)
+        }
+    }
+
+    private func applyShield(_ active: Bool) async {
+        guard let source = BrowserActivationShield.script(mode: active ? "raise" : "lift", token: shieldToken) else {
+            return
+        }
+        do {
+            if active {
+                let added = try await send("Page.addScriptToEvaluateOnNewDocument", [
+                    "source": source, "runImmediately": true
+                ])
+                shieldScriptIdentifier = added["identifier"] as? String
+            } else if let identifier = shieldScriptIdentifier {
+                shieldScriptIdentifier = nil
+                _ = try await send("Page.removeScriptToEvaluateOnNewDocument", ["identifier": identifier])
+            }
+            _ = try await send("Emulation.setFocusEmulationEnabled", ["enabled": active])
+            if url != nil {
+                _ = try await send("Runtime.evaluate", ["expression": source])
+            }
+        } catch {
+            logger.debug("activation shield did not change: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    // MARK: Input gate
+
+    /// Whether `channel` reaches the page, told to `onInputDecision` either
+    /// way.
+    func decide(_ channel: BrowserInputChannel, _ event: String, synthesized: Bool, detail: String = "") -> Bool {
+        let delivered = inputGate.allows(channel, synthesized: synthesized, pageHasFocus: pageHasFocus)
+        onInputDecision?(channel, event, delivered, synthesized, detail)
+        return delivered
+    }
+
+    /// The window is key and the first responder is in the page.
+    private var pageHasFocus: Bool {
+        guard let window = browserView.window, window.isKeyWindow else { return false }
+        return holdsFirstResponder
+    }
+
+    private var holdsFirstResponder: Bool {
+        guard let responder = browserView.window?.firstResponder as? NSView else { return false }
+        return responder === browserView || responder.isDescendant(of: browserView)
+    }
+
+    /// Whether the window's event at `event`'s location lands on the page:
+    /// the frontmost view under it is Chromium's, so a popover or sheet over
+    /// the page keeps its own clicks.
+    private func isOverPage(_ event: NSEvent) -> Bool {
+        guard let window = browserView.window, event.window === window,
+              let frame = window.contentView?.superview ?? window.contentView,
+              let hit = frame.hitTest(event.locationInWindow) else { return false }
+        return hit === browserView || hit.isDescendant(of: browserView)
+    }
+
+    private static let monitoredEvents: NSEvent.EventTypeMask = [
+        .keyDown, .keyUp, .flagsChanged,
+        .leftMouseDown, .leftMouseUp, .leftMouseDragged,
+        .rightMouseDown, .rightMouseUp, .rightMouseDragged,
+        .otherMouseDown, .otherMouseUp, .otherMouseDragged,
+        .scrollWheel, .magnify, .rotate, .swipe, .smartMagnify, .pressure,
+        .mouseMoved, .mouseEntered, .mouseExited, .cursorUpdate
+    ]
+
+    /// Chromium's views are its own, so the gate sits in front of them: a
+    /// local monitor sees every event before the window dispatches it, and
+    /// drops the ones bound for this page that the gate refuses.
+    func installInputMonitor() {
+        // Local monitors run on the main thread. The block answers a Bool, not
+        // the event, because NSEvent is not Sendable across the isolation hop.
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: Self.monitoredEvents) { [weak self] event in
+            nonisolated(unsafe) let event = event
+            let keep = MainActor.assumeIsolated {
+                guard let self else { return true }
+                return self.filter(event) != nil
+            }
+            return keep ? event : nil
+        }
+    }
+
+    private func filter(_ event: NSEvent) -> NSEvent? {
+        guard let window = browserView.window, event.window === window else { return event }
+        switch event.type {
+        case .keyDown, .keyUp, .flagsChanged:
+            return filterKey(event)
+        case .leftMouseDown, .rightMouseDown, .otherMouseDown:
+            mouseSequenceOnPage = isOverPage(event)
+            return gateMouse(event, applies: mouseSequenceOnPage)
+        case .leftMouseDragged, .rightMouseDragged, .otherMouseDragged:
+            return gateMouse(event, applies: mouseSequenceOnPage)
+        case .leftMouseUp, .rightMouseUp, .otherMouseUp:
+            let applies = mouseSequenceOnPage
+            mouseSequenceOnPage = false
+            return gateMouse(event, applies: applies)
+        case .scrollWheel, .magnify, .rotate, .swipe, .smartMagnify, .pressure:
+            return gateMouse(event, applies: isOverPage(event))
+        case .mouseEntered, .mouseExited:
+            guard let owner = event.trackingArea?.owner as? NSView,
+                  owner === browserView || owner.isDescendant(of: browserView) else { return event }
+            return decide(.pointer, Self.name(of: event), synthesized: false) ? event : nil
+        case .mouseMoved, .cursorUpdate:
+            guard isOverPage(event) else { return event }
+            return decide(.pointer, Self.name(of: event), synthesized: false) ? event : nil
+        default:
+            return event
+        }
+    }
+
+    private func gateMouse(_ event: NSEvent, applies: Bool) -> NSEvent? {
+        guard applies else { return event }
+        return decide(.mouse, Self.name(of: event), synthesized: false) ? event : nil
+    }
+
+    /// A key bound for the page is gated; one for the address bar or any
+    /// other view is not. A refused key with Command still reaches the menu
+    /// bar, so Close Tab and the like keep working with the page shut off,
+    /// unless it is an editing command the menu would send straight back to
+    /// the page.
+    private func filterKey(_ event: NSEvent) -> NSEvent? {
+        guard holdsFirstResponder else { return event }
+        let name = event.type == .keyDown ? "keyDown" : event.type == .keyUp ? "keyUp" : "flagsChanged"
+        if decide(.keyboard, name, synthesized: false, detail: BrowserEventLog.keyDetail(for: event)) {
+            return event
+        }
+        if event.type == .keyDown, event.modifierFlags.contains(.command), !Self.isEditingShortcut(event) {
+            _ = NSApp.mainMenu?.performKeyEquivalent(with: event)
+        }
+        return nil
+    }
+
+    /// The Edit menu's own shortcuts, whose actions go to the first responder,
+    /// which is the page.
+    static func isEditingShortcut(_ event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])
+        guard flags.contains(.command), !flags.contains(.control),
+              let key = event.charactersIgnoringModifiers?.lowercased() else { return false }
+        return ["a", "c", "v", "x", "z"].contains(key)
+    }
+
+    private static func name(of event: NSEvent) -> String {
+        switch event.type {
+        case .leftMouseDown: "mouseDown"
+        case .leftMouseUp: "mouseUp"
+        case .leftMouseDragged: "mouseDragged"
+        case .rightMouseDown: "rightMouseDown"
+        case .rightMouseUp: "rightMouseUp"
+        case .rightMouseDragged: "rightMouseDragged"
+        case .otherMouseDown: "otherMouseDown"
+        case .otherMouseUp: "otherMouseUp"
+        case .otherMouseDragged: "otherMouseDragged"
+        case .scrollWheel: "scrollWheel"
+        case .magnify: "magnify"
+        case .rotate: "rotate"
+        case .swipe: "swipe"
+        case .smartMagnify: "smartMagnify"
+        case .pressure: "pressureChange"
+        case .mouseMoved: "mouseMoved"
+        case .mouseEntered: "mouseEntered"
+        case .mouseExited: "mouseExited"
+        case .cursorUpdate: "cursorUpdate"
+        default: "event"
+        }
     }
 }

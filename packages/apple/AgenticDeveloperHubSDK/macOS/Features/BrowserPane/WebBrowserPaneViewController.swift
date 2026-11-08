@@ -4,7 +4,9 @@
 //
 
 import AppKit
+import Combine
 import os
+import WebKit
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
@@ -17,10 +19,17 @@ import AgenticDeveloperHubSDKCoreMacOS
 ///
 /// Everything a browser pane is regardless of engine lives here — the bar,
 /// the remembered address, history, downloads' destination, the media
-/// question, the drive seam a model reaches it through — so the two panes
-/// differ in exactly one thing, the engine, and a model drives either the
-/// same way (`separation-of-concerns`, `dry`). A subclass hands in its
-/// engine and names itself; it overrides nothing else.
+/// question, the drive seam a model reaches it through, and every session
+/// privacy setting: the input gate, the activation shield, Pause Events, the
+/// storage jar and the cookie policy — so the two panes differ in exactly one
+/// thing, the engine, and a privacy setting means the same on either
+/// (`separation-of-concerns`, `dry`). A subclass hands in an engine factory
+/// and names itself; it overrides nothing else.
+///
+/// The engine is made from a factory rather than handed in, because some
+/// settings are fixed when an engine is made — the storage jar above all —
+/// and a pane that moves jars throws its engine away and makes another on the
+/// page it was showing (`rebuildEngine`).
 ///
 /// Deliberately *not* the extension webview. That one shows HTML an extension
 /// hands it behind a custom scheme and opens every link in the user's default
@@ -61,9 +70,20 @@ open class WebBrowserPaneViewController: NSViewController {
     /// The page shown when the store remembers nothing and no home was given.
     public static let blankPage = URL(string: "about:blank")!
 
-    /// The engine rendering the page.
-    public let engine: BrowserEngine
+    /// What a new pane jar is named before its page has a title.
+    public static let untitledLabel = "Browser"
 
+    public typealias ResolvedJar = BrowserResolvedJar
+    public typealias EngineFactory = @MainActor (BrowserEngineConfiguration) -> BrowserEngine
+
+    /// The engine rendering the page. Replaced whole when the pane moves to
+    /// another storage jar (`rebuildEngine`).
+    public private(set) var engine: BrowserEngine
+
+    private let makeEngine: EngineFactory
+    /// Told about each engine a rebuild makes, after the pane has wired it,
+    /// so a subclass can carry its own per-engine state (a test seam) over.
+    var onEngineMade: ((BrowserEngine) -> Void)?
     private let store: PaneStateStore
     let settings: SettingsStore
     private let history: BrowserHistoryStore?
@@ -72,14 +92,74 @@ open class WebBrowserPaneViewController: NSViewController {
     public let engineKind: BrowserEngineKind
     private let minimizedSymbol: String
     private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
+    private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
-    /// What the page wrote to `console.*` since the last navigation.
-    public var consoleLog: BrowserConsoleLog { engine.consoleLog }
+    /// Which project, worktree and node this pane belongs to.
+    public let paneContext: BrowserPaneContext
+    /// The pane's own layered settings, when the factory built it with one.
+    public var paneSettings: LayeredSettingsStore? { settings as? LayeredSettingsStore }
+    /// Whether the user has paused this pane's events (Pause Events, spec
+    /// section 7). Set only through `setEventsPaused(_:)`, so the gate, the
+    /// shield and the badge always move with it. Not persisted: a relaunch
+    /// reloads the page anyway, and a pane that came back paused would look
+    /// broken.
+    public private(set) var isEventsPaused = false
+    /// Asked to open a log of the events this pane delivered and withheld
+    /// (the debug-only Show Browser Log gear item). The host wires it.
+    public var onShowBrowserLog: ((WebBrowserPaneViewController) -> Void)?
+    /// The pane's effective Agent access, read from its own layered settings
+    /// so a per-pane override counts.
+    public var agentAccess: BrowserAgentAccess { settings.get(UserSettings.browserPrivacyAgentAccess) }
+    /// Whether the agent is held off this pane: its events are paused and its
+    /// Agent while paused setting says the agent pauses too.
+    public var isPausedForAgent: Bool {
+        isEventsPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
+    }
 
+    /// What the page wrote to `console.*` since the last navigation. The
+    /// pane's, so it outlives an engine rebuilt under it.
+    public let consoleLog = BrowserConsoleLog()
+    /// What this pane delivered to its page, withheld from it, and did around
+    /// it (spec section 12). In memory only, and recorded in every build; only
+    /// debug builds have a pane that shows it.
+    public let eventLog = BrowserEventLog()
+    /// Whether the pane has left the layout for good
+    /// (`paneContentWillBeDiscarded`), so a log pane stops following it.
+    public private(set) var isDiscarded = false
+    /// The jar the current engine was built on.
+    public private(set) var resolvedJar: ResolvedJar
+    /// Whether the current engine captures the page console: read once, where
+    /// the engine is built, and used for the engine and the automation alike.
+    /// A construction-time setting; a change waits for a rebuild.
+    private(set) var capturesConsole: Bool
+    /// The construction-time settings the current engine was built with
+    /// (`BrowserSettings.constructionSnapshot`), so closing the settings
+    /// sheet can tell whether the pane still matches them.
+    private(set) var builtConstructionSettings: [String: String]
+    /// The construction-time settings in effect when the pane's settings
+    /// sheet opened; `nil` while no sheet is up. Closing the sheet rebuilds
+    /// only for what changed since then, so a global change made earlier —
+    /// which an open pane does not follow (spec sections 3 and 4) — is never
+    /// applied by a Done that changed nothing.
+    private(set) var settingsSheetSnapshot: [String: String]?
+    /// Whether the pane's settings sheet is up. While it is, a jar change
+    /// waits for the sheet to close rather than rebuilding under it.
+    var isSettingsSheetOpen: Bool { settingsSheetSnapshot != nil }
+    /// What the jar's row was last named, so a title change writes only when
+    /// the name it would write is new.
+    private var jarLabel: String?
+    /// When `jarLabel` may next be rewritten.
+    private var jarLabelGate = BrowserJarLabelGate()
+
+    private var builtAutomation: BrowserAutomation?
     /// The driving seam a model reaches the pane through. Built on first
-    /// use so a pane nobody drives pays nothing for it.
-    public private(set) lazy var automation: BrowserAutomation = {
-        let automation = BrowserAutomation(driver: engine, console: engine.consoleLog)
+    /// use so a pane nobody drives pays nothing for it, and moved to the new
+    /// engine on a rebuild, so a handle taken before it still drives the page
+    /// on screen.
+    public var automation: BrowserAutomation {
+        if let builtAutomation { return builtAutomation }
+        let automation = BrowserAutomation(driver: engine, console: consoleLog)
+        automation.isConsoleCaptureOn = capturesConsole
         automation.onDriveStateChange = { [weak self] driving in
             guard let self else { return }
             // The start of every drive is a use of this pane, so it becomes
@@ -87,9 +167,19 @@ open class WebBrowserPaneViewController: NSViewController {
             if driving { BrowserPaneFocus.shared.note(self) }
             self.drivenBadge.setDriven(driving)
         }
+        automation.onAction = { [weak self] name, succeeded in
+            self?.eventLog.record(
+                channel: "agent", event: name, decision: .info, detail: succeeded ? "succeeded" : "failed")
+        }
+        builtAutomation = automation
         return automation
-    }()
+    }
+
+    /// What holds the engine's view in the view hierarchy; replaced with it.
+    private var pageHost: NSView?
+    private weak var addressBar: NSView?
     let drivenBadge = BrowserDrivenBadge()
+    let pausedBadge = BrowserPausedBadge()
     let addressField = NSTextField()
     let backButton = NSButton()
     let forwardButton = NSButton()
@@ -97,6 +187,14 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// The window's first responder, followed while the pane is on screen.
     private var firstResponderObservation: NSKeyValueObservation?
+    /// Whether the page held first responder at the last change, so the log
+    /// records the page gaining and losing it rather than every move between
+    /// two controls outside it.
+    private var pageHeldFirstResponder: Bool?
+    /// The pane's window's key and occlusion notifications, for the log.
+    private var windowObservers: [NSObjectProtocol] = []
+    /// The settings subscriptions; made again with every engine.
+    private var cancellables: Set<AnyCancellable> = []
     /// The history row for the page on screen, so a title that arrives after
     /// the load is filed against it rather than lost.
     private var currentVisitID: Int64?
@@ -105,39 +203,68 @@ open class WebBrowserPaneViewController: NSViewController {
     private var visitGeneration = 0
 
     /// - Parameters:
-    ///   - engine: What renders the page. The pane becomes its delegate.
-    ///   - engineKind: Which engine `engine` is, for the model tools, and the
-    ///     name the pane calls itself while it shows nothing.
+    ///   - makeEngine: Makes what renders the page, from the configuration
+    ///     the pane resolved; called again on every rebuild. The pane becomes
+    ///     each engine's delegate.
+    ///   - engineKind: Which engine `makeEngine` makes, for the model tools,
+    ///     and the name the pane calls itself while it shows nothing.
     ///   - minimizedSymbol: The SF Symbol a minimized pane shows.
     ///   - store: Where the pane remembers its address between launches.
     ///   - settings: The browser settings the pane honours.
     ///   - history: Where visits are recorded; `nil` records nothing.
     ///   - homeURL: What a pane opens on when nothing is remembered *and* the
     ///     Home Page setting is blank.
+    ///   - context: The project, worktree and node the pane belongs to.
     public init(
-        engine: BrowserEngine,
+        makeEngine: @escaping EngineFactory,
         engineKind: BrowserEngineKind,
         minimizedSymbol: String,
         store: PaneStateStore,
         settings: SettingsStore,
         history: BrowserHistoryStore?,
-        homeURL: URL
+        homeURL: URL,
+        context: BrowserPaneContext = .detached
     ) {
-        self.engine = engine
+        self.makeEngine = makeEngine
         self.engineKind = engineKind
         self.minimizedSymbol = minimizedSymbol
         self.store = store
         self.settings = settings
         self.history = history
         self.fallbackHomeURL = homeURL
+        self.paneContext = context
+        let jar = Self.resolveJar(settings: settings, context: context, label: Self.untitledLabel)
+        let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
+        self.resolvedJar = jar
+        self.capturesConsole = capturesConsole
+        self.builtConstructionSettings = BrowserSettings.constructionSnapshot(in: settings)
+        self.engine = makeEngine(BrowserEngineConfiguration(
+            settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: capturesConsole
+        ))
         super.init(nibName: nil, bundle: nil)
-        engine.delegate = self
+        jarLabel = jar.jarID == nil ? nil : Self.untitledLabel
+        context.jars?.noteUse(of: jar.jarID, by: self)
+        recordJarFallback(jar)
+        wireEngine()
+        applyCookiePolicy()
+        observeSettings()
     }
 
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     public var onPaneTitleChange: (() -> Void)?
+
+    /// Posted, with the pane as its object, whenever `paneTitle` may have
+    /// changed. `onPaneTitleChange` is the host's one slot; this is for
+    /// anything else following a pane, such as its Browser Log, whatever
+    /// engine it is on.
+    public static let paneTitleDidChangeNotification = Notification.Name("WebBrowserPaneTitleDidChange")
+
+    private func announceTitleChange() {
+        onPaneTitleChange?()
+        NotificationCenter.default.post(name: Self.paneTitleDidChangeNotification, object: self)
+    }
 
     /// The address the pane will restore to: what the store remembers, else
     /// the Home Page setting, else the registration's home.
@@ -149,6 +276,239 @@ open class WebBrowserPaneViewController: NSViewController {
             return url
         }
         return BrowserSettings.homePage(in: settings) ?? fallbackHomeURL
+    }
+
+    // MARK: - Engine
+
+    /// Everything a new engine needs from the pane before it shows a page.
+    /// One place, so the engine a rebuild makes is wired exactly as the first
+    /// one was (`dry`).
+    private func wireEngine() {
+        engine.delegate = self
+        engine.onInputDecision = { [weak self] channel, event, delivered, synthesized, detail in
+            self?.recordInput(channel, event, delivered: delivered, synthesized: synthesized, detail: detail)
+        }
+        refreshInputGate()
+        refreshActivationShield()
+    }
+
+    /// Recomputes the engine's input gate from the pane's settings and its
+    /// pause state. The one place the gate is built, so a settings change, a
+    /// pause change and a rebuilt engine (through `wireEngine`) all land on
+    /// the same answer. Only the page is gated; the pane's address bar and
+    /// chrome never are, so the address bar and the back, forward and reload
+    /// buttons still work while the pane is paused.
+    private func refreshInputGate() {
+        engine.inputGate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
+    }
+
+    /// Raises or lowers the activation shield from the Hide Focus setting and
+    /// the pause state: up when either asks for it. The one place that answer
+    /// is computed, beside `refreshInputGate` for the same reasons.
+    private func refreshActivationShield() {
+        engine.setActivationShieldActive(settings.get(UserSettings.browserPrivacyHideActivation) || isEventsPaused)
+    }
+
+    // MARK: - Settings
+
+    /// Private browsing first — a store that lives only as long as the pane,
+    /// whatever jar is chosen — and otherwise the jar the setting names,
+    /// through the registry. With no registry there is nowhere to keep a
+    /// worktree or pane jar, so the pane is on the shared store.
+    ///
+    /// The WebKit store stays unmade until an engine asks for it, so a
+    /// Chrome pane never makes one.
+    public static func resolveJar(
+        settings: SettingsStore, context: BrowserPaneContext, label: String
+    ) -> ResolvedJar {
+        if settings.get(UserSettings.browserPrivateBrowsing) {
+            return ResolvedJar(webKitDataStore: .nonPersistent(), jar: nil, jarID: nil)
+        }
+        let wanted = settings.get(UserSettings.browserPrivacyStorageJar)
+        guard let jars = context.jars else {
+            if wanted != .global {
+                logger.debug("browser pane has no jar registry; using the shared jar")
+            }
+            return .global
+        }
+        let resolution = jars.resolve(wanted, context: context, label: label)
+        return ResolvedJar(
+            webKitDataStore: resolution.dataStore, jar: resolution.jar, jarID: resolution.jarID,
+            fallbackReason: resolution.fallbackReason
+        )
+    }
+
+    /// Puts a jar that failed closed in the pane's event log, where the
+    /// pane's own record of what happened to it lives.
+    private func recordJarFallback(_ jar: ResolvedJar) {
+        guard let reason = jar.fallbackReason else { return }
+        eventLog.record(
+            channel: "settings", event: "jarFallback", decision: .info,
+            detail: "\(jar.jar?.rawValue ?? "jar") not made, non-persistent store: \(reason)")
+    }
+
+    /// The cookie policy belongs to the store, not the page, and a global or
+    /// worktree store is shared by other panes. The pane still applies it,
+    /// because a private or pane store has no other owner — but only when the
+    /// cookie setting itself changes, not on every browser change: a zoom
+    /// slider drag is not a reason for every open pane to rewrite the shared
+    /// store's policy once per tick.
+    private func applyCookiePolicy() {
+        engine.applyCookiePolicy(
+            acceptsCookies: Self.acceptsCookies(settings: settings, ownsDataStore: resolvedJar.isOwnedByPane))
+    }
+
+    /// The cookie policy to put on the pane's store. A pane's own override
+    /// counts only on a store the pane alone uses; on a shared one it would
+    /// silently change every sibling's policy, so the shared value wins.
+    public static func acceptsCookies(settings: SettingsStore, ownsDataStore: Bool) -> Bool {
+        if !ownsDataStore, let layered = settings as? LayeredSettingsStore {
+            return layered.fallback.get(UserSettings.browserAcceptsCookies)
+        }
+        return settings.get(UserSettings.browserAcceptsCookies)
+    }
+
+    /// What the pane itself follows of the settings. Everything an engine can
+    /// change under a page — zoom, user agent, content rules — the engine
+    /// follows on its own; the pane follows what needs the pane's state: the
+    /// gate and the shield (which need the pause), the cookie policy (which
+    /// needs the jar) and the jar (which needs a rebuild).
+    private func observeSettings() {
+        cancellables.removeAll()
+        settings.changes
+            .filter { $0.hasPrefix("browser.") }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] key in
+                guard let self else { return }
+                // A pane's layered store publishes its own overrides and only
+                // the shared changes no override hides, so every key here is
+                // one that took effect on this pane.
+                self.eventLog.record(channel: "settings", event: "changed", decision: .info, detail: key)
+                self.refreshInputGate()
+                self.refreshActivationShield()
+                if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
+                if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
+            }
+            .store(in: &cancellables)
+        // A pane overriding the cookie setting hides the shared value's
+        // changes from `settings`, but on a shared store it is the shared
+        // value that applies, so it is followed here as well.
+        paneSettings?.fallback.changes
+            .filter { $0 == UserSettings.browserAcceptsCookies.name }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.applyCookiePolicy() }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - Storage jar
+
+    /// The shared jar setting moved. A pane following it — no override of
+    /// its own, not private — moves too, when the jar it would now resolve to
+    /// is not the one it is on. A pane's own jar override is applied by its
+    /// settings sheet, not here: the sheet decides when a rebuild is due.
+    /// While the sheet is up nothing moves — not even a dropped override —
+    /// and the sheet's close compares what changed (spec section 4).
+    private func storageJarSettingDidChange() {
+        guard !isSettingsSheetOpen else { return }
+        guard resolvedJar.jar != nil else { return }
+        if paneSettings?.hasOverride(UserSettings.browserPrivacyStorageJar) == true { return }
+        guard needsRebuildForJar() else { return }
+        rebuildEngine()
+    }
+
+    /// Whether the jar setting now names a different store from the one the
+    /// engine is on. Answered without making a row: a jar not made yet is a
+    /// different one by definition.
+    func needsRebuildForJar() -> Bool {
+        let wanted = settings.get(UserSettings.browserPrivacyStorageJar)
+        guard let jars = paneContext.jars, wanted != .global else {
+            return resolvedJar.jar != .global
+        }
+        // A jar this context cannot have resolves to a non-persistent store
+        // under the same name; a pane already on that has nowhere to go.
+        guard jars.canIsolate(wanted, context: paneContext) else {
+            return !(resolvedJar.isFallback && resolvedJar.jar == wanted)
+        }
+        guard resolvedJar.jar == wanted else { return true }
+        return jars.jarID(for: wanted, context: paneContext) != resolvedJar.jarID
+    }
+
+    /// Throws the engine away and makes a new one on the jar the settings
+    /// resolve to now, on the page the old one was showing.
+    ///
+    /// Both engines fix a page's session store when the page is made, so
+    /// moving jars is a new engine, not a property change. The old one is
+    /// torn down exactly as a discarded pane's is, so it lets go of its store
+    /// — WebKit will not remove a store a web view still holds.
+    ///
+    /// Downloads in flight in the old engine are cancelled with it, as are
+    /// its back and forward history and any form a page had half filled in.
+    /// That is accepted rather than worked around: changing a pane's jar is
+    /// rare and deliberate, and carrying a download across two stores would
+    /// hand one jar's session to another.
+    public func rebuildEngine() {
+        let shownURL = engine.url.flatMap { $0 == Self.blankPage ? nil : $0 }
+        // A navigation still held for the old engine's rules is where the
+        // pane was going, so it wins over the page the old one was showing.
+        let heldURL = engine.heldLoadURL
+        let label = paneTitle
+        // Removing the page drops a first responder it held to the window;
+        // the new one takes it back, as does a paused pane's, whose page is
+        // meant to be focused and frozen (spec section 7) — but only when
+        // nothing else in the window holds the focus: a rebuild a global
+        // setting caused must not pull the keyboard out of a terminal.
+        let responder = viewIfLoaded?.window?.firstResponder
+        let focusIsFree = responder == nil || responder === viewIfLoaded?.window
+        let refocus = pageHolds(responder) || (isEventsPaused && focusIsFree)
+        firstResponderObservation = nil
+        cancellables.removeAll()
+        engine.teardown()
+        engine.view.removeFromSuperview()
+        pageHost?.removeFromSuperview()
+        pageHost = nil
+
+        let jar = Self.resolveJar(settings: settings, context: paneContext, label: label)
+        let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
+        resolvedJar = jar
+        self.capturesConsole = capturesConsole
+        builtConstructionSettings = BrowserSettings.constructionSnapshot(in: settings)
+        // What the old engine captured is not this one's to report.
+        if !capturesConsole { consoleLog.clear() }
+        jarLabel = jar.jarID == nil ? nil : label
+        paneContext.jars?.noteUse(of: jar.jarID, by: self)
+        engine = makeEngine(BrowserEngineConfiguration(
+            settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: capturesConsole
+        ))
+        wireEngine()
+        onEngineMade?(engine)
+        builtAutomation?.retarget(to: engine)
+        builtAutomation?.isConsoleCaptureOn = capturesConsole
+        applyCookiePolicy()
+        observeSettings()
+        eventLog.record(channel: "settings", event: "rebuild", decision: .info, detail: jar.jar?.rawValue ?? "private")
+        recordJarFallback(jar)
+
+        guard isViewLoaded else { return }
+        installPageHost()
+        browserEngineTitleDidChange(engine)
+        browserEngineHistoryDidChange(engine)
+        if view.window != nil { observeFirstResponder() }
+        if refocus { view.window?.makeFirstResponder(engine.view) }
+        engine.load(heldURL ?? shownURL ?? restorationURL)
+    }
+
+    /// Keeps the pane jar's row named after the page, so a list of jars says
+    /// what each was for after its pane is gone.
+    ///
+    /// At most once per committed navigation (`BrowserJarLabelGate`), so a
+    /// page that keeps retitling itself does not keep writing the database.
+    private func updateJarLabel(finished: Bool) {
+        guard resolvedJar.jar == .pane, let jarID = resolvedJar.jarID, let jars = paneContext.jars else { return }
+        guard let label = jarLabelGate.label(
+            pageTitle: engine.title, fallback: paneTitle, finished: finished, current: jarLabel
+        ) else { return }
+        jarLabel = label
+        jars.updateLabel(jarID: jarID, label: label)
     }
 
     /// Forgets visits older than the retention setting allows. Run as the
@@ -187,28 +547,38 @@ open class WebBrowserPaneViewController: NSViewController {
         addressField.setContentHuggingPriority(.defaultLow, for: .horizontal)
         addressField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let bar = NSStackView(views: [backButton, forwardButton, reloadButton, addressField, drivenBadge])
+        let bar = NSStackView(views: [backButton, forwardButton, reloadButton, addressField, pausedBadge, drivenBadge])
         bar.orientation = .horizontal
         bar.alignment = .centerY
         bar.spacing = 4
         bar.edgeInsets = NSEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
         bar.translatesAutoresizingMaskIntoConstraints = false
 
+        root.addSubview(bar)
+        addressBar = bar
+        NSLayoutConstraint.activate([
+            bar.topAnchor.constraint(equalTo: root.topAnchor),
+            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            bar.trailingAnchor.constraint(equalTo: root.trailingAnchor)
+        ])
+        installPageHost()
+    }
+
+    /// Puts the current engine's view under the address bar.
+    private func installPageHost() {
+        guard let bar = addressBar else { return }
         // Held still while a shelf slides beside the pane: the page paints
         // behind its frame, so resized on every frame it trails the edge.
         let page = FrameHoldingView(content: engine.view, leadsWidthChanges: true)
         page.translatesAutoresizingMaskIntoConstraints = false
-        root.addSubview(bar)
-        root.addSubview(page)
+        view.addSubview(page)
         NSLayoutConstraint.activate([
-            bar.topAnchor.constraint(equalTo: root.topAnchor),
-            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            bar.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             page.topAnchor.constraint(equalTo: bar.bottomAnchor),
-            page.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            page.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            page.bottomAnchor.constraint(equalTo: root.bottomAnchor)
+            page.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            page.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            page.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        pageHost = page
     }
 
     open override func viewDidLoad() {
@@ -229,18 +599,79 @@ open class WebBrowserPaneViewController: NSViewController {
     open override func viewDidAppear() {
         super.viewDidAppear()
         BrowserPaneFocus.shared.note(self)
-        firstResponderObservation = view.window?.observe(\.firstResponder, options: [.new]) { [weak self] window, _ in
-            MainActor.assumeIsolated {
-                guard let self, let responder = window.firstResponder as? NSView,
-                      responder === self.engine.view || responder.isDescendant(of: self.engine.view) else { return }
-                BrowserPaneFocus.shared.note(self)
-            }
-        }
+        observeFirstResponder()
+        observeWindow()
     }
 
     open override func viewDidDisappear() {
         super.viewDidDisappear()
         firstResponderObservation = nil
+        pageHeldFirstResponder = nil
+        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        windowObservers = []
+    }
+
+    /// Whether `responder` is the page: the engine's view or a view inside it.
+    private func pageHolds(_ responder: NSResponder?) -> Bool {
+        guard let view = responder as? NSView else { return false }
+        return view === engine.view || view.isDescendant(of: engine.view)
+    }
+
+    private func observeFirstResponder() {
+        firstResponderObservation = view.window?.observe(\.firstResponder, options: [.new]) { [weak self] window, _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let pageHolds = self.pageHolds(window.firstResponder)
+                if pageHolds != self.pageHeldFirstResponder {
+                    self.pageHeldFirstResponder = pageHolds
+                    self.eventLog.record(
+                        channel: "window", event: "firstResponder", decision: .info,
+                        detail: pageHolds ? "page" : "outside the page")
+                }
+                guard pageHolds else { return }
+                BrowserPaneFocus.shared.note(self)
+            }
+        }
+    }
+
+    /// Follows the window's key and occlusion state into the log: both
+    /// decide what the page can tell about its own focus and visibility.
+    private func observeWindow() {
+        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        windowObservers = []
+        guard let window = view.window else { return }
+        let center = NotificationCenter.default
+        let events: [(Notification.Name, String)] = [
+            (NSWindow.didBecomeKeyNotification, "becameKey"),
+            (NSWindow.didResignKeyNotification, "resignedKey"),
+            (NSWindow.didChangeOcclusionStateNotification, "occlusion")
+        ]
+        windowObservers = events.map { name, event in
+            center.addObserver(forName: name, object: window, queue: .main) { [weak self, weak window] _ in
+                MainActor.assumeIsolated {
+                    let visible = window?.occlusionState.contains(.visible) == true
+                    let detail = event == "occlusion" ? (visible ? "visible" : "occluded") : ""
+                    self?.eventLog.record(channel: "window", event: event, decision: .info, detail: detail)
+                }
+            }
+        }
+    }
+
+    /// One gate decision into the log. A withheld event the agent sent says
+    /// so, since that only happens while the agent is paused too.
+    private func recordInput(
+        _ channel: BrowserInputChannel, _ event: String, delivered: Bool, synthesized: Bool, detail: String
+    ) {
+        let decision: BrowserEventLogEntry.Decision = !delivered ? .withheld : synthesized ? .synthesized : .delivered
+        let shown = synthesized && !delivered ? (detail.isEmpty ? "agent" : "agent " + detail) : detail
+        eventLog.record(channel: channel.rawValue, event: event, decision: decision, detail: shown)
+    }
+
+    /// A navigation into the log, by host: a path or query can carry a token.
+    private func recordNavigation(_ event: String, error: Error? = nil) {
+        var detail = engine.url?.host ?? ""
+        if let error { detail += (detail.isEmpty ? "" : " ") + "error \((error as NSError).code)" }
+        eventLog.record(channel: "navigation", event: event, decision: .info, detail: detail)
     }
 
     private func configureButton(_ button: NSButton, symbol: String, label: String, action: Selector) {
@@ -346,7 +777,8 @@ open class WebBrowserPaneViewController: NSViewController {
 extension WebBrowserPaneViewController: BrowserEngineDelegate {
 
     public func browserEngineTitleDidChange(_ engine: BrowserEngine) {
-        onPaneTitleChange?()
+        announceTitleChange()
+        updateJarLabel(finished: false)
         guard let visitID = currentVisitID, let title = engine.title, !title.isEmpty else { return }
         file(title, againstVisit: visitID)
     }
@@ -362,7 +794,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         if addressField.currentEditor() == nil {
             addressField.stringValue = url == Self.blankPage ? "" : url.absoluteString
         }
-        onPaneTitleChange?()
+        announceTitleChange()
     }
 
     public func browserEngineHistoryDidChange(_ engine: BrowserEngine) {
@@ -376,15 +808,28 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// onto the previous page's row.
     public func browserEngineDidStartNavigation(_ engine: BrowserEngine) {
         currentVisitID = nil
+        recordNavigation("start")
     }
 
     public func browserEngineDidCommitNavigation(_ engine: BrowserEngine) {
-        engine.consoleLog.clear()
+        consoleLog.clear()
         rememberAddress()
+        jarLabelGate.navigationDidCommit()
+        recordNavigation("commit")
     }
 
     public func browserEngineDidFinishNavigation(_ engine: BrowserEngine) {
         recordVisit()
+        updateJarLabel(finished: true)
+        recordNavigation("finish")
+    }
+
+    public func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error) {
+        recordNavigation("fail", error: error)
+    }
+
+    public func browserEngine(_ engine: BrowserEngine, download event: String, host: String) {
+        eventLog.record(channel: "download", event: event, decision: .info, detail: host)
     }
 
     /// A dialog raised while a model acts is the model's to hear about, and it
@@ -392,7 +837,12 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// not the user's. Outside an action the same dismissal applies, since the
     /// pane shows no dialogs of its own; the answer is just not reported.
     public func browserEngine(_ engine: BrowserEngine, didRaise dialog: BrowserDialog) {
-        guard automation.isActionInFlight else { return }
+        // The message is the page's words and stays out of the log.
+        let reported = builtAutomation?.isActionInFlight == true
+        eventLog.record(
+            channel: "dialog", event: dialog.kind.rawValue, decision: .info,
+            detail: reported ? "dismissed, reported to the agent" : "dismissed")
+        guard reported else { return }
         automation.dialogRaised(kind: dialog.kind, message: dialog.message)
     }
 
@@ -442,6 +892,20 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     public func browserEngine(
         _ engine: BrowserEngine, allowsMediaCaptureFor host: String, device: String
     ) async -> Bool? {
+        eventLog.record(channel: "permission", event: "request", decision: .info, detail: "\(host) \(device)")
+        let decision = await decideMediaCapture(host: host, device: device)
+        let answer = switch decision {
+        case true?: "granted"
+        case false?: "denied"
+        case nil: "left to the engine"
+        }
+        eventLog.record(
+            channel: "permission", event: "decision", decision: .info, detail: "\(host) \(device) \(answer)"
+        )
+        return decision
+    }
+
+    private func decideMediaCapture(host: String, device: String) async -> Bool? {
         switch settings.get(UserSettings.browserMediaCapture) {
         case .allow: return true
         case .deny: return false
@@ -471,6 +935,117 @@ extension WebBrowserPaneViewController: PaneTitleProviding {
     }
 }
 
+// MARK: - Pause Events
+
+extension WebBrowserPaneViewController {
+
+    /// Pauses or unpauses the page's events (spec section 7).
+    ///
+    /// Pausing first makes the page the window's first responder, so the
+    /// page holds focus at the moment it is frozen. That also ends an edit in
+    /// the address field without navigating, because the field's cell does
+    /// not send its action on end editing. Then the gate closes every user
+    /// channel, the activation shield goes up (on the live page too), and the
+    /// paused badge shows. Unpausing hands the gate and the shield back to
+    /// the settings and hides the badge; first responder stays where it is.
+    public func setEventsPaused(_ paused: Bool) {
+        guard paused != isEventsPaused else { return }
+        if paused { viewIfLoaded?.window?.makeFirstResponder(engine.view) }
+        isEventsPaused = paused
+        refreshInputGate()
+        refreshActivationShield()
+        pausedBadge.setPaused(paused)
+        eventLog.record(channel: "pane", event: paused ? "pause" : "unpause", decision: .info)
+    }
+}
+
+// MARK: - Gear menu
+
+extension WebBrowserPaneViewController: PaneMenuProviding {
+
+    /// After the framework's Move: Pause Events (checked while paused),
+    /// Settings…, and in debug builds Show Browser Log (spec section 11).
+    /// Asked on every click, so the checkmark is always the current state.
+    public func makePaneMenuItems() -> [NSMenuItem] {
+        let pause = NSMenuItem(title: "Pause Events", action: #selector(togglePauseEvents), keyEquivalent: "")
+        pause.target = self
+        pause.state = isEventsPaused ? .on : .off
+        pause.accessibilityID("pane.options.browser.pause")
+
+        let settingsItem = NSMenuItem(title: "Settings…", action: #selector(showPaneSettings), keyEquivalent: "")
+        settingsItem.target = self
+        settingsItem.accessibilityID("pane.options.browser.settings")
+
+        var items = [pause, settingsItem]
+        #if DEBUG
+        let log = NSMenuItem(title: "Show Browser Log", action: #selector(showBrowserLog), keyEquivalent: "")
+        log.target = self
+        log.accessibilityID("pane.options.browser.log")
+        items.append(log)
+        #endif
+        return items
+    }
+
+    @objc func togglePauseEvents() {
+        setEventsPaused(!isEventsPaused)
+    }
+
+    /// Whether the settings an engine fixes at construction now resolve to
+    /// anything other than `snapshot`.
+    func needsRebuild(after snapshot: [String: String]) -> Bool {
+        BrowserSettings.constructionSnapshot(in: settings) != snapshot
+    }
+
+    /// Whether `settings` — the values the settings sheet shows — put this
+    /// pane on a store no other pane uses: private browsing, or a pane jar
+    /// the registry can make. Answers for the jar the sheet now shows, not
+    /// the one the engine was built on, so the Accept cookies row is never
+    /// offered as an override that would not apply after the close.
+    func wouldOwnDataStore(under settings: SettingsStore) -> Bool {
+        if settings.get(UserSettings.browserPrivateBrowsing) { return true }
+        guard settings.get(UserSettings.browserPrivacyStorageJar) == .pane,
+              let jars = paneContext.jars else { return false }
+        return jars.canIsolate(.pane, context: paneContext)
+    }
+
+    /// The pane's settings sheet, ready to present: its construction-time
+    /// values are recorded now, and its close rebuilds the engine for
+    /// whatever of them changed while it was up (spec section 3). `nil` for a
+    /// pane with no settings layer of its own. Internal so a test can drive
+    /// open and close without a window.
+    func makePaneSettingsSheet() -> BrowserPaneSettingsSheetController? {
+        guard let sheet = BrowserPaneSettingsSheetController(pane: self, history: history) else {
+            logger.info("browser pane settings requested, but the pane has no settings layer of its own")
+            return nil
+        }
+        settingsSheetSnapshot = BrowserSettings.constructionSnapshot(in: settings)
+        sheet.onClose = { [weak self] in self?.paneSettingsSheetDidClose() }
+        return sheet
+    }
+
+    /// The sheet has gone: rebuild if a construction-time value differs from
+    /// what it was when the sheet opened.
+    private func paneSettingsSheetDidClose() {
+        guard let snapshot = settingsSheetSnapshot else { return }
+        settingsSheetSnapshot = nil
+        guard !isDiscarded else { return }
+        if needsRebuild(after: snapshot) { rebuildEngine() }
+    }
+
+    @objc func showPaneSettings() {
+        guard view.window != nil else {
+            logger.info("browser pane settings requested, but the pane is in no window to present a sheet on")
+            return
+        }
+        guard let sheet = makePaneSettingsSheet() else { return }
+        presentAsSheet(sheet)
+    }
+
+    @objc func showBrowserLog() {
+        onShowBrowserLog?(self)
+    }
+}
+
 extension WebBrowserPaneViewController: PaneMinimizedRepresenting {
     public var paneMinimizedSymbolName: String { minimizedSymbol }
     public var paneMinimizedTooltip: String { paneTitle }
@@ -479,9 +1054,19 @@ extension WebBrowserPaneViewController: PaneMinimizedRepresenting {
 extension WebBrowserPaneViewController: PaneContentTeardown {
 
     /// Lets go of the engine: a navigation or a transfer that completes into
-    /// a discarded pane would otherwise call back into it.
+    /// a discarded pane would otherwise call back into it. The jar is
+    /// released, so the reconciler may collect it once the layout no longer
+    /// holds the pane.
     public func paneContentWillBeDiscarded() {
         firstResponderObservation = nil
+        cancellables.removeAll()
+        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        windowObservers = []
         engine.teardown()
+        paneContext.jars?.endUse(by: self)
+        // A log pane following this one lets it go on the change this sends:
+        // its list empties and its title drops this pane's name.
+        isDiscarded = true
+        eventLog.clear()
     }
 }

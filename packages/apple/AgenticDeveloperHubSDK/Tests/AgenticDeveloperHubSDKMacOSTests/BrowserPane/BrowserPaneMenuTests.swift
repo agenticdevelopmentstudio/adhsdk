@@ -14,22 +14,22 @@ final class BrowserPaneMenuTests: XCTestCase {
         )
     }
 
-    private func makePane(settings: SettingsStore? = nil) -> BrowserPaneViewController {
-        BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings ?? makeSettings())
+    private func makePane(settings: SettingsStore? = nil) -> SafariBrowserPaneViewController {
+        SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings ?? makeSettings())
     }
 
-    private func item(_ title: String, in pane: BrowserPaneViewController) throws -> NSMenuItem {
+    private func item(_ title: String, in pane: SafariBrowserPaneViewController) throws -> NSMenuItem {
         try XCTUnwrap(pane.makePaneMenuItems().first { $0.title == title }, "no \(title) item")
     }
 
     /// The current web view's gate; every pane web view is a `BrowserWebView`.
-    private func gate(of pane: BrowserPaneViewController) throws -> BrowserInputGate {
+    private func gate(of pane: SafariBrowserPaneViewController) throws -> BrowserInputGate {
         try XCTUnwrap(pane.webView as? BrowserWebView).gate
     }
 
     /// Whether the current web view's controller holds the shield's
     /// document-start script: the half of the shield a rebuild can lose.
-    private func hasShieldScript(_ pane: BrowserPaneViewController) -> Bool {
+    private func hasShieldScript(_ pane: SafariBrowserPaneViewController) -> Bool {
         pane.webView.configuration.userContentController.userScripts
             .contains { $0.source.contains(BrowserActivationShield.marker) }
     }
@@ -139,7 +139,7 @@ final class BrowserPaneMenuTests: XCTestCase {
     func testARebuiltWebViewStaysPaused() throws {
         let pane = makePane()
         pane.setEventsPaused(true)
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertTrue(try gate(of: pane).isPaused)
         XCTAssertTrue(pane.activationShield.isActive)
         XCTAssertTrue(hasShieldScript(pane), "the new web view has the shield's script")
@@ -180,13 +180,13 @@ final class BrowserPaneMenuTests: XCTestCase {
         XCTAssertFalse(pane.webView.isLoading, "ending the edit did not navigate")
         XCTAssertFalse(pane.isHoldingLoad, "nor held a navigation for later")
         XCTAssertEqual(pane.webView.url, urlBefore)
-        XCTAssertTrue(pane.webView.url == nil || pane.webView.url == BrowserPaneViewController.blankPage)
+        XCTAssertTrue(pane.webView.url == nil || pane.webView.url == SafariBrowserPaneViewController.blankPage)
     }
 
     func testShowBrowserLogCallsTheHost() throws {
         #if DEBUG
         let pane = makePane()
-        var asked: BrowserPaneViewController?
+        var asked: WebBrowserPaneViewController?
         pane.onShowBrowserLog = { asked = $0 }
         let log = try item("Show Browser Log", in: pane)
         _ = pane.perform(try XCTUnwrap(log.action), with: log)

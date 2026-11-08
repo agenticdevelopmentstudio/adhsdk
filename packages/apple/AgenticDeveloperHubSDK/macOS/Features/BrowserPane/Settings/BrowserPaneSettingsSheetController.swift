@@ -37,7 +37,7 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
 
     /// `nil` when the pane has no settings layer of its own — a pane built
     /// over the shared store directly, whose every change would be global.
-    public init?(pane: BrowserPaneViewController, history: BrowserHistoryStore?) {
+    public init?(pane: WebBrowserPaneViewController, history: BrowserHistoryStore?) {
         guard let layered = pane.paneSettings else { return nil }
         self.paneTitle = pane.paneTitle
         self.panels = BrowserSettingsPanelViewController(

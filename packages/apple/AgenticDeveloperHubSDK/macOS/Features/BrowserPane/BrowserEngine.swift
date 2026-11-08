@@ -5,6 +5,8 @@
 
 import AppKit
 import Combine
+import WebKit
+import AgenticDeveloperHubSDKCore
 
 /// Which JavaScript world a call runs in.
 ///
@@ -76,6 +78,16 @@ public protocol BrowserEngineDelegate: AnyObject {
     /// Whether `host` may use `device` ("camera", "microphone", …). `nil`
     /// leaves the answer to the engine's own default.
     func browserEngine(_ engine: BrowserEngine, allowsMediaCaptureFor host: String, device: String) async -> Bool?
+    /// A navigation failed for a reason other than being replaced by the next.
+    func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error)
+    /// A download started, finished or failed (`event` is "start", "finish"
+    /// or "fail"), from `host`.
+    func browserEngine(_ engine: BrowserEngine, download event: String, host: String)
+}
+
+extension BrowserEngineDelegate {
+    public func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error) {}
+    public func browserEngine(_ engine: BrowserEngine, download event: String, host: String) {}
 }
 
 /// A browser engine under a pane: WebKit for Safari, Chromium for Chrome.
@@ -95,6 +107,102 @@ public protocol BrowserEngine: BrowserPageDriver {
     /// Stops the page, cancels its transfers and lets go of every callback;
     /// the engine is not used again.
     func teardown()
+
+    // MARK: Session privacy
+
+    /// What the page's user input passes through (Session Privacy, spec
+    /// section 5). The pane computes it from its settings and pause state and
+    /// sets it whole; the engine only enforces it.
+    var inputGate: BrowserInputGate { get set }
+    /// Told about every input the gate decided: channel, event name, whether
+    /// it was delivered, whether the agent sent it, and a detail.
+    var onInputDecision: ((BrowserInputChannel, String, Bool, Bool, String) -> Void)? { get set }
+    /// Whether the page is being told it is focused and visible whatever the
+    /// window really is (`BrowserActivationShield`).
+    var isActivationShieldActive: Bool { get }
+    /// Raises or lowers the activation shield, on the page showing now and
+    /// every page after it.
+    func setActivationShieldActive(_ active: Bool)
+    /// Puts the cookie policy the pane decided on the engine's store. The pane
+    /// decides because only it knows whether the store is shared.
+    func applyCookiePolicy(acceptsCookies: Bool)
+    /// A load waiting for the Third-Party Content rules to land, so a rebuild
+    /// carries where the pane was going; `nil` when none is held.
+    var heldLoadURL: URL? { get }
+}
+
+/// The storage jar a pane's engine is built on, resolved once by the pane.
+///
+/// The jar is engine-neutral: a WebKit engine reads `webKitDataStore`, a
+/// Chromium engine reads `jar` and `jarID` and keeps the session in its own
+/// on-disk directory named by the id, so the same jar setting isolates a
+/// Safari pane and a Chrome pane alike.
+public struct BrowserResolvedJar {
+    /// `nil` for private browsing, which is no jar at all; `.global` for a
+    /// pane with no jar registry.
+    public let jar: BrowserStorageJar?
+    /// The `browser_jars` row, for a worktree or pane jar.
+    public let jarID: UUID?
+    /// Why the worktree or pane jar asked for could not be made; the store is
+    /// then a non-persistent one of the pane's own.
+    public let fallbackReason: String?
+    private let makeWebKitDataStore: () -> WKWebsiteDataStore
+
+    public init(
+        webKitDataStore: @autoclosure @escaping () -> WKWebsiteDataStore,
+        jar: BrowserStorageJar?, jarID: UUID?, fallbackReason: String? = nil
+    ) {
+        self.makeWebKitDataStore = webKitDataStore
+        self.jar = jar
+        self.jarID = jarID
+        self.fallbackReason = fallbackReason
+    }
+
+    /// The WebKit store for this jar, made when asked for: a Chrome pane
+    /// never asks, so never makes a WebKit store it does not use.
+    public var webKitDataStore: WKWebsiteDataStore { makeWebKitDataStore() }
+
+    /// Whether the jar asked for was replaced by a non-persistent store.
+    public var isFallback: Bool { fallbackReason != nil }
+
+    /// Whether this pane alone uses the store, so a policy set on it changes
+    /// no other pane.
+    public var isOwnedByPane: Bool { jar == nil || jar == .pane || isFallback }
+
+    /// Whether the store lives only as long as the pane: private browsing,
+    /// or a jar that failed closed.
+    public var isEphemeral: Bool { jar == nil || isFallback }
+
+    /// The shared store, for a pane with no jar registry and for tests.
+    public static var global: BrowserResolvedJar {
+        BrowserResolvedJar(webKitDataStore: .default(), jar: .global, jarID: nil)
+    }
+}
+
+/// Everything an engine is built from, decided by the pane before the engine
+/// exists, so a rebuild hands the next engine exactly what the first got.
+@MainActor
+public struct BrowserEngineConfiguration {
+    /// The settings the engine follows live.
+    public let settings: SettingsStore
+    /// Where the page's console goes; owned by the pane, so it outlives an
+    /// engine rebuilt under it.
+    public let consoleLog: BrowserConsoleLog
+    /// The store the engine keeps its session in.
+    public let jar: BrowserResolvedJar
+    /// Whether the page console is captured at all. Read once, where the
+    /// engine is built: a change waits for a rebuild.
+    public let capturesConsole: Bool
+
+    public init(
+        settings: SettingsStore, consoleLog: BrowserConsoleLog,
+        jar: BrowserResolvedJar, capturesConsole: Bool
+    ) {
+        self.settings = settings
+        self.consoleLog = consoleLog
+        self.jar = jar
+        self.capturesConsole = capturesConsole
+    }
 }
 
 /// The words a media-capture question names the device with, shared by every

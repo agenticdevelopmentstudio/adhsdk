@@ -6,16 +6,20 @@
 //  style: Chromium makes a child view of this one and draws into it. The C++
 //  client below is every CEF handler the pane needs, and it reports to the
 //  view, which reports to its Objective-C delegate. Every handler but the
-//  cookie filter runs on CEF's UI thread, which on macOS is the main thread;
-//  the cookie filter runs on the network thread and reads only an atomic.
+//  cookie filter and the resource filter runs on CEF's UI thread, which on
+//  macOS is the main thread; those two run on the network thread and read
+//  only atomics.
 //
 
 #import "ADHChromiumBrowserView.h"
 #import "ADHChromiumPrivate.h"
 
 #include <algorithm>
+#include <atomic>
+#include <cctype>
 #include <cmath>
 #include <map>
+#include <string>
 
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
@@ -31,6 +35,61 @@ NSString* ADHString(const CefString& value) {
 }
 
 constexpr int kInspectElementCommand = MENU_ID_USER_FIRST;
+
+/// The host of a URL, lowercased; empty when it has none.
+std::string ADHHost(const std::string& url) {
+  size_t start = url.find("://");
+  if (start == std::string::npos) {
+    return std::string();
+  }
+  start += 3;
+  size_t end = url.find_first_of("/?#", start);
+  std::string authority = url.substr(start, end == std::string::npos ? std::string::npos : end - start);
+  size_t at = authority.rfind('@');
+  if (at != std::string::npos) {
+    authority = authority.substr(at + 1);
+  }
+  if (!authority.empty() && authority.front() == '[') {
+    size_t close = authority.find(']');
+    authority = authority.substr(0, close == std::string::npos ? std::string::npos : close + 1);
+  } else {
+    size_t colon = authority.find(':');
+    if (colon != std::string::npos) {
+      authority = authority.substr(0, colon);
+    }
+  }
+  std::transform(authority.begin(), authority.end(), authority.begin(),
+                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  return authority;
+}
+
+/// A host's registrable domain, by heuristic: the last two labels, or the
+/// last three when a two-letter country code follows a short second-level
+/// label like `co` in `co.uk`. No public-suffix list ships with the bridge,
+/// so a suffix like `github.io` counts as one site; WebKit's own third-party
+/// test is exact.
+std::string ADHRegistrableDomain(const std::string& host) {
+  if (host.empty() || host.front() == '[' || host.find_first_not_of("0123456789.") == std::string::npos) {
+    return host;
+  }
+  size_t last = host.rfind('.');
+  if (last == std::string::npos || last == 0) {
+    return host;
+  }
+  size_t second = host.rfind('.', last - 1);
+  if (second == std::string::npos) {
+    return host;
+  }
+  std::string secondLabel = host.substr(second + 1, last - second - 1);
+  if (secondLabel.size() <= 3 && host.size() - last - 1 == 2) {
+    if (second == 0) {
+      return host;
+    }
+    size_t third = host.rfind('.', second - 1);
+    return third == std::string::npos ? host : host.substr(third + 1);
+  }
+  return host.substr(second + 1);
+}
 
 }  // namespace
 
@@ -72,9 +131,14 @@ class ADHBrowserClient : public CefClient,
                          public CefRequestHandler,
                          public CefResourceRequestHandler,
                          public CefCookieAccessFilter,
+                         public CefDragHandler,
                          public CefDevToolsMessageObserver {
  public:
-  explicit ADHBrowserClient(ADHChromiumBrowserView* view) : view_(view) {}
+  ADHBrowserClient(ADHChromiumBrowserView* view, bool acceptsCookies, ADHChromiumThirdPartyBlocking thirdParty)
+      : view_(view), acceptsCookies_(acceptsCookies), thirdParty_(static_cast<int>(thirdParty)) {}
+
+  void SetAcceptsCookies(bool accepts) { acceptsCookies_.store(accepts); }
+  void SetThirdPartyBlocking(ADHChromiumThirdPartyBlocking blocking) { thirdParty_.store(static_cast<int>(blocking)); }
 
   /// Drops the view, so a callback still in flight after `close` reports to
   /// nobody.
@@ -88,6 +152,18 @@ class ADHBrowserClient : public CefClient,
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
   CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override { return this; }
   CefRefPtr<CefRequestHandler> GetRequestHandler() override { return this; }
+  CefRefPtr<CefDragHandler> GetDragHandler() override { return this; }
+
+  // MARK: Drag and drop
+
+  bool OnDragEnter(CefRefPtr<CefBrowser> /*browser*/,
+                   CefRefPtr<CefDragData> /*dragData*/,
+                   DragOperationsMask /*mask*/) override {
+    ADHChromiumBrowserView* view = view_;
+    id<ADHChromiumBrowserViewDelegate> delegate = view.delegate;
+    // True cancels the drag; with no one to ask, the page takes it.
+    return delegate ? ![delegate chromiumBrowserViewShouldAcceptDrag:view] : false;
+  }
 
   // MARK: Life span
 
@@ -291,6 +367,34 @@ class ADHBrowserClient : public CefClient,
     return true;
   }
 
+  // MARK: Third-party content
+
+  ReturnValue OnBeforeResourceLoad(CefRefPtr<CefBrowser> /*browser*/,
+                                   CefRefPtr<CefFrame> /*frame*/,
+                                   CefRefPtr<CefRequest> request,
+                                   CefRefPtr<CefCallback> /*callback*/) override {
+    const int blocking = thirdParty_.load();
+    if (blocking == ADHChromiumThirdPartyBlockingNone) {
+      return RV_CONTINUE;
+    }
+    const cef_resource_type_t type = request->GetResourceType();
+    // A document load is never refused, the way WebKit's rules never block
+    // the page itself.
+    if (type == RT_MAIN_FRAME || type == RT_NAVIGATION_PRELOAD_MAIN_FRAME) {
+      return RV_CONTINUE;
+    }
+    if (blocking == ADHChromiumThirdPartyBlockingScripts && type != RT_SCRIPT && type != RT_WORKER &&
+        type != RT_SHARED_WORKER && type != RT_SERVICE_WORKER) {
+      return RV_CONTINUE;
+    }
+    const std::string page = ADHRegistrableDomain(ADHHost(request->GetFirstPartyForCookies().ToString()));
+    const std::string resource = ADHRegistrableDomain(ADHHost(request->GetURL().ToString()));
+    if (page.empty() || resource.empty() || page == resource) {
+      return RV_CONTINUE;
+    }
+    return RV_CANCEL;
+  }
+
   // MARK: Cookies
 
   CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(CefRefPtr<CefBrowser> /*browser*/,
@@ -313,7 +417,7 @@ class ADHBrowserClient : public CefClient,
                      CefRefPtr<CefFrame> /*frame*/,
                      CefRefPtr<CefRequest> /*request*/,
                      const CefCookie& /*cookie*/) override {
-    return ADHChromiumRuntime.shared.acceptsCookies;
+    return acceptsCookies_.load();
   }
 
   bool CanSaveCookie(CefRefPtr<CefBrowser> /*browser*/,
@@ -321,7 +425,7 @@ class ADHBrowserClient : public CefClient,
                      CefRefPtr<CefRequest> /*request*/,
                      CefRefPtr<CefResponse> /*response*/,
                      const CefCookie& /*cookie*/) override {
-    return ADHChromiumRuntime.shared.acceptsCookies;
+    return acceptsCookies_.load();
   }
 
   // MARK: DevTools protocol
@@ -337,6 +441,8 @@ class ADHBrowserClient : public CefClient,
 
  private:
   __weak ADHChromiumBrowserView* view_;
+  std::atomic<bool> acceptsCookies_;
+  std::atomic<int> thirdParty_;
   IMPLEMENT_REFCOUNTING(ADHBrowserClient);
 };
 
@@ -376,6 +482,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
 - (instancetype)initWithFrame:(NSRect)frame options:(ADHChromiumBrowserOptions*)options {
   if ((self = [super initWithFrame:frame])) {
     _options = options;
+    _acceptsCookies = options.acceptsCookies;
     _queuedMessages = [NSMutableArray array];
     _completions = [NSMutableDictionary dictionary];
     _nextMessageID = 1;
@@ -447,7 +554,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   }
   _creating = YES;
   _retainedWhileCreating = self;
-  _client = new ADHBrowserClient(self);
+  _client = new ADHBrowserClient(self, _acceptsCookies, _thirdPartyBlocking);
 
   NSRect bounds = self.bounds;
   CefWindowInfo windowInfo;
@@ -466,13 +573,24 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
                         channel(background.blueComponent));
   }
 
+  // nil shares the global context; an empty cache path keeps everything in
+  // memory, gone with the context; a path is a profile of the pane's own.
   CefRefPtr<CefRequestContext> context;
-  if (_options.privateBrowsing) {
-    // An empty cache path keeps everything in memory, gone with the context.
+  if (_options.cachePath) {
     CefRequestContextSettings contextSettings;
+    if (_options.cachePath.length > 0) {
+      [NSFileManager.defaultManager createDirectoryAtPath:_options.cachePath
+                              withIntermediateDirectories:YES
+                                               attributes:nil
+                                                    error:nil];
+      CefString(&contextSettings.cache_path) = _options.cachePath.UTF8String;
+      contextSettings.persist_session_cookies = true;
+    }
     context = CefRequestContext::CreateContext(contextSettings, nullptr);
-    ADHApplyCookiePolicy(context);
+  } else {
+    context = CefRequestContext::GetGlobalContext();
   }
+  ADHApplyCookiePolicy(context, _acceptsCookies);
 
   [ADHChromiumRuntime.shared browserDidOpen];
   if (!CefBrowserHost::CreateBrowser(windowInfo, _client, CefString(), settings, nullptr, context)) {
@@ -523,6 +641,25 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   _creating = NO;
   _retainedWhileCreating = nil;
   [self failPendingWithDescription:@"The Chrome pane closed"];
+}
+
+// MARK: Privacy
+
+- (void)setAcceptsCookies:(BOOL)acceptsCookies {
+  _acceptsCookies = acceptsCookies;
+  if (_client) {
+    _client->SetAcceptsCookies(acceptsCookies);
+  }
+  if (_browser) {
+    ADHApplyCookiePolicy(_browser->GetHost()->GetRequestContext(), acceptsCookies);
+  }
+}
+
+- (void)setThirdPartyBlocking:(ADHChromiumThirdPartyBlocking)thirdPartyBlocking {
+  _thirdPartyBlocking = thirdPartyBlocking;
+  if (_client) {
+    _client->SetThirdPartyBlocking(thirdPartyBlocking);
+  }
 }
 
 // MARK: Navigation

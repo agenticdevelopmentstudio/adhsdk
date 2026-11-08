@@ -64,7 +64,7 @@ class ADHCefApp : public CefApp, public CefBrowserProcessHandler {
 
   void OnContextInitialized() override {
     // The global context takes settings only once it exists.
-    ADHApplyCookiePolicy(CefRequestContext::GetGlobalContext());
+    ADHApplyCookiePolicy(CefRequestContext::GetGlobalContext(), gAcceptsCookies.load());
   }
 
   void OnBeforeCommandLineProcessing(const CefString& process_type,
@@ -155,11 +155,10 @@ void ADHInstallApplicationProtocol(void) {
 
 }  // namespace
 
-void ADHApplyCookiePolicy(CefRefPtr<CefRequestContext> context) {
+void ADHApplyCookiePolicy(CefRefPtr<CefRequestContext> context, bool accepts) {
   if (!context) {
     return;
   }
-  const bool accepts = gAcceptsCookies.load();
   // The content setting is the store-wide switch; an in-memory (private)
   // context refuses a default content setting, so the same default is also
   // written as the profile preference it is stored in.
@@ -232,7 +231,7 @@ static void ADHPumpChromium(void) {
 - (void)setAcceptsCookies:(BOOL)acceptsCookies {
   gAcceptsCookies.store(acceptsCookies);
   if (gRunning.load()) {
-    ADHApplyCookiePolicy(CefRequestContext::GetGlobalContext());
+    ADHApplyCookiePolicy(CefRequestContext::GetGlobalContext(), gAcceptsCookies.load());
   }
 }
 

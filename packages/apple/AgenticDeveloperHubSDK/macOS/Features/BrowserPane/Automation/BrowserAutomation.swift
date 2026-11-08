@@ -100,8 +100,8 @@ public final class BrowserAutomation: NSObject {
     public static let maximumScreenshotSide: CGFloat = 1568
 
     /// The page being driven. Replaced, never mutated, when the pane rebuilds
-    /// its web view onto another storage jar — see `retarget(to:)`.
-    public private(set) var webView: WKWebView
+    /// its engine onto another storage jar — see `retarget(to:)`.
+    public private(set) var driver: BrowserPageDriver
     public let console: BrowserConsoleLog
     /// Whether the page's console is being captured at all. Set by the pane
     /// from the Capture Page Console setting it built the current web view
@@ -128,18 +128,17 @@ public final class BrowserAutomation: NSObject {
         observeLoading()
     }
 
-    /// Points the automation at a new web view: the pane's handle, the model's
+    /// Points the automation at a new page: the pane's handle, the model's
     /// tools and the drive badge all reach the page through this one object,
-    /// so a pane that swaps its web view moves them all by moving this.
-    public func retarget(to webView: WKWebView) {
-        guard webView !== self.webView else { return }
-        self.webView = webView
+    /// so a pane that swaps its engine moves them all by moving this.
+    public func retarget(to driver: BrowserPageDriver) {
+        guard driver !== self.driver else { return }
+        self.driver = driver
         observeLoading()
     }
 
     private func observeLoading() {
-        loadObservation = webView.observe(\.isLoading, options: [.new]) { [weak self] _, change in
-            let started = change.newValue == true
+        loadObservation = driver.loadingChanges.sink { [weak self] started in
             Task { @MainActor in
                 guard let self else { return }
                 if started { self.navigationsStarted += 1 } else { self.navigationsFinished += 1 }
@@ -450,7 +449,7 @@ public final class BrowserAutomation: NSObject {
     public func clickAt(x: Double, y: Double) async throws -> BrowserActionDelta {
         guard let frame = lastScreenshot else { throw BrowserAutomationError.noScreenshot }
         let point = frame.viewportPoint(imageX: x, imageY: y)
-        return try await act("clickAt") { try self.nativeClick(atViewportX: point.x, viewportY: point.y) }
+        return try await act("clickAt") { try await self.nativeClick(atViewportX: point.x, viewportY: point.y) }
     }
 
     /// Runs `expression` as the body `return (<expression>);` of an async
@@ -539,11 +538,11 @@ public final class BrowserAutomation: NSObject {
     }
 
     public func navigate(to url: URL) async throws -> BrowserActionDelta {
-        try await act("navigate") { self.webView.load(URLRequest(url: url)) }
+        try await act("navigate") { self.driver.load(url) }
     }
 
-    public func goBack() async throws -> BrowserActionDelta { try await act("goBack") { self.webView.goBack() } }
-    public func goForward() async throws -> BrowserActionDelta { try await act("goForward") { self.webView.goForward() } }
+    public func goBack() async throws -> BrowserActionDelta { try await act("goBack") { self.driver.goBack() } }
+    public func goForward() async throws -> BrowserActionDelta { try await act("goForward") { self.driver.goForward() } }
 
     /// Runs one action, reports it to `onAction` by name and outcome, and
     /// returns its delta.
@@ -695,26 +694,11 @@ public final class BrowserAutomation: NSObject {
         return png
     }
 
-    /// Mouse down/up through the web view's own responder methods, so WebKit
-    /// handles it as a real click. The point is viewport CSS pixels: the web
-    /// view's bounds are the viewport, so a page coordinate would be off by
-    /// the scroll offset on any page that has scrolled.
-    private func nativeClick(atViewportX x: Double, viewportY y: Double) throws {
-        guard let window = webView.window else { throw BrowserAutomationError.noWindow }
-        let zoom = webView.pageZoom
-        var point = NSPoint(x: x * zoom, y: y * zoom)
-        if !webView.isFlipped { point.y = webView.bounds.height - point.y }
-        let inWindow = webView.convert(point, to: nil)
-        for (type, number) in [(NSEvent.EventType.leftMouseDown, 1), (.leftMouseUp, 2)] {
-            guard let event = NSEvent.mouseEvent(
-                with: type, location: inWindow, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
-                windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1) else { continue }
-            let deliver = {
-                if type == .leftMouseDown { self.webView.mouseDown(with: event) } else { self.webView.mouseUp(with: event) }
-            }
-            // Marked as the agent's, so a gate that blocks the user's mouse still lets it through.
-            if let gated = webView as? BrowserWebView { gated.deliveringAutomationInput(deliver) } else { deliver() }
-        }
+    /// A real click at a viewport point in CSS pixels, through the engine.
+    /// Viewport, not page, coordinates: a page coordinate would be off by the
+    /// scroll offset on any page that has scrolled.
+    private func nativeClick(atViewportX x: Double, viewportY y: Double) async throws {
+        try await driver.nativeClick(atViewportX: x, viewportY: y)
     }
 }
 // swiftlint:enable line_length identifier_name

@@ -37,13 +37,13 @@ public enum BrowserJarReconciler {
     /// The named WebKit stores on disk, and how one is removed — WebKit's own
     /// by default; a test hands in a fake so it never sweeps the test host's
     /// real stores.
-    public struct DataStores {
-        public var identifiers: @MainActor () async -> [UUID]
-        public var remove: @MainActor (UUID) async throws -> Void
+    public struct DataStores: Sendable {
+        public var identifiers: @MainActor @Sendable () async -> [UUID]
+        public var remove: @MainActor @Sendable (UUID) async throws -> Void
 
         public init(
-            identifiers: @escaping @MainActor () async -> [UUID],
-            remove: @escaping @MainActor (UUID) async throws -> Void
+            identifiers: @escaping @MainActor @Sendable () async -> [UUID],
+            remove: @escaping @MainActor @Sendable (UUID) async throws -> Void
         ) {
             self.identifiers = identifiers
             self.remove = remove
@@ -55,6 +55,46 @@ public enum BrowserJarReconciler {
                 remove: { try await WKWebsiteDataStore.remove(forIdentifier: $0) }
             )
         }
+
+        /// Every store of every engine: WebKit's, then each one an engine
+        /// registered with `registerEngineStores(_:)`. A jar is one session
+        /// whichever engine holds it, so a leftover is swept from all of them.
+        @MainActor public static var allEngines: DataStores {
+            combined([.webKit] + BrowserJarReconciler.engineStores)
+        }
+
+        /// Several engines' stores as one: the union of their identifiers,
+        /// and a removal that asks each engine holding the identifier. Every
+        /// engine is asked even when one refuses; the first refusal is
+        /// rethrown so the store is retried on a later pass.
+        public static func combined(_ stores: [DataStores]) -> DataStores {
+            DataStores(
+                identifiers: {
+                    var all: [UUID] = []
+                    for store in stores {
+                        for id in await store.identifiers() where !all.contains(id) { all.append(id) }
+                    }
+                    return all
+                },
+                remove: { id in
+                    var failure: Error?
+                    for store in stores where await store.identifiers().contains(id) {
+                        do { try await store.remove(id) } catch { failure = failure ?? error }
+                    }
+                    if let failure { throw failure }
+                }
+            )
+        }
+    }
+
+    /// Stores other engines keep jars in. The Chromium framework registers
+    /// its on-disk jar directories here, so the toolkit's reconciler sweeps a
+    /// Chrome pane's leftover session without linking Chromium.
+    public private(set) static var engineStores: [DataStores] = []
+
+    /// Adds an engine's jar stores to every later sweep.
+    public static func registerEngineStores(_ stores: DataStores) {
+        engineStores.append(stores)
     }
 
     /// How long a new jar row is safe from the reconciler.
@@ -77,7 +117,7 @@ public enum BrowserJarReconciler {
     public static func reconcile(
         database: ProjectDatabase,
         settings: SettingsStore = UserSettings.shared,
-        dataStores: DataStores = .webKit,
+        dataStores: DataStores = .allEngines,
         now: Date = Date()
     ) async {
         do {
@@ -221,7 +261,7 @@ public enum BrowserJarReconciler {
                 database: database,
                 repoID: pane.repoID,
                 nodeID: pane.stateNodeID,
-                prefix: pane.stateKeyPrefix(ComposableTabsViewRegistry.browserStatePrefix)
+                prefix: pane.ownStateKeyPrefix
             )
         )
         let key = UserSettings.browserPrivacyStorageJar

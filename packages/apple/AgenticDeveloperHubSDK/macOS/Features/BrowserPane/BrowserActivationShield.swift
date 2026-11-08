@@ -67,7 +67,16 @@ public final class BrowserActivationShield {
     let token = UUID().uuidString
 
     private func script(mode: String) -> String? {
-        Self.template?
+        Self.script(mode: mode, token: token)
+    }
+
+    /// The shield script with `token` written in, set to `"raise"` or
+    /// `"lift"`. Public for an engine that is not WebKit: Chromium injects
+    /// the same script over the DevTools protocol, so both engines hide
+    /// focus and visibility the same way (`dry`). The token must be one per
+    /// page view, never shared, for the reason `token` gives.
+    public static func script(mode: String, token: String) -> String? {
+        template?
             .replacingOccurrences(of: "__ADK_SHIELD_TOKEN__", with: token)
             .replacingOccurrences(of: "__ADK_SHIELD_MODE__", with: mode)
     }

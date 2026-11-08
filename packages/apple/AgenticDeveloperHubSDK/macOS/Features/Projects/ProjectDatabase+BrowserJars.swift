@@ -58,13 +58,24 @@ public struct LiveBrowserPane: Sendable, Hashable {
     /// (`ProjectPaneStateStore.ownerNodeID`); `nil` for a pane that is a
     /// layout node itself.
     public let ownerNodeID: UUID?
+    /// The prefix the pane's engine files its state under
+    /// (`BrowserEngineKind.statePrefix`), so its storage-jar override is read
+    /// from the rows that engine's pane wrote.
+    public let statePrefix: String
 
-    public init(nodeID: UUID, repoID: UUID, worktreePath: String, ownerNodeID: UUID? = nil) {
+    public init(
+        nodeID: UUID, repoID: UUID, worktreePath: String, ownerNodeID: UUID? = nil,
+        statePrefix: String = ComposableTabsViewRegistry.browserStatePrefix
+    ) {
         self.nodeID = nodeID
         self.repoID = repoID
         self.worktreePath = worktreePath
         self.ownerNodeID = ownerNodeID
+        self.statePrefix = statePrefix
     }
+
+    /// What this pane's own state keys start with under `stateNodeID`.
+    public var ownStateKeyPrefix: String { stateKeyPrefix(statePrefix) }
 
     /// The `pane_state.node_id` this pane's rows live under.
     public var stateNodeID: UUID { ownerNodeID ?? nodeID }
@@ -188,8 +199,7 @@ extension ProjectDatabase {
         guard let value = String(data: try JSONEncoder().encode([BrowserStorageJar.global]), encoding: .utf8)
         else { return }
         for pane in try liveBrowserPanes() {
-            let base = pane.stateKeyPrefix(ComposableTabsViewRegistry.browserStatePrefix)
-                + PaneStateSettingsStorageProvider.defaultPrefix
+            let base = pane.ownStateKeyPrefix + PaneStateSettingsStorageProvider.defaultPrefix
             let node = pane.stateNodeID
             if try paneState(repoID: pane.repoID, nodeID: node, key: base + name) == nil {
                 try setPaneState(repoID: pane.repoID, nodeID: node, key: base + name, value: value)
@@ -249,10 +259,24 @@ extension ProjectDatabase {
     /// the tab's `working_directory` names it, or the repository's own path
     /// when the tab names none — the same fallback the window uses when it
     /// builds the pane's context.
-    public func liveBrowserPanes(
-        contentType: String = ComposableTabsViewID.browser.rawValue,
-        statePrefix: String = ComposableTabsViewRegistry.browserStatePrefix
-    ) throws -> [LiveBrowserPane] {
+    ///
+    /// Every engine's panes are listed: a Chrome pane holds a jar exactly as
+    /// a Safari pane does.
+    public func liveBrowserPanes() throws -> [LiveBrowserPane] {
+        var panes: [LiveBrowserPane] = []
+        var seen: Set<UUID> = []
+        for engine in BrowserEngineKind.allCases {
+            for pane in try liveBrowserPanes(contentType: engine.viewID.rawValue, statePrefix: engine.statePrefix)
+            where seen.insert(pane.nodeID).inserted {
+                panes.append(pane)
+            }
+        }
+        return panes
+    }
+
+    /// The live panes of one engine: leaves showing `contentType`, and
+    /// nested panes whose state keys read `<statePrefix><UUID>.…`.
+    public func liveBrowserPanes(contentType: String, statePrefix: String) throws -> [LiveBrowserPane] {
         let sql = Self.liveNodesCTE + """
             SELECT DISTINCT id, repo_id, worktree FROM live
             WHERE kind = 'leaf' AND content_type = ?
@@ -271,7 +295,8 @@ extension ProjectDatabase {
                   let path = columnText(stmt, 2) else { return }
             seen.insert(nodeID)
             panes.append(LiveBrowserPane(
-                nodeID: nodeID, repoID: repoID, worktreePath: LiveBrowserPane.standardizedPath(path)
+                nodeID: nodeID, repoID: repoID, worktreePath: LiveBrowserPane.standardizedPath(path),
+                statePrefix: statePrefix
             ))
         }
         try forEachLiveStateKey { key, ownerID, repoID, path in
@@ -283,7 +308,8 @@ extension ProjectDatabase {
                 nodeID: nestedID,
                 repoID: repoID,
                 worktreePath: LiveBrowserPane.standardizedPath(path),
-                ownerNodeID: ownerID
+                ownerNodeID: ownerID,
+                statePrefix: statePrefix
             ))
         }
         return panes

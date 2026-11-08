@@ -8,8 +8,9 @@ import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKMacOS
 
 /// The Chrome Web Browser pane: a `WebBrowserPaneViewController` over
-/// Chromium. Everything but the engine is the base class's, so it behaves as
-/// the Safari pane does — address bar, history, restoration, automation.
+/// Chromium. Everything but the engine, privacy included, is the base
+/// class's, so it behaves as the Safari pane does — address bar, history,
+/// restoration, automation, jars, the input gate and the activation shield.
 @MainActor
 public final class ChromeBrowserPaneViewController: WebBrowserPaneViewController {
 
@@ -19,29 +20,26 @@ public final class ChromeBrowserPaneViewController: WebBrowserPaneViewController
     ///   - history: Where visits are recorded; `nil` records nothing.
     ///   - homeURL: What a pane opens on when nothing is remembered *and* the
     ///     Home Page setting is blank.
+    ///   - context: The project, worktree and node the pane belongs to.
     public init(
         store: PaneStateStore,
         settings: SettingsStore = UserSettings.shared,
         history: BrowserHistoryStore? = nil,
-        homeURL: URL = WebBrowserPaneViewController.blankPage
+        homeURL: URL = WebBrowserPaneViewController.blankPage,
+        context: BrowserPaneContext = .detached
     ) {
+        ChromiumLauncher.registerJarStores()
         super.init(
-            engine: ChromiumBrowserEngine(settings: settings),
+            makeEngine: { ChromiumBrowserEngine(configuration: $0) },
             engineKind: .chrome,
             minimizedSymbol: "globe",
             store: store,
             settings: settings,
             history: history,
-            homeURL: homeURL
+            homeURL: homeURL,
+            context: context
         )
     }
-}
-
-extension ComposableTabsViewID {
-    /// A pane holding the Chrome Web Browser. Persisted in `layout_nodes`, so
-    /// it is a storage format: changing it orphans every saved layout that
-    /// holds one.
-    public static let chromeBrowser = ComposableTabsViewID("browser.chrome")
 }
 
 extension ComposableTabsViewRegistry {
@@ -52,7 +50,8 @@ extension ComposableTabsViewRegistry {
     /// Chromium.
     ///
     /// Its panes keep their state under their own prefix, so a Safari pane and
-    /// a Chrome pane never read each other's remembered address.
+    /// a Chrome pane never read each other's remembered address; their
+    /// per-pane settings sit on that state the way the Safari pane's do.
     @MainActor
     public func registerChromeBrowser(
         preferredAxis: ComposableTabsAxis,
@@ -60,6 +59,7 @@ extension ComposableTabsViewRegistry {
         settings: SettingsStore = UserSettings.shared,
         history: BrowserHistoryStore? = nil
     ) {
+        ChromiumLauncher.registerJarStores()
         register(
             .chromeBrowser,
             descriptor: .init(
@@ -69,12 +69,18 @@ extension ComposableTabsViewRegistry {
                 minimumThickness: 360
             )
         ) { context in
-            ChromeBrowserPaneViewController(
-                store: context.makeStateStore(prefix: "browser.chrome."),
-                settings: settings,
+            let state = context.makeStateStore(prefix: Self.chromeBrowserStatePrefix)
+            let pane = ChromeBrowserPaneViewController(
+                store: state,
+                settings: Self.paneSettings(over: state, fallback: settings),
                 history: history,
-                homeURL: homeURL
+                homeURL: homeURL,
+                context: BrowserPaneContext(paneContext: context)
             )
+            #if DEBUG
+            pane.onShowBrowserLog = { BrowserLogPaneViewController.show(for: $0) }
+            #endif
+            return pane
         }
     }
 }

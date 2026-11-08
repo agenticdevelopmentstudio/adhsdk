@@ -315,7 +315,8 @@ final class BrowserJarTests: XCTestCase {
         let noNode = BrowserPaneContext(
             paneNodeID: nil, projectID: UUID(), projectName: "Test", worktreePath: "/tmp/wt", jars: registry
         )
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, context: noNode)
+        let pane = SafariBrowserPaneViewController(
+            store: EphemeralPaneStateStore(), settings: settings, context: noNode)
         let store = pane.webView.configuration.websiteDataStore
         XCTAssertFalse(store.isPersistent)
         XCTAssertFalse(store === WKWebsiteDataStore.default())
@@ -325,7 +326,7 @@ final class BrowserJarTests: XCTestCase {
         XCTAssertEqual(BrowserSettingsPanelViewController.jarLabel(for: pane), "This Pane")
         XCTAssertTrue(pane.eventLog.entries.contains { $0.channel == "settings" && $0.event == "jarFallback" })
 
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertFalse(pane.webView.configuration.websiteDataStore.isPersistent)
         XCTAssertEqual(pane.eventLog.entries.filter { $0.event == "jarFallback" }.count, 2)
         pane.paneContentWillBeDiscarded()
@@ -338,7 +339,7 @@ final class BrowserJarTests: XCTestCase {
         settings.set(true, for: UserSettings.browserPrivateBrowsing)
         settings.set(BrowserStorageJar.pane, for: UserSettings.browserPrivacyStorageJar)
 
-        let pane = BrowserPaneViewController(
+        let pane = SafariBrowserPaneViewController(
             store: EphemeralPaneStateStore(),
             settings: settings,
             context: context(repoID: UUID(), worktree: "/tmp/wt", jars: registry)
@@ -352,7 +353,7 @@ final class BrowserJarTests: XCTestCase {
     func testAPaneIsBuiltOnItsJarAndHoldsItWhileOpen() throws {
         let database = try makeDatabase()
         let registry = BrowserJarRegistry(database: database)
-        let pane = BrowserPaneViewController(
+        let pane = SafariBrowserPaneViewController(
             store: EphemeralPaneStateStore(),
             settings: makeSettings(),
             context: context(repoID: UUID(), worktree: "/tmp/wt", jars: registry)
@@ -370,7 +371,7 @@ final class BrowserJarTests: XCTestCase {
     // MARK: - Rebuild
 
     func testARebuiltWebViewTakesBackTheFocusTheOldOneHad() throws {
-        let pane = BrowserPaneViewController(
+        let pane = SafariBrowserPaneViewController(
             store: EphemeralPaneStateStore(),
             settings: makeSettings(),
             context: context(repoID: UUID(), worktree: "/tmp/wt", jars: nil)
@@ -392,26 +393,26 @@ final class BrowserJarTests: XCTestCase {
         // The page had it: the new page gets it.
         XCTAssertTrue(window.makeFirstResponder(pane.webView))
         var old = pane.webView
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertFalse(pane.webView === old)
         XCTAssertTrue(pageHasFocus())
 
         // Something else had it: the rebuild leaves it there.
         XCTAssertTrue(window.makeFirstResponder(field))
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertFalse(pageHasFocus())
 
         // A paused pane's page takes a focus nothing else holds...
         pane.setEventsPaused(true)
         XCTAssertTrue(window.makeFirstResponder(nil))
         old = pane.webView
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertFalse(pane.webView === old)
         XCTAssertTrue(pageHasFocus())
 
         // ...but never pulls it out of another view, such as a terminal.
         XCTAssertTrue(window.makeFirstResponder(field))
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertFalse(pageHasFocus())
         pane.paneContentWillBeDiscarded()
     }
@@ -423,7 +424,7 @@ final class BrowserJarTests: XCTestCase {
             overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
             fallback: global
         )
-        let pane = BrowserPaneViewController(
+        let pane = SafariBrowserPaneViewController(
             store: EphemeralPaneStateStore(),
             settings: layered,
             context: context(repoID: UUID(), worktree: "/tmp/wt", jars: registry)
@@ -440,7 +441,8 @@ final class BrowserJarTests: XCTestCase {
         XCTAssertFalse(pane.webView === before, "a new jar is a new web view")
         XCTAssertTrue(pane.webView.configuration.websiteDataStore === WKWebsiteDataStore.default())
         XCTAssertTrue(automation === pane.automation)
-        XCTAssertTrue(automation.webView === pane.webView, "the model drives the page on screen")
+        XCTAssertTrue((automation.driver as? WebKitPageDriver)?.webView === pane.webView,
+                      "the model drives the page on screen")
         XCTAssertNil(before.superview, "the old web view is out of the pane")
         XCTAssertTrue(pane.webView.isDescendant(of: pane.view))
         XCTAssertEqual(registry.jarIDsInUse, [], "the global jar holds no row")
@@ -461,7 +463,7 @@ final class BrowserJarTests: XCTestCase {
             fallback: global
         )
         layered.set(BrowserStorageJar.pane, for: UserSettings.browserPrivacyStorageJar)
-        let pane = BrowserPaneViewController(
+        let pane = SafariBrowserPaneViewController(
             store: EphemeralPaneStateStore(),
             settings: layered,
             context: context(repoID: UUID(), worktree: "/tmp/wt", jars: registry)
@@ -487,12 +489,12 @@ final class BrowserJarTests: XCTestCase {
         )
         layered.set(false, for: UserSettings.browserAcceptsCookies)
 
-        XCTAssertFalse(BrowserPaneViewController.acceptsCookies(settings: layered, ownsDataStore: true))
-        XCTAssertTrue(BrowserPaneViewController.acceptsCookies(settings: layered, ownsDataStore: false),
+        XCTAssertFalse(SafariBrowserPaneViewController.acceptsCookies(settings: layered, ownsDataStore: true))
+        XCTAssertTrue(SafariBrowserPaneViewController.acceptsCookies(settings: layered, ownsDataStore: false),
                       "a shared store takes the shared value")
         global.set(false, for: UserSettings.browserAcceptsCookies)
-        XCTAssertFalse(BrowserPaneViewController.acceptsCookies(settings: layered, ownsDataStore: false))
-        XCTAssertFalse(BrowserPaneViewController.acceptsCookies(settings: global, ownsDataStore: false))
+        XCTAssertFalse(SafariBrowserPaneViewController.acceptsCookies(settings: layered, ownsDataStore: false))
+        XCTAssertFalse(SafariBrowserPaneViewController.acceptsCookies(settings: global, ownsDataStore: false))
     }
 
     // MARK: - Reconciler

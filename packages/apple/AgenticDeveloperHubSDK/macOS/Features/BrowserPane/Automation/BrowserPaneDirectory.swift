@@ -8,6 +8,9 @@ public struct BrowserPaneHandle {
     public let project: String
     public let tab: String
     public let automation: BrowserAutomation
+    /// Which engine draws the pane. Every tool drives either the same way;
+    /// `browser_list` reports it so a model can tell the panes apart.
+    public let engine: BrowserEngineKind
     /// The pane's Agent access setting, as it stood when the handle was made.
     /// The tool set takes a fresh handle once a call is dequeued, so a change
     /// made while the call waited is the one that counts.
@@ -19,9 +22,11 @@ public struct BrowserPaneHandle {
 
     public init(
         id: String, project: String, tab: String, automation: BrowserAutomation,
+        engine: BrowserEngineKind = .safari,
         access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false
     ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
+        self.engine = engine
         self.access = access; self.isPausedForAgent = isPausedForAgent
     }
 
@@ -44,9 +49,9 @@ public protocol BrowserPaneDirectory: AnyObject {
     func browserPane(besidePane paneID: String) -> BrowserPaneHandle?
     /// The Browser pane most recently active, if still open.
     func lastUsedBrowserPane() -> BrowserPaneHandle?
-    /// Opens a Browser pane beside the caller's pane (or in the front
-    /// window when nil / unknown) and returns it.
-    func openBrowserPane(besidePane paneID: String?) throws -> BrowserPaneHandle
+    /// Opens a Browser pane on `engine` beside the caller's pane (or in the
+    /// front window when nil / unknown) and returns it.
+    func openBrowserPane(besidePane paneID: String?, engine: BrowserEngineKind) throws -> BrowserPaneHandle
     /// Puts the pane's project on screen, for a call about to drive it: a
     /// screenshot of an ordered-out window fails, and a pane driven there is
     /// one nobody can see. Called only after the call's access check passed.

@@ -91,12 +91,22 @@ public class WebKitPageDriver: NSObject, BrowserPageDriver {
         var point = NSPoint(x: viewportX * zoom, y: viewportY * zoom)
         if !webView.isFlipped { point.y = webView.bounds.height - point.y }
         let inWindow = webView.convert(point, to: nil)
-        for (type, number) in [(NSEvent.EventType.leftMouseDown, 1), (.leftMouseUp, 2)] {
-            guard let event = NSEvent.mouseEvent(
-                with: type, location: inWindow, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
-                windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1
-            ) else { continue }
-            if type == .leftMouseDown { webView.mouseDown(with: event) } else { webView.mouseUp(with: event) }
+        let click = { [webView] in
+            for (type, number) in [(NSEvent.EventType.leftMouseDown, 1), (.leftMouseUp, 2)] {
+                guard let event = NSEvent.mouseEvent(
+                    with: type, location: inWindow, modifierFlags: [],
+                    timestamp: ProcessInfo.processInfo.systemUptime,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1
+                ) else { continue }
+                if type == .leftMouseDown { webView.mouseDown(with: event) } else { webView.mouseUp(with: event) }
+            }
+        }
+        // A gated web view lets the click through as the agent's, so the
+        // pane's input settings judge it as synthesized, not as the user's.
+        if let gated = webView as? BrowserWebView {
+            gated.deliveringAutomationInput(click)
+        } else {
+            click()
         }
     }
 }
@@ -106,7 +116,11 @@ public class WebKitPageDriver: NSObject, BrowserPageDriver {
 ///
 /// What it honours comes from the Browser settings (`BrowserSettings.swift`):
 /// read once where WebKit fixes a value at construction, and followed live
-/// everywhere WebKit lets a value change under a page.
+/// everywhere WebKit lets a value change under a page. The Session Privacy
+/// settings arrive through the pane: the input gate, the activation shield
+/// and the cookie policy are the pane's decisions, enforced here. Third-Party
+/// Content is followed here, because holding a load until the rules are on
+/// is a fact about WebKit's rule compiler.
 @MainActor
 public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
 
@@ -114,7 +128,13 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     public let consoleLog: BrowserConsoleLog
 
     private let settings: SettingsStore
+    /// Whether this web view captures the page console, read once where its
+    /// configuration was built, so the handler and the hook come together or
+    /// not at all.
+    private let capturesConsole: Bool
     private let siteData: BrowserSiteData
+    /// Hides focus and visibility changes from the page.
+    let activationShield: BrowserActivationShield
     private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
     private var observations: [NSKeyValueObservation] = []
     private var cancellables: Set<AnyCancellable> = []
@@ -123,14 +143,59 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// the backdrop under every page.
     private var themedUnderPageColor: NSColor?
 
-    public init(settings: SettingsStore) {
-        self.settings = settings
-        let consoleLog = BrowserConsoleLog()
-        self.consoleLog = consoleLog
-        let configuration = Self.makeConfiguration(settings: settings, consoleLog: consoleLog)
-        self.siteData = BrowserSiteData(dataStore: configuration.websiteDataStore)
-        let webView = LiveResizingWebView(
-            frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: configuration)
+    /// The Third-Party Content value last asked of this web view, so an
+    /// unrelated browser key change does not compile the rules again.
+    private var requestedThirdPartyContent: BrowserThirdPartyContent?
+    /// The value whose rules the web view actually has. What tests wait on;
+    /// the compile behind it is asynchronous.
+    private(set) var appliedThirdPartyContent: BrowserThirdPartyContent?
+    /// Counts content-rule requests, so a compile that finishes after a newer
+    /// request — or after teardown — is dropped.
+    private var contentRulesGeneration = 0
+    /// Whether the current request's rule list is still being compiled or
+    /// looked up. A load asked for meanwhile is held (`heldLoad`).
+    private var isApplyingContentRules = false
+    /// The load waiting for the rules to land, so a page never starts before
+    /// the blocker it was meant to load under.
+    private var heldLoad: URLRequest?
+    /// Whether a load is waiting for the rules. For tests.
+    var isHoldingLoad: Bool { heldLoad != nil }
+    /// Where rule lists come from. The store by default; a test injects a
+    /// slow or failing one to drive the generation and failure paths.
+    var contentRuleListProvider: @MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList? = {
+        try await BrowserContentRules.ruleList(for: $0)
+    }
+    /// Called as each navigation starts. A test seam: it is how a test sees
+    /// what rules were on the web view when its first page began loading.
+    var onNavigationStart: (() -> Void)?
+    /// How many finished compiles were dropped because a newer request had
+    /// come since. For tests.
+    private(set) var droppedContentRules = 0
+
+    public convenience init(configuration: BrowserEngineConfiguration) {
+        self.init(configuration: configuration, contentRuleListProvider: nil)
+    }
+
+    /// - Parameter contentRuleListProvider: Where rule lists come from, when
+    ///   not the store. Given here rather than set afterwards because the
+    ///   first compile starts during `init`.
+    init(
+        configuration: BrowserEngineConfiguration,
+        contentRuleListProvider: (@MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList?)?
+    ) {
+        if let contentRuleListProvider { self.contentRuleListProvider = contentRuleListProvider }
+        self.settings = configuration.settings
+        self.consoleLog = configuration.consoleLog
+        self.capturesConsole = configuration.capturesConsole
+        let webConfiguration = Self.makeConfiguration(
+            settings: configuration.settings, consoleLog: configuration.consoleLog,
+            jar: configuration.jar, capturesConsole: configuration.capturesConsole
+        )
+        self.siteData = BrowserSiteData(dataStore: webConfiguration.websiteDataStore)
+        // Every page sits behind an input gate, open until the pane sets one.
+        let webView = BrowserWebView(
+            frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: webConfiguration)
+        self.activationShield = BrowserActivationShield(webView: webView)
         super.init(webView: webView)
         webView.navigationDelegate = self
         webView.uiDelegate = self
@@ -141,32 +206,136 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
             self?.updatePageBackground()
         }
         updatePageBackground()
+        installUserScripts()
         applyLiveSettings()
-        applyCookiePolicy()
         observeSettings()
         observeWebView()
     }
 
+    /// An engine on the shared store — or a private one, when the settings
+    /// say private browsing — with its own console log, honouring the
+    /// cookie setting itself. For a host with no pane around the engine, and
+    /// for tests.
+    public convenience init(settings: SettingsStore) {
+        let jar = WebBrowserPaneViewController.resolveJar(
+            settings: settings, context: .detached, label: WebBrowserPaneViewController.untitledLabel)
+        self.init(configuration: BrowserEngineConfiguration(
+            settings: settings,
+            consoleLog: BrowserConsoleLog(),
+            jar: jar,
+            capturesConsole: settings.get(UserSettings.browserPrivacyConsoleCapture)
+        ))
+        applyCookiePolicy(acceptsCookies: WebBrowserPaneViewController.acceptsCookies(
+            settings: settings, ownsDataStore: jar.isOwnedByPane))
+    }
+
+    private var gatedWebView: BrowserWebView? { webView as? BrowserWebView }
+
     public var canGoBack: Bool { webView.canGoBack }
     public var canGoForward: Bool { webView.canGoForward }
-    public func reload() { webView.reload() }
+
+    /// Loads now, or — while the current rule list is still on its way —
+    /// once it is on, so a blocked resource is never fetched by a page that
+    /// started first. A newer load replaces a held one.
+    public override func load(_ url: URL) {
+        let request = URLRequest(url: url)
+        if isApplyingContentRules {
+            heldLoad = request
+        } else {
+            webView.load(request)
+        }
+    }
+
+    // History moves are not held for rules, but they do cancel a held load,
+    // so a load asked for earlier cannot land over them afterwards.
+    public override func goBack() {
+        heldLoad = nil
+        webView.goBack()
+    }
+
+    public override func goForward() {
+        heldLoad = nil
+        webView.goForward()
+    }
+
+    public func reload() {
+        heldLoad = nil
+        webView.reload()
+    }
+
     public func stopLoading() { webView.stopLoading() }
+
+    public var heldLoadURL: URL? { heldLoad?.url }
+
+    // MARK: - Session privacy
+
+    public var inputGate: BrowserInputGate {
+        get { gatedWebView?.gate ?? .open }
+        set { gatedWebView?.gate = newValue }
+    }
+
+    public var onInputDecision: ((BrowserInputChannel, String, Bool, Bool, String) -> Void)? {
+        get { gatedWebView?.onInputDecision }
+        set { gatedWebView?.onInputDecision = newValue }
+    }
+
+    public var isActivationShieldActive: Bool { activationShield.isActive }
+
+    /// When the shield's state moves, the user scripts are put back so the
+    /// next page load follows it; the shield itself acts on the page showing.
+    public func setActivationShieldActive(_ active: Bool) {
+        let wasActive = activationShield.isActive
+        activationShield.apply(active: active)
+        if activationShield.isActive != wasActive { installUserScripts() }
+    }
+
+    /// The cookie policy belongs to the data store, which may be shared; the
+    /// pane decides what goes on it and says so only when the answer moves.
+    public func applyCookiePolicy(acceptsCookies: Bool) {
+        let siteData = siteData
+        Task { await siteData.setAcceptsCookies(acceptsCookies) }
+    }
+
+    /// Puts every user script the engine wants on the web view's controller:
+    /// the console hook when this web view captures the console, the
+    /// activation shield's script while the shield is up.
+    ///
+    /// The only place user scripts are added or removed.
+    /// `WKUserContentController` cannot remove one script, only all of them,
+    /// so turning the shield off means putting back everything else, and that
+    /// is safe only while one function knows what "everything" is (`dry`).
+    /// The automation runtime is not a user script (it is evaluated into its
+    /// own content world on demand), so clearing the list does not touch it.
+    private func installUserScripts() {
+        let controller = webView.configuration.userContentController
+        controller.removeAllUserScripts()
+        if capturesConsole { controller.addUserScript(consoleLog.userScript) }
+        if let shieldScript = activationShield.userScript {
+            controller.addUserScript(shieldScript)
+        }
+    }
 
     // MARK: - Settings
 
     /// The configuration WebKit fixes when the web view is made. The settings
     /// read here take effect for the *next* Safari pane, and the panel says
-    /// so beside each of them.
-    static func makeConfiguration(settings: SettingsStore, consoleLog: BrowserConsoleLog) -> WKWebViewConfiguration {
+    /// so beside each of them. User scripts are not added here:
+    /// `installUserScripts()` owns them, so there is one owner to keep right.
+    ///
+    /// - Parameter capturesConsole: Whether to register the console message
+    ///   handler. Off, a page has no `webkit.messageHandlers` entry to find
+    ///   the hook by.
+    static func makeConfiguration(
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        jar: BrowserResolvedJar,
+        capturesConsole: Bool
+    ) -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
-        configuration.userContentController.addUserScript(consoleLog.userScript)
-        configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
-        // Private browsing is a data store that lives only as long as the
-        // pane; otherwise the default store, shared with every other Safari
-        // pane, so a login in one pane is a login in the next.
-        configuration.websiteDataStore = settings.get(UserSettings.browserPrivateBrowsing)
-            ? .nonPersistent()
-            : .default()
+        if capturesConsole {
+            configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
+        }
+        configuration.websiteDataStore = jar.webKitDataStore
         configuration.upgradeKnownHostsToHTTPS = settings.get(UserSettings.browserUpgradesToHTTPS)
         configuration.allowsAirPlayForMediaPlayback = settings.get(UserSettings.browserAllowsAirPlay)
         configuration.mediaTypesRequiringUserActionForPlayback = switch settings.get(UserSettings.browserAutoplay) {
@@ -175,6 +344,21 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         case .never: .all
         }
         return configuration
+    }
+
+    /// The configuration a pane in `context` would be built with now.
+    static func makeConfiguration(
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        context: BrowserPaneContext = .detached
+    ) -> WKWebViewConfiguration {
+        makeConfiguration(
+            settings: settings,
+            consoleLog: consoleLog,
+            jar: WebBrowserPaneViewController.resolveJar(
+                settings: settings, context: context, label: WebBrowserPaneViewController.untitledLabel),
+            capturesConsole: settings.get(UserSettings.browserPrivacyConsoleCapture)
+        )
     }
 
     /// Every setting WebKit lets change under a page, applied from the store.
@@ -186,6 +370,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         let agent = settings.get(UserSettings.browserCustomUserAgent)
         webView.customUserAgent = agent.isEmpty ? nil : agent
         webView.isInspectable = settings.get(UserSettings.browserWebInspectorEnabled)
+        applyContentRules()
 
         let preferences = webView.configuration.preferences
         let fontSize = settings.get(UserSettings.browserMinimumFontSize)
@@ -195,25 +380,77 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         preferences.isFraudulentWebsiteWarningEnabled = settings.get(UserSettings.browserFraudWarning)
     }
 
-    /// The cookie policy belongs to the data store, not the web view, and the
-    /// persistent store is shared by every non-private pane. The engine still
-    /// applies it, because a private pane's store has no other owner — but
-    /// only when the cookie setting itself changes, not on every browser
-    /// change: a zoom slider drag is not a reason for every open pane to
-    /// rewrite the shared store's policy once per tick.
-    private func applyCookiePolicy() {
-        let acceptsCookies = settings.get(UserSettings.browserAcceptsCookies)
-        Task { await siteData.setAcceptsCookies(acceptsCookies) }
+    /// Puts the Third-Party Content setting's rule list on the web view,
+    /// live: the old list comes off and the new one goes on when its compile
+    /// finishes (spec section 9). Only when the value differs from the one
+    /// last asked, so a zoom drag does not recompile.
+    ///
+    /// The compile is asynchronous, so a request carries a generation; one
+    /// that finishes after a newer request is dropped rather than applied
+    /// over it. `.allow` takes the rules off at once. Until a blocking
+    /// compile lands the web view keeps whatever list it had, and a load
+    /// asked for meanwhile is held (`load(_:)`).
+    ///
+    /// A failed compile fails **open**: the web view keeps the lists it had,
+    /// the held load goes ahead, the failure is logged, and the request is
+    /// forgotten so the next settings change tries again. Blocking every load
+    /// because the rule store errored would break browsing outright.
+    private func applyContentRules() {
+        let policy = settings.get(UserSettings.browserPrivacyThirdPartyContent)
+        guard policy != requestedThirdPartyContent else { return }
+        requestedThirdPartyContent = policy
+        contentRulesGeneration += 1
+        let generation = contentRulesGeneration
+        guard policy != .allow else {
+            webView.configuration.userContentController.removeAllContentRuleLists()
+            appliedThirdPartyContent = .allow
+            finishContentRules()
+            return
+        }
+        isApplyingContentRules = true
+        let provide = contentRuleListProvider
+        Task { [weak self, logger] in
+            do {
+                let list = try await provide(policy)
+                guard let self else { return }
+                guard self.contentRulesGeneration == generation else {
+                    self.droppedContentRules += 1
+                    return
+                }
+                let controller = self.webView.configuration.userContentController
+                controller.removeAllContentRuleLists()
+                if let list { controller.add(list) }
+                self.appliedThirdPartyContent = policy
+                self.finishContentRules()
+            } catch {
+                guard let self else { return }
+                // A stale failure says nothing about the current request: it
+                // must neither forget that request nor release its held load.
+                guard self.contentRulesGeneration == generation else {
+                    self.droppedContentRules += 1
+                    return
+                }
+                self.requestedThirdPartyContent = nil
+                logger.error(
+                    "browser content rules failed to compile: \(error.localizedDescription, privacy: .public)")
+                self.finishContentRules()
+            }
+        }
+    }
+
+    /// The current request is done, one way or the other: a held load may go.
+    private func finishContentRules() {
+        isApplyingContentRules = false
+        guard let request = heldLoad else { return }
+        heldLoad = nil
+        webView.load(request)
     }
 
     private func observeSettings() {
         settings.changes
             .filter { $0.hasPrefix("browser.") }
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] key in
-                self?.applyLiveSettings()
-                if key == UserSettings.browserAcceptsCookies.name { self?.applyCookiePolicy() }
-            }
+            .sink { [weak self] _ in self?.applyLiveSettings() }
             .store(in: &cancellables)
     }
 
@@ -284,21 +521,28 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
 
     /// Stops the page, cancels its downloads and drops the delegates: a
     /// navigation or a transfer that completes into a discarded pane would
-    /// otherwise call back into it.
+    /// otherwise call back into it. A compile still in flight is dropped by
+    /// its generation.
     public func teardown() {
         observations.removeAll()
         cancellables.removeAll()
         downloads.forEach { $0.cancel() }
         downloads.removeAll()
+        contentRulesGeneration += 1
+        heldLoad = nil
         webView.stopLoading()
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
+        gatedWebView?.onInputDecision = nil
         delegate = nil
-        // The handler holds the log strongly and the engine holds the log, so
+        onNavigationStart = nil
+        // The handler holds the log strongly and the pane holds the log, so
         // without this the two outlive the pane together.
-        webView.configuration.userContentController.removeScriptMessageHandler(
-            forName: BrowserConsoleLog.handlerName
-        )
+        if capturesConsole {
+            webView.configuration.userContentController.removeScriptMessageHandler(
+                forName: BrowserConsoleLog.handlerName
+            )
+        }
     }
 }
 
@@ -341,6 +585,7 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
 
     public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         delegate?.browserEngineDidStartNavigation(self)
+        onNavigationStart?()
     }
 
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
@@ -358,7 +603,13 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
     ) {
         // A cancelled load is the next navigation starting, not a failure.
         guard (error as NSError).code != NSURLErrorCancelled else { return }
+        delegate?.browserEngine(self, didFailNavigationWith: error)
         logger.error("browser pane failed to load: \(error.localizedDescription, privacy: .public)")
+    }
+
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        guard (error as NSError).code != NSURLErrorCancelled else { return }
+        delegate?.browserEngine(self, didFailNavigationWith: error)
     }
 }
 
@@ -369,6 +620,7 @@ extension WebKitBrowserEngine: WKDownloadDelegate {
     private func adopt(_ download: WKDownload) {
         download.delegate = self
         downloads.append(download)
+        delegate?.browserEngine(self, download: "start", host: download.originalRequest?.url?.host ?? "")
     }
 
     public func download(
@@ -384,12 +636,14 @@ extension WebKitBrowserEngine: WKDownloadDelegate {
         // The host says which site it came from; the path and query can carry
         // a token or a name, and stay out of the public log.
         let host = download.originalRequest?.url?.host ?? ""
+        delegate?.browserEngine(self, download: "finish", host: host)
         logger.info("browser download finished from \(host, privacy: .public)")
     }
 
     public func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
         downloads.removeAll { $0 === download }
         guard (error as NSError).code != NSURLErrorCancelled else { return }
+        delegate?.browserEngine(self, download: "fail", host: download.originalRequest?.url?.host ?? "")
         logger.error("browser download failed: \(error.localizedDescription, privacy: .public)")
     }
 }

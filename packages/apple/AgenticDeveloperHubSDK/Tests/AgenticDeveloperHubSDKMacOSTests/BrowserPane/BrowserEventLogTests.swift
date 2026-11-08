@@ -172,8 +172,8 @@ final class BrowserEventLogTests: XCTestCase {
 
     // MARK: - The pane records
 
-    private func makePane() -> BrowserPaneViewController {
-        BrowserPaneViewController(
+    private func makePane() -> SafariBrowserPaneViewController {
+        SafariBrowserPaneViewController(
             store: EphemeralPaneStateStore(),
             settings: UserSettings(
                 with: InMemorySettingsStorageProvider(),
@@ -199,7 +199,7 @@ final class BrowserEventLogTests: XCTestCase {
                 secureSettingsProvider: InMemorySecureSettingsStorageProvider()
             )
         )
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         // The pane hears settings through `receive(on: .main)`, so the line
         // arrives on a later turn of the main queue.
         let recorded = expectation(description: "settings change recorded")
@@ -216,7 +216,7 @@ final class BrowserEventLogTests: XCTestCase {
         XCTAssertEqual(change.detail, UserSettings.browserPageZoom.name)
         XCTAssertFalse(change.detail.contains("1.5"), "the key, never the value")
 
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertEqual(pane.eventLog.entries.last?.event, "rebuild")
     }
 
@@ -230,7 +230,7 @@ final class BrowserEventLogTests: XCTestCase {
         logPane.reload()
         XCTAssertEqual(logPane.tableView.numberOfRows, 1)
         XCTAssertEqual(logPane.text(row: 0, column: "Detail"), "×2")
-        XCTAssertEqual(logPane.paneTitle, "Browser Log — Browser")
+        XCTAssertEqual(logPane.paneTitle, "Browser Log — Safari")
 
         logPane.clearLog()
         logPane.reload()

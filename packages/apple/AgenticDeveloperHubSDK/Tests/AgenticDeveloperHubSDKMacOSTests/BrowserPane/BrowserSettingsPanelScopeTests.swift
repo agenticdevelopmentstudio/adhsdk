@@ -10,7 +10,7 @@ import AgenticDeveloperHubSDKCore
 final class BrowserSettingsPanelScopeTests: XCTestCase {
 
     private var tempRoot: URL!
-    private var panes: [BrowserPaneViewController] = []
+    private var panes: [SafariBrowserPaneViewController] = []
 
     override func setUp() async throws {
         try await super.setUp()
@@ -49,11 +49,11 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         )
     }
 
-    private func makePane(settings: LayeredSettingsStore) throws -> BrowserPaneViewController {
+    private func makePane(settings: LayeredSettingsStore) throws -> SafariBrowserPaneViewController {
         let registry = BrowserJarRegistry(
             database: try ProjectDatabase(path: tempRoot.appendingPathComponent("Test.db").path)
         )
-        let pane = BrowserPaneViewController(
+        let pane = SafariBrowserPaneViewController(
             store: EphemeralPaneStateStore(),
             settings: settings,
             context: BrowserPaneContext(
@@ -166,7 +166,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         let ownRow = try row(UserSettings.browserAcceptsCookies, in: ownPanel)
         XCTAssertTrue(ownRow.row.isEnabled)
         XCTAssertNotNil(ownRow.row.marker)
-        XCTAssertEqual(ownPanel.siteDataTitle, "Cookies and Site Data — This Pane")
+        XCTAssertEqual(ownPanel.cookiesTitle, "Cookies — This Pane")
 
         // On the shared jar, it may not: the policy belongs to every pane on it.
         global.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
@@ -179,7 +179,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertFalse(sharedRow.row.isEnabled)
         XCTAssertEqual(sharedRow.row.marker?.isShowingOverride, false)
         XCTAssertFalse(sharedRow.model.value, "shows the global value")
-        XCTAssertEqual(sharedPanel.siteDataTitle, "Cookies and Site Data — All Browser Panes")
+        XCTAssertEqual(sharedPanel.cookiesTitle, "Cookies — All Browser Panes")
 
         // Within a worktree's jar, likewise, and the title names the worktree.
         global.set(BrowserStorageJar.worktree, for: UserSettings.browserPrivacyStorageJar)
@@ -188,7 +188,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertEqual(worktreePane.resolvedJar.jar, .worktree)
         let worktreePanel = makePanel(settings: global, scope: .pane(worktreeLayer, worktreePane))
         XCTAssertFalse(try row(UserSettings.browserAcceptsCookies, in: worktreePanel).row.isEnabled)
-        XCTAssertEqual(worktreePanel.siteDataTitle, "Cookies and Site Data — wt")
+        XCTAssertEqual(worktreePanel.cookiesTitle, "Cookies — wt")
     }
 
     func testResetInPaneScopeClearsOverrides() throws {
@@ -230,13 +230,13 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         // A construction-time override does, and a rebuild catches up.
         layered.set(false, for: UserSettings.browserPrivacyConsoleCapture)
         XCTAssertTrue(pane.needsRebuild(after: built))
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertFalse(pane.needsRebuild(after: pane.builtConstructionSettings))
         XCTAssertFalse(pane.capturesConsole)
 
         let sheet = try XCTUnwrap(BrowserPaneSettingsSheetController(pane: pane, history: nil))
         XCTAssertEqual(sheet.title, "Settings for \(pane.paneTitle)")
-        let unlayered = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: global)
+        let unlayered = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: global)
         panes.append(unlayered)
         XCTAssertNil(BrowserPaneSettingsSheetController(pane: unlayered, history: nil),
                      "a pane with no layer of its own has no sheet")
@@ -245,10 +245,10 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
     func testGlobalCookiesTopicTitle() throws {
         let panel = makePanel(settings: makeSettings())
         let titles = panel.panels.map(\.descriptor.title)
-        XCTAssertTrue(titles.contains("Global Cookies and Site Data"))
-        XCTAssertFalse(titles.contains("Cookies and Site Data"))
-        let privacy = try XCTUnwrap(titles.firstIndex(of: "Privacy and Security"))
-        XCTAssertEqual(titles[privacy + 1], "Session Privacy", "Session Privacy follows Privacy and Security")
+        XCTAssertTrue(titles.contains("Global Cookies"))
+        XCTAssertFalse(titles.contains("Cookies"))
+        let cookies = try XCTUnwrap(titles.firstIndex(of: "Global Cookies"))
+        XCTAssertEqual(titles[cookies + 1], "Session Privacy", "Session Privacy follows Cookies")
     }
 
     // MARK: - The sheet's open and close

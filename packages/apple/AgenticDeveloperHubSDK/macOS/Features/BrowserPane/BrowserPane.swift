@@ -17,20 +17,59 @@ extension ComposableTabsViewID {
     /// builds. Persisted in `layout_nodes` like every view id, so a storage
     /// format too.
     public static let browserLog = ComposableTabsViewID("browser-log")
+
+    /// A pane holding the Chrome Web Browser. Declared here rather than
+    /// beside the Chromium pane because the jar reconciler, which knows
+    /// nothing of Chromium, has to find every browser pane in a saved layout.
+    /// Persisted in `layout_nodes`, so a storage format.
+    public static let chromeBrowser = ComposableTabsViewID("browser.chrome")
+}
+
+extension BrowserEngineKind {
+    /// The view id a pane on this engine is saved under.
+    public var viewID: ComposableTabsViewID {
+        switch self {
+        case .safari: .browser
+        case .chrome: .chromeBrowser
+        }
+    }
+
+    /// The prefix a pane on this engine files its state under. Storage
+    /// format: the jar reconciler reads a closed pane's storage-jar override
+    /// from the database by it.
+    public nonisolated var statePrefix: String {
+        switch self {
+        case .safari: ComposableTabsViewRegistry.browserStatePrefix
+        case .chrome: ComposableTabsViewRegistry.chromeBrowserStatePrefix
+        }
+    }
 }
 
 extension ComposableTabsViewRegistry {
 
-    /// The prefix every browser pane files its state under. Storage format,
-    /// like the view id: the jar reconciler reads a closed pane's storage-jar
-    /// override from the database by it, so the two must spell it once.
+    /// The prefix every Safari browser pane files its state under. Storage
+    /// format, like the view id: the jar reconciler reads a closed pane's
+    /// storage-jar override from the database by it, so the two must spell
+    /// it once.
     public nonisolated static let browserStatePrefix = "browser."
 
     /// The prefix the debug Browser Log pane files its state under.
     public nonisolated static let browserLogStatePrefix = "browser-log."
 
-    /// Registers the browser pane: an address bar over a web view, reopening
-    /// on the page it was last on.
+    /// The prefix every Chrome browser pane files its state under, for the
+    /// same reason as `browserStatePrefix`.
+    public nonisolated static let chromeBrowserStatePrefix = "browser.chrome."
+
+    /// The settings one browser pane answers from: its own overrides first,
+    /// then the shared settings, so one pane's zoom never moves another's.
+    /// Every engine's pane is built over the same shape, so the settings
+    /// sheet and the reconciler read either the same way.
+    public static func paneSettings(over state: PaneStateStore, fallback: SettingsStore) -> SettingsStore {
+        LayeredSettingsStore(overrides: PaneStateSettingsStorageProvider(store: state), fallback: fallback)
+    }
+
+    /// Registers the Safari Web Browser pane: an address bar over WebKit,
+    /// reopening on the page it was last on.
     ///
     /// The same shape as `registerTerminal(preferredAxis:)`, so a host adds a
     /// browser the way it adds a shell — one call, no factory to write.
@@ -65,26 +104,12 @@ extension ComposableTabsViewRegistry {
             )
         ) { context in
             let state = context.makeStateStore(prefix: Self.browserStatePrefix)
-            // Each pane answers from its own overrides first, then from the
-            // shared settings, so one pane's zoom never moves another's.
-            let layered = LayeredSettingsStore(
-                overrides: PaneStateSettingsStorageProvider(store: state),
-                fallback: settings
-            )
-            let pane = BrowserPaneViewController(
+            let pane = SafariBrowserPaneViewController(
                 store: state,
-                settings: layered,
+                settings: Self.paneSettings(over: state, fallback: settings),
                 history: history,
                 homeURL: homeURL,
-                context: BrowserPaneContext(
-                    paneNodeID: context.nodeID,
-                    projectID: context.project.id,
-                    projectName: context.project.displayName,
-                    worktreePath: context.workingDirectory.standardizedFileURL.path,
-                    // One registry per database, so the reconciler sees every
-                    // jar held by every window's panes.
-                    jars: BrowserJarRegistry.shared(for: context.project.database)
-                )
+                context: BrowserPaneContext(paneContext: context)
             )
             #if DEBUG
             pane.onShowBrowserLog = { BrowserLogPaneViewController.show(for: $0) }
@@ -122,5 +147,22 @@ extension ComposableTabsViewRegistry {
         ) { context in
             BrowserLogPaneViewController(store: context.makeStateStore(prefix: Self.browserLogStatePrefix))
         }
+    }
+}
+
+extension BrowserPaneContext {
+    /// The context of a browser pane a project window lays out: its node,
+    /// its project, the tab's worktree, and the jar registry over the
+    /// project's database — one registry per database, so the reconciler
+    /// sees every jar held by every window's panes.
+    @MainActor
+    public init(paneContext context: ComposableTabsViewContext) {
+        self.init(
+            paneNodeID: context.nodeID,
+            projectID: context.project.id,
+            projectName: context.project.displayName,
+            worktreePath: context.workingDirectory.standardizedFileURL.path,
+            jars: BrowserJarRegistry.shared(for: context.project.database)
+        )
     }
 }

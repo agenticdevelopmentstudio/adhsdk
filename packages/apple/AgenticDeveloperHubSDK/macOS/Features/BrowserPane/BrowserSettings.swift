@@ -298,9 +298,13 @@ public enum BrowserSettings {
         UserSettings.browserPrivateBrowsing.name
     ]
 
-    /// Cannot be overridden per pane, so it is only ever read from the global settings.
+    /// Cannot be overridden per pane, so it is only ever read from the global
+    /// settings. Chrome's remote debugging port and hardware acceleration are
+    /// fixed when Chromium starts, for every Chrome pane at once.
     public static let globalOnlyKeyNames: Set<String> = [
-        UserSettings.browserPrivateBrowsing.name
+        UserSettings.browserPrivateBrowsing.name,
+        UserSettings.browserChromeRemoteDebuggingPort.name,
+        UserSettings.browserChromeHardwareAcceleration.name
     ]
 
     /// What `store` holds for every construction-time key, each described as

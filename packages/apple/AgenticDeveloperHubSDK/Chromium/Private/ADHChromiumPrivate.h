@@ -25,11 +25,11 @@ NS_ASSUME_NONNULL_END
 #ifdef __cplusplus
 #include "include/cef_request_context.h"
 
-/// Writes `acceptsCookies` into `context` as its default cookie content
+/// Writes `accepts` into `context` as its default cookie content
 /// setting, which is what `document.cookie`, service workers and every other
 /// cookie path consult; the per-request cookie filter covers only requests.
 /// UI thread only.
-void ADHApplyCookiePolicy(CefRefPtr<CefRequestContext> context);
+void ADHApplyCookiePolicy(CefRefPtr<CefRequestContext> context, bool accepts);
 #endif
 
 NS_ASSUME_NONNULL_BEGIN

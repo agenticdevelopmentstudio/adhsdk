@@ -138,8 +138,8 @@ final class BrowserPaneTests: XCTestCase {
             )
         }
         let storeA = layered()
-        let paneA = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: storeA)
-        let paneB = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: layered())
+        let paneA = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: storeA)
+        let paneB = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: layered())
         storeA.set(2.0, for: UserSettings.browserPageZoom)
         settle()
         XCTAssertEqual(paneA.webView.pageZoom, 2.0)
@@ -154,7 +154,7 @@ final class BrowserPaneTests: XCTestCase {
             overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
             fallback: fallback
         )
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: overrides)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: overrides)
         XCTAssertEqual(pane.agentAccess, .full)
         overrides.set(.readOnly, for: UserSettings.browserPrivacyAgentAccess)
         XCTAssertEqual(pane.agentAccess, .readOnly)

@@ -31,7 +31,7 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
         openedEngines.append(engine)
         if openFails { throw BrowserAutomationError.openRefused }
         let page = OffscreenWebView()
-        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), access: openAccess)
+        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), engine: engine, access: openAccess)
         panes.append(handle)
         return handle
     }

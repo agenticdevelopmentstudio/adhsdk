@@ -16,6 +16,14 @@ typedef NS_ENUM(NSInteger, ADHChromiumDialogKind) {
     ADHChromiumDialogKindPrompt,
 } NS_SWIFT_NAME(ChromiumDialogKind);
 
+/// Which third-party subresources a browser view refuses. Third party means a
+/// registrable domain other than the page's; a document load is never refused.
+typedef NS_ENUM(NSInteger, ADHChromiumThirdPartyBlocking) {
+    ADHChromiumThirdPartyBlockingNone,
+    ADHChromiumThirdPartyBlockingScripts,
+    ADHChromiumThirdPartyBlockingAll,
+} NS_SWIFT_NAME(ChromiumThirdPartyBlocking);
+
 /// What a browser view reports. Every call arrives on the main thread, which
 /// is CEF's UI thread on macOS.
 NS_SWIFT_NAME(ChromiumBrowserViewDelegate) NS_SWIFT_UI_ACTOR
@@ -53,13 +61,20 @@ NS_SWIFT_NAME(ChromiumBrowserViewDelegate) NS_SWIFT_UI_ACTOR
 - (void)chromiumBrowserView:(ADHChromiumBrowserView *)view
     didRequestPopupForAddress:(NSString *)address
                   userGesture:(BOOL)userGesture;
+/// Whether a drag that has entered the page may reach it.
+- (BOOL)chromiumBrowserViewShouldAcceptDrag:(ADHChromiumBrowserView *)view;
 @end
 
 /// What a pane fixes when its browser is created.
 NS_SWIFT_NAME(ChromiumBrowserOptions)
 @interface ADHChromiumBrowserOptions : NSObject
-/// A store of its own, kept in memory and thrown away with the browser.
-@property (nonatomic) BOOL privateBrowsing;
+/// Where the browser keeps its cookies and site data. nil is the shared
+/// profile; an empty string is a store of its own kept in memory and thrown
+/// away with the browser; a path is a profile of its own on disk, which must
+/// sit inside the runtime's root cache directory.
+@property (nonatomic, copy, nullable) NSString *cachePath;
+/// Whether cookies are sent and saved when the browser is created.
+@property (nonatomic) BOOL acceptsCookies;
 /// Points; 0 keeps Chromium's own.
 @property (nonatomic) NSInteger minimumFontSize;
 /// The colour behind a page that paints none, so a blank page is the theme's.
@@ -95,6 +110,12 @@ NS_SWIFT_NAME(ChromiumBrowserView) NS_SWIFT_UI_ACTOR
 - (void)stopLoading;
 /// 1.0 is 100%.
 - (void)setZoomFactor:(double)factor;
+
+/// Whether this browser sends and saves cookies; applied to its store live.
+@property (nonatomic) BOOL acceptsCookies;
+/// Which third-party subresources this browser refuses; applies from the next
+/// request.
+@property (nonatomic) ADHChromiumThirdPartyBlocking thirdPartyBlocking;
 
 /// Whether the context menu offers Inspect Element.
 @property (nonatomic) BOOL allowsDevTools;

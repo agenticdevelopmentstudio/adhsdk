@@ -42,7 +42,7 @@ final class BrowserActivationShieldTests: XCTestCase {
     func testShieldInstallsScriptWhenActive() throws {
         let settings = makeSettings()
         settings.set(true, for: UserSettings.browserPrivacyHideActivation)
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
 
         XCTAssertTrue(pane.activationShield.isActive)
         XCTAssertEqual(shieldScriptCount(pane.webView), 1)
@@ -54,7 +54,7 @@ final class BrowserActivationShieldTests: XCTestCase {
 
     func testShieldRemovesScriptWhenInactive() {
         let settings = makeSettings()
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         XCTAssertFalse(pane.activationShield.isActive)
         XCTAssertNil(pane.activationShield.userScript)
         XCTAssertEqual(shieldScriptCount(pane.webView), 0)
@@ -75,7 +75,7 @@ final class BrowserActivationShieldTests: XCTestCase {
     func testShieldToggleWithCaptureOffAddsNoConsoleHook() {
         let settings = makeSettings()
         settings.set(false, for: UserSettings.browserPrivacyConsoleCapture)
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         XCTAssertEqual(consoleScriptCount(pane.webView), 0)
 
         settings.set(true, for: UserSettings.browserPrivacyHideActivation)
@@ -91,10 +91,10 @@ final class BrowserActivationShieldTests: XCTestCase {
     func testARebuiltWebViewGetsTheShieldAgain() {
         let settings = makeSettings()
         settings.set(true, for: UserSettings.browserPrivacyHideActivation)
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         let firstShield = pane.activationShield
 
-        pane.rebuildWebView()
+        pane.rebuildEngine()
 
         XCTAssertFalse(pane.activationShield === firstShield, "a new web view gets a new shield")
         XCTAssertTrue(pane.activationShield.isActive)

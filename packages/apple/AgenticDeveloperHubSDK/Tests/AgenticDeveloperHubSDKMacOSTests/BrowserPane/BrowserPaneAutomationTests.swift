@@ -13,8 +13,9 @@ final class BrowserPaneAutomationTests: XCTestCase {
         )
     }
 
-    private func makePane(settings: SettingsStore? = nil) -> BrowserPaneViewController {
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings ?? makeSettings())
+    private func makePane(settings: SettingsStore? = nil) -> SafariBrowserPaneViewController {
+        let pane = SafariBrowserPaneViewController(
+            store: EphemeralPaneStateStore(), settings: settings ?? makeSettings())
         _ = pane.view
         return pane
     }
@@ -114,8 +115,8 @@ final class BrowserPaneAutomationTests: XCTestCase {
     /// `makeConfiguration` registers the handler only when told to.
     func testConfigurationRegistersTheHandlerOnlyWithCapture() async {
         let settings = makeSettings()
-        let jar = BrowserPaneViewController.resolveJar(settings: settings, context: .detached, label: "t")
-        let off = BrowserPaneViewController.makeConfiguration(
+        let jar = SafariBrowserPaneViewController.resolveJar(settings: settings, context: .detached, label: "t")
+        let off = WebKitBrowserEngine.makeConfiguration(
             settings: settings, consoleLog: BrowserConsoleLog(), jar: jar, capturesConsole: false
         )
         XCTAssertTrue(off.userContentController.userScripts.isEmpty)
@@ -123,7 +124,7 @@ final class BrowserPaneAutomationTests: XCTestCase {
         XCTAssertEqual(offHandler, false)
 
         let consoleLog = BrowserConsoleLog()
-        let capturing = BrowserPaneViewController.makeConfiguration(
+        let capturing = WebKitBrowserEngine.makeConfiguration(
             settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: true
         )
         XCTAssertTrue(capturing.userContentController.userScripts.isEmpty, "scripts belong to installUserScripts()")
@@ -145,14 +146,14 @@ final class BrowserPaneAutomationTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 50_000_000)
         XCTAssertEqual(consoleScriptCount(pane.webView), 1, "not live: the current web view keeps its hook")
 
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertEqual(consoleScriptCount(pane.webView), 0)
         let offHandler = await hasConsoleHandler(pane.webView)
         XCTAssertEqual(offHandler, false)
         XCTAssertFalse(automation.isConsoleCaptureOn, "the retargeted automation follows the rebuild")
 
         settings.set(true, for: UserSettings.browserPrivacyConsoleCapture)
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertEqual(consoleScriptCount(pane.webView), 1)
         let onHandler = await hasConsoleHandler(pane.webView)
         XCTAssertEqual(onHandler, true)

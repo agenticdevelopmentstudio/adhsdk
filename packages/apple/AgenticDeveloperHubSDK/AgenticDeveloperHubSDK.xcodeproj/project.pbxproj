@@ -1357,7 +1357,6 @@
 		59B5582D763D4C1404BE6EFF /* ProjectWindowManager+Scripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02300A0BD89ECB94BCE1B43A /* ProjectWindowManager+Scripting.swift */; };
 		59B6A5C3CFBD29BA172C4D51 /* PasskeyAssertionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E1B46A86529DB8179E3022 /* PasskeyAssertionProvider.swift */; };
 		59C1FC97CFB8C8908DFBD60A /* PartnerStore+Jobs.swift in Sources */ = {isa = PBXBuildFile; fileRef = C229AE322E94EA1024B0F58A /* PartnerStore+Jobs.swift */; };
-		59CCAFF386FA3CB3AA47C771 /* BrowserPaneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D69C75EA625DCCD813082B00 /* BrowserPaneViewController.swift */; };
 		59E9CB89A1391BCC02971C7E /* SigninAppsTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4C12F79CBE6F9B689BF8456 /* SigninAppsTopic.swift */; };
 		59F625C21B9638330CBBCFEB /* WindowFooterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B971686B9961D0EFEFCEE32E /* WindowFooterBar.swift */; };
 		5A0AE078E20ED63E68A7D574 /* AgenticDeveloperHubSDKCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99B0EDCF642AA70D3B9E629F /* AgenticDeveloperHubSDKCore.framework */; };
@@ -8251,7 +8250,6 @@
 		D647721A76C9B5543A216D24 /* ExternalThemeChangeObservationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalThemeChangeObservationTests.swift; sourceTree = "<group>"; };
 		D64C41F0D502A56EB00B9CE2 /* ColorSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSetting.swift; sourceTree = "<group>"; };
 		D6710BC648B51AFE48924320 /* RGBAColor+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RGBAColor+Theme.swift"; sourceTree = "<group>"; };
-		D69C75EA625DCCD813082B00 /* BrowserPaneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPaneViewController.swift; sourceTree = "<group>"; };
 		D6C59D3DAD05FC4A1E42D070 /* BuiltInThemes+Web.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BuiltInThemes+Web.swift"; sourceTree = "<group>"; };
 		D6CA84EE811DF56FF84BAB0E /* AgenticDeveloperHubSDKCoreUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AgenticDeveloperHubSDKCoreUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6DA320C7F505712B030F28D /* WorkTrackingXPCProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkTrackingXPCProtocol.swift; sourceTree = "<group>"; };
@@ -11840,7 +11838,6 @@
 				FFF765CB6A061629E23F1498 /* BrowserLogPaneViewController.swift */,
 				7B6D29419B66F92D800D9EF3 /* BrowserPane.swift */,
 				E1B104F85723E2D47D40A761 /* BrowserPaneContext.swift */,
-				D69C75EA625DCCD813082B00 /* BrowserPaneViewController.swift */,
 				EAD0A35C2E9EF6B6281FAE75 /* BrowserPausedBadge.swift */,
 				C054030209D6AC08BD3F9714 /* BrowserSettings.swift */,
 				71F6C61C5CDABE50EC0A9454 /* BrowserSiteData.swift */,
@@ -19899,7 +19896,6 @@
 				CEC6038DC8DA560135C633B7 /* BrowserPaneDirectory.swift in Sources */,
 				9BDB47526253E0A08F475B57 /* BrowserPaneFocus.swift in Sources */,
 				7302D9B28FF824B778B8F6FE /* BrowserPaneSettingsSheetController.swift in Sources */,
-				59CCAFF386FA3CB3AA47C771 /* BrowserPaneViewController.swift in Sources */,
 				D20C245BB2E577165F75C3FF /* BrowserPausedBadge.swift in Sources */,
 				E4C1FAAD147CDF40A7102C05 /* BrowserSettings.swift in Sources */,
 				58C34707D4B68538AFAC5B6E /* BrowserSettingsPanelViewController.swift in Sources */,

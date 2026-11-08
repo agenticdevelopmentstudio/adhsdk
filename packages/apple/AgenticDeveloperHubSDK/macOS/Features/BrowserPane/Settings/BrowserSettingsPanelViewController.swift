@@ -17,24 +17,27 @@ import AgenticDeveloperHubSDKCore
 ///   sheet. Writes land in the layer; the global settings are never touched.
 public enum BrowserSettingsScope {
     case global
-    case pane(LayeredSettingsStore, BrowserPaneViewController)
+    case pane(LayeredSettingsStore, WebBrowserPaneViewController)
 }
 
-/// Settings panel for the Browser pane: a topic list on the left — General,
-/// History, Cookies and Site Data, Privacy and Security, Session Privacy,
-/// Media and Permissions, Downloads, Developer, Reset — and the chosen topic's
-/// controls on the right, the shape the Language Servers panel has.
+/// Settings panel for the browser panes: a topic list on the left — General,
+/// History, Cookies, Session Privacy, Media and Permissions, Downloads,
+/// Safari, Chrome, Reset — and the chosen topic's controls on the right, the
+/// shape the Language Servers panel has. Safari and Chrome hold what only that
+/// engine has; every other topic applies to both. In a pane's sheet only the
+/// pane's own engine topic is listed.
 ///
 /// **One panel definition serves both scopes** (`dry`). Every row reads and
 /// writes through `ViewModel(title:get:set:)` over the scope's store — the
 /// store handed in as `settings` in global scope, the pane's
 /// `LayeredSettingsStore` in pane scope — so the Settings window and a pane's
-/// sheet are the same rows over different stores. The two things that are not
-/// settings, the visit history and WebKit's site data, are handed in for the
-/// same reason: they are stores with files behind them (`dependency-injection`).
+/// sheet are the same rows over different stores. The things that are not
+/// settings — the visit history, WebKit's site data, Chromium's cookie jar and
+/// version — are handed in for the same reason: they are stores with files
+/// behind them (`dependency-injection`).
 ///
-/// **Every setting shown is one the pane honours.** The ones WebKit fixes when
-/// a web view is created say so in their explanation — "new browser panes" in
+/// **Every setting shown is one the pane honours.** The ones an engine fixes
+/// when a pane is created say so in their explanation — "new browser panes" in
 /// global scope, "when this sheet closes" in pane scope, where closing the
 /// sheet rebuilds the pane — so the panel never promises an effect the open
 /// pane cannot deliver (`principle-of-least-astonishment`).
@@ -43,6 +46,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
 
     private let history: BrowserHistoryStore?
     private let siteData: BrowserSiteData
+    private let chrome: BrowserEngineMaintenance?
     /// Every row's store and the bookkeeping behind its override marker.
     /// Internal so a test can reach the rows without pixels.
     let binding: BrowserSettingsBinding
@@ -57,14 +61,20 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     ///     shared store by default. Unused in pane scope, whose store is the
     ///     pane's layer.
     ///   - scope: the Settings window's `.global`, or one pane's sheet.
+    ///   - chrome: the Chromium engine's maintenance, from the host that links
+    ///     it; `nil` leaves the Chrome topic out of the Settings window. A
+    ///     Chrome pane's sheet lists the topic either way, without the
+    ///     version row when there is none.
     public init(
         history: BrowserHistoryStore?,
         siteData: BrowserSiteData = BrowserSiteData(),
         settings: SettingsStore = UserSettings.shared,
-        scope: BrowserSettingsScope = .global
+        scope: BrowserSettingsScope = .global,
+        chrome: BrowserEngineMaintenance? = nil
     ) {
         self.history = history
         self.siteData = siteData
+        self.chrome = chrome
         self.binding = BrowserSettingsBinding(settings: settings, scope: scope)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Web Browser",
@@ -85,10 +95,13 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
                     ? "These are the settings of one browser pane. Each starts as the global "
                         + "browser setting from the Settings window, and a change made here "
                         + "applies to this pane alone. Pick a topic on the left."
-                    : "The Browser pane is a web browser inside a project window: an address "
-                        + "bar over a page. These topics decide how its pages load, what it "
-                        + "remembers about where you have been, what sites may keep and do, "
-                        + "and where downloads land. Pick a topic on the left."
+                    : "The Safari Web Browser and Chrome Web Browser panes are web "
+                        + "browsers inside a project window: an address bar over a page, "
+                        + "drawn by WebKit or by Chromium. These topics decide how their pages "
+                        + "load, what they remember about where you have been, what sites may "
+                        + "keep and do, and where downloads land. Safari and Chrome hold what "
+                        + "only that browser has; every other topic applies to both. Pick a "
+                        + "topic on the left."
             )
         ]
         if binding.isPaneScope {
@@ -98,7 +111,8 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
                     + "row shows a small dot in the accent colour for as long as it does. "
                     + "Right-click the row and choose Use Global Setting to drop the override; "
                     + "the row then follows the Settings window again. Reset clears every "
-                    + "override of the pane at once. Private browsing is global only, and "
+                    + "override of the pane at once. Private browsing, and Chrome's "
+                    + "remote debugging port and hardware acceleration, are global only, and "
                     + "Accept cookies can be overridden only while the jar chosen here is "
                     + "the pane's own, or private browsing is on, because under a shared "
                     + "jar it would change every pane on that jar."
@@ -107,20 +121,25 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         topics.append(.init(
             title: "When a Change Takes Effect",
             body: binding.isPaneScope
-                ? "Most settings apply to the pane as you change them. Those WebKit fixes "
-                    + "when a web view is made — the cookie and storage jar, the HTTPS "
-                    + "upgrade, autoplay, AirPlay and console capture — apply when this "
-                    + "sheet closes: the pane rebuilds its web view and reloads its page, "
-                    + "and anything the old page had half done is lost. JavaScript and "
-                    + "Lockdown Mode apply to the next page the pane loads."
+                ? "Most settings apply to the pane as you change them. Those fixed when "
+                    + "the pane's page is made — the cookie and storage jar, console "
+                    + "capture and, in a Safari pane, the HTTPS upgrade, autoplay and "
+                    + "AirPlay — apply when this sheet closes: the pane rebuilds its page "
+                    + "and reloads it, and anything the old page had half done is lost. "
+                    + "JavaScript and Lockdown Mode apply to the next page a Safari pane "
+                    + "loads. Chromium reads autoplay once, when it starts, so a Chrome "
+                    + "pane follows it the next time the app opens."
                 : "Most settings apply to every open browser pane as you change them. A few "
-                    + "are fixed by WebKit when a pane is created — private browsing, the "
-                    + "HTTPS upgrade, autoplay, AirPlay and console capture — and those say "
-                    + "so beside the control: they apply to browser panes opened after the "
-                    + "change. The cookie and storage jar is the exception: every open pane "
-                    + "that follows the global value moves to the new jar at once, "
-                    + "reloading its page. JavaScript and Lockdown Mode apply to the next "
-                    + "page a pane loads."
+                    + "are fixed when a pane is created — private browsing, console "
+                    + "capture, and the HTTPS upgrade, autoplay and AirPlay in Safari "
+                    + "panes — and those say so beside the control: they apply to panes "
+                    + "opened after the change. The cookie and storage jar is the "
+                    + "exception: every open pane that follows the global value moves to "
+                    + "the new jar at once, reloading its page. JavaScript and Lockdown "
+                    + "Mode apply to the next page a Safari pane loads. Chromium reads "
+                    + "autoplay, the remote debugging port and hardware acceleration once, "
+                    + "when it starts, so in Chrome panes those apply the next time the "
+                    + "app opens."
         ))
         return ComposableSettings.PanelHelp(topics: topics)
     }
@@ -131,10 +150,12 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     /// terms are listed here as well, from the same declarations the topics
     /// use (`dry`).
     public override var searchKeywords: [String] {
-        BrowserGeneralPanel.keywords + BrowserHistoryPanel.keywords + BrowserSiteDataPanel.keywords
-            + BrowserPrivacyPanel.keywords + SessionPrivacySettingsPanel.keywords
-            + BrowserMediaPanel.keywords + BrowserDownloadsPanel.keywords
-            + BrowserDeveloperPanel.keywords + BrowserResetPanel.keywords
+        BrowserGeneralPanel.keywords + BrowserHistoryPanel.keywords + BrowserCookiesPanel.keywords
+            + SessionPrivacySettingsPanel.keywords + BrowserMediaPanel.keywords
+            + BrowserDownloadsPanel.keywords
+            + (showsSafariTopic ? SafariBrowserTopicPanel.keywords : [])
+            + (showsChromeTopic ? ChromeBrowserTopicPanel.keywords : [])
+            + BrowserResetPanel.keywords
     }
 
     /// A pane's sheet has no remembered geometry to restore, and a divider
@@ -146,37 +167,53 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         super.viewDidLoad()
         addPanel(BrowserGeneralPanel(binding: binding))
         addPanel(BrowserHistoryPanel(history: history, binding: binding))
-        addPanel(BrowserSiteDataPanel(
-            title: siteDataTitle,
-            siteData: paneSiteData ?? siteData,
-            binding: binding
-        ))
-        addPanel(BrowserPrivacyPanel(binding: binding))
+        addPanel(BrowserCookiesPanel(title: cookiesTitle, binding: binding))
         addPanel(SessionPrivacySettingsPanel(binding: binding))
         addPanel(BrowserMediaPanel(binding: binding))
         addPanel(BrowserDownloadsPanel(binding: binding))
-        addPanel(BrowserDeveloperPanel(binding: binding))
+        if showsSafariTopic {
+            addPanel(SafariBrowserTopicPanel(siteData: paneSiteData ?? siteData, binding: binding))
+        }
+        if showsChromeTopic { addPanel(ChromeBrowserTopicPanel(engine: chrome, binding: binding)) }
         addPanel(BrowserResetPanel(binding: binding))
     }
 
-    // MARK: Cookies topic, by scope
+    // MARK: Engine topics, by scope
 
-    /// "Global Cookies and Site Data" in the Settings window, which lists the
-    /// global jar only; in a pane's sheet, the jar that pane is on.
-    var siteDataTitle: String {
-        guard let pane = binding.pane else { return "Global Cookies and Site Data" }
-        return "Cookies and Site Data — \(Self.jarLabel(for: pane))"
+    /// The Settings window lists Safari always and Chrome when the host links
+    /// Chromium; a pane's sheet lists only the pane's own engine, since the
+    /// other's settings would change nothing the pane does.
+    var showsSafariTopic: Bool {
+        guard let pane = binding.pane else { return true }
+        return pane.engineKind == .safari
     }
 
-    /// The pane's own data store, whichever jar it resolved to.
+    var showsChromeTopic: Bool {
+        guard let pane = binding.pane else { return chrome != nil }
+        return pane.engineKind == .chrome
+    }
+
+    // MARK: Cookies and site data, by scope
+
+    /// "Global Cookies" in the Settings window, whose site data is the global
+    /// jar's; in a pane's sheet, the jar that pane is on.
+    var cookiesTitle: String {
+        guard let pane = binding.pane else { return "Global Cookies" }
+        return "Cookies — \(Self.jarLabel(for: pane))"
+    }
+
+    /// A Safari pane's own data store, whichever jar it resolved to: the one
+    /// its web view was built on, because a private or fail-closed jar is a
+    /// store no second call would hand back.
     private var paneSiteData: BrowserSiteData? {
-        binding.pane.map { BrowserSiteData(dataStore: $0.webView.configuration.websiteDataStore) }
+        guard let pane = binding.pane as? SafariBrowserPaneViewController else { return nil }
+        return BrowserSiteData(dataStore: pane.webView.configuration.websiteDataStore)
     }
 
     /// The name a pane's current jar goes by in the sheet. Private browsing
     /// is a store the pane alone has, so it reads as the pane's own, and so
     /// does a jar that failed closed onto a non-persistent store.
-    static func jarLabel(for pane: BrowserPaneViewController) -> String {
+    static func jarLabel(for pane: WebBrowserPaneViewController) -> String {
         guard !pane.resolvedJar.isFallback else { return "This Pane" }
         switch pane.resolvedJar.jar {
         case .global:
@@ -266,7 +303,7 @@ final class BrowserSettingsBinding {
         return nil
     }
 
-    var pane: BrowserPaneViewController? {
+    var pane: WebBrowserPaneViewController? {
         if case .pane(_, let pane) = scope { return pane }
         return nil
     }
@@ -476,8 +513,9 @@ final class BrowserSettingsBinding {
 
 /// One topic of the Browser panel. Every topic is listed by a title and a
 /// symbol, binds through the panel's `BrowserSettingsBinding` and is never
-/// made from a coder, so that is said once here rather than nine times over
-/// (`dry`). Internal so the Session Privacy topic can live in its own file.
+/// made from a coder, so that is said once here rather than over and over
+/// (`dry`). Internal so the Session Privacy and engine topics can live in
+/// their own files.
 @MainActor
 class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController {
 
@@ -599,7 +637,7 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
         let group = ComposableSettings.GroupView(withTitle: "User Agent")
         let agent = binding.model(
             "Custom user agent", UserSettings.browserCustomUserAgent,
-            explanation: "Blank sends WebKit's own. Applies to pages loaded after the change."
+            explanation: "Blank sends each browser's own. Applies to pages loaded after the change."
         )
         let field = ComposableSettings.TextEditView(with: agent)
         field.textField.placeholderString = "Default"
@@ -834,21 +872,14 @@ private final class BrowserHistoryPanel: BrowserTopicPanel {
 
 // MARK: - Cookies
 
-/// In global scope, the global jar ("Global Cookies and Site Data"); in pane
-/// scope, whichever jar the pane is on, named in the title.
+/// Accept cookies and private browsing, for Safari and Chrome panes alike. In
+/// global scope the title says the global jar; in pane scope it names
+/// whichever jar the pane is on, since Accept cookies belongs to the jar.
+/// What each engine has already kept is listed in its own topic.
 @MainActor
 private final class BrowserCookiesPanel: BrowserTopicPanel {
 
-    private let siteData: BrowserSiteData
-    private var table: ComposableSettings.EditableTableCard?
-    private var records: [WKWebsiteDataRecord] = []
-    /// The read in flight. One at a time: a Refresh pressed twice, or a
-    /// removal landing while a read is out, must not let the older answer
-    /// arrive last and show rows that are already gone.
-    private var reloadTask: Task<Void, Never>?
-
-    init(title: String, siteData: BrowserSiteData, binding: BrowserSettingsBinding) {
-        self.siteData = siteData
+    init(title: String, binding: BrowserSettingsBinding) {
         super.init(title: title, symbol: "tray.full", binding: binding)
     }
 
@@ -856,31 +887,17 @@ private final class BrowserCookiesPanel: BrowserTopicPanel {
         ComposableSettings.PanelHelp(topics: [
             .init(
                 title: "Cookies",
-                body: "Accept cookies is WebKit's one switch for whether sites may set "
-                    + "cookies at all; there is no first-party-only middle, because WebKit "
-                    + "offers none. Off, most sites cannot keep you signed in. It belongs "
-                    + "to the jar, not the pane, so in a pane's settings it can be changed "
-                    + "only while the pane has a jar of its own. Private browsing gives "
-                    + "each new browser pane a store of its own that is thrown away when "
-                    + "the pane closes. It is set for all browser panes in the Settings "
-                    + "window, and applies to panes opened after the change; a pane "
-                    + "already open keeps the store it was made with."
-            ),
-            .init(
-                title: "Site Data",
-                body: (binding.isPaneScope
-                    ? "Everything WebKit is keeping for sites in this pane's jar, named in "
-                        + "the topic's title — all browser panes, this worktree's panes, or "
-                        + "this pane alone. "
-                    : "Everything WebKit is keeping in the global jar, the one shared by "
-                        + "all browser panes; the jars of a worktree or a single pane are "
-                        + "listed in the project window's settings. ")
-                    + "One row per site: cookies, local storage, caches, service workers and "
-                    + "the rest, named in the second column. Select a site and press − to "
-                    + "remove what it kept, which signs you out of it. Remove All clears "
-                    + "every site at once. Refresh re-reads the list, since pages write "
-                    + "while it is open. Browsing history is separate and has its own "
-                    + "topic."
+                body: "Accept cookies decides whether sites may set cookies at all, in "
+                    + "Safari and Chrome panes alike; there is no first-party-only middle. "
+                    + "Off, most sites cannot keep you signed in. It belongs to the jar, "
+                    + "not the pane, so in a pane's settings it can be changed only while "
+                    + "the pane has a jar of its own. Private browsing gives each new "
+                    + "browser pane a store of its own that is thrown away when the pane "
+                    + "closes, so nothing it visits is kept. It is set for all browser "
+                    + "panes in the Settings window, and applies to panes opened after the "
+                    + "change; a pane already open keeps the store it was made with. What "
+                    + "each browser has already kept is listed and removed from its own "
+                    + "topic, Safari or Chrome."
             )
         ])
     }
@@ -898,7 +915,7 @@ private final class BrowserCookiesPanel: BrowserTopicPanel {
             explanation: "Off, sites cannot keep you signed in."
         )
         let acceptsView = ComposableSettings.CheckboxView(with: accepts)
-        _ = acceptsView.toggle.accessibilityID("settings.browser.site-data.accept-cookies")
+        _ = acceptsView.toggle.accessibilityID("settings.browser.cookies.accept-cookies")
         binding.add(acceptsView, model: accepts, key: UserSettings.browserAcceptsCookies, to: group)
 
         let privateBrowsing = binding.model(
@@ -906,140 +923,8 @@ private final class BrowserCookiesPanel: BrowserTopicPanel {
             explanation: "New browser panes keep nothing once closed. Applies to panes opened after the change."
         )
         let privateView = ComposableSettings.CheckboxView(with: privateBrowsing)
-        _ = privateView.toggle.accessibilityID("settings.browser.site-data.private-browsing")
+        _ = privateView.toggle.accessibilityID("settings.browser.cookies.private-browsing")
         binding.add(privateView, model: privateBrowsing, key: UserSettings.browserPrivateBrowsing, to: group)
-
-        return group
-    }
-
-    private func makeTable() -> ComposableSettings.EditableTableCard {
-        let table = ComposableSettings.EditableTableCard(
-            title: "Site Data",
-            columns: [
-                .init(id: "site", title: "Site", width: 220),
-                .init(id: "kinds", title: "Data", width: 340)
-            ],
-            emptyMessage: "No site data stored.",
-            visibleRows: 10,
-            accessibilityPrefix: "settings.browser.site-data.sites"
-        )
-        table.addButton.isHidden = true
-        table.onRemove = { [weak self] rowID in
-            guard let self, let record = self.records.first(where: { $0.displayName == rowID }) else { return }
-            Task {
-                await self.siteData.remove([record])
-                self.reload()
-            }
-        }
-        table.addFooterButton(
-            title: "Remove All…", identifier: "settings.browser.site-data.remove-all"
-        ) { [weak self] in
-            self?.removeAll()
-        }
-        table.addFooterButton(title: "Refresh", identifier: "settings.browser.site-data.refresh") { [weak self] in
-            self?.reload()
-        }
-        return table
-    }
-
-    private func removeAll() {
-        ComposableSettings.Alerts.confirmDestructive(
-            "Remove all site data?",
-            detail: (binding.isPaneScope
-                ? "Cookies, caches and storage for every site in this jar are removed, and you are signed out of them. "
-                : "Cookies, caches and storage for every site are removed, and you are signed out everywhere. ")
-                + "History is not affected.",
-            actionTitle: "Remove All",
-            on: view.window
-        ) { [weak self] confirmed in
-            guard let self, confirmed else { return }
-            Task {
-                await self.siteData.removeAll()
-                self.reload()
-            }
-        }
-    }
-
-    private func reload() {
-        reloadTask?.cancel()
-        reloadTask = Task {
-            let records = await siteData.records()
-            guard !Task.isCancelled else { return }
-            self.records = records
-            table?.setRows(records.map { record in
-                ComposableSettings.EditableTableRow(id: record.displayName, cells: [
-                    "site": .text(record.displayName),
-                    "kinds": .text(BrowserSiteData.labels(for: record))
-                ])
-            })
-        }
-    }
-}
-
-// MARK: - Privacy and security
-
-@MainActor
-private final class BrowserPrivacyPanel: BrowserTopicPanel {
-
-    init(binding: BrowserSettingsBinding) {
-        super.init(title: "Privacy and Security", symbol: "lock.shield", binding: binding)
-    }
-
-    override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Protection",
-                body: "Warn about fraudulent websites asks WebKit to check each page "
-                    + "against Apple's list of known phishing and malware sites and show "
-                    + "a warning page in place of a match. Upgrade to HTTPS loads a site "
-                    + "WebKit knows supports HTTPS over HTTPS even when the address said "
-                    + "http; WebKit fixes it when a pane's web view is made. "
-                    + "Lockdown Mode is the same restricted mode Safari offers: certain "
-                    + "web technologies, fonts and media formats are refused, which "
-                    + "breaks some sites in exchange for a smaller attack surface. It "
-                    + "applies to the next page each pane loads."
-            ),
-            .init(
-                title: "What Is Not Here",
-                body: "There is no Do Not Track switch, because WebKit sends no such "
-                    + "header and the sites that honoured it have largely stopped. "
-                    + "Passwords are not saved by the browser pane; the system keychain "
-                    + "is not involved. What a page can see of you — keyboard, mouse, "
-                    + "focus, the agent, cookie jars and third-party scripts — is in "
-                    + "Session Privacy."
-            )
-        ])
-    }
-
-    static let keywords: [String] = ["privacy", "security", "fraud", "phishing", "https", "lockdown mode", "tracking"]
-
-    override var searchKeywords: [String] { Self.keywords }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        let group = ComposableSettings.GroupView(withTitle: "Protection")
-
-        let fraud = binding.model("Warn about fraudulent websites", UserSettings.browserFraudWarning)
-        let fraudView = ComposableSettings.CheckboxView(with: fraud)
-        _ = fraudView.toggle.accessibilityID("settings.browser.privacy.fraud-warning")
-        binding.add(fraudView, model: fraud, key: UserSettings.browserFraudWarning, to: group)
-
-        let https = binding.model(
-            "Upgrade known sites to HTTPS", UserSettings.browserUpgradesToHTTPS,
-            explanation: binding.constructionNote(for: UserSettings.browserUpgradesToHTTPS.name)
-        )
-        let httpsView = ComposableSettings.CheckboxView(with: https)
-        _ = httpsView.toggle.accessibilityID("settings.browser.privacy.upgrade-https")
-        binding.add(httpsView, model: https, key: UserSettings.browserUpgradesToHTTPS, to: group)
-
-        let lockdown = binding.model(
-            "Lockdown Mode", UserSettings.browserLockdownMode,
-            explanation: "Refuses some web technologies for a smaller attack surface. "
-                + "Applies to the next page each pane loads."
-        )
-        let lockdownView = ComposableSettings.CheckboxView(with: lockdown)
-        _ = lockdownView.toggle.accessibilityID("settings.browser.privacy.lockdown")
-        binding.add(lockdownView, model: lockdown, key: UserSettings.browserLockdownMode, to: group)
 
         settingsView.addGroup(group)
     }
@@ -1060,11 +945,14 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
                 title: "Playback",
                 body: "Autoplay decides whether a page may start video or audio without a "
                     + "click: allowed, only without sound (the usual browser default — a "
-                    + "muted video plays, one with sound waits), or never. AirPlay lets a "
-                    + "page's video offer the AirPlay control. Both are fixed when a "
-                    + "browser pane's web view is made: in the Settings window they apply "
-                    + "to panes opened after the change, and in a pane's settings when "
-                    + "the sheet closes."
+                    + "muted video plays, one with sound waits), or never. A Safari pane "
+                    + "fixes it when the pane is created: in the Settings window it applies "
+                    + "to Safari panes opened after the change, and in a Safari pane's "
+                    + "settings when the sheet closes. Chromium reads it once when it "
+                    + "starts, so Chrome panes follow it the next time the app opens. Never "
+                    + "in a Chrome pane still lets a muted video play: Chromium has no "
+                    + "policy that stops one. AirPlay is Safari's alone and is in the "
+                    + "Safari topic."
             ),
             .init(
                 title: "Camera and Microphone",
@@ -1095,21 +983,26 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
         let autoplay = binding.choice(
             "Autoplay", UserSettings.browserAutoplay,
             choices: BrowserAutoplayPolicy.allCases.map { .init(label: $0.label, value: $0) },
-            explanation: binding.constructionNote(for: UserSettings.browserAutoplay.name)
+            explanation: autoplayNote
         )
         let autoplayView = ComposableSettings.PopupMenuChoiceView(viewModel: autoplay)
         _ = autoplayView.popUpButton.accessibilityID("settings.browser.media.autoplay")
         binding.add(autoplayView, model: autoplay, key: UserSettings.browserAutoplay, to: group)
 
-        let airPlay = binding.model(
-            "Allow AirPlay", UserSettings.browserAllowsAirPlay,
-            explanation: binding.constructionNote(for: UserSettings.browserAllowsAirPlay.name)
-        )
-        let airPlayView = ComposableSettings.CheckboxView(with: airPlay)
-        _ = airPlayView.toggle.accessibilityID("settings.browser.media.airplay")
-        binding.add(airPlayView, model: airPlay, key: UserSettings.browserAllowsAirPlay, to: group)
-
         return group
+    }
+
+    /// When autoplay takes effect differs by engine: a Safari pane fixes it
+    /// when its page is made, Chromium once when it starts.
+    private var autoplayNote: String {
+        guard let pane = binding.pane else {
+            return "Applies to Safari panes opened after the change, and to Chrome "
+                + "panes the next time the app opens."
+        }
+        switch pane.engineKind {
+        case .safari: return binding.constructionNote(for: UserSettings.browserAutoplay.name)
+        case .chrome: return "Applies the next time the app opens."
+        }
     }
 
     private func makeCaptureGroup() -> ComposableSettings.GroupView {
@@ -1219,46 +1112,6 @@ private final class BrowserDownloadsPanel: BrowserTopicPanel {
     }
 }
 
-// MARK: - Developer
-
-@MainActor
-private final class BrowserDeveloperPanel: BrowserTopicPanel {
-
-    init(binding: BrowserSettingsBinding) {
-        super.init(title: "Developer", symbol: "hammer", binding: binding)
-    }
-
-    override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Web Inspector",
-                body: "Safari's Web Inspector, attached to a browser pane's page. With it "
-                    + "on, right-click a page and choose Inspect Element, or open Safari's "
-                    + "Develop menu and find this app under your Mac's name. Off is the "
-                    + "default because an inspectable page is one any process with "
-                    + "Safari's privileges can read."
-            )
-        ])
-    }
-
-    static let keywords: [String] = ["developer", "web inspector", "inspect element", "devtools", "debug"]
-
-    override var searchKeywords: [String] { Self.keywords }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        let group = ComposableSettings.GroupView(withTitle: "Web Inspector")
-        let inspector = binding.model(
-            "Allow Web Inspector", UserSettings.browserWebInspectorEnabled,
-            explanation: "Right-click a page and choose Inspect Element."
-        )
-        let inspectorView = ComposableSettings.CheckboxView(with: inspector)
-        _ = inspectorView.toggle.accessibilityID("settings.browser.developer.inspector")
-        binding.add(inspectorView, model: inspector, key: UserSettings.browserWebInspectorEnabled, to: group)
-        settingsView.addGroup(group)
-    }
-}
-
 // MARK: - Reset
 
 /// Globally, every browser setting back to its default. In a pane, every
@@ -1279,13 +1132,15 @@ private final class BrowserResetPanel: BrowserTopicPanel {
                     title: "Use Global Settings",
                     body: "Drops every setting this pane overrides, so each topic shows the "
                         + "global value from the Settings window again and follows it from "
-                        + "then on. Overrides that WebKit fixes when a web view is made — the "
-                        + "jar, the HTTPS upgrade, autoplay, AirPlay, console capture — take "
-                        + "effect when this sheet closes, by rebuilding the pane."
+                        + "then on. Overrides fixed when the pane's page is made — the jar, "
+                        + "console capture and, in a Safari pane, the HTTPS upgrade, autoplay "
+                        + "and AirPlay — take effect when this sheet closes, by rebuilding the "
+                        + "pane."
                 )
                 : .init(
                     title: "Reset",
-                    body: "Puts every setting in the Browser topics back to its default — the "
+                    body: "Puts every setting in the Web Browser topics, Safari's and "
+                        + "Chrome's included, back to its default — the "
                         + "value each control shows on a fresh install. Settings only: "
                         + "history and site data are kept, and are cleared from their own "
                         + "topics. Open browser panes pick up the defaults the same way they "

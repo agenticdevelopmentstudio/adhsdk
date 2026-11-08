@@ -53,13 +53,13 @@ final class BrowserContentRulesTests: XCTestCase {
         }
     }
 
-    private func waitForRules(_ policy: BrowserThirdPartyContent, on pane: BrowserPaneViewController) async {
+    private func waitForRules(_ policy: BrowserThirdPartyContent, on pane: SafariBrowserPaneViewController) async {
         await waitUntil { pane.appliedThirdPartyContent == policy }
     }
 
     /// A pane on `.allow` whose later rule requests go through `gated`.
-    private func gatedPane(_ settings: SettingsStore, _ gated: GatedRuleLists) -> BrowserPaneViewController {
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+    private func gatedPane(_ settings: SettingsStore, _ gated: GatedRuleLists) -> SafariBrowserPaneViewController {
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         pane.contentRuleListProvider = { try await gated.provide($0) }
         return pane
     }
@@ -132,14 +132,14 @@ final class BrowserContentRulesTests: XCTestCase {
     func testPaneAppliesTheSettingAtConstruction() async {
         let settings = makeSettings()
         settings.set(BrowserThirdPartyContent.blockScripts, for: UserSettings.browserPrivacyThirdPartyContent)
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         await waitForRules(.blockScripts, on: pane)
         XCTAssertEqual(pane.appliedThirdPartyContent, .blockScripts)
     }
 
     func testPaneFollowsTheSettingLive() async {
         let settings = makeSettings()
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         XCTAssertEqual(pane.appliedThirdPartyContent, .allow)
 
         settings.set(BrowserThirdPartyContent.blockAll, for: UserSettings.browserPrivacyThirdPartyContent)
@@ -175,8 +175,9 @@ final class BrowserContentRulesTests: XCTestCase {
         XCTAssertEqual(pane.appliedThirdPartyContent, .blockScripts, "the older compile's result is dropped")
     }
 
-    /// A rebuild while a compile is in flight: the old web view's compile is
-    /// dropped, and the new web view gets the current policy from its own.
+    /// A rebuild while a compile is in flight: the old web view's compile
+    /// goes with its engine, and the new web view gets the current policy
+    /// from its own.
     func testARebuildDuringACompileEndsOnTheCurrentPolicy() async {
         let settings = makeSettings()
         let gated = GatedRuleLists()
@@ -186,14 +187,14 @@ final class BrowserContentRulesTests: XCTestCase {
         await waitUntil { gated.requested.count == 1 }
         let oldWebView = pane.webView
 
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertFalse(pane.webView === oldWebView)
         await waitUntil { gated.requested.count == 2 }
         XCTAssertEqual(gated.requested, [.blockAll, .blockAll], "the new web view asks for its own list")
 
         gated.release(0)
-        await waitUntil { pane.droppedContentRules == 1 }
-        XCTAssertEqual(pane.droppedContentRules, 1, "the old web view's compile came back and was dropped")
+        await Task.yield()
+        XCTAssertEqual(pane.droppedContentRules, 0, "the new engine dropped nothing of its own")
         XCTAssertNil(pane.appliedThirdPartyContent, "the old web view's compile is not applied to the new one")
 
         gated.release(1)
@@ -204,10 +205,10 @@ final class BrowserContentRulesTests: XCTestCase {
     func testARebuiltWebViewGetsTheRulesAgain() async {
         let settings = makeSettings()
         settings.set(BrowserThirdPartyContent.blockAll, for: UserSettings.browserPrivacyThirdPartyContent)
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         await waitForRules(.blockAll, on: pane)
 
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertNil(pane.appliedThirdPartyContent, "a new web view starts with no rule lists")
         await waitForRules(.blockAll, on: pane)
         XCTAssertEqual(pane.appliedThirdPartyContent, .blockAll)
@@ -217,7 +218,7 @@ final class BrowserContentRulesTests: XCTestCase {
     /// claimed, and is tried again on the next settings change.
     func testAFailedCompileFailsOpenAndRetries() async {
         let settings = makeSettings()
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         var attempts = 0
         pane.contentRuleListProvider = { _ in
             attempts += 1
@@ -244,7 +245,7 @@ final class BrowserContentRulesTests: XCTestCase {
         let settings = makeSettings()
         settings.set(BrowserThirdPartyContent.blockScripts, for: UserSettings.browserPrivacyThirdPartyContent)
         let home = URL(string: "data:text/html,held")!
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: home)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: home)
         var rulesAtNavigation: [BrowserThirdPartyContent?] = []
         pane.onNavigationStart = { [unowned pane] in rulesAtNavigation.append(pane.appliedThirdPartyContent) }
 
@@ -258,7 +259,7 @@ final class BrowserContentRulesTests: XCTestCase {
     /// A failed compile still lets the held load go.
     func testAFailedCompileReleasesTheHeldLoad() async {
         let settings = makeSettings()
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         _ = pane.view
         let gated = GatedRuleLists()
         var failNext = true
@@ -324,7 +325,7 @@ final class BrowserContentRulesTests: XCTestCase {
     }
 
     func testUnderAllowTheFirstLoadIsNotHeld() {
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: makeSettings())
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: makeSettings())
         _ = pane.view
         XCTAssertFalse(pane.isHoldingLoad)
     }
@@ -335,7 +336,7 @@ final class BrowserContentRulesTests: XCTestCase {
         let settings = makeSettings()
         settings.set(BrowserThirdPartyContent.blockScripts, for: UserSettings.browserPrivacyThirdPartyContent)
         let home = URL(string: "data:text/html,rebuilt")!
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: home)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: home)
         var rulesAtNavigation: [BrowserThirdPartyContent?] = []
         pane.onNavigationStart = { [unowned pane] in rulesAtNavigation.append(pane.appliedThirdPartyContent) }
         _ = pane.view
@@ -345,7 +346,7 @@ final class BrowserContentRulesTests: XCTestCase {
         await waitUntil { !pane.webView.isLoading }
         rulesAtNavigation.removeAll()
 
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertTrue(pane.isHoldingLoad)
         await waitUntil { !rulesAtNavigation.isEmpty }
         XCTAssertEqual(rulesAtNavigation.first, .blockScripts)
@@ -357,7 +358,7 @@ final class BrowserContentRulesTests: XCTestCase {
         let settings = makeSettings()
         let gated = GatedRuleLists()
         let home = URL(string: "data:text/html,home")!
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: home)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: home)
         pane.contentRuleListProvider = { try await gated.provide($0) }
         _ = pane.view
         await waitUntil { pane.webView.url == home && !pane.webView.isLoading }
@@ -370,7 +371,7 @@ final class BrowserContentRulesTests: XCTestCase {
 
         var started: [URL?] = []
         pane.onNavigationStart = { [unowned pane] in started.append(pane.webView.url) }
-        pane.rebuildWebView()
+        pane.rebuildEngine()
         XCTAssertTrue(pane.isHoldingLoad, "the rebuilt web view holds the load for its own rules")
         await waitUntil { gated.requested.count == 2 }
         gated.release(0)

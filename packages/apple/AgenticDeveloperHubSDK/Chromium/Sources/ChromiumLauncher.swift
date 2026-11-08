@@ -88,6 +88,37 @@ public enum ChromiumLauncher {
         #endif
         return root.appendingPathComponent("Default")
     }
+
+    /// Where worktree and pane jars keep their Chromium profiles, one
+    /// directory per jar row, named by its id. Beside `Default`, inside the
+    /// root cache directory, where Chromium requires every profile to be.
+    public static func jarsDirectory() -> URL {
+        profileDirectory().deletingLastPathComponent().appendingPathComponent("Jars")
+    }
+
+    /// The jar directories under `jarsDirectory()`, as the reconciler sweeps
+    /// them: identifiers are the directories named by a UUID, and removing
+    /// one deletes it.
+    static let jarStores = BrowserJarReconciler.DataStores(
+        identifiers: {
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: jarsDirectory().path)) ?? []
+            return names.compactMap(UUID.init(uuidString:))
+        },
+        remove: { id in
+            let directory = jarsDirectory().appendingPathComponent(id.uuidString)
+            guard FileManager.default.fileExists(atPath: directory.path) else { return }
+            try FileManager.default.removeItem(at: directory)
+        }
+    )
+
+    private static var registeredJarStores = false
+
+    /// Adds the Chromium jar directories to the reconciler's sweep, once.
+    static func registerJarStores() {
+        guard !registeredJarStores else { return }
+        registeredJarStores = true
+        BrowserJarReconciler.registerEngineStores(jarStores)
+    }
 }
 
 /// The Chrome settings topic's view of Chromium: its version, and the cookie
