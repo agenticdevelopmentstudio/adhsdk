@@ -78,4 +78,14 @@ extension NSColor {
             alpha: 1
         )
     }
+
+    /// `#RRGGBB` in sRGB; the inverse of `init?(desktopHex:)`.
+    var desktopHex: String {
+        let color = usingColorSpace(.sRGB) ?? self
+        func byte(_ value: CGFloat) -> Int { Int((min(max(value, 0), 1) * 255).rounded()) }
+        return String(
+            format: "#%02X%02X%02X",
+            byte(color.redComponent), byte(color.greenComponent), byte(color.blueComponent)
+        )
+    }
 }
