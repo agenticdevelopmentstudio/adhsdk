@@ -120,15 +120,11 @@ public final class DesktopAppSettings {
 
     /// Removes the stored value, so the field reads its schema default again.
     public func reset(_ key: String) {
-        guard let field = schema.fields.first(where: { $0.key == key }) else {
+        guard schema.fields.contains(where: { $0.key == key }) else {
             preconditionFailure("DesktopAppSettings: undeclared key '\(key)'")
         }
-        switch field.kind {
-        case .toggle(let fallback): store.remove(settingKey(key, default: fallback))
-        case .text(let fallback, _): store.remove(settingKey(key, default: fallback))
-        case .integer(let fallback, _): store.remove(settingKey(key, default: fallback))
-        case .choice(let fallback, _): store.remove(settingKey(key, default: fallback))
-        }
+        // Removal goes by key name alone, so the value type is irrelevant.
+        store.remove(settingKey(key, default: ""))
     }
 
     // MARK: Validation

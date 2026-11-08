@@ -2,6 +2,7 @@ import AppKit
 
 /// The frame around an in-desktop window: title bar with traffic lights, drag by
 /// the title bar, resize from the edges and corners, and a content area.
+/// The resize band lies outside the content area, so it never covers content.
 /// Flipped, so its geometry and its superview's share a top-left origin.
 final class DesktopWindowChromeView: NSView {
     static let titleBarHeight: CGFloat = 28
@@ -64,7 +65,7 @@ final class DesktopWindowChromeView: NSView {
     var minimumWindowSize: CGSize { windowSize(forContent: minimumContentSize) }
 
     func windowSize(forContent content: CGSize) -> CGSize {
-        CGSize(width: content.width, height: content.height + chromeHeight)
+        CGSize(width: content.width + 2 * Self.resizeBand, height: content.height + chromeHeight + Self.resizeBand)
     }
 
     private var interaction: Interaction?
@@ -128,9 +129,37 @@ final class DesktopWindowChromeView: NSView {
         accessoryView?.frame = CGRect(
             x: 0, y: Self.titleBarHeight, width: bounds.width, height: accessoryHeight
         )
-        contentContainer.frame = CGRect(x: 0, y: top, width: bounds.width, height: max(0, bounds.height - top))
+        let band = Self.resizeBand
+        contentContainer.frame = CGRect(
+            x: band, y: top,
+            width: max(0, bounds.width - 2 * band), height: max(0, bounds.height - top - band)
+        )
         for subview in contentContainer.subviews {
             subview.frame = contentContainer.bounds
+        }
+        window?.invalidateCursorRects(for: self)
+    }
+
+    // MARK: Cursors
+
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        let band = Self.resizeBand
+        let width = bounds.width
+        let height = bounds.height
+        let all: NSCursor.FrameResizeDirection.Set = [.inward, .outward]
+        let rects: [(CGRect, NSCursor.FrameResizePosition)] = [
+            (CGRect(x: 0, y: band, width: band, height: height - 2 * band), .left),
+            (CGRect(x: width - band, y: band, width: band, height: height - 2 * band), .right),
+            (CGRect(x: band, y: 0, width: width - 2 * band, height: band), .top),
+            (CGRect(x: band, y: height - band, width: width - 2 * band, height: band), .bottom),
+            (CGRect(x: 0, y: 0, width: band, height: band), .topLeft),
+            (CGRect(x: width - band, y: 0, width: band, height: band), .topRight),
+            (CGRect(x: 0, y: height - band, width: band, height: band), .bottomLeft),
+            (CGRect(x: width - band, y: height - band, width: band, height: band), .bottomRight)
+        ]
+        for (rect, position) in rects where rect.width > 0 && rect.height > 0 {
+            addCursorRect(rect, cursor: NSCursor.frameResize(position: position, directions: all))
         }
     }
 
@@ -194,7 +223,12 @@ final class DesktopWindowChromeView: NSView {
         } else if let light = light(at: point) {
             interaction = .light(light)
         } else if titleBarRect.contains(point) {
-            interaction = .move(startFrame: frame, startMouse: superviewPoint(event))
+            if event.clickCount == 2 {
+                interaction = nil
+                toggleZoom()
+            } else {
+                interaction = .move(startFrame: frame, startMouse: superviewPoint(event))
+            }
         }
     }
 
@@ -205,10 +239,9 @@ final class DesktopWindowChromeView: NSView {
             var moved = start
             moved.origin.x += mouse.x - startMouse.x
             moved.origin.y += mouse.y - startMouse.y
-            restoreFrame = nil
             setFrameClamped(moved)
+            if frame != start { restoreFrame = nil }
         case let .resize(edges, start, startMouse):
-            restoreFrame = nil
             var proposed = Self.resized(
                 start, edges: edges, deltaX: mouse.x - startMouse.x, deltaY: mouse.y - startMouse.y,
                 minimum: minimumWindowSize
@@ -220,6 +253,7 @@ final class DesktopWindowChromeView: NSView {
                 proposed.origin.y = start.maxY - height
             }
             setFrameClamped(proposed)
+            if frame != start { restoreFrame = nil }
         case .light, .none:
             break
         }

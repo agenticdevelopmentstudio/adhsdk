@@ -55,4 +55,13 @@ final class DesktopSettingsTests: XCTestCase {
         XCTAssertEqual(count, 1)
         sub.cancel()
     }
+
+    func test_clearingBackgroundImagePath_removesTheKey() {
+        let settings = DesktopSettings(store: store)
+        settings.backgroundImagePath = "/tmp/x.png"
+        XCTAssertEqual(store.keys(withPrefix: "desktop.backgroundImagePath"), ["desktop.backgroundImagePath"])
+        settings.backgroundImagePath = nil
+        XCTAssertEqual(store.keys(withPrefix: "desktop.backgroundImagePath"), [])
+        XCTAssertNil(settings.backgroundImagePath)
+    }
 }

@@ -29,6 +29,11 @@ final class DesktopIconView: NSView {
         label.font = .systemFont(ofSize: 11)
         label.textColor = .white
         label.drawsBackground = false
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.8)
+        shadow.shadowOffset = NSSize(width: 0, height: -1)
+        shadow.shadowBlurRadius = 2
+        label.shadow = shadow
         label.cell?.truncatesLastVisibleLine = true
         addSubview(imageView)
         addSubview(label)

@@ -63,4 +63,9 @@ final class EmailAppTests: XCTestCase {
         }
         XCTAssertGreaterThan(service.requests.count, before)
     }
+
+    func test_email_publicIdentifier_matchesDescriptor() {
+        XCTAssertEqual(EmailApp.identifier, "com.agenticdeveloperhub.desktop.email")
+        XCTAssertEqual(makeApp().descriptor.identifier, EmailApp.identifier)
+    }
 }

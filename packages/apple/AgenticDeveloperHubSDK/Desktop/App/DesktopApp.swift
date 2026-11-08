@@ -6,10 +6,14 @@ public protocol DesktopApp: AnyObject {
     var descriptor: DesktopAppDescriptor { get }
     /// Where the App's resources live. Defaults to the bundle of the App's own type.
     var resourceBundle: Bundle { get }
+    /// Called once per window, always before `makeMenus(context:)` for the same context,
+    /// so menus may be built from state the content creates.
     func makeContentViewController(context: DesktopAppContext) -> NSViewController
+    /// Called after `makeContentViewController(context:)` for the same context.
     func makeMenus(context: DesktopAppContext) -> [NSMenu]
     func makeSettingsViewController(context: DesktopAppContext) -> NSViewController?
-    /// Called when the App's window closes; release anything the content holds.
+    /// Called when the App's own window closes; release anything the content holds.
+    /// It fires only then: hiding or closing the Desktop window, or quitting, does not call it.
     func appWillClose(context: DesktopAppContext)
 }
 

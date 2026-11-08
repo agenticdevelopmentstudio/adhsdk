@@ -136,7 +136,15 @@ final class DesktopAppWindowController {
 
     /// The default content area of this window: the App's, or the panel's.
     var defaultContentSize: CGSize {
-        kind == .app ? app.descriptor.defaultWindowSize : kind.panelContentSize
+        switch kind {
+        case .app:
+            return app.descriptor.defaultWindowSize
+        case .about:
+            return kind.panelContentSize
+        case .settings:
+            let preferred = contentViewController?.preferredContentSize ?? .zero
+            return preferred.width > 0 && preferred.height > 0 ? preferred : kind.panelContentSize
+        }
     }
 
     /// Offers a key event to this window's menus. The App's own menus come before the
@@ -148,6 +156,11 @@ final class DesktopAppWindowController {
 
     /// Releases everything the window holds, so nothing it created outlives it.
     func teardown() {
+        // Commits any text still being edited before the content goes away.
+        if let responder = chrome.window?.firstResponder as? NSView,
+           let contentView = contentViewController?.view, responder.isDescendant(of: contentView) {
+            chrome.window?.makeFirstResponder(nil)
+        }
         contentViewController?.view.removeFromSuperview()
         contentViewController = nil
         menus = []

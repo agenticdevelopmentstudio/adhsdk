@@ -104,4 +104,28 @@ final class DesktopAppSettingsTests: XCTestCase {
         XCTAssertNotNil(DesktopAppSettings.kindMismatch(key: "loud", access: .string, schema: schema))
         XCTAssertNil(DesktopAppSettings.kindMismatch(key: "loud", access: .bool, schema: schema))
     }
+
+    func test_choice_staleStoredValue_readsAsDefault() {
+        let settings = makeSettings()
+        settings.setChoice("b", for: "mode")
+        XCTAssertEqual(settings.choice("mode"), "b")
+        // An option removed from the schema since the value was stored.
+        let narrowed = DesktopAppSettingsSchema(fields: [
+            .init(key: "mode", label: "Mode", kind: .choice(default: "a", options: [.init(id: "a", label: "A")]))
+        ])
+        let later = DesktopAppSettings(appIdentifier: appID, schema: narrowed, store: store)
+        XCTAssertEqual(later.choice("mode"), "a")
+    }
+
+    func test_reset_removesEveryKindOfField() {
+        let settings = makeSettings()
+        settings.setString("Hi", for: "greeting")
+        settings.setBool(true, for: "loud")
+        settings.setInteger(7, for: "count")
+        settings.setChoice("b", for: "mode")
+        for key in ["greeting", "loud", "count", "mode"] { settings.reset(key) }
+        XCTAssertEqual(store.keys(withPrefix: "desktopApp.\(appID)."), [])
+        XCTAssertEqual(settings.string("greeting"), "Hello")
+        XCTAssertEqual(settings.integer("count"), 5)
+    }
 }

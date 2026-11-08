@@ -93,4 +93,18 @@ final class HelloWorldAppTests: XCTestCase {
         app.appWillClose(context: context)
         XCTAssertFalse(controller.isClockRunning)
     }
+
+    func test_helloWorld_clock_pausesWhenViewDisappears_andResumesWhenItAppears() throws {
+        let app = HelloWorldApp()
+        let context = FakeDesktopAppContext(app: app)
+        let controller = try makeController(app, context)
+        XCTAssertTrue(controller.isClockRunning)
+        controller.viewDidDisappear()
+        XCTAssertFalse(controller.isClockRunning)
+        controller.viewWillAppear()
+        XCTAssertTrue(controller.isClockRunning)
+        controller.viewWillAppear()
+        XCTAssertTrue(controller.isClockRunning)
+        controller.stopClock()
+    }
 }

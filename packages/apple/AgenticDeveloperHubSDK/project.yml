@@ -995,8 +995,6 @@ targets:
       - target: AgenticDeveloperHubSDKMacOS
         embed: true
         codeSign: true
-      # The scripting tests import it directly (`@testable`), not through the
-      # AgenticDeveloperHubSDKMacOS re-export, so its internal `reset()` is reachable.
       - target: AgenticDeveloperHubSDKIntegrations
         embed: true
         codeSign: true
@@ -1012,32 +1010,15 @@ targets:
       - target: AgenticDeveloperHubSDKCore
         embed: true
         codeSign: true
-      # The pane-chrome tests import `AgenticDeveloperHubSDKUI` directly —
-      # the gear, the options dialog and its body live a layer down in the
-      # developer toolkit. Embedded and signed like the four above: a test bundle
-      # loads its frameworks out of its own Frameworks directory, and the UI
-      # framework links the base one, so both have to be there or the bundle
-      # fails to load with a dyld error naming a framework the tests never
-      # mention.
       - target: AgenticDeveloperHubSDK-macOS
         embed: true
         codeSign: true
       - target: AgenticDeveloperHubSDKUI-macOS
         embed: true
         codeSign: true
-      # MarkdownNoteStorageTests imports AgenticDeveloperHubSDKMarkdown directly to
-      # drive MarkdownStore/MarkdownText, same transitive-linking reason as
-      # AgenticDeveloperHubSDKMarkdownTests above.
       - target: AgenticDeveloperHubSDKMarkdown-macOS
         embed: true
         codeSign: true
-      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
-      # `AgenticDeveloperHubSDKMacOS` links all seven of these directly or through
-      # `AgenticDeveloperHubSDKMarkdown`; `AgenticDeveloperHubSDKDatabase`,
-      # `AgenticDeveloperHubSDKSyncGRDB` and `AgenticDeveloperHubSDKMarkdown` each load the
-      # GRDB package product, which is why the package is named here too --
-      # linking it is what makes Xcode copy it in, exactly as the app target
-      # does.
       - target: AgenticDeveloperHubSDKPermissions
         embed: true
         codeSign: true
@@ -1064,31 +1045,12 @@ targets:
         codeSign: true
       - package: GRDB
         product: GRDB
-      # AgenticDeveloperHubSDKMacOS links Sparkle (AppUpdater); the test bundle loads
-      # its frameworks out of its own Frameworks directory, so Sparkle has to
-      # be there too — same "closure completion" reason as GRDB above.
+      # Closure completion: the test bundle loads frameworks from its own Frameworks directory.
       - package: Sparkle
         product: Sparkle
-      # AgenticDeveloperHubSDKMacOS links FlyingFox (MCPHTTPEndpoint); same closure
-      # completion as Sparkle above.
       - package: FlyingFox
         product: FlyingFox
-      # The key-command tests drive `KeyboardShortcuts` directly (chord
-      # recording, registration), so the bundle links it itself.
       - package: KeyboardShortcuts
-
-  # A per-platform pair rather than one `supportedDestinations: [macOS, iOS]`
-  # target, for the reason spelled out above AgenticDeveloperHubSDKMarkdown: this
-  # framework depends on AgenticDeveloperHubSDKUI, which exposes only
-  # platform-specific targets, and a multi-destination target cannot depend on a
-  # single-platform one. Both halves build the same `HTDV` sources under the same
-  # product name, so consumers still see one framework called AgenticDeveloperHubSDKHTDV.
-  #
-  # The dependency is what makes these views themeable: SemanticPalette,
-  # ThemeRole, Themeable and ThemePaletteObserver all live in
-  # AgenticDeveloperHubSDKUI. Before it, HTDV had no dependencies at all and so
-  # had no vocabulary but NSColor's system colors, which is why every view in it
-  # ignored the user's theme.
       - target: AgenticDeveloperHubSDKDesktop
         embed: true
         codeSign: true

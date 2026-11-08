@@ -68,6 +68,16 @@ final class HelloWorldViewController: NSViewController {
         startClock()
     }
 
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        if clock == nil { startClock() }
+    }
+
+    override func viewDidDisappear() {
+        super.viewDidDisappear()
+        stopClock()
+    }
+
     func stopClock() {
         clock?.invalidate()
         clock = nil
@@ -75,9 +85,12 @@ final class HelloWorldViewController: NSViewController {
 
     private func startClock() {
         stopClock()
-        clock = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.refreshTime() }
         }
+        // `.common`, so the clock keeps ticking during menu tracking and live resize.
+        RunLoop.main.add(timer, forMode: .common)
+        clock = timer
     }
 
     private func refreshGreeting() {

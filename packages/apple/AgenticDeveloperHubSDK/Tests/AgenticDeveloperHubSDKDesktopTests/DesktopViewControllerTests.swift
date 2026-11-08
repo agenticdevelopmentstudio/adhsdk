@@ -125,4 +125,15 @@ final class DesktopViewControllerTests: XCTestCase {
     private func allSubviews(of view: NSView) -> [NSView] {
         view.subviews + view.subviews.flatMap { allSubviews(of: $0) }
     }
+
+    func test_listMode_rowsAreSortedByName() throws {
+        settings.iconArrangement = .list
+        let controller = makeController(names: [("c", "Charlie"), ("a", "alpha"), ("b", "Bravo")])
+        let table = try XCTUnwrap(allSubviews(of: controller.view).compactMap { $0 as? NSTableView }.first)
+        let names = (0..<table.numberOfRows).compactMap { row -> String? in
+            let cell = table.view(atColumn: 0, row: row, makeIfNecessary: true) as? NSTableCellView
+            return cell?.textField?.stringValue
+        }
+        XCTAssertEqual(names, ["alpha", "Bravo", "Charlie"])
+    }
 }

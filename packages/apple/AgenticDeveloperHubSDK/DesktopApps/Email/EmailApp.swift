@@ -8,8 +8,11 @@ import AgenticDeveloperHubSDKMacOS
 /// Reads mail from the connected accounts, in the Mail browser.
 @MainActor
 public final class EmailApp: DesktopApp {
+    /// The Email App's identifier, for callers that route to it.
+    public static let identifier = "com.agenticdeveloperhub.desktop.email"
+
     public let descriptor = DesktopAppDescriptor(
-        identifier: "com.agenticdeveloperhub.desktop.email",
+        identifier: EmailApp.identifier,
         displayName: "Email",
         version: "1.0",
         summary: "Read your mail from connected accounts.",
@@ -29,6 +32,8 @@ public final class EmailApp: DesktopApp {
     /// The browser of each open window, retained for its menu; released when the window closes.
     private var browsers: [ObjectIdentifier: MailBrowserViewController] = [:]
     private var menuTargets: [ObjectIdentifier: [ClosureMenuItemTarget]] = [:]
+    /// The in-flight Refresh of each open window, cancelled when the window closes.
+    private var refreshes: [ObjectIdentifier: Task<Void, Never>] = [:]
 
     public init(client: MailClient) {
         self.client = client
@@ -43,9 +48,10 @@ public final class EmailApp: DesktopApp {
     public func makeMenus(context: DesktopAppContext) -> [NSMenu] {
         let key = ObjectIdentifier(context)
         guard let browser = browsers[key] else { return [] }
-        let refresh = ClosureMenuItemTarget(action: { [weak browser] in
-            guard let browser else { return }
-            Task { await browser.model.reload() }
+        let refresh = ClosureMenuItemTarget(action: { [weak self, weak browser] in
+            guard let self, let browser else { return }
+            self.refreshes[key]?.cancel()
+            self.refreshes[key] = Task { await browser.model.reload() }
         })
         menuTargets[key] = [refresh]
         let item = NSMenuItem(
@@ -68,5 +74,6 @@ public final class EmailApp: DesktopApp {
         let key = ObjectIdentifier(context)
         browsers.removeValue(forKey: key)
         menuTargets.removeValue(forKey: key)
+        refreshes.removeValue(forKey: key)?.cancel()
     }
 }

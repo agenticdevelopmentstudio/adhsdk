@@ -52,7 +52,14 @@ public final class DesktopSettings {
     /// Nil means no photo: the Desktop shows its background color.
     public var backgroundImagePath: String? {
         get { read(Key.backgroundImagePath, default: String?.none) }
-        set { write(newValue, Key.backgroundImagePath, default: String?.none) }
+        set {
+            if let newValue {
+                write(newValue, Key.backgroundImagePath, default: String?.none)
+            } else {
+                // Remove the key rather than storing an encoded null.
+                store.remove(DesktopSettingKey(name: Key.backgroundImagePath, defaultValue: String?.none))
+            }
+        }
     }
 
     public var iconArrangement: DesktopIconArrangement {

@@ -3,7 +3,7 @@ import Combine
 
 /// A settings form generated from an App's schema, writing through `DesktopAppSettings`.
 @MainActor
-final class DesktopSettingsFormViewController: NSViewController {
+final class DesktopSettingsFormViewController: NSViewController, NSTextFieldDelegate {
     private let schema: DesktopAppSettingsSchema
     private let settings: DesktopAppSettings
     private var subscription: AnyCancellable?
@@ -64,6 +64,7 @@ final class DesktopSettingsFormViewController: NSViewController {
             text.placeholderString = placeholder
             text.widthAnchor.constraint(equalToConstant: 220).isActive = true
             wire(text, action: #selector(textChanged(_:)))
+            text.delegate = self
             return text
         case let .integer(_, range):
             let text = NSTextField()
@@ -137,6 +138,15 @@ final class DesktopSettingsFormViewController: NSViewController {
     }
 
     // MARK: Actions
+
+    /// Commits a text field on every keystroke, so text typed and abandoned is not lost.
+    func controlTextDidChange(_ notification: Notification) {
+        guard let field = notification.object as? NSTextField,
+              let key = field.identifier?.rawValue,
+              let kind = schema.fields.first(where: { $0.key == key })?.kind,
+              case .text = kind else { return }
+        settings.setString(field.stringValue, for: key)
+    }
 
     @objc private func toggleChanged(_ sender: NSSwitch) {
         guard let key = sender.identifier?.rawValue else { return }

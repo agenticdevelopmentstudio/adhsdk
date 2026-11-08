@@ -41,7 +41,9 @@ final class DesktopAppWindowTests: XCTestCase {
     }
 
     /// Real mouse handlers on the chrome, with points in the chrome's coordinates.
-    private func drag(_ chrome: DesktopWindowChromeView, from start: CGPoint, to end: CGPoint) throws {
+    private func drag(
+        _ chrome: DesktopWindowChromeView, from start: CGPoint, to end: CGPoint, clickCount: Int = 1
+    ) throws {
         let layer = try XCTUnwrap(chrome.superview)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
@@ -54,7 +56,7 @@ final class DesktopAppWindowTests: XCTestCase {
         func event(_ type: NSEvent.EventType, _ location: CGPoint) -> NSEvent {
             NSEvent.mouseEvent(
                 with: type, location: location, modifierFlags: [], timestamp: 0,
-                windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: clickCount, pressure: 1
             )!
         }
         chrome.mouseDown(with: event(.leftMouseDown, startWindow))
@@ -175,7 +177,7 @@ final class DesktopAppWindowTests: XCTestCase {
         settings.windowFrames = ["ghost": CGRect(x: 1, y: 1, width: 100, height: 100)]
         let controller = makeController()
         controller.openApp(identifier: "a")
-        XCTAssertEqual(try chrome(controller, "a").frame, CGRect(x: 200, y: 124, width: 400, height: 352))
+        XCTAssertEqual(try chrome(controller, "a").frame, CGRect(x: 195, y: 121.5, width: 410, height: 357))
         XCTAssertEqual(controller.openWindowIdentifiers, ["a"])
     }
 
@@ -183,7 +185,7 @@ final class DesktopAppWindowTests: XCTestCase {
         let controller = makeController()
         controller.openApp(identifier: "a")
         controller.showAbout(forApp: "a")
-        XCTAssertEqual(try chrome(controller, "about:a").frame.origin, CGPoint(x: 220 + 24, y: 71 + 24))
+        XCTAssertEqual(try chrome(controller, "about:a").frame.origin, CGPoint(x: 215 + 24, y: 68.5 + 24))
     }
 
     func test_cmdW_closesFrontAppWindow() {
@@ -233,8 +235,8 @@ final class DesktopAppWindowTests: XCTestCase {
         controller.openApp(identifier: "a")
         let window = try chrome(controller, "a")
         // Bottom-right corner, dragged far inward.
-        try drag(window, from: CGPoint(x: 398, y: 350), to: CGPoint(x: 10, y: 10))
-        XCTAssertEqual(window.frame.size, CGSize(width: 200, height: 202))
+        try drag(window, from: CGPoint(x: 407, y: 354), to: CGPoint(x: 10, y: 10))
+        XCTAssertEqual(window.frame.size, CGSize(width: 210, height: 207))
         XCTAssertEqual(settings.windowFrames["a"], window.frame)
     }
 
@@ -270,13 +272,23 @@ final class DesktopAppWindowTests: XCTestCase {
         let window = try chrome(controller, "a")
         let bar = try XCTUnwrap(window.subviews.compactMap { $0 as? DesktopMenuBarView }.first)
         XCTAssertEqual(bar.menus.map(\.title), ["Alpha", "File"])
+        var shown: [String] = []
+        bar.popUp = { menu, _, _ in shown.append(menu.title) }
+        let title = try XCTUnwrap(bar.titleView(at: 1))
+        let press = try XCTUnwrap(NSEvent.mouseEvent(
+            with: .leftMouseDown, location: .zero, modifierFlags: [], timestamp: 0,
+            windowNumber: 0, context: nil, eventNumber: 0, clickCount: 1, pressure: 1
+        ))
+        // The menu opens on press, before any release.
+        title.mouseDown(with: press)
+        XCTAssertEqual(shown, ["File"])
     }
 
     func test_savedFrameBelowMinimum_isRaisedToWholeWindowMinimum() throws {
         settings.windowFrames = ["a": CGRect(x: 100, y: 100, width: 50, height: 50)]
         let controller = makeController()
         controller.openApp(identifier: "a")
-        XCTAssertEqual(try chrome(controller, "a").frame, CGRect(x: 100, y: 100, width: 200, height: 202))
+        XCTAssertEqual(try chrome(controller, "a").frame, CGRect(x: 100, y: 100, width: 210, height: 207))
     }
 
     func test_defaultWindow_contentHeightEqualsDefaultWindowSize() throws {
@@ -285,7 +297,9 @@ final class DesktopAppWindowTests: XCTestCase {
         let window = try chrome(controller, "a")
         window.layoutSubtreeIfNeeded()
         XCTAssertEqual(window.contentContainer.frame.size, CGSize(width: 400, height: 300))
-        XCTAssertEqual(window.frame.height, 300 + DesktopWindowChromeView.titleBarHeight + DesktopMenuBarView.height)
+        XCTAssertEqual(
+            window.frame.height, 300 + DesktopWindowChromeView.titleBarHeight + DesktopMenuBarView.height + 5
+        )
     }
 
     func test_panelsUseOwnMinimum_notTheApps() throws {
@@ -384,5 +398,133 @@ final class DesktopAppWindowTests: XCTestCase {
         try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 150, y: 44))
         window.toggleZoom()
         XCTAssertEqual(window.frame, controller.windowLayer.bounds)
+    }
+
+    // MARK: Final review fixes
+
+    func test_settingsWindow_usesControllersPreferredSize_whenNonZero() throws {
+        let custom = NSViewController()
+        custom.view = NSView()
+        custom.preferredContentSize = CGSize(width: 720, height: 480)
+        app.settingsViewController = custom
+        let controller = makeController()
+        controller.showSettings(forApp: "a")
+        let window = try XCTUnwrap(controller.windowController("settings:a"))
+        XCTAssertEqual(window.defaultContentSize, CGSize(width: 720, height: 480))
+        let chrome = try chrome(controller, "settings:a")
+        chrome.layoutSubtreeIfNeeded()
+        XCTAssertEqual(chrome.contentContainer.frame.size, CGSize(width: 720, height: 480))
+    }
+
+    func test_settingsWindow_fallsBackTo440x300_whenPreferredSizeIsZero() throws {
+        let custom = NSViewController()
+        custom.view = NSView()
+        app.settingsViewController = custom
+        let controller = makeController()
+        controller.showSettings(forApp: "a")
+        let window = try XCTUnwrap(controller.windowController("settings:a"))
+        XCTAssertEqual(window.defaultContentSize, CGSize(width: 440, height: 300))
+        controller.showAbout(forApp: "a")
+        XCTAssertEqual(try XCTUnwrap(controller.windowController("about:a")).defaultContentSize,
+                       CGSize(width: 360, height: 430))
+    }
+
+    func test_doubleClickOnTitleBar_togglesZoom() throws {
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        let original = window.frame
+        try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 200, y: 14), clickCount: 2)
+        XCTAssertEqual(window.frame, controller.windowLayer.bounds)
+        XCTAssertEqual(settings.windowFrames["a"], controller.windowLayer.bounds)
+        try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 200, y: 14), clickCount: 2)
+        XCTAssertEqual(window.frame, original)
+    }
+
+    func test_noOpTitleBarClick_keepsRestoreFrame() throws {
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        let original = window.frame
+        window.toggleZoom()
+        XCTAssertEqual(window.frame, controller.windowLayer.bounds)
+        // A click with no movement must not forget the frame the zoom will restore.
+        try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 200, y: 14))
+        window.toggleZoom()
+        XCTAssertEqual(window.frame, original)
+    }
+
+    func test_resizeBand_doesNotCoverContent() throws {
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        window.layoutSubtreeIfNeeded()
+        let band: CGFloat = 5
+        XCTAssertEqual(window.contentContainer.frame.minX, band)
+        XCTAssertEqual(window.contentContainer.frame.maxX, window.bounds.width - band)
+        XCTAssertEqual(window.contentContainer.frame.maxY, window.bounds.height - band)
+        func hit(_ local: CGPoint) -> NSView? {
+            window.hitTest(CGPoint(x: window.frame.minX + local.x, y: window.frame.minY + local.y))
+        }
+        // In the band: the chrome. Just inside the content's corner: the content, not the chrome.
+        XCTAssertTrue(hit(CGPoint(x: 2, y: 200)) === window)
+        XCTAssertTrue(hit(CGPoint(x: window.bounds.width - 2, y: 200)) === window)
+        XCTAssertTrue(hit(CGPoint(x: 200, y: window.bounds.height - 2)) === window)
+        let inside = try XCTUnwrap(hit(CGPoint(x: band + 1, y: window.bounds.height - band - 1)))
+        XCTAssertFalse(inside === window)
+        XCTAssertTrue(inside.isDescendant(of: window.contentContainer))
+    }
+
+    func test_shrinkingDesktop_reclampsWindows_withoutWritingFrames() throws {
+        let saved = CGRect(x: 700, y: 500, width: 400, height: 300)
+        settings.windowFrames = ["a": saved]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        XCTAssertEqual(try chrome(controller, "a").frame.origin, CGPoint(x: 700, y: 500))
+        controller.view.frame = NSRect(x: 0, y: 0, width: 500, height: 400)
+        controller.view.layoutSubtreeIfNeeded()
+        controller.windowLayer.layoutSubtreeIfNeeded()
+        let frame = try chrome(controller, "a").frame
+        XCTAssertEqual(frame.origin, CGPoint(x: 460, y: 372))
+        XCTAssertEqual(settings.windowFrames["a"], saved)
+    }
+
+    func test_closingSettingsWindow_savesTextTypedButNotCommitted() throws {
+        let schema = DesktopAppSettingsSchema(fields: [
+            .init(key: "name", label: "Name", kind: .text(default: "x", placeholder: nil))
+        ])
+        let textApp = StubApp(identifier: "t", schema: schema, displayName: "Text")
+        let controller = makeController(extra: [textApp])
+        let host = hostWindow(for: controller)
+        controller.showSettings(forApp: "t")
+        let window = try XCTUnwrap(controller.windowController("settings:t"))
+        let field = try XCTUnwrap(Self.descendants(of: window.chrome).compactMap { $0 as? NSTextField }
+            .first { $0.identifier?.rawValue == "name" })
+        XCTAssertTrue(host.makeFirstResponder(field))
+        let editor = try XCTUnwrap(field.currentEditor())
+        // Set without any action or change notification: only closing the window can commit it.
+        editor.string = "typed"
+        controller.closeWindow(id: "settings:t")
+        XCTAssertEqual(settings.appSettings(for: textApp).string("name"), "typed")
+    }
+
+    func test_typingInSettingsField_commitsOnEveryChange() throws {
+        let schema = DesktopAppSettingsSchema(fields: [
+            .init(key: "name", label: "Name", kind: .text(default: "x", placeholder: nil))
+        ])
+        let textApp = StubApp(identifier: "t", schema: schema, displayName: "Text")
+        let controller = makeController(extra: [textApp])
+        controller.showSettings(forApp: "t")
+        let window = try XCTUnwrap(controller.windowController("settings:t"))
+        let form = try XCTUnwrap(window.contentViewController as? DesktopSettingsFormViewController)
+        let field = try XCTUnwrap(Self.descendants(of: window.chrome).compactMap { $0 as? NSTextField }
+            .first { $0.identifier?.rawValue == "name" })
+        field.stringValue = "partial"
+        form.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+        XCTAssertEqual(settings.appSettings(for: textApp).string("name"), "partial")
+    }
+
+    private static func descendants(of view: NSView) -> [NSView] {
+        view.subviews + view.subviews.flatMap { descendants(of: $0) }
     }
 }
