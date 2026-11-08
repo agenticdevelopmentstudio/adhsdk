@@ -60,6 +60,28 @@ final class BrowserInputGateTests: XCTestCase {
         XCTAssertFalse(gate.allows(.pointer, synthesized: false, pageHasFocus: false))
     }
 
+    /// WebKit's hover tracking area belongs to an internal observer that
+    /// would hand events straight to WebKit, past the gate; the web view
+    /// takes every such area over, so each pointer event is decided first.
+    func testTheWebViewOwnsEveryTrackingArea() {
+        let webView = BrowserWebView(frame: NSRect(x: 0, y: 0, width: 100, height: 100),
+                                     configuration: WKWebViewConfiguration())
+        let window = NSWindow(contentRect: webView.frame, styleMask: [.titled], backing: .buffered, defer: true)
+        window.contentView = webView
+        let foreign = NSTrackingArea(rect: webView.bounds, options: [.mouseMoved, .activeAlways], owner: NSObject(),
+                                     userInfo: nil)
+        webView.addTrackingArea(foreign)
+        webView.adoptForeignTrackingAreas()
+        XCTAssertFalse(webView.trackingAreas.isEmpty)
+        for area in webView.trackingAreas {
+            XCTAssertTrue(area.owner as AnyObject === webView, "\(area) is owned elsewhere")
+        }
+        let count = webView.trackingAreas.count
+        webView.adoptForeignTrackingAreas()
+        XCTAssertEqual(webView.trackingAreas.count, count, "taking over twice changes nothing")
+        withExtendedLifetime(foreign) {}
+    }
+
     func testBlockedKeyboardDisablesEditActions() {
         let webView = BrowserWebView(frame: NSRect(x: 0, y: 0, width: 100, height: 100),
                                      configuration: WKWebViewConfiguration())

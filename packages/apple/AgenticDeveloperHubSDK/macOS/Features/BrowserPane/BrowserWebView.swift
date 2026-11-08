@@ -150,20 +150,93 @@ public final class BrowserWebView: LiveResizingWebView {
 
     // MARK: - Pointer tracking
 
+    // WebKit's hover tracking never reaches these overrides on its own: the
+    // NSTrackingArea it adds to this view is owned by an internal observer
+    // object that hands moved, entered, exited and cursor-update events
+    // straight to WebKit. So every tracking area someone else owns is taken
+    // over: removed, and replaced by one with the same rect and options owned
+    // by this view, which decides each event and then hands it to the
+    // original owner. The decision is per event because Pointer tracking
+    // "when focused" depends on focus at that moment.
+
+    /// The original owner of each tracking area this view took over, keyed
+    /// by the replacement area.
+    private var trackingOwners: [ObjectIdentifier: NSObject] = [:]
+
+    public override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        adoptForeignTrackingAreas()
+    }
+
+    public override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        adoptForeignTrackingAreas()
+    }
+
+    /// Replaces every tracking area owned by something other than this view
+    /// with one this view owns. Safe to repeat: an area it owns is skipped.
+    func adoptForeignTrackingAreas() {
+        for area in trackingAreas {
+            guard let owner = area.owner as? NSObject, owner !== self else { continue }
+            removeTrackingArea(area)
+            let replacement = NSTrackingArea(rect: area.rect, options: area.options, owner: self,
+                                             userInfo: area.userInfo)
+            trackingOwners[ObjectIdentifier(replacement)] = owner
+            addTrackingArea(replacement)
+        }
+        let live = Set(trackingAreas.map(ObjectIdentifier.init))
+        trackingOwners = trackingOwners.filter { live.contains($0.key) }
+    }
+
+    /// Whether a tracking area this view took over is in charge of `event`'s
+    /// kind; the original owners when it is. `mouseMoved` carries no
+    /// tracking area, so it goes to every taken-over owner (one, in practice).
+    private func trackingOwners(for event: NSEvent) -> [NSObject] {
+        switch event.type {
+        case .mouseEntered, .mouseExited, .cursorUpdate:
+            guard let area = event.trackingArea else { return [] }
+            return trackingOwners[ObjectIdentifier(area)].map { [$0] } ?? []
+        default:
+            var seen = Set<ObjectIdentifier>()
+            return trackingOwners.values.filter { seen.insert(ObjectIdentifier($0)).inserted }
+        }
+    }
+
+    /// Decides one pointer event and delivers it: to the tracking areas'
+    /// original owners when they are in charge of it, else to WebKit's own
+    /// responder method.
+    private func deliverPointer(_ event: NSEvent, _ name: String, _ selector: Selector, toSuper: () -> Void) {
+        guard allows(.pointer, name) else { return }
+        let owners = trackingOwners(for: event).filter { $0.responds(to: selector) }
+        if owners.isEmpty {
+            toSuper()
+        } else {
+            for owner in owners { owner.perform(selector, with: event) }
+        }
+    }
+
     public override func mouseMoved(with event: NSEvent) {
-        if allows(.pointer, "mouseMoved") { super.mouseMoved(with: event) }
+        deliverPointer(event, "mouseMoved", #selector(NSResponder.mouseMoved(with:))) {
+            super.mouseMoved(with: event)
+        }
     }
 
     public override func mouseEntered(with event: NSEvent) {
-        if allows(.pointer, "mouseEntered") { super.mouseEntered(with: event) }
+        deliverPointer(event, "mouseEntered", #selector(NSResponder.mouseEntered(with:))) {
+            super.mouseEntered(with: event)
+        }
     }
 
     public override func mouseExited(with event: NSEvent) {
-        if allows(.pointer, "mouseExited") { super.mouseExited(with: event) }
+        deliverPointer(event, "mouseExited", #selector(NSResponder.mouseExited(with:))) {
+            super.mouseExited(with: event)
+        }
     }
 
     public override func cursorUpdate(with event: NSEvent) {
-        if allows(.pointer, "cursorUpdate") { super.cursorUpdate(with: event) }
+        deliverPointer(event, "cursorUpdate", #selector(NSResponder.cursorUpdate(with:))) {
+            super.cursorUpdate(with: event)
+        }
     }
 
     // MARK: - Drag and drop
