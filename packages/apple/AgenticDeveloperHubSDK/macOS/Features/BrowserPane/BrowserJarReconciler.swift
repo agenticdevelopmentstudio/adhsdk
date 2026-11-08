@@ -14,8 +14,8 @@ import os
 ///
 /// A jar is a cookie and site-data store; one left behind when its pane closes
 /// is a logged-in session nobody can see or sign out of. So a pane jar goes when
-/// its pane leaves the saved layout, a worktree jar goes when no live pane in
-/// that worktree resolves to it, and a WebKit store whose identifier is in no
+/// its pane leaves the saved layout, a worktree jar goes when no pane in that
+/// worktree is left in the layout, and a WebKit store whose identifier is in no
 /// row goes too — the last covers a crash between deleting a row and deleting
 /// its store.
 ///
@@ -109,14 +109,10 @@ public enum BrowserJarReconciler {
     /// One pass. Safe to call at any time and from anywhere on the main actor.
     ///
     /// - Parameters:
-    ///   - settings: Where a pane without its own storage-jar override reads
-    ///     the value from — the same store the panes fall back to, so the
-    ///     reconciler resolves a pane the way the pane does.
     ///   - dataStores: The WebKit stores to sweep.
     ///   - now: The time the grace period is measured to; a test moves it on.
     public static func reconcile(
         database: ProjectDatabase,
-        settings: SettingsStore = UserSettings.shared,
         dataStores: DataStores = .allEngines,
         now: Date = Date()
     ) async {
@@ -127,7 +123,6 @@ public enum BrowserJarReconciler {
                 records: records,
                 livePanes: live,
                 liveNodeIDs: try database.livePaneNodeIDs(),
-                effectiveJar: { effectiveJar(of: $0, database: database, settings: settings) },
                 inUse: jarIDsInUse(database: database),
                 createdAt: try database.browserJarCreationDates(),
                 now: now
@@ -162,10 +157,13 @@ public enum BrowserJarReconciler {
 
     /// The jars no live pane uses, out of `records`.
     ///
-    /// A pane jar is kept while its pane is in the layout, whatever the pane's
-    /// setting now says — moving a pane off its own jar and back again should
-    /// find the session it left. A worktree jar is kept while any live pane of
-    /// that project and worktree resolves to `.worktree`. `inUse` is kept
+    /// A jar is kept while a pane that could use it is in the layout,
+    /// whatever that pane's setting now says — moving panes off a jar and
+    /// back again should find the session they left. So a pane jar is kept
+    /// while its pane is live, and a worktree jar while any live pane of that
+    /// project and worktree is, whichever jar it resolves to. Re-pointing a
+    /// pane, or the app-wide default, never deletes a jar; removing the last
+    /// pane that could use it does. `inUse` is kept
     /// regardless: it is what open panes hold, whether or not their layout has
     /// been saved yet. `liveNodeIDs` adds panes the layout knows only by a
     /// state key (`ProjectDatabase.livePaneNodeIDs()`) to `livePanes`' own.
@@ -175,14 +173,12 @@ public enum BrowserJarReconciler {
         records: [BrowserJarRecord],
         livePanes: [LiveBrowserPane],
         liveNodeIDs extraLiveNodeIDs: Set<UUID> = [],
-        effectiveJar: (LiveBrowserPane) -> BrowserStorageJar,
         inUse: Set<UUID> = [],
         createdAt: [UUID: Date] = [:],
         now: Date = Date()
     ) -> Set<UUID> {
         let liveNodeIDs = Set(livePanes.map(\.nodeID)).union(extraLiveNodeIDs)
-        let worktreesInUse = Set(livePanes.filter { effectiveJar($0) == .worktree }
-            .map { WorktreeKey(repoID: $0.repoID, path: $0.worktreePath) })
+        let worktreesInUse = Set(livePanes.map { WorktreeKey(repoID: $0.repoID, path: $0.worktreePath) })
         func isNew(_ record: BrowserJarRecord) -> Bool {
             createdAt[record.id].map { now.timeIntervalSince($0) < newJarGracePeriod } ?? false
         }
@@ -215,17 +211,17 @@ public enum BrowserJarReconciler {
     /// Saves arrive in bursts — a drag fires several — so passes are spaced a
     /// second apart and a save during a pass asks for one more, never for one
     /// per save.
-    public static func start(database: ProjectDatabase, settings: SettingsStore = UserSettings.shared) {
+    public static func start(database: ProjectDatabase) {
         observation = NotificationCenter.default
             .publisher(for: ProjectWorkspace.didPersistTabsNotification)
             .receive(on: DispatchQueue.main)
             .sink { _ in
-                MainActor.assumeIsolated { schedule(database: database, settings: settings, delay: 1) }
+                MainActor.assumeIsolated { schedule(database: database, delay: 1) }
             }
-        schedule(database: database, settings: settings, delay: 0)
+        schedule(database: database, delay: 0)
     }
 
-    private static func schedule(database: ProjectDatabase, settings: SettingsStore, delay: TimeInterval) {
+    private static func schedule(database: ProjectDatabase, delay: TimeInterval) {
         guard !isRunning else {
             isPending = true
             return
@@ -233,39 +229,13 @@ public enum BrowserJarReconciler {
         isRunning = true
         Task { @MainActor in
             if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
-            await reconcile(database: database, settings: settings)
+            await reconcile(database: database)
             isRunning = false
             if isPending {
                 isPending = false
-                schedule(database: database, settings: settings, delay: 1)
+                schedule(database: database, delay: 1)
             }
         }
-    }
-
-    // MARK: - Reading a pane's jar
-
-    /// What `pane` resolves to: its own override if it has one, else the
-    /// shared setting. Private browsing is not consulted — a private pane
-    /// holds no jar, and the jar it would return to when private browsing is
-    /// turned off is the one worth keeping.
-    static func effectiveJar(
-        of pane: LiveBrowserPane,
-        database: ProjectDatabase,
-        settings: SettingsStore
-    ) -> BrowserStorageJar {
-        // The pane's own decode path, over its own rows: the override is read
-        // exactly as the pane's layered settings would read it. A nested pane's
-        // rows are under its owner, with its own id in the key.
-        let overrides = PaneStateSettingsStorageProvider(
-            store: DatabasePaneStateReader(
-                database: database,
-                repoID: pane.repoID,
-                nodeID: pane.stateNodeID,
-                prefix: pane.ownStateKeyPrefix
-            )
-        )
-        let key = UserSettings.browserPrivacyStorageJar
-        return overrides.contains(key) ? overrides.get(key) : settings.get(key)
     }
 
     private static func jarIDsInUse(database: ProjectDatabase) -> Set<UUID> {
@@ -280,27 +250,4 @@ public enum BrowserJarReconciler {
 private struct WorktreeKey: Hashable {
     let repoID: UUID
     let path: String
-}
-
-/// A pane's state rows, read straight from the database for a pane that may
-/// have no window open. Read-only: the reconciler decides nothing by writing.
-@MainActor
-private final class DatabasePaneStateReader: PaneStateStore {
-    let database: ProjectDatabase
-    let repoID: UUID
-    let nodeID: UUID
-    let prefix: String
-
-    init(database: ProjectDatabase, repoID: UUID, nodeID: UUID, prefix: String) {
-        self.database = database
-        self.repoID = repoID
-        self.nodeID = nodeID
-        self.prefix = prefix
-    }
-
-    func paneStateValue(forKey key: String) -> String? {
-        try? database.paneState(repoID: repoID, nodeID: nodeID, key: prefix + key)
-    }
-
-    func setPaneStateValue(_ value: String?, forKey key: String) {}
 }

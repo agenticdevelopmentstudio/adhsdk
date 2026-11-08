@@ -131,9 +131,7 @@ final class BrowserJarTests: XCTestCase {
         ))
         XCTAssertTrue(overrides.contains(UserSettings.browserPrivacyStorageJar), "written as the sheet writes it")
         XCTAssertEqual(overrides.get(UserSettings.browserPrivacyStorageJar), .global)
-        XCTAssertEqual(
-            BrowserJarReconciler.effectiveJar(of: live, database: upgraded, settings: makeSettings()), .global
-        )
+        XCTAssertEqual(live.nodeID, node)
 
         // A second run finds its own work: one name in the index, the value kept.
         try upgraded.keepExistingBrowserPanesOnTheSharedJar()
@@ -157,10 +155,7 @@ final class BrowserJarTests: XCTestCase {
             database: reopened, repoID: repo.id, nodeID: node, prefix: ComposableTabsViewRegistry.browserStatePrefix
         ))
         XCTAssertFalse(overrides.contains(UserSettings.browserPrivacyStorageJar))
-        XCTAssertEqual(
-            BrowserJarReconciler.effectiveJar(of: pane(node, repo: repo), database: reopened, settings: makeSettings()),
-            .pane
-        )
+        XCTAssertEqual(makeSettings().get(UserSettings.browserPrivacyStorageJar), .pane)
     }
 
     func testTheSchemaRefusesDuplicateJarsAndUnknownKinds() throws {
@@ -513,22 +508,22 @@ final class BrowserJarTests: XCTestCase {
         let second = pane(UUID(), repo: repo)
         let jar = worktreeJar(of: repo)
 
-        // One of two panes still resolves to the worktree jar.
+        // Panes of that worktree keep it, whichever jar they resolve to now.
         XCTAssertEqual(BrowserJarReconciler.staleJarIDs(
-            records: [jar], livePanes: [first, second], effectiveJar: { $0 == first ? .worktree : .pane }
+            records: [jar], livePanes: [first, second]
         ), [])
-        // Neither does any more.
+        // The last of them leaving the layout lets it go.
         XCTAssertEqual(BrowserJarReconciler.staleJarIDs(
-            records: [jar], livePanes: [first, second], effectiveJar: { _ in .pane }
+            records: [jar], livePanes: []
         ), [jar.id])
         // A pane in another worktree does not keep it.
         let elsewhere = LiveBrowserPane(nodeID: UUID(), repoID: repo.id, worktreePath: "/elsewhere")
         XCTAssertEqual(BrowserJarReconciler.staleJarIDs(
-            records: [jar], livePanes: [elsewhere], effectiveJar: { _ in .worktree }
+            records: [jar], livePanes: [elsewhere]
         ), [jar.id])
         // An open pane holding it keeps it whatever the layout says.
         XCTAssertEqual(BrowserJarReconciler.staleJarIDs(
-            records: [jar], livePanes: [], effectiveJar: { _ in .worktree }, inUse: [jar.id]
+            records: [jar], livePanes: [], inUse: [jar.id]
         ), [])
     }
 
@@ -540,7 +535,7 @@ final class BrowserJarTests: XCTestCase {
         let old = BrowserJarRecord(kind: .pane, repoID: UUID(), worktreePath: "/a", paneNodeID: UUID())
         let undated = BrowserJarRecord(kind: .pane, repoID: UUID(), worktreePath: "/a", paneNodeID: UUID())
         XCTAssertEqual(BrowserJarReconciler.staleJarIDs(
-            records: [young, old, undated], livePanes: [], effectiveJar: { _ in .pane },
+            records: [young, old, undated], livePanes: [],
             createdAt: [young.id: now.addingTimeInterval(-10), old.id: now.addingTimeInterval(-120)],
             now: now
         ), [old.id, undated.id])
@@ -554,10 +549,10 @@ final class BrowserJarTests: XCTestCase {
         )
         try database.insertBrowserJar(jar)
         let stores = FakeDataStores()
-        await BrowserJarReconciler.reconcile(database: database, settings: makeSettings(), dataStores: stores.api)
+        await BrowserJarReconciler.reconcile(database: database, dataStores: stores.api)
         XCTAssertEqual(try database.allBrowserJars(), [jar], "made a moment ago, by this copy or another")
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(try database.allBrowserJars(), [])
     }
@@ -566,10 +561,10 @@ final class BrowserJarTests: XCTestCase {
         let node = UUID()
         let jar = BrowserJarRecord(kind: .pane, repoID: UUID(), worktreePath: "/a", paneNodeID: node)
         XCTAssertEqual(BrowserJarReconciler.staleJarIDs(
-            records: [jar], livePanes: [], effectiveJar: { _ in .pane }
+            records: [jar], livePanes: []
         ), [jar.id])
         XCTAssertEqual(BrowserJarReconciler.staleJarIDs(
-            records: [jar], livePanes: [], liveNodeIDs: [node], effectiveJar: { _ in .pane }
+            records: [jar], livePanes: [], liveNodeIDs: [node]
         ), [])
     }
 
@@ -596,7 +591,7 @@ final class BrowserJarTests: XCTestCase {
 
         let stores = FakeDataStores()
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(try database.allBrowserJars(), [jar], "the nested pane still holds its jar")
 
@@ -605,14 +600,15 @@ final class BrowserJarTests: XCTestCase {
         try database.saveTabs([other], activeTabID: other.id, enabledEdges: [.top], repoID: repo.id)
         XCTAssertFalse(try database.livePaneNodeIDs().contains(nested))
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(try database.allBrowserJars(), [])
     }
 
-    /// End to end over the database: a pane whose own override says
-    /// `worktree` keeps the worktree jar while the shared setting says `pane`.
-    func testReconcilerReadsAPanesOverrideFromItsState() async throws {
+    /// End to end over the database: moving a pane off its worktree jar,
+    /// through its own override or the shared setting, keeps the jar, so
+    /// moving back finds the session; removing the pane lets it go.
+    func testAWorktreeJarOutlivesItsPanesMovingOffIt() async throws {
         let database = try makeDatabase()
         let repo = try registerRepo(in: database)
         let node = UUID()
@@ -620,41 +616,19 @@ final class BrowserJarTests: XCTestCase {
         try database.saveTabs([tab], activeTabID: tab.id, enabledEdges: [.top], repoID: repo.id)
         let jar = worktreeJar(of: repo)
         try database.insertBrowserJar(jar)
-        let settings = makeSettings()
-        settings.set(BrowserStorageJar.pane, for: UserSettings.browserPrivacyStorageJar)
-        let stores = FakeDataStores()
-
-        await BrowserJarReconciler.reconcile(database: database, settings: settings, dataStores: stores.api, now: later)
-        XCTAssertEqual(try database.allBrowserJars(), [], "no pane resolves to the worktree jar")
-
-        try database.insertBrowserJar(jar)
         PaneStateSettingsStorageProvider(store: DatabaseStateStore(
             database: database, repoID: repo.id, nodeID: node, prefix: ComposableTabsViewRegistry.browserStatePrefix
-        )).set(BrowserStorageJar.worktree, for: UserSettings.browserPrivacyStorageJar)
-        await BrowserJarReconciler.reconcile(database: database, settings: settings, dataStores: stores.api, now: later)
-        XCTAssertEqual(try database.allBrowserJars(), [jar], "the pane's own override keeps it")
-    }
+        )).set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
+        let stores = FakeDataStores()
 
-    /// A nested pane's override lives under its owner's node, with its own id
-    /// in the key; the reconciler must read it from there.
-    func testReconcilerReadsANestedPanesOverrideUnderItsOwner() async throws {
-        let database = try makeDatabase()
-        let repo = try registerRepo(in: database)
-        let owner = UUID()
-        let nested = UUID()
-        let tab = TabRecord(title: "docs", root: .leaf(id: owner, contentType: ComposableTabsViewID("test.document")))
-        try database.saveTabs([tab], activeTabID: tab.id, enabledEdges: [.top], repoID: repo.id)
-        PaneStateSettingsStorageProvider(store: nestedStore(database, repo: repo, owner: owner, nested: nested))
-            .set(BrowserStorageJar.worktree, for: UserSettings.browserPrivacyStorageJar)
-        let jar = worktreeJar(of: repo)
-        try database.insertBrowserJar(jar)
-        let settings = makeSettings()
-        settings.set(BrowserStorageJar.pane, for: UserSettings.browserPrivacyStorageJar)
+        await BrowserJarReconciler.reconcile(database: database, dataStores: stores.api, now: later)
+        XCTAssertEqual(try database.allBrowserJars(), [jar], "the pane could move back")
 
-        await BrowserJarReconciler.reconcile(
-            database: database, settings: settings, dataStores: FakeDataStores().api, now: later
-        )
-        XCTAssertEqual(try database.allBrowserJars(), [jar])
+        let document = ComposableTabsViewID("test.document")
+        let other = TabRecord(title: "main", root: .leaf(id: UUID(), contentType: document))
+        try database.saveTabs([other], activeTabID: other.id, enabledEdges: [.top], repoID: repo.id)
+        await BrowserJarReconciler.reconcile(database: database, dataStores: stores.api, now: later)
+        XCTAssertEqual(try database.allBrowserJars(), [], "no pane of the worktree is left")
     }
 
     func testReconcilerDropsJarsOfRemovedPanes() async throws {
@@ -679,20 +653,20 @@ final class BrowserJarTests: XCTestCase {
         )
         try database.saveTabs([both], activeTabID: both.id, enabledEdges: [.top], repoID: repo.id)
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(Set(try database.allBrowserJars().map(\.id)), [keptJar, removedJar])
 
         let one = TabRecord(id: both.id, title: "main", root: browserLeaf(kept))
         try database.saveTabs([one], activeTabID: one.id, enabledEdges: [.top], repoID: repo.id)
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(try database.allBrowserJars().map(\.id), [keptJar])
 
         // Idempotent: a second pass finds nothing more to do.
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(try database.allBrowserJars().map(\.id), [keptJar])
     }
@@ -717,7 +691,7 @@ final class BrowserJarTests: XCTestCase {
         let stores = FakeDataStores(identifiers: [rowJar.id, held, orphan])
 
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(stores.removed, [orphan])
         XCTAssertEqual(stores.identifiers, [rowJar.id, held])
@@ -726,7 +700,7 @@ final class BrowserJarTests: XCTestCase {
         stores.refuses = true
         stores.identifiers.append(UUID())
         await BrowserJarReconciler.reconcile(
-            database: database, settings: makeSettings(), dataStores: stores.api, now: later
+            database: database, dataStores: stores.api, now: later
         )
         XCTAssertEqual(stores.removed, [orphan])
         XCTAssertEqual(stores.identifiers.count, 3)
