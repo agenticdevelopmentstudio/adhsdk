@@ -21,10 +21,19 @@ public final class DesktopSettings {
         ]
     }
 
-    private let store: UserSettings
+    let store: UserSettings
 
     public init(store: UserSettings = .shared) {
         self.store = store
+    }
+
+    /// The settings store for one App, in the same underlying store as the Desktop's own settings.
+    public func appSettings(for app: DesktopApp) -> DesktopAppSettings {
+        DesktopAppSettings(
+            appIdentifier: app.descriptor.identifier,
+            schema: app.descriptor.settingsSchema,
+            store: store
+        )
     }
 
     /// Emits whenever any Desktop setting changes.

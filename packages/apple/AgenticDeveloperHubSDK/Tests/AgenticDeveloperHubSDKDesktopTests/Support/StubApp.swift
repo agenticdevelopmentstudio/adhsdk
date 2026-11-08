@@ -1,10 +1,18 @@
 import AppKit
 @testable import AgenticDeveloperHubSDKDesktop
 
-/// A minimal `DesktopApp` for tests.
+/// A minimal `DesktopApp` for tests that records what the Desktop asks of it.
 @MainActor
 final class StubApp: DesktopApp {
     let descriptor: DesktopAppDescriptor
+
+    /// Menus `makeMenus` returns.
+    var menus: [NSMenu] = []
+    /// When set, `makeSettingsViewController` returns it.
+    var settingsViewController: NSViewController?
+    private(set) var contentViewControllers: [NSViewController] = []
+    private(set) var willCloseCount = 0
+    private(set) var contexts: [DesktopAppContext] = []
 
     init(
         identifier: String,
@@ -26,6 +34,16 @@ final class StubApp: DesktopApp {
     }
 
     func makeContentViewController(context: DesktopAppContext) -> NSViewController {
-        NSViewController()
+        let controller = NSViewController()
+        controller.view = NSView()
+        contentViewControllers.append(controller)
+        contexts.append(context)
+        return controller
     }
+
+    func makeMenus(context: DesktopAppContext) -> [NSMenu] { menus }
+
+    func makeSettingsViewController(context: DesktopAppContext) -> NSViewController? { settingsViewController }
+
+    func appWillClose(context: DesktopAppContext) { willCloseCount += 1 }
 }
