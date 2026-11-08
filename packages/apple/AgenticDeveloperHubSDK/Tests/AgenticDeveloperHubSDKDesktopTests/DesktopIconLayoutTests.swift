@@ -47,4 +47,44 @@ final class DesktopIconLayoutTests: XCTestCase {
         XCTAssertEqual(origin, CGPoint(x: 304, y: 204))
         XCTAssertEqual(layout.clamp(CGPoint(x: -10, y: -10)), .zero)
     }
+
+    private func assertInside(
+        _ origins: [String: CGPoint],
+        _ size: CGSize,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let cell = metrics.cellSize
+        for (id, origin) in origins {
+            XCTAssertGreaterThanOrEqual(origin.x, 0, id, file: file, line: line)
+            XCTAssertGreaterThanOrEqual(origin.y, 0, id, file: file, line: line)
+            XCTAssertLessThanOrEqual(origin.x + min(cell.width, size.width), size.width, id, file: file, line: line)
+            XCTAssertLessThanOrEqual(origin.y + min(cell.height, size.height), size.height, id, file: file, line: line)
+        }
+    }
+
+    func test_arranged_overflow_staysInsideContainer() {
+        let size = CGSize(width: 300, height: 250)
+        let ids = (0..<20).map { "i\($0)" }
+        let origins = DesktopIconLayout(metrics: metrics, containerSize: size).arrangedOrigins(for: ids)
+        XCTAssertEqual(origins.count, 20)
+        assertInside(origins, size)
+    }
+
+    func test_free_overflow_staysInsideContainer() {
+        let size = CGSize(width: 300, height: 250)
+        let ids = (0..<20).map { "i\($0)" }
+        let origins = DesktopIconLayout(metrics: metrics, containerSize: size)
+            .freeOrigins(for: ids, saved: ["i0": CGPoint(x: 20, y: 20)])
+        XCTAssertEqual(origins.count, 20)
+        assertInside(origins, size)
+    }
+
+    func test_tinyContainer_originsInside() {
+        let size = CGSize(width: 50, height: 40)
+        let layout = DesktopIconLayout(metrics: metrics, containerSize: size)
+        let arranged = layout.arrangedOrigins(for: ["a", "b", "c"])
+        let free = layout.freeOrigins(for: ["a", "b", "c"], saved: [:])
+        for origin in Array(arranged.values) + Array(free.values) { XCTAssertEqual(origin, .zero) }
+    }
 }

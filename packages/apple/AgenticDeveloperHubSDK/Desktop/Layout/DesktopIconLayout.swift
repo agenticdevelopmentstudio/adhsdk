@@ -35,10 +35,11 @@ public struct DesktopIconLayout: Sendable {
     }
 
     private func origin(column: Int, row: Int) -> CGPoint {
-        CGPoint(
+        // Always clamped: the surface never scrolls, so overflow icons stack at the edge.
+        clamp(CGPoint(
             x: metrics.padding + CGFloat(column) * metrics.cellSize.width,
             y: metrics.padding + CGFloat(row) * metrics.cellSize.height
-        )
+        ))
     }
 
     private func cellIndex(containing origin: CGPoint) -> (column: Int, row: Int) {
