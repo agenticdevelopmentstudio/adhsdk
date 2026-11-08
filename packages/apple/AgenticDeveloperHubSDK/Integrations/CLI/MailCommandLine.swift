@@ -2,24 +2,33 @@ import Foundation
 
 /// The `mail …` command line: parses the arguments after `mail`, asks a `MailClient`, prints.
 public enum MailCommandLine {
-    public static let usage = """
-        usage: mail <command> [--json]
-          mail accounts
-          mail labels <account>
-          mail list <account> [--since D] [--until D] [--label L]... [--limit N] [--cursor C] [--bodies]
-          mail get <account> <id>
-          mail label add <account> <label> <id>...
-          mail label remove <account> <label> <id>...
+    /// The usage text. `program` is how the host's users type the command, such as `olylo mail`.
+    public static func usage(program: String = "mail") -> String {
+        """
+        usage: \(program) <command> [--json]
+          \(program) accounts
+          \(program) labels <account>
+          \(program) list <account> [--since D] [--until D] [--label L]... [--limit N] [--cursor C] [--bodies]
+          \(program) get <account> <id>
+          \(program) label add <account> <label> <id>...
+          \(program) label remove <account> <label> <id>...
         D is YYYY-MM-DD or an ISO-8601 timestamp.
         """
+    }
 
-    /// 0 on success, 64 for a usage error, 1 for a failure.
+    /// 0 on success or when help was asked for (printed to stdout), 64 for a usage error (the
+    /// usage goes to stderr), 1 for a failure.
     public static func run(
-        _ args: [String], client: MailClient, stdout: @Sendable (String) -> Void,
-        stderr: @Sendable (String) -> Void
+        _ args: [String], program: String = "mail", client: MailClient,
+        stdout: @Sendable (String) -> Void, stderr: @Sendable (String) -> Void
     ) async -> Int32 {
+        // `help` as the command, or `--help`/`-h` anywhere (`mail list --help`).
+        if args.first == "help" || args.contains(where: ["--help", "-h"].contains) {
+            stdout(usage(program: program))
+            return 0
+        }
         guard let parsed = parse(args) else {
-            stderr(usage)
+            stderr(usage(program: program))
             return 64
         }
         do {

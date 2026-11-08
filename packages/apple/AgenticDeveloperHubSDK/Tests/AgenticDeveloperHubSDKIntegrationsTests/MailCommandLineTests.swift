@@ -59,7 +59,7 @@ struct MailCommandLineTests {
         let mail = ScriptedMail(.ok)
         let (code, out) = await run(["label", "add", "a", "Work"], mail)
         #expect(code == 64)
-        #expect(out.stderr == [MailCommandLine.usage])
+        #expect(out.stderr == [MailCommandLine.usage()])
         #expect(mail.requests.isEmpty)
     }
 
@@ -80,9 +80,30 @@ struct MailCommandLineTests {
     @Test func unknownSubcommandReturns64() async {
         let (code, out) = await run(["frobnicate"], ScriptedMail(.ok))
         #expect(code == 64)
-        #expect(out.stderr == [MailCommandLine.usage])
+        #expect(out.stderr == [MailCommandLine.usage()])
         let (none, _) = await run([], ScriptedMail(.ok))
         #expect(none == 64)
+    }
+
+    @Test func helpPrintsUsageToStdoutAndSucceeds() async {
+        for args in [["--help"], ["-h"], ["help"], ["list", "--help"], ["label", "add", "-h"]] {
+            let (code, out) = await run(args, ScriptedMail(.ok))
+            #expect(code == 0, "\(args)")
+            #expect(out.stdout == [MailCommandLine.usage()], "\(args)")
+            #expect(out.stderr.isEmpty, "\(args)")
+        }
+    }
+
+    @Test func usageNamesTheCommandAsTheHostSpellsIt() async {
+        let output = Output()
+        let code = await MailCommandLine.run(
+            ["--help"], program: "olylo mail", client: ScriptedMail(.ok).client,
+            stdout: { output.writeOut($0) }, stderr: { output.writeErr($0) })
+        #expect(code == 0)
+        let text = output.stdout.joined()
+        #expect(text.hasPrefix("usage: olylo mail <command>"))
+        #expect(text.contains("  olylo mail list <account>"))
+        #expect(!text.contains("\n  mail "))
     }
 
     @Test func remoteFailureReturns1() async {
@@ -170,7 +191,7 @@ struct MailCommandLineTests {
         let mail = ScriptedMail(.ok)
         let (code, out) = await run(["list", "a", "--bogus"], mail)
         #expect(code == 64)
-        #expect(out.stderr == [MailCommandLine.usage])
+        #expect(out.stderr == [MailCommandLine.usage()])
         let (accounts, _) = await run(["accounts", "--limit", "5"], mail)
         #expect(accounts == 64)
         #expect(mail.requests.isEmpty)
