@@ -259,6 +259,21 @@
       "holds": "AgenticDeveloperHubSDKDesktop. The Desktop: App abstraction, icon layout, window management."
     },
     {
+      "name": "apple-desktopapps",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/DesktopApps/"
+      ],
+      "depends_on": [
+        "apple-desktop",
+        "apple-macos",
+        "apple-integrations",
+        "apple-coreui",
+        "apple-core"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKDesktopApps. The Desktop's built-in Apps: Hello World and Email."
+    },
+    {
       "name": "apple-activity",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Activity/"
@@ -483,7 +498,9 @@
         "apple-chromium",
         "apple-integrations",
         "apple-menubar",
-        "apple-desktop"
+        "apple-desktop",
+        "apple-desktop",
+        "apple-desktopapps"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

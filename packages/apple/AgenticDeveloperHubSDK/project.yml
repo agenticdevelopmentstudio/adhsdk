@@ -966,6 +966,139 @@ targets:
         embed: true
         codeSign: true
 
+  # The Desktop's built-in Apps: Hello World and Email.
+  AgenticDeveloperHubSDKDesktopApps:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - DesktopApps
+    dependencies:
+      - target: AgenticDeveloperHubSDKDesktop
+      - target: AgenticDeveloperHubSDKMacOS
+      - target: AgenticDeveloperHubSDKIntegrations
+      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKCoreUI
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKDesktopAppsTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - path: Tests/AgenticDeveloperHubSDKDesktopAppsTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKMacOS
+        embed: true
+        codeSign: true
+      # The scripting tests import it directly (`@testable`), not through the
+      # AgenticDeveloperHubSDKMacOS re-export, so its internal `reset()` is reachable.
+      - target: AgenticDeveloperHubSDKIntegrations
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKScripting
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCoreMacOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCoreUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      # The pane-chrome tests import `AgenticDeveloperHubSDKUI` directly —
+      # the gear, the options dialog and its body live a layer down in the
+      # developer toolkit. Embedded and signed like the four above: a test bundle
+      # loads its frameworks out of its own Frameworks directory, and the UI
+      # framework links the base one, so both have to be there or the bundle
+      # fails to load with a dyld error naming a framework the tests never
+      # mention.
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKUI-macOS
+        embed: true
+        codeSign: true
+      # MarkdownNoteStorageTests imports AgenticDeveloperHubSDKMarkdown directly to
+      # drive MarkdownStore/MarkdownText, same transitive-linking reason as
+      # AgenticDeveloperHubSDKMarkdownTests above.
+      - target: AgenticDeveloperHubSDKMarkdown-macOS
+        embed: true
+        codeSign: true
+      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
+      # `AgenticDeveloperHubSDKMacOS` links all seven of these directly or through
+      # `AgenticDeveloperHubSDKMarkdown`; `AgenticDeveloperHubSDKDatabase`,
+      # `AgenticDeveloperHubSDKSyncGRDB` and `AgenticDeveloperHubSDKMarkdown` each load the
+      # GRDB package product, which is why the package is named here too --
+      # linking it is what makes Xcode copy it in, exactly as the app target
+      # does.
+      - target: AgenticDeveloperHubSDKPermissions
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKPermissionsUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDisplays
+        embed: true
+        codeSign: true
+      - target: AIPluginKit
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKLanguage
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      # AgenticDeveloperHubSDKMacOS links Sparkle (AppUpdater); the test bundle loads
+      # its frameworks out of its own Frameworks directory, so Sparkle has to
+      # be there too — same "closure completion" reason as GRDB above.
+      - package: Sparkle
+        product: Sparkle
+      # AgenticDeveloperHubSDKMacOS links FlyingFox (MCPHTTPEndpoint); same closure
+      # completion as Sparkle above.
+      - package: FlyingFox
+        product: FlyingFox
+      # The key-command tests drive `KeyboardShortcuts` directly (chord
+      # recording, registration), so the bundle links it itself.
+      - package: KeyboardShortcuts
+
+  # A per-platform pair rather than one `supportedDestinations: [macOS, iOS]`
+  # target, for the reason spelled out above AgenticDeveloperHubSDKMarkdown: this
+  # framework depends on AgenticDeveloperHubSDKUI, which exposes only
+  # platform-specific targets, and a multi-destination target cannot depend on a
+  # single-platform one. Both halves build the same `HTDV` sources under the same
+  # product name, so consumers still see one framework called AgenticDeveloperHubSDKHTDV.
+  #
+  # The dependency is what makes these views themeable: SemanticPalette,
+  # ThemeRole, Themeable and ThemePaletteObserver all live in
+  # AgenticDeveloperHubSDKUI. Before it, HTDV had no dependencies at all and so
+  # had no vocabulary but NSColor's system colors, which is why every view in it
+  # ignored the user's theme.
+      - target: AgenticDeveloperHubSDKDesktop
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDesktopApps
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
   # Activity capture and tracking, moved verbatim from Olylo's OlyloCore:
   # the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore),
   # the context-event model/store/triggers, the capture permission gate, and
@@ -1994,6 +2127,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKActivity-macOS
       - AgenticDeveloperHubSDKIntegrations
       - AgenticDeveloperHubSDKDesktop
+      - AgenticDeveloperHubSDKDesktopApps
 
   # The spec files this store under "macOS, iOS", and `AgenticDeveloperHubSDKMarkdown-iOS`
   # existed but was reachable from no aggregate and no scheme — so nothing ever
@@ -2080,6 +2214,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKIntegrationsTests
       - AgenticDeveloperHubSDKDesktop
       - AgenticDeveloperHubSDKDesktopTests
+      - AgenticDeveloperHubSDKDesktopApps
+      - AgenticDeveloperHubSDKDesktopAppsTests
 
 schemes:
   AgenticDeveloperHubSDKChromium:
@@ -2258,6 +2394,23 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKDesktopTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKDesktopApps:
+    build:
+      targets:
+        AgenticDeveloperHubSDKDesktopApps: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKDesktopAppsTests
     profile:
       config: Release
     analyze:
