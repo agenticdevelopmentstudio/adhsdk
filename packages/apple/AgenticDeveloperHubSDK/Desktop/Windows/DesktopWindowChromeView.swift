@@ -31,7 +31,8 @@ final class DesktopWindowChromeView: NSView {
     }
 
     let contentContainer = NSView()
-    var minimumSize = CGSize(width: 200, height: 120)
+    /// The smallest content area (below the title bar and menu strip), like an NSWindow content rect.
+    var minimumContentSize = CGSize(width: 200, height: 120)
     var onClose: (() -> Void)?
     var onActivate: (() -> Void)?
     /// Called on every frame change while moving or resizing.
@@ -57,6 +58,15 @@ final class DesktopWindowChromeView: NSView {
             needsLayout = true
         }
     }
+    /// Height of everything above the content: title bar plus accessory strip.
+    var chromeHeight: CGFloat { Self.titleBarHeight + accessoryHeight }
+    /// The smallest whole-window size, derived so setup order cannot matter.
+    var minimumWindowSize: CGSize { windowSize(forContent: minimumContentSize) }
+
+    func windowSize(forContent content: CGSize) -> CGSize {
+        CGSize(width: content.width, height: content.height + chromeHeight)
+    }
+
     private var interaction: Interaction?
     private var restoreFrame: CGRect?
 
@@ -68,10 +78,6 @@ final class DesktopWindowChromeView: NSView {
         layer?.cornerRadius = 8
         layer?.masksToBounds = true
         addSubview(contentContainer)
-        let press = NSPressGestureRecognizer(target: self, action: #selector(contentPressed(_:)))
-        press.minimumPressDuration = 0
-        press.allowableMovement = .greatestFiniteMagnitude
-        addGestureRecognizer(press)
     }
 
     required init?(coder: NSCoder) {
@@ -171,10 +177,6 @@ final class DesktopWindowChromeView: NSView {
         return super.hitTest(point)
     }
 
-    @objc private func contentPressed(_ recognizer: NSPressGestureRecognizer) {
-        if recognizer.state == .began { onActivate?() }
-    }
-
     private func superviewPoint(_ event: NSEvent) -> CGPoint {
         superview?.convert(event.locationInWindow, from: nil) ?? event.locationInWindow
     }
@@ -203,12 +205,21 @@ final class DesktopWindowChromeView: NSView {
             var moved = start
             moved.origin.x += mouse.x - startMouse.x
             moved.origin.y += mouse.y - startMouse.y
+            restoreFrame = nil
             setFrameClamped(moved)
         case let .resize(edges, start, startMouse):
-            setFrameClamped(Self.resized(
+            restoreFrame = nil
+            var proposed = Self.resized(
                 start, edges: edges, deltaX: mouse.x - startMouse.x, deltaY: mouse.y - startMouse.y,
-                minimum: minimumSize
-            ))
+                minimum: minimumWindowSize
+            )
+            if edges.contains(.top), proposed.minY < 0 {
+                // At the Desktop top the height shrinks; the bottom edge stays where it was.
+                let height = max(minimumWindowSize.height, start.maxY)
+                proposed.size.height = height
+                proposed.origin.y = start.maxY - height
+            }
+            setFrameClamped(proposed)
         case .light, .none:
             break
         }
@@ -248,7 +259,7 @@ final class DesktopWindowChromeView: NSView {
 
     private func setFrameClamped(_ proposed: CGRect) {
         let container = superview?.bounds.size ?? .zero
-        let result = container == .zero ? proposed : Self.clamped(proposed, in: container, minimum: minimumSize)
+        let result = container == .zero ? proposed : Self.clamped(proposed, in: container, minimum: minimumWindowSize)
         guard result != frame else { return }
         frame = result
         onFrameChange?(result)

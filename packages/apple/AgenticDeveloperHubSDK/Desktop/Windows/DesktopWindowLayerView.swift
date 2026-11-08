@@ -43,20 +43,50 @@ final class DesktopWindowLayerView: NSView {
     }
 
     /// Orders the chrome views to match the stack and marks the front one active.
+    /// Reorders in place, so a window's first responder and tracking survive a raise.
     private func render() {
         let ordered = stack.entries.compactMap { chromes[$0.id] }
         if subviews != ordered {
-            ordered.forEach { $0.removeFromSuperview() }
-            ordered.forEach { addSubview($0) }
+            let ranks = RankBox(Dictionary(
+                uniqueKeysWithValues: ordered.enumerated().map { (ObjectIdentifier($1), $0) }
+            ))
+            sortSubviews({ first, second, context in
+                guard let context else { return .orderedSame }
+                let box = Unmanaged<RankBox>.fromOpaque(context).takeUnretainedValue()
+                let lhs = box.ranks[ObjectIdentifier(first)] ?? 0
+                let rhs = box.ranks[ObjectIdentifier(second)] ?? 0
+                return lhs < rhs ? .orderedAscending : (lhs > rhs ? .orderedDescending : .orderedSame)
+            }, context: Unmanaged.passUnretained(ranks).toOpaque())
+            withExtendedLifetime(ranks) {}
         }
         for entry in stack.entries {
             chromes[entry.id]?.isActive = entry.id == stack.frontID
         }
     }
 
+    private final class RankBox {
+        let ranks: [ObjectIdentifier: Int]
+        init(_ ranks: [ObjectIdentifier: Int]) { self.ranks = ranks }
+    }
+
+    /// A press raises its window here, at dispatch time, before the content sees the click.
     override func hitTest(_ point: NSPoint) -> NSView? {
-        let hit = super.hitTest(point)
-        return hit === self ? nil : hit
+        guard let hit = super.hitTest(point), hit !== self else { return nil }
+        if NSApp.currentEvent?.type == .leftMouseDown, let id = identifier(owning: hit) {
+            bringToFront(id)
+        }
+        return hit
+    }
+
+    private func identifier(owning view: NSView) -> String? {
+        var current: NSView? = view
+        while let candidate = current {
+            if let chrome = candidate as? DesktopWindowChromeView {
+                return chromes.first { $0.value === chrome }?.key
+            }
+            current = candidate.superview
+        }
+        return nil
     }
 
     /// Windows stay reachable when the Desktop shrinks. Never writes settings.
@@ -64,7 +94,9 @@ final class DesktopWindowLayerView: NSView {
         super.layout()
         guard bounds.width > 0, bounds.height > 0 else { return }
         for (id, chrome) in chromes {
-            let clamped = DesktopWindowChromeView.clamped(chrome.frame, in: bounds.size, minimum: chrome.minimumSize)
+            let clamped = DesktopWindowChromeView.clamped(
+                chrome.frame, in: bounds.size, minimum: chrome.minimumWindowSize
+            )
             if clamped != chrome.frame {
                 chrome.frame = clamped
                 stack.setFrame(clamped, for: id)

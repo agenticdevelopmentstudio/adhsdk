@@ -62,6 +62,21 @@ final class DesktopAppWindowTests: XCTestCase {
         chrome.mouseUp(with: event(.leftMouseUp, endWindow))
     }
 
+    private final class Recorder: NSObject {
+        private(set) var hits = 0
+        @objc func hit(_ sender: Any?) { hits += 1 }
+    }
+
+    private func hostWindow(for controller: DesktopViewController) -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled], backing: .buffered, defer: true
+        )
+        window.contentView = controller.view
+        window.orderBack(nil)
+        return window
+    }
+
     func test_openApp_twice_keepsOneWindow_andFrontsIt() {
         let other = StubApp(identifier: "b", displayName: "Bravo")
         let controller = makeController(extra: [other])
@@ -160,7 +175,7 @@ final class DesktopAppWindowTests: XCTestCase {
         settings.windowFrames = ["ghost": CGRect(x: 1, y: 1, width: 100, height: 100)]
         let controller = makeController()
         controller.openApp(identifier: "a")
-        XCTAssertEqual(try chrome(controller, "a").frame, CGRect(x: 200, y: 150, width: 400, height: 300))
+        XCTAssertEqual(try chrome(controller, "a").frame, CGRect(x: 200, y: 124, width: 400, height: 352))
         XCTAssertEqual(controller.openWindowIdentifiers, ["a"])
     }
 
@@ -168,7 +183,7 @@ final class DesktopAppWindowTests: XCTestCase {
         let controller = makeController()
         controller.openApp(identifier: "a")
         controller.showAbout(forApp: "a")
-        XCTAssertEqual(try chrome(controller, "about:a").frame.origin, CGPoint(x: 220 + 24, y: 85 + 24))
+        XCTAssertEqual(try chrome(controller, "about:a").frame.origin, CGPoint(x: 220 + 24, y: 71 + 24))
     }
 
     func test_cmdW_closesFrontAppWindow() {
@@ -218,8 +233,8 @@ final class DesktopAppWindowTests: XCTestCase {
         controller.openApp(identifier: "a")
         let window = try chrome(controller, "a")
         // Bottom-right corner, dragged far inward.
-        try drag(window, from: CGPoint(x: 398, y: 298), to: CGPoint(x: 10, y: 10))
-        XCTAssertEqual(window.frame.size, CGSize(width: 200, height: 150))
+        try drag(window, from: CGPoint(x: 398, y: 350), to: CGPoint(x: 10, y: 10))
+        XCTAssertEqual(window.frame.size, CGSize(width: 200, height: 202))
         XCTAssertEqual(settings.windowFrames["a"], window.frame)
     }
 
@@ -255,5 +270,119 @@ final class DesktopAppWindowTests: XCTestCase {
         let window = try chrome(controller, "a")
         let bar = try XCTUnwrap(window.subviews.compactMap { $0 as? DesktopMenuBarView }.first)
         XCTAssertEqual(bar.menus.map(\.title), ["Alpha", "File"])
+    }
+
+    func test_savedFrameBelowMinimum_isRaisedToWholeWindowMinimum() throws {
+        settings.windowFrames = ["a": CGRect(x: 100, y: 100, width: 50, height: 50)]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        XCTAssertEqual(try chrome(controller, "a").frame, CGRect(x: 100, y: 100, width: 200, height: 202))
+    }
+
+    func test_defaultWindow_contentHeightEqualsDefaultWindowSize() throws {
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        window.layoutSubtreeIfNeeded()
+        XCTAssertEqual(window.contentContainer.frame.size, CGSize(width: 400, height: 300))
+        XCTAssertEqual(window.frame.height, 300 + DesktopWindowChromeView.titleBarHeight + DesktopMenuBarView.height)
+    }
+
+    func test_panelsUseOwnMinimum_notTheApps() throws {
+        let controller = makeController()
+        controller.showAbout(forApp: "a")
+        controller.showSettings(forApp: "a")
+        XCTAssertEqual(try chrome(controller, "about:a").minimumContentSize, CGSize(width: 300, height: 340))
+        XCTAssertEqual(try chrome(controller, "settings:a").minimumContentSize, CGSize(width: 320, height: 200))
+    }
+
+    func test_mouseDownOnContent_frontsWindow() throws {
+        settings.windowFrames = [
+            "a": CGRect(x: 20, y: 20, width: 300, height: 300),
+            "b": CGRect(x: 400, y: 20, width: 300, height: 300)
+        ]
+        let controller = makeController(extra: [StubApp(identifier: "b", displayName: "Bravo")])
+        controller.openApp(identifier: "a")
+        controller.openApp(identifier: "b")
+        XCTAssertEqual(controller.openWindowIdentifiers, ["a", "b"])
+        let window = hostWindow(for: controller)
+        controller.view.layoutSubtreeIfNeeded()
+        let target = controller.windowLayer.convert(CGPoint(x: 170, y: 200), to: nil)
+        let event = try XCTUnwrap(NSEvent.mouseEvent(
+            with: .leftMouseDown, location: target, modifierFlags: [], timestamp: 0,
+            windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1
+        ))
+        // Through the application queue, so `NSApp.currentEvent` is the click while it dispatches.
+        XCTAssertGreaterThan(window.windowNumber, 0)
+        NSApp.postEvent(event, atStart: true)
+        let next = try XCTUnwrap(NSApp.nextEvent(matching: .any, until: .distantPast, inMode: .default, dequeue: true))
+        NSApp.sendEvent(next)
+        XCTAssertEqual(controller.openWindowIdentifiers, ["b", "a"])
+    }
+
+    func test_closeWindow_releasesControllerAndContent_evenWhenAppKeepsContext() {
+        let controller = makeController()
+        weak var weakWindowController: DesktopAppWindowController?
+        weak var weakContent: NSViewController?
+        autoreleasepool {
+            controller.openApp(identifier: "a")
+            weakWindowController = controller.windowController("a")
+            weakContent = app.contentViewControllers.first
+            XCTAssertNotNil(weakWindowController)
+            XCTAssertNotNil(weakContent)
+            controller.closeApp(identifier: "a")
+        }
+        XCTAssertNil(weakWindowController)
+        XCTAssertNil(weakContent)
+    }
+
+    func test_cmdW_closesFrontSettingsWindow() {
+        let controller = makeController()
+        controller.showSettings(forApp: "a")
+        XCTAssertTrue(controller.view.performKeyEquivalent(with: keyEvent("w")))
+        XCTAssertFalse(controller.isShowingSettings(forApp: "a"))
+    }
+
+    func test_appMenu_claimsKey_beforeStandardMenu() {
+        let recorder = Recorder()
+        let menu = NSMenu(title: "File")
+        let item = NSMenuItem(title: "Custom", action: #selector(Recorder.hit(_:)), keyEquivalent: "w")
+        item.target = recorder
+        menu.addItem(item)
+        app.menus = [menu]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        XCTAssertTrue(controller.view.performKeyEquivalent(with: keyEvent("w")))
+        XCTAssertEqual(recorder.hits, 1)
+        XCTAssertEqual(controller.openWindowIdentifiers, ["a"])
+    }
+
+    func test_closeApp_ignoresAboutAndSettingsIdentifiers() {
+        let controller = makeController()
+        controller.showAbout(forApp: "a")
+        controller.showSettings(forApp: "a")
+        controller.closeApp(identifier: "about:a")
+        controller.closeApp(identifier: "settings:a")
+        XCTAssertEqual(controller.openWindowIdentifiers, ["about:a", "settings:a"])
+    }
+
+    func test_topEdgeResize_atDesktopTop_shrinksHeight_keepingBottomEdge() throws {
+        settings.windowFrames = ["a": CGRect(x: 100, y: 50, width: 400, height: 352)]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        try drag(window, from: CGPoint(x: 200, y: 2), to: CGPoint(x: 200, y: -98))
+        XCTAssertEqual(window.frame.minY, 0)
+        XCTAssertEqual(window.frame.maxY, 402)
+    }
+
+    func test_moveAfterZoom_discardsRestoreFrame() throws {
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        window.toggleZoom()
+        try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 150, y: 44))
+        window.toggleZoom()
+        XCTAssertEqual(window.frame, controller.windowLayer.bounds)
     }
 }

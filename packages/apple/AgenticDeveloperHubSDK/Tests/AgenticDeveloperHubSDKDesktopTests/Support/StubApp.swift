@@ -10,8 +10,15 @@ final class StubApp: DesktopApp {
     var menus: [NSMenu] = []
     /// When set, `makeSettingsViewController` returns it.
     var settingsViewController: NSViewController?
-    private(set) var contentViewControllers: [NSViewController] = []
+    /// Weak, so a test can tell whether closing a window released its content.
+    var contentViewControllers: [NSViewController] { weakContents.compactMap(\.value) }
+    private var weakContents: [WeakBox] = []
+    private final class WeakBox {
+        weak var value: NSViewController?
+        init(_ value: NSViewController) { self.value = value }
+    }
     private(set) var willCloseCount = 0
+    /// Strong on purpose: an App that keeps its context must not keep a closed window alive.
     private(set) var contexts: [DesktopAppContext] = []
 
     init(
@@ -36,7 +43,7 @@ final class StubApp: DesktopApp {
     func makeContentViewController(context: DesktopAppContext) -> NSViewController {
         let controller = NSViewController()
         controller.view = NSView()
-        contentViewControllers.append(controller)
+        weakContents.append(WeakBox(controller))
         contexts.append(context)
         return controller
     }

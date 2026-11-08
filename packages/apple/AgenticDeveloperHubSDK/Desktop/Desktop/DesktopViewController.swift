@@ -68,6 +68,7 @@ public final class DesktopViewController: NSViewController {
     }
 
     public func closeApp(identifier: String) {
+        guard windowControllers[identifier]?.kind == .app else { return }
         closeWindow(id: identifier)
     }
 
@@ -104,19 +105,21 @@ public final class DesktopViewController: NSViewController {
         )
         controller.chrome.onFrameCommit = { [weak self] in self?.windowFrameCommitted(id: id, frame: $0) }
         windowControllers[id] = controller
-        addChild(controller.contentViewController)
-        windowLayer.open(id: id, chrome: controller.chrome, frame: initialFrame(kind: kind, app: app))
+        if let content = controller.contentViewController { addChild(content) }
+        windowLayer.open(id: id, chrome: controller.chrome, frame: initialFrame(for: controller))
         controller.chrome.needsLayout = true
     }
 
-    private func initialFrame(kind: DesktopAppWindowController.Kind, app: DesktopApp) -> CGRect {
+    /// The saved frame (a whole-window frame) clamped into the Desktop, or the default content size
+    /// plus the chrome, centered with a cascade step per open window.
+    private func initialFrame(for controller: DesktopAppWindowController) -> CGRect {
         let container = windowLayer.bounds.size
-        let descriptor = app.descriptor
-        let minimum = descriptor.minimumWindowSize
-        if kind == .app, let saved = settings.windowFrames[descriptor.identifier] {
+        let chrome = controller.chrome
+        let minimum = chrome.minimumWindowSize
+        if controller.kind == .app, let saved = settings.windowFrames[controller.app.descriptor.identifier] {
             return DesktopWindowChromeView.clamped(saved, in: container, minimum: minimum)
         }
-        let size = kind == .app ? descriptor.defaultWindowSize : Self.panelSize(for: kind)
+        let size = chrome.windowSize(forContent: controller.defaultContentSize)
         let cascade = CGFloat(windowLayer.identifiers.count) * Self.cascadeStep
         let origin = CGPoint(
             x: (container.width - size.width) / 2 + cascade,
@@ -126,10 +129,6 @@ public final class DesktopViewController: NSViewController {
     }
 
     private static let cascadeStep: CGFloat = 24
-
-    private static func panelSize(for kind: DesktopAppWindowController.Kind) -> CGSize {
-        kind == .about ? CGSize(width: 360, height: 430) : CGSize(width: 440, height: 300)
-    }
 
     // MARK: Test seams
 
@@ -229,10 +228,10 @@ public final class DesktopViewController: NSViewController {
 extension DesktopViewController: DesktopWindowHost {
     func closeWindow(id: String) {
         guard let controller = windowControllers.removeValue(forKey: id) else { return }
-        if controller.kind == .app { controller.app.appWillClose(context: controller) }
-        controller.contentViewController.view.removeFromSuperview()
-        controller.contentViewController.removeFromParent()
+        if controller.kind == .app { controller.app.appWillClose(context: controller.context) }
+        controller.contentViewController?.removeFromParent()
         windowLayer.close(id)
+        controller.teardown()
     }
 
     func windowFrameCommitted(id: String, frame: CGRect) {
