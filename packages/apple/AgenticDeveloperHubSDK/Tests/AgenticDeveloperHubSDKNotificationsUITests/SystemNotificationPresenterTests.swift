@@ -211,6 +211,44 @@ final class SystemNotificationPresenterTests: XCTestCase {
         XCTAssertEqual(center.posted, ["b"])
     }
 
+    /// A banner left in Notification Center after its card was handled (or
+    /// from before a relaunch) has no tracked actions. Its tap and dismiss go
+    /// to the host instead of being dropped.
+    func testUntrackedTapAndDismissReachTheHost() {
+        let center = ControlledCenter()
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        var taps: [String] = []
+        var dismissals: [String] = []
+        presenter.onUntrackedTap = { taps.append($0) }
+        presenter.onUntrackedDismiss = { dismissals.append($0) }
+
+        presenter.handleTap(identifier: "gone")
+        presenter.handleDismiss(identifier: "old")
+        XCTAssertEqual(taps, ["gone"])
+        XCTAssertEqual(dismissals, ["old"])
+    }
+
+    /// A tracked banner runs its own actions; the host's callbacks stay quiet.
+    func testTrackedTapAndDismissSkipTheHostCallbacks() {
+        let center = ControlledCenter()
+        let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })
+        var acts: [String] = []
+        var closes: [String] = []
+        var untracked: [String] = []
+        presenter.onUntrackedTap = { untracked.append("tap \($0)") }
+        presenter.onUntrackedDismiss = { untracked.append("dismiss \($0)") }
+        let actions = NoticeCardActions(
+            act: { acts.append("a") }, respond: { _, _ in }, snooze: nil, archive: nil,
+            close: { closes.append("a") })
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: [profile], actions: actions)
+
+        presenter.handleTap(identifier: "a")
+        presenter.handleDismiss(identifier: "a")
+        XCTAssertEqual(acts, ["a"])
+        XCTAssertEqual(closes, ["a"])
+        XCTAssertEqual(untracked, [])
+    }
+
     func testReplaceWhilePendingPostsOnlyTheNewOne() {
         let center = ControlledCenter()
         let presenter = SystemNotificationPresenter(poster: center, playsSound: { false })

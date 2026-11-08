@@ -52,6 +52,15 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     /// host app, so the host can say so.
     public var onAuthorizationDenied: (@MainActor () -> Void)?
 
+    /// A banner was clicked that this presenter no longer tracks: its card was
+    /// handled elsewhere, or it was posted before a relaunch. The argument is
+    /// the notice id, so the host can still open it.
+    public var onUntrackedTap: (@MainActor (String) -> Void)?
+
+    /// The user cleared a banner this presenter no longer tracks; the
+    /// argument is the notice id.
+    public var onUntrackedDismiss: (@MainActor (String) -> Void)?
+
     /// The category every banner is posted under. It asks for the dismiss
     /// callback, so a banner the user clears comes back as a close.
     static let categoryIdentifier = "com.agentic-cookbook.notice"
@@ -239,15 +248,25 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     // MARK: Taps
 
     /// A banner was clicked. One this presenter no longer tracks (the notice
-    /// was acted on elsewhere since) does nothing.
+    /// was acted on elsewhere since, or the banner predates a relaunch) goes
+    /// to `onUntrackedTap`, so the host can still open the notice.
     func handleTap(identifier: String) {
-        actions[identifier]?.act()
+        if let tracked = actions[identifier] {
+            tracked.act()
+        } else {
+            onUntrackedTap?(identifier)
+        }
     }
 
     /// The user cleared a banner: the notice closes, which takes it out of
-    /// the center's newest-shown order so a hotkey does not act on it.
+    /// the center's newest-shown order so a hotkey does not act on it. An
+    /// untracked banner goes to `onUntrackedDismiss`.
     func handleDismiss(identifier: String) {
-        actions[identifier]?.close()
+        if let tracked = actions[identifier] {
+            tracked.close()
+        } else {
+            onUntrackedDismiss?(identifier)
+        }
     }
 
     public nonisolated func userNotificationCenter(
