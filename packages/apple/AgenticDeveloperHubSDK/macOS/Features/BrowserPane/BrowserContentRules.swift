@@ -17,15 +17,19 @@ import WebKit
 /// not best-effort.
 ///
 /// "Third party" is WebKit's `load-type: third-party`: a resource from a
-/// different registrable domain from the page's. The page's own `document`
-/// loads are never blocked, so a link to another site still opens.
+/// different registrable domain from the page's. The top-level document is
+/// never blocked, so a link to another site still opens; a frame's document
+/// (`child-document`) is, under Block All.
 public enum BrowserContentRules {
 
     /// What `blockAll` blocks: every resource type WebKit names except
-    /// `document`, which is the page itself.
+    /// `document` and `top-document`, which cover the page itself.
+    /// `child-document` is a frame's document: a third-party iframe is
+    /// blocked before its request (and its cookies) leave, as Chrome panes
+    /// block a third-party sub-frame.
     static let blockAllResourceTypes = [
         "image", "style-sheet", "script", "font", "raw", "svg-document",
-        "media", "popup", "ping", "fetch", "websocket", "other"
+        "media", "popup", "ping", "fetch", "websocket", "other", "child-document"
     ]
 
     /// The store identifier for a policy's list:

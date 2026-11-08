@@ -84,9 +84,10 @@ final class BrowserContentRulesTests: XCTestCase {
         let types = try XCTUnwrap(trigger["resource-type"] as? [String])
         XCTAssertEqual(types, [
             "image", "style-sheet", "script", "font", "raw", "svg-document",
-            "media", "popup", "ping", "fetch", "websocket", "other"
+            "media", "popup", "ping", "fetch", "websocket", "other", "child-document"
         ])
         XCTAssertFalse(types.contains("document"), "the page itself is never blocked")
+        XCTAssertFalse(types.contains("top-document"), "the page itself is never blocked")
         XCTAssertEqual(trigger["load-type"] as? [String], ["third-party"])
     }
 
