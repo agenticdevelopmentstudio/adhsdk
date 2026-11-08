@@ -147,13 +147,43 @@ public final class FullScreenPresenter: NoticePresenter {
 
     // MARK: Screens
 
-    /// Refits every panel to its screen after a display was added, removed
-    /// or rearranged.
+    /// After a display was added, removed or rearranged: refits every panel
+    /// to its screen, closes the panels on displays that are gone, and moves a
+    /// notice left with no panel at all to the main screen. If the keyboard's
+    /// panel went, the newest one left takes it.
     func screensDidChange() {
-        let byID = Dictionary(screens(.all).map { ($0.displayID, $0) }, uniquingKeysWith: { first, _ in first })
-        for placement in placements.values.flatMap({ $0 }) {
-            guard let screen = byID[placement.displayID] else { continue }
-            placement.panel.setFrame(screen.frame, display: true)
+        let live = screens(.all)
+        guard !live.isEmpty else { return }
+        let byID = Dictionary(live.map { ($0.displayID, $0) }, uniquingKeysWith: { first, _ in first })
+        let main = screens(.main).first ?? live[0]
+        var moved = false
+        for (id, group) in placements {
+            var kept: [Placement] = []
+            var orphans: [Placement] = []
+            for placement in group {
+                if let screen = byID[placement.displayID] {
+                    placement.panel.setFrame(screen.frame, display: true)
+                    kept.append(placement)
+                } else {
+                    orphans.append(placement)
+                }
+            }
+            guard !orphans.isEmpty else { continue }
+            moved = true
+            if kept.isEmpty {
+                // Its only screens went: the first panel moves to the main one.
+                let rehomed = orphans.removeFirst()
+                rehomed.panel.setFrame(main.frame, display: true)
+                kept.append(Placement(displayID: main.displayID, panel: rehomed.panel, view: rehomed.view))
+            }
+            for orphan in orphans {
+                orphan.view.card.stop()
+                windowing.dismiss(orphan.panel)
+            }
+            placements[id] = kept
+        }
+        if moved, let next = shownIDs.last, let placement = placements[next]?.first {
+            windowing.makeKey(placement.panel, firstResponder: placement.view)
         }
     }
 }

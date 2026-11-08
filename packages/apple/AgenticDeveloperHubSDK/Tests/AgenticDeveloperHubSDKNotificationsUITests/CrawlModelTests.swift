@@ -264,4 +264,42 @@ final class CrawlPresenterTests: XCTestCase {
         XCTAssertEqual(panel.frame.minY, screens[0].visibleFrame.minY)
         presenter.remove(id: "a")
     }
+
+    /// Unplugging one of two displays closes the strip on it; the notice runs
+    /// on in the strip left.
+    func testScreenChangeClosesTheStripOnAGoneDisplay() throws {
+        screens = [testScreen(1), testScreen(2, originX: 1512)]
+        let windowing = RecordingWindowing()
+        let presenter = makePresenter(windowing)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles(.bottomCenter), actions: .inert)
+        XCTAssertEqual(windowing.presented.count, 2)
+        let gone = CrawlPresenter.StripKey(displayID: 2, edge: .bottom)
+        let goneView = try XCTUnwrap(presenter.stripView(of: gone))
+
+        screens = [testScreen(1)]
+        presenter.screensDidChange()
+        XCTAssertNil(presenter.stripView(of: gone))
+        XCTAssertTrue(windowing.dismissed.contains { $0.contentView === goneView })
+        XCTAssertNotNil(presenter.stripView(of: .init(displayID: 1, edge: .bottom)))
+        XCTAssertEqual(presenter.shownIDs, ["a"])
+        presenter.remove(id: "a")
+    }
+
+    /// A notice whose only strip's display went away moves to a strip on the
+    /// main screen, rather than running (and timing out) where no one sees it.
+    func testScreenChangeMovesAnOrphanedCrawlToTheMainScreen() throws {
+        screens = [testScreen(2, width: 2560, originX: 1512)]
+        let windowing = RecordingWindowing()
+        let presenter = makePresenter(windowing)
+        presenter.show(Notice(id: "a", source: "ci", title: "a"), profiles: profiles(.bottomCenter), actions: .inert)
+
+        screens = [testScreen(1)]
+        presenter.screensDidChange()
+        XCTAssertNil(presenter.stripView(of: .init(displayID: 2, edge: .bottom)))
+        let moved = try XCTUnwrap(windowing.presented.last)
+        XCTAssertNotNil(presenter.stripView(of: .init(displayID: 1, edge: .bottom)))
+        XCTAssertEqual(moved.frame.width, 1512)
+        XCTAssertEqual(presenter.shownIDs, ["a"])
+        presenter.remove(id: "a")
+    }
 }

@@ -256,9 +256,28 @@ public final class CrawlPresenter: NoticePresenter {
             stripWidth: strip.view.bounds.width, leftToRight: strip.leftToRight))
     }
 
-    /// Refits every strip to its screen after a display was added, removed
-    /// or rearranged.
+    /// After a display was added, removed or rearranged: strips on displays
+    /// that are gone close, a notice left with no strip moves to one on the
+    /// main screen, and every strip left refits to its screen.
     func screensDidChange() {
+        let live = screens(.all)
+        if !live.isEmpty {
+            let liveIDs = Set(live.map(\.displayID))
+            let main = screens(.main).first ?? live[0]
+            var frames: [StripKey: CGRect] = [:]
+            for id in model.order {
+                guard let item = items[id] else { continue }
+                let keys = model.keys(of: id)
+                var kept = keys.filter { liveIDs.contains($0.displayID) }
+                guard kept.count != keys.count else { continue }
+                if kept.isEmpty, let edge = keys.first?.edge {
+                    let key = StripKey(displayID: main.displayID, edge: edge)
+                    frames[key] = main.visibleFrame
+                    kept = [key]
+                }
+                apply(model.replace(id, with: id, on: kept), layer: item.layer, frames: frames)
+            }
+        }
         restyleStrips()
     }
 

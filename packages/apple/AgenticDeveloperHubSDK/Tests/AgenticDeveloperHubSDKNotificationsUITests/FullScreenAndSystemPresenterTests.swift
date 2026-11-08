@@ -119,6 +119,49 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         presenter.remove(id: "a")
     }
 
+    /// Unplugging one of two displays closes the panel on it, and the keyboard
+    /// moves to the panel left on the other.
+    func testScreenChangeClosesThePanelOnAGoneDisplay() throws {
+        let windowing = RecordingWindowing()
+        var screens = [testScreen(1), testScreen(2, originX: 1512)]
+        let presenter = fullScreen(windowing) { screens }
+        presenter.show(Notice(id: "a", source: "pager", title: "a"), profiles: [profile], actions: .inert)
+        let panels = presenter.panels(for: "a")
+        XCTAssertEqual(panels.count, 2)
+        XCTAssertTrue(windowing.keyed.last === panels[0])
+
+        screens = [testScreen(2, originX: 1512)]
+        presenter.screensDidChange()
+        XCTAssertTrue(windowing.dismissed.contains { $0 === panels[0] }, "the gone display's panel closes")
+        XCTAssertEqual(presenter.panels(for: "a").count, 1)
+        XCTAssertTrue(presenter.panels(for: "a").first === panels[1])
+        XCTAssertTrue(windowing.keyed.last === panels[1], "the panel left takes the keyboard")
+        presenter.remove(id: "a")
+    }
+
+    /// A notice whose only display went away moves to the main screen rather
+    /// than staying up, invisible, on nothing.
+    func testScreenChangeMovesAnOrphanedFullScreenToTheMainScreen() throws {
+        let windowing = RecordingWindowing()
+        var screens = [testScreen(2, width: 2560, originX: 1512)]
+        let presenter = fullScreen(windowing) { screens }
+        presenter.show(Notice(id: "a", source: "pager", title: "a"), profiles: [profile], actions: .inert)
+        let panel = try XCTUnwrap(presenter.panels(for: "a").first)
+
+        screens = [testScreen(1)]
+        presenter.screensDidChange()
+        XCTAssertFalse(windowing.dismissed.contains { $0 === panel })
+        XCTAssertTrue(presenter.panels(for: "a").first === panel, "still shown")
+        XCTAssertEqual(panel.frame, screens[0].frame, "on the main screen now")
+        XCTAssertTrue(windowing.keyed.last === panel)
+        XCTAssertEqual(presenter.shownIDs, ["a"])
+
+        screens = [testScreen(1, width: 1800)]
+        presenter.screensDidChange()
+        XCTAssertEqual(panel.frame, screens[0].frame, "and follows that screen from now on")
+        presenter.remove(id: "a")
+    }
+
     /// Esc while replying in full screen hands the keyboard back to the
     /// backdrop, so a second Esc still snoozes.
     func testEndingAFullScreenReplyRestoresTheBackdrop() throws {
