@@ -31,7 +31,7 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
                 title: "Input",
                 body: "Keyboard and Mouse and scrolling decide whether the page receives "
                     + "what you type and click. Blocked, the pane drops the event before "
-                    + "WebKit sees it, so the page never learns it happened; menu "
+                    + "the browser engine sees it, so the page never learns it happened; menu "
                     + "shortcuts still reach the menu bar, and the address bar and the "
                     + "back, forward and reload buttons still work. Pointer tracking "
                     + "decides when the page is told where the pointer is — hover, "
@@ -91,6 +91,18 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
                 body: "A screenshot of a pane, taken by you or the agent, reads the pixels "
                     + "the page has already drawn. The page cannot observe it, so there is "
                     + "nothing to hide and no setting for it."
+            ),
+            .init(
+                title: "Chrome Panes",
+                body: "Every setting here applies to Chrome panes as well as Safari ones, "
+                    + "with four differences. Paste chosen from the Edit menu with the "
+                    + "mouse reaches the page even when Keyboard is blocked; Command-V "
+                    + "does not. Third-party content is judged by a site's last two name "
+                    + "parts (three for names like example.co.uk), so a few shared "
+                    + "hosting domains count as one site. Hiding focus and visibility "
+                    + "does not reach frames from other sites that are already showing "
+                    + "when it is turned on; they pick it up on the next page load. And "
+                    + "Chrome does not honour Autoplay set to Never."
             )
         ])
     }
@@ -98,7 +110,7 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
     static let keywords: [String] = [
         "session privacy", "keyboard", "mouse", "scrolling", "pointer", "hover", "drag and drop",
         "focus", "visibility", "agent", "agent access", "jar", "storage", "third-party", "trackers",
-        "console", "screenshots"
+        "console", "screenshots", "chrome"
     ]
 
     override var searchKeywords: [String] { Self.keywords }
