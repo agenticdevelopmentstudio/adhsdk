@@ -1,8 +1,7 @@
-// macOS/Features/MCP/HostMCPServer.swift
+// Core/MCP/HostMCPServer.swift
 import Foundation
 import MCP
 import OSLog
-import AgenticDeveloperHubSDKCore
 
 /// One MCP server for the host app: every registered `ChatToolSource` is
 /// advertised under `tools/list`, and `tools/call` is routed to the source

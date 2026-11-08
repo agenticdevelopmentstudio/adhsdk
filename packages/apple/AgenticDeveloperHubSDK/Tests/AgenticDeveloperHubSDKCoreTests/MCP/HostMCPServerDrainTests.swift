@@ -1,9 +1,8 @@
-// Tests/AgenticDeveloperHubSDKMacOSTests/MCP/HostMCPServerDrainTests.swift
+// Tests/AgenticDeveloperHubSDKCoreTests/MCP/HostMCPServerDrainTests.swift
 import XCTest
 import Logging
 import MCP
-import AgenticDeveloperHubSDKCore
-@testable import AgenticDeveloperHubSDKMacOS
+@testable import AgenticDeveloperHubSDKCore
 
 /// A transport whose input is a fixed script that ends at once. That is what
 /// `printf '…' | olylo mcp` looks like: stdin hits EOF right after the last

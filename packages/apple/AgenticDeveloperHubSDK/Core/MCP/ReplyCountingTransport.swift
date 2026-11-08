@@ -1,4 +1,4 @@
-// macOS/Features/MCP/ReplyCountingTransport.swift
+// Core/MCP/ReplyCountingTransport.swift
 import Foundation
 import Logging
 import MCP

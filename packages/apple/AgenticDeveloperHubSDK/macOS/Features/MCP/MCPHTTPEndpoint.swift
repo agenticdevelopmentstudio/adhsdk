@@ -1,5 +1,6 @@
 // macOS/Features/MCP/MCPHTTPEndpoint.swift
 import Foundation
+import AgenticDeveloperHubSDKCore
 import FlyingFox
 import FlyingSocks
 import MCP
