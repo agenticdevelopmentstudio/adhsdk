@@ -567,7 +567,8 @@ public final class NoticePresentationCenter {
     }
 
     private func perform(_ action: Notice.Action, of id: String, text: String?) {
-        if case let .open(url) = action.kind {
+        // Decoding refuses these schemes; an action built in code is checked here.
+        if case let .open(url) = action.kind, Notice.Action.isOpenable(url) {
             handler.openURL(url)
         }
         handler.respond(id, actionID: action.id, text: text)

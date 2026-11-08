@@ -131,6 +131,43 @@ final class NoticeCodingTests: XCTestCase {
         XCTAssertThrowsError(try decode(#"{"source":"s","title":"t","actions":[{"id":"a"}]}"#))
     }
 
+    private func openAction(_ url: String) throws -> Notice {
+        try decode(#"{"source":"s","title":"t","actions":[{"id":"a","label":"A","url":"\#(url)"}]}"#)
+    }
+
+    /// An open action may never reach a local file, a network share or a
+    /// script: those schemes are refused when the notice is decoded.
+    func testLocalFileSchemesAreRefused() {
+        let refused = [
+            "file:///etc/passwd", "FILE:///Applications/Calculator.app", "file://localhost/tmp/x",
+            "afp://server/share", "smb://server/share", "cifs://server/share", "nfs://server/export",
+            "ftp://example.com/x", "ftps://example.com/x", "webdav://example.com/x",
+            "data:text/html,hi", "javascript:alert(1)", "vbscript:x", "blob:https://example.com/1"
+        ]
+        for url in refused {
+            XCTAssertThrowsError(try openAction(url), url) { error in
+                XCTAssertEqual(error as? NoticeDecodingError, .refusedURL("a"), url)
+            }
+        }
+    }
+
+    /// Web links and app deep links are a feature.
+    func testWebAndAppSchemesAreAllowed() throws {
+        for raw in ["https://example.com/pr/1", "http://localhost:8080/x", "x-github-client://openRepo/y",
+                    "rooster://events/1", "slack://channel?id=1", "mailto:a@example.com"] {
+            let url = try XCTUnwrap(URL(string: raw))
+            XCTAssertEqual(try openAction(raw).actions.first?.kind, .open(url), raw)
+            XCTAssertTrue(Notice.Action.isOpenable(url), raw)
+        }
+        for raw in ["file:///tmp/x", "SMB://server/share", "javascript:x"] {
+            XCTAssertFalse(Notice.Action.isOpenable(try XCTUnwrap(URL(string: raw))), raw)
+        }
+        XCTAssertEqual(
+            Notice.Action.refusedURLSchemes,
+            ["file", "afp", "smb", "cifs", "nfs", "ftp", "ftps", "webdav", "webdavs",
+             "data", "javascript", "vbscript", "blob"])
+    }
+
     func testDuplicateActionIDThrows() {
         XCTAssertThrowsError(
             try decode(#"{"source":"s","title":"t","actions":[{"id":"a","label":"A"},{"id":"a","label":"B"}]}"#)

@@ -96,6 +96,20 @@ final class NoticePanelTests: XCTestCase {
         XCTAssertEqual(alert.actionButtons.map(\.title), ["Open", "Retry", "Ignore"])
     }
 
+    /// An open action's button names where it goes, so the user can see the
+    /// target before clicking.
+    func testOpenActionButtonShowsItsTarget() throws {
+        let url = try XCTUnwrap(URL(string: "https://example.com/pr/42"))
+        let notice = Notice(
+            source: "ci", title: "PR", urgency: .soon,
+            actions: [
+                .init(id: "open1", label: "Open PR", kind: .open(url)),
+                .init(id: "retry", label: "Retry", kind: .callback)
+            ])
+        let card = NoticeCardView(notice: notice, actions: .inert, style: .alert)
+        XCTAssertEqual(card.actionButtons.map(\.toolTip), ["https://example.com/pr/42", nil])
+    }
+
     func testSnoozeMenuOffersEveryOption() {
         var chosen: [SnoozeOption] = []
         let menu = SnoozeMenu.make { chosen.append($0) }

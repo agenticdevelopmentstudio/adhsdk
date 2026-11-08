@@ -142,6 +142,10 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
                 title: action.label, style: index == 0 ? .primary : .secondary,
                 target: self, action: #selector(actionButtonClicked(_:)))
             button.tag = index
+            // Where an open action goes, so it can be checked before clicking.
+            if case let .open(url) = action.kind {
+                button.toolTip = url.absoluteString
+            }
             // The panel never becomes key, so a button that waited for
             // activation would need two clicks.
             button.acceptsFirstClick = true

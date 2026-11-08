@@ -140,6 +140,17 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertEqual(env.toast.removed.first, "a")
     }
 
+    /// An action built in code (not decoded) with a refused scheme still
+    /// answers the poster, but nothing is opened.
+    func testActNeverOpensARefusedURL() throws {
+        let env = harness()
+        let url = try XCTUnwrap(URL(string: "file:///Applications/Calculator.app"))
+        env.center.receive(notice("a", actions: [.init(id: "open", label: "Open", kind: .open(url))], at: env.clock))
+        env.center.act(id: "a")
+
+        XCTAssertEqual(env.handler.calls, [.respond("a", "open", nil)])
+    }
+
     func testActOpenURLRespondsAndOpens() throws {
         let env = harness()
         let url = try XCTUnwrap(URL(string: "https://example.com/build/1"))
