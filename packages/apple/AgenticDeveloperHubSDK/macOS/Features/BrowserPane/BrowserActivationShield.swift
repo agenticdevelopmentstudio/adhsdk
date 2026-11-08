@@ -60,10 +60,11 @@ public final class BrowserActivationShield {
     /// the script this shield hands out — the document-start one, the
     /// immediate raise and the lift — so they recognise each other's record
     /// on a window, and a value the page put under the same name is not
-    /// taken for one (see the script). The page can read it, so it must
-    /// never be shared: one token across web views would be an identifier
-    /// every page in every jar could send home, linking the jars (spec
-    /// section 4). A rebuilt web view gets a new shield and a new token.
+    /// taken for one (see the script). The page never sees it: the script
+    /// carries it as bytes and hands out only digests keyed to a fresh
+    /// challenge. It is still one per web view, so even a flaw in that
+    /// handshake could not link two jars (spec section 4). A rebuilt web
+    /// view gets a new shield and a new token.
     let token = UUID().uuidString
 
     private func script(mode: String) -> String? {
@@ -74,10 +75,12 @@ public final class BrowserActivationShield {
     /// `"lift"`. Public for an engine that is not WebKit: Chromium injects
     /// the same script over the DevTools protocol, so both engines hide
     /// focus and visibility the same way (`dry`). The token must be one per
-    /// page view, never shared, for the reason `token` gives.
+    /// page view, never shared, for the reason `token` gives. It goes in as
+    /// a literal array of its UTF-8 bytes, never as text.
     public static func script(mode: String, token: String) -> String? {
-        template?
-            .replacingOccurrences(of: "__ADK_SHIELD_TOKEN__", with: token)
+        let bytes = "[" + token.utf8.map(String.init).joined(separator: ",") + "]"
+        return template?
+            .replacingOccurrences(of: "__ADK_SHIELD_TOKEN_BYTES__", with: bytes)
             .replacingOccurrences(of: "__ADK_SHIELD_MODE__", with: mode)
     }
 

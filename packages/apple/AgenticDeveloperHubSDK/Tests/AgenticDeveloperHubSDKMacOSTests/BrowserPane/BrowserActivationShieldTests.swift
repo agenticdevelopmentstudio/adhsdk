@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 import WebKit
 import AgenticDeveloperHubSDKCore
@@ -186,28 +187,50 @@ final class BrowserActivationShieldTests: XCTestCase {
 
     // MARK: - The live page (Pause Events, spec section 7)
 
-    /// The shield's token is readable by the page, so two web views on
-    /// different jars must not share it, or it would link them (spec
-    /// section 4).
-    func testShieldedWebViewsOnDifferentJarsReadDifferentTokens() async throws {
-        var tokens: [String] = []
-        for _ in 0..<2 {
-            let configuration = WKWebViewConfiguration()
-            configuration.websiteDataStore = .nonPersistent()
-            let webView = try await loadedWebView("<p>jar</p>", configuration: configuration)
-            let shield = BrowserActivationShield(webView: webView)
-            shield.apply(active: true)
-            let raised = try await waitFor(
-                "String(typeof window.__adkActivationShield === 'function')", toBe: "true", in: webView
-            )
-            XCTAssertEqual(raised, "true")
-            let token = try await webView.evaluateJavaScript(
-                "__adkActivationShield('x').proof.split('|')[1]"
-            ) as? String
-            XCTAssertEqual(token, shield.token)
-            tokens.append(try XCTUnwrap(token))
-        }
-        XCTAssertNotEqual(tokens[0], tokens[1])
+    /// The page can find the shim's record but cannot use it: without a key
+    /// only the token's holder can compute, calling it answers null — no
+    /// token to link sites by, no lift to run — and the token never appears
+    /// in the script's text.
+    func testThePageCannotReadTheTokenOrLiftTheShield() async throws {
+        let webView = try await loadedWebView("<p>jar</p>")
+        let shield = BrowserActivationShield(webView: webView)
+        shield.apply(active: true)
+        let raised = try await waitFor(
+            "String(typeof window.__adkActivationShield === 'function')", toBe: "true", in: webView
+        )
+        XCTAssertEqual(raised, "true")
+
+        let answers = try await webView.evaluateJavaScript("""
+            [String(__adkActivationShield('x')),
+             String(__adkActivationShield('x', 'guess')),
+             String(__adkActivationShield('x', '\(Self.key("y", token: shield.token))'))].join(',')
+            """) as? String
+        XCTAssertEqual(answers, "null,null,null", "a missing, wrong or replayed key gets nothing")
+        let hidden = try await webView.evaluateJavaScript("String(document.hidden)") as? String
+        XCTAssertEqual(hidden, "false")
+        XCTAssertFalse(try XCTUnwrap(shield.source).contains(shield.token))
+        XCTAssertFalse(try XCTUnwrap(shield.liftSource).contains(shield.token))
+
+        let opened = try await webView.evaluateJavaScript("""
+            String(__adkActivationShield('c', '\(Self.key("c", token: shield.token))').doc === document)
+            """) as? String
+        XCTAssertEqual(opened, "true", "the token's holder still opens it")
+    }
+
+    /// Each web view gets its own token, so even a flaw in the handshake
+    /// could not link two jars (spec section 4).
+    func testShieldsOnDifferentWebViewsHaveDifferentTokens() {
+        let first = BrowserActivationShield(webView: WKWebView())
+        let second = BrowserActivationShield(webView: WKWebView())
+        XCTAssertNotEqual(first.token, second.token)
+    }
+
+    /// The key that opens a record under `token` for `challenge`, as the
+    /// script computes it: SHA-256 of the token's bytes, the caller label
+    /// (1), and the challenge, in hex.
+    static func key(_ challenge: String, token: String) -> String {
+        let input = Data(token.utf8) + Data([1]) + Data(challenge.utf8)
+        return SHA256.hash(data: input).map { String(format: "%02x", $0) }.joined()
     }
 
     /// Loads `html` into a fresh offscreen web view and waits for it, or
@@ -361,7 +384,14 @@ final class BrowserActivationShieldTests: XCTestCase {
               && frames[1].document.readyState === 'complete')
             """, toBe: "true", in: webView)
         XCTAssertEqual(ready, "true", "both srcdoc frames loaded")
-        let raise = try XCTUnwrap(BrowserActivationShield(webView: webView).source)
+        let shield = BrowserActivationShield(webView: webView)
+        let raise = try XCTUnwrap(shield.source)
+        // Opens a record as the token's holder does, so the test can reach
+        // its document and lift.
+        _ = try await webView.evaluateJavaScript("""
+            window.__open = function (record) { return record('t', '\(Self.key("t", token: shield.token))'); };
+            true
+            """)
 
         // Hidden-descriptor state of a frame's current document: "shielded"
         // when the shim's own descriptor is on it, "plain" when not.
@@ -378,14 +408,14 @@ final class BrowserActivationShieldTests: XCTestCase {
         // frames[0]'s record: a valid record that names another document.
         let staged = try await webView.evaluateJavaScript("""
             (function () {
-              frames[1].__adkActivationShield('test').lift();
+              __open(frames[1].__adkActivationShield).lift();
               var lifted = \(state(1));
               var stale = frames[0].__adkActivationShield;
               Object.defineProperty(frames[1], '__adkActivationShield',
                 { configurable: true, enumerable: false, writable: false, value: stale });
               window.__staleRecord = stale;
               return [lifted,
-                      String(frames[1].__adkActivationShield('t').doc === frames[0].document)].join(',');
+                      String(__open(frames[1].__adkActivationShield).doc === frames[0].document)].join(',');
             })()
             """) as? String
         XCTAssertEqual(staged, "plain,true",
@@ -396,7 +426,7 @@ final class BrowserActivationShieldTests: XCTestCase {
             [\(state(1)),
              String(typeof frames[1].__adkActivationShield === 'function'
                     && frames[1].__adkActivationShield !== window.__staleRecord),
-             String(frames[1].__adkActivationShield('t').doc === frames[1].document),
+             String(__open(frames[1].__adkActivationShield).doc === frames[1].document),
              String(frames[1].document.hidden), frames[1].document.visibilityState,
              \(state(0)), typeof frames[0].__adkActivationShield].join(',')
             """) as? String
@@ -407,8 +437,8 @@ final class BrowserActivationShieldTests: XCTestCase {
 
         _ = try await webView.evaluateJavaScript(raise)
         let again = try await webView.evaluateJavaScript("""
-            [\(state(0)), String(frames[0].__adkActivationShield('t').doc === frames[0].document),
-             \(state(1)), String(frames[1].__adkActivationShield('t').doc === frames[1].document)].join(',')
+            [\(state(0)), String(__open(frames[0].__adkActivationShield).doc === frames[0].document),
+             \(state(1)), String(__open(frames[1].__adkActivationShield).doc === frames[1].document)].join(',')
             """) as? String
         XCTAssertEqual(again, "shielded,true,shielded,true",
                        "a further raise shields frames[0] again and leaves frames[1] as it was")
