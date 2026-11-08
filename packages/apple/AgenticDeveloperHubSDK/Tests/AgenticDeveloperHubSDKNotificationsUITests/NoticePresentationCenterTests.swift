@@ -568,6 +568,38 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertFalse(env.toast.shownIDs.contains("flood:ci"))
     }
 
+    /// What a summary folded is remembered only while the summary exists:
+    /// closing, acting on, archiving or snoozing it forgets them, so flood
+    /// after flood of notices the host keeps active does not pile up. A
+    /// reconcile listing them afterwards still does not show them.
+    func testFoldedIDsDoNotGrowAcrossFloods() {
+        var rules = NoticeRoutingRules.defaults
+        rules.flood = .init(threshold: 1, window: 10)
+        let env = harness(rules: rules)
+        var active: [Notice] = []
+        let closers: [(String) -> Void] = [
+            { env.toast.actions[$0]?.close() },
+            { env.toast.actions[$0]?.act() },
+            // A summary card offers neither; a keyboard shortcut reaches them.
+            { env.center.archive(id: $0) },
+            { env.center.snooze(id: $0, option: .fiveMinutes) }
+        ]
+        for round in 0..<8 {
+            env.clock.now.addTimeInterval(60)
+            for index in 0..<4 {
+                let next = notice("r\(round)n\(index)", urgency: .fyi, at: env.clock)
+                active.append(next)
+                env.center.receive(next)
+            }
+            XCTAssertEqual(env.center.foldedCount, 3, "round \(round) folds three")
+            closers[round % closers.count]("flood:ci")
+            XCTAssertFalse(env.toast.shownIDs.contains("flood:ci"), "round \(round)")
+            XCTAssertEqual(env.center.foldedCount, 0, "round \(round): the summary is gone, so is what it folded")
+            env.center.reconcile(active: active)
+            XCTAssertFalse(env.toast.shownIDs.contains("r\(round)n1"), "a folded notice is not shown after all")
+        }
+    }
+
     func testFloodSummaryGoesWhenNothingItFoldedIsStillActive() {
         var rules = NoticeRoutingRules.defaults
         rules.flood = .init(threshold: 1, window: 10)

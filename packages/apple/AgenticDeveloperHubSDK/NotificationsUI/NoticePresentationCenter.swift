@@ -50,11 +50,14 @@ public final class NoticePresentationCenter {
     private var order: [String] = []
     private var held: [Notice] = []
     private var floodFolder = FloodFolder()
-    /// Notices already counted into a flood summary, by id, so a reconcile
-    /// does not count them twice or show them after all, and a summary goes
-    /// once nothing it folded is still active. The notice is kept so a
-    /// partial reconcile can tell whether its list speaks for it.
+    /// Notices counted into a flood summary that is still on screen, by id,
+    /// so a reconcile does not count them twice or show them after all, and a
+    /// summary goes once nothing it folded is still active. Closing or acting
+    /// on the summary drops its entries (see `closeSummary`). The notice is
+    /// kept so a partial reconcile can tell whether its list speaks for it.
     private var foldedIDs: [String: Notice] = [:]
+    /// How many notices are held folded; what a test checks stays bounded.
+    var foldedCount: Int { foldedIDs.count }
     /// Ids whose style set is empty: evaluated once and drawn nowhere.
     /// Remembered so each reconcile does not feed them to the flood folder
     /// again and conjure a summary out of one quiet notice.
@@ -302,7 +305,7 @@ public final class NoticePresentationCenter {
     public func act(id: String) {
         guard let entry = entries[id] else { return }
         if entry.isSummary {
-            dismiss(id)
+            closeSummary(id)
             handler.showHistory()
             return
         }
@@ -345,7 +348,7 @@ public final class NoticePresentationCenter {
     public func archive(id: String) {
         guard let entry = entries[id] else { return }
         if entry.isSummary {
-            dismiss(id)
+            closeSummary(id)
         } else {
             userDismiss(id)
             handler.setState(id, .archived)
@@ -363,7 +366,7 @@ public final class NoticePresentationCenter {
     public func snooze(id: String, option: SnoozeOption) {
         guard let entry = entries[id] else { return }
         if entry.isSummary {
-            dismiss(id)
+            closeSummary(id)
         } else {
             // A set that turned snoozing off offers no control; a stray call
             // (a shortcut, a stale card) changes nothing.
@@ -430,7 +433,7 @@ public final class NoticePresentationCenter {
     public func close(id: String) {
         guard let entry = entries[id] else { return }
         if entry.isSummary {
-            dismiss(id)
+            closeSummary(id)
         } else {
             userDismiss(id)
             handler.setState(id, .read)
@@ -554,6 +557,20 @@ public final class NoticePresentationCenter {
     /// broadcast leaves it off.
     private func userDismiss(_ id: String) {
         actedIDs.insert(id)
+        dismiss(id)
+    }
+
+    /// The user closed or acted on a flood summary. What it folded stops
+    /// being tracked as folded, so `foldedIDs` holds only notices whose
+    /// summary is still on screen. They move to `evaluatedIDs`, which every
+    /// reconcile prunes to the host's active list, so a reconcile that still
+    /// lists them does not bring them back as cards or as a new summary.
+    private func closeSummary(_ id: String) {
+        if let source = entries[id]?.notice.source {
+            let spent = foldedIDs.filter { $0.value.source == source }.keys
+            evaluatedIDs.formUnion(spent)
+            spent.forEach { foldedIDs[$0] = nil }
+        }
         dismiss(id)
     }
 
