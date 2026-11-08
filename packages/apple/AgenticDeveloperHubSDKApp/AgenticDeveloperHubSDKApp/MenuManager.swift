@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDKCoreMacOS
+import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKMacOS
 
 @MainActor

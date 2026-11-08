@@ -1,6 +1,6 @@
 import AppKit
 import Testing
-@testable import AgenticDeveloperHubSDKCoreUI
+import AgenticDeveloperHubSDKCoreUI
 
 @MainActor
 @Suite("ClosureMenuItemTarget")
