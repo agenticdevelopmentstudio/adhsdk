@@ -399,6 +399,17 @@
       "holds": "AgenticDeveloperHubSDKSystemMonitorUI. The themed System Status window and its reading cards and gauges."
     },
     {
+      "name": "apple-menubar",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/MenuBar/"
+      ],
+      "depends_on": [
+        "apple-core"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKMenuBar. The status-bar app driver for a daemon's menu bar app: StatusBarAppDelegate (with configurable badge corners), MenuComposer, MenuSection and the stock sections, StatusBarImageController. AppKit only; reads /health through Core's DaemonHealthReport and never links DaemonKit."
+    },
+    {
       "name": "apple-notifications",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Notifications/"
@@ -458,7 +469,8 @@
         "apple-hubclient",
         "apple-hubauth",
         "apple-chromium",
-        "apple-integrations"
+        "apple-integrations",
+        "apple-menubar"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

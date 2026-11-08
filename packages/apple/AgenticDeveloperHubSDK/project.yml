@@ -406,6 +406,20 @@ targets:
     # The themed System Status window. AgenticDeveloperHubSDKMacOS for the window
     # controllers and the settings scroll host it reuses.
 
+  AgenticDeveloperHubSDKMenuBar:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - MenuBar
+    dependencies:
+      - target: AgenticDeveloperHubSDKCore
+    # The status-bar app driver for a daemon's menu bar app (StatusBarAppDelegate,
+    # MenuComposer and the stock sections), formerly agenticdaemon's MenuBarKit.
+    # AppKit only. It reads a daemon's /health through Core's DaemonHealthReport
+    # and never links DaemonKit, so the daemon side stays free of UI.
+
   AgenticDeveloperHubSDKScripting:
     type: framework
     platform: macOS
@@ -1172,6 +1186,24 @@ targets:
         embed: true
         codeSign: true
 
+  AgenticDeveloperHubSDKMenuBarTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKMenuBarTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKMenuBar
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+
   AgenticDeveloperHubSDKSystemMonitorUITests:
     type: bundle.unit-test
     platform: macOS
@@ -1909,6 +1941,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKChromium
       - AgenticDeveloperHubSDKSystemMonitor
       - AgenticDeveloperHubSDKSystemMonitorUI
+      - AgenticDeveloperHubSDKMenuBar
       - AgenticDeveloperHubSDKDatabase
       - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKNotificationsUI
@@ -1977,6 +2010,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSystemMonitorTests
       - AgenticDeveloperHubSDKSystemMonitorUI
       - AgenticDeveloperHubSDKSystemMonitorUITests
+      - AgenticDeveloperHubSDKMenuBar
+      - AgenticDeveloperHubSDKMenuBarTests
       - AgenticDeveloperHubSDKDatabase
       - AgenticDeveloperHubSDKDatabaseTests
       - AgenticDeveloperHubSDKNotifications
@@ -2347,6 +2382,23 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKSystemMonitorTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKMenuBar:
+    build:
+      targets:
+        AgenticDeveloperHubSDKMenuBar: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKMenuBarTests
     profile:
       config: Release
     analyze:

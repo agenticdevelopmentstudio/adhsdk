@@ -237,6 +237,7 @@ open packages/apple/AgenticDeveloperHubSDK.xcworkspace
 | `AgenticDeveloperHubSDKMacOS` | `macOS/` | `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKCoreUI`, `AgenticDeveloperHubSDKCoreMacOS`, SwiftTerm, CodeEditSourceEditor, CodeEditLanguages |
 | `AgenticDeveloperHubSDKSystemMonitor` | `SystemMonitor/` | `AgenticDeveloperHubSDKCore` |
 | `AgenticDeveloperHubSDKSystemMonitorUI` | `SystemMonitorUI/` | `AgenticDeveloperHubSDKSystemMonitor`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMacOS`, `AgenticDeveloperHubSDKUI` |
+| `AgenticDeveloperHubSDKMenuBar` | `MenuBar/` | `AgenticDeveloperHubSDKCore` (AppKit; a daemon's status-bar app — formerly agenticdaemon's MenuBarKit) |
 | `AgenticDeveloperHubSDKNotifications` | `Notifications/` | none (Foundation only; macOS + iOS) |
 | `AgenticDeveloperHubSDKNotificationsUI` | `NotificationsUI/` | `AgenticDeveloperHubSDKNotifications`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMacOS`, `AgenticDeveloperHubSDKUI` |
 
