@@ -90,8 +90,8 @@ final class MenuManager {
 
     private func buildEditMenu() -> NSMenu {
         let menu = NSMenu(title: "Edit")
-        menu.addItem(NSMenuItem(title: "Undo", action: Selector(("undo:")), keyEquivalent: "z"))
-        menu.addItem(NSMenuItem(title: "Redo", action: Selector(("redo:")), keyEquivalent: "Z"))
+        menu.addItem(NSMenuItem(title: "Undo", action: NSSelectorFromString("undo:"), keyEquivalent: "z"))
+        menu.addItem(NSMenuItem(title: "Redo", action: NSSelectorFromString("redo:"), keyEquivalent: "Z"))
         menu.addItem(.separator())
         menu.addItem(stock("Cut", #selector(NSText.cut(_:)), key: "x"))
         menu.addItem(stock("Copy", #selector(NSText.copy(_:)), key: "c"))
