@@ -1,6 +1,7 @@
 import AppKit
 import AgenticDeveloperHubSDK
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKMacOS
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKNotifications

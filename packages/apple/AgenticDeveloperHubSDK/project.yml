@@ -468,6 +468,7 @@ targets:
     dependencies:
       - target: AgenticDeveloperHubSDKNotifications
       - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKCoreUI
       - target: AgenticDeveloperHubSDKMacOS
       - target: AgenticDeveloperHubSDKUI-macOS
       - sdk: UserNotifications.framework

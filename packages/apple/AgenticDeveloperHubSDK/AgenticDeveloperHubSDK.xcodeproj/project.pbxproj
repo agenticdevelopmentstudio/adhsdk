@@ -2152,6 +2152,7 @@
 		8DBF99389AC2F1F2B799904E /* NoticeRequestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D54372C6F10D7A794A580D39 /* NoticeRequestsTests.swift */; };
 		8DD567D18258A20247286D84 /* AgenticDeveloperHubAuth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AB5ADC411A6E4F89369D8BB /* AgenticDeveloperHubAuth.framework */; };
 		8DD5B12B885C18B454A4DD80 /* WindowLifecycleContextTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F4447EF9EE6ED3E37CA84EB /* WindowLifecycleContextTrigger.swift */; };
+		8DE67C5B5887C2B294A4B964 /* AgenticDeveloperHubSDKCoreUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6CA84EE811DF56FF84BAB0E /* AgenticDeveloperHubSDKCoreUI.framework */; };
 		8DFB1AB4AA3C7C1256528A4C /* HostMCPServer+Stdio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF36EB7E04D7D589BEE755F /* HostMCPServer+Stdio.swift */; };
 		8DFFEAA7260D1C73CC93A5AA /* PendingUsersTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAFC7DC6D49D1DFF8CCF6F65 /* PendingUsersTopic.swift */; };
 		8E00F1482ABFC06F116645AB /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33356C3CADC8ADE5D246F583 /* HeaderView.swift */; };
@@ -5910,6 +5911,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = BBD2DF0CFB513099434BE201;
 			remoteInfo = AgenticDeveloperHubSDKDatabase;
+		};
+		DA6FD314604ED481D3C828E8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D33CF928023D6855666D42F3;
+			remoteInfo = AgenticDeveloperHubSDKCoreUI;
 		};
 		DADE09D9137C5A3FF8B16939 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -9820,6 +9828,7 @@
 			files = (
 				E2B965A7F80A3C198C854E22 /* AgenticDeveloperHubSDKNotifications.framework in Frameworks */,
 				F7A019EA9AFD8555516EC213 /* AgenticDeveloperHubSDKCore.framework in Frameworks */,
+				8DE67C5B5887C2B294A4B964 /* AgenticDeveloperHubSDKCoreUI.framework in Frameworks */,
 				F572C7A43BC9CE937939F7FF /* AgenticDeveloperHubSDKMacOS.framework in Frameworks */,
 				19F0095434D96DD8344CA559 /* AgenticDeveloperHubSDKUI-macOS.framework in Frameworks */,
 				94100B579975FD6FCB9ED6BB /* UserNotifications.framework in Frameworks */,
@@ -16768,6 +16777,7 @@
 			dependencies = (
 				DCF82F822CFA8E1E5A483F72 /* PBXTargetDependency */,
 				8DA138D16A2EA62ED023CA04 /* PBXTargetDependency */,
+				A1611441C13C77C63BC52B6A /* PBXTargetDependency */,
 				FAEAB92A0F951D594BB54EE9 /* PBXTargetDependency */,
 				773126E2A17C832976F4AD11 /* PBXTargetDependency */,
 			);
@@ -24302,6 +24312,11 @@
 			isa = PBXTargetDependency;
 			target = 833A8BDFA4A99BE1FC7DE69B /* AgenticDeveloperHubSDKHub-macOS */;
 			targetProxy = 98C635A7E52FB5E4A2472001 /* PBXContainerItemProxy */;
+		};
+		A1611441C13C77C63BC52B6A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D33CF928023D6855666D42F3 /* AgenticDeveloperHubSDKCoreUI */;
+			targetProxy = DA6FD314604ED481D3C828E8 /* PBXContainerItemProxy */;
 		};
 		A229EEA13DAF5C4088523133 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
