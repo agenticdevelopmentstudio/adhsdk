@@ -299,6 +299,13 @@ public enum BrowserSettings {
         UserSettings.browserPrivateBrowsing.name
     ]
 
+    /// Overridable for a Safari pane, but fixed once for every Chrome pane
+    /// when Chromium starts, so a Chrome pane reads them from the global
+    /// settings only (`ChromiumLauncher.processSettings`).
+    public static let chromeProcessKeyNames: Set<String> = [
+        UserSettings.browserAutoplay.name
+    ]
+
     /// Cannot be overridden per pane, so it is only ever read from the global
     /// settings. Chrome's remote debugging port and hardware acceleration are
     /// fixed when Chromium starts, for every Chrome pane at once.

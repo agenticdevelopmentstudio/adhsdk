@@ -316,7 +316,8 @@ final class BrowserSettingsBinding {
     }
 
     /// Whether, in pane scope, the row for `name` shows the global value and
-    /// takes no edits: a global-only setting, or Accept cookies while the jar
+    /// takes no edits: a global-only setting, Autoplay in a Chrome pane
+    /// (Chromium fixes it once, for every Chrome pane), or Accept cookies while the jar
     /// the sheet shows is shared with other panes. That is the jar the pane
     /// will be on once the sheet closes, not the one it was built on, so the
     /// row never takes an override that would not apply. Private browsing
@@ -324,6 +325,7 @@ final class BrowserSettingsBinding {
     func isLocked(_ name: String) -> Bool {
         guard let pane else { return false }
         if BrowserSettings.globalOnlyKeyNames.contains(name) { return true }
+        if pane.engineKind == .chrome, BrowserSettings.chromeProcessKeyNames.contains(name) { return true }
         if name == UserSettings.browserAcceptsCookies.name { return !pane.wouldOwnDataStore(under: store) }
         return false
     }
@@ -1001,7 +1003,8 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
         }
         switch pane.engineKind {
         case .safari: return binding.constructionNote(for: UserSettings.browserAutoplay.name)
-        case .chrome: return "Applies the next time the app opens."
+        case .chrome: return "Chrome panes all follow the Settings window's value, "
+            + "from the next time the app opens."
         }
     }
 

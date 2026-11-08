@@ -31,10 +31,16 @@ public enum ChromiumLauncher {
 
     /// Starts Chromium if it is not running. `nil` when it is running after
     /// the call; otherwise why it is not, which every later call repeats.
+    ///
+    /// What it reads is fixed for the whole process, for every Chrome pane
+    /// at once, so it reads `processSettings(settings)`: a pane's layered
+    /// store hands in the global values beneath it, never the overrides of
+    /// whichever pane happened to start Chromium first.
     @discardableResult
     public static func start(settings: SettingsStore = UserSettings.shared) -> Error? {
         let runtime = ChromiumRuntime.shared
         if runtime.isRunning { return nil }
+        let settings = processSettings(settings)
         let configuration = makeConfiguration(settings: settings)
         do {
             try runtime.start(with: configuration)
@@ -45,6 +51,14 @@ public enum ChromiumLauncher {
             logger.error("Chromium did not start: \(error.localizedDescription, privacy: .public)")
             return error
         }
+    }
+
+    /// The store beneath every pane override: `settings` with each
+    /// `LayeredSettingsStore` peeled back to its fallback.
+    static func processSettings(_ settings: SettingsStore) -> SettingsStore {
+        var store = settings
+        while let layered = store as? LayeredSettingsStore { store = layered.fallback }
+        return store
     }
 
     static func makeConfiguration(settings: SettingsStore) -> ChromiumRuntimeConfiguration {
