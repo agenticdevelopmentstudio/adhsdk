@@ -33,7 +33,8 @@ final class DesktopMenuBarView: NSView {
         super.layout()
         var offset: CGFloat = 4
         for button in buttons {
-            let width = button.frame.width + Self.titlePadding
+            // From the title's own text width, so repeated layout passes never accumulate.
+            let width = button.textWidth + Self.titlePadding
             button.frame = CGRect(x: offset, y: 0, width: width, height: bounds.height)
             offset += width
         }
@@ -65,12 +66,24 @@ private final class MenuTitleView: NSView {
     var onPress: (() -> Void)?
     private let text: NSAttributedString
 
+    /// The rendered title's width; the menu bar lays the title out from this.
+    let textWidth: CGFloat
+
     init(title: String, font: NSFont) {
         text = NSAttributedString(string: title, attributes: [
             .font: font, .foregroundColor: NSColor.labelColor
         ])
         let size = text.size()
-        super.init(frame: NSRect(x: 0, y: 0, width: ceil(size.width), height: ceil(size.height)))
+        textWidth = ceil(size.width)
+        super.init(frame: NSRect(x: 0, y: 0, width: textWidth, height: ceil(size.height)))
+        setAccessibilityElement(true)
+        setAccessibilityRole(.menuBarItem)
+        setAccessibilityLabel(title)
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        onPress?()
+        return true
     }
 
     required init?(coder: NSCoder) {

@@ -284,6 +284,47 @@ final class DesktopAppWindowTests: XCTestCase {
         XCTAssertEqual(shown, ["File"])
     }
 
+    func test_menuTitles_keepTheirFramesAcrossRepeatedLayout() throws {
+        app.menus = [NSMenu(title: "File"), NSMenu(title: "Edit")]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        let bar = try XCTUnwrap(window.subviews.compactMap { $0 as? DesktopMenuBarView }.first)
+        bar.layout()
+        let first = (0..<3).compactMap { bar.titleView(at: $0)?.frame }
+        bar.layout()
+        bar.layout()
+        XCTAssertEqual((0..<3).compactMap { bar.titleView(at: $0)?.frame }, first)
+        XCTAssertEqual(first.count, 3)
+    }
+
+    func test_menuBar_sitsBetweenTheSideResizeBands() throws {
+        app.menus = [NSMenu(title: "File")]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        window.layout()
+        let bar = try XCTUnwrap(window.subviews.compactMap { $0 as? DesktopMenuBarView }.first)
+        let band: CGFloat = 5 // the chrome's resize band
+        XCTAssertEqual(bar.frame.minX, band)
+        XCTAssertEqual(bar.frame.maxX, window.bounds.width - band)
+    }
+
+    func test_menuTitle_isAnAccessibleMenuBarItem_thatPressesOpen() throws {
+        app.menus = [NSMenu(title: "File")]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        let bar = try XCTUnwrap(window.subviews.compactMap { $0 as? DesktopMenuBarView }.first)
+        var shown: [String] = []
+        bar.popUp = { menu, _, _ in shown.append(menu.title) }
+        let title = try XCTUnwrap(bar.titleView(at: 1))
+        XCTAssertEqual(title.accessibilityRole(), .menuBarItem)
+        XCTAssertEqual(title.accessibilityLabel(), "File")
+        XCTAssertTrue(title.accessibilityPerformPress())
+        XCTAssertEqual(shown, ["File"])
+    }
+
     func test_savedFrameBelowMinimum_isRaisedToWholeWindowMinimum() throws {
         settings.windowFrames = ["a": CGRect(x: 100, y: 100, width: 50, height: 50)]
         let controller = makeController()

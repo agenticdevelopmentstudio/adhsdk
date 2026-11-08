@@ -126,10 +126,12 @@ final class DesktopWindowChromeView: NSView {
     override func layout() {
         super.layout()
         let top = Self.titleBarHeight + accessoryHeight
-        accessoryView?.frame = CGRect(
-            x: 0, y: Self.titleBarHeight, width: bounds.width, height: accessoryHeight
-        )
         let band = Self.resizeBand
+        // Inset like the content, so the side resize bands never cover a menu title.
+        accessoryView?.frame = CGRect(
+            x: band, y: Self.titleBarHeight,
+            width: max(0, bounds.width - 2 * band), height: accessoryHeight
+        )
         contentContainer.frame = CGRect(
             x: band, y: top,
             width: max(0, bounds.width - 2 * band), height: max(0, bounds.height - top - band)
