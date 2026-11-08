@@ -583,6 +583,21 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertTrue(env.toast.shown.isEmpty)
     }
 
+    /// Notices a Don't-show override hides are drawn nowhere, so they neither
+    /// count toward a flood nor get a summary, and a real notice from the same
+    /// source is shown rather than folded.
+    func testHiddenNoticesNeitherCountTowardNorFoldIntoAFlood() {
+        var rules = NoticeRoutingRules.defaults
+        rules.overrides = [.init(source: "ci", urgency: .fyi, target: .hide)]
+        rules.flood = .init(threshold: 2, window: 10)
+        let env = harness(rules: rules)
+        for index in 0..<6 {
+            env.center.receive(notice("beat\(index)", urgency: .fyi, at: env.clock))
+        }
+        env.center.receive(notice("failed", urgency: .soon, at: env.clock))
+        XCTAssertEqual(env.toast.shownIDs, ["failed"], "no summary for hidden notices, and the real one shows")
+    }
+
     // MARK: Final review fixes
 
     /// Finding 1: the daemon broadcasts the new notice, then the old one's

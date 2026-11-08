@@ -9,9 +9,9 @@ import AgenticDeveloperHubSDKNotifications
 /// 1. drops it if the filter rejects it;
 /// 2. replaces in place a shown notice with the same `source` + `key`;
 /// 3. holds it while Focus is on and its urgency is below `now`;
-/// 4. folds it into a per-source summary while that source is flooding;
-/// 5. resolves its style set and hands each style's items to that style's
-///    presenter, once per style.
+/// 4. resolves its style set, and drops it if the set shows nothing;
+/// 5. folds it into a per-source summary while that source is flooding;
+/// 6. hands each style's items to that style's presenter, once per style.
 ///
 /// Every user action removes the card first and tells the host second, so the
 /// screen never waits on the host's transport.
@@ -192,6 +192,13 @@ public final class NoticePresentationCenter {
         }
 
         guard foldedIDs[notice.id] == nil, !evaluatedIDs.contains(notice.id) else { return }
+        // The style first: a notice drawn nowhere (a Don't-show override, an
+        // empty set) must neither count toward a flood nor be folded into one.
+        let set = rules.style(for: notice)
+        guard !set.presentedItems.isEmpty else {
+            evaluatedIDs.insert(notice.id)
+            return
+        }
         floodFolder.configuration = rules.flood
         if case let .fold(source, count) = floodFolder.admit(notice, at: now) {
             foldedIDs[notice.id] = notice
@@ -199,7 +206,7 @@ public final class NoticePresentationCenter {
             return
         }
 
-        present(notice, set: rules.style(for: notice))
+        present(notice, set: set)
     }
 
     /// A state change the host broadcast. Anything but `unread` takes the
