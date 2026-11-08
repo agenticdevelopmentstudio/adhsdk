@@ -70,6 +70,13 @@ NS_SWIFT_NAME(ChromiumBrowserViewDelegate) NS_SWIFT_UI_ACTOR
 /// composition, or an Edit menu action such as `paste:`. Asked for every
 /// one, whether a key event, a menu or the system delivered it.
 - (BOOL)chromiumBrowserView:(ADHChromiumBrowserView *)view shouldPerformTextInput:(NSString *)action;
+/// A DevTools protocol event. `sessionId` names the attached target it came
+/// from (an out-of-process frame, attached with `Target.setAutoAttach`), and
+/// is nil for the page's own.
+- (void)chromiumBrowserView:(ADHChromiumBrowserView *)view
+    didReceiveDevToolsEvent:(NSString *)method
+                     params:(NSDictionary<NSString *, id> *)params
+                  sessionId:(nullable NSString *)sessionId;
 @end
 
 /// What a pane fixes when its browser is created.
@@ -133,6 +140,14 @@ NS_SWIFT_NAME(ChromiumBrowserView) NS_SWIFT_UI_ACTOR
 /// Methods sent before the browser exists wait for it, in order.
 - (void)sendDevToolsMethod:(NSString *)method
                     params:(nullable NSDictionary<NSString *, id> *)params
+                completion:(void (^)(NSDictionary<NSString *, id> *_Nullable result,
+                                     NSError *_Nullable error))completion;
+
+/// The same, sent to an attached target's session: `sessionId` from a
+/// `Target.attachedToTarget` event, or nil for the page itself.
+- (void)sendDevToolsMethod:(NSString *)method
+                    params:(nullable NSDictionary<NSString *, id> *)params
+                 sessionId:(nullable NSString *)sessionId
                 completion:(void (^)(NSDictionary<NSString *, id> *_Nullable result,
                                      NSError *_Nullable error))completion;
 

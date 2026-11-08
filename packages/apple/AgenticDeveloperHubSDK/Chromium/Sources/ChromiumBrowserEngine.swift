@@ -69,9 +69,22 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     private let shieldToken = UUID().uuidString
     /// The new-document script the raised shield added, to remove on lower.
     private var shieldScriptIdentifier: String?
+    /// The shield the page last took in full. `isActivationShieldActive` is
+    /// what was asked; the two differ while a change is on its way, or after
+    /// one failed, which the next page load tries again.
+    private var appliedShield = false
     /// Raises and lowers in the order asked, each after the last has landed,
     /// so a lower never misses the identifier of the raise before it.
     private var shieldTask: Task<Void, Never>?
+    /// Whether out-of-process frames are attached to as they appear, so the
+    /// shield reaches a cross-site frame: on from the first raise.
+    private var attachesFrames = false
+    /// The attached cross-site frames' DevTools sessions.
+    private var frameSessions: Set<String> = []
+    /// The frames the raised shield was sent to, and the identifier of each
+    /// one's new-document script once Chromium has answered.
+    private var shieldedFrames: Set<String> = []
+    private var frameScriptIdentifiers: [String: String] = [:]
     private var eventMonitor: Any?
     /// Whether the mouse button now down went down on the page, so its drags
     /// and its release follow it wherever the pointer goes.
@@ -228,7 +241,11 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         }
     }
 
-    private func send(_ method: String, _ params: [String: Any] = [:]) async throws -> [String: Any] {
+    /// One DevTools call. `timeout` nil waits for the answer however long the
+    /// browser takes to exist; closing the view still answers it.
+    private func send(
+        _ method: String, _ params: [String: Any] = [:], timeout: TimeInterval? = devToolsTimeout
+    ) async throws -> [String: Any] {
         guard ChromiumRuntime.shared.isRunning else {
             throw BrowserAutomationError.script("Chrome is not running, so \(method) cannot be sent")
         }
@@ -244,19 +261,26 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
                     }
                 }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + Self.devToolsTimeout) {
+            guard let timeout else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
                 MainActor.assumeIsolated {
                     pending.finish(.failure(BrowserAutomationError.script(
-                        "Chrome did not answer \(method) within \(Int(Self.devToolsTimeout)) seconds")))
+                        "Chrome did not answer \(method) within \(Int(timeout)) seconds")))
                 }
             }
         }.value
     }
 
-    private func sendIgnoringResult(_ method: String, _ params: [String: Any]) {
-        browserView.sendDevToolsMethod(method, params: params) { [logger] _, error in
+    private func sendIgnoringResult(
+        _ method: String, _ params: [String: Any], sessionId: String? = nil,
+        then handle: (@MainActor ([String: Any]) -> Void)? = nil
+    ) {
+        browserView.sendDevToolsMethod(method, params: params, sessionId: sessionId) { [logger] result, error in
             if let error {
                 logger.error("\(method, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            } else if let handle, let result {
+                let reply = DevToolsReply(value: result)
+                MainActor.assumeIsolated { handle(reply.value) }
             }
         }
     }
@@ -417,7 +441,20 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
     public func chromiumBrowserViewDidFinishMainFrameLoad(_ view: ChromiumBrowserView) {
         commitIfPending()
         setMainFrameLoading(false)
+        reconcileShield()
         delegate?.browserEngineDidFinishNavigation(self)
+    }
+
+    public func chromiumBrowserView(
+        _ view: ChromiumBrowserView, didReceiveDevToolsEvent method: String,
+        params: [String: Any], sessionId: String?
+    ) {
+        switch method {
+        case "Target.attachedToTarget": frameDidAttach(params)
+        case "Target.detachedFromTarget":
+            if let session = params["sessionId"] as? String { frameDidDetach(session) }
+        default: break
+        }
     }
 
     public func chromiumBrowserView(
@@ -512,40 +549,129 @@ extension ChromiumBrowserEngine {
     /// document after it: the same script the WebKit engine installs, added
     /// as a new-document script, run at once on the page already showing,
     /// with Chromium's focus emulation so the page reads as focused even in a
-    /// window that is not key. A cross-origin frame already showing is
-    /// shielded from its next load.
+    /// window that is not key. A cross-site frame runs in a process and a
+    /// DevTools target of its own, so it is attached to and shielded the same
+    /// way, in its own session: those showing when the shield goes up at
+    /// once, and each new one before its document runs.
     public func setActivationShieldActive(_ active: Bool) {
         guard active != isActivationShieldActive else { return }
         isActivationShieldActive = active
+        reconcileShield()
+    }
+
+    /// Brings the page to the shield asked for, after any change still
+    /// landing. A change that failed is tried again here, at the next load.
+    private func reconcileShield() {
         let previous = shieldTask
         shieldTask = Task { @MainActor [weak self] in
             await previous?.value
             guard let self, !Task.isCancelled else { return }
-            await self.applyShield(active)
+            let wanted = self.isActivationShieldActive
+            guard wanted != self.appliedShield else { return }
+            if await self.applyShield(wanted) { self.appliedShield = wanted }
         }
     }
 
-    private func applyShield(_ active: Bool) async {
+    /// Whether the page took the change. Its calls wait for Chromium however
+    /// long it takes (a pane in a background tab has no browser yet), so a
+    /// script's identifier is never lost to a timeout; closing the pane
+    /// answers them all. A step that already landed is not repeated.
+    private func applyShield(_ active: Bool) async -> Bool {
         guard let source = BrowserActivationShield.script(mode: active ? "raise" : "lift", token: shieldToken) else {
-            return
+            return false
         }
+        if active { attachFrames() }
+        for session in frameSessions { shieldFrame(session, active: active, runNow: true) }
         do {
-            if active {
+            if active, shieldScriptIdentifier == nil {
                 let added = try await send("Page.addScriptToEvaluateOnNewDocument", [
                     "source": source, "runImmediately": true
-                ])
+                ], timeout: nil)
                 shieldScriptIdentifier = added["identifier"] as? String
-            } else if let identifier = shieldScriptIdentifier {
+            } else if !active, let identifier = shieldScriptIdentifier {
+                _ = try await send("Page.removeScriptToEvaluateOnNewDocument", ["identifier": identifier], timeout: nil)
                 shieldScriptIdentifier = nil
-                _ = try await send("Page.removeScriptToEvaluateOnNewDocument", ["identifier": identifier])
             }
-            _ = try await send("Emulation.setFocusEmulationEnabled", ["enabled": active])
+            _ = try await send("Emulation.setFocusEmulationEnabled", ["enabled": active], timeout: nil)
             if url != nil {
-                _ = try await send("Runtime.evaluate", ["expression": source])
+                _ = try await send("Runtime.evaluate", ["expression": source], timeout: nil)
             }
+            return true
         } catch {
             logger.debug("activation shield did not change: \(error.localizedDescription, privacy: .public)")
+            return false
         }
+    }
+
+    // MARK: Cross-site frames
+
+    /// Auto-attach to out-of-process frames, each paused until it is told to
+    /// run, so a new frame is shielded before its first script. The setting
+    /// stays on the page's session across navigations; frames already
+    /// showing are attached at once, unpaused.
+    private static let frameAttach: [String: Any] = [
+        "autoAttach": true, "waitForDebuggerOnStart": true, "flatten": true,
+        "filter": [["type": "iframe", "exclude": false]]
+    ]
+
+    private func attachFrames() {
+        guard !attachesFrames else { return }
+        attachesFrames = true
+        sendIgnoringResult("Target.setAutoAttach", Self.frameAttach)
+    }
+
+    private func frameDidAttach(_ params: [String: Any]) {
+        guard let session = params["sessionId"] as? String else { return }
+        let waiting = params["waitingForDebugger"] as? Bool ?? false
+        let info = params["targetInfo"] as? [String: Any]
+        if info?["type"] as? String == "iframe" {
+            frameSessions.insert(session)
+            // A frame inside this one is out of its process too.
+            sendIgnoringResult("Target.setAutoAttach", Self.frameAttach, sessionId: session)
+            if isActivationShieldActive { shieldFrame(session, active: true, runNow: !waiting) }
+        }
+        // Messages in one session run in order, so whatever was sent above is
+        // in place before the frame goes on.
+        if waiting { sendIgnoringResult("Runtime.runIfWaitingForDebugger", [:], sessionId: session) }
+    }
+
+    private func frameDidDetach(_ session: String) {
+        frameSessions.remove(session)
+        shieldedFrames.remove(session)
+        frameScriptIdentifiers.removeValue(forKey: session)
+    }
+
+    /// Raises or lowers the shield in one frame's session. `runNow` also runs
+    /// the script on the document showing, which a frame still paused before
+    /// its first document does not have.
+    private func shieldFrame(_ session: String, active: Bool, runNow: Bool) {
+        guard active != shieldedFrames.contains(session),
+              let source = BrowserActivationShield.script(mode: active ? "raise" : "lift", token: shieldToken) else {
+            return
+        }
+        if active {
+            shieldedFrames.insert(session)
+            sendIgnoringResult("Page.addScriptToEvaluateOnNewDocument", [
+                "source": source, "runImmediately": true
+            ], sessionId: session) { [weak self] added in
+                guard let self, let identifier = added["identifier"] as? String else { return }
+                if self.shieldedFrames.contains(session) {
+                    self.frameScriptIdentifiers[session] = identifier
+                } else if self.frameSessions.contains(session) {
+                    // Lowered while the raise was on its way.
+                    self.sendIgnoringResult("Page.removeScriptToEvaluateOnNewDocument",
+                                            ["identifier": identifier], sessionId: session)
+                }
+            }
+        } else {
+            shieldedFrames.remove(session)
+            if let identifier = frameScriptIdentifiers.removeValue(forKey: session) {
+                sendIgnoringResult("Page.removeScriptToEvaluateOnNewDocument",
+                                   ["identifier": identifier], sessionId: session)
+            }
+        }
+        sendIgnoringResult("Emulation.setFocusEmulationEnabled", ["enabled": active], sessionId: session)
+        if runNow { sendIgnoringResult("Runtime.evaluate", ["expression": source], sessionId: session) }
     }
 
     // MARK: Input gate

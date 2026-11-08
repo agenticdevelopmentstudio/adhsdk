@@ -277,6 +277,8 @@ class ADHRequestContextHandler : public CefRequestContextHandler, public CefReso
                  microphone:(BOOL)microphone
                  completion:(void (^)(NSNumber* _Nullable allowed))completion;
 - (void)devToolsResult:(int)messageID success:(BOOL)success payload:(NSData*)payload;
+- (void)devToolsResult:(int)messageID success:(BOOL)success body:(NSDictionary*)body;
+- (void)devToolsEvent:(NSString*)method params:(NSDictionary*)params sessionId:(nullable NSString*)sessionId;
 - (void)showDevToolsAtX:(int)x y:(int)y;
 @end
 
@@ -576,6 +578,31 @@ class ADHBrowserClient : public CefClient,
   }
 
   // MARK: DevTools protocol
+
+  /// Every message, read here once so an event keeps its `sessionId`, which
+  /// `OnDevToolsEvent` drops: an attached frame's events carry it at the top
+  /// level. A message that does not parse is left to CEF.
+  bool OnDevToolsMessage(CefRefPtr<CefBrowser> /*browser*/, const void* message, size_t message_size) override {
+    NSData* data = [NSData dataWithBytesNoCopy:const_cast<void*>(message) length:message_size freeWhenDone:NO];
+    id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    if (![object isKindOfClass:NSDictionary.class]) {
+      return false;
+    }
+    NSDictionary* body = object;
+    NSString* session = [body[@"sessionId"] isKindOfClass:NSString.class] ? body[@"sessionId"] : nil;
+    if ([body[@"id"] isKindOfClass:NSNumber.class]) {
+      NSDictionary* error = [body[@"error"] isKindOfClass:NSDictionary.class] ? body[@"error"] : nil;
+      NSDictionary* result = [body[@"result"] isKindOfClass:NSDictionary.class] ? body[@"result"] : @{};
+      [view_ devToolsResult:[body[@"id"] intValue] success:error == nil body:error ?: result];
+      return true;
+    }
+    if ([body[@"method"] isKindOfClass:NSString.class]) {
+      NSDictionary* params = [body[@"params"] isKindOfClass:NSDictionary.class] ? body[@"params"] : @{};
+      [view_ devToolsEvent:body[@"method"] params:params sessionId:session];
+      return true;
+    }
+    return false;
+  }
 
   void OnDevToolsMethodResult(CefRefPtr<CefBrowser> /*browser*/,
                               int message_id,
@@ -877,12 +904,23 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
 - (void)sendDevToolsMethod:(NSString*)method
                     params:(NSDictionary<NSString*, id>*)params
                 completion:(ADHDevToolsCompletion)completion {
+  [self sendDevToolsMethod:method params:params sessionId:nil completion:completion];
+}
+
+- (void)sendDevToolsMethod:(NSString*)method
+                    params:(NSDictionary<NSString*, id>*)params
+                 sessionId:(NSString*)sessionId
+                completion:(ADHDevToolsCompletion)completion {
   if (_closed) {
     completion(nil, [self errorWithDescription:@"The Chrome pane closed"]);
     return;
   }
   int messageID = _nextMessageID++;
-  NSDictionary* message = @{@"id" : @(messageID), @"method" : method, @"params" : params ?: @{}};
+  NSMutableDictionary* message =
+      [@{@"id" : @(messageID), @"method" : method, @"params" : params ?: @{}} mutableCopy];
+  if (sessionId) {
+    message[@"sessionId"] = sessionId;
+  }
   NSError* encodingError;
   NSData* data = [NSJSONSerialization dataWithJSONObject:message options:0 error:&encodingError];
   if (!data) {
@@ -912,13 +950,20 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
 }
 
 - (void)devToolsResult:(int)messageID success:(BOOL)success payload:(NSData*)payload {
+  id object = payload.length > 0 ? [NSJSONSerialization JSONObjectWithData:payload options:0 error:nil] : @{};
+  [self devToolsResult:messageID success:success body:[object isKindOfClass:NSDictionary.class] ? object : @{}];
+}
+
+- (void)devToolsEvent:(NSString*)method params:(NSDictionary*)params sessionId:(NSString*)sessionId {
+  [_delegate chromiumBrowserView:self didReceiveDevToolsEvent:method params:params sessionId:sessionId];
+}
+
+- (void)devToolsResult:(int)messageID success:(BOOL)success body:(NSDictionary*)body {
   ADHDevToolsCompletion completion = _completions[@(messageID)];
   if (!completion) {
     return;
   }
   [_completions removeObjectForKey:@(messageID)];
-  id object = payload.length > 0 ? [NSJSONSerialization JSONObjectWithData:payload options:0 error:nil] : @{};
-  NSDictionary* body = [object isKindOfClass:NSDictionary.class] ? object : @{};
   if (success) {
     completion(body, nil);
   } else {

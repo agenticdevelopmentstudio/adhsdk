@@ -95,10 +95,7 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
             .init(
                 title: "Chrome Panes",
                 body: "Every setting here applies to Chrome panes as well as Safari ones, "
-                    + "with two differences. Hiding focus and visibility "
-                    + "does not reach frames from other sites that are already showing "
-                    + "when it is turned on; they pick it up on the next page load. And "
-                    + "Chrome does not honour Autoplay set to Never."
+                    + "with one difference: Chrome does not honour Autoplay set to Never."
             )
         ])
     }
