@@ -68,7 +68,10 @@ final class BrowserInputGateTests: XCTestCase {
                                      configuration: WKWebViewConfiguration())
         let window = NSWindow(contentRect: webView.frame, styleMask: [.titled], backing: .buffered, defer: true)
         window.contentView = webView
-        let foreign = NSTrackingArea(rect: webView.bounds, options: [.mouseMoved, .activeAlways], owner: NSObject(),
+        // A tracking area does not retain its owner, so the test holds it, as
+        // WebKit holds its observer; an inline NSObject() is gone at once.
+        let observer = NSObject()
+        let foreign = NSTrackingArea(rect: webView.bounds, options: [.mouseMoved, .activeAlways], owner: observer,
                                      userInfo: nil)
         webView.addTrackingArea(foreign)
         webView.adoptForeignTrackingAreas()
@@ -79,7 +82,7 @@ final class BrowserInputGateTests: XCTestCase {
         let count = webView.trackingAreas.count
         webView.adoptForeignTrackingAreas()
         XCTAssertEqual(webView.trackingAreas.count, count, "taking over twice changes nothing")
-        withExtendedLifetime(foreign) {}
+        withExtendedLifetime((foreign, observer)) {}
     }
 
     func testBlockedKeyboardDisablesEditActions() {
