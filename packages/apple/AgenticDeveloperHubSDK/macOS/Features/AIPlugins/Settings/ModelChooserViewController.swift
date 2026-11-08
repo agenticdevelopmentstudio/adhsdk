@@ -533,8 +533,20 @@ extension ModelChooserViewController: NSTableViewDataSource, NSTableViewDelegate
             ])
             return view
         }()
-        cell.textField?.stringValue = filtered[row].id
+        cell.textField?.attributedStringValue = Self.underlinedMatches(
+            filtered[row].id, query: searchField.stringValue.trimmingCharacters(in: .whitespaces))
         return cell
+    }
+
+    /// `id` with the letters the search query matched underlined, so each row
+    /// shows why it survived the "any" filter. Only the underline is set: the
+    /// label's own themed font and color stay in charge of everything else.
+    static func underlinedMatches(_ id: String, query: String) -> NSAttributedString {
+        let text = NSMutableAttributedString(string: id)
+        for range in SubsequenceMatch.ranges(of: query, in: id) ?? [] {
+            text.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+        }
+        return text
     }
 
     public func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {

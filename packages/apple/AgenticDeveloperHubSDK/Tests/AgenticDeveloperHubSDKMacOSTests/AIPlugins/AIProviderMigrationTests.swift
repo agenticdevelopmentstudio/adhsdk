@@ -87,3 +87,37 @@ struct AIProviderMigrationTests {
         #expect(plan.selectedId == "")
     }
 }
+
+@Suite("AIProviderMigration retired plugin identifiers")
+struct AIProviderMigrationRenameTests {
+
+    @Test("A retired com.agentictoolkit identifier maps to its renamed equivalent")
+    func mapsRetiredIdentifier() {
+        #expect(AIProviderMigration.currentPluginIdentifier("com.agentictoolkit.plugin.claude-local")
+                == "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local")
+        #expect(AIProviderMigration.currentPluginIdentifier("com.example.plugin.x") == "com.example.plugin.x")
+    }
+
+    @Test("Only retired configurations are rewritten, keeping id, name and template")
+    func rewritesRetiredConfigurations() throws {
+        let old = AIProviderConfiguration(
+            name: "Claude Code (local CLI)",
+            pluginIdentifier: "com.agentictoolkit.plugin.claude-local", templateId: "claude-local")
+        let current = AIProviderConfiguration(
+            name: "Claude Max",
+            pluginIdentifier: "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-api",
+            templateId: "claude-max-token")
+        let renamed = try #require(AIProviderMigration.renamingRetiredPluginIdentifiers([old, current]))
+        #expect(renamed[0].id == old.id)
+        #expect(renamed[0].name == old.name)
+        #expect(renamed[0].templateId == "claude-local")
+        #expect(renamed[0].pluginIdentifier == "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local")
+        #expect(renamed[1] == current)
+    }
+
+    @Test("Nothing to rename returns nil, so nothing is written")
+    func nothingToRename() {
+        let current = AIProviderConfiguration(name: "X", pluginIdentifier: "com.example.p", templateId: "t")
+        #expect(AIProviderMigration.renamingRetiredPluginIdentifiers([current]) == nil)
+    }
+}

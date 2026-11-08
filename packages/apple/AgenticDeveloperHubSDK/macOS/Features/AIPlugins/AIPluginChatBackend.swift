@@ -145,9 +145,16 @@ public final class AIPluginChatBackend: ChatBackend, @unchecked Sendable {
     }
 
     /// Errors specific to the plugin-backed chat path.
-    public enum AIPluginChatError: Error {
+    public enum AIPluginChatError: LocalizedError {
         /// No plugin available for the currently selected identifier.
         case pluginNotAvailable
+
+        public var errorDescription: String? {
+            switch self {
+            case .pluginNotAvailable:
+                "This configuration's plugin isn't installed or didn't load."
+            }
+        }
     }
 
     // MARK: - Request assembly
