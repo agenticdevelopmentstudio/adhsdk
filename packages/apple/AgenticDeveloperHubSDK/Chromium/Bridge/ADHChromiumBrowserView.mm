@@ -27,7 +27,91 @@
 #include "include/cef_request_context.h"
 #include "include/cef_request_context_handler.h"
 
+#import <objc/runtime.h>
+
 namespace {
+
+// MARK: Text input gate
+
+/// The browser view holding `view`, if any.
+ADHChromiumBrowserView* ADHOwningBrowserView(NSView* view) {
+  for (NSView* ancestor = view.superview; ancestor; ancestor = ancestor.superview) {
+    if ([ancestor isKindOfClass:[ADHChromiumBrowserView class]]) {
+      return (ADHChromiumBrowserView*)ancestor;
+    }
+  }
+  return nil;
+}
+
+/// Whether `view`'s pane lets `selector` through; a view outside any pane
+/// (DevTools, say) always does.
+bool ADHAllowsTextInput(NSView* view, SEL selector) {
+  ADHChromiumBrowserView* owner = ADHOwningBrowserView(view);
+  id<ADHChromiumBrowserViewDelegate> delegate = owner.delegate;
+  if (!delegate) {
+    return true;
+  }
+  return [delegate chromiumBrowserView:owner shouldPerformTextInput:NSStringFromSelector(selector)];
+}
+
+/// Wraps the text-input and editing methods of Chromium's page view, so the
+/// keyboard gate holds what arrives without a key event — Dictation, the
+/// Emoji & Symbols picker, an input method, an Edit menu item — and what the
+/// main menu sends back when a refused Command key is passed on to it, on any
+/// keyboard layout. The key monitor in front of the page cannot see any of
+/// these. Done once, for the class; each call asks the pane it belongs to.
+void ADHInstallTextInputGate(void) {
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    Class cls = NSClassFromString(@"RenderWidgetHostViewCocoa");
+    if (!cls) {
+      NSLog(@"Chromium: no RenderWidgetHostViewCocoa; text input outside key events is not gated");
+      return;
+    }
+    auto wrapObject = ^(SEL selector) {
+      Method method = class_getInstanceMethod(cls, selector);
+      if (!method) {
+        return;
+      }
+      typedef void (*IMP1)(id, SEL, id);
+      IMP1 original = reinterpret_cast<IMP1>(method_getImplementation(method));
+      IMP wrapped = imp_implementationWithBlock(^(NSView* view, id argument) {
+        if (ADHAllowsTextInput(view, selector)) {
+          original(view, selector, argument);
+        }
+      });
+      class_replaceMethod(cls, selector, wrapped, method_getTypeEncoding(method));
+    };
+    for (NSString* name in @[ @"insertText:", @"paste:", @"pasteAndMatchStyle:", @"cut:", @"copy:",
+                              @"selectAll:", @"undo:", @"redo:", @"delete:" ]) {
+      wrapObject(NSSelectorFromString(name));
+    }
+
+    SEL insert = @selector(insertText:replacementRange:);
+    if (Method method = class_getInstanceMethod(cls, insert)) {
+      typedef void (*InsertIMP)(id, SEL, id, NSRange);
+      InsertIMP original = reinterpret_cast<InsertIMP>(method_getImplementation(method));
+      IMP wrapped = imp_implementationWithBlock(^(NSView* view, id text, NSRange replacement) {
+        if (ADHAllowsTextInput(view, insert)) {
+          original(view, insert, text, replacement);
+        }
+      });
+      class_replaceMethod(cls, insert, wrapped, method_getTypeEncoding(method));
+    }
+
+    SEL mark = @selector(setMarkedText:selectedRange:replacementRange:);
+    if (Method method = class_getInstanceMethod(cls, mark)) {
+      typedef void (*MarkIMP)(id, SEL, id, NSRange, NSRange);
+      MarkIMP original = reinterpret_cast<MarkIMP>(method_getImplementation(method));
+      IMP wrapped = imp_implementationWithBlock(^(NSView* view, id text, NSRange selected, NSRange replacement) {
+        if (ADHAllowsTextInput(view, mark)) {
+          original(view, mark, text, selected, replacement);
+        }
+      });
+      class_replaceMethod(cls, mark, wrapped, method_getTypeEncoding(method));
+    }
+  });
+}
 
 NSString* ADHString(const CefString& value) {
   std::string utf8 = value.ToString();
@@ -614,6 +698,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
     return;
   }
   _browser = browser;
+  ADHInstallTextInputGate();
   NSView* child = (__bridge NSView*)browser->GetHost()->GetWindowHandle();
   child.frame = self.bounds;
   child.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;

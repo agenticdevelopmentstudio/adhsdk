@@ -63,6 +63,12 @@ NS_SWIFT_NAME(ChromiumBrowserViewDelegate) NS_SWIFT_UI_ACTOR
                   userGesture:(BOOL)userGesture;
 /// Whether a drag that has entered the page may reach it.
 - (BOOL)chromiumBrowserViewShouldAcceptDrag:(ADHChromiumBrowserView *)view;
+/// Whether text input or an editing command may reach the page. `action` is
+/// the selector Chromium's view was sent: `insertText:replacementRange:` for
+/// typed, dictated or picked text, `setMarkedText:…` for an input method's
+/// composition, or an Edit menu action such as `paste:`. Asked for every
+/// one, whether a key event, a menu or the system delivered it.
+- (BOOL)chromiumBrowserView:(ADHChromiumBrowserView *)view shouldPerformTextInput:(NSString *)action;
 @end
 
 /// What a pane fixes when its browser is created.

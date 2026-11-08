@@ -474,6 +474,19 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         decide(.dragAndDrop, "draggingEntered", synthesized: false)
     }
 
+    /// Text and editing commands that reach Chromium's view. One carried by a
+    /// key event the monitor already passed is let through without a second
+    /// decision, so the log shows the keystroke once; anything else (a
+    /// dictated phrase, a picked emoji, an Edit menu item, a refused Command
+    /// key the menu sent back) is decided here.
+    public func chromiumBrowserView(_ view: ChromiumBrowserView, shouldPerformTextInput action: String) -> Bool {
+        if let type = NSApp.currentEvent?.type, type == .keyDown || type == .keyUp,
+           inputGate.allows(.keyboard, synthesized: false, pageHasFocus: pageHasFocus) {
+            return true
+        }
+        return decide(.keyboard, action, synthesized: false)
+    }
+
     /// A pane has no windows to give a pop-up, so the address opens here, the
     /// way the Safari pane does it. With pop-ups blocked, only one the user
     /// clicked for opens; an address-less `window.open()` never does.
@@ -627,8 +640,9 @@ extension ChromiumBrowserEngine {
     /// A key bound for the page is gated; one for the address bar or any
     /// other view is not. A refused key with Command still reaches the menu
     /// bar, so Close Tab and the like keep working with the page shut off,
-    /// unless it is an editing command the menu would send straight back to
-    /// the page.
+    /// unless it is an editing shortcut. Whatever the menu sends back to the
+    /// page is refused again in the bridge (`shouldPerformTextInput`), so the
+    /// shortcut list only spares the menu a pointless round trip.
     private func filterKey(_ event: NSEvent) -> NSEvent? {
         guard holdsFirstResponder else { return event }
         let name = event.type == .keyDown ? "keyDown" : event.type == .keyUp ? "keyUp" : "flagsChanged"
@@ -642,13 +656,18 @@ extension ChromiumBrowserEngine {
     }
 
     /// The Edit menu's own shortcuts, whose actions go to the first responder,
-    /// which is the page.
+    /// which is the page. Matched by the key's position (A, Z, X, C, V on an
+    /// ANSI board) as well as its character, since a non-Latin layout types
+    /// 'м' for Command-V and the menu still reads it as Paste.
     static func isEditingShortcut(_ event: NSEvent) -> Bool {
-        let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])
-        guard flags.contains(.command), !flags.contains(.control),
-              let key = event.charactersIgnoringModifiers?.lowercased() else { return false }
+        guard event.modifierFlags.contains(.command) else { return false }
+        if editingKeyCodes.contains(event.keyCode) { return true }
+        guard let key = event.charactersIgnoringModifiers?.lowercased() else { return false }
         return ["a", "c", "v", "x", "z"].contains(key)
     }
+
+    /// kVK_ANSI_A, Z, X, C and V.
+    static let editingKeyCodes: Set<UInt16> = [0x00, 0x06, 0x07, 0x08, 0x09]
 
     private static func name(of event: NSEvent) -> String {
         switch event.type {

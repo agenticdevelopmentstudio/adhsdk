@@ -95,9 +95,7 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
             .init(
                 title: "Chrome Panes",
                 body: "Every setting here applies to Chrome panes as well as Safari ones, "
-                    + "with four differences. Paste chosen from the Edit menu with the "
-                    + "mouse reaches the page even when Keyboard is blocked; Command-V "
-                    + "does not. Third-party content is judged by a site's last two name "
+                    + "with three differences. Third-party content is judged by a site's last two name "
                     + "parts (three for names like example.co.uk), so a few shared "
                     + "hosting domains count as one site. Hiding focus and visibility "
                     + "does not reach frames from other sites that are already showing "
