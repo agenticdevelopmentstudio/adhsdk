@@ -3,60 +3,86 @@ import AIPluginKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
 
-/// Try an LLM out: pick one of the configured providers, pick its model, and chat
-/// with it — the "does this key work / is this the model I want" surface that used
-/// to be crammed into every provider's settings editor.
+/// Chat with an AI: pick one of the configured providers, pick its model, and talk
+/// to it.
 ///
 /// ```
-/// Provider: [popup]
-///    Model: label                          [Choose Model…]
-/// ─────────────────────────────────────────────────────────
+/// Provider: [popup]                     ┐
+///    Model: label        [Choose Model…] │ the configuration view —
+/// ─────────────────────────────────────  ┘ hidden by `isConfigurationVisible`
 /// [chat transcript]
 /// [chat entry]
 /// [Cancel] [Choose]      ← only when presented as a modal picker
 /// ```
 ///
-/// Two presentations share this one controller: a plain window
-/// (``LLMChatWindowController``) and an app-modal picker (``LLMChatPicker``) that
-/// reports the provider + model the user settled on. `showsChoiceButtons` is what
-/// tells them apart.
+/// Three presentations share this one controller:
+/// - the AI Chat window (``AIChatWindowController``), one per "New AI Chat…";
+/// - an app-modal picker (``LLMChatPicker``) that reports the provider + model the
+///   user settled on (`showsChoiceButtons`);
+/// - the settings panel's Test Chat, **pinned** to the configuration being edited
+///   (`pinsConfiguration`): the provider is a label, not a popup, because that
+///   chat exists to test that one connection.
 ///
-/// Choosing a model **persists** it to that configuration (the same
-/// `AIProviderConfigStore` write the settings editor used to do), in both
-/// presentations. The chat is pinned to the live configuration, so the very next
-/// message goes to the model just chosen.
+/// Choosing a model **persists** it to that configuration (the
+/// `AIProviderConfigStore` model setting), in every presentation. The chat is
+/// pinned to the live configuration, so the very next message goes to the model
+/// just chosen.
 @MainActor
-public final class LLMChatViewController: NSViewController, Themeable {
+public final class AIChatViewController: NSViewController, Themeable {
 
     /// Called with the chosen provider + model, or `nil` on cancel. Only meaningful
     /// in picker mode; the presenter sets it.
     public var completion: ((Selection?) -> Void)?
 
+    /// Called whenever the provider or the model shown changes — the window
+    /// re-titles itself from ``title(for:)``.
+    public var onSelectionChange: (() -> Void)?
+
+    /// Shows or completely hides the configuration view (provider + model rows and
+    /// the separator under them). Hidden, the transcript takes the whole view.
+    public var isConfigurationVisible: Bool = true {
+        didSet {
+            guard isConfigurationVisible != oldValue, isViewLoaded else { return }
+            applyConfigurationVisibility()
+        }
+    }
+
     /// Picker mode: show the Cancel / Choose bar under the chat. Declared at init
     /// rather than inferred from `completion` because `loadView` runs the moment a
     /// window is built around this controller — before a presenter could assign it.
     private let showsChoiceButtons: Bool
+    /// Test-Chat mode: the configuration is fixed and shown as a label.
+    private let pinsConfiguration: Bool
     private let pluginManager: AIPluginManager
+    /// Handed to every session this controller builds; nil means a plain chat.
+    private let toolSource: (any ChatToolSource)?
     private var configurations: [AIProviderConfiguration]
     private var selectedIndex: Int
     /// A model handed in by the presenter (`init(model:)` / `refresh(model:)`) that
-    /// is deliberately NOT written to the store — it only points this window at a
+    /// is deliberately NOT written to the store — it only points this view at a
     /// model. Cleared the moment the provider changes or a real choice is made.
     private var overrideModel: String = ""
     /// Rebuilt whenever the provider changes; nil when nothing is configured.
     private var chatSession: AIProviderChatSession?
 
+    private let configView = NSView()
     private let providerLabel = NSTextField(labelWithString: "Provider:")
     private let modelLabel = NSTextField(labelWithString: "Model:")
     private let providerPopUp = NSPopUpButton()
+    /// Stands in for the popup when the configuration is pinned.
+    private let providerName = NSTextField(labelWithString: "")
     private let modelValue = NSTextField(labelWithString: "")
     private let chooseModelButton = NSButton()
     private let separator = ThemedSeparatorView(role: .border)
     private let chatContainer = NSView()
-    private let emptyLabel = NSTextField(labelWithString:
-        "No LLM providers are configured. Add one in Settings › LLM Providers.")
+    private let emptyLabel = NSTextField(labelWithString: "No providers are configured.")
     private let cancelButton = NSButton()
     private let chooseButton = NSButton()
+
+    /// The two places the transcript can start: under the configuration view, or
+    /// at the top of the view when that is hidden. Exactly one is active.
+    private var chatBelowConfiguration: NSLayoutConstraint?
+    private var chatAtTop: NSLayoutConstraint?
 
     private var themeObserver: ThemePaletteObserver?
     private var chatView: ChatView?
@@ -71,13 +97,21 @@ public final class LLMChatViewController: NSViewController, Themeable {
     ///   - model: the model to open on. `nil` uses the provider's stored/default
     ///     model. A model is never written to the store just for being passed in —
     ///     only an explicit choice persists.
+    ///   - toolSource: tools every session built here may call; nil for a plain
+    ///     chat.
     ///   - showsChoiceButtons: picker mode — add the Cancel / Choose bar.
+    ///   - pinsConfiguration: Test-Chat mode — `configuration` is fixed, and shown
+    ///     as a label instead of a popup.
     public init(pluginManager: AIPluginManager,
                 configuration: AIProviderConfiguration? = nil,
                 model: String? = nil,
-                showsChoiceButtons: Bool = false) {
+                toolSource: (any ChatToolSource)? = nil,
+                showsChoiceButtons: Bool = false,
+                pinsConfiguration: Bool = false) {
         self.pluginManager = pluginManager
+        self.toolSource = toolSource
         self.showsChoiceButtons = showsChoiceButtons
+        self.pinsConfiguration = pinsConfiguration && configuration != nil
         let configs = UserSettings.aiProviderConfigurations.value
         self.configurations = configs
         self.selectedIndex = configuration.flatMap { wanted in
@@ -100,6 +134,20 @@ public final class LLMChatViewController: NSViewController, Themeable {
     /// own text field won't take synthetically.
     public var chatViewModel: AIChatViewModel? { chatSession?.viewModel }
 
+    /// The window title for a chat showing `selection`: "<model> (<provider>)
+    /// Chat" with both chosen, just the one that is chosen otherwise, and "AI
+    /// Chat" with neither.
+    public static func title(for selection: Selection?) -> String {
+        let provider = selection?.configuration.name ?? ""
+        let model = selection?.model ?? ""
+        switch (model.isEmpty, provider.isEmpty) {
+        case (false, false): return "\(model) (\(provider)) Chat"
+        case (false, true): return "\(model) Chat"
+        case (true, false): return "\(provider) Chat"
+        case (true, true): return "AI Chat"
+        }
+    }
+
     private var selectedConfiguration: AIProviderConfiguration? {
         guard selectedIndex >= 0, selectedIndex < configurations.count else { return nil }
         return configurations[selectedIndex]
@@ -109,9 +157,10 @@ public final class LLMChatViewController: NSViewController, Themeable {
     /// else whatever the store says right now.
     ///
     /// Read live rather than mirrored in a stored property. The same store key is
-    /// written from two places — the model chooser here, and the host app's own
-    /// feature settings — and the chat backend resolves the model afresh on every
-    /// turn, so a cached copy went on labelling the window with a model that
+    /// written from several places — the model chooser here, the same chooser in
+    /// another chat window or the settings panel's Test Chat, and the host app's
+    /// own feature settings — and the chat resolves the model afresh on every
+    /// turn, so a cached copy went on labelling the view with a model that
     /// messages were no longer being sent to.
     private var currentModel: String {
         guard overrideModel.isEmpty else { return overrideModel }
@@ -139,22 +188,35 @@ public final class LLMChatViewController: NSViewController, Themeable {
         emptyLabel.maximumNumberOfLines = 0
         emptyLabel.isHidden = true
 
-        for subview in [providerLabel, modelLabel, providerPopUp, modelValue, chooseModelButton,
-                        separator, chatContainer, emptyLabel] {
+        let header = pinsConfiguration ? providerName : providerPopUp
+        for subview in [providerLabel, modelLabel, header, modelValue, chooseModelButton, separator] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+            configView.addSubview(subview)
+        }
+        for subview in [configView, chatContainer, emptyLabel] {
             subview.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview(subview)
         }
 
+        let below = chatContainer.topAnchor.constraint(equalTo: configView.bottomAnchor)
+        let atTop = chatContainer.topAnchor.constraint(equalTo: root.topAnchor)
+        chatBelowConfiguration = below
+        chatAtTop = atTop
+
         var constraints: [NSLayoutConstraint] = [
-            providerLabel.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16),
-            providerLabel.centerYAnchor.constraint(equalTo: providerPopUp.centerYAnchor),
+            configView.topAnchor.constraint(equalTo: root.topAnchor),
+            configView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            configView.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+
+            providerLabel.leadingAnchor.constraint(equalTo: configView.leadingAnchor, constant: 16),
+            providerLabel.centerYAnchor.constraint(equalTo: header.centerYAnchor),
             providerLabel.widthAnchor.constraint(equalTo: modelLabel.widthAnchor),
 
-            providerPopUp.topAnchor.constraint(equalTo: root.topAnchor, constant: 16),
-            providerPopUp.leadingAnchor.constraint(equalTo: providerLabel.trailingAnchor, constant: 8),
-            providerPopUp.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor, constant: -16),
+            header.topAnchor.constraint(equalTo: configView.topAnchor, constant: 16),
+            header.leadingAnchor.constraint(equalTo: providerLabel.trailingAnchor, constant: 8),
+            header.trailingAnchor.constraint(lessThanOrEqualTo: configView.trailingAnchor, constant: -16),
 
-            modelLabel.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16),
+            modelLabel.leadingAnchor.constraint(equalTo: configView.leadingAnchor, constant: 16),
             modelLabel.centerYAnchor.constraint(equalTo: chooseModelButton.centerYAnchor),
 
             modelValue.leadingAnchor.constraint(equalTo: modelLabel.trailingAnchor, constant: 8),
@@ -164,14 +226,14 @@ public final class LLMChatViewController: NSViewController, Themeable {
             modelValue.trailingAnchor.constraint(
                 lessThanOrEqualTo: chooseModelButton.leadingAnchor, constant: -8),
 
-            chooseModelButton.topAnchor.constraint(equalTo: providerPopUp.bottomAnchor, constant: 8),
-            chooseModelButton.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -16),
+            chooseModelButton.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 8),
+            chooseModelButton.trailingAnchor.constraint(equalTo: configView.trailingAnchor, constant: -16),
 
             separator.topAnchor.constraint(equalTo: chooseModelButton.bottomAnchor, constant: 12),
-            separator.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            separator.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            separator.leadingAnchor.constraint(equalTo: configView.leadingAnchor),
+            separator.trailingAnchor.constraint(equalTo: configView.trailingAnchor),
+            separator.bottomAnchor.constraint(equalTo: configView.bottomAnchor),
 
-            chatContainer.topAnchor.constraint(equalTo: separator.bottomAnchor),
             chatContainer.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             chatContainer.trailingAnchor.constraint(equalTo: root.trailingAnchor),
 
@@ -203,6 +265,7 @@ public final class LLMChatViewController: NSViewController, Themeable {
 
         NSLayoutConstraint.activate(constraints)
         self.view = root
+        applyConfigurationVisibility()
         themeObserver = ThemePaletteObserver(host: view) { [weak self] palette in self?.applyTheme(palette) }
     }
 
@@ -211,15 +274,25 @@ public final class LLMChatViewController: NSViewController, Themeable {
         reloadProviders()
     }
 
+    /// Hidden means gone, not collapsed: the configuration view leaves the layout
+    /// and the transcript moves up to the top edge.
+    private func applyConfigurationVisibility() {
+        configView.isHidden = !isConfigurationVisible
+        chatBelowConfiguration?.isActive = isConfigurationVisible
+        chatAtTop?.isActive = !isConfigurationVisible
+    }
+
     // MARK: - Subview configuration
 
     private func configureHeader() {
         providerLabel.alignment = .right
         modelLabel.alignment = .right
+        providerName.lineBreakMode = .byTruncatingTail
         modelValue.lineBreakMode = .byTruncatingMiddle
         // Let the value give up width before the label column or the button do.
         modelValue.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         modelValue.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        providerName.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         providerPopUp.target = self
         providerPopUp.action = #selector(providerChanged)
@@ -251,19 +324,19 @@ public final class LLMChatViewController: NSViewController, Themeable {
     // MARK: - Provider / model state
 
     /// Re-reads the configured providers and points the chat at `configuration`
-    /// (or keeps the current one when it's `nil` and still exists). The window is a
-    /// singleton that outlives any number of add/remove edits in Settings, so
-    /// re-showing it has to pick up that list again rather than trust the snapshot
-    /// taken at init.
+    /// (or keeps the current one when it's `nil` and still exists), so a view that
+    /// outlives add/remove/rename edits in Settings picks up the list again rather
+    /// than trusting the snapshot taken at init.
     ///
     /// Rebuilds the transcript only when the selected provider actually changes —
-    /// re-showing the window on the same provider keeps the conversation.
+    /// refreshing on the same provider keeps the conversation. A pinned view never
+    /// changes provider: `configuration` is ignored.
     public func refresh(selecting configuration: AIProviderConfiguration? = nil, model: String? = nil) {
         let previous = selectedConfiguration?.id
         configurations = UserSettings.aiProviderConfigurations.value
-        let wanted = configuration?.id ?? previous
+        let wanted = pinsConfiguration ? previous : (configuration?.id ?? previous)
         selectedIndex = wanted.flatMap { id in configurations.firstIndex { $0.id == id } }
-            ?? (configurations.isEmpty ? -1 : 0)
+            ?? (configurations.isEmpty || pinsConfiguration ? -1 : 0)
         let sameProvider = previous != nil && selectedConfiguration?.id == previous
         // A different provider carries its own model, so drop any override and let
         // `currentModel` fall through to that provider's stored one; an explicit
@@ -278,9 +351,10 @@ public final class LLMChatViewController: NSViewController, Themeable {
         }
     }
 
-    /// Refreshes the pop-up's items without disturbing the live chat — for a rename
-    /// or a sibling provider added/removed while this window stayed open.
+    /// Refreshes the provider's title(s) without disturbing the live chat — for a
+    /// rename or a sibling provider added/removed while this view stayed open.
     private func syncPopUpTitles() {
+        providerName.stringValue = selectedConfiguration?.name ?? ""
         providerPopUp.removeAllItems()
         providerPopUp.addItems(withTitles: configurations.map(\.name))
         providerPopUp.isEnabled = !configurations.isEmpty
@@ -290,6 +364,7 @@ public final class LLMChatViewController: NSViewController, Themeable {
     /// Repopulates the provider pop-up from the stored configurations and rebuilds
     /// the chat for whichever one is selected.
     private func reloadProviders() {
+        providerName.stringValue = selectedConfiguration?.name ?? ""
         providerPopUp.removeAllItems()
         if configurations.isEmpty {
             providerPopUp.addItem(withTitle: "No providers configured")
@@ -312,7 +387,7 @@ public final class LLMChatViewController: NSViewController, Themeable {
     }
 
     /// Swaps in a chat pinned to the selected configuration and refreshes the model
-    /// row. Called on load and on every provider change — the backend is pinned to
+    /// row. Called on load and on every provider change — the session is pinned to
     /// one configuration, so a new provider means a new session and a fresh
     /// transcript.
     private func rebuildChat() {
@@ -325,13 +400,15 @@ public final class LLMChatViewController: NSViewController, Themeable {
             modelValue.stringValue = "—"
             chooseModelButton.isEnabled = false
             chooseButton.isEnabled = false
+            onSelectionChange?()
             return
         }
 
         emptyLabel.isHidden = true
         updateModelRow()
 
-        let session = AIProviderChatSession(configuration: config, pluginManager: pluginManager)
+        let session = AIProviderChatSession(
+            configuration: config, pluginManager: pluginManager, toolSource: toolSource)
         let view = ChatView(viewModel: session.viewModel)
         view.translatesAutoresizingMaskIntoConstraints = false
         chatContainer.addSubview(view)
@@ -358,6 +435,7 @@ public final class LLMChatViewController: NSViewController, Themeable {
         modelValue.stringValue = currentModel.isEmpty ? "None chosen" : currentModel
         chooseButton.isEnabled = selectedConfiguration != nil
         applyModelRowTheme(view.resolvedThemeScope.palette)
+        onSelectionChange?()
     }
 
     // MARK: - Actions
@@ -374,7 +452,7 @@ public final class LLMChatViewController: NSViewController, Themeable {
             currentModel: currentModel.isEmpty ? template.resolvedDefaultModel : currentModel)
         ModelChooser.present(over: window, context: context) { [weak self] model in
             guard let self else { return }
-            // The chooser runs its own modal session, and the window it sits over can
+            // The chooser runs its own modal session, and the view it sits over can
             // be pointed somewhere else while it is up — a scripted `send test
             // message` on another provider, or a `refresh` from Settings. Persisting
             // then would write this model against the provider that was showing when
@@ -394,7 +472,7 @@ public final class LLMChatViewController: NSViewController, Themeable {
         let previous = currentModel.isEmpty ? template.resolvedDefaultModel : currentModel
         AIProviderConfigStore.modelSetting(config: config.id, template: template).value = model
         // The store now holds the answer, so the presenter's override has to go —
-        // leaving it would make the window ignore the choice just made.
+        // leaving it would make the view ignore the choice just made.
         overrideModel = ""
         updateModelRow()
         if model != previous { chatSession?.viewModel.noteModelChanged(to: model) }
@@ -415,9 +493,12 @@ public final class LLMChatViewController: NSViewController, Themeable {
     // MARK: - Theme
 
     public func applyTheme(_ palette: SemanticPalette) {
-        view.layer?.backgroundColor = palette.windowBackgroundColor.cgColor
+        // Pinned, the view sits inside a settings card that paints its own fill.
+        view.layer?.backgroundColor = pinsConfiguration
+            ? NSColor.clear.cgColor : palette.windowBackgroundColor.cgColor
         providerLabel.textColor = palette.secondaryTextColor
         modelLabel.textColor = palette.secondaryTextColor
+        providerName.textColor = palette.primaryTextColor
         emptyLabel.textColor = palette.secondaryTextColor
         // The same explicit Cancel styling the pickers use, so the dialogs agree —
         // AppKit's stock bezel does not (see `applySecondaryActionTheme`).
@@ -432,10 +513,10 @@ public final class LLMChatViewController: NSViewController, Themeable {
     }
 }
 
-extension LLMChatViewController {
+extension AIChatViewController {
 
-    /// What the modal picker reports back: which configured provider, and which of
-    /// its models.
+    /// A provider + one of its models: what the modal picker reports back, and
+    /// what a chat window titles itself from.
     public struct Selection: Sendable, Equatable {
         public let configuration: AIProviderConfiguration
         public let model: String
@@ -449,9 +530,9 @@ extension LLMChatViewController {
 
 // MARK: - Window delegate (picker presentation only)
 
-/// Only ``LLMChatPicker`` attaches this — the standalone window's delegate is its
+/// Only ``LLMChatPicker`` attaches this — a chat window's delegate is its
 /// `SingleWindowController`, which does its own frame persistence.
-extension LLMChatViewController: NSWindowDelegate {
+extension AIChatViewController: NSWindowDelegate {
 
     /// Frame-persistence key for the modal picker window, so its size + location go
     /// through the app's `WindowManager` like every other window.

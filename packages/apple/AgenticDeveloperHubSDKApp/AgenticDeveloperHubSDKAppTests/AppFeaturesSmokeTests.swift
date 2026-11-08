@@ -11,7 +11,6 @@ final class AppFeaturesSmokeTests: XCTestCase {
         XCTAssertNotNil(features.terminalCoordinator)
         XCTAssertNotNil(features.aiPluginsCoordinator)
         XCTAssertNotNil(features.aiChatCoordinator)
-        XCTAssertNotNil(features.chatConfigProvider)
         XCTAssertNotNil(features.windowContextsCoordinator)
         XCTAssertNotNil(features.commandRegistry)
         XCTAssertNotNil(features.settingsCoordinator)

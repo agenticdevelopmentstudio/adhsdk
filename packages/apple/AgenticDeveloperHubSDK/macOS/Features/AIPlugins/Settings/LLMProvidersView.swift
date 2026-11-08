@@ -8,10 +8,13 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// authenticate with the provider — nothing else.
 ///
 /// A configuration is a connection, so what is *done* over it — choosing a model,
-/// chatting — lives in the LLM Chat window (`LLMChatViewController`), never here.
-/// The "Chat…" button opens that window pointed at this configuration, and is
-/// always available: when the plugin cannot be reached, the chat window is where
-/// the reason surfaces, at the first send.
+/// chatting — is not part of this editor. The panel puts a Test Chat card under
+/// it (`ProviderConfigPanelViewController`), an `AIChatViewController` pinned to
+/// this configuration; when the plugin cannot be reached, that chat is where the
+/// reason surfaces, at the first send.
+///
+/// Sized to its content, not to the pane: the Test Chat card below takes the
+/// rest of the height.
 struct LLMProviderEditorView: View {
 
     let configuration: AIProviderConfiguration
@@ -62,29 +65,37 @@ struct LLMProviderEditorView: View {
                     .foregroundStyle(theme.secondaryText)
             }
 
-            Form {
-                TextField("Name", text: $name)
-                    .onSubmit {
-                        viewModel.rename(configuration.id, to: name)
-                        name = viewModel.configuration(for: configuration.id)?.name ?? name
-                    }
-
-                ForEach(fields, id: \.key) { field in
-                    if field.isSecret {
-                        SecureField(field.label, text: fieldBinding(field))
-                    } else {
-                        TextField(field.label, text: fieldBinding(field),
-                                  prompt: field.placeholder.map(Text.init))
-                    }
+            ComposableSettings.SettingsGroup("Connection") {
+                ComposableSettings.SettingsCardRow {
+                    // Full width, so the card lines up with the Test Chat card
+                    // beneath it rather than hugging the form.
+                    connectionForm
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-
-            Button("Chat…") { viewModel.onRequestChat?(configuration) }
-
-            Spacer(minLength: 0)
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.horizontal, ComposableSettings.SettingsLayout.default[.panelInset])
+        .padding(.top, ComposableSettings.SettingsLayout.default[.panelInset])
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    private var connectionForm: some View {
+        Form {
+            TextField("Name", text: $name)
+                .onSubmit {
+                    viewModel.rename(configuration.id, to: name)
+                    name = viewModel.configuration(for: configuration.id)?.name ?? name
+                }
+
+            ForEach(fields, id: \.key) { field in
+                if field.isSecret {
+                    SecureField(field.label, text: fieldBinding(field))
+                } else {
+                    TextField(field.label, text: fieldBinding(field),
+                              prompt: field.placeholder.map(Text.init))
+                }
+            }
+        }
     }
 
     private func fieldBinding(_ field: AIPluginDescriptor.Field) -> Binding<String> {

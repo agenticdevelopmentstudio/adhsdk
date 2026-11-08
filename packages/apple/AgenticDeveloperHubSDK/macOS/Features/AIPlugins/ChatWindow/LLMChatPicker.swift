@@ -3,7 +3,7 @@ import AIPluginKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
 
-/// Presents ``LLMChatViewController`` as an app-modal, **resizable** window centered
+/// Presents ``AIChatViewController`` as an app-modal, **resizable** window centered
 /// over a parent and reports the provider + model the user settled on — "try a few
 /// and hand me the one that worked". A titled resizable window is used (not a
 /// sheet) because sheets don't accept user resizing, the same reason
@@ -22,9 +22,9 @@ public enum LLMChatPicker {
         pluginManager: AIPluginManager,
         configuration: AIProviderConfiguration? = nil,
         model: String? = nil,
-        onChoose: @escaping (LLMChatViewController.Selection) -> Void
+        onChoose: @escaping (AIChatViewController.Selection) -> Void
     ) {
-        let controller = LLMChatViewController(
+        let controller = AIChatViewController(
             pluginManager: pluginManager, configuration: configuration,
             model: model, showsChoiceButtons: true)
         let window = NSWindow(contentViewController: controller)
@@ -39,7 +39,7 @@ public enum LLMChatPicker {
         // Restore the user's saved size + location via the shared frame manager, like
         // every other window. First time, center over the parent.
         if !WindowManager.shared.frames.restoreFrame(
-            for: window, id: LLMChatViewController.pickerWindowID) {
+            for: window, id: AIChatViewController.pickerWindowID) {
             let size = window.frame.size
             window.setFrameOrigin(NSPoint(
                 x: parent.frame.midX - size.width / 2,
@@ -52,7 +52,7 @@ public enum LLMChatPicker {
         // reads it.
         window.delegate = controller
 
-        var chosen: LLMChatViewController.Selection?
+        var chosen: AIChatViewController.Selection?
         controller.completion = { [weak window] result in
             chosen = result
             window?.orderOut(nil)

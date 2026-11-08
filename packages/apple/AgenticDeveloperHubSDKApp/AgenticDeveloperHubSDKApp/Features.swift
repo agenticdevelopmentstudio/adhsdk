@@ -10,7 +10,6 @@ class Features {
     let permissionWalkthrough: PermissionWalkthrough
     let terminalCoordinator: TerminalCoordinator
     let aiPluginsCoordinator: AIPluginsCoordinator
-    let chatConfigProvider: PluginChatConfigProvider
     let aiChatCoordinator: AIChatCoordinator
     let windowContextsCoordinator: WindowContextsCoordinator
     let settingsCoordinator: ComposableSettings.AppCoordinator
@@ -32,17 +31,11 @@ class Features {
         self.terminalCoordinator = TerminalCoordinator(commandRegistry: commandRegistry)
         self.windowContextsCoordinator = WindowContextsCoordinator()
 
-        // Chat runs through the loaded plugins: the config provider reports the
-        // user's selection (from the AI settings panel) and the backend asks the
-        // selected plugin to describe each request.
-        let chatConfigProvider = PluginChatConfigProvider(pluginManager: aiPluginsCoordinator.pluginManager)
-        self.chatConfigProvider = chatConfigProvider
-        self.aiChatCoordinator = AIChatCoordinator(makeBackend: {
-            AIPluginChatBackend(
-                pluginManager: aiPluginsCoordinator.pluginManager,
-                configProvider: chatConfigProvider
-            )
-        }, commandRegistry: commandRegistry)
+        // Each chat window picks its own provider and model from the loaded
+        // plugins.
+        self.aiChatCoordinator = AIChatCoordinator(
+            pluginManager: aiPluginsCoordinator.pluginManager,
+            commandRegistry: commandRegistry)
 
         self.settingsCoordinator = ComposableSettings.AppCoordinator(
             windowTitle: "Agentic Developer Hub SDK Settings",

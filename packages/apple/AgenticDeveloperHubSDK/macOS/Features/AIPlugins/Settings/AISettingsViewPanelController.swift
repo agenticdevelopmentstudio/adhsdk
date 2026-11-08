@@ -6,7 +6,8 @@ import AgenticDeveloperHubSDKCoreMacOS
 import AIPluginKit
 
 /// The "LLM Providers" settings panel — a topic/detail split (like "Theme") with
-/// one sub-panel per configured provider. The sidebar lists the configurations
+/// one sub-panel per configured provider, each a Connection card over a Test
+/// Chat card. The sidebar lists the configurations
 /// (titled "Providers" and themed by the framework); selecting one shows its
 /// editor in the detail, whose title is the configuration's name. A footer under
 /// the list carries add (`+`, opens the provider picker) / remove (`−`).
@@ -55,12 +56,14 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
                     + "along with it."
             ),
             .init(
-                title: "Trying It Out",
-                body: "The chat below a provider's settings talks to it directly, so you "
-                    + "can confirm the key and the endpoint work — and pick a model — "
-                    + "before anything else depends on them. A provider whose plugin "
-                    + "failed to load says so instead, and can't be used until that is "
-                    + "resolved."
+                title: "Test Chat",
+                body: "The Test Chat card under a provider's connection talks to that "
+                    + "provider directly, so you can confirm the key and the endpoint "
+                    + "work — and pick a model with Choose Model… — before anything "
+                    + "else depends on them. Choosing a model here saves it as the "
+                    + "provider's model. For a longer conversation, New AI Chat… in "
+                    + "the AI menu opens a chat window. A provider whose plugin failed "
+                    + "to load says so instead, and can't be used until that is resolved."
             )
         ])
     }
@@ -93,11 +96,6 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
             }
         }
 
-        viewModel.onRequestChat = { [weak self] config in
-            guard let self else { return }
-            LLMChatWindowController.present(pluginManager: self.pluginManager, configuration: config)
-        }
-
         rebuildPanels(selecting: viewModel.selectedId ?? viewModel.configurations.first?.id)
 
         // Enable remove (−) only when a configuration is selected.
@@ -122,6 +120,7 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
             existing[config.id] ?? ProviderConfigPanelViewController(
                 config: config,
                 viewModel: viewModel,
+                pluginManager: pluginManager,
                 onRenamed: { [weak self] in self?.refreshRows() }
             )
         }
@@ -156,23 +155,24 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
         return true
     }
 
-    /// Opens the LLM Chat window on the selected configuration and hands back its
-    /// view model, so automation can drive a chat whose text field doesn't take
-    /// synthetic input. Returns nil when no configuration is selected.
-    ///
-    /// The chat left this panel (see `LLMProviderEditorView`), so the scripted
-    /// "test chat" verbs now reach it through its own window — the surface a user
-    /// would drive by hand.
-    @discardableResult
-    public func presentChat() -> AIChatViewModel? {
-        guard let id = viewModel.selectedId,
-              let config = viewModel.configuration(for: id) else { return nil }
-        LLMChatWindowController.present(pluginManager: pluginManager, configuration: config)
-        return LLMChatWindowController.current?.chatViewModel
+    /// The selected configuration's panel, or `nil` when nothing is selected.
+    private var selectedProviderPanel: ProviderConfigPanelViewController? {
+        guard let id = viewModel.selectedId else { return nil }
+        return panels.lazy
+            .compactMap { $0 as? ProviderConfigPanelViewController }
+            .first { $0.config.id == id }
     }
 
-    /// Sends a message through the selected configuration's chat. Returns false
+    /// The selected configuration's Test Chat view model, so automation can
+    /// drive a chat whose text field doesn't take synthetic input. Returns nil
     /// when no configuration is selected.
+    @discardableResult
+    public func presentChat() -> AIChatViewModel? {
+        selectedProviderPanel?.chatViewModel
+    }
+
+    /// Sends a message through the selected configuration's Test Chat. Returns
+    /// false when no configuration is selected.
     @discardableResult
     public func sendTestMessage(_ text: String) -> Bool {
         guard let viewModel = presentChat() else { return false }
@@ -180,27 +180,10 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
         return true
     }
 
-    /// The chat already open on the selected configuration, or `nil` when there is
-    /// no chat window, nothing is selected, or the open window is pointed at a
-    /// different provider. Never opens or switches one — this is the read side.
-    private func openChatViewModel() -> AIChatViewModel? {
-        guard let id = viewModel.selectedId,
-              let controller = LLMChatWindowController.current,
-              controller.window?.isVisible == true,
-              controller.selection?.configuration.id == id else { return nil }
-        return controller.chatViewModel
-    }
-
-    /// The selected configuration's chat transcript as newline-separated
-    /// `role: text` lines. Empty when no chat is open on that configuration.
-    ///
-    /// Reads the open window rather than presenting one. Presenting is what
-    /// `sendTestMessage` does, and it rebuilds the transcript whenever the window
-    /// was showing a different provider — so a *getter* that presented could
-    /// destroy the very conversation it was asked to report, and always answered
-    /// "" when it did.
+    /// The selected configuration's Test Chat transcript as newline-separated
+    /// `role: text` lines. Empty when nothing is selected.
     public func testChatTranscript() -> String {
-        guard let viewModel = openChatViewModel() else { return "" }
+        guard let viewModel = presentChat() else { return "" }
         return viewModel.messages.map { "\($0.role.scriptingLabel): \($0.text)" }.joined(separator: "\n")
     }
 
@@ -249,7 +232,26 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
 }
 
 /// One configuration's detail panel: its title (the config name) is the sidebar
-/// row label + detail-pane title; its body is the SwiftUI editor.
+/// row label + detail-pane title. Its body is two cards:
+///
+/// ```
+/// Anthropic API
+/// Anthropic · Claude · API Key
+/// Connection
+/// ┌──────────────────────────────┐
+/// │ Name / key / endpoint fields │   ← LLMProviderEditorView (SwiftUI)
+/// └──────────────────────────────┘
+/// Test Chat
+/// ┌──────────────────────────────┐
+/// │ Provider: name               │   ← AIChatViewController, pinned to this
+/// │ Model: …     [Choose Model…] │     configuration, filling the rest of
+/// │ transcript / entry           │     the pane
+/// └──────────────────────────────┘
+/// ```
+///
+/// It hosts its own scrolling (`hostsOwnScroll`): the transcript scrolls inside
+/// its card, and a panel wrapped in the framework's scroll view would grow
+/// with the transcript instead of filling the pane.
 @MainActor
 private final class ProviderConfigPanelViewController: ComposableSettings.SettingsPanelViewController {
 
@@ -257,11 +259,17 @@ private final class ProviderConfigPanelViewController: ComposableSettings.Settin
     private let viewModel: LLMProvidersListViewModel
     private let onRenamed: () -> Void
     private var nameObserver: AnyCancellable?
+    private let chat: AIChatViewController
 
-    init(config: AIProviderConfiguration, viewModel: LLMProvidersListViewModel, onRenamed: @escaping () -> Void) {
+    init(config: AIProviderConfiguration,
+         viewModel: LLMProvidersListViewModel,
+         pluginManager: AIPluginManager,
+         onRenamed: @escaping () -> Void) {
         self.config = config
         self.viewModel = viewModel
         self.onRenamed = onRenamed
+        self.chat = AIChatViewController(
+            pluginManager: pluginManager, configuration: config, pinsConfiguration: true)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: config.name,
             icon: NSImage(systemSymbolName: "cpu", accessibilityDescription: nil)
@@ -274,6 +282,7 @@ private final class ProviderConfigPanelViewController: ComposableSettings.Settin
             .sink { [weak self] name in
                 guard let self, self.descriptor.title != name else { return }
                 self.descriptor.title = name
+                self.chat.refresh()
                 self.onRenamed()
             }
     }
@@ -286,9 +295,57 @@ private final class ProviderConfigPanelViewController: ComposableSettings.Settin
         ["provider", "api key", "endpoint", "model", config.name]
     }
 
+    override var hostsOwnScroll: Bool { true }
+
+    /// The Test Chat transcript, for the panel's scripting verbs.
+    var chatViewModel: AIChatViewModel? {
+        loadViewIfNeeded()
+        return chat.chatViewModel
+    }
+
     override func loadView() {
-        let editor = LLMProviderEditorView(configuration: config, viewModel: viewModel)
-        self.view = Self.hostingView(for: editor.themedRoot())
+        let layout = ComposableSettings.SettingsLayout.default
+        let inset = layout[.panelInset]
+        let root = NSView()
+
+        let editor = Self.hostingView(
+            for: LLMProviderEditorView(configuration: config, viewModel: viewModel).themedRoot())
+        let caption = ComposableSettings.HeaderView(title: "Test Chat")
+        let card = ThemedBox(fill: .card, stroke: .outline, cornerRadius: layout[.cardCornerRadius])
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.layer?.masksToBounds = true
+
+        addChild(chat)
+        let chatView = chat.view
+        chatView.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(chatView)
+
+        for subview in [editor, caption, card] { root.addSubview(subview) }
+        // The editor keeps its own height; the card takes whatever is left.
+        editor.setContentHuggingPriority(.required, for: .vertical)
+        editor.setContentCompressionResistancePriority(.required, for: .vertical)
+
+        NSLayoutConstraint.activate([
+            editor.topAnchor.constraint(equalTo: root.topAnchor),
+            editor.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            editor.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+
+            caption.topAnchor.constraint(equalTo: editor.bottomAnchor, constant: layout[.groupSpacing]),
+            caption.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: inset),
+            caption.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -inset),
+
+            card.topAnchor.constraint(equalTo: caption.bottomAnchor, constant: layout[.captionSpacing]),
+            card.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: inset),
+            card.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -inset),
+            card.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -inset),
+            card.heightAnchor.constraint(greaterThanOrEqualToConstant: 240),
+
+            chatView.topAnchor.constraint(equalTo: card.topAnchor),
+            chatView.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            chatView.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            chatView.bottomAnchor.constraint(equalTo: card.bottomAnchor)
+        ])
+        self.view = root
     }
 
     override func viewWillAppear() {
