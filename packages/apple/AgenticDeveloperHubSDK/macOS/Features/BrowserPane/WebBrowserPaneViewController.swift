@@ -37,7 +37,17 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// "browser" means to the person who split a pane off for it
 /// (`principle-of-least-astonishment`).
 ///
-/// What it remembers in its own state store is one key, `url`.
+/// The page area is tabs, like the Document pane's: a `MultiTabbedViewController`
+/// under the address bar, one engine per tab, and the bar, the title and the
+/// drive seam all follow the tab in front. A window a page opens — a
+/// `target="_blank"` link, a `window.open()`, a sign-in or 2FA window — opens
+/// as a new tab whose engine is tied to the opener, so `window.opener` works
+/// and the window can post its answer back and close itself
+/// (`browserEngine(_:didOpenPopup:)`, `browserEngineDidRequestClose`).
+///
+/// What it remembers in its own state store is two keys: `tabs`, every tab's
+/// address and title and which was in front, and `url`, the front tab's
+/// address — kept so a pane stored before tabs reopens where it was.
 @MainActor
 open class WebBrowserPaneViewController: NSViewController {
 
@@ -67,6 +77,12 @@ open class WebBrowserPaneViewController: NSViewController {
     /// The state-store key the current address lives under.
     static let addressKey = "url"
 
+    /// The state-store key the tab list lives under (`StoredBrowserTabs`).
+    static let tabsKey = "tabs"
+
+    /// What a tab with no page and no title is called.
+    public static let newTabTitle = "New Tab"
+
     /// The page shown when the store remembers nothing and no home was given.
     public static let blankPage = URL(string: "about:blank")!
 
@@ -76,9 +92,24 @@ open class WebBrowserPaneViewController: NSViewController {
     public typealias ResolvedJar = BrowserResolvedJar
     public typealias EngineFactory = @MainActor (BrowserEngineConfiguration) -> BrowserEngine
 
-    /// The engine rendering the page. Replaced whole when the pane moves to
-    /// another storage jar (`rebuildEngine`).
+    /// The engine rendering the page in the tab in front. Changes with the
+    /// tab, and is replaced whole when the pane moves to another storage jar
+    /// (`rebuildEngine`).
     public private(set) var engine: BrowserEngine
+
+    /// The pane's tabs, in bar order. Never empty: closing the last tab
+    /// empties it instead.
+    private var tabs: [BrowserTab] = []
+    /// The tab in front, whose engine is `engine`.
+    private var activeTab: BrowserTab
+    /// The tab bar and the page area under the address bar.
+    private let tabStrip = MultiTabbedViewController()
+    /// The tab list last written to the store, so an unchanged list is not
+    /// written again.
+    private var lastStoredTabs: String?
+    /// Set while the strip is being handed the tabs, whose activations are
+    /// not the user's.
+    private var isInstallingTabs = false
 
     private let makeEngine: EngineFactory
     /// Told about each engine a rebuild makes, after the pane has wired it,
@@ -175,9 +206,8 @@ open class WebBrowserPaneViewController: NSViewController {
         return automation
     }
 
-    /// What holds the engine's view in the view hierarchy; replaced with it.
-    private var pageHost: NSView?
     private weak var addressBar: NSView?
+    let newTabButton = NSButton()
     let drivenBadge = BrowserDrivenBadge()
     let pausedBadge = BrowserPausedBadge()
     let addressField = NSTextField()
@@ -195,12 +225,6 @@ open class WebBrowserPaneViewController: NSViewController {
     private var windowObservers: [NSObjectProtocol] = []
     /// The settings subscriptions; made again with every engine.
     private var cancellables: Set<AnyCancellable> = []
-    /// The history row for the page on screen, so a title that arrives after
-    /// the load is filed against it rather than lost.
-    private var currentVisitID: Int64?
-    /// Counts page loads, so a visit row that comes back from the file after
-    /// the pane has moved on to the next page is not filed as the current one.
-    private var visitGeneration = 0
 
     /// - Parameters:
     ///   - makeEngine: Makes what renders the page, from the configuration
@@ -238,14 +262,38 @@ open class WebBrowserPaneViewController: NSViewController {
         self.resolvedJar = jar
         self.capturesConsole = capturesConsole
         self.builtConstructionSettings = BrowserSettings.constructionSnapshot(in: settings)
-        self.engine = makeEngine(BrowserEngineConfiguration(
+        let configuration = BrowserEngineConfiguration(
             settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: capturesConsole
-        ))
+        )
+        let first = makeEngine(configuration)
+        self.engine = first
+        // Every remembered tab gets an engine now and its page when it is
+        // first brought forward (`activate`), so a pane that comes back with
+        // ten tabs loads one page, not ten.
+        let stored = Self.readStoredTabs(from: store)
+        let selected = min(max(stored.selectedIndex, 0), max(stored.tabs.count - 1, 0))
+        var restored: [BrowserTab] = []
+        for (index, entry) in stored.tabs.enumerated() {
+            let tabEngine = index == 0 ? first : makeEngine(configuration)
+            // The front tab with no address falls back to the Home Page
+            // (`restorationURL`, below); a tab behind it was on a blank page.
+            let url = entry.url.flatMap { URL(string: $0, encodingInvalidCharacters: false) }
+            restored.append(BrowserTab(
+                engine: tabEngine, pendingURL: url ?? (index == selected ? nil : Self.blankPage),
+                storedTitle: entry.title))
+        }
+        if restored.isEmpty { restored = [BrowserTab(engine: first, pendingURL: nil, storedTitle: nil)] }
+        self.tabs = restored
+        self.activeTab = restored[min(selected, restored.count - 1)]
         super.init(nibName: nil, bundle: nil)
         jarLabel = jar.jarID == nil ? nil : Self.untitledLabel
         context.jars?.noteUse(of: jar.jarID, by: self)
         recordJarFallback(jar)
-        wireEngine()
+        tabs.forEach { wireEngine($0.engine) }
+        engine = activeTab.engine
+        if activeTab.pendingURL == nil { activeTab.pendingURL = restorationURL }
+        tabStrip.delegate = self
+        tabStrip.setEdgeEnabled(.top, true)
         applyCookiePolicy()
         observeSettings()
     }
@@ -283,13 +331,13 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Everything a new engine needs from the pane before it shows a page.
     /// One place, so the engine a rebuild makes is wired exactly as the first
     /// one was (`dry`).
-    private func wireEngine() {
+    private func wireEngine(_ engine: BrowserEngine) {
         engine.delegate = self
         engine.onInputDecision = { [weak self] channel, event, delivered, synthesized, detail in
             self?.recordInput(channel, event, delivered: delivered, synthesized: synthesized, detail: detail)
         }
-        refreshInputGate()
-        refreshActivationShield()
+        engine.inputGate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
+        engine.setActivationShieldActive(isActivationShieldWanted)
     }
 
     /// Recomputes the engine's input gate from the pane's settings and its
@@ -299,14 +347,20 @@ open class WebBrowserPaneViewController: NSViewController {
     /// chrome never are, so the address bar and the back, forward and reload
     /// buttons still work while the pane is paused.
     private func refreshInputGate() {
-        engine.inputGate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
+        let gate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
+        for tab in tabs { tab.engine.inputGate = gate }
     }
 
     /// Raises or lowers the activation shield from the Hide Focus setting and
     /// the pause state: up when either asks for it. The one place that answer
     /// is computed, beside `refreshInputGate` for the same reasons.
     private func refreshActivationShield() {
-        engine.setActivationShieldActive(settings.get(UserSettings.browserPrivacyHideActivation) || isEventsPaused)
+        let active = isActivationShieldWanted
+        for tab in tabs { tab.engine.setActivationShieldActive(active) }
+    }
+
+    private var isActivationShieldWanted: Bool {
+        settings.get(UserSettings.browserPrivacyHideActivation) || isEventsPaused
     }
 
     // MARK: - Settings
@@ -354,8 +408,8 @@ open class WebBrowserPaneViewController: NSViewController {
     /// slider drag is not a reason for every open pane to rewrite the shared
     /// store's policy once per tick.
     private func applyCookiePolicy() {
-        engine.applyCookiePolicy(
-            acceptsCookies: Self.acceptsCookies(settings: settings, ownsDataStore: resolvedJar.isOwnedByPane))
+        let accepts = Self.acceptsCookies(settings: settings, ownsDataStore: resolvedJar.isOwnedByPane)
+        for tab in tabs { tab.engine.applyCookiePolicy(acceptsCookies: accepts) }
     }
 
     /// The cookie policy to put on the pane's store. A pane's own override
@@ -447,10 +501,6 @@ open class WebBrowserPaneViewController: NSViewController {
     /// rare and deliberate, and carrying a download across two stores would
     /// hand one jar's session to another.
     public func rebuildEngine() {
-        let shownURL = engine.url.flatMap { $0 == Self.blankPage ? nil : $0 }
-        // A navigation still held for the old engine's rules is where the
-        // pane was going, so it wins over the page the old one was showing.
-        let heldURL = engine.heldLoadURL
         let label = paneTitle
         // Removing the page drops a first responder it held to the window;
         // the new one takes it back, as does a paused pane's, whose page is
@@ -462,10 +512,17 @@ open class WebBrowserPaneViewController: NSViewController {
         let refocus = pageHolds(responder) || (isEventsPaused && focusIsFree)
         firstResponderObservation = nil
         cancellables.removeAll()
-        engine.teardown()
-        engine.view.removeFromSuperview()
-        pageHost?.removeFromSuperview()
-        pageHost = nil
+        // Where each tab was: a navigation still held for the old engine's
+        // rules is where it was going, so it wins over the page it showed;
+        // a tab never brought forward keeps the page it is waiting to load.
+        let destinations = tabs.map { tab -> URL? in
+            let shown = tab.engine.url.flatMap { $0 == Self.blankPage ? nil : $0 }
+            return tab.engine.heldLoadURL ?? shown ?? tab.pendingURL
+        }
+        for tab in tabs {
+            tab.engine.teardown()
+            tab.engine.view.removeFromSuperview()
+        }
 
         let jar = Self.resolveJar(settings: settings, context: paneContext, label: label)
         let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
@@ -476,11 +533,19 @@ open class WebBrowserPaneViewController: NSViewController {
         if !capturesConsole { consoleLog.clear() }
         jarLabel = jar.jarID == nil ? nil : label
         paneContext.jars?.noteUse(of: jar.jarID, by: self)
-        engine = makeEngine(BrowserEngineConfiguration(
-            settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: capturesConsole
-        ))
-        wireEngine()
-        onEngineMade?(engine)
+        let configuration = currentConfiguration
+        for (tab, destination) in zip(tabs, destinations) {
+            let made = makeEngine(configuration)
+            tab.engine = made
+            tab.resetVisit()
+            wireEngine(made)
+            onEngineMade?(made)
+            tab.content.show(made.view)
+            // The tab in front loads now (below); the others when brought
+            // forward. A tab that was on nothing comes back on nothing.
+            tab.pendingURL = destination ?? (tab === activeTab ? nil : Self.blankPage)
+        }
+        engine = activeTab.engine
         builtAutomation?.retarget(to: engine)
         builtAutomation?.isConsoleCaptureOn = capturesConsole
         applyCookiePolicy()
@@ -489,12 +554,19 @@ open class WebBrowserPaneViewController: NSViewController {
         recordJarFallback(jar)
 
         guard isViewLoaded else { return }
-        installPageHost()
         browserEngineTitleDidChange(engine)
         browserEngineHistoryDidChange(engine)
         if view.window != nil { observeFirstResponder() }
         if refocus { view.window?.makeFirstResponder(engine.view) }
-        engine.load(heldURL ?? shownURL ?? restorationURL)
+        let destination = activeTab.pendingURL ?? restorationURL
+        activeTab.pendingURL = nil
+        engine.load(destination)
+    }
+
+    /// What every engine the pane makes now is made from.
+    private var currentConfiguration: BrowserEngineConfiguration {
+        BrowserEngineConfiguration(
+            settings: settings, consoleLog: consoleLog, jar: resolvedJar, capturesConsole: capturesConsole)
     }
 
     /// Keeps the pane jar's row named after the page, so a list of jars says
@@ -534,6 +606,8 @@ open class WebBrowserPaneViewController: NSViewController {
         configureButton(backButton, symbol: "chevron.left", label: "Back", action: #selector(goBack))
         configureButton(forwardButton, symbol: "chevron.right", label: "Forward", action: #selector(goForward))
         configureButton(reloadButton, symbol: "arrow.clockwise", label: "Reload", action: #selector(reload))
+        configureButton(newTabButton, symbol: "plus", label: "New Tab", action: #selector(newTab(_:)))
+        newTabButton.setAccessibilityIdentifier("browser.newtab")
 
         addressField.placeholderString = "Enter an address"
         addressField.target = self
@@ -547,7 +621,9 @@ open class WebBrowserPaneViewController: NSViewController {
         addressField.setContentHuggingPriority(.defaultLow, for: .horizontal)
         addressField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let bar = NSStackView(views: [backButton, forwardButton, reloadButton, addressField, pausedBadge, drivenBadge])
+        let bar = NSStackView(views: [
+            backButton, forwardButton, reloadButton, addressField, pausedBadge, drivenBadge, newTabButton
+        ])
         bar.orientation = .horizontal
         bar.alignment = .centerY
         bar.spacing = 4
@@ -561,24 +637,32 @@ open class WebBrowserPaneViewController: NSViewController {
             bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             bar.trailingAnchor.constraint(equalTo: root.trailingAnchor)
         ])
-        installPageHost()
+        installTabStrip(below: bar)
     }
 
-    /// Puts the current engine's view under the address bar.
-    private func installPageHost() {
-        guard let bar = addressBar else { return }
-        // Held still while a shelf slides beside the pane: the page paints
-        // behind its frame, so resized on every frame it trails the edge.
-        let page = FrameHoldingView(content: engine.view, leadsWidthChanges: true)
-        page.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(page)
+    /// Puts the tab bar and the page area under the address bar, with every
+    /// tab in it and the remembered one in front.
+    private func installTabStrip(below bar: NSView) {
+        addChild(tabStrip)
+        let strip = tabStrip.view
+        strip.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(strip)
         NSLayoutConstraint.activate([
-            page.topAnchor.constraint(equalTo: bar.bottomAnchor),
-            page.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            page.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            page.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            strip.topAnchor.constraint(equalTo: bar.bottomAnchor),
+            strip.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            strip.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            strip.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        pageHost = page
+        // The strip activates the first tab it is given; which tab comes
+        // forward is decided here, once, rather than by that.
+        let front = activeTab
+        isInstallingTabs = true
+        for tab in tabs {
+            tabStrip.addTab(.init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content), on: .top)
+        }
+        tabStrip.selectTab(id: front.id, on: .top)
+        isInstallingTabs = false
+        activate(front)
     }
 
     open override func viewDidLoad() {
@@ -589,7 +673,7 @@ open class WebBrowserPaneViewController: NSViewController {
         browserEngineAddressDidChange(engine)
         browserEngineHistoryDidChange(engine)
         pruneHistory()
-        engine.load(restorationURL)
+        loadPendingPage(of: activeTab)
     }
 
     /// A pane that appears — opened, or its tab brought forward — is the one
@@ -668,7 +752,7 @@ open class WebBrowserPaneViewController: NSViewController {
     }
 
     /// A navigation into the log, by host: a path or query can carry a token.
-    private func recordNavigation(_ event: String, error: Error? = nil) {
+    private func recordNavigation(_ event: String, of engine: BrowserEngine, error: Error? = nil) {
         var detail = engine.url?.host ?? ""
         if let error { detail += (detail.isEmpty ? "" : " ") + "error \((error as NSError).code)" }
         eventLog.record(channel: "navigation", event: event, decision: .info, detail: detail)
@@ -707,23 +791,24 @@ open class WebBrowserPaneViewController: NSViewController {
         store.setPaneStateValue(address, forKey: Self.addressKey)
     }
 
-    /// Files the page that just finished loading. Only pages, only when the
-    /// setting says so, and never the blank page.
-    private func recordVisit() {
-        currentVisitID = nil
-        visitGeneration += 1
+    /// Files the page that just finished loading in `tab`. Only pages, only
+    /// when the setting says so, and never the blank page.
+    private func recordVisit(in tab: BrowserTab) {
+        tab.currentVisitID = nil
+        tab.visitGeneration += 1
+        let engine = tab.engine
         guard let history, settings.get(UserSettings.browserRecordsHistory),
               let url = engine.url, url != Self.blankPage else { return }
-        let generation = visitGeneration
+        let generation = tab.visitGeneration
         let title = engine.title ?? ""
-        Task { [weak self, logger] in
+        Task { [weak self, weak tab, logger] in
             do {
                 let visitID = try await history.perform { try $0.record(url, title: title) }
-                guard let self, self.visitGeneration == generation else { return }
-                self.currentVisitID = visitID
+                guard let self, let tab, tab.visitGeneration == generation, tab.engine === engine else { return }
+                tab.currentVisitID = visitID
                 // A title that arrived while the row was being written found
                 // no row to be filed against; file it now.
-                if let later = self.engine.title, !later.isEmpty, later != title {
+                if let later = engine.title, !later.isEmpty, later != title {
                     self.file(later, againstVisit: visitID)
                 }
             } catch {
@@ -755,6 +840,157 @@ open class WebBrowserPaneViewController: NSViewController {
     @objc private func goForward() { engine.goForward() }
     @objc private func reload() { engine.reload() }
 
+    // MARK: - Tabs
+
+    /// The tab `engine` renders, or `nil` for one the pane has let go of.
+    private func tab(for engine: BrowserEngine) -> BrowserTab? {
+        tabs.first { $0.engine === engine }
+    }
+
+    /// What a tab is called in the bar: its page's title, else its host,
+    /// else what it was called when the pane was last stored, else New Tab.
+    private func tabTitle(for tab: BrowserTab) -> String {
+        // Chromium titles a blank page with its address; that is no name.
+        if let title = tab.engine.title, !title.isEmpty, title != Self.blankPage.absoluteString { return title }
+        if let url = tab.engine.url, url != Self.blankPage, let host = url.host, !host.isEmpty { return host }
+        if tab.engine.url == nil, let stored = tab.storedTitle, !stored.isEmpty { return stored }
+        return Self.newTabTitle
+    }
+
+    private func retitle(_ tab: BrowserTab) {
+        tabStrip.renameTab(id: tab.id, title: tabTitle(for: tab))
+    }
+
+    /// Brings `tab` forward: the bar, the title, the drive seam and the
+    /// pane's idea of the page all follow it, and a tab brought forward for
+    /// the first time loads its page.
+    private func activate(_ tab: BrowserTab) {
+        let responderWasInPage = pageHolds(viewIfLoaded?.window?.firstResponder)
+        activeTab = tab
+        engine = tab.engine
+        builtAutomation?.retarget(to: engine)
+        // A half-typed address was meant for the tab being left.
+        if addressField.currentEditor() != nil { addressField.abortEditing() }
+        let shown = engine.url ?? tab.pendingURL
+        addressField.stringValue = shown.map { $0 == Self.blankPage ? "" : $0.absoluteString } ?? ""
+        browserEngineHistoryDidChange(engine)
+        announceTitleChange()
+        loadPendingPage(of: tab)
+        if responderWasInPage { view.window?.makeFirstResponder(engine.view) }
+        rememberAddress()
+        persistTabs()
+        eventLog.record(channel: "pane", event: "tab", decision: .info, detail: engine.url?.host ?? "")
+    }
+
+    /// Loads the page `tab` is waiting for, once.
+    private func loadPendingPage(of tab: BrowserTab) {
+        guard let url = tab.pendingURL else { return }
+        tab.pendingURL = nil
+        tab.engine.load(url)
+    }
+
+    /// Adds a tab for `engine`, wired, after `opener`'s tab (else at the end),
+    /// and brings it forward. Returns the tab.
+    @discardableResult
+    private func addTab(engine tabEngine: BrowserEngine, after opener: BrowserTab?, pendingURL: URL?) -> BrowserTab {
+        let tab = BrowserTab(engine: tabEngine, pendingURL: pendingURL, storedTitle: nil)
+        wireEngine(tabEngine)
+        tabEngine.applyCookiePolicy(
+            acceptsCookies: Self.acceptsCookies(settings: settings, ownsDataStore: resolvedJar.isOwnedByPane))
+        onEngineMade?(tabEngine)
+        let index = opener.flatMap { opener in tabs.firstIndex { $0 === opener } }.map { $0 + 1 } ?? tabs.count
+        tabs.insert(tab, at: index)
+        // The strip's tab order is the pane's: insert at the same place.
+        tabStrip.insertTab(
+            .init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content), at: index, on: .top)
+        tabStrip.selectTab(id: tab.id, on: .top)
+        if activeTab !== tab { activate(tab) }
+        return tab
+    }
+
+    /// A new tab on the Home Page, with the address field ready to type in.
+    /// The plus button and File > New Tab both land here.
+    @objc public func newTab(_ sender: Any?) {
+        guard !isDiscarded else { return }
+        let home = BrowserSettings.homePage(in: settings) ?? fallbackHomeURL
+        addTab(engine: makeEngine(currentConfiguration), after: nil, pendingURL: home)
+        view.window?.makeFirstResponder(addressField)
+    }
+
+    /// Closes `tab`. The last tab is never closed: it goes back to a blank
+    /// page instead, as the Document pane's last tab empties rather than
+    /// going away. `pageClosedItself` is a page's `window.close()`, whose
+    /// engine is finished and is replaced rather than reused.
+    private func closeTab(_ tab: BrowserTab, pageClosedItself: Bool = false) {
+        guard tabs.contains(where: { $0 === tab }) else { return }
+        guard tabs.count > 1 else {
+            if pageClosedItself { replaceEngine(of: tab) }
+            tab.storedTitle = nil
+            tab.pendingURL = nil
+            tab.engine.load(Self.blankPage)
+            retitle(tab)
+            persistTabs()
+            return
+        }
+        // Out of the list first, so the neighbour the strip brings forward is
+        // activated with this one already gone.
+        let wasFront = tab === activeTab
+        tabs.removeAll { $0 === tab }
+        tab.engine.delegate = nil
+        tab.engine.teardown()
+        tabStrip.removeTab(id: tab.id)
+        // A window that came from a page hands the focus back to that page,
+        // the way a closed browser window returns to the one that opened it.
+        if wasFront, let opener = tab.opener, tabs.contains(where: { $0 === opener }) {
+            tabStrip.selectTab(id: opener.id, on: .top)
+        }
+        persistTabs()
+    }
+
+    /// A fresh engine in `tab`, made and wired as every other is.
+    private func replaceEngine(of tab: BrowserTab) {
+        tab.engine.delegate = nil
+        tab.engine.teardown()
+        tab.engine.view.removeFromSuperview()
+        let made = makeEngine(currentConfiguration)
+        tab.engine = made
+        tab.resetVisit()
+        wireEngine(made)
+        made.applyCookiePolicy(
+            acceptsCookies: Self.acceptsCookies(settings: settings, ownsDataStore: resolvedJar.isOwnedByPane))
+        onEngineMade?(made)
+        tab.content.show(made.view)
+        if tab === activeTab {
+            engine = made
+            builtAutomation?.retarget(to: made)
+        }
+    }
+
+    /// Writes the tab list, when it differs from what was last written.
+    private func persistTabs() {
+        let stored = StoredBrowserTabs(
+            tabs: tabs.map { tab in
+                let url = tab.engine.url.flatMap { $0 == Self.blankPage ? nil : $0.absoluteString }
+                    ?? tab.pendingURL.flatMap { $0 == Self.blankPage ? nil : $0.absoluteString }
+                let title = tab.engine.title.flatMap { $0.isEmpty ? nil : $0 } ?? tab.storedTitle
+                return StoredBrowserTab(url: url, title: title)
+            },
+            selectedIndex: tabs.firstIndex { $0 === activeTab } ?? 0
+        )
+        guard let data = try? JSONEncoder().encode(stored),
+              let json = String(data: data, encoding: .utf8), json != lastStoredTabs else { return }
+        lastStoredTabs = json
+        store.setPaneStateValue(json, forKey: Self.tabsKey)
+    }
+
+    static func readStoredTabs(from store: PaneStateStore) -> StoredBrowserTabs {
+        guard let json = store.paneStateValue(forKey: tabsKey), let data = json.data(using: .utf8),
+              let stored = try? JSONDecoder().decode(StoredBrowserTabs.self, from: data) else {
+            return StoredBrowserTabs(tabs: [], selectedIndex: 0)
+        }
+        return stored
+    }
+
     // MARK: - Downloads
 
     /// A file name that does not collide with one already in `directory`:
@@ -776,15 +1012,24 @@ open class WebBrowserPaneViewController: NSViewController {
 
 extension WebBrowserPaneViewController: BrowserEngineDelegate {
 
+    /// Every engine callback names its engine; a tab behind the one in front
+    /// keeps its own title, visits and stored address up to date, and only
+    /// the front tab's engine moves the bar, the pane's title and the jar.
+    private func isFront(_ engine: BrowserEngine) -> Bool { engine === self.engine }
+
     public func browserEngineTitleDidChange(_ engine: BrowserEngine) {
+        guard let tab = tab(for: engine) else { return }
+        retitle(tab)
+        if let visitID = tab.currentVisitID, let title = engine.title, !title.isEmpty {
+            file(title, againstVisit: visitID)
+        }
+        guard isFront(engine) else { return }
         announceTitleChange()
         updateJarLabel(finished: false)
-        guard let visitID = currentVisitID, let title = engine.title, !title.isEmpty else { return }
-        file(title, againstVisit: visitID)
     }
 
     public func browserEngineAddressDidChange(_ engine: BrowserEngine) {
-        guard let url = engine.url else { return }
+        guard isFront(engine), let url = engine.url else { return }
         // A field being edited is the user's; overwriting it mid-keystroke
         // because a redirect landed would throw away what they typed. A field
         // has an editor exactly while it is being edited, so that is the test
@@ -798,6 +1043,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     }
 
     public func browserEngineHistoryDidChange(_ engine: BrowserEngine) {
+        guard isFront(engine) else { return }
         backButton.isEnabled = engine.canGoBack
         forwardButton.isEnabled = engine.canGoForward
     }
@@ -807,25 +1053,55 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// title that lands while a load is in flight would otherwise be written
     /// onto the previous page's row.
     public func browserEngineDidStartNavigation(_ engine: BrowserEngine) {
-        currentVisitID = nil
-        recordNavigation("start")
+        tab(for: engine)?.currentVisitID = nil
+        recordNavigation("start", of: engine)
     }
 
     public func browserEngineDidCommitNavigation(_ engine: BrowserEngine) {
+        recordNavigation("commit", of: engine)
+        if let tab = tab(for: engine) {
+            tab.storedTitle = nil
+            retitle(tab)
+        }
+        persistTabs()
+        guard isFront(engine) else { return }
         consoleLog.clear()
         rememberAddress()
         jarLabelGate.navigationDidCommit()
-        recordNavigation("commit")
     }
 
     public func browserEngineDidFinishNavigation(_ engine: BrowserEngine) {
-        recordVisit()
+        if let tab = tab(for: engine) { recordVisit(in: tab) }
+        recordNavigation("finish", of: engine)
+        persistTabs()
+        guard isFront(engine) else { return }
         updateJarLabel(finished: true)
-        recordNavigation("finish")
     }
 
     public func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error) {
-        recordNavigation("fail", error: error)
+        recordNavigation("fail", of: engine, error: error)
+    }
+
+    /// The page opened a window. It becomes a tab beside its opener's,
+    /// brought forward at once — synchronously, because a Chromium popup's
+    /// browser is created into the tab's view as soon as this returns — and
+    /// its engine stays tied to the opener, which is what lets a sign-in or
+    /// 2FA window post its answer back through `window.opener`.
+    public func browserEngine(_ engine: BrowserEngine, didOpenPopup popup: BrowserEngine) -> Bool {
+        guard !isDiscarded, let opener = tab(for: engine) else { return false }
+        let tab = addTab(engine: popup, after: opener, pendingURL: nil)
+        tab.opener = opener
+        eventLog.record(channel: "navigation", event: "popup", decision: .info, detail: engine.url?.host ?? "")
+        return true
+    }
+
+    /// The page closed its own window — a sign-in or 2FA window that has
+    /// answered — so its tab goes, and the opener's tab is in front again
+    /// when it is the neighbour.
+    public func browserEngineDidRequestClose(_ engine: BrowserEngine) {
+        guard let tab = tab(for: engine) else { return }
+        eventLog.record(channel: "navigation", event: "close", decision: .info, detail: engine.url?.host ?? "")
+        closeTab(tab, pageClosedItself: true)
     }
 
     public func browserEngine(_ engine: BrowserEngine, download event: String, host: String) {
@@ -929,10 +1205,16 @@ extension WebBrowserPaneViewController: PaneTitleProviding {
     /// The page's title; its host while the title is still blank; the
     /// engine's name for a pane that is on nothing yet.
     public var paneTitle: String {
-        if let title = engine.title, !title.isEmpty { return title }
+        if let title = engine.title, !title.isEmpty, title != Self.blankPage.absoluteString { return title }
         if let host = engine.url?.host, !host.isEmpty { return host }
         return engineKind.displayName
     }
+}
+
+extension WebBrowserPaneViewController: PaneIconProviding {
+
+    /// The browser the pane is: Safari's icon or Chrome's.
+    public var paneIcon: NSImage? { engineKind.icon }
 }
 
 // MARK: - Pause Events
@@ -1062,11 +1344,134 @@ extension WebBrowserPaneViewController: PaneContentTeardown {
         cancellables.removeAll()
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
         windowObservers = []
-        engine.teardown()
+        for tab in tabs {
+            tab.engine.delegate = nil
+            tab.engine.teardown()
+        }
         paneContext.jars?.endUse(by: self)
         // A log pane following this one lets it go on the change this sends:
         // its list empties and its title drops this pane's name.
         isDiscarded = true
         eventLog.clear()
     }
+}
+
+// MARK: - Tab strip
+
+extension WebBrowserPaneViewController: MultiTabbedViewControllerDelegate {
+
+    public func multiTabbedViewControllerNeedsNewTab(_ controller: MultiTabbedViewController) {
+        newTab(controller)
+    }
+
+    /// The one funnel every change of the tab in front goes through: a
+    /// click, a close's neighbour, a popup brought forward.
+    public func multiTabbedViewController(
+        _ controller: MultiTabbedViewController, activeTabDidChange id: UUID?, on edge: Edge?
+    ) {
+        guard !isInstallingTabs, let id, let tab = tabs.first(where: { $0.id == id }), tab !== activeTab else { return }
+        activate(tab)
+    }
+
+    public func multiTabbedViewController(
+        _ controller: MultiTabbedViewController, didRequestCloseTab id: UUID, on edge: Edge
+    ) {
+        guard let tab = tabs.first(where: { $0.id == id }) else { return }
+        closeTab(tab)
+    }
+
+    /// The bar has already moved the tab; the pane's list follows it.
+    public func multiTabbedViewController(
+        _ controller: MultiTabbedViewController, didReorderTab id: UUID, to index: Int, on edge: Edge
+    ) {
+        guard let from = tabs.firstIndex(where: { $0.id == id }) else { return }
+        let tab = tabs.remove(at: from)
+        tabs.insert(tab, at: min(max(index, 0), tabs.count))
+        persistTabs()
+    }
+}
+
+// MARK: - Tab model
+
+/// One tab of a browser pane: the engine drawing it and what the pane keeps
+/// per page. A class, so a rebuilt engine is swapped in place and every
+/// reference to the tab still names it.
+@MainActor
+private final class BrowserTab {
+    let id = UUID()
+    var engine: BrowserEngine
+    /// What the tab shows under the bar; holds whichever engine is current.
+    let content = BrowserTabContentViewController()
+    /// The page to load when the tab is first brought forward.
+    var pendingURL: URL?
+    /// The title it was stored under, shown until its page loads.
+    var storedTitle: String?
+    /// The tab whose page opened this one, which comes forward again when
+    /// this one's page closes itself.
+    weak var opener: BrowserTab?
+    /// The history row for the page on screen, so a title that arrives after
+    /// the load is filed against it rather than lost.
+    var currentVisitID: Int64?
+    /// Counts page loads, so a visit row that comes back from the file after
+    /// the tab has moved on to the next page is not filed as the current one.
+    var visitGeneration = 0
+
+    init(engine: BrowserEngine, pendingURL: URL?, storedTitle: String?) {
+        self.engine = engine
+        self.pendingURL = pendingURL
+        self.storedTitle = storedTitle
+        content.show(engine.view)
+    }
+
+    func resetVisit() {
+        currentVisitID = nil
+        visitGeneration += 1
+    }
+}
+
+/// The page area of one tab: the engine's view, held still while a shelf
+/// slides beside the pane — the page paints behind its frame, so resized on
+/// every frame it trails the edge.
+@MainActor
+private final class BrowserTabContentViewController: NSViewController {
+    private var pageView: NSView?
+    private var holder: NSView?
+
+    override func loadView() {
+        view = NSView()
+        if let pageView { install(pageView) }
+    }
+
+    /// Shows `page`, in place of whatever engine view was there.
+    func show(_ page: NSView) {
+        pageView = page
+        guard isViewLoaded else { return }
+        install(page)
+    }
+
+    private func install(_ page: NSView) {
+        holder?.removeFromSuperview()
+        let frameHolder = FrameHoldingView(content: page, leadsWidthChanges: true)
+        frameHolder.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(frameHolder)
+        NSLayoutConstraint.activate([
+            frameHolder.topAnchor.constraint(equalTo: view.topAnchor),
+            frameHolder.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            frameHolder.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            frameHolder.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        holder = frameHolder
+    }
+}
+
+/// The tab list as the pane stores it under `tabs`.
+struct StoredBrowserTabs: Codable, Equatable {
+    var tabs: [StoredBrowserTab]
+    var selectedIndex: Int
+}
+
+struct StoredBrowserTab: Codable, Equatable {
+    /// `nil` for a blank page.
+    var url: String?
+    var title: String?
 }

@@ -57,11 +57,18 @@ NS_SWIFT_NAME(ChromiumBrowserViewDelegate) NS_SWIFT_UI_ACTOR
                        camera:(BOOL)camera
                    microphone:(BOOL)microphone
                    completion:(void (^)(NSNumber *_Nullable allowed))completion;
-/// A new-window request for `address`, already refused; the delegate decides
-/// whether to load it in place.
-- (void)chromiumBrowserView:(ADHChromiumBrowserView *)view
-    didRequestPopupForAddress:(NSString *)address
-                  userGesture:(BOOL)userGesture;
+/// The page asked for a new window for `address` (empty for a script's
+/// blank `window.open()`). Answer a view made with `initPopupWithFrame:` —
+/// already in a window, or about to be, since CEF parents the popup's
+/// browser to it — and Chromium opens the popup into it, tied to this page
+/// so `window.opener` works and sharing its session. nil refuses the window.
+/// Asked synchronously, from inside Chromium's popup decision.
+- (nullable ADHChromiumBrowserView *)chromiumBrowserView:(ADHChromiumBrowserView *)view
+                                     popupViewForAddress:(NSString *)address
+                                             userGesture:(BOOL)userGesture;
+/// The page closed itself (`window.close()`); the browser is gone. Not sent
+/// for a `close` the host asked for.
+- (void)chromiumBrowserViewDidClose:(ADHChromiumBrowserView *)view;
 /// Whether a drag that has entered the page may reach it.
 - (BOOL)chromiumBrowserViewShouldAcceptDrag:(ADHChromiumBrowserView *)view;
 /// Whether text input or an editing command may reach the page. `action` is
@@ -104,6 +111,10 @@ NS_SWIFT_NAME(ChromiumBrowserView) NS_SWIFT_UI_ACTOR
 @interface ADHChromiumBrowserView : NSView
 
 - (instancetype)initWithFrame:(NSRect)frame options:(ADHChromiumBrowserOptions *)options NS_DESIGNATED_INITIALIZER;
+/// A view for a popup's browser, which Chromium creates itself once the
+/// view is handed back from `chromiumBrowserView:popupViewForAddress:…`;
+/// until then the view makes no browser of its own, window or not.
+- (instancetype)initPopupWithFrame:(NSRect)frame options:(ADHChromiumBrowserOptions *)options;
 - (instancetype)initWithFrame:(NSRect)frame NS_UNAVAILABLE;
 - (nullable instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE;
 

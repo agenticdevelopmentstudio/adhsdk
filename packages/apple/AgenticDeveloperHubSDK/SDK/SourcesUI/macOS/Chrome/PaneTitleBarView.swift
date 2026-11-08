@@ -4,8 +4,12 @@ import AppKit
 /// same order.
 ///
 /// ```
-/// [ ✕  −  ⤢ ]  Files          <accessory area>          [ ⚙ ]
+/// [ ✕  −  ⤢ ]  ▣ Files        <accessory area>          [ ⚙ ]
 /// ```
+///
+/// The icon after the window controls says what kind of pane this is at a
+/// glance; a pane with no icon closes the gap and the title follows the
+/// controls directly.
 ///
 /// The accessory area between the title and the gear is the pane's to fill —
 /// a file browser's filter field, a terminal's shell name. This view knows only
@@ -36,6 +40,24 @@ public final class PaneTitleBarView: NSView {
             titleLabel.toolTip = newValue.isEmpty ? nil : newValue
         }
     }
+
+    /// What kind of pane this is, shown between the controls and the title;
+    /// `nil` hides it and the title moves up to the controls.
+    public var icon: NSImage? {
+        get { iconView.image }
+        set {
+            iconView.image = newValue
+            let shows = newValue != nil
+            iconView.isHidden = !shows
+            titleAfterControls.isActive = !shows
+            titleAfterIcon.isActive = shows
+        }
+    }
+
+    /// The icon's side, small enough to sit on the title's baseline row.
+    public static let iconSize: CGFloat = 14
+
+    public let iconView = NSImageView()
 
     /// The pane's own controls, leading-to-trailing in array order.
     /// Assigning replaces: content whose controls change hands back a new
@@ -120,6 +142,8 @@ public final class PaneTitleBarView: NSView {
     private let hairline = ThemedSeparatorView(role: .border, axis: .horizontal)
     private let accessoryStack = NSStackView()
     private var accessoryTrailing: NSLayoutConstraint!
+    private var titleAfterControls: NSLayoutConstraint!
+    private var titleAfterIcon: NSLayoutConstraint!
 
     public init() {
         super.init(frame: .zero)
@@ -130,11 +154,16 @@ public final class PaneTitleBarView: NSView {
         titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         titleLabel.accessibilityID("pane.title")
 
+        iconView.imageScaling = .scaleProportionallyUpOrDown
+        iconView.isHidden = true
+        iconView.setAccessibilityElement(false)
+        iconView.accessibilityID("pane.icon")
+
         accessoryStack.orientation = .horizontal
         accessoryStack.spacing = 4
         accessoryStack.alignment = .centerY
 
-        for child in [background, hairline, controls, titleLabel, accessoryStack] as [NSView] {
+        for child in [background, hairline, controls, iconView, titleLabel, accessoryStack] as [NSView] {
             child.translatesAutoresizingMaskIntoConstraints = false
             addSubview(child)
         }
@@ -142,6 +171,8 @@ public final class PaneTitleBarView: NSView {
         accessoryTrailing = accessoryStack.trailingAnchor.constraint(
             equalTo: trailingAnchor, constant: -6
         )
+        titleAfterControls = titleLabel.leadingAnchor.constraint(equalTo: controls.trailingAnchor, constant: 8)
+        titleAfterIcon = titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 5)
 
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: Self.height),
@@ -158,7 +189,12 @@ public final class PaneTitleBarView: NSView {
             controls.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
             controls.centerYAnchor.constraint(equalTo: centerYAnchor),
 
-            titleLabel.leadingAnchor.constraint(equalTo: controls.trailingAnchor, constant: 8),
+            iconView.leadingAnchor.constraint(equalTo: controls.trailingAnchor, constant: 8),
+            iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: Self.iconSize),
+            iconView.heightAnchor.constraint(equalToConstant: Self.iconSize),
+
+            titleAfterControls,
             titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
 
             accessoryStack.leadingAnchor.constraint(

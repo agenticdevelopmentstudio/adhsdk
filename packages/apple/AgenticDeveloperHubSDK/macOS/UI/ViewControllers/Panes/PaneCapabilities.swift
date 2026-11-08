@@ -27,6 +27,16 @@ public protocol PaneTitleProviding: AnyObject {
     var onPaneTitleChange: (() -> Void)? { get set }
 }
 
+/// Content that shows its own icon in the title bar, between the window
+/// controls and the title — a browser pane showing the browser it is.
+/// `nil` falls back to the pane's own icon. Read with the title, so content
+/// whose icon changes calls `onPaneTitleChange` (or the pane's
+/// `refreshTitle()`) and both are re-read together.
+@MainActor
+public protocol PaneIconProviding: AnyObject {
+    var paneIcon: NSImage? { get }
+}
+
 /// Content that puts its own controls in the title bar's middle.
 ///
 /// This is the "space between the title and the gear, abstracted to accept

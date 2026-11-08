@@ -149,6 +149,9 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// The value whose rules the web view actually has. What tests wait on;
     /// the compile behind it is asynchronous.
     private(set) var appliedThirdPartyContent: BrowserThirdPartyContent?
+    /// The list behind `appliedThirdPartyContent`, kept so a popup can start
+    /// under it without waiting on a lookup.
+    private var appliedRuleList: WKContentRuleList?
     /// Counts content-rule requests, so a compile that finishes after a newer
     /// request — or after teardown — is dropped.
     private var contentRulesGeneration = 0
@@ -179,24 +182,58 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// - Parameter contentRuleListProvider: Where rule lists come from, when
     ///   not the store. Given here rather than set afterwards because the
     ///   first compile starts during `init`.
-    init(
+    convenience init(
         configuration: BrowserEngineConfiguration,
         contentRuleListProvider: (@MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList?)?
     ) {
-        if let contentRuleListProvider { self.contentRuleListProvider = contentRuleListProvider }
-        self.settings = configuration.settings
-        self.consoleLog = configuration.consoleLog
-        self.capturesConsole = configuration.capturesConsole
         let webConfiguration = Self.makeConfiguration(
             settings: configuration.settings, consoleLog: configuration.consoleLog,
             jar: configuration.jar, capturesConsole: configuration.capturesConsole
         )
+        self.init(
+            webConfiguration: webConfiguration, settings: configuration.settings,
+            consoleLog: configuration.consoleLog, capturesConsole: configuration.capturesConsole,
+            contentRuleListProvider: contentRuleListProvider, inheritedRules: nil
+        )
+    }
+
+    /// The rules a popup starts with, handed over by its opener so the first
+    /// request — which WebKit loads itself, the moment the web view is
+    /// returned — already runs under them.
+    struct InheritedRules {
+        let policy: BrowserThirdPartyContent
+        let list: WKContentRuleList?
+    }
+
+    /// The one initialiser every engine goes through: a fresh pane's, from a
+    /// configuration made for it, and a popup's, from the configuration
+    /// WebKit hands the opener (which ties the two pages together).
+    private init(
+        webConfiguration: WKWebViewConfiguration,
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        capturesConsole: Bool,
+        contentRuleListProvider: (@MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList?)?,
+        inheritedRules: InheritedRules?
+    ) {
+        if let contentRuleListProvider { self.contentRuleListProvider = contentRuleListProvider }
+        self.settings = settings
+        self.consoleLog = consoleLog
+        self.capturesConsole = capturesConsole
         self.siteData = BrowserSiteData(dataStore: webConfiguration.websiteDataStore)
         // Every page sits behind an input gate, open until the pane sets one.
         let webView = BrowserWebView(
             frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: webConfiguration)
         self.activationShield = BrowserActivationShield(webView: webView)
         super.init(webView: webView)
+        if let inheritedRules {
+            if let list = inheritedRules.list {
+                webConfiguration.userContentController.add(list)
+            }
+            requestedThirdPartyContent = inheritedRules.policy
+            appliedThirdPartyContent = inheritedRules.policy
+            appliedRuleList = inheritedRules.list
+        }
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true
@@ -210,6 +247,28 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         applyLiveSettings()
         observeSettings()
         observeWebView()
+    }
+
+    /// A popup's engine, on the configuration WebKit gave `opener`'s web view
+    /// for it. WebKit requires exactly that configuration — it is what makes
+    /// the new page the opener's `window.opener` partner and puts it in the
+    /// same session — but it arrives sharing the opener's user content
+    /// controller, and an engine owns its controller outright
+    /// (`installUserScripts()` clears it), so the popup gets a fresh one.
+    convenience init(popupOf opener: WebKitBrowserEngine, configuration webConfiguration: WKWebViewConfiguration) {
+        let controller = WKUserContentController()
+        if opener.capturesConsole {
+            controller.add(opener.consoleLog, name: BrowserConsoleLog.handlerName)
+        }
+        webConfiguration.userContentController = controller
+        let inherited = opener.appliedThirdPartyContent.map {
+            InheritedRules(policy: $0, list: opener.appliedRuleList)
+        }
+        self.init(
+            webConfiguration: webConfiguration, settings: opener.settings,
+            consoleLog: opener.consoleLog, capturesConsole: opener.capturesConsole,
+            contentRuleListProvider: opener.contentRuleListProvider, inheritedRules: inherited
+        )
     }
 
     /// An engine on the shared store — or a private one, when the settings
@@ -404,6 +463,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         guard policy != .allow else {
             webView.configuration.userContentController.removeAllContentRuleLists()
             appliedThirdPartyContent = .allow
+            appliedRuleList = nil
             finishContentRules()
             return
         }
@@ -421,6 +481,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
                 controller.removeAllContentRuleLists()
                 if let list { controller.add(list) }
                 self.appliedThirdPartyContent = policy
+                self.appliedRuleList = list
                 self.finishContentRules()
             } catch {
                 guard let self else { return }
@@ -679,24 +740,36 @@ extension WebKitBrowserEngine: WKUIDelegate {
         return nil
     }
 
-    /// A `target="_blank"` link asks for a new window. A pane has no windows to
-    /// give it, so the link opens here instead — in the pane the user is
-    /// looking at, which is where a click goes everywhere else.
+    /// A `target="_blank"` link or a `window.open()` asks for a new window.
+    /// The pane has tabs, not windows, so the new page becomes a tab: an
+    /// engine built on the configuration WebKit passes, which keeps the two
+    /// pages linked — `window.opener` works and the popup shares the opener's
+    /// session — and that is what a sign-in or 2FA window needs to post its
+    /// answer back. WebKit loads the request into the returned web view
+    /// itself. With no host to take the tab, the popup is refused.
     ///
-    /// A script's `window.open()` with no address asks for a blank window to
-    /// write into later. There is nothing to open for that, and loading the
-    /// blank page here would throw away the page on screen and the address
-    /// the pane remembers, so it is refused.
+    /// Blocked popups never get here: `javaScriptCanOpenWindowsAutomatically`
+    /// (the Block Pop-ups setting) has WebKit refuse a script's window that
+    /// no click asked for.
     public func webView(
         _ webView: WKWebView,
         createWebViewWith configuration: WKWebViewConfiguration,
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        guard navigationAction.targetFrame == nil,
-              let url = navigationAction.request.url, url != WebBrowserPaneViewController.blankPage else { return nil }
-        webView.load(navigationAction.request)
-        return nil
+        let popup = WebKitBrowserEngine(popupOf: self, configuration: configuration)
+        guard delegate?.browserEngine(self, didOpenPopup: popup) == true else {
+            popup.teardown()
+            return nil
+        }
+        return popup.webView
+    }
+
+    /// The page called `window.close()` on itself — a sign-in popup done
+    /// with its work. The host closes its tab.
+    public func webViewDidClose(_ webView: WKWebView) {
+        webView.stopLoading()
+        delegate?.browserEngineDidRequestClose(self)
     }
 
     /// Camera and microphone: the pane decides, from the Media setting; with

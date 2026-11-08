@@ -270,7 +270,8 @@ class ADHRequestContextHandler : public CefRequestContextHandler, public CefReso
 - (void)mainFrameDidFailWithMessage:(NSString*)message address:(NSString*)address;
 - (void)consoleText:(NSString*)text level:(NSString*)level;
 - (void)dialog:(ADHChromiumDialogKind)kind message:(NSString*)message;
-- (void)popupForAddress:(NSString*)address userGesture:(BOOL)userGesture;
+- (nullable ADHChromiumBrowserView*)popupViewForAddress:(NSString*)address userGesture:(BOOL)userGesture;
+- (CefRefPtr<CefClient>)adoptPopupWithWindowInfo:(CefWindowInfo&)windowInfo settings:(CefBrowserSettings&)settings;
 - (BOOL)destinationForDownloadNamed:(NSString*)name completion:(void (^)(NSString* _Nullable path))completion;
 - (BOOL)mediaCaptureForHost:(NSString*)host
                      camera:(BOOL)camera
@@ -368,15 +369,25 @@ class ADHBrowserClient : public CefClient,
                      WindowOpenDisposition /*target_disposition*/,
                      bool user_gesture,
                      const CefPopupFeatures& /*popupFeatures*/,
-                     CefWindowInfo& /*windowInfo*/,
-                     CefRefPtr<CefClient>& /*client*/,
-                     CefBrowserSettings& /*settings*/,
+                     CefWindowInfo& windowInfo,
+                     CefRefPtr<CefClient>& client,
+                     CefBrowserSettings& settings,
                      CefRefPtr<CefDictionaryValue>& /*extra_info*/,
                      bool* /*no_javascript_access*/) override {
-    // A pane is one page: no new window opens. The delegate decides whether
-    // the address loads in place, the way the Safari pane treats one.
-    [view_ popupForAddress:ADHString(target_url) userGesture:user_gesture];
-    return true;
+    // The host puts the popup in a tab: a view of its own, which Chromium
+    // creates the popup's browser into. Returning false lets Chromium go
+    // ahead, so the popup keeps its opener and the opener's request context
+    // — what a sign-in or 2FA window needs to post its answer back.
+    ADHChromiumBrowserView* popup = [view_ popupViewForAddress:ADHString(target_url) userGesture:user_gesture];
+    if (!popup) {
+      return true;
+    }
+    CefRefPtr<CefClient> adopted = [popup adoptPopupWithWindowInfo:windowInfo settings:settings];
+    if (!adopted) {
+      return true;
+    }
+    client = adopted;
+    return false;
   }
 
   // MARK: Display
@@ -651,6 +662,9 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   /// The view was made first responder before its browser existed; the
   /// focus goes to the page when it arrives.
   BOOL _wantsFocus;
+  /// A popup's view, waiting for Chromium to create its browser
+  /// (`adoptPopupWithWindowInfo:settings:`); it makes none of its own.
+  BOOL _awaitingPopup;
 }
 
 - (instancetype)initWithFrame:(NSRect)frame options:(ADHChromiumBrowserOptions*)options {
@@ -665,6 +679,13 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
                                            selector:@selector(runtimeWillShutdown:)
                                                name:ADHChromiumRuntimeWillShutdownNotification
                                              object:nil];
+  }
+  return self;
+}
+
+- (instancetype)initPopupWithFrame:(NSRect)frame options:(ADHChromiumBrowserOptions*)options {
+  if ((self = [self initWithFrame:frame options:options])) {
+    _awaitingPopup = YES;
   }
   return self;
 }
@@ -723,7 +744,7 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
 }
 
 - (void)createBrowserIfReady {
-  if (!self.window || _browser || _creating || _closed || !ADHChromiumRuntime.shared.isRunning) {
+  if (!self.window || _browser || _creating || _closed || _awaitingPopup || !ADHChromiumRuntime.shared.isRunning) {
     return;
   }
   _creating = YES;
@@ -779,6 +800,36 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   }
 }
 
+/// Chromium is about to create a popup's browser for this view: it gets the
+/// view as its parent, this view's client and this view's settings, and the
+/// view waits for it as it would for a browser of its own. The request
+/// context stays the opener's, which is what shares the session. nullptr
+/// when the view cannot take it (closed, or not a popup's view).
+- (CefRefPtr<CefClient>)adoptPopupWithWindowInfo:(CefWindowInfo&)windowInfo settings:(CefBrowserSettings&)settings {
+  if (!_awaitingPopup || _closed || _browser || _creating) {
+    return nullptr;
+  }
+  _awaitingPopup = NO;
+  _creating = YES;
+  _retainedWhileCreating = self;
+  _client = new ADHBrowserClient(self, _acceptsCookies, _thirdPartyBlocking);
+  NSRect bounds = self.bounds;
+  windowInfo.SetAsChild((__bridge CefWindowHandle)self,
+                        CefRect(0, 0, static_cast<int>(NSWidth(bounds)), static_cast<int>(NSHeight(bounds))));
+  if (_options.minimumFontSize > 0) {
+    settings.minimum_font_size = static_cast<int>(_options.minimumFontSize);
+  }
+  NSColor* background = [_options.backgroundColor colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+  if (background) {
+    auto channel = [](CGFloat value) { return static_cast<int>(std::lround(std::clamp(value, 0.0, 1.0) * 255)); };
+    settings.background_color =
+        CefColorSetARGB(255, channel(background.redComponent), channel(background.greenComponent),
+                        channel(background.blueComponent));
+  }
+  [ADHChromiumRuntime.shared browserDidOpen];
+  return _client;
+}
+
 - (void)browserDidOpen:(CefRefPtr<CefBrowser>)browser {
   _creating = NO;
   // Released at the end of this method, not here: the view may be closing.
@@ -814,11 +865,22 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
 }
 
 - (void)browserDidClose {
+  BOOL closedByPage = !_closed && _browser != nullptr;
   _devToolsRegistration = nullptr;
   _browser = nullptr;
   _creating = NO;
   _retainedWhileCreating = nil;
   [self failPendingWithDescription:@"The Chrome pane closed"];
+  if (closedByPage) {
+    // `window.close()`: nobody asked, so the host is told and lets the view go.
+    _closed = YES;
+    id<ADHChromiumBrowserViewDelegate> delegate = _delegate;
+    _delegate = nil;
+    if (_client) {
+      _client->Detach();
+    }
+    [delegate chromiumBrowserViewDidClose:self];
+  }
 }
 
 // MARK: Privacy
@@ -1052,8 +1114,8 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   [_delegate chromiumBrowserView:self didRaiseDialog:kind message:message];
 }
 
-- (void)popupForAddress:(NSString*)address userGesture:(BOOL)userGesture {
-  [_delegate chromiumBrowserView:self didRequestPopupForAddress:address userGesture:userGesture];
+- (nullable ADHChromiumBrowserView*)popupViewForAddress:(NSString*)address userGesture:(BOOL)userGesture {
+  return [_delegate chromiumBrowserView:self popupViewForAddress:address userGesture:userGesture];
 }
 
 - (BOOL)destinationForDownloadNamed:(NSString*)name completion:(void (^)(NSString* _Nullable))completion {

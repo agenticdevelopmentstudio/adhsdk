@@ -83,11 +83,22 @@ public protocol BrowserEngineDelegate: AnyObject {
     /// A download started, finished or failed (`event` is "start", "finish"
     /// or "fail"), from `host`.
     func browserEngine(_ engine: BrowserEngine, download event: String, host: String)
+    /// The page opened a window — a `target="_blank"` link, a `window.open()`
+    /// — and `popup` is the engine already showing it, tied to the opener so
+    /// `window.opener` works (a sign-in or 2FA window posts its answer back
+    /// through it). The host puts it in a tab and becomes its delegate, and
+    /// answers `true`; `false` refuses it, and the engine tears it down.
+    func browserEngine(_ engine: BrowserEngine, didOpenPopup popup: BrowserEngine) -> Bool
+    /// The page closed its own window (`window.close()`); the engine has
+    /// stopped and the host lets it go.
+    func browserEngineDidRequestClose(_ engine: BrowserEngine)
 }
 
 extension BrowserEngineDelegate {
     public func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error) {}
     public func browserEngine(_ engine: BrowserEngine, download event: String, host: String) {}
+    public func browserEngine(_ engine: BrowserEngine, didOpenPopup popup: BrowserEngine) -> Bool { false }
+    public func browserEngineDidRequestClose(_ engine: BrowserEngine) {}
 }
 
 /// A browser engine under a pane: WebKit for Safari, Chromium for Chrome.

@@ -27,6 +27,29 @@ struct PaneTitleBarViewTests {
         #expect(bar.titleLabel.contentCompressionResistancePriority(for: .horizontal) == .defaultLow)
     }
 
+    /// The icon sits between the controls and the title, and a pane without
+    /// one closes the gap rather than leaving an empty square.
+    @Test("the icon shows when set and hides when cleared, and the title follows it")
+    func iconTogglesAndLeadsTheTitle() {
+        let bar = PaneTitleBarView()
+        #expect(bar.icon == nil)
+        #expect(bar.iconView.isHidden)
+        #expect(bar.iconView.accessibilityIdentifier() == "pane.icon")
+
+        bar.frame = NSRect(x: 0, y: 0, width: 400, height: PaneTitleBarView.height)
+        bar.title = "Files"
+        bar.icon = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+        bar.layoutSubtreeIfNeeded()
+        #expect(!bar.iconView.isHidden)
+        #expect(bar.iconView.frame.minX >= bar.controls.frame.maxX)
+        #expect(bar.titleLabel.frame.minX >= bar.iconView.frame.maxX)
+
+        bar.icon = nil
+        bar.layoutSubtreeIfNeeded()
+        #expect(bar.iconView.isHidden)
+        #expect(abs(bar.titleLabel.frame.minX - (bar.controls.frame.maxX + 8)) < 1)
+    }
+
     @Test("setting the title updates the label and its tooltip")
     func titleRoundTrips() {
         let bar = PaneTitleBarView()

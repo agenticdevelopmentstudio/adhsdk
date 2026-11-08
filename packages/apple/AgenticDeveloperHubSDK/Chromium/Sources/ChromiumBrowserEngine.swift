@@ -92,21 +92,48 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
 
     public var heldLoadURL: URL? { nil }
 
-    public init(configuration: BrowserEngineConfiguration) {
+    public convenience init(configuration: BrowserEngineConfiguration) {
         let settings = configuration.settings
-        self.settings = settings
-        consoleLog = configuration.consoleLog
-        capturesConsole = configuration.capturesConsole
         let options = ChromiumBrowserOptions()
         options.cachePath = Self.cachePath(for: configuration.jar)
         options.acceptsCookies = WebBrowserPaneViewController.acceptsCookies(
             settings: settings, ownsDataStore: configuration.jar.isOwnedByPane)
+        self.init(
+            settings: settings, consoleLog: configuration.consoleLog,
+            capturesConsole: configuration.capturesConsole, options: options, isPopup: false
+        )
+    }
+
+    /// A popup's engine: its view makes no browser of its own, and Chromium
+    /// creates the popup's browser into it once `opener` hands the view back
+    /// from its popup decision, in the opener's session. Everything else —
+    /// settings, console, cookie policy — is the opener's.
+    convenience init(popupOf opener: ChromiumBrowserEngine) {
+        let options = ChromiumBrowserOptions()
+        options.cachePath = opener.options.cachePath
+        options.acceptsCookies = opener.browserView.acceptsCookies
+        self.init(
+            settings: opener.settings, consoleLog: opener.consoleLog,
+            capturesConsole: opener.capturesConsole, options: options, isPopup: true
+        )
+    }
+
+    private init(
+        settings: SettingsStore, consoleLog: BrowserConsoleLog, capturesConsole: Bool,
+        options: ChromiumBrowserOptions, isPopup: Bool
+    ) {
+        self.settings = settings
+        self.consoleLog = consoleLog
+        self.capturesConsole = capturesConsole
         let fontRange = BrowserSettings.minimumFontSizeRange
         options.minimumFontSize = min(max(settings.get(UserSettings.browserMinimumFontSize),
                                           fontRange.lowerBound), fontRange.upperBound)
         self.options = options
         let startError = ChromiumLauncher.start(settings: settings)
-        browserView = ChromiumBrowserView(frame: NSRect(x: 0, y: 0, width: 640, height: 480), options: options)
+        let frame = NSRect(x: 0, y: 0, width: 640, height: 480)
+        browserView = isPopup
+            ? ChromiumBrowserView(popupWithFrame: frame, options: options)
+            : ChromiumBrowserView(frame: frame, options: options)
         super.init()
         browserView.delegate = self
         // Read when the browser is created, the first time the view is in a
@@ -524,16 +551,26 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         return decide(.keyboard, action, synthesized: false)
     }
 
-    /// A pane has no windows to give a pop-up, so the address opens here, the
-    /// way the Safari pane does it. With pop-ups blocked, only one the user
-    /// clicked for opens; an address-less `window.open()` never does.
+    /// The page asked for a new window: the host puts it in a tab, as an
+    /// engine whose view Chromium opens the popup into, tied to this page so
+    /// `window.opener` works (a sign-in or 2FA window posts its answer back
+    /// through it). With pop-ups blocked, only one the user clicked for
+    /// opens. With no host to take the tab, the window is refused.
     public func chromiumBrowserView(
-        _ view: ChromiumBrowserView, didRequestPopupForAddress address: String, userGesture: Bool
-    ) {
-        if settings.get(UserSettings.browserBlocksPopups) && !userGesture { return }
-        guard let url = URL(string: address), !address.isEmpty,
-              url != WebBrowserPaneViewController.blankPage else { return }
-        load(url)
+        _ view: ChromiumBrowserView, popupViewForAddress address: String, userGesture: Bool
+    ) -> ChromiumBrowserView? {
+        if settings.get(UserSettings.browserBlocksPopups) && !userGesture { return nil }
+        let popup = ChromiumBrowserEngine(popupOf: self)
+        guard delegate?.browserEngine(self, didOpenPopup: popup) == true else {
+            popup.teardown()
+            return nil
+        }
+        return popup.browserView
+    }
+
+    /// The page closed its own window; the host lets the tab go.
+    public func chromiumBrowserViewDidClose(_ view: ChromiumBrowserView) {
+        delegate?.browserEngineDidRequestClose(self)
     }
 }
 

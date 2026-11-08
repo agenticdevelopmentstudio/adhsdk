@@ -120,6 +120,13 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     /// used when the content does not name itself.
     public override var fallbackTitle: String { paneName }
 
+    /// The registry's symbol for this kind of pane — the same one the Add
+    /// popup shows beside its name.
+    public override var fallbackIcon: NSImage? {
+        guard let symbolName = paneDescriptor.symbolName else { return nil }
+        return NSImage(systemSymbolName: symbolName, accessibilityDescription: paneName)
+    }
+
     /// `pane.<content-type>`, numbered only when the tab holds more than one of
     /// this kind. The number comes from the tree, which is the only thing that
     /// can know.
@@ -200,9 +207,12 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     /// content from: a pane nested inside another pane's tree — a Document
     /// editor — is registered only in the override, and asking the project's
     /// registry about it answers `.unknown`.
-    var paneName: String {
+    var paneName: String { paneDescriptor.displayName }
+
+    /// This pane's registry entry, from the layout its content is vended from.
+    private var paneDescriptor: ComposableTabsViewDescriptor {
         let layout = layoutOverride ?? project?.layout ?? ComposableTabsLayout.placeholderOnly()
-        return layout.registry.descriptor(for: viewID).displayName
+        return layout.registry.descriptor(for: viewID)
     }
 
     private func makeArrangeController() -> PaneArrangeOverlayController {

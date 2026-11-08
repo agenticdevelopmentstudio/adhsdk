@@ -141,6 +141,10 @@ open class PaneViewController: NSViewController {
     /// What the title bar says when the content does not name itself.
     open var fallbackTitle: String { "Pane" }
 
+    /// The icon the title bar shows when the content has none of its own;
+    /// `nil` shows none.
+    open var fallbackIcon: NSImage? { nil }
+
     /// How far the content is held off the container's edges. A subclass that
     /// draws a border on the container needs room for it.
     open var contentInset: CGFloat { 0 }
@@ -398,6 +402,10 @@ open class PaneViewController: NSViewController {
         (contentViewController as? PaneTitleProviding)?.paneTitle ?? fallbackTitle
     }
 
+    public var resolvedIcon: NSImage? {
+        (contentViewController as? PaneIconProviding)?.paneIcon ?? fallbackIcon
+    }
+
     /// What the content has selected, or `nil` — in which case a display path
     /// stops at this pane rather than showing an empty trailing segment.
     public var selectionDescription: String? {
@@ -421,6 +429,7 @@ open class PaneViewController: NSViewController {
     /// called when it opened.
     public func refreshTitle() {
         titleBar.title = resolvedTitle
+        titleBar.icon = resolvedIcon
         optionsSheet?.heading = resolvedTitle
         onTitleChange?()
     }
