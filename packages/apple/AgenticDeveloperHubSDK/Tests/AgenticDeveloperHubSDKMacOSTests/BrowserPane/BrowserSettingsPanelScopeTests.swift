@@ -137,6 +137,27 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertTrue(dragAndDrop.model.value)
     }
 
+    /// "Use Global Setting" re-reads the row by force, discarding an edit in
+    /// progress, rather than waiting for the store's change notice, whose
+    /// refresh skips a field that still has focus.
+    func testUseGlobalSettingDiscardsAnEditInProgress() throws {
+        let global = makeSettings()
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        let panel = makePanel(settings: global, scope: .pane(layered, pane))
+        let dragAndDrop = try row(UserSettings.browserPrivacyDragAndDrop, in: panel)
+        dragAndDrop.model.settingObserver.value = false
+        settle()
+        var refreshes: [Bool] = []
+        dragAndDrop.model.refreshHandler = { force in refreshes.append(force) }
+
+        let item = try XCTUnwrap(dragAndDrop.row.marker).useGlobalItem
+        _ = item.target?.perform(item.action, with: item)
+
+        XCTAssertEqual(refreshes, [true], "the revert itself forces the re-read")
+        XCTAssertFalse(layered.hasOverride(UserSettings.browserPrivacyDragAndDrop))
+    }
+
     func testPrivateBrowsingRowIsDisabledInPaneScope() throws {
         let global = makeSettings()
         global.set(true, for: UserSettings.browserPrivateBrowsing)

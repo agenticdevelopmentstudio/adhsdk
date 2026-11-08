@@ -423,6 +423,13 @@ final class BrowserSettingsBinding {
             self?.layered?.hasOverride(key) ?? false
         }, revert: { [weak self] in
             self?.layered?.removeOverride(key)
+            // Forced: a field still being edited shows the override's value,
+            // and ending the edit later would write it straight back.
+            if model.refreshHandler != nil {
+                model.revert()
+            } else {
+                model.onChange?(model.value)
+            }
         })
     }
 
