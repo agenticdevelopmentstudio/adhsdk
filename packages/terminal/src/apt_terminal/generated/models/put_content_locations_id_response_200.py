@@ -13,7 +13,6 @@ class PutContentLocationsIdResponse200:
     """
     Attributes:
         id (str):
-        customer_id (str):
         deleted_at (None | str):
         ecosystem_id (str):
         owner_kind (str):
@@ -34,7 +33,6 @@ class PutContentLocationsIdResponse200:
     """
 
     id: str
-    customer_id: str
     deleted_at: None | str
     ecosystem_id: str
     owner_kind: str
@@ -55,8 +53,6 @@ class PutContentLocationsIdResponse200:
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
-
-        customer_id = self.customer_id
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -102,7 +98,6 @@ class PutContentLocationsIdResponse200:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
                 "deletedAt": deleted_at,
                 "ecosystemId": ecosystem_id,
                 "ownerKind": owner_kind,
@@ -129,8 +124,6 @@ class PutContentLocationsIdResponse200:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         id = d.pop("id")
-
-        customer_id = d.pop("customerId")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
@@ -193,7 +186,6 @@ class PutContentLocationsIdResponse200:
 
         put_content_locations_id_response_200 = cls(
             id=id,
-            customer_id=customer_id,
             deleted_at=deleted_at,
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,

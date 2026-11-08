@@ -21,7 +21,9 @@ class PersonaMemory:
     Attributes:
         id (str):
         ecosystem_id (str): Ecosystem (tenant) id
-        customer_id (str): Owning user; empty for a global memory
+        owner_kind (str): Kind of principal that owns the memory (the user for a user-scoped memory, else the persona):
+            'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+        owner_id (str): Id of the owning principal.
         persona_id (str):
         scope (PersonaMemoryScope):
         slug (str):
@@ -46,7 +48,8 @@ class PersonaMemory:
 
     id: str
     ecosystem_id: str
-    customer_id: str
+    owner_kind: str
+    owner_id: str
     persona_id: str
     scope: PersonaMemoryScope
     slug: str
@@ -74,7 +77,9 @@ class PersonaMemory:
 
         ecosystem_id = self.ecosystem_id
 
-        customer_id = self.customer_id
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         persona_id = self.persona_id
 
@@ -150,7 +155,8 @@ class PersonaMemory:
             {
                 "id": id,
                 "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "personaId": persona_id,
                 "scope": scope,
                 "slug": slug,
@@ -190,7 +196,9 @@ class PersonaMemory:
 
         ecosystem_id = d.pop("ecosystemId")
 
-        customer_id = d.pop("customerId")
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         persona_id = d.pop("personaId")
 
@@ -284,7 +292,8 @@ class PersonaMemory:
         persona_memory = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             persona_id=persona_id,
             scope=scope,
             slug=slug,

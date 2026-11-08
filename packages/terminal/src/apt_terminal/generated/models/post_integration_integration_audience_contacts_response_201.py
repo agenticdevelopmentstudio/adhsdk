@@ -25,7 +25,6 @@ class PostIntegrationIntegrationAudienceContactsResponse201:
     """
     Attributes:
         id (str):
-        customer_id (str):
         ecosystem_id (str):
         owner_kind (str):
         owner_id (str):
@@ -56,7 +55,6 @@ class PostIntegrationIntegrationAudienceContactsResponse201:
     """
 
     id: str
-    customer_id: str
     ecosystem_id: str
     owner_kind: str
     owner_id: str
@@ -115,8 +113,6 @@ class PostIntegrationIntegrationAudienceContactsResponse201:
         )
 
         id = self.id
-
-        customer_id = self.customer_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -203,7 +199,6 @@ class PostIntegrationIntegrationAudienceContactsResponse201:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
                 "ecosystemId": ecosystem_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
@@ -247,8 +242,6 @@ class PostIntegrationIntegrationAudienceContactsResponse201:
 
         d = dict(src_dict)
         id = d.pop("id")
-
-        customer_id = d.pop("customerId")
 
         ecosystem_id = d.pop("ecosystemId")
 
@@ -461,7 +454,6 @@ class PostIntegrationIntegrationAudienceContactsResponse201:
 
         post_integration_integration_audience_contacts_response_201 = cls(
             id=id,
-            customer_id=customer_id,
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
             owner_id=owner_id,

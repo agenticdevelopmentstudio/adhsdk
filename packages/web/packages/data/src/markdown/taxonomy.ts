@@ -12,8 +12,8 @@
 //
 // Two consequences of that door worth knowing before calling any of this:
 //
-//   1. **No `?workspace=`.** These tables are scoped by `customer_id` + `ecosystem_id`, and
-//      the generic layer treats `customer_id` as an OWNERSHIP stamp rather than a read
+//   1. **No `?workspace=`.** These tables are scoped by `owner_kind`/`owner_id` + `ecosystem_id`, and
+//      the generic layer treats the owner pair as an OWNERSHIP stamp rather than a read
 //      filter — a platform principal addresses any row in their own ecosystem. So an
 //      org-owned category is reachable without naming the workspace, and passing one would
 //      not narrow anything (the workspace pin only applies to tables with owner_kind /

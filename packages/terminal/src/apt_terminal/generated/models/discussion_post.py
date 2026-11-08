@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.discussion_post_author_kind import DiscussionPostAuthorKind
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DiscussionPost")
@@ -22,7 +23,9 @@ class DiscussionPost:
         body_document_id (None | str): The content.markdown doc backing this post’s body.
         created_at (str):
         updated_at (str):
-        customer_id (str | Unset): Author (server-stamped principal). Omitted on the public surface.
+        author_kind (DiscussionPostAuthorKind | Unset): Kind of principal that wrote the post (omitted on the public
+            surface); null when nobody did (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         ecosystem_id (str | Unset): Owning ecosystem (present on create only).
         community_id (str | Unset): The community instance (inherited from the topic; present on create only).
         content (None | str | Unset): Resolved markdown body (present on the list routes; null if the body doc was
@@ -38,7 +41,8 @@ class DiscussionPost:
     body_document_id: None | str
     created_at: str
     updated_at: str
-    customer_id: str | Unset = UNSET
+    author_kind: DiscussionPostAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     ecosystem_id: str | Unset = UNSET
     community_id: str | Unset = UNSET
     content: None | str | Unset = UNSET
@@ -63,7 +67,15 @@ class DiscussionPost:
 
         updated_at = self.updated_at
 
-        customer_id = self.customer_id
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -96,8 +108,10 @@ class DiscussionPost:
                 "updatedAt": updated_at,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if author_kind is not UNSET:
+            field_dict["authorKind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["authorId"] = author_id
         if ecosystem_id is not UNSET:
             field_dict["ecosystemId"] = ecosystem_id
         if community_id is not UNSET:
@@ -138,7 +152,21 @@ class DiscussionPost:
 
         updated_at = d.pop("updatedAt")
 
-        customer_id = d.pop("customerId", UNSET)
+        _author_kind = d.pop("authorKind", UNSET)
+        author_kind: DiscussionPostAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = DiscussionPostAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("authorId", UNSET))
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
@@ -172,7 +200,8 @@ class DiscussionPost:
             body_document_id=body_document_id,
             created_at=created_at,
             updated_at=updated_at,
-            customer_id=customer_id,
+            author_kind=author_kind,
+            author_id=author_id,
             ecosystem_id=ecosystem_id,
             community_id=community_id,
             content=content,

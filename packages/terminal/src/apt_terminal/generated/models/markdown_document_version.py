@@ -24,7 +24,7 @@ class MarkdownDocumentVersion:
     Attributes:
         id (str):
         document_id (str):
-        customer_id (str): The revision WRITER.
+        writer_customer_id (str): The revision WRITER.
         ecosystem_id (str):
         owner_kind (MarkdownDocumentVersionOwnerKind): Inherited from the head document at write.
         owner_id (str): Inherited from the head document at write.
@@ -44,7 +44,7 @@ class MarkdownDocumentVersion:
 
     id: str
     document_id: str
-    customer_id: str
+    writer_customer_id: str
     ecosystem_id: str
     owner_kind: MarkdownDocumentVersionOwnerKind
     owner_id: str
@@ -71,7 +71,7 @@ class MarkdownDocumentVersion:
 
         document_id = self.document_id
 
-        customer_id = self.customer_id
+        writer_customer_id = self.writer_customer_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -131,7 +131,7 @@ class MarkdownDocumentVersion:
             {
                 "id": id,
                 "documentId": document_id,
-                "customerId": customer_id,
+                "writerCustomerId": writer_customer_id,
                 "ecosystemId": ecosystem_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
@@ -168,7 +168,7 @@ class MarkdownDocumentVersion:
 
         document_id = d.pop("documentId")
 
-        customer_id = d.pop("customerId")
+        writer_customer_id = d.pop("writerCustomerId")
 
         ecosystem_id = d.pop("ecosystemId")
 
@@ -248,7 +248,7 @@ class MarkdownDocumentVersion:
         markdown_document_version = cls(
             id=id,
             document_id=document_id,
-            customer_id=customer_id,
+            writer_customer_id=writer_customer_id,
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
             owner_id=owner_id,

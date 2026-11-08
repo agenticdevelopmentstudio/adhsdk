@@ -86,9 +86,9 @@ def sync_detailed(
     """The caller’s own per-game profile
 
      Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-
-    plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would
-    be every profile in the ecosystem. 404 when the caller has never played this game — inventing a
-    blank profile would make the PATCH below look like an update when it is the first write.
+    plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be
+    every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank
+    profile would make the PATCH below look like an update when it is the first write.
 
     Args:
         game_id (str | Unset):
@@ -123,9 +123,9 @@ def sync(
     """The caller’s own per-game profile
 
      Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-
-    plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would
-    be every profile in the ecosystem. 404 when the caller has never played this game — inventing a
-    blank profile would make the PATCH below look like an update when it is the first write.
+    plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be
+    every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank
+    profile would make the PATCH below look like an update when it is the first write.
 
     Args:
         game_id (str | Unset):
@@ -155,9 +155,9 @@ async def asyncio_detailed(
     """The caller’s own per-game profile
 
      Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-
-    plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would
-    be every profile in the ecosystem. 404 when the caller has never played this game — inventing a
-    blank profile would make the PATCH below look like an update when it is the first write.
+    plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be
+    every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank
+    profile would make the PATCH below look like an update when it is the first write.
 
     Args:
         game_id (str | Unset):
@@ -190,9 +190,9 @@ async def asyncio(
     """The caller’s own per-game profile
 
      Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-
-    plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would
-    be every profile in the ecosystem. 404 when the caller has never played this game — inventing a
-    blank profile would make the PATCH below look like an update when it is the first write.
+    plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be
+    every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank
+    profile would make the PATCH below look like an update when it is the first write.
 
     Args:
         game_id (str | Unset):

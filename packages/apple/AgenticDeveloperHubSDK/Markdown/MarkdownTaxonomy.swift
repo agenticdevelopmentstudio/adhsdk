@@ -44,6 +44,10 @@ extension MarkdownStore {
     /// uses, so a filed item survives a round-trip through the server unchanged.
     static let documentTargetKind = "content.markdown"
 
+    /// Every row this store stamps belongs to the signed-in customer: the owner
+    /// pair is `('customer', customerID)`. adh's `customer_id` column is gone.
+    static let ownerKind = "customer"
+
     // MARK: - Categories
 
     public func createCategory(
@@ -58,11 +62,11 @@ extension MarkdownStore {
             try conn.execute(
                 sql: """
                     INSERT INTO categories
-                        (id, customer_id, ecosystem_id, name, description, color, icon,
+                        (id, owner_kind, owner_id, ecosystem_id, name, description, color, icon,
                          sort_order, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                arguments: [category.id, customerID, ecosystemID, name, description,
+                arguments: [category.id, Self.ownerKind, customerID, ecosystemID, name, description,
                             color, icon, sortOrder, stamp, stamp])
             // Taxonomy is not pull-only, so it rides the generic outbox — the
             // typed row and its push op land in one transaction, which is what
@@ -212,16 +216,17 @@ extension MarkdownStore {
             try conn.execute(
                 sql: """
                     INSERT INTO category_edges
-                        (id, customer_id, ecosystem_id, parent_id, child_id, sort_order,
+                        (id, owner_kind, owner_id, ecosystem_id, parent_id, child_id, sort_order,
                          created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(ecosystem_id, parent_id, child_id) DO UPDATE SET
                         deleted_at = NULL,
                         sort_order = excluded.sort_order,
                         updated_at = excluded.updated_at
                     WHERE category_edges.deleted_at IS NOT NULL
                     """,
-                arguments: [newID, customerID, ecosystemID, parent, child, sortOrder, stamp, stamp])
+                arguments: [newID, Self.ownerKind, customerID, ecosystemID, parent, child, sortOrder,
+                            stamp, stamp])
             // `UNIQUE (ecosystem_id, parent_id, child_id)` is unconditional —
             // deliberately, because adh's is — so `removeCategoryEdge`'s
             // tombstone keeps occupying the key forever. A plain
@@ -474,7 +479,7 @@ extension MarkdownStore {
     /// with a tombstone, and returns it under its original id.
     ///
     /// The tombstone half is the interesting half, and reviving is the answer
-    /// because of what adh's own constraint is. `UNIQUE (customer_id,
+    /// because of what adh's own constraint is. `UNIQUE (owner_kind, owner_id,
     /// ecosystem_id, label)` there is unconditional, not partial — a
     /// soft-deleted row keeps occupying its label. So minting a second row for
     /// the same label would produce a local state the server would reject on
@@ -500,17 +505,17 @@ extension MarkdownStore {
             try conn.execute(
                 sql: """
                     INSERT INTO keywords
-                        (id, customer_id, ecosystem_id, label, color, description,
+                        (id, owner_kind, owner_id, ecosystem_id, label, color, description,
                          created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT (customer_id, ecosystem_id, label) DO UPDATE SET
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (owner_kind, owner_id, ecosystem_id, label) DO UPDATE SET
                         deleted_at = NULL,
                         color = excluded.color,
                         description = excluded.description,
                         updated_at = excluded.updated_at
                     WHERE keywords.deleted_at IS NOT NULL
                     """,
-                arguments: [newID, customerID, ecosystemID, label, color,
+                arguments: [newID, Self.ownerKind, customerID, ecosystemID, label, color,
                             description, stamp, stamp])
             // The `WHERE` makes the UPDATE branch a no-op for a live row, and a
             // no-op `DO UPDATE` changes nothing — so zero here means precisely
@@ -525,9 +530,9 @@ extension MarkdownStore {
                 conn,
                 sql: """
                     SELECT id FROM keywords
-                    WHERE customer_id = ? AND ecosystem_id = ? AND label = ?
+                    WHERE owner_kind = ? AND owner_id = ? AND ecosystem_id = ? AND label = ?
                     """,
-                arguments: [customerID, ecosystemID, label]) ?? newID
+                arguments: [Self.ownerKind, customerID, ecosystemID, label]) ?? newID
             var data: [String: JSONValue] = [
                 "label": .string(label), "color": .string(color),
                 "description": .string(description)
@@ -619,16 +624,16 @@ extension MarkdownStore {
             try conn.execute(
                 sql: """
                     INSERT INTO \(table)
-                        (id, customer_id, ecosystem_id, \(column), target_kind, target_id,
+                        (id, owner_kind, owner_id, ecosystem_id, \(column), target_kind, target_id,
                          sort_order, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(ecosystem_id, \(column), target_kind, target_id) DO UPDATE SET
                         deleted_at = NULL,
                         sort_order = excluded.sort_order,
                         updated_at = excluded.updated_at
                     WHERE \(table).deleted_at IS NOT NULL
                     """,
-                arguments: [newID, customerID, ecosystemID, ownerID,
+                arguments: [newID, Self.ownerKind, customerID, ecosystemID, ownerID,
                             Self.documentTargetKind, documentID, sortOrder, stamp, stamp])
             // The unique this conflicts on is unconditional — deliberately,
             // because adh's is — and `unassignCategory` only *tombstones* the

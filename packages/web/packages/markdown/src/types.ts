@@ -6,7 +6,12 @@
  */
 export interface MarkdownDocument {
   id: string
-  customerId: string
+  /** Who owns the row: customer, organization, application, persona or ecosystem. */
+  ownerKind: string
+  ownerId: string
+  /** Who wrote it: customer, application or persona; null for a system row. */
+  authorKind?: string | null
+  authorId?: string | null
   /** Ecosystem (tenant) id. */
   ecosystemId: string
   deletedAt?: string | null

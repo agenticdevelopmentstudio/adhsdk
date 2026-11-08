@@ -13,7 +13,6 @@ class GetSettingsNotificationsResponse200Item:
     """
     Attributes:
         id (str):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         deleted_at (None | str):
@@ -30,7 +29,6 @@ class GetSettingsNotificationsResponse200Item:
     """
 
     id: str
-    customer_id: str
     owner_kind: str
     owner_id: str
     deleted_at: None | str
@@ -47,8 +45,6 @@ class GetSettingsNotificationsResponse200Item:
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -83,7 +79,6 @@ class GetSettingsNotificationsResponse200Item:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "deletedAt": deleted_at,
@@ -106,8 +101,6 @@ class GetSettingsNotificationsResponse200Item:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         id = d.pop("id")
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -147,7 +140,6 @@ class GetSettingsNotificationsResponse200Item:
 
         get_settings_notifications_response_200_item = cls(
             id=id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             deleted_at=deleted_at,

@@ -35,7 +35,6 @@ class GetIntegrationIntegrationCalendarEventsIdResponse200:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         deleted_at (None | str):
@@ -68,7 +67,6 @@ class GetIntegrationIntegrationCalendarEventsIdResponse200:
     created_at: str
     updated_at: str
     is_deleted: bool
-    customer_id: str
     owner_kind: str
     owner_id: str
     deleted_at: None | str
@@ -138,8 +136,6 @@ class GetIntegrationIntegrationCalendarEventsIdResponse200:
 
         is_deleted = self.is_deleted
 
-        customer_id = self.customer_id
-
         owner_kind = self.owner_kind
 
         owner_id = self.owner_id
@@ -183,7 +179,6 @@ class GetIntegrationIntegrationCalendarEventsIdResponse200:
                 "createdAt": created_at,
                 "updatedAt": updated_at,
                 "isDeleted": is_deleted,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "deletedAt": deleted_at,
@@ -315,8 +310,6 @@ class GetIntegrationIntegrationCalendarEventsIdResponse200:
 
         is_deleted = d.pop("isDeleted")
 
-        customer_id = d.pop("customerId")
-
         owner_kind = d.pop("ownerKind")
 
         owner_id = d.pop("ownerId")
@@ -365,7 +358,6 @@ class GetIntegrationIntegrationCalendarEventsIdResponse200:
             created_at=created_at,
             updated_at=updated_at,
             is_deleted=is_deleted,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             deleted_at=deleted_at,

@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.project_author_kind import ProjectAuthorKind
 from ..models.project_estimate_scale import ProjectEstimateScale
 from ..models.project_health_type_1 import ProjectHealthType1
 from ..models.project_health_type_2_type_1 import ProjectHealthType2Type1
@@ -43,7 +44,6 @@ class Project:
         updated_at (str):
         is_deleted (bool):
         sync_version (int):
-        customer_id (str): the customer (user) who created the project
         ecosystem_id (str): the owning ecosystem (tenant scope)
         owner_kind (ProjectOwnerKind): the kind of principal that OWNS the project
         owner_id (str): the owning principal (customer or organization id); server-stamped from the verified ?workspace=
@@ -57,6 +57,9 @@ class Project:
             column with a default. Retracting the newest update moves it back to the previous one, or to null.
         health_updated_at (None | str): when the update that decided `health` was posted; null exactly when `health` is
             null. A dashboard needs this to say whether a green board is green or merely stale.
+        author_kind (ProjectAuthorKind | Unset): Kind of principal that created the project; null when nobody did (a
+            storage token).
+        author_id (None | str | Unset): Id of that principal.
         deleted_at (None | str | Unset):
         archived_at (None | str | Unset): ISO timestamp when archived; null = not archived
         start_date (None | str | Unset): date (YYYY-MM-DD); null = no committed start
@@ -83,13 +86,14 @@ class Project:
     updated_at: str
     is_deleted: bool
     sync_version: int
-    customer_id: str
     ecosystem_id: str
     owner_kind: ProjectOwnerKind
     owner_id: str
     key_prefix: str
     health: None | ProjectHealthType1 | ProjectHealthType2Type1 | ProjectHealthType3Type1
     health_updated_at: None | str
+    author_kind: ProjectAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
     archived_at: None | str | Unset = UNSET
     start_date: None | str | Unset = UNSET
@@ -128,8 +132,6 @@ class Project:
 
         sync_version = self.sync_version
 
-        customer_id = self.customer_id
-
         ecosystem_id = self.ecosystem_id
 
         owner_kind = self.owner_kind.value
@@ -150,6 +152,16 @@ class Project:
 
         health_updated_at: None | str
         health_updated_at = self.health_updated_at
+
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
@@ -216,7 +228,6 @@ class Project:
                 "updatedAt": updated_at,
                 "isDeleted": is_deleted,
                 "syncVersion": sync_version,
-                "customerId": customer_id,
                 "ecosystemId": ecosystem_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
@@ -225,6 +236,10 @@ class Project:
                 "healthUpdatedAt": health_updated_at,
             }
         )
+        if author_kind is not UNSET:
+            field_dict["authorKind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["authorId"] = author_id
         if deleted_at is not UNSET:
             field_dict["deletedAt"] = deleted_at
         if archived_at is not UNSET:
@@ -270,8 +285,6 @@ class Project:
         is_deleted = d.pop("isDeleted")
 
         sync_version = d.pop("syncVersion")
-
-        customer_id = d.pop("customerId")
 
         ecosystem_id = d.pop("ecosystemId")
 
@@ -322,6 +335,22 @@ class Project:
             return cast(None | str, data)
 
         health_updated_at = _parse_health_updated_at(d.pop("healthUpdatedAt"))
+
+        _author_kind = d.pop("authorKind", UNSET)
+        author_kind: ProjectAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = ProjectAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("authorId", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -439,13 +468,14 @@ class Project:
             updated_at=updated_at,
             is_deleted=is_deleted,
             sync_version=sync_version,
-            customer_id=customer_id,
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             key_prefix=key_prefix,
             health=health,
             health_updated_at=health_updated_at,
+            author_kind=author_kind,
+            author_id=author_id,
             deleted_at=deleted_at,
             archived_at=archived_at,
             start_date=start_date,

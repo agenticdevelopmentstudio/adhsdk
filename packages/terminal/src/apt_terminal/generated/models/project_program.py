@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.project_program_author_kind import ProjectProgramAuthorKind
 from ..models.project_program_owner_kind import ProjectProgramOwnerKind
 from ..types import UNSET, Unset
 
@@ -26,7 +27,9 @@ class ProjectProgram:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        customer_id (str | Unset): the customer (user) who created the program
+        author_kind (ProjectProgramAuthorKind | Unset): Kind of principal that created the program; null when nobody did
+            (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         start_date (None | str | Unset): date (YYYY-MM-DD); null is ordinary here, UNLIKE an iteration — a standing
             program ("Platform") has no start, and a delivery program usually knows its target long before one
         target_date (None | str | Unset): date (YYYY-MM-DD); never before startDate
@@ -45,7 +48,8 @@ class ProjectProgram:
     created_at: str
     updated_at: str
     is_deleted: bool
-    customer_id: str | Unset = UNSET
+    author_kind: ProjectProgramAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     start_date: None | str | Unset = UNSET
     target_date: None | str | Unset = UNSET
     created_by: None | str | Unset = UNSET
@@ -74,7 +78,15 @@ class ProjectProgram:
 
         is_deleted = self.is_deleted
 
-        customer_id = self.customer_id
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         start_date: None | str | Unset
         if isinstance(self.start_date, Unset):
@@ -118,8 +130,10 @@ class ProjectProgram:
                 "isDeleted": is_deleted,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if author_kind is not UNSET:
+            field_dict["authorKind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["authorId"] = author_id
         if start_date is not UNSET:
             field_dict["startDate"] = start_date
         if target_date is not UNSET:
@@ -156,7 +170,21 @@ class ProjectProgram:
 
         is_deleted = d.pop("isDeleted")
 
-        customer_id = d.pop("customerId", UNSET)
+        _author_kind = d.pop("authorKind", UNSET)
+        author_kind: ProjectProgramAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = ProjectProgramAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("authorId", UNSET))
 
         def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
@@ -207,7 +235,8 @@ class ProjectProgram:
             created_at=created_at,
             updated_at=updated_at,
             is_deleted=is_deleted,
-            customer_id=customer_id,
+            author_kind=author_kind,
+            author_id=author_id,
             start_date=start_date,
             target_date=target_date,
             created_by=created_by,

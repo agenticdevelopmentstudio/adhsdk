@@ -30,7 +30,7 @@ final class MessagingAdapterTests: XCTestCase {
     }
 
     private let entryJSON = #"""
-    {"id":"m-1","customerId":"c-jane","ecosystemId":"org.acme.shop","channel":"email",
+    {"id":"m-1","ownerKind":"customer","ownerId":"c-jane","ecosystemId":"org.acme.shop","channel":"email",
      "recipient":"jane@example.com","subject":"Your order","body":"Shipped.",
      "templateId":null,"status":"sent","providerId":"pm-1","errorMessage":null,
      "sentBy":"owner@acme.test","origin":"ecosystem","createdAt":"2026-09-03T12:00:00.000Z"}

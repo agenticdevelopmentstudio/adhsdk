@@ -225,7 +225,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 16},
@@ -256,7 +255,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -284,7 +282,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -309,7 +306,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -334,7 +330,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 16},
@@ -365,7 +360,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -388,7 +382,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 16},
@@ -418,7 +411,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -441,7 +433,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -474,7 +465,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -498,7 +488,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -523,7 +512,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -549,7 +537,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -574,7 +561,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -597,7 +583,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 16},
@@ -628,7 +613,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -652,7 +636,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -680,7 +663,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -708,7 +690,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -730,7 +711,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 16},
@@ -758,7 +738,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 16},
@@ -786,7 +765,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 16},
@@ -815,7 +793,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -881,7 +858,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "documentId", "type": "string", "required": true, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -909,7 +885,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -937,7 +912,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "blockId", "type": "string", "required": true, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -966,7 +940,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "documentId", "type": "string", "required": true, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "blockId", "type": "string", "required": false, "nullable": true, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -995,7 +968,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "documentId", "type": "string", "required": true, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1075,11 +1047,11 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
       {"name": "updatedAt", "type": "string", "required": false, "nullable": false, "serverManaged": true},
       {"name": "isDeleted", "type": "boolean", "required": false, "nullable": false, "serverManaged": true},
       {"name": "isDefault", "type": "boolean", "required": false, "nullable": false, "serverManaged": false},
-      {"name": "isInfrastructure", "type": "boolean", "required": false, "nullable": false, "serverManaged": false},
       {"name": "type", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "namespaceId", "type": "string", "required": false, "nullable": true, "serverManaged": false, "maxLength": 36},
       {"name": "parentId", "type": "string", "required": false, "nullable": true, "serverManaged": false, "maxLength": 36},
       {"name": "archivedAt", "type": "string", "required": false, "nullable": true, "serverManaged": false},
+      {"name": "isInfrastructure", "type": "boolean", "required": false, "nullable": false, "serverManaged": true},
     ],
   },
   "integration/integration-audience-contacts": {
@@ -1092,7 +1064,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
@@ -1129,7 +1100,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
@@ -1160,7 +1130,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1218,7 +1187,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
       {"name": "createdAt", "type": "string", "required": false, "nullable": false, "serverManaged": true},
       {"name": "updatedAt", "type": "string", "required": false, "nullable": false, "serverManaged": true},
       {"name": "isDeleted", "type": "boolean", "required": false, "nullable": false, "serverManaged": true},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1238,7 +1206,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
@@ -1279,7 +1246,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1317,7 +1283,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1356,7 +1321,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1489,7 +1453,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1514,7 +1477,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1551,7 +1513,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "srcId", "type": "string", "required": true, "nullable": false, "serverManaged": false, "maxLength": 36},
@@ -1576,7 +1537,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ecosystemId", "type": "string", "required": false, "nullable": false, "serverManaged": false, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1719,7 +1679,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1748,7 +1707,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1777,7 +1735,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},
@@ -1813,7 +1770,6 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
     "exposure": "owner",
     "columns": [
       {"name": "id", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
-      {"name": "customerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "ownerKind", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 16},
       {"name": "ownerId", "type": "string", "required": false, "nullable": false, "serverManaged": true, "maxLength": 36},
       {"name": "deletedAt", "type": "string", "required": false, "nullable": true, "serverManaged": true},

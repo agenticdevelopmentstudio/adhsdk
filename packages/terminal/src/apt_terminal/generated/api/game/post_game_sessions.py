@@ -90,10 +90,10 @@ def sync_detailed(
 
      Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four
     session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s
-    session carries the empty-string owner, so these handlers scope on the visitor token id rather than
-    on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id`
-    resumes the caller’s own active session for that chat (200) instead of starting a second one; the
-    owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on
+    the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes
+    the caller’s own active session for that chat (200) instead of starting a second one; the owner
+    predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
         body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.
@@ -127,10 +127,10 @@ def sync(
 
      Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four
     session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s
-    session carries the empty-string owner, so these handlers scope on the visitor token id rather than
-    on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id`
-    resumes the caller’s own active session for that chat (200) instead of starting a second one; the
-    owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on
+    the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes
+    the caller’s own active session for that chat (200) instead of starting a second one; the owner
+    predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
         body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.
@@ -159,10 +159,10 @@ async def asyncio_detailed(
 
      Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four
     session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s
-    session carries the empty-string owner, so these handlers scope on the visitor token id rather than
-    on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id`
-    resumes the caller’s own active session for that chat (200) instead of starting a second one; the
-    owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on
+    the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes
+    the caller’s own active session for that chat (200) instead of starting a second one; the owner
+    predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
         body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.
@@ -194,10 +194,10 @@ async def asyncio(
 
      Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four
     session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s
-    session carries the empty-string owner, so these handlers scope on the visitor token id rather than
-    on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id`
-    resumes the caller’s own active session for that chat (200) instead of starting a second one; the
-    owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on
+    the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes
+    the caller’s own active session for that chat (200) instead of starting a second one; the owner
+    predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
         body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.

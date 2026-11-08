@@ -14,7 +14,6 @@ class GetContentKeywordItemsIdResponse200:
     Attributes:
         id (str):
         ecosystem_id (str):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         deleted_at (None | str):
@@ -31,7 +30,6 @@ class GetContentKeywordItemsIdResponse200:
 
     id: str
     ecosystem_id: str
-    customer_id: str
     owner_kind: str
     owner_id: str
     deleted_at: None | str
@@ -49,8 +47,6 @@ class GetContentKeywordItemsIdResponse200:
         id = self.id
 
         ecosystem_id = self.ecosystem_id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -84,7 +80,6 @@ class GetContentKeywordItemsIdResponse200:
             {
                 "id": id,
                 "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "deletedAt": deleted_at,
@@ -108,8 +103,6 @@ class GetContentKeywordItemsIdResponse200:
         id = d.pop("id")
 
         ecosystem_id = d.pop("ecosystemId")
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -148,7 +141,6 @@ class GetContentKeywordItemsIdResponse200:
         get_content_keyword_items_id_response_200 = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             deleted_at=deleted_at,

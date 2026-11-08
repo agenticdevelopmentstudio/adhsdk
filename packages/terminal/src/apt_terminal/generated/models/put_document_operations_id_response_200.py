@@ -15,7 +15,6 @@ class PutDocumentOperationsIdResponse200:
         id (str):
         document_id (str):
         block_id (None | str):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         deleted_at (None | str):
@@ -36,7 +35,6 @@ class PutDocumentOperationsIdResponse200:
     id: str
     document_id: str
     block_id: None | str
-    customer_id: str
     owner_kind: str
     owner_id: str
     deleted_at: None | str
@@ -60,8 +58,6 @@ class PutDocumentOperationsIdResponse200:
 
         block_id: None | str
         block_id = self.block_id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -104,7 +100,6 @@ class PutDocumentOperationsIdResponse200:
                 "id": id,
                 "documentId": document_id,
                 "blockId": block_id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "deletedAt": deleted_at,
@@ -138,8 +133,6 @@ class PutDocumentOperationsIdResponse200:
             return cast(None | str, data)
 
         block_id = _parse_block_id(d.pop("blockId"))
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -195,7 +188,6 @@ class PutDocumentOperationsIdResponse200:
             id=id,
             document_id=document_id,
             block_id=block_id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             deleted_at=deleted_at,

@@ -223,7 +223,9 @@ from .delete_usage_rates_id_response_200 import DeleteUsageRatesIdResponse200
 from .delivery import Delivery
 from .delivery_status import DeliveryStatus
 from .discussion_post import DiscussionPost
+from .discussion_post_author_kind import DiscussionPostAuthorKind
 from .discussion_topic import DiscussionTopic
+from .discussion_topic_author_kind import DiscussionTopicAuthorKind
 from .dm_chat_list import DmChatList
 from .dm_chat_summary import DmChatSummary
 from .dm_create_request import DmCreateRequest
@@ -252,6 +254,7 @@ from .error_error import ErrorError
 from .error_error_owned_item import ErrorErrorOwnedItem
 from .feature_flag import FeatureFlag
 from .feed_item import FeedItem
+from .feed_item_author_kind import FeedItemAuthorKind
 from .feed_page import FeedPage
 from .feed_read_all_result import FeedReadAllResult
 from .feed_unread_count import FeedUnreadCount
@@ -1091,6 +1094,7 @@ from .list_stats import ListStats
 from .markdown_category_node import MarkdownCategoryNode
 from .markdown_category_tree import MarkdownCategoryTree
 from .markdown_document import MarkdownDocument
+from .markdown_document_author_kind import MarkdownDocumentAuthorKind
 from .markdown_document_frontmatter_type_0 import MarkdownDocumentFrontmatterType0
 from .markdown_document_kind import MarkdownDocumentKind
 from .markdown_document_owner_kind import MarkdownDocumentOwnerKind
@@ -2168,6 +2172,7 @@ from .project_activity import ProjectActivity
 from .project_activity_detail_type_0 import ProjectActivityDetailType0
 from .project_artifact import ProjectArtifact
 from .project_artifact_direction import ProjectArtifactDirection
+from .project_author_kind import ProjectAuthorKind
 from .project_comment import ProjectComment
 from .project_comment_author_kind import ProjectCommentAuthorKind
 from .project_estimate_scale import ProjectEstimateScale
@@ -2177,6 +2182,7 @@ from .project_health_type_1 import ProjectHealthType1
 from .project_health_type_2_type_1 import ProjectHealthType2Type1
 from .project_health_type_3_type_1 import ProjectHealthType3Type1
 from .project_iteration import ProjectIteration
+from .project_iteration_author_kind import ProjectIterationAuthorKind
 from .project_iteration_owner_kind import ProjectIterationOwnerKind
 from .project_iteration_state import ProjectIterationState
 from .project_lead_kind_type_1 import ProjectLeadKindType1
@@ -2189,6 +2195,7 @@ from .project_participant import ProjectParticipant
 from .project_participant_participant_kind import ProjectParticipantParticipantKind
 from .project_priority_scale import ProjectPriorityScale
 from .project_program import ProjectProgram
+from .project_program_author_kind import ProjectProgramAuthorKind
 from .project_program_owner_kind import ProjectProgramOwnerKind
 from .project_saved_view import ProjectSavedView
 from .project_saved_view_config import ProjectSavedViewConfig
@@ -2197,6 +2204,7 @@ from .project_status_category import ProjectStatusCategory
 from .project_status_update import ProjectStatusUpdate
 from .project_status_update_health import ProjectStatusUpdateHealth
 from .project_template import ProjectTemplate
+from .project_template_author_kind import ProjectTemplateAuthorKind
 from .project_template_body import ProjectTemplateBody
 from .project_template_body_estimate_scale import ProjectTemplateBodyEstimateScale
 from .project_template_body_milestones_item import ProjectTemplateBodyMilestonesItem
@@ -2680,6 +2688,7 @@ from .put_usage_usage_counters_scope_principal_id_period_start_response_200 impo
 from .put_usage_usage_events_id_body import PutUsageUsageEventsIdBody
 from .put_usage_usage_events_id_response_200 import PutUsageUsageEventsIdResponse200
 from .reaction import Reaction
+from .reaction_author_kind import ReactionAuthorKind
 from .refresh_result import RefreshResult
 from .registry import Registry
 from .registry_agent_mcp_server import RegistryAgentMcpServer
@@ -3111,7 +3120,9 @@ __all__ = (
     "Delivery",
     "DeliveryStatus",
     "DiscussionPost",
+    "DiscussionPostAuthorKind",
     "DiscussionTopic",
+    "DiscussionTopicAuthorKind",
     "DmChatList",
     "DmChatSummary",
     "DmCreateRequest",
@@ -3140,6 +3151,7 @@ __all__ = (
     "ErrorErrorOwnedItem",
     "FeatureFlag",
     "FeedItem",
+    "FeedItemAuthorKind",
     "FeedPage",
     "FeedReadAllResult",
     "FeedUnreadCount",
@@ -3705,6 +3717,7 @@ __all__ = (
     "MarkdownCategoryNode",
     "MarkdownCategoryTree",
     "MarkdownDocument",
+    "MarkdownDocumentAuthorKind",
     "MarkdownDocumentFrontmatterType0",
     "MarkdownDocumentKind",
     "MarkdownDocumentOwnerKind",
@@ -4398,6 +4411,7 @@ __all__ = (
     "ProjectActivityDetailType0",
     "ProjectArtifact",
     "ProjectArtifactDirection",
+    "ProjectAuthorKind",
     "ProjectComment",
     "ProjectCommentAuthorKind",
     "ProjectEstimateScale",
@@ -4407,6 +4421,7 @@ __all__ = (
     "ProjectHealthType2Type1",
     "ProjectHealthType3Type1",
     "ProjectIteration",
+    "ProjectIterationAuthorKind",
     "ProjectIterationOwnerKind",
     "ProjectIterationState",
     "ProjectLeadKindType1",
@@ -4419,6 +4434,7 @@ __all__ = (
     "ProjectParticipantParticipantKind",
     "ProjectPriorityScale",
     "ProjectProgram",
+    "ProjectProgramAuthorKind",
     "ProjectProgramOwnerKind",
     "ProjectSavedView",
     "ProjectSavedViewConfig",
@@ -4427,6 +4443,7 @@ __all__ = (
     "ProjectStatusUpdate",
     "ProjectStatusUpdateHealth",
     "ProjectTemplate",
+    "ProjectTemplateAuthorKind",
     "ProjectTemplateBody",
     "ProjectTemplateBodyEstimateScale",
     "ProjectTemplateBodyMilestonesItem",
@@ -4760,6 +4777,7 @@ __all__ = (
     "PutUsageUsageEventsIdBody",
     "PutUsageUsageEventsIdResponse200",
     "Reaction",
+    "ReactionAuthorKind",
     "RefreshResult",
     "Registry",
     "RegistryAgentMcpServer",

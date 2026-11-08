@@ -493,7 +493,8 @@
         "required": [
           "id",
           "ecosystemId",
-          "customerId",
+          "ownerKind",
+          "ownerId",
           "url",
           "eventTypes",
           "active",
@@ -509,9 +510,13 @@
             "type": "string",
             "description": "Ecosystem that owns this endpoint"
           },
-          "customerId": {
+          "ownerKind": {
             "type": "string",
-            "description": "User who registered the endpoint"
+            "description": "Kind of principal that owns the endpoint: 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
           },
           "url": {
             "type": "string",
@@ -6838,9 +6843,20 @@
             "type": "string",
             "description": "The community instance this topic belongs to."
           },
-          "customerId": {
+          "authorKind": {
             "type": "string",
-            "description": "Author (server-stamped principal). Omitted on the public surface."
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that wrote the topic (omitted on the public surface); null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "title": {
             "type": "string"
@@ -6926,9 +6942,20 @@
             "nullable": true,
             "description": "The content.markdown doc backing this post’s body."
           },
-          "customerId": {
+          "authorKind": {
             "type": "string",
-            "description": "Author (server-stamped principal). Omitted on the public surface."
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that wrote the post (omitted on the public surface); null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "ecosystemId": {
             "type": "string",
@@ -7757,7 +7784,6 @@
         "type": "object",
         "required": [
           "id",
-          "customerId",
           "ecosystemId",
           "ownerKind",
           "ownerId",
@@ -7778,9 +7804,20 @@
           "id": {
             "type": "string"
           },
-          "customerId": {
+          "authorKind": {
             "type": "string",
-            "description": "The CREATOR/author (public routes key on this)."
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that created the doc (public routes key on a customer author); null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "ecosystemId": {
             "type": "string",
@@ -7976,7 +8013,7 @@
         "required": [
           "id",
           "documentId",
-          "customerId",
+          "writerCustomerId",
           "ecosystemId",
           "ownerKind",
           "ownerId",
@@ -7995,7 +8032,7 @@
           "documentId": {
             "type": "string"
           },
-          "customerId": {
+          "writerCustomerId": {
             "type": "string",
             "description": "The revision WRITER."
           },
@@ -8106,7 +8143,8 @@
         "type": "object",
         "required": [
           "id",
-          "customerId",
+          "ownerKind",
+          "ownerId",
           "ecosystemId",
           "channel",
           "recipient",
@@ -8119,9 +8157,13 @@
           "id": {
             "type": "string"
           },
-          "customerId": {
+          "ownerKind": {
             "type": "string",
-            "description": "Target user (recipient) id"
+            "description": "Kind of principal that owns the message (the recipient, for a message to a user): 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
           },
           "deletedAt": {
             "type": "string",
@@ -8518,7 +8560,8 @@
         "type": "object",
         "required": [
           "id",
-          "customerId",
+          "ownerKind",
+          "ownerId",
           "ecosystemId",
           "targetKind",
           "targetId",
@@ -8529,8 +8572,13 @@
           "id": {
             "type": "string"
           },
-          "customerId": {
-            "type": "string"
+          "ownerKind": {
+            "type": "string",
+            "description": "Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
           },
           "ecosystemId": {
             "type": "string"
@@ -8585,7 +8633,6 @@
         "type": "object",
         "required": [
           "id",
-          "customerId",
           "ecosystemId",
           "targetKind",
           "targetId",
@@ -8596,8 +8643,28 @@
           "id": {
             "type": "string"
           },
-          "customerId": {
-            "type": "string"
+          "ownerKind": {
+            "type": "string",
+            "description": "Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
+          },
+          "authorKind": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that reacted; null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "ecosystemId": {
             "type": "string"
@@ -8625,7 +8692,8 @@
         "required": [
           "id",
           "ecosystemId",
-          "customerId",
+          "ownerKind",
+          "ownerId",
           "optionId",
           "createdAt"
         ],
@@ -8636,8 +8704,13 @@
           "ecosystemId": {
             "type": "string"
           },
-          "customerId": {
-            "type": "string"
+          "ownerKind": {
+            "type": "string",
+            "description": "Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
           },
           "optionId": {
             "type": "string"
@@ -8821,7 +8894,6 @@
           "updatedAt",
           "isDeleted",
           "syncVersion",
-          "customerId",
           "ecosystemId",
           "ownerKind",
           "ownerId",
@@ -8886,9 +8958,20 @@
           "syncVersion": {
             "type": "integer"
           },
-          "customerId": {
+          "authorKind": {
             "type": "string",
-            "description": "the customer (user) who created the project"
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that created the project; null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "deletedAt": {
             "type": "string",
@@ -9185,9 +9268,20 @@
           "ecosystemId": {
             "type": "string"
           },
-          "customerId": {
+          "authorKind": {
             "type": "string",
-            "description": "the customer (user) who created the iteration"
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that created the iteration; null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "ownerKind": {
             "type": "string",
@@ -9268,9 +9362,20 @@
           "ecosystemId": {
             "type": "string"
           },
-          "customerId": {
+          "authorKind": {
             "type": "string",
-            "description": "the customer (user) who created the program"
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that created the program; null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "ownerKind": {
             "type": "string",
@@ -9345,9 +9450,13 @@
           "ecosystemId": {
             "type": "string"
           },
-          "customerId": {
+          "ownerKind": {
             "type": "string",
-            "description": "inherited from the owning project by trigger, never sent"
+            "description": "Kind of principal that owns the milestone (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
           },
           "projectId": {
             "type": "string"
@@ -9429,9 +9538,13 @@
           "ecosystemId": {
             "type": "string"
           },
-          "customerId": {
+          "ownerKind": {
             "type": "string",
-            "description": "inherited from the owning project by trigger, never sent"
+            "description": "Kind of principal that owns the status update (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
           },
           "projectId": {
             "type": "string"
@@ -9491,9 +9604,20 @@
           "ecosystemId": {
             "type": "string"
           },
-          "customerId": {
+          "authorKind": {
             "type": "string",
-            "description": "the customer (user) who created the template"
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that created the template; null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "ownerKind": {
             "type": "string",
@@ -10363,7 +10487,8 @@
         "required": [
           "id",
           "ecosystemId",
-          "customerId",
+          "ownerKind",
+          "ownerId",
           "personaId",
           "scope",
           "slug",
@@ -10386,9 +10511,13 @@
             "type": "string",
             "description": "Ecosystem (tenant) id"
           },
-          "customerId": {
+          "ownerKind": {
             "type": "string",
-            "description": "Owning user; empty for a global memory"
+            "description": "Kind of principal that owns the memory (the user for a user-scoped memory, else the persona): 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
           },
           "deletedAt": {
             "type": "string",
@@ -14988,7 +15117,8 @@
         "type": "object",
         "required": [
           "id",
-          "customerId",
+          "ownerKind",
+          "ownerId",
           "ecosystemId",
           "source",
           "entityType",
@@ -15001,8 +15131,28 @@
           "id": {
             "type": "string"
           },
-          "customerId": {
-            "type": "string"
+          "ownerKind": {
+            "type": "string",
+            "description": "Kind of principal that owns the feed item: 'customer', 'organization', 'application', 'persona' or 'ecosystem'."
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Id of the owning principal."
+          },
+          "authorKind": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "customer",
+              "application",
+              "persona"
+            ],
+            "description": "Kind of principal that wrote the item; null when nobody did (a storage token)."
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id of that principal."
           },
           "deletedAt": {
             "type": "string",
@@ -15934,7 +16084,6 @@
         "required": [
           "id",
           "ecosystemId",
-          "customerId",
           "ownerKind",
           "ownerId",
           "parentType",
@@ -15954,10 +16103,6 @@
           },
           "ecosystemId": {
             "type": "string"
-          },
-          "customerId": {
-            "type": "string",
-            "description": "The owning customer, empty when the owner is not a customer. Superseded by ownerKind / ownerId, and kept on the wire for clients that have not moved."
           },
           "ownerKind": {
             "type": "string",
@@ -16327,10 +16472,10 @@
             "type": "string",
             "enum": [
               "owner",
-              "customer",
+              "author",
               "ecosystem"
             ],
-            "description": "Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem"
+            "description": "Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem"
           },
           "pushMode": {
             "type": "string",
@@ -40291,7 +40436,7 @@
           "game"
         ],
         "summary": "Start a session, or resume the caller’s active one for a chat",
-        "description": "Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session carries the empty-string owner, so these handlers scope on the visitor token id rather than on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.",
+        "description": "Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.",
         "security": [
           {
             "bearerAuth": []
@@ -41202,7 +41347,7 @@
           "game"
         ],
         "summary": "Acquire an artifact (idempotent by the unique, not by a caller-sent key)",
-        "description": "A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. `customer_id` comes from the principal and is never read from the body, which is why this is not generic CRUD.",
+        "description": "A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. The owner comes from the principal and is never read from the body, which is why this is not generic CRUD.",
         "security": [
           {
             "bearerAuth": []
@@ -41332,7 +41477,7 @@
           "game"
         ],
         "summary": "The caller’s own per-game profile",
-        "description": "Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.",
+        "description": "Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.",
         "security": [
           {
             "bearerAuth": []
@@ -83813,10 +83958,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "deletedAt": {
                         "type": [
                           "string",
@@ -83910,7 +84051,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "deletedAt",
                       "ecosystemId",
                       "ownerKind",
@@ -84045,10 +84185,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -84142,7 +84278,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -84255,10 +84390,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -84352,7 +84483,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -84486,10 +84616,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -84583,7 +84709,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -84746,10 +84871,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -84813,7 +84934,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -84910,10 +85030,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -84977,7 +85093,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -85055,10 +85170,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -85122,7 +85233,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -85225,10 +85335,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -85292,7 +85398,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -85413,10 +85518,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -85470,7 +85571,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -85562,10 +85662,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -85619,7 +85715,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -85698,10 +85793,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -85755,7 +85846,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -85852,10 +85942,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -85909,7 +85995,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -86027,10 +86112,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -86088,7 +86169,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -86186,10 +86266,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -86247,7 +86323,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -86327,10 +86402,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -86388,7 +86459,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -86490,10 +86560,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -86551,7 +86617,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -86666,10 +86731,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "deletedAt": {
                         "type": [
                           "string",
@@ -86765,7 +86826,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "deletedAt",
                       "ecosystemId",
                       "ownerKind",
@@ -86880,10 +86940,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -86979,7 +87035,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -87060,10 +87115,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -87159,7 +87210,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -87283,10 +87333,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -87382,7 +87428,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -87506,10 +87551,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -87559,7 +87600,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -87646,10 +87686,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -87699,7 +87735,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -87777,10 +87812,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -87830,7 +87861,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -87922,10 +87952,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -87975,7 +88001,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -88088,10 +88113,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "deletedAt": {
                         "type": [
                           "string",
@@ -88183,7 +88204,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "deletedAt",
                       "ecosystemId",
                       "ownerKind",
@@ -88293,10 +88313,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -88388,7 +88404,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -88468,10 +88483,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -88563,7 +88574,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -88682,10 +88692,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -88777,7 +88783,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -88900,10 +88905,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -88971,7 +88972,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -89076,10 +89076,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -89147,7 +89143,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -89225,10 +89220,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -89296,7 +89287,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -89406,10 +89396,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -89477,7 +89463,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -89590,10 +89575,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -89675,7 +89656,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -89799,10 +89779,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -89884,7 +89860,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -89967,10 +89942,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -90052,7 +90023,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -90178,10 +90148,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -90263,7 +90229,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -90389,10 +90354,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -90460,7 +90421,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -90565,10 +90525,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -90636,7 +90592,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -90714,10 +90669,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -90785,7 +90736,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -90895,10 +90845,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -90966,7 +90912,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -91083,10 +91028,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -91144,7 +91085,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -91242,10 +91182,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -91303,7 +91239,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -91383,10 +91318,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -91444,7 +91375,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -91546,10 +91476,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -91607,7 +91533,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -91722,10 +91647,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -91780,7 +91701,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -91866,10 +91786,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -91924,7 +91840,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -92000,10 +91915,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -92058,7 +91969,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -92150,10 +92060,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -92208,7 +92114,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -92327,10 +92232,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -92403,7 +92304,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -92515,10 +92415,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -92591,7 +92487,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -92670,10 +92565,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -92746,7 +92637,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -92862,10 +92752,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -92938,7 +92824,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -93056,10 +92941,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -93115,7 +92996,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -93207,10 +93087,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -93266,7 +93142,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -93344,10 +93219,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -93403,7 +93274,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -93501,10 +93371,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -93560,7 +93426,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -93673,10 +93538,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "deletedAt": {
                         "type": [
                           "string",
@@ -93772,7 +93633,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "deletedAt",
                       "ecosystemId",
                       "ownerKind",
@@ -93887,10 +93747,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -93986,7 +93842,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -94067,10 +93922,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -94166,7 +94017,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -94290,10 +94140,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -94389,7 +94235,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -94513,10 +94358,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -94570,7 +94411,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -94662,10 +94502,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -94719,7 +94555,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -94798,10 +94633,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -94855,7 +94686,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -94952,10 +94782,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -95009,7 +94835,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -95123,10 +94948,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -95204,7 +95025,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -95315,10 +95135,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -95396,7 +95212,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -95474,10 +95289,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -95555,7 +95366,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -95672,10 +95482,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -95753,7 +95559,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -95874,10 +95679,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -95967,7 +95768,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -96103,10 +95903,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -96196,7 +95992,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -96278,10 +96073,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -96371,7 +96162,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -96510,10 +96300,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -96603,7 +96389,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -96724,10 +96509,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -96772,7 +96553,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -96852,10 +96632,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -96900,7 +96676,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -96977,10 +96752,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -97025,7 +96796,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -97111,10 +96881,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -97159,7 +96925,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -97271,10 +97036,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "deletedAt": {
                         "type": [
                           "string",
@@ -97355,7 +97116,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "deletedAt",
                       "ecosystemId",
                       "ownerKind",
@@ -97456,10 +97216,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -97540,7 +97296,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -97619,10 +97374,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -97703,7 +97454,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -97810,10 +97560,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -97894,7 +97640,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -98012,10 +97757,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "deletedAt": {
                         "type": [
                           "string",
@@ -98098,7 +97839,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "deletedAt",
                       "ecosystemId",
                       "ownerKind",
@@ -98219,10 +97959,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -98305,7 +98041,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -98415,10 +98150,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -98501,7 +98232,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -98621,10 +98351,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -98707,7 +98433,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -98867,10 +98592,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "deletedAt": {
                         "type": [
                           "string",
@@ -98955,7 +98676,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "deletedAt",
                       "ecosystemId",
                       "ownerKind",
@@ -99058,10 +98778,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -99146,7 +98862,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -99226,10 +98941,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -99314,7 +99025,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -99426,10 +99136,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "deletedAt": {
                       "type": [
                         "string",
@@ -99514,7 +99220,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "deletedAt",
                     "ecosystemId",
                     "ownerKind",
@@ -99633,10 +99338,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -99749,7 +99450,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -99902,10 +99602,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -100018,7 +99714,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -100104,10 +99799,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -100220,7 +99911,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -100377,10 +100067,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -100493,7 +100179,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -101571,10 +101256,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -101647,7 +101328,6 @@
                     "required": [
                       "id",
                       "documentId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -101760,10 +101440,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -101836,7 +101512,6 @@
                   "required": [
                     "id",
                     "documentId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -101919,10 +101594,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -101995,7 +101666,6 @@
                   "required": [
                     "id",
                     "documentId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -102112,10 +101782,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -102188,7 +101854,6 @@
                   "required": [
                     "id",
                     "documentId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -102306,10 +101971,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -102386,7 +102047,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -102493,10 +102153,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -102573,7 +102229,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -102651,10 +102306,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -102731,7 +102382,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -102844,10 +102494,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -102924,7 +102570,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -103045,10 +102690,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -103109,7 +102750,6 @@
                     "required": [
                       "id",
                       "blockId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -103210,10 +102850,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -103274,7 +102910,6 @@
                   "required": [
                     "id",
                     "blockId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -103356,10 +102991,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -103420,7 +103051,6 @@
                   "required": [
                     "id",
                     "blockId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -103524,10 +103154,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -103588,7 +103214,6 @@
                   "required": [
                     "id",
                     "blockId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -103720,10 +103345,6 @@
                           }
                         ]
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -103807,7 +103428,6 @@
                       "id",
                       "documentId",
                       "blockId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -103956,10 +103576,6 @@
                         }
                       ]
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -104043,7 +103659,6 @@
                     "id",
                     "documentId",
                     "blockId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -104137,10 +103752,6 @@
                         }
                       ]
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -104224,7 +103835,6 @@
                     "id",
                     "documentId",
                     "blockId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -104376,10 +103986,6 @@
                         }
                       ]
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -104463,7 +104069,6 @@
                     "id",
                     "documentId",
                     "blockId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -104585,10 +104190,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -104652,7 +104253,6 @@
                     "required": [
                       "id",
                       "documentId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -104756,10 +104356,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -104823,7 +104419,6 @@
                   "required": [
                     "id",
                     "documentId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -104905,10 +104500,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -104972,7 +104563,6 @@
                   "required": [
                     "id",
                     "documentId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -105079,10 +104669,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -105146,7 +104732,6 @@
                   "required": [
                     "id",
                     "documentId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -110463,10 +110048,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -110543,7 +110124,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "gameId",
@@ -110651,10 +110231,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -110731,7 +110307,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "gameId",
@@ -110813,10 +110388,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -110893,7 +110464,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "gameId",
@@ -111005,10 +110575,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -111085,7 +110651,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "gameId",
@@ -111199,10 +110764,6 @@
                     "type": "object",
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -111406,7 +110967,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ecosystemId",
                       "ownerKind",
                       "ownerId",
@@ -111630,10 +111190,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -111834,7 +111390,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -111922,10 +111477,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -112126,7 +111677,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -112351,10 +111901,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -112555,7 +112101,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -112679,10 +112224,6 @@
                     "type": "object",
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -112811,7 +112352,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ecosystemId",
                       "ownerKind",
                       "ownerId",
@@ -112952,10 +112492,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -113081,7 +112617,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -113163,10 +112698,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -113292,7 +112823,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -113436,10 +112966,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -113565,7 +113091,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -113683,10 +113208,6 @@
                     "type": "object",
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -113810,7 +113331,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -113974,10 +113494,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -114098,7 +113614,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -114185,10 +113700,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -114309,7 +113820,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -114475,10 +113985,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -114599,7 +114105,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -114867,10 +114372,6 @@
                       "isDeleted": {
                         "type": "boolean"
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -114930,7 +114431,6 @@
                       "createdAt",
                       "updatedAt",
                       "isDeleted",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -115277,10 +114777,6 @@
                     "isDeleted": {
                       "type": "boolean"
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -115340,7 +114836,6 @@
                     "createdAt",
                     "updatedAt",
                     "isDeleted",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -115553,10 +115048,6 @@
                     "isDeleted": {
                       "type": "boolean"
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -115616,7 +115107,6 @@
                     "createdAt",
                     "updatedAt",
                     "isDeleted",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -115967,10 +115457,6 @@
                     "isDeleted": {
                       "type": "boolean"
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -116030,7 +115516,6 @@
                     "createdAt",
                     "updatedAt",
                     "isDeleted",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -116137,10 +115622,6 @@
                     "type": "object",
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -116371,7 +115852,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ecosystemId",
                       "ownerKind",
                       "ownerId",
@@ -116624,10 +116104,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -116855,7 +116331,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -116947,10 +116422,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -117178,7 +116649,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -117434,10 +116904,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ecosystemId": {
                       "type": "string",
                       "maxLength": 36
@@ -117665,7 +117131,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ecosystemId",
                     "ownerKind",
                     "ownerId",
@@ -117793,10 +117258,6 @@
                     "type": "object",
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -117948,7 +117409,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -118143,10 +117603,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -118295,7 +117751,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -118384,10 +117839,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -118536,7 +117987,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -118732,10 +118182,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -118884,7 +118330,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -119009,10 +118454,6 @@
                     "type": "object",
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -119154,7 +118595,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -119340,10 +118780,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -119482,7 +118918,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -119572,10 +119007,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -119714,7 +119145,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -119901,10 +119331,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -120043,7 +119469,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -120172,10 +119597,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -120286,7 +119707,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -120435,10 +119855,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -120549,7 +119965,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -120633,10 +120048,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -120747,7 +120158,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -120900,10 +120310,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -121014,7 +120420,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -127422,10 +126827,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -127505,7 +126906,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -127623,10 +127023,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -127706,7 +127102,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -127785,10 +127180,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -127868,7 +127259,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -127991,10 +127381,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -128074,7 +127460,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -128189,10 +127574,6 @@
                         "maxLength": 36
                       },
                       "ecosystemId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -128346,7 +127727,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -128547,10 +127927,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -128701,7 +128077,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -128792,10 +128167,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -128946,7 +128317,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -129152,10 +128522,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -129306,7 +128672,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -129436,10 +128801,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -129492,7 +128853,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "srcId",
@@ -129583,10 +128943,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -129639,7 +128995,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "srcId",
@@ -129718,10 +129073,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -129774,7 +129125,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "srcId",
@@ -129870,10 +129220,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -129926,7 +129272,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "srcId",
@@ -130041,10 +129386,6 @@
                         "maxLength": 36
                       },
                       "ecosystemId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -130224,7 +129565,6 @@
                     "required": [
                       "id",
                       "ecosystemId",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -130411,10 +129751,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -130591,7 +129927,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -130687,10 +130022,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -130867,7 +130198,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -131056,10 +130386,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -131236,7 +130562,6 @@
                   "required": [
                     "id",
                     "ecosystemId",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -131367,10 +130692,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -131448,7 +130769,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -131558,10 +130878,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -131639,7 +130955,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -131719,10 +131034,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -131800,7 +131111,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -131919,10 +131229,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -132000,7 +131306,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -132119,10 +131424,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -132199,7 +131500,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -132308,10 +131608,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -132388,7 +131684,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -132468,10 +131763,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -132548,7 +131839,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -132666,10 +131956,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -132746,7 +132032,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -132862,10 +132147,6 @@
                     "type": "object",
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
-                      "customerId": {
                         "type": "string",
                         "maxLength": 36
                       },
@@ -132996,7 +132277,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -133166,10 +132446,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -133297,7 +132573,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -133384,10 +132659,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -133515,7 +132786,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -133688,10 +132958,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -133819,7 +133085,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -133945,10 +133210,6 @@
                         "type": "string",
                         "maxLength": 36
                       },
-                      "customerId": {
-                        "type": "string",
-                        "maxLength": 36
-                      },
                       "ownerKind": {
                         "type": "string",
                         "maxLength": 16
@@ -134005,7 +133266,6 @@
                     },
                     "required": [
                       "id",
-                      "customerId",
                       "ownerKind",
                       "ownerId",
                       "deletedAt",
@@ -134094,10 +133354,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -134154,7 +133410,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -134231,10 +133486,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -134291,7 +133542,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",
@@ -134386,10 +133636,6 @@
                       "type": "string",
                       "maxLength": 36
                     },
-                    "customerId": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
                     "ownerKind": {
                       "type": "string",
                       "maxLength": 16
@@ -134446,7 +133692,6 @@
                   },
                   "required": [
                     "id",
-                    "customerId",
                     "ownerKind",
                     "ownerId",
                     "deletedAt",

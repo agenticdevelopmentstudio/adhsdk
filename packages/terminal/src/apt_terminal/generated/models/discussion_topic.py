@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.discussion_topic_author_kind import DiscussionTopicAuthorKind
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DiscussionTopic")
@@ -25,7 +26,9 @@ class DiscussionTopic:
         last_activity_at (str):
         created_at (str):
         updated_at (str):
-        customer_id (str | Unset): Author (server-stamped principal). Omitted on the public surface.
+        author_kind (DiscussionTopicAuthorKind | Unset): Kind of principal that wrote the topic (omitted on the public
+            surface); null when nobody did (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         category_id (None | str | Unset):
         answered_post_id (None | str | Unset):
         excerpt (None | str | Unset): LIST routes only: the opening post’s leading prose, flattened from markdown
@@ -49,7 +52,8 @@ class DiscussionTopic:
     last_activity_at: str
     created_at: str
     updated_at: str
-    customer_id: str | Unset = UNSET
+    author_kind: DiscussionTopicAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     category_id: None | str | Unset = UNSET
     answered_post_id: None | str | Unset = UNSET
     excerpt: None | str | Unset = UNSET
@@ -79,7 +83,15 @@ class DiscussionTopic:
 
         updated_at = self.updated_at
 
-        customer_id = self.customer_id
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         category_id: None | str | Unset
         if isinstance(self.category_id, Unset):
@@ -133,8 +145,10 @@ class DiscussionTopic:
                 "updatedAt": updated_at,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if author_kind is not UNSET:
+            field_dict["authorKind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["authorId"] = author_id
         if category_id is not UNSET:
             field_dict["categoryId"] = category_id
         if answered_post_id is not UNSET:
@@ -173,7 +187,21 @@ class DiscussionTopic:
 
         updated_at = d.pop("updatedAt")
 
-        customer_id = d.pop("customerId", UNSET)
+        _author_kind = d.pop("authorKind", UNSET)
+        author_kind: DiscussionTopicAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = DiscussionTopicAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("authorId", UNSET))
 
         def _parse_category_id(data: object) -> None | str | Unset:
             if data is None:
@@ -240,7 +268,8 @@ class DiscussionTopic:
             last_activity_at=last_activity_at,
             created_at=created_at,
             updated_at=updated_at,
-            customer_id=customer_id,
+            author_kind=author_kind,
+            author_id=author_id,
             category_id=category_id,
             answered_post_id=answered_post_id,
             excerpt=excerpt,

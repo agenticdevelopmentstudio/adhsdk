@@ -20,7 +20,7 @@ class SyncEnrollmentRow:
         Attributes:
             resource (str): "<schema>.<table>", e.g. content.contacts
             scope (SyncEnrollmentRowScope): Which rows a caller syncs: 'owner' the rows whose owner pair names them,
-                'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem
+                'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem
             push_mode (SyncEnrollmentRowPushMode): 'route' means /sync/push refuses direct writes; the row's own route owns
                 them
             default_enabled (bool): What the shipped catalog says

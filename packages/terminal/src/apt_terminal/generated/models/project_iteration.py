@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.project_iteration_author_kind import ProjectIterationAuthorKind
 from ..models.project_iteration_owner_kind import ProjectIterationOwnerKind
 from ..models.project_iteration_state import ProjectIterationState
 from ..types import UNSET, Unset
@@ -30,7 +31,9 @@ class ProjectIteration:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        customer_id (str | Unset): the customer (user) who created the iteration
+        author_kind (ProjectIterationAuthorKind | Unset): Kind of principal that created the iteration; null when nobody
+            did (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         created_by (None | str | Unset):
         deleted_at (None | str | Unset):
         sync_version (int | Unset):
@@ -48,7 +51,8 @@ class ProjectIteration:
     created_at: str
     updated_at: str
     is_deleted: bool
-    customer_id: str | Unset = UNSET
+    author_kind: ProjectIterationAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     created_by: None | str | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
     sync_version: int | Unset = UNSET
@@ -79,7 +83,15 @@ class ProjectIteration:
 
         is_deleted = self.is_deleted
 
-        customer_id = self.customer_id
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
@@ -113,8 +125,10 @@ class ProjectIteration:
                 "isDeleted": is_deleted,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if author_kind is not UNSET:
+            field_dict["authorKind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["authorId"] = author_id
         if created_by is not UNSET:
             field_dict["createdBy"] = created_by
         if deleted_at is not UNSET:
@@ -151,7 +165,21 @@ class ProjectIteration:
 
         is_deleted = d.pop("isDeleted")
 
-        customer_id = d.pop("customerId", UNSET)
+        _author_kind = d.pop("authorKind", UNSET)
+        author_kind: ProjectIterationAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = ProjectIterationAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("authorId", UNSET))
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -186,7 +214,8 @@ class ProjectIteration:
             created_at=created_at,
             updated_at=updated_at,
             is_deleted=is_deleted,
-            customer_id=customer_id,
+            author_kind=author_kind,
+            author_id=author_id,
             created_by=created_by,
             deleted_at=deleted_at,
             sync_version=sync_version,

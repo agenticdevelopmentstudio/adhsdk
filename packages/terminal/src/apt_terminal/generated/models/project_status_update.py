@@ -24,7 +24,9 @@ class ProjectStatusUpdate:
         body (str): the report itself (1–10000 chars)
         created_at (str):
         updated_at (str):
-        customer_id (str | Unset): inherited from the owning project by trigger, never sent
+        owner_kind (str | Unset): Kind of principal that owns the status update (inherited from the project):
+            'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+        owner_id (str | Unset): Id of the owning principal.
         created_by (None | str | Unset): the AUTHOR, as the acting principal — a persona’s report is the persona’s.
             Never re-written: an edit revises the words, it does not change who signed them.
         deleted_at (None | str | Unset):
@@ -38,7 +40,8 @@ class ProjectStatusUpdate:
     body: str
     created_at: str
     updated_at: str
-    customer_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
     created_by: None | str | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
     sync_version: int | Unset = UNSET
@@ -59,7 +62,9 @@ class ProjectStatusUpdate:
 
         updated_at = self.updated_at
 
-        customer_id = self.customer_id
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
@@ -88,8 +93,10 @@ class ProjectStatusUpdate:
                 "updatedAt": updated_at,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if owner_kind is not UNSET:
+            field_dict["ownerKind"] = owner_kind
+        if owner_id is not UNSET:
+            field_dict["ownerId"] = owner_id
         if created_by is not UNSET:
             field_dict["createdBy"] = created_by
         if deleted_at is not UNSET:
@@ -116,7 +123,9 @@ class ProjectStatusUpdate:
 
         updated_at = d.pop("updatedAt")
 
-        customer_id = d.pop("customerId", UNSET)
+        owner_kind = d.pop("ownerKind", UNSET)
+
+        owner_id = d.pop("ownerId", UNSET)
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -146,7 +155,8 @@ class ProjectStatusUpdate:
             body=body,
             created_at=created_at,
             updated_at=updated_at,
-            customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             created_by=created_by,
             deleted_at=deleted_at,
             sync_version=sync_version,

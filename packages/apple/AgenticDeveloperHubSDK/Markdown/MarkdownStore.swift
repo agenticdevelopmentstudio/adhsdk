@@ -74,7 +74,7 @@ public enum MarkdownStoreError: Error, Equatable {
     /// server payload, not only from corruption.
     case unreadableTimestamp(id: String, column: String)
     /// `createKeyword` was asked for a label that already exists and is live.
-    /// adh's `UNIQUE (customer_id, ecosystem_id, label)` is unconditional, so
+    /// adh's `UNIQUE (owner_kind, owner_id, ecosystem_id, label)` is unconditional, so
     /// this is what the server would answer too.
     case duplicateKeyword(label: String)
 }
@@ -872,11 +872,11 @@ public final class MarkdownStore: @unchecked Sendable {
         try conn.execute(
             sql: """
                 INSERT INTO markdown
-                    (id, customer_id, ecosystem_id, title, content, frontmatter,
+                    (id, author_kind, author_id, ecosystem_id, title, content, frontmatter,
                      content_hash, size_bytes, current_version, latest_version_id,
                      is_deleted, public_route, visibility, stage, owner_kind, owner_id,
                      created_at, updated_at, deleted_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
             arguments: arguments(for: document))
     }
@@ -906,7 +906,7 @@ public final class MarkdownStore: @unchecked Sendable {
     /// authority — every write recomputes them.
     private func arguments(for document: MarkdownDocument) -> StatementArguments {
         [
-            document.id, customerID, ecosystemID,
+            document.id, "customer", customerID, ecosystemID,
             document.title, document.content, document.frontmatterJSON,
             document.contentHash, document.sizeBytes,
             document.currentVersion, document.latestVersionID,
@@ -926,10 +926,10 @@ public final class MarkdownStore: @unchecked Sendable {
         try conn.execute(
             sql: """
                 INSERT INTO \(marker.table)
-                    (id, customer_id, ecosystem_id, markdown_id, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                    (id, owner_kind, owner_id, ecosystem_id, markdown_id, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-            arguments: [UUID().uuidString.lowercased(), customerID, ecosystemID,
+            arguments: [UUID().uuidString.lowercased(), "customer", customerID, ecosystemID,
                         documentID, stamp, stamp])
     }
 

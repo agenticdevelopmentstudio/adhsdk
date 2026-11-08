@@ -7,8 +7,11 @@
 /** Backend row for `/content/reactions` (list, create) — one actor's one emoji on one subject. */
 export interface ReactionRow {
   id: string;
-  /** the user who reacted (server-stamped from the caller — never sent). */
-  customerId: string;
+  ownerKind: string;
+  ownerId: string;
+  /** the actor who reacted (server-stamped from the caller — never sent). */
+  authorKind: string | null;
+  authorId: string | null;
   ecosystemId: string;
   targetKind: string;
   targetId: string;

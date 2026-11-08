@@ -1654,7 +1654,7 @@ public protocol APIProtocol: Sendable {
     func postGamificationReplay(_ input: Operations.PostGamificationReplay.Input) async throws -> Operations.PostGamificationReplay.Output
     /// Start a session, or resume the caller’s active one for a chat
     ///
-    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session carries the empty-string owner, so these handlers scope on the visitor token id rather than on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
     ///
     /// - Remark: HTTP `POST /game/sessions`.
     /// - Remark: Generated from `#/paths//game/sessions/post`.
@@ -1729,7 +1729,7 @@ public protocol APIProtocol: Sendable {
     func getGameHoldings(_ input: Operations.GetGameHoldings.Input) async throws -> Operations.GetGameHoldings.Output
     /// Acquire an artifact (idempotent by the unique, not by a caller-sent key)
     ///
-    /// A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. `customer_id` comes from the principal and is never read from the body, which is why this is not generic CRUD.
+    /// A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. The owner comes from the principal and is never read from the body, which is why this is not generic CRUD.
     ///
     /// - Remark: HTTP `PUT /game/holdings`.
     /// - Remark: Generated from `#/paths//game/holdings/put`.
@@ -1743,7 +1743,7 @@ public protocol APIProtocol: Sendable {
     func deleteGameHoldings(_ input: Operations.DeleteGameHoldings.Input) async throws -> Operations.DeleteGameHoldings.Output
     /// The caller’s own per-game profile
     ///
-    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
+    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
     ///
     /// - Remark: HTTP `GET /game/players/me`.
     /// - Remark: Generated from `#/paths//game/players/me/get`.
@@ -10082,7 +10082,7 @@ extension APIProtocol {
     }
     /// Start a session, or resume the caller’s active one for a chat
     ///
-    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session carries the empty-string owner, so these handlers scope on the visitor token id rather than on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
     ///
     /// - Remark: HTTP `POST /game/sessions`.
     /// - Remark: Generated from `#/paths//game/sessions/post`.
@@ -10249,7 +10249,7 @@ extension APIProtocol {
     }
     /// Acquire an artifact (idempotent by the unique, not by a caller-sent key)
     ///
-    /// A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. `customer_id` comes from the principal and is never read from the body, which is why this is not generic CRUD.
+    /// A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. The owner comes from the principal and is never read from the body, which is why this is not generic CRUD.
     ///
     /// - Remark: HTTP `PUT /game/holdings`.
     /// - Remark: Generated from `#/paths//game/holdings/put`.
@@ -10279,7 +10279,7 @@ extension APIProtocol {
     }
     /// The caller’s own per-game profile
     ///
-    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
+    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
     ///
     /// - Remark: HTTP `GET /game/players/me`.
     /// - Remark: Generated from `#/paths//game/players/me/get`.
@@ -22017,10 +22017,14 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/AiProcessingWebhookEndpoint/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// User who registered the endpoint
+            /// Kind of principal that owns the endpoint: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
-            /// - Remark: Generated from `#/components/schemas/AiProcessingWebhookEndpoint/customerId`.
-            public var customerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AiProcessingWebhookEndpoint/ownerKind`.
+            public var ownerKind: Swift.String
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingWebhookEndpoint/ownerId`.
+            public var ownerId: Swift.String
             /// HTTPS-only delivery target URL
             ///
             /// - Remark: Generated from `#/components/schemas/AiProcessingWebhookEndpoint/url`.
@@ -22050,7 +22054,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId: Ecosystem that owns this endpoint
-            ///   - customerId: User who registered the endpoint
+            ///   - ownerKind: Kind of principal that owns the endpoint: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
             ///   - url: HTTPS-only delivery target URL
             ///   - eventTypes: Subscribed event types (e.g. job.succeeded, job.failed)
             ///   - active: Whether the endpoint receives deliveries
@@ -22060,7 +22065,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String,
+                ownerKind: Swift.String,
+                ownerId: Swift.String,
                 url: Swift.String,
                 eventTypes: [Swift.String],
                 active: Swift.Bool,
@@ -22070,7 +22076,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
                 self.url = url
                 self.eventTypes = eventTypes
                 self.active = active
@@ -22081,7 +22088,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case ownerKind
+                case ownerId
                 case url
                 case eventTypes
                 case active
@@ -32161,10 +32169,22 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/DiscussionTopic/communityId`.
             public var communityId: Swift.String
-            /// Author (server-stamped principal). Omitted on the public surface.
+            /// Kind of principal that wrote the topic (omitted on the public surface); null when nobody did (a storage token).
             ///
-            /// - Remark: Generated from `#/components/schemas/DiscussionTopic/customerId`.
-            public var customerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/DiscussionTopic/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that wrote the topic (omitted on the public surface); null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/DiscussionTopic/authorKind`.
+            public var authorKind: Components.Schemas.DiscussionTopic.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/DiscussionTopic/authorId`.
+            public var authorId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/DiscussionTopic/title`.
             public var title: Swift.String
             /// - Remark: Generated from `#/components/schemas/DiscussionTopic/categoryId`.
@@ -32206,7 +32226,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - communityId: The community instance this topic belongs to.
-            ///   - customerId: Author (server-stamped principal). Omitted on the public surface.
+            ///   - authorKind: Kind of principal that wrote the topic (omitted on the public surface); null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - title:
             ///   - categoryId:
             ///   - isPinned:
@@ -32224,7 +32245,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 communityId: Swift.String,
-                customerId: Swift.String? = nil,
+                authorKind: Components.Schemas.DiscussionTopic.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 title: Swift.String,
                 categoryId: Swift.String? = nil,
                 isPinned: Swift.Bool,
@@ -32242,7 +32264,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.communityId = communityId
-                self.customerId = customerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.title = title
                 self.categoryId = categoryId
                 self.isPinned = isPinned
@@ -32261,7 +32284,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case communityId
-                case customerId
+                case authorKind
+                case authorId
                 case title
                 case categoryId
                 case isPinned
@@ -32292,10 +32316,22 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/DiscussionPost/bodyDocumentId`.
             public var bodyDocumentId: Swift.String?
-            /// Author (server-stamped principal). Omitted on the public surface.
+            /// Kind of principal that wrote the post (omitted on the public surface); null when nobody did (a storage token).
             ///
-            /// - Remark: Generated from `#/components/schemas/DiscussionPost/customerId`.
-            public var customerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/DiscussionPost/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that wrote the post (omitted on the public surface); null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/DiscussionPost/authorKind`.
+            public var authorKind: Components.Schemas.DiscussionPost.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/DiscussionPost/authorId`.
+            public var authorId: Swift.String?
             /// Owning ecosystem (present on create only).
             ///
             /// - Remark: Generated from `#/components/schemas/DiscussionPost/ecosystemId`.
@@ -32324,7 +32360,8 @@ public enum Components {
             ///   - parentPostId:
             ///   - postNumber:
             ///   - bodyDocumentId: The content.markdown doc backing this post’s body.
-            ///   - customerId: Author (server-stamped principal). Omitted on the public surface.
+            ///   - authorKind: Kind of principal that wrote the post (omitted on the public surface); null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - ecosystemId: Owning ecosystem (present on create only).
             ///   - communityId: The community instance (inherited from the topic; present on create only).
             ///   - content: Resolved markdown body (present on the list routes; null if the body doc was deleted).
@@ -32338,7 +32375,8 @@ public enum Components {
                 parentPostId: Swift.String? = nil,
                 postNumber: Swift.Int,
                 bodyDocumentId: Swift.String? = nil,
-                customerId: Swift.String? = nil,
+                authorKind: Components.Schemas.DiscussionPost.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 ecosystemId: Swift.String? = nil,
                 communityId: Swift.String? = nil,
                 content: Swift.String? = nil,
@@ -32352,7 +32390,8 @@ public enum Components {
                 self.parentPostId = parentPostId
                 self.postNumber = postNumber
                 self.bodyDocumentId = bodyDocumentId
-                self.customerId = customerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.ecosystemId = ecosystemId
                 self.communityId = communityId
                 self.content = content
@@ -32367,7 +32406,8 @@ public enum Components {
                 case parentPostId
                 case postNumber
                 case bodyDocumentId
-                case customerId
+                case authorKind
+                case authorId
                 case ecosystemId
                 case communityId
                 case content
@@ -33679,10 +33719,22 @@ public enum Components {
         public struct MarkdownDocument: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/MarkdownDocument/id`.
             public var id: Swift.String
-            /// The CREATOR/author (public routes key on this).
+            /// Kind of principal that created the doc (public routes key on a customer author); null when nobody did (a storage token).
             ///
-            /// - Remark: Generated from `#/components/schemas/MarkdownDocument/customerId`.
-            public var customerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MarkdownDocument/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that created the doc (public routes key on a customer author); null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/MarkdownDocument/authorKind`.
+            public var authorKind: Components.Schemas.MarkdownDocument.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/MarkdownDocument/authorId`.
+            public var authorId: Swift.String?
             /// Ecosystem (tenant) id.
             ///
             /// - Remark: Generated from `#/components/schemas/MarkdownDocument/ecosystemId`.
@@ -33799,7 +33851,8 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - id:
-            ///   - customerId: The CREATOR/author (public routes key on this).
+            ///   - authorKind: Kind of principal that created the doc (public routes key on a customer author); null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - ecosystemId: Ecosystem (tenant) id.
             ///   - ownerKind: The kind of principal that OWNS the doc (what access scopes by).
             ///   - ownerId: The owning principal (customer or organization id); server-stamped from the verified ?workspace= scope, else the creator.
@@ -33822,7 +33875,8 @@ public enum Components {
             ///   - isDeleted:
             public init(
                 id: Swift.String,
-                customerId: Swift.String,
+                authorKind: Components.Schemas.MarkdownDocument.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 ecosystemId: Swift.String,
                 ownerKind: Components.Schemas.MarkdownDocument.OwnerKindPayload,
                 ownerId: Swift.String,
@@ -33845,7 +33899,8 @@ public enum Components {
                 isDeleted: Swift.Bool
             ) {
                 self.id = id
-                self.customerId = customerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.ecosystemId = ecosystemId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
@@ -33869,7 +33924,8 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case id
-                case customerId
+                case authorKind
+                case authorId
                 case ecosystemId
                 case ownerKind
                 case ownerId
@@ -34044,8 +34100,8 @@ public enum Components {
             public var documentId: Swift.String
             /// The revision WRITER.
             ///
-            /// - Remark: Generated from `#/components/schemas/MarkdownDocumentVersion/customerId`.
-            public var customerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MarkdownDocumentVersion/writerCustomerId`.
+            public var writerCustomerId: Swift.String
             /// - Remark: Generated from `#/components/schemas/MarkdownDocumentVersion/deletedAt`.
             public var deletedAt: Swift.String?
             /// - Remark: Generated from `#/components/schemas/MarkdownDocumentVersion/ecosystemId`.
@@ -34112,7 +34168,7 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - documentId:
-            ///   - customerId: The revision WRITER.
+            ///   - writerCustomerId: The revision WRITER.
             ///   - deletedAt:
             ///   - ecosystemId:
             ///   - ownerKind: Inherited from the head document at write.
@@ -34131,7 +34187,7 @@ public enum Components {
             public init(
                 id: Swift.String,
                 documentId: Swift.String,
-                customerId: Swift.String,
+                writerCustomerId: Swift.String,
                 deletedAt: Swift.String? = nil,
                 ecosystemId: Swift.String,
                 ownerKind: Components.Schemas.MarkdownDocumentVersion.OwnerKindPayload,
@@ -34150,7 +34206,7 @@ public enum Components {
             ) {
                 self.id = id
                 self.documentId = documentId
-                self.customerId = customerId
+                self.writerCustomerId = writerCustomerId
                 self.deletedAt = deletedAt
                 self.ecosystemId = ecosystemId
                 self.ownerKind = ownerKind
@@ -34170,7 +34226,7 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case documentId
-                case customerId
+                case writerCustomerId
                 case deletedAt
                 case ecosystemId
                 case ownerKind
@@ -34257,10 +34313,14 @@ public enum Components {
         public struct MessagingLogEntry: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/MessagingLogEntry/id`.
             public var id: Swift.String
-            /// Target user (recipient) id
+            /// Kind of principal that owns the message (the recipient, for a message to a user): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
-            /// - Remark: Generated from `#/components/schemas/MessagingLogEntry/customerId`.
-            public var customerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/MessagingLogEntry/ownerKind`.
+            public var ownerKind: Swift.String
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/MessagingLogEntry/ownerId`.
+            public var ownerId: Swift.String
             /// - Remark: Generated from `#/components/schemas/MessagingLogEntry/deletedAt`.
             public var deletedAt: Swift.String?
             /// Ecosystem (tenant) id
@@ -34322,7 +34382,8 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - id:
-            ///   - customerId: Target user (recipient) id
+            ///   - ownerKind: Kind of principal that owns the message (the recipient, for a message to a user): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
             ///   - deletedAt:
             ///   - ecosystemId: Ecosystem (tenant) id
             ///   - channel:
@@ -34338,7 +34399,8 @@ public enum Components {
             ///   - createdAt:
             public init(
                 id: Swift.String,
-                customerId: Swift.String,
+                ownerKind: Swift.String,
+                ownerId: Swift.String,
                 deletedAt: Swift.String? = nil,
                 ecosystemId: Swift.String,
                 channel: Components.Schemas.MessagingLogEntry.ChannelPayload,
@@ -34354,7 +34416,8 @@ public enum Components {
                 createdAt: Swift.String
             ) {
                 self.id = id
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
                 self.deletedAt = deletedAt
                 self.ecosystemId = ecosystemId
                 self.channel = channel
@@ -34371,7 +34434,8 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case id
-                case customerId
+                case ownerKind
+                case ownerId
                 case deletedAt
                 case ecosystemId
                 case channel
@@ -34893,8 +34957,14 @@ public enum Components {
         public struct Bookmark: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/Bookmark/id`.
             public var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Bookmark/customerId`.
-            public var customerId: Swift.String
+            /// Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Bookmark/ownerKind`.
+            public var ownerKind: Swift.String
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Bookmark/ownerId`.
+            public var ownerId: Swift.String
             /// - Remark: Generated from `#/components/schemas/Bookmark/ecosystemId`.
             public var ecosystemId: Swift.String
             /// - Remark: Generated from `#/components/schemas/Bookmark/targetKind`.
@@ -34911,7 +34981,8 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - id:
-            ///   - customerId:
+            ///   - ownerKind: Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
             ///   - ecosystemId:
             ///   - targetKind:
             ///   - targetId:
@@ -34920,7 +34991,8 @@ public enum Components {
             ///   - deletedAt:
             public init(
                 id: Swift.String,
-                customerId: Swift.String,
+                ownerKind: Swift.String,
+                ownerId: Swift.String,
                 ecosystemId: Swift.String,
                 targetKind: Swift.String,
                 targetId: Swift.String,
@@ -34929,7 +35001,8 @@ public enum Components {
                 deletedAt: Swift.String? = nil
             ) {
                 self.id = id
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
                 self.ecosystemId = ecosystemId
                 self.targetKind = targetKind
                 self.targetId = targetId
@@ -34939,7 +35012,8 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case id
-                case customerId
+                case ownerKind
+                case ownerId
                 case ecosystemId
                 case targetKind
                 case targetId
@@ -34995,8 +35069,30 @@ public enum Components {
         public struct Reaction: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/Reaction/id`.
             public var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/Reaction/customerId`.
-            public var customerId: Swift.String
+            /// Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Reaction/ownerKind`.
+            public var ownerKind: Swift.String?
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Reaction/ownerId`.
+            public var ownerId: Swift.String?
+            /// Kind of principal that reacted; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/Reaction/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that reacted; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/Reaction/authorKind`.
+            public var authorKind: Components.Schemas.Reaction.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Reaction/authorId`.
+            public var authorId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/Reaction/ecosystemId`.
             public var ecosystemId: Swift.String
             /// - Remark: Generated from `#/components/schemas/Reaction/targetKind`.
@@ -35013,7 +35109,10 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - id:
-            ///   - customerId:
+            ///   - ownerKind: Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
+            ///   - authorKind: Kind of principal that reacted; null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - ecosystemId:
             ///   - targetKind:
             ///   - targetId:
@@ -35022,7 +35121,10 @@ public enum Components {
             ///   - deletedAt:
             public init(
                 id: Swift.String,
-                customerId: Swift.String,
+                ownerKind: Swift.String? = nil,
+                ownerId: Swift.String? = nil,
+                authorKind: Components.Schemas.Reaction.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 ecosystemId: Swift.String,
                 targetKind: Swift.String,
                 targetId: Swift.String,
@@ -35031,7 +35133,10 @@ public enum Components {
                 deletedAt: Swift.String? = nil
             ) {
                 self.id = id
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.ecosystemId = ecosystemId
                 self.targetKind = targetKind
                 self.targetId = targetId
@@ -35041,7 +35146,10 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case id
-                case customerId
+                case ownerKind
+                case ownerId
+                case authorKind
+                case authorId
                 case ecosystemId
                 case targetKind
                 case targetId
@@ -35056,8 +35164,14 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/PollVote/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// - Remark: Generated from `#/components/schemas/PollVote/customerId`.
-            public var customerId: Swift.String
+            /// Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///
+            /// - Remark: Generated from `#/components/schemas/PollVote/ownerKind`.
+            public var ownerKind: Swift.String
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/PollVote/ownerId`.
+            public var ownerId: Swift.String
             /// - Remark: Generated from `#/components/schemas/PollVote/optionId`.
             public var optionId: Swift.String
             /// - Remark: Generated from `#/components/schemas/PollVote/createdAt`.
@@ -35069,21 +35183,24 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
-            ///   - customerId:
+            ///   - ownerKind: Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
             ///   - optionId:
             ///   - createdAt:
             ///   - deletedAt:
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String,
+                ownerKind: Swift.String,
+                ownerId: Swift.String,
                 optionId: Swift.String,
                 createdAt: Swift.String,
                 deletedAt: Swift.String? = nil
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
                 self.optionId = optionId
                 self.createdAt = createdAt
                 self.deletedAt = deletedAt
@@ -35091,7 +35208,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case ownerKind
+                case ownerId
                 case optionId
                 case createdAt
                 case deletedAt
@@ -35368,10 +35486,22 @@ public enum Components {
             public var isDeleted: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/Project/syncVersion`.
             public var syncVersion: Swift.Int
-            /// the customer (user) who created the project
+            /// Kind of principal that created the project; null when nobody did (a storage token).
             ///
-            /// - Remark: Generated from `#/components/schemas/Project/customerId`.
-            public var customerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Project/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that created the project; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/Project/authorKind`.
+            public var authorKind: Components.Schemas.Project.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Project/authorId`.
+            public var authorId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/Project/deletedAt`.
             public var deletedAt: Swift.String?
             /// the owning ecosystem (tenant scope)
@@ -35463,7 +35593,8 @@ public enum Components {
             ///   - updatedAt:
             ///   - isDeleted:
             ///   - syncVersion:
-            ///   - customerId: the customer (user) who created the project
+            ///   - authorKind: Kind of principal that created the project; null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - deletedAt:
             ///   - ecosystemId: the owning ecosystem (tenant scope)
             ///   - archivedAt: ISO timestamp when archived; null = not archived
@@ -35491,7 +35622,8 @@ public enum Components {
                 updatedAt: Swift.String,
                 isDeleted: Swift.Bool,
                 syncVersion: Swift.Int,
-                customerId: Swift.String,
+                authorKind: Components.Schemas.Project.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 deletedAt: Swift.String? = nil,
                 ecosystemId: Swift.String,
                 archivedAt: Swift.String? = nil,
@@ -35519,7 +35651,8 @@ public enum Components {
                 self.updatedAt = updatedAt
                 self.isDeleted = isDeleted
                 self.syncVersion = syncVersion
-                self.customerId = customerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.deletedAt = deletedAt
                 self.ecosystemId = ecosystemId
                 self.archivedAt = archivedAt
@@ -35548,7 +35681,8 @@ public enum Components {
                 case updatedAt
                 case isDeleted
                 case syncVersion
-                case customerId
+                case authorKind
+                case authorId
                 case deletedAt
                 case ecosystemId
                 case archivedAt
@@ -35875,10 +36009,22 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/ProjectIteration/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// the customer (user) who created the iteration
+            /// Kind of principal that created the iteration; null when nobody did (a storage token).
             ///
-            /// - Remark: Generated from `#/components/schemas/ProjectIteration/customerId`.
-            public var customerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProjectIteration/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that created the iteration; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectIteration/authorKind`.
+            public var authorKind: Components.Schemas.ProjectIteration.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectIteration/authorId`.
+            public var authorId: Swift.String?
             /// the kind of principal that OWNS the time-box
             ///
             /// - Remark: Generated from `#/components/schemas/ProjectIteration/ownerKind`.
@@ -35937,7 +36083,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
-            ///   - customerId: the customer (user) who created the iteration
+            ///   - authorKind: Kind of principal that created the iteration; null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - ownerKind: the kind of principal that OWNS the time-box
             ///   - ownerId: the owning principal; server-stamped from the verified ?workspace= scope, else the creator
             ///   - name: unique among the workspace’s live iterations
@@ -35954,7 +36101,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String? = nil,
+                authorKind: Components.Schemas.ProjectIteration.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 ownerKind: Components.Schemas.ProjectIteration.OwnerKindPayload,
                 ownerId: Swift.String,
                 name: Swift.String,
@@ -35971,7 +36119,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
                 self.name = name
@@ -35989,7 +36138,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case authorKind
+                case authorId
                 case ownerKind
                 case ownerId
                 case name
@@ -36011,10 +36161,22 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/ProjectProgram/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// the customer (user) who created the program
+            /// Kind of principal that created the program; null when nobody did (a storage token).
             ///
-            /// - Remark: Generated from `#/components/schemas/ProjectProgram/customerId`.
-            public var customerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProjectProgram/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that created the program; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectProgram/authorKind`.
+            public var authorKind: Components.Schemas.ProjectProgram.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectProgram/authorId`.
+            public var authorId: Swift.String?
             /// the kind of principal that OWNS the program
             ///
             /// - Remark: Generated from `#/components/schemas/ProjectProgram/ownerKind`.
@@ -36065,7 +36227,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
-            ///   - customerId: the customer (user) who created the program
+            ///   - authorKind: Kind of principal that created the program; null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - ownerKind: the kind of principal that OWNS the program
             ///   - ownerId: the owning principal; server-stamped from the verified ?workspace= scope, else the creator
             ///   - name: unique among the workspace’s live programs
@@ -36082,7 +36245,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String? = nil,
+                authorKind: Components.Schemas.ProjectProgram.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 ownerKind: Components.Schemas.ProjectProgram.OwnerKindPayload,
                 ownerId: Swift.String,
                 name: Swift.String,
@@ -36099,7 +36263,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
                 self.name = name
@@ -36117,7 +36282,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case authorKind
+                case authorId
                 case ownerKind
                 case ownerId
                 case name
@@ -36139,10 +36305,14 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/ProjectMilestone/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// inherited from the owning project by trigger, never sent
+            /// Kind of principal that owns the milestone (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
-            /// - Remark: Generated from `#/components/schemas/ProjectMilestone/customerId`.
-            public var customerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProjectMilestone/ownerKind`.
+            public var ownerKind: Swift.String?
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectMilestone/ownerId`.
+            public var ownerId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ProjectMilestone/projectId`.
             public var projectId: Swift.String
             /// unique among the project’s live milestones
@@ -36217,7 +36387,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
-            ///   - customerId: inherited from the owning project by trigger, never sent
+            ///   - ownerKind: Kind of principal that owns the milestone (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
             ///   - projectId:
             ///   - name: unique among the project’s live milestones
             ///   - description:
@@ -36231,7 +36402,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String? = nil,
+                ownerKind: Swift.String? = nil,
+                ownerId: Swift.String? = nil,
                 projectId: Swift.String,
                 name: Swift.String,
                 description: Swift.String,
@@ -36245,7 +36417,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
                 self.projectId = projectId
                 self.name = name
                 self.description = description
@@ -36260,7 +36433,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case ownerKind
+                case ownerId
                 case projectId
                 case name
                 case description
@@ -36279,10 +36453,14 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/ProjectStatusUpdate/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// inherited from the owning project by trigger, never sent
+            /// Kind of principal that owns the status update (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
-            /// - Remark: Generated from `#/components/schemas/ProjectStatusUpdate/customerId`.
-            public var customerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProjectStatusUpdate/ownerKind`.
+            public var ownerKind: Swift.String?
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectStatusUpdate/ownerId`.
+            public var ownerId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ProjectStatusUpdate/projectId`.
             public var projectId: Swift.String
             /// the reported health. The NEWEST live update’s value is what `Project.health` returns.
@@ -36318,7 +36496,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
-            ///   - customerId: inherited from the owning project by trigger, never sent
+            ///   - ownerKind: Kind of principal that owns the status update (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
             ///   - projectId:
             ///   - health: the reported health. The NEWEST live update’s value is what `Project.health` returns.
             ///   - body: the report itself (1–10000 chars)
@@ -36330,7 +36509,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String? = nil,
+                ownerKind: Swift.String? = nil,
+                ownerId: Swift.String? = nil,
                 projectId: Swift.String,
                 health: Components.Schemas.ProjectStatusUpdate.HealthPayload,
                 body: Swift.String,
@@ -36342,7 +36522,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
                 self.projectId = projectId
                 self.health = health
                 self.body = body
@@ -36355,7 +36536,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case ownerKind
+                case ownerId
                 case projectId
                 case health
                 case body
@@ -36372,10 +36554,22 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/ProjectTemplate/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// the customer (user) who created the template
+            /// Kind of principal that created the template; null when nobody did (a storage token).
             ///
-            /// - Remark: Generated from `#/components/schemas/ProjectTemplate/customerId`.
-            public var customerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProjectTemplate/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that created the template; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectTemplate/authorKind`.
+            public var authorKind: Components.Schemas.ProjectTemplate.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProjectTemplate/authorId`.
+            public var authorId: Swift.String?
             /// the kind of principal that OWNS the template
             ///
             /// - Remark: Generated from `#/components/schemas/ProjectTemplate/ownerKind`.
@@ -36466,7 +36660,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
-            ///   - customerId: the customer (user) who created the template
+            ///   - authorKind: Kind of principal that created the template; null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - ownerKind: the kind of principal that OWNS the template
             ///   - ownerId: the owning principal; server-stamped from the verified ?workspace= scope, else the creator
             ///   - kind: what this template MAKES, and therefore which schema its `body` is read against. Immutable — a PATCH cannot re-kind a template, because that would silently re-interpret a stored body against a schema it was never written for.
@@ -36482,7 +36677,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String? = nil,
+                authorKind: Components.Schemas.ProjectTemplate.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 ownerKind: Components.Schemas.ProjectTemplate.OwnerKindPayload,
                 ownerId: Swift.String,
                 kind: Components.Schemas.ProjectTemplate.KindPayload,
@@ -36498,7 +36694,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
                 self.kind = kind
@@ -36515,7 +36712,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case authorKind
+                case authorId
                 case ownerKind
                 case ownerId
                 case kind
@@ -37899,10 +38097,14 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/PersonaMemory/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// Owning user; empty for a global memory
+            /// Kind of principal that owns the memory (the user for a user-scoped memory, else the persona): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
-            /// - Remark: Generated from `#/components/schemas/PersonaMemory/customerId`.
-            public var customerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PersonaMemory/ownerKind`.
+            public var ownerKind: Swift.String
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/PersonaMemory/ownerId`.
+            public var ownerId: Swift.String
             /// - Remark: Generated from `#/components/schemas/PersonaMemory/deletedAt`.
             public var deletedAt: Swift.String?
             /// - Remark: Generated from `#/components/schemas/PersonaMemory/personaId`.
@@ -37972,7 +38174,8 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId: Ecosystem (tenant) id
-            ///   - customerId: Owning user; empty for a global memory
+            ///   - ownerKind: Kind of principal that owns the memory (the user for a user-scoped memory, else the persona): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
             ///   - deletedAt:
             ///   - personaId:
             ///   - scope:
@@ -37996,7 +38199,8 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String,
+                ownerKind: Swift.String,
+                ownerId: Swift.String,
                 deletedAt: Swift.String? = nil,
                 personaId: Swift.String,
                 scope: Components.Schemas.PersonaMemory.ScopePayload,
@@ -38020,7 +38224,8 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
                 self.deletedAt = deletedAt
                 self.personaId = personaId
                 self.scope = scope
@@ -38045,7 +38250,8 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
+                case ownerKind
+                case ownerId
                 case deletedAt
                 case personaId
                 case scope
@@ -45092,8 +45298,30 @@ public enum Components {
         public struct FeedItem: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/FeedItem/id`.
             public var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/FeedItem/customerId`.
-            public var customerId: Swift.String
+            /// Kind of principal that owns the feed item: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///
+            /// - Remark: Generated from `#/components/schemas/FeedItem/ownerKind`.
+            public var ownerKind: Swift.String
+            /// Id of the owning principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/FeedItem/ownerId`.
+            public var ownerId: Swift.String
+            /// Kind of principal that wrote the item; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/FeedItem/authorKind`.
+            @frozen public enum AuthorKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case application = "application"
+                case persona = "persona"
+            }
+            /// Kind of principal that wrote the item; null when nobody did (a storage token).
+            ///
+            /// - Remark: Generated from `#/components/schemas/FeedItem/authorKind`.
+            public var authorKind: Components.Schemas.FeedItem.AuthorKindPayload?
+            /// Id of that principal.
+            ///
+            /// - Remark: Generated from `#/components/schemas/FeedItem/authorId`.
+            public var authorId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/FeedItem/deletedAt`.
             public var deletedAt: Swift.String?
             /// - Remark: Generated from `#/components/schemas/FeedItem/ecosystemId`.
@@ -45120,7 +45348,10 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - id:
-            ///   - customerId:
+            ///   - ownerKind: Kind of principal that owns the feed item: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+            ///   - ownerId: Id of the owning principal.
+            ///   - authorKind: Kind of principal that wrote the item; null when nobody did (a storage token).
+            ///   - authorId: Id of that principal.
             ///   - deletedAt:
             ///   - ecosystemId:
             ///   - source:
@@ -45134,7 +45365,10 @@ public enum Components {
             ///   - createdAt:
             public init(
                 id: Swift.String,
-                customerId: Swift.String,
+                ownerKind: Swift.String,
+                ownerId: Swift.String,
+                authorKind: Components.Schemas.FeedItem.AuthorKindPayload? = nil,
+                authorId: Swift.String? = nil,
                 deletedAt: Swift.String? = nil,
                 ecosystemId: Swift.String,
                 source: Swift.String,
@@ -45148,7 +45382,10 @@ public enum Components {
                 createdAt: Swift.String
             ) {
                 self.id = id
-                self.customerId = customerId
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
+                self.authorKind = authorKind
+                self.authorId = authorId
                 self.deletedAt = deletedAt
                 self.ecosystemId = ecosystemId
                 self.source = source
@@ -45163,7 +45400,10 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case id
-                case customerId
+                case ownerKind
+                case ownerId
+                case authorKind
+                case authorId
                 case deletedAt
                 case ecosystemId
                 case source
@@ -46491,10 +46731,6 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/StorageAttachment/ecosystemId`.
             public var ecosystemId: Swift.String
-            /// The owning customer, empty when the owner is not a customer. Superseded by ownerKind / ownerId, and kept on the wire for clients that have not moved.
-            ///
-            /// - Remark: Generated from `#/components/schemas/StorageAttachment/customerId`.
-            public var customerId: Swift.String
             /// Kind of principal that owns the attachment: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
             /// - Remark: Generated from `#/components/schemas/StorageAttachment/ownerKind`.
@@ -46579,7 +46815,6 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
-            ///   - customerId: The owning customer, empty when the owner is not a customer. Superseded by ownerKind / ownerId, and kept on the wire for clients that have not moved.
             ///   - ownerKind: Kind of principal that owns the attachment: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///   - ownerId: Id of the owning principal.
             ///   - parentType: Kind of row the attachment hangs off, e.g. 'standalone', 'persona', 'registry.entry'.
@@ -46601,7 +46836,6 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
-                customerId: Swift.String,
                 ownerKind: Swift.String,
                 ownerId: Swift.String,
                 parentType: Swift.String,
@@ -46623,7 +46857,6 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
-                self.customerId = customerId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
                 self.parentType = parentType
@@ -46646,7 +46879,6 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
-                case customerId
                 case ownerKind
                 case ownerId
                 case parentType
@@ -47115,15 +47347,15 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/SyncEnrollmentRow/resource`.
             public var resource: Swift.String
-            /// Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem
+            /// Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem
             ///
             /// - Remark: Generated from `#/components/schemas/SyncEnrollmentRow/scope`.
             @frozen public enum ScopePayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case owner = "owner"
-                case customer = "customer"
+                case author = "author"
                 case ecosystem = "ecosystem"
             }
-            /// Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem
+            /// Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem
             ///
             /// - Remark: Generated from `#/components/schemas/SyncEnrollmentRow/scope`.
             public var scope: Components.Schemas.SyncEnrollmentRow.ScopePayload
@@ -47152,7 +47384,7 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - resource: "<schema>.<table>", e.g. content.contacts
-            ///   - scope: Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem
+            ///   - scope: Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem
             ///   - pushMode: 'route' means /sync/push refuses direct writes; the row's own route owns them
             ///   - defaultEnabled: What the shipped catalog says
             ///   - enabled: What is actually in force — the override if there is one
@@ -135593,7 +135825,7 @@ public enum Operations {
     }
     /// Start a session, or resume the caller’s active one for a chat
     ///
-    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session carries the empty-string owner, so these handlers scope on the visitor token id rather than on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
     ///
     /// - Remark: HTTP `POST /game/sessions`.
     /// - Remark: Generated from `#/paths//game/sessions/post`.
@@ -139062,7 +139294,7 @@ public enum Operations {
     }
     /// Acquire an artifact (idempotent by the unique, not by a caller-sent key)
     ///
-    /// A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. `customer_id` comes from the principal and is never read from the body, which is why this is not generic CRUD.
+    /// A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. The owner comes from the principal and is never read from the body, which is why this is not generic CRUD.
     ///
     /// - Remark: HTTP `PUT /game/holdings`.
     /// - Remark: Generated from `#/paths//game/holdings/put`.
@@ -139612,7 +139844,7 @@ public enum Operations {
     }
     /// The caller’s own per-game profile
     ///
-    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
+    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
     ///
     /// - Remark: HTTP `GET /game/players/me`.
     /// - Remark: Generated from `#/paths//game/players/me/get`.
@@ -294807,8 +295039,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/addresses/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/addresses/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/addresses/GET/responses/200/content/JsonPayload/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/addresses/GET/responses/200/content/JsonPayload/ecosystemId`.
@@ -294845,7 +295075,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -294864,7 +295093,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -294883,7 +295111,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -294903,7 +295130,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -294926,10 +295152,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -294997,7 +295219,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -295390,8 +295611,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/addresses/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/addresses/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/addresses/POST/responses/201/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/addresses/POST/responses/201/content/json/ecosystemId`.
@@ -295428,7 +295647,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -295447,7 +295665,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -295466,7 +295683,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -295486,7 +295702,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -295509,10 +295724,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -295580,7 +295791,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -295954,8 +296164,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/addresses/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/addresses/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/addresses/{id}/GET/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/addresses/{id}/GET/responses/200/content/json/ecosystemId`.
@@ -295992,7 +296200,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -296011,7 +296218,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -296030,7 +296236,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -296050,7 +296255,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -296073,10 +296277,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -296144,7 +296344,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -296551,8 +296750,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/addresses/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/addresses/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/addresses/{id}/PUT/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/addresses/{id}/PUT/responses/200/content/json/ecosystemId`.
@@ -296589,7 +296786,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -296608,7 +296804,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -296627,7 +296822,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -296647,7 +296841,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -296670,10 +296863,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -296741,7 +296930,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -297362,8 +297550,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/categories/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/categories/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/GET/responses/200/content/JsonPayload/ownerId`.
@@ -297396,7 +297582,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -297413,7 +297598,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -297430,7 +297614,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -297448,7 +297631,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -297469,10 +297651,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -297532,7 +297710,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -297810,8 +297987,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/categories/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/categories/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/POST/responses/201/content/json/ownerId`.
@@ -297844,7 +298019,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -297861,7 +298035,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -297878,7 +298051,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -297896,7 +298068,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -297917,10 +298088,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -297980,7 +298147,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -298232,8 +298398,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/categories/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/categories/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/{id}/GET/responses/200/content/json/ownerId`.
@@ -298266,7 +298430,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -298283,7 +298446,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -298300,7 +298462,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -298318,7 +298479,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -298339,10 +298499,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -298402,7 +298558,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -298745,8 +298900,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/categories/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/categories/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/categories/{id}/PUT/responses/200/content/json/ownerId`.
@@ -298779,7 +298932,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -298796,7 +298948,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -298813,7 +298964,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -298831,7 +298981,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -298852,10 +299001,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -298915,7 +299060,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -299416,8 +299560,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-edges/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/GET/responses/200/content/JsonPayload/ownerId`.
@@ -299445,7 +299587,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -299460,7 +299601,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -299475,7 +299615,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -299491,7 +299630,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -299513,10 +299651,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -299565,7 +299699,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -299820,8 +299953,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-edges/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/POST/responses/201/content/json/ownerId`.
@@ -299849,7 +299980,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -299864,7 +299994,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -299879,7 +300008,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -299895,7 +300023,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -299917,10 +300044,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -299969,7 +300092,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -300220,8 +300342,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-edges/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/{id}/GET/responses/200/content/json/ownerId`.
@@ -300249,7 +300369,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -300264,7 +300383,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -300279,7 +300397,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -300295,7 +300412,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -300317,10 +300433,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -300369,7 +300481,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -300689,8 +300800,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-edges/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-edges/{id}/PUT/responses/200/content/json/ownerId`.
@@ -300718,7 +300827,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -300733,7 +300841,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -300748,7 +300855,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -300764,7 +300870,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -300786,10 +300891,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -300838,7 +300939,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -301336,8 +301436,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-items/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/GET/responses/200/content/JsonPayload/ownerId`.
@@ -301367,7 +301465,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -301383,7 +301480,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -301399,7 +301495,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -301416,7 +301511,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -301439,10 +301533,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -301495,7 +301585,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -301762,8 +301851,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-items/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/POST/responses/201/content/json/ownerId`.
@@ -301793,7 +301880,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -301809,7 +301895,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -301825,7 +301910,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -301842,7 +301926,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -301865,10 +301948,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -301921,7 +302000,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -302173,8 +302251,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-items/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/{id}/GET/responses/200/content/json/ownerId`.
@@ -302204,7 +302280,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -302220,7 +302295,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -302236,7 +302310,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -302253,7 +302326,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -302276,10 +302348,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -302332,7 +302400,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -302664,8 +302731,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/category-items/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/category-items/{id}/PUT/responses/200/content/json/ownerId`.
@@ -302695,7 +302760,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -302711,7 +302775,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -302727,7 +302790,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -302744,7 +302806,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -302767,10 +302828,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -302823,7 +302880,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -303320,8 +303376,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/contacts/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/contacts/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/contacts/GET/responses/200/content/JsonPayload/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/contacts/GET/responses/200/content/JsonPayload/ecosystemId`.
@@ -303354,7 +303408,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -303371,7 +303424,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -303388,7 +303440,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -303406,7 +303457,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -303427,10 +303477,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -303490,7 +303536,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -303790,8 +303835,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/contacts/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/contacts/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/contacts/POST/responses/201/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/contacts/POST/responses/201/content/json/ecosystemId`.
@@ -303824,7 +303867,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -303841,7 +303883,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -303858,7 +303899,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -303876,7 +303916,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -303897,10 +303936,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -303960,7 +303995,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -304212,8 +304246,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/contacts/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/contacts/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/contacts/{id}/GET/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/contacts/{id}/GET/responses/200/content/json/ecosystemId`.
@@ -304246,7 +304278,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -304263,7 +304294,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -304280,7 +304310,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -304298,7 +304327,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -304319,10 +304347,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -304382,7 +304406,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -304747,8 +304770,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/contacts/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/contacts/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/contacts/{id}/PUT/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/contacts/{id}/PUT/responses/200/content/json/ecosystemId`.
@@ -304781,7 +304802,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -304798,7 +304818,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -304815,7 +304834,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -304833,7 +304851,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -304854,10 +304871,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -304917,7 +304930,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -305418,8 +305430,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/counters/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/GET/responses/200/content/JsonPayload/ownerId`.
@@ -305445,7 +305455,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -305459,7 +305468,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -305473,7 +305481,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -305488,7 +305495,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -305509,10 +305515,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -305557,7 +305559,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -305800,8 +305801,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/counters/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/POST/responses/201/content/json/ownerId`.
@@ -305827,7 +305826,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -305841,7 +305839,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -305855,7 +305852,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -305870,7 +305866,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -305891,10 +305886,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -305939,7 +305930,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -306189,8 +306179,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/counters/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/{id}/GET/responses/200/content/json/ownerId`.
@@ -306216,7 +306204,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -306230,7 +306217,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -306244,7 +306230,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -306259,7 +306244,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -306280,10 +306264,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -306328,7 +306308,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -306636,8 +306615,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/counters/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/counters/{id}/PUT/responses/200/content/json/ownerId`.
@@ -306663,7 +306640,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -306677,7 +306653,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -306691,7 +306666,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -306706,7 +306680,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -306727,10 +306700,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -306775,7 +306744,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -307270,8 +307238,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/dates/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/dates/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/dates/GET/responses/200/content/JsonPayload/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/dates/GET/responses/200/content/JsonPayload/ecosystemId`.
@@ -307302,7 +307268,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -307318,7 +307283,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -307334,7 +307298,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -307351,7 +307314,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -307371,10 +307333,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -307430,7 +307388,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -307718,8 +307675,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/dates/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/dates/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/dates/POST/responses/201/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/dates/POST/responses/201/content/json/ecosystemId`.
@@ -307750,7 +307705,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -307766,7 +307720,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -307782,7 +307735,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -307799,7 +307751,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -307819,10 +307770,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -307878,7 +307825,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -308129,8 +308075,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/dates/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/dates/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/dates/{id}/GET/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/dates/{id}/GET/responses/200/content/json/ecosystemId`.
@@ -308161,7 +308105,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -308177,7 +308120,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -308193,7 +308135,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -308210,7 +308151,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -308230,10 +308170,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -308289,7 +308225,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -308642,8 +308577,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/dates/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/dates/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/dates/{id}/PUT/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/dates/{id}/PUT/responses/200/content/json/ecosystemId`.
@@ -308674,7 +308607,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -308690,7 +308622,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -308706,7 +308637,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -308723,7 +308653,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -308743,10 +308672,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -308802,7 +308727,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -309302,8 +309226,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/events/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/GET/responses/200/content/JsonPayload/ownerId`.
@@ -309406,7 +309328,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -309420,7 +309341,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -309434,7 +309354,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -309449,7 +309368,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -309470,10 +309388,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -309518,7 +309432,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -309838,8 +309751,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/events/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/POST/responses/201/content/json/ownerId`.
@@ -309942,7 +309853,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -309956,7 +309866,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -309970,7 +309879,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -309985,7 +309893,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -310006,10 +309913,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -310054,7 +309957,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -310304,8 +310206,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/events/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/{id}/GET/responses/200/content/json/ownerId`.
@@ -310408,7 +310308,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -310422,7 +310321,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -310436,7 +310334,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -310451,7 +310348,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -310472,10 +310368,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -310520,7 +310412,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -310905,8 +310796,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/events/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/events/{id}/PUT/responses/200/content/json/ownerId`.
@@ -311009,7 +310898,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -311023,7 +310911,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -311037,7 +310924,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -311052,7 +310938,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -311073,10 +310958,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -311121,7 +311002,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -311616,8 +311496,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/feedback/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/feedback/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/GET/responses/200/content/JsonPayload/ownerId`.
@@ -311660,7 +311538,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -311682,7 +311559,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -311704,7 +311580,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -311727,7 +311602,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -311753,10 +311627,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -311836,7 +311706,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -312174,8 +312043,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/feedback/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/feedback/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/POST/responses/201/content/json/ownerId`.
@@ -312218,7 +312085,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -312240,7 +312106,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -312262,7 +312127,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -312285,7 +312149,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -312311,10 +312174,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -312394,7 +312253,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -312651,8 +312509,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/feedback/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/feedback/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/{id}/GET/responses/200/content/json/ownerId`.
@@ -312695,7 +312551,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -312717,7 +312572,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -312739,7 +312593,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -312762,7 +312615,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -312788,10 +312640,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -312871,7 +312719,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -313274,8 +313121,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/feedback/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/feedback/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/feedback/{id}/PUT/responses/200/content/json/ownerId`.
@@ -313318,7 +313163,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -313340,7 +313184,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -313362,7 +313205,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -313385,7 +313227,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -313411,10 +313252,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -313494,7 +313331,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -314000,8 +313836,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/key-value-pairs/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/GET/responses/200/content/JsonPayload/ownerId`.
@@ -314104,7 +313938,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -314118,7 +313951,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -314132,7 +313964,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -314147,7 +313978,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -314168,10 +313998,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -314216,7 +314042,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -314536,8 +314361,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/key-value-pairs/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/POST/responses/201/content/json/ownerId`.
@@ -314640,7 +314463,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -314654,7 +314476,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -314668,7 +314489,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -314683,7 +314503,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -314704,10 +314523,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -314752,7 +314567,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -315002,8 +314816,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/GET/responses/200/content/json/ownerId`.
@@ -315106,7 +314918,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -315120,7 +314931,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -315134,7 +314944,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -315149,7 +314958,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -315170,10 +314978,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -315218,7 +315022,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -315603,8 +315406,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/key-value-pairs/{id}/PUT/responses/200/content/json/ownerId`.
@@ -315707,7 +315508,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -315721,7 +315521,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -315735,7 +315534,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -315750,7 +315548,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -315771,10 +315568,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -315819,7 +315612,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -316316,8 +316108,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keyword-items/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/GET/responses/200/content/JsonPayload/ownerId`.
@@ -316347,7 +316137,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -316363,7 +316152,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -316379,7 +316167,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -316396,7 +316183,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -316419,10 +316205,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -316475,7 +316257,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -316742,8 +316523,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keyword-items/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/POST/responses/201/content/json/ownerId`.
@@ -316773,7 +316552,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -316789,7 +316567,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -316805,7 +316582,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -316822,7 +316598,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -316845,10 +316620,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -316901,7 +316672,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -317153,8 +316923,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keyword-items/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/{id}/GET/responses/200/content/json/ownerId`.
@@ -317184,7 +316952,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -317200,7 +316967,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -317216,7 +316982,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -317233,7 +316998,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -317256,10 +317020,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -317312,7 +317072,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -317644,8 +317403,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keyword-items/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keyword-items/{id}/PUT/responses/200/content/json/ownerId`.
@@ -317675,7 +317432,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -317691,7 +317447,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -317707,7 +317462,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -317724,7 +317478,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -317747,10 +317500,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -317803,7 +317552,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -318300,8 +318048,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/keywords/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keywords/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/GET/responses/200/content/JsonPayload/ownerId`.
@@ -318330,7 +318076,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -318345,7 +318090,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -318360,7 +318104,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -318376,7 +318119,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -318395,10 +318137,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -318450,7 +318188,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -318704,8 +318441,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/keywords/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keywords/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/POST/responses/201/content/json/ownerId`.
@@ -318734,7 +318469,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -318749,7 +318483,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -318764,7 +318497,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -318780,7 +318512,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -318799,10 +318530,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -318854,7 +318581,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -319104,8 +318830,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/keywords/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keywords/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/{id}/GET/responses/200/content/json/ownerId`.
@@ -319134,7 +318858,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -319149,7 +318872,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -319164,7 +318886,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -319180,7 +318901,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -319199,10 +318919,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -319254,7 +318970,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -319573,8 +319288,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/keywords/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/keywords/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/keywords/{id}/PUT/responses/200/content/json/ownerId`.
@@ -319603,7 +319316,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -319618,7 +319330,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -319633,7 +319344,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -319649,7 +319359,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -319668,10 +319377,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -319723,7 +319428,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -320222,8 +319926,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/list-items/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/GET/responses/200/content/JsonPayload/ownerId`.
@@ -320328,7 +320030,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -320343,7 +320044,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -320358,7 +320058,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -320374,7 +320073,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -320396,10 +320094,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -320448,7 +320142,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -320780,8 +320473,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/list-items/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/POST/responses/201/content/json/ownerId`.
@@ -320886,7 +320577,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -320901,7 +320591,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -320916,7 +320605,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -320932,7 +320620,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -320954,10 +320641,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -321006,7 +320689,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -321257,8 +320939,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/list-items/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/{id}/GET/responses/200/content/json/ownerId`.
@@ -321363,7 +321043,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -321378,7 +321057,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -321393,7 +321071,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -321409,7 +321086,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -321431,10 +321107,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -321483,7 +321155,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -321880,8 +321551,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/list-items/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/list-items/{id}/PUT/responses/200/content/json/ownerId`.
@@ -321986,7 +321655,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -322001,7 +321669,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -322016,7 +321683,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -322032,7 +321698,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -322054,10 +321719,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -322106,7 +321767,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -322604,8 +322264,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/lists/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/GET/responses/200/content/JsonPayload/ownerId`.
@@ -322629,7 +322287,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -322642,7 +322299,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -322655,7 +322311,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -322669,7 +322324,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -322689,10 +322343,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -322733,7 +322383,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -322964,8 +322613,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/lists/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/POST/responses/201/content/json/ownerId`.
@@ -322989,7 +322636,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -323002,7 +322648,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -323015,7 +322660,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -323029,7 +322673,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -323049,10 +322692,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -323093,7 +322732,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -323342,8 +322980,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/lists/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/{id}/GET/responses/200/content/json/ownerId`.
@@ -323367,7 +323003,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -323380,7 +323015,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -323393,7 +323027,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -323407,7 +323040,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -323427,10 +323059,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -323471,7 +323099,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -323767,8 +323394,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/lists/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/lists/{id}/PUT/responses/200/content/json/ownerId`.
@@ -323792,7 +323417,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -323805,7 +323429,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -323818,7 +323441,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -323832,7 +323454,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -323852,10 +323473,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -323896,7 +323513,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -324390,8 +324006,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/locations/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/locations/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/locations/GET/responses/200/content/JsonPayload/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/locations/GET/responses/200/content/JsonPayload/ecosystemId`.
@@ -324424,7 +324038,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -324441,7 +324054,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -324458,7 +324070,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -324476,7 +324087,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -324497,10 +324107,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -324560,7 +324166,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -324860,8 +324465,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/locations/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/locations/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/locations/POST/responses/201/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/locations/POST/responses/201/content/json/ecosystemId`.
@@ -324894,7 +324497,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -324911,7 +324513,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -324928,7 +324529,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -324946,7 +324546,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -324967,10 +324566,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -325030,7 +324625,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -325282,8 +324876,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/locations/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/locations/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/locations/{id}/GET/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/locations/{id}/GET/responses/200/content/json/ecosystemId`.
@@ -325316,7 +324908,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -325333,7 +324924,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -325350,7 +324940,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -325368,7 +324957,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -325389,10 +324977,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -325452,7 +325036,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -325817,8 +325400,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/locations/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/locations/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/locations/{id}/PUT/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/locations/{id}/PUT/responses/200/content/json/ecosystemId`.
@@ -325851,7 +325432,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -325868,7 +325448,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -325885,7 +325464,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -325903,7 +325481,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -325924,10 +325501,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -325987,7 +325560,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -326488,8 +326060,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/poll-options/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/GET/responses/200/content/JsonPayload/ownerId`.
@@ -326517,7 +326087,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -326532,7 +326101,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -326547,7 +326115,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -326563,7 +326130,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -326585,10 +326151,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -326637,7 +326199,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -326892,8 +326453,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/poll-options/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/POST/responses/201/content/json/ownerId`.
@@ -326921,7 +326480,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -326936,7 +326494,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -326951,7 +326508,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -326967,7 +326523,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -326989,10 +326544,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -327041,7 +326592,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -327292,8 +326842,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/poll-options/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/{id}/GET/responses/200/content/json/ownerId`.
@@ -327321,7 +326869,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -327336,7 +326883,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -327351,7 +326897,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -327367,7 +326912,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -327389,10 +326933,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -327441,7 +326981,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -327761,8 +327300,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/poll-options/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/poll-options/{id}/PUT/responses/200/content/json/ownerId`.
@@ -327790,7 +327327,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -327805,7 +327341,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -327820,7 +327355,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -327836,7 +327370,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -327858,10 +327391,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -327910,7 +327439,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -328406,8 +327934,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/polls/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/polls/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/GET/responses/200/content/JsonPayload/ownerId`.
@@ -328436,7 +327962,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -328451,7 +327976,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -328466,7 +327990,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -328482,7 +328005,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -328501,10 +328023,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -328556,7 +328074,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -328810,8 +328327,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/polls/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/polls/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/POST/responses/201/content/json/ownerId`.
@@ -328840,7 +328355,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -328855,7 +328369,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -328870,7 +328383,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -328886,7 +328398,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -328905,10 +328416,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -328960,7 +328467,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -329210,8 +328716,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/polls/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/polls/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/{id}/GET/responses/200/content/json/ownerId`.
@@ -329240,7 +328744,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -329255,7 +328758,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -329270,7 +328772,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -329286,7 +328787,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -329305,10 +328805,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -329360,7 +328856,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -329679,8 +329174,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/polls/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/polls/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/polls/{id}/PUT/responses/200/content/json/ownerId`.
@@ -329709,7 +329202,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -329724,7 +329216,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -329739,7 +329230,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -329755,7 +329245,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -329774,10 +329263,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -329829,7 +329314,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -330328,8 +329812,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queue-items/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/GET/responses/200/content/JsonPayload/ownerId`.
@@ -330440,7 +329922,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -330458,7 +329939,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -330476,7 +329956,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -330495,7 +329974,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -330520,10 +329998,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -330584,7 +330058,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -330963,8 +330436,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queue-items/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/POST/responses/201/content/json/ownerId`.
@@ -331075,7 +330546,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -331093,7 +330563,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -331111,7 +330580,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -331130,7 +330598,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -331155,10 +330622,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -331219,7 +330682,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -331473,8 +330935,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queue-items/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/{id}/GET/responses/200/content/json/ownerId`.
@@ -331585,7 +331045,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -331603,7 +331062,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -331621,7 +331079,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -331640,7 +331097,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -331665,10 +331121,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -331729,7 +331181,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -332173,8 +331624,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queue-items/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queue-items/{id}/PUT/responses/200/content/json/ownerId`.
@@ -332285,7 +331734,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -332303,7 +331751,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -332321,7 +331768,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -332340,7 +331786,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -332365,10 +331810,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -332429,7 +331870,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -332930,8 +332370,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queues/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/GET/responses/200/content/JsonPayload/ownerId`.
@@ -332955,7 +332393,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -332968,7 +332405,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -332981,7 +332417,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -332995,7 +332430,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -333015,10 +332449,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -333059,7 +332489,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -333290,8 +332719,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queues/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/POST/responses/201/content/json/ownerId`.
@@ -333315,7 +332742,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -333328,7 +332754,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -333341,7 +332766,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -333355,7 +332779,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -333375,10 +332798,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -333419,7 +332838,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -333668,8 +333086,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queues/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/{id}/GET/responses/200/content/json/ownerId`.
@@ -333693,7 +333109,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -333706,7 +333121,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -333719,7 +333133,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -333733,7 +333146,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -333753,10 +333165,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -333797,7 +333205,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -334093,8 +333500,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/content/queues/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/queues/{id}/PUT/responses/200/content/json/ownerId`.
@@ -334118,7 +333523,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -334131,7 +333535,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -334144,7 +333547,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -334158,7 +333560,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -334178,10 +333579,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -334222,7 +333619,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -334716,8 +334112,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/relationships/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/relationships/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/relationships/GET/responses/200/content/JsonPayload/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/relationships/GET/responses/200/content/JsonPayload/ecosystemId`.
@@ -334748,7 +334142,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -334764,7 +334157,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -334780,7 +334172,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -334797,7 +334188,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -334817,10 +334207,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -334876,7 +334262,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -335164,8 +334549,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/relationships/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/relationships/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/relationships/POST/responses/201/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/relationships/POST/responses/201/content/json/ecosystemId`.
@@ -335196,7 +334579,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -335212,7 +334594,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -335228,7 +334609,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -335245,7 +334625,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -335265,10 +334644,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -335324,7 +334699,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -335575,8 +334949,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/relationships/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/relationships/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/relationships/{id}/GET/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/relationships/{id}/GET/responses/200/content/json/ecosystemId`.
@@ -335607,7 +334979,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -335623,7 +334994,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -335639,7 +335009,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -335656,7 +335025,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -335676,10 +335044,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -335735,7 +335099,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -336088,8 +335451,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/relationships/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/relationships/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/relationships/{id}/PUT/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/relationships/{id}/PUT/responses/200/content/json/ecosystemId`.
@@ -336120,7 +335481,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -336136,7 +335496,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -336152,7 +335511,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -336169,7 +335527,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -336189,10 +335546,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -336248,7 +335601,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -336766,8 +336118,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/social-links/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/social-links/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/social-links/GET/responses/200/content/JsonPayload/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/social-links/GET/responses/200/content/JsonPayload/ecosystemId`.
@@ -336798,7 +336148,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -336814,7 +336163,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -336830,7 +336178,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -336847,7 +336194,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -336867,10 +336213,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -336926,7 +336268,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -337283,8 +336624,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/social-links/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/social-links/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/social-links/POST/responses/201/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/social-links/POST/responses/201/content/json/ecosystemId`.
@@ -337315,7 +336654,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -337331,7 +336669,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -337347,7 +336684,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -337364,7 +336700,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -337384,10 +336719,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -337443,7 +336774,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -337814,8 +337144,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/social-links/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/social-links/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/social-links/{id}/GET/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/social-links/{id}/GET/responses/200/content/json/ecosystemId`.
@@ -337846,7 +337174,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -337862,7 +337189,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -337878,7 +337204,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -337895,7 +337220,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -337915,10 +337239,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -337974,7 +337294,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -338345,8 +337664,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/social-links/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/social-links/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/social-links/{id}/PUT/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/social-links/{id}/PUT/responses/200/content/json/ecosystemId`.
@@ -338377,7 +337694,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -338393,7 +337709,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -338409,7 +337724,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -338426,7 +337740,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -338446,10 +337759,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -338505,7 +337814,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -339123,8 +338431,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/tags/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/tags/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/tags/GET/responses/200/content/JsonPayload/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/tags/GET/responses/200/content/JsonPayload/ecosystemId`.
@@ -339157,7 +338463,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -339174,7 +338479,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -339191,7 +338495,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -339209,7 +338512,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -339230,10 +338532,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -339293,7 +338591,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -339593,8 +338890,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/tags/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/tags/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/tags/POST/responses/201/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/tags/POST/responses/201/content/json/ecosystemId`.
@@ -339627,7 +338922,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -339644,7 +338938,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -339661,7 +338954,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -339679,7 +338971,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -339700,10 +338991,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -339763,7 +339050,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -340015,8 +339301,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/tags/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/tags/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/tags/{id}/GET/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/tags/{id}/GET/responses/200/content/json/ecosystemId`.
@@ -340049,7 +339333,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -340066,7 +339349,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -340083,7 +339365,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -340101,7 +339382,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -340122,10 +339402,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -340185,7 +339461,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -340550,8 +339825,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/tags/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/tags/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/tags/{id}/PUT/responses/200/content/json/deletedAt`.
                         public var deletedAt: Swift.String?
                         /// - Remark: Generated from `#/paths/content/tags/{id}/PUT/responses/200/content/json/ecosystemId`.
@@ -340584,7 +339857,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - deletedAt:
                         ///   - ecosystemId:
                         ///   - ownerKind:
@@ -340601,7 +339873,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             deletedAt: Swift.String? = nil,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
@@ -340618,7 +339889,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.deletedAt = deletedAt
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
@@ -340636,7 +339906,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case deletedAt
                             case ecosystemId
                             case ownerKind
@@ -340657,10 +339926,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.deletedAt = try container.decodeIfPresent(
                                 Swift.String.self,
@@ -340720,7 +339985,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "deletedAt",
                                 "ecosystemId",
                                 "ownerKind",
@@ -341219,8 +340483,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/urls/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/urls/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/GET/responses/200/content/JsonPayload/ownerId`.
@@ -341267,7 +340529,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -341291,7 +340552,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -341315,7 +340575,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -341340,7 +340599,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -341368,10 +340626,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -341459,7 +340713,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -341810,8 +341063,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/urls/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/urls/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/POST/responses/201/content/json/ownerId`.
@@ -341858,7 +341109,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -341882,7 +341132,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -341906,7 +341155,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -341931,7 +341179,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -341959,10 +341206,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -342050,7 +341293,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -342309,8 +341551,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/urls/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/urls/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/{id}/GET/responses/200/content/json/ownerId`.
@@ -342357,7 +341597,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -342381,7 +341620,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -342405,7 +341643,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -342430,7 +341667,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -342458,10 +341694,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -342549,7 +341781,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -342965,8 +342196,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/content/urls/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/content/urls/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/content/urls/{id}/PUT/responses/200/content/json/ownerId`.
@@ -343013,7 +342242,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -343037,7 +342265,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -343061,7 +342288,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -343086,7 +342312,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -343114,10 +342339,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -343205,7 +342426,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -345830,8 +345050,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/GET/responses/200/content/JsonPayload/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/blocks/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/GET/responses/200/content/JsonPayload/ownerId`.
@@ -345865,7 +345083,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -345883,7 +345100,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -345901,7 +345117,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -345920,7 +345135,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -345945,10 +345159,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -346009,7 +345219,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -346289,8 +345498,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/POST/responses/201/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/blocks/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/POST/responses/201/content/json/ownerId`.
@@ -346324,7 +345531,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -346342,7 +345548,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -346360,7 +345565,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -346379,7 +345583,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -346404,10 +345607,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -346468,7 +345667,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -346722,8 +345920,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/{id}/GET/responses/200/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/blocks/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/{id}/GET/responses/200/content/json/ownerId`.
@@ -346757,7 +345953,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -346775,7 +345970,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -346793,7 +345987,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -346812,7 +346005,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -346837,10 +346029,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -346901,7 +346089,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -347246,8 +346433,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/{id}/PUT/responses/200/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/blocks/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/blocks/{id}/PUT/responses/200/content/json/ownerId`.
@@ -347281,7 +346466,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -347299,7 +346483,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -347317,7 +346500,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -347336,7 +346518,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -347361,10 +346542,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -347425,7 +346602,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -347924,8 +347100,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/document/documents/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/document/documents/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/GET/responses/200/content/JsonPayload/ownerId`.
@@ -347954,7 +347128,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -347969,7 +347142,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -347984,7 +347156,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -348000,7 +347171,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -348019,10 +347189,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -348074,7 +347240,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -348317,8 +347482,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/document/documents/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/document/documents/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/POST/responses/201/content/json/ownerId`.
@@ -348347,7 +347510,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -348362,7 +347524,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -348377,7 +347538,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -348393,7 +347553,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -348412,10 +347571,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -348467,7 +347622,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -348717,8 +347871,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/document/documents/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/document/documents/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/{id}/GET/responses/200/content/json/ownerId`.
@@ -348747,7 +347899,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -348762,7 +347913,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -348777,7 +347927,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -348793,7 +347942,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -348812,10 +347960,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -348867,7 +348011,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -349175,8 +348318,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/document/documents/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/document/documents/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/documents/{id}/PUT/responses/200/content/json/ownerId`.
@@ -349205,7 +348346,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -349220,7 +348360,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -349235,7 +348374,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -349251,7 +348389,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -349270,10 +348407,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -349325,7 +348458,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -349824,8 +348956,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/GET/responses/200/content/JsonPayload/blockId`.
                         public var blockId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/marks/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/GET/responses/200/content/JsonPayload/ownerId`.
@@ -349859,7 +348989,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - blockId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -349877,7 +349006,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             blockId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -349895,7 +349023,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.blockId = blockId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -349914,7 +349041,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case blockId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -349939,10 +349065,6 @@ public enum Operations {
                             self.blockId = try container.decode(
                                 Swift.String.self,
                                 forKey: .blockId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -350003,7 +349125,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "blockId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -350283,8 +349404,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/POST/responses/201/content/json/blockId`.
                         public var blockId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/marks/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/POST/responses/201/content/json/ownerId`.
@@ -350318,7 +349437,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - blockId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -350336,7 +349454,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             blockId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -350354,7 +349471,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.blockId = blockId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -350373,7 +349489,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case blockId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -350398,10 +349513,6 @@ public enum Operations {
                             self.blockId = try container.decode(
                                 Swift.String.self,
                                 forKey: .blockId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -350462,7 +349573,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "blockId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -350716,8 +349826,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/{id}/GET/responses/200/content/json/blockId`.
                         public var blockId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/marks/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/{id}/GET/responses/200/content/json/ownerId`.
@@ -350751,7 +349859,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - blockId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -350769,7 +349876,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             blockId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -350787,7 +349893,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.blockId = blockId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -350806,7 +349911,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case blockId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -350831,10 +349935,6 @@ public enum Operations {
                             self.blockId = try container.decode(
                                 Swift.String.self,
                                 forKey: .blockId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -350895,7 +349995,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "blockId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -351240,8 +350339,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/{id}/PUT/responses/200/content/json/blockId`.
                         public var blockId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/marks/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/marks/{id}/PUT/responses/200/content/json/ownerId`.
@@ -351275,7 +350372,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - blockId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -351293,7 +350389,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             blockId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -351311,7 +350406,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.blockId = blockId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -351330,7 +350424,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case blockId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -351355,10 +350448,6 @@ public enum Operations {
                             self.blockId = try container.decode(
                                 Swift.String.self,
                                 forKey: .blockId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -351419,7 +350508,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "blockId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -351920,8 +351008,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/GET/responses/200/content/JsonPayload/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/operations/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/GET/responses/200/content/JsonPayload/ownerId`.
@@ -351953,7 +351039,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -351970,7 +351055,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -351987,7 +351071,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -352005,7 +351088,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -352029,10 +351111,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -352089,7 +351167,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -352368,8 +351445,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/POST/responses/201/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/operations/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/POST/responses/201/content/json/ownerId`.
@@ -352401,7 +351476,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -352418,7 +351492,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -352435,7 +351508,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -352453,7 +351525,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -352477,10 +351548,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -352537,7 +351604,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -352790,8 +351856,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/{id}/GET/responses/200/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/operations/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/{id}/GET/responses/200/content/json/ownerId`.
@@ -352823,7 +351887,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -352840,7 +351903,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -352857,7 +351919,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -352875,7 +351936,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -352899,10 +351959,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -352959,7 +352015,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -353303,8 +352358,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/{id}/PUT/responses/200/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/operations/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/operations/{id}/PUT/responses/200/content/json/ownerId`.
@@ -353336,7 +352389,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -353353,7 +352405,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -353370,7 +352421,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -353388,7 +352438,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -353412,10 +352461,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -353472,7 +352517,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -353972,8 +353016,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/GET/responses/200/content/JsonPayload/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/versions/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/GET/responses/200/content/JsonPayload/ownerId`.
@@ -354007,7 +353049,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -354025,7 +353066,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -354043,7 +353083,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -354062,7 +353101,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -354087,10 +353125,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -354151,7 +353185,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -354431,8 +353464,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/POST/responses/201/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/versions/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/POST/responses/201/content/json/ownerId`.
@@ -354466,7 +353497,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -354484,7 +353514,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -354502,7 +353531,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -354521,7 +353549,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -354546,10 +353573,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -354610,7 +353633,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -354864,8 +353886,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/{id}/GET/responses/200/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/versions/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/{id}/GET/responses/200/content/json/ownerId`.
@@ -354899,7 +353919,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -354917,7 +353936,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -354935,7 +353953,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -354954,7 +353971,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -354979,10 +353995,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -355043,7 +354055,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -355388,8 +354399,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/{id}/PUT/responses/200/content/json/documentId`.
                         public var documentId: Swift.String
-                        /// - Remark: Generated from `#/paths/document/versions/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/document/versions/{id}/PUT/responses/200/content/json/ownerId`.
@@ -355423,7 +354432,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - documentId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -355441,7 +354449,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             documentId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -355459,7 +354466,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.documentId = documentId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -355478,7 +354484,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case documentId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -355503,10 +354508,6 @@ public enum Operations {
                             self.documentId = try container.decode(
                                 Swift.String.self,
                                 forKey: .documentId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -355567,7 +354568,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "documentId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -370953,8 +369953,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/game/players/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/GET/responses/200/content/JsonPayload/ownerId`.
@@ -370984,7 +369982,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - gameId:
@@ -371000,7 +369997,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             gameId: Swift.String,
@@ -371016,7 +370012,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.gameId = gameId
@@ -371033,7 +370028,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case gameId
@@ -371056,10 +370050,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -371112,7 +370102,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "gameId",
@@ -371379,8 +370368,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/game/players/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/POST/responses/201/content/json/ownerId`.
@@ -371410,7 +370397,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - gameId:
@@ -371426,7 +370412,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             gameId: Swift.String,
@@ -371442,7 +370427,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.gameId = gameId
@@ -371459,7 +370443,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case gameId
@@ -371482,10 +370465,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -371538,7 +370517,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "gameId",
@@ -371790,8 +370768,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/game/players/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/{id}/GET/responses/200/content/json/ownerId`.
@@ -371821,7 +370797,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - gameId:
@@ -371837,7 +370812,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             gameId: Swift.String,
@@ -371853,7 +370827,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.gameId = gameId
@@ -371870,7 +370843,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case gameId
@@ -371893,10 +370865,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -371949,7 +370917,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "gameId",
@@ -372281,8 +371248,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/game/players/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/game/players/{id}/PUT/responses/200/content/json/ownerId`.
@@ -372312,7 +371277,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - gameId:
@@ -372328,7 +371292,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             gameId: Swift.String,
@@ -372344,7 +371307,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.gameId = gameId
@@ -372361,7 +371323,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case gameId
@@ -372384,10 +371345,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -372440,7 +371397,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "gameId",
@@ -372937,8 +371893,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/GET/responses/200/content/JsonPayload/ownerKind`.
@@ -372981,7 +371935,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -373003,7 +371956,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -373025,7 +371977,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -373048,7 +371999,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -373074,10 +372024,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -373157,7 +372103,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -373484,8 +372429,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/POST/responses/201/content/json/ownerKind`.
@@ -373528,7 +372471,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -373550,7 +372492,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -373572,7 +372513,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -373595,7 +372535,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -373621,10 +372560,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -373704,7 +372639,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -373961,8 +372895,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/GET/responses/200/content/json/ownerKind`.
@@ -374005,7 +372937,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -374027,7 +372958,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -374049,7 +372979,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -374072,7 +373001,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -374098,10 +373026,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -374181,7 +373105,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -374573,8 +373496,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audience-contacts/{id}/PUT/responses/200/content/json/ownerKind`.
@@ -374617,7 +373538,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -374639,7 +373559,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -374661,7 +373580,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -374684,7 +373602,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -374710,10 +373627,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -374793,7 +373706,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -375297,8 +374209,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audiences/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/GET/responses/200/content/JsonPayload/ownerKind`.
@@ -375331,7 +374241,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -375348,7 +374257,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -375365,7 +374273,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -375383,7 +374290,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -375404,10 +374310,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -375467,7 +374369,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -375734,8 +374635,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audiences/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/POST/responses/201/content/json/ownerKind`.
@@ -375768,7 +374667,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -375785,7 +374683,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -375802,7 +374699,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -375820,7 +374716,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -375841,10 +374736,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -375904,7 +374795,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -376156,8 +375046,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/GET/responses/200/content/json/ownerKind`.
@@ -376190,7 +375078,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -376207,7 +375094,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -376224,7 +375110,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -376242,7 +375127,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -376263,10 +375147,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -376326,7 +375206,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -376658,8 +375537,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-audiences/{id}/PUT/responses/200/content/json/ownerKind`.
@@ -376692,7 +375569,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -376709,7 +375585,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -376726,7 +375601,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -376744,7 +375618,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -376765,10 +375638,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -376828,7 +375697,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -377327,8 +376195,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-bookmarks/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/GET/responses/200/content/JsonPayload/ownerId`.
@@ -377375,7 +376241,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -377399,7 +376264,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -377423,7 +376287,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -377448,7 +376311,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -377476,10 +376338,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -377567,7 +376425,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -377918,8 +376775,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-bookmarks/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/POST/responses/201/content/json/ownerId`.
@@ -377966,7 +376821,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -377990,7 +376844,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -378014,7 +376867,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -378039,7 +376891,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -378067,10 +376918,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -378158,7 +377005,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -378417,8 +377263,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/GET/responses/200/content/json/ownerId`.
@@ -378465,7 +377309,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -378489,7 +377332,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -378513,7 +377355,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -378538,7 +377379,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -378566,10 +377406,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -378657,7 +377493,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -379073,8 +377908,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-bookmarks/{id}/PUT/responses/200/content/json/ownerId`.
@@ -379121,7 +377954,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -379145,7 +377977,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -379169,7 +378000,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -379194,7 +378024,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -379222,10 +378051,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -379313,7 +378138,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -379851,8 +378675,6 @@ public enum Operations {
                         public var updatedAt: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/GET/responses/200/content/JsonPayload/isDeleted`.
                         public var isDeleted: Swift.Bool
-                        /// - Remark: Generated from `#/paths/integration/integration-calendar-events/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/GET/responses/200/content/JsonPayload/ownerId`.
@@ -379887,7 +378709,6 @@ public enum Operations {
                         ///   - createdAt:
                         ///   - updatedAt:
                         ///   - isDeleted:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -379913,7 +378734,6 @@ public enum Operations {
                             createdAt: Swift.String,
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -379939,7 +378759,6 @@ public enum Operations {
                             self.createdAt = createdAt
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -379966,7 +378785,6 @@ public enum Operations {
                             case createdAt
                             case updatedAt
                             case isDeleted
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -380045,10 +378863,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDeleted
                             )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
-                            )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
                                 forKey: .ownerKind
@@ -380095,7 +378909,6 @@ public enum Operations {
                                 "createdAt",
                                 "updatedAt",
                                 "isDeleted",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -380486,8 +379299,6 @@ public enum Operations {
                         public var updatedAt: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/POST/responses/201/content/json/isDeleted`.
                         public var isDeleted: Swift.Bool
-                        /// - Remark: Generated from `#/paths/integration/integration-calendar-events/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/POST/responses/201/content/json/ownerId`.
@@ -380522,7 +379333,6 @@ public enum Operations {
                         ///   - createdAt:
                         ///   - updatedAt:
                         ///   - isDeleted:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -380548,7 +379358,6 @@ public enum Operations {
                             createdAt: Swift.String,
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -380574,7 +379383,6 @@ public enum Operations {
                             self.createdAt = createdAt
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -380601,7 +379409,6 @@ public enum Operations {
                             case createdAt
                             case updatedAt
                             case isDeleted
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -380680,10 +379487,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDeleted
                             )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
-                            )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
                                 forKey: .ownerKind
@@ -380730,7 +379533,6 @@ public enum Operations {
                                 "createdAt",
                                 "updatedAt",
                                 "isDeleted",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -381007,8 +379809,6 @@ public enum Operations {
                         public var updatedAt: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/GET/responses/200/content/json/isDeleted`.
                         public var isDeleted: Swift.Bool
-                        /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/GET/responses/200/content/json/ownerId`.
@@ -381043,7 +379843,6 @@ public enum Operations {
                         ///   - createdAt:
                         ///   - updatedAt:
                         ///   - isDeleted:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -381069,7 +379868,6 @@ public enum Operations {
                             createdAt: Swift.String,
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -381095,7 +379893,6 @@ public enum Operations {
                             self.createdAt = createdAt
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -381122,7 +379919,6 @@ public enum Operations {
                             case createdAt
                             case updatedAt
                             case isDeleted
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -381201,10 +379997,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDeleted
                             )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
-                            )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
                                 forKey: .ownerKind
@@ -381251,7 +380043,6 @@ public enum Operations {
                                 "createdAt",
                                 "updatedAt",
                                 "isDeleted",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -381707,8 +380498,6 @@ public enum Operations {
                         public var updatedAt: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/PUT/responses/200/content/json/isDeleted`.
                         public var isDeleted: Swift.Bool
-                        /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-calendar-events/{id}/PUT/responses/200/content/json/ownerId`.
@@ -381743,7 +380532,6 @@ public enum Operations {
                         ///   - createdAt:
                         ///   - updatedAt:
                         ///   - isDeleted:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -381769,7 +380557,6 @@ public enum Operations {
                             createdAt: Swift.String,
                             updatedAt: Swift.String,
                             isDeleted: Swift.Bool,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -381795,7 +380582,6 @@ public enum Operations {
                             self.createdAt = createdAt
                             self.updatedAt = updatedAt
                             self.isDeleted = isDeleted
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -381822,7 +380608,6 @@ public enum Operations {
                             case createdAt
                             case updatedAt
                             case isDeleted
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -381901,10 +380686,6 @@ public enum Operations {
                                 Swift.Bool.self,
                                 forKey: .isDeleted
                             )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
-                            )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
                                 forKey: .ownerKind
@@ -381951,7 +380732,6 @@ public enum Operations {
                                 "createdAt",
                                 "updatedAt",
                                 "isDeleted",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -382443,8 +381223,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/GET/responses/200/content/JsonPayload/ownerKind`.
@@ -382483,7 +381261,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -382503,7 +381280,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -382523,7 +381299,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -382544,7 +381319,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -382568,10 +381342,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -382643,7 +381413,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -382946,8 +381715,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/POST/responses/201/content/json/ownerKind`.
@@ -382986,7 +381753,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -383006,7 +381772,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -383026,7 +381791,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -383047,7 +381811,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -383071,10 +381834,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -383146,7 +381905,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -383401,8 +382159,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/GET/responses/200/content/json/ownerKind`.
@@ -383441,7 +382197,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -383461,7 +382216,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -383481,7 +382235,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -383502,7 +382255,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -383526,10 +382278,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -383601,7 +382349,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -383969,8 +382716,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-campaign-stats/{id}/PUT/responses/200/content/json/ownerKind`.
@@ -384009,7 +382754,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ecosystemId:
                         ///   - ownerKind:
                         ///   - ownerId:
@@ -384029,7 +382773,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ecosystemId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
@@ -384049,7 +382792,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ecosystemId = ecosystemId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
@@ -384070,7 +382812,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ecosystemId
                             case ownerKind
                             case ownerId
@@ -384094,10 +382835,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
@@ -384169,7 +382906,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ecosystemId",
                                 "ownerKind",
                                 "ownerId",
@@ -384671,8 +383407,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/GET/responses/200/content/JsonPayload/ownerId`.
@@ -384715,7 +383449,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -384737,7 +383470,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -384759,7 +383491,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -384782,7 +383513,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -384808,10 +383538,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -384891,7 +383617,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -385218,8 +383943,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/POST/responses/201/content/json/ownerId`.
@@ -385262,7 +383985,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -385284,7 +384006,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -385306,7 +384027,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -385329,7 +384049,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -385355,10 +384074,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -385438,7 +384153,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -385695,8 +384409,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/GET/responses/200/content/json/ownerId`.
@@ -385739,7 +384451,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -385761,7 +384472,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -385783,7 +384493,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -385806,7 +384515,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -385832,10 +384540,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -385915,7 +384619,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -386307,8 +385010,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-financial-transactions/{id}/PUT/responses/200/content/json/ownerId`.
@@ -386351,7 +385052,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -386373,7 +385073,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -386395,7 +385094,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -386418,7 +385116,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -386444,10 +385141,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -386527,7 +385220,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -387031,8 +385723,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-items/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-items/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/GET/responses/200/content/JsonPayload/ownerId`.
@@ -387085,7 +385775,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -387112,7 +385801,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -387139,7 +385827,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -387167,7 +385854,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -387198,10 +385884,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -387301,7 +385983,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -387688,8 +386369,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-items/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-items/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/POST/responses/201/content/json/ownerId`.
@@ -387742,7 +386421,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -387769,7 +386447,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -387796,7 +386473,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -387824,7 +386500,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -387855,10 +386530,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -387958,7 +386629,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -388220,8 +386890,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-items/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-items/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/{id}/GET/responses/200/content/json/ownerId`.
@@ -388274,7 +386942,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -388301,7 +386968,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -388328,7 +386994,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -388356,7 +387021,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -388387,10 +387051,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -388490,7 +387150,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -388942,8 +387601,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-items/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-items/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-items/{id}/PUT/responses/200/content/json/ownerId`.
@@ -388996,7 +387653,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -389023,7 +387679,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -389050,7 +387705,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -389078,7 +387732,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -389109,10 +387762,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -389212,7 +387861,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -389721,8 +388369,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-pages/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-pages/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/GET/responses/200/content/JsonPayload/ownerId`.
@@ -389761,7 +388407,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -389781,7 +388426,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -389801,7 +388445,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -389822,7 +388465,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -389846,10 +388488,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -389921,7 +388559,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -390224,8 +388861,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-pages/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-pages/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/POST/responses/201/content/json/ownerId`.
@@ -390264,7 +388899,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -390284,7 +388918,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -390304,7 +388937,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -390325,7 +388957,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -390349,10 +388980,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -390424,7 +389051,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -390679,8 +389305,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/GET/responses/200/content/json/ownerId`.
@@ -390719,7 +389343,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -390739,7 +389362,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -390759,7 +389381,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -390780,7 +389401,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -390804,10 +389424,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -390879,7 +389495,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -391247,8 +389862,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/integration/integration-pages/{id}/PUT/responses/200/content/json/ownerId`.
@@ -391287,7 +389900,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -391307,7 +389919,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -391327,7 +389938,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -391348,7 +389958,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -391372,10 +389981,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -391447,7 +390052,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -406537,8 +405141,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/blocks/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/GET/responses/200/content/JsonPayload/ownerId`.
@@ -406641,7 +405243,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -406655,7 +405256,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -406669,7 +405269,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -406684,7 +405283,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -406705,10 +405303,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -406753,7 +405347,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -407073,8 +405666,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/blocks/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/POST/responses/201/content/json/ownerId`.
@@ -407177,7 +405768,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -407191,7 +405781,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -407205,7 +405794,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -407220,7 +405808,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -407241,10 +405828,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -407289,7 +405872,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -407539,8 +406121,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/GET/responses/200/content/json/ownerId`.
@@ -407643,7 +406223,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -407657,7 +406236,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -407671,7 +406249,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -407686,7 +406263,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -407707,10 +406283,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -407755,7 +406327,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -408140,8 +406711,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/blocks/{id}/PUT/responses/200/content/json/ownerId`.
@@ -408244,7 +406813,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -408258,7 +406826,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -408272,7 +406839,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -408287,7 +406853,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -408308,10 +406873,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -408356,7 +406917,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -408853,8 +407413,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/facts/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/GET/responses/200/content/JsonPayload/ownerId`.
@@ -408894,7 +407452,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -408915,7 +407472,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -408936,7 +407492,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -408958,7 +407513,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -408986,10 +407540,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -409062,7 +407612,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -409389,8 +407938,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/facts/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/POST/responses/201/content/json/ownerId`.
@@ -409430,7 +407977,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -409451,7 +407997,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -409472,7 +408017,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -409494,7 +408038,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -409522,10 +408065,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -409598,7 +408137,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -409855,8 +408393,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/GET/responses/200/content/json/ownerId`.
@@ -409896,7 +408432,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -409917,7 +408452,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -409938,7 +408472,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -409960,7 +408493,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -409988,10 +408520,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -410064,7 +408592,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -410456,8 +408983,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/facts/{id}/PUT/responses/200/content/json/ownerId`.
@@ -410497,7 +409022,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -410518,7 +409042,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -410539,7 +409062,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -410561,7 +409083,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -410589,10 +409110,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -410665,7 +409182,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -411169,8 +409685,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/links/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/GET/responses/200/content/JsonPayload/ownerId`.
@@ -411198,7 +409712,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - srcId:
@@ -411213,7 +409726,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             srcId: Swift.String,
@@ -411228,7 +409740,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.srcId = srcId
@@ -411244,7 +409755,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case srcId
@@ -411266,10 +409776,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -411318,7 +409824,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "srcId",
@@ -411573,8 +410078,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/links/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/POST/responses/201/content/json/ownerId`.
@@ -411602,7 +410105,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - srcId:
@@ -411617,7 +410119,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             srcId: Swift.String,
@@ -411632,7 +410133,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.srcId = srcId
@@ -411648,7 +410148,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case srcId
@@ -411670,10 +410169,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -411722,7 +410217,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "srcId",
@@ -411973,8 +410467,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/links/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/{id}/GET/responses/200/content/json/ownerId`.
@@ -412002,7 +410494,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - srcId:
@@ -412017,7 +410508,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             srcId: Swift.String,
@@ -412032,7 +410522,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.srcId = srcId
@@ -412048,7 +410537,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case srcId
@@ -412070,10 +410558,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -412122,7 +410606,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "srcId",
@@ -412442,8 +410925,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/links/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/links/{id}/PUT/responses/200/content/json/ownerId`.
@@ -412471,7 +410952,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - srcId:
@@ -412486,7 +410966,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             srcId: Swift.String,
@@ -412501,7 +410980,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.srcId = srcId
@@ -412517,7 +410995,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case srcId
@@ -412539,10 +411016,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -412591,7 +411064,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "srcId",
@@ -413089,8 +411561,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/GET/responses/200/content/JsonPayload/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/memories/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/GET/responses/200/content/JsonPayload/ownerId`.
@@ -413140,7 +411610,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -413166,7 +411635,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -413192,7 +411660,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -413219,7 +411686,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -413252,10 +411718,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -413348,7 +411810,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -413713,8 +412174,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/POST/responses/201/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/memories/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/POST/responses/201/content/json/ownerId`.
@@ -413764,7 +412223,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -413790,7 +412248,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -413816,7 +412273,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -413843,7 +412299,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -413876,10 +412331,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -413972,7 +412423,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -414234,8 +412684,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/GET/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/GET/responses/200/content/json/ownerId`.
@@ -414285,7 +412733,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -414311,7 +412758,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -414337,7 +412783,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -414364,7 +412809,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -414397,10 +412841,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -414493,7 +412933,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -414923,8 +413362,6 @@ public enum Operations {
                         public var id: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/PUT/responses/200/content/json/ecosystemId`.
                         public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/persona-memory/memories/{id}/PUT/responses/200/content/json/ownerId`.
@@ -414974,7 +413411,6 @@ public enum Operations {
                         /// - Parameters:
                         ///   - id:
                         ///   - ecosystemId:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -415000,7 +413436,6 @@ public enum Operations {
                         public init(
                             id: Swift.String,
                             ecosystemId: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -415026,7 +413461,6 @@ public enum Operations {
                         ) {
                             self.id = id
                             self.ecosystemId = ecosystemId
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -415053,7 +413487,6 @@ public enum Operations {
                         public enum CodingKeys: String, CodingKey {
                             case id
                             case ecosystemId
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -415086,10 +413519,6 @@ public enum Operations {
                             self.ecosystemId = try container.decode(
                                 Swift.String.self,
                                 forKey: .ecosystemId
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -415182,7 +413611,6 @@ public enum Operations {
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ecosystemId",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -415689,8 +414117,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/education/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/education/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/GET/responses/200/content/JsonPayload/ownerId`.
@@ -415725,7 +414151,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -415743,7 +414168,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -415761,7 +414185,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -415780,7 +414203,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -415802,10 +414224,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -415869,7 +414287,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -416159,8 +414576,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/education/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/education/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/POST/responses/201/content/json/ownerId`.
@@ -416195,7 +414610,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -416213,7 +414627,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -416231,7 +414644,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -416250,7 +414662,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -416272,10 +414683,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -416339,7 +414746,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -416592,8 +414998,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/education/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/education/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/{id}/GET/responses/200/content/json/ownerId`.
@@ -416628,7 +415032,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -416646,7 +415049,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -416664,7 +415066,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -416683,7 +415084,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -416705,10 +415105,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -416772,7 +415168,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -417127,8 +415522,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/education/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/education/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/education/{id}/PUT/responses/200/content/json/ownerId`.
@@ -417163,7 +415556,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -417181,7 +415573,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -417199,7 +415590,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -417218,7 +415608,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -417240,10 +415629,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -417307,7 +415692,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -417807,8 +416191,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/jobs/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/jobs/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/GET/responses/200/content/JsonPayload/ownerId`.
@@ -417843,7 +416225,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -417861,7 +416242,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -417879,7 +416259,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -417898,7 +416277,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -417920,10 +416298,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -417987,7 +416361,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -418277,8 +416650,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/jobs/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/jobs/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/POST/responses/201/content/json/ownerId`.
@@ -418313,7 +416684,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -418331,7 +416701,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -418349,7 +416718,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -418368,7 +416736,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -418390,10 +416757,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -418457,7 +416820,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -418710,8 +417072,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/jobs/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/jobs/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/{id}/GET/responses/200/content/json/ownerId`.
@@ -418746,7 +417106,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -418764,7 +417123,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -418782,7 +417140,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -418801,7 +417158,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -418823,10 +417179,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -418890,7 +417242,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -419245,8 +417596,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/personal/jobs/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/personal/jobs/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/personal/jobs/{id}/PUT/responses/200/content/json/ownerId`.
@@ -419281,7 +417630,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -419299,7 +417647,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -419317,7 +417664,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -419336,7 +417682,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -419358,10 +417703,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -419425,7 +417766,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -419925,8 +418265,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/project/tasks/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/project/tasks/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/GET/responses/200/content/JsonPayload/ownerId`.
@@ -419971,7 +418309,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -419994,7 +418331,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -420017,7 +418353,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -420041,7 +418376,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -420068,10 +418402,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -420155,7 +418485,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -420494,8 +418823,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/project/tasks/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/project/tasks/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/POST/responses/201/content/json/ownerId`.
@@ -420540,7 +418867,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -420563,7 +418889,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -420586,7 +418911,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -420610,7 +418934,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -420637,10 +418960,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -420724,7 +419043,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -420982,8 +419300,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/project/tasks/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/project/tasks/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/{id}/GET/responses/200/content/json/ownerId`.
@@ -421028,7 +419344,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -421051,7 +419366,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -421074,7 +419388,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -421098,7 +419411,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -421125,10 +419437,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -421212,7 +419520,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -421616,8 +419923,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/project/tasks/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/project/tasks/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/project/tasks/{id}/PUT/responses/200/content/json/ownerId`.
@@ -421662,7 +419967,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -421685,7 +419989,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -421708,7 +420011,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -421732,7 +420034,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -421759,10 +420060,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -421846,7 +420143,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -422351,8 +420647,6 @@ public enum Operations {
                     public struct JsonPayloadPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/settings/notifications/GET/responses/200/content/JsonPayload/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/settings/notifications/GET/responses/200/content/JsonPayload/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/GET/responses/200/content/JsonPayload/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/GET/responses/200/content/JsonPayload/ownerId`.
@@ -422383,7 +420677,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -422399,7 +420692,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -422415,7 +420707,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -422432,7 +420723,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -422452,10 +420742,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -422511,7 +420797,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -422777,8 +421062,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/settings/notifications/POST/responses/201/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/settings/notifications/POST/responses/201/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/POST/responses/201/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/POST/responses/201/content/json/ownerId`.
@@ -422809,7 +421092,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -422825,7 +421107,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -422841,7 +421122,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -422858,7 +421138,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -422878,10 +421157,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -422937,7 +421212,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -423188,8 +421462,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/settings/notifications/{id}/GET/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/settings/notifications/{id}/GET/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/{id}/GET/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/{id}/GET/responses/200/content/json/ownerId`.
@@ -423220,7 +421492,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -423236,7 +421507,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -423252,7 +421522,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -423269,7 +421538,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -423289,10 +421557,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -423348,7 +421612,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",
@@ -423679,8 +421942,6 @@ public enum Operations {
                     public struct JsonPayload: Codable, Hashable, Sendable {
                         /// - Remark: Generated from `#/paths/settings/notifications/{id}/PUT/responses/200/content/json/id`.
                         public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/settings/notifications/{id}/PUT/responses/200/content/json/customerId`.
-                        public var customerId: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/{id}/PUT/responses/200/content/json/ownerKind`.
                         public var ownerKind: Swift.String
                         /// - Remark: Generated from `#/paths/settings/notifications/{id}/PUT/responses/200/content/json/ownerId`.
@@ -423711,7 +421972,6 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - id:
-                        ///   - customerId:
                         ///   - ownerKind:
                         ///   - ownerId:
                         ///   - deletedAt:
@@ -423727,7 +421987,6 @@ public enum Operations {
                         ///   - syncTxid:
                         public init(
                             id: Swift.String,
-                            customerId: Swift.String,
                             ownerKind: Swift.String,
                             ownerId: Swift.String,
                             deletedAt: Swift.String? = nil,
@@ -423743,7 +422002,6 @@ public enum Operations {
                             syncTxid: Swift.Int
                         ) {
                             self.id = id
-                            self.customerId = customerId
                             self.ownerKind = ownerKind
                             self.ownerId = ownerId
                             self.deletedAt = deletedAt
@@ -423760,7 +422018,6 @@ public enum Operations {
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
-                            case customerId
                             case ownerKind
                             case ownerId
                             case deletedAt
@@ -423780,10 +422037,6 @@ public enum Operations {
                             self.id = try container.decode(
                                 Swift.String.self,
                                 forKey: .id
-                            )
-                            self.customerId = try container.decode(
-                                Swift.String.self,
-                                forKey: .customerId
                             )
                             self.ownerKind = try container.decode(
                                 Swift.String.self,
@@ -423839,7 +422092,6 @@ public enum Operations {
                             )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
-                                "customerId",
                                 "ownerKind",
                                 "ownerId",
                                 "deletedAt",

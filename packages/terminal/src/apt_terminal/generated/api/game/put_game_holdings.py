@@ -83,12 +83,12 @@ def sync_detailed(
 ) -> Response[Error | GameHolding]:
     """Acquire an artifact (idempotent by the unique, not by a caller-sent key)
 
-     A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row,
-    so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT
-    refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to
-    this game AND be one the caller may see; without that last test this route would be a read oracle
-    over every other player’s private work. `customer_id` comes from the principal and is never read
-    from the body, which is why this is not generic CRUD.
+     A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so
+    no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed
+    on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game
+    AND be one the caller may see; without that last test this route would be a read oracle over every
+    other player’s private work. The owner comes from the principal and is never read from the body,
+    which is why this is not generic CRUD.
 
     Args:
         body (GameHoldingPut | Unset):
@@ -119,12 +119,12 @@ def sync(
 ) -> Error | GameHolding | None:
     """Acquire an artifact (idempotent by the unique, not by a caller-sent key)
 
-     A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row,
-    so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT
-    refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to
-    this game AND be one the caller may see; without that last test this route would be a read oracle
-    over every other player’s private work. `customer_id` comes from the principal and is never read
-    from the body, which is why this is not generic CRUD.
+     A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so
+    no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed
+    on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game
+    AND be one the caller may see; without that last test this route would be a read oracle over every
+    other player’s private work. The owner comes from the principal and is never read from the body,
+    which is why this is not generic CRUD.
 
     Args:
         body (GameHoldingPut | Unset):
@@ -150,12 +150,12 @@ async def asyncio_detailed(
 ) -> Response[Error | GameHolding]:
     """Acquire an artifact (idempotent by the unique, not by a caller-sent key)
 
-     A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row,
-    so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT
-    refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to
-    this game AND be one the caller may see; without that last test this route would be a read oracle
-    over every other player’s private work. `customer_id` comes from the principal and is never read
-    from the body, which is why this is not generic CRUD.
+     A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so
+    no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed
+    on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game
+    AND be one the caller may see; without that last test this route would be a read oracle over every
+    other player’s private work. The owner comes from the principal and is never read from the body,
+    which is why this is not generic CRUD.
 
     Args:
         body (GameHoldingPut | Unset):
@@ -184,12 +184,12 @@ async def asyncio(
 ) -> Error | GameHolding | None:
     """Acquire an artifact (idempotent by the unique, not by a caller-sent key)
 
-     A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row,
-    so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT
-    refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to
-    this game AND be one the caller may see; without that last test this route would be a read oracle
-    over every other player’s private work. `customer_id` comes from the principal and is never read
-    from the body, which is why this is not generic CRUD.
+     A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so
+    no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed
+    on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game
+    AND be one the caller may see; without that last test this route would be a read oracle over every
+    other player’s private work. The owner comes from the principal and is never read from the body,
+    which is why this is not generic CRUD.
 
     Args:
         body (GameHoldingPut | Unset):
