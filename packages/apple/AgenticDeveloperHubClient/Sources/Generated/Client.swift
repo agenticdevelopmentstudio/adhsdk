@@ -36880,7 +36880,7 @@ public struct Client: APIProtocol {
     }
     /// Start a session, or resume the caller’s active one for a chat
     ///
-    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session carries the empty-string owner, so these handlers scope on the visitor token id rather than on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+    /// Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
     ///
     /// - Remark: HTTP `POST /game/sessions`.
     /// - Remark: Generated from `#/paths//game/sessions/post`.
@@ -38467,7 +38467,7 @@ public struct Client: APIProtocol {
     }
     /// Acquire an artifact (idempotent by the unique, not by a caller-sent key)
     ///
-    /// A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. `customer_id` comes from the principal and is never read from the body, which is why this is not generic CRUD.
+    /// A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. The owner comes from the principal and is never read from the body, which is why this is not generic CRUD.
     ///
     /// - Remark: HTTP `PUT /game/holdings`.
     /// - Remark: Generated from `#/paths//game/holdings/put`.
@@ -38728,7 +38728,7 @@ public struct Client: APIProtocol {
     }
     /// The caller’s own per-game profile
     ///
-    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
+    /// Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
     ///
     /// - Remark: HTTP `GET /game/players/me`.
     /// - Remark: Generated from `#/paths//game/players/me/get`.

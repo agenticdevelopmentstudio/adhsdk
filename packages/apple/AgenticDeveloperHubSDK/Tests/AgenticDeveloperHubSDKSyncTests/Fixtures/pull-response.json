@@ -1,8 +1,8 @@
 {
   "manifest": [
-    { "resource": "content.contacts", "schemaVersion": 1 },
-    { "resource": "content.lists", "schemaVersion": 1 },
-    { "resource": "content.list_items", "schemaVersion": 1 }
+    { "resource": "content.contacts", "schemaVersion": 2 },
+    { "resource": "content.lists", "schemaVersion": 2 },
+    { "resource": "content.list_items", "schemaVersion": 2 }
   ],
   "changes": [
     {
@@ -12,11 +12,12 @@
       "syncVersion": "1041",
       "data": {
         "id": "0197a5e0-0000-7000-8000-000000000001",
-        "customer_id": "0197a5e0-aaaa-7000-8000-000000000001",
+        "author_id": "0197a5e0-aaaa-7000-8000-000000000001",
+        "author_kind": "customer",
         "deleted_at": null,
         "ecosystem_id": "eco-1",
         "owner_kind": "customer",
-        "owner_id": "",
+        "owner_id": "0197a5e0-aaaa-7000-8000-000000000001",
         "person_user_id": null,
         "full_name": "Groceries",
         "nickname": "",

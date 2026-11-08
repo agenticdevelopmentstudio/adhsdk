@@ -23,13 +23,14 @@
 // ── Owner-polymorphic profile content ─────────────────────────────────────────────────────
 //
 // Both tables are owned by `(ownerKind, ownerId)`, which is what lets an ORGANIZATION hold
-// social links and addresses of its own. `customerId` is the denormalized CREATOR, not the
+// social links and addresses of its own. `(authorKind, authorId)` is the CREATOR, not the
 // owner — do not read it as "whose row this is".
 
 /** Columns every owner-scoped content row carries: identity, tenancy, ownership, sync stamps. */
 interface OwnerScopedRow {
   id: string;
-  customerId: string;
+  authorKind: string | null;
+  authorId: string | null;
   deletedAt: string | null;
   ecosystemId: string;
   ownerKind: string;

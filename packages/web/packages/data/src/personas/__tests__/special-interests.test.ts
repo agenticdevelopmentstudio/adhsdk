@@ -100,7 +100,8 @@ describe("interestDocumentsApi", () => {
    *  wire shape look like something it isn't. */
   const WIRE_ROW = {
     id: "md-1",
-    customerId: "cust-1",
+    authorKind: "customer",
+    authorId: "cust-1",
     deletedAt: null,
     ecosystemId: "eco-1",
     ownerKind: "customer",

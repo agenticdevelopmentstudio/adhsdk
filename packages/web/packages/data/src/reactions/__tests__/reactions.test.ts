@@ -29,7 +29,10 @@ beforeEach(() => {
 
 const row = (id: string, over: Partial<ReactionRow> = {}): ReactionRow => ({
   id,
-  customerId: "cust-1",
+  ownerKind: "customer",
+  ownerId: "cust-1",
+  authorKind: "customer",
+  authorId: "cust-1",
   ecosystemId: "eco-1",
   targetKind: "project.comments",
   targetId: "c1",
@@ -40,7 +43,7 @@ const row = (id: string, over: Partial<ReactionRow> = {}): ReactionRow => ({
 
 const reaction = (id: string, over: Partial<Reaction> = {}): Reaction => ({
   id,
-  customerId: "cust-1",
+  authorId: "cust-1",
   targetKind: "project.comments",
   targetId: "c1",
   emoji: "👍",
@@ -118,9 +121,9 @@ describe("tally", () => {
   it("counts per emoji and hands back the VIEWER's own reaction id", async () => {
     const out = tally(
       [
-        reaction("r1", { emoji: "👍", customerId: "cust-1" }),
-        reaction("r2", { emoji: "👍", customerId: "cust-2" }),
-        reaction("r3", { emoji: "🎉", customerId: "cust-2" }),
+        reaction("r1", { emoji: "👍", authorId: "cust-1" }),
+        reaction("r2", { emoji: "👍", authorId: "cust-2" }),
+        reaction("r3", { emoji: "🎉", authorId: "cust-2" }),
       ],
       "cust-1",
     );

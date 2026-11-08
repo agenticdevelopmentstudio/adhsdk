@@ -19213,7 +19213,7 @@ export interface paths {
         put?: never;
         /**
          * Start a session, or resume the caller’s active one for a chat
-         * @description Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session carries the empty-string owner, so these handlers scope on the visitor token id rather than on `customer_id`, which for an empty owner would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
+         * @description Reachable by a VISITOR principal (an opaque `tmp_` api token) as well as by an account — the four session routes are the only ones that are, because a visitor has no `game.players` row. A visitor’s session is owned by the ecosystem, so these handlers scope on the visitor token id rather than on the owner, which for the ecosystem would match every other visitor’s rows. Passing `chat_id` resumes the caller’s own active session for that chat (200) instead of starting a second one; the owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
          */
         post: {
             parameters: {
@@ -19966,7 +19966,7 @@ export interface paths {
         };
         /**
          * Acquire an artifact (idempotent by the unique, not by a caller-sent key)
-         * @description A toggle, not an append: `uq_holdings_customer_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. `customer_id` comes from the principal and is never read from the body, which is why this is not generic CRUD.
+         * @description A toggle, not an append: `uq_holdings_owner_artifact` makes a repeat an update of the same row, so no `client_event_id` is involved — the row IS the key. `acquired_at` is deliberately NOT refreshed on a repeat, so re-tapping cannot reorder your own inventory. The artifact must belong to this game AND be one the caller may see; without that last test this route would be a read oracle over every other player’s private work. The owner comes from the principal and is never read from the body, which is why this is not generic CRUD.
          */
         put: {
             parameters: {
@@ -20086,7 +20086,7 @@ export interface paths {
         };
         /**
          * The caller’s own per-game profile
-         * @description Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where `customer_id` is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
+         * @description Only `/me`, and the absence of an id parameter is the security property: generic CRUD reads data-plane tables in OWNER mode, where the owner is not a read filter, so a `GET /players/{id}` would be every profile in the ecosystem. 404 when the caller has never played this game — inventing a blank profile would make the PATCH below look like an update when it is the first write.
          */
         get: {
             parameters: {
@@ -53791,7 +53791,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -53870,7 +53869,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -53968,7 +53966,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -54048,7 +54045,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -54190,7 +54186,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54249,7 +54244,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54322,7 +54316,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54391,7 +54384,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54509,7 +54501,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54564,7 +54555,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54635,7 +54625,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54700,7 +54689,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54815,7 +54803,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54872,7 +54859,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -54944,7 +54930,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -55011,7 +54996,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -55126,7 +55110,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -55191,7 +55174,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -55267,7 +55249,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -55342,7 +55323,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -55463,7 +55443,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -55516,7 +55495,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -55586,7 +55564,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -55649,7 +55626,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -55762,7 +55738,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -55825,7 +55800,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -55900,7 +55874,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -55973,7 +55946,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -56093,7 +56065,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56150,7 +56121,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56222,7 +56192,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56289,7 +56258,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56404,7 +56372,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56473,7 +56440,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56551,7 +56517,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56630,7 +56595,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56753,7 +56717,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56810,7 +56773,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56882,7 +56844,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -56949,7 +56910,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57065,7 +57025,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57122,7 +57081,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57194,7 +57152,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57261,7 +57218,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57376,7 +57332,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57431,7 +57386,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57502,7 +57456,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57567,7 +57520,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57683,7 +57635,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57742,7 +57693,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57815,7 +57765,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -57884,7 +57833,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58001,7 +57949,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58054,7 +58001,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58124,7 +58070,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58187,7 +58132,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58300,7 +58244,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -58365,7 +58308,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -58441,7 +58383,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -58516,7 +58457,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -58637,7 +58577,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58692,7 +58631,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58763,7 +58701,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58828,7 +58765,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -58942,7 +58878,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59001,7 +58936,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59074,7 +59008,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59143,7 +59076,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59261,7 +59193,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59327,7 +59258,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59403,7 +59333,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59479,7 +59408,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59599,7 +59527,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59650,7 +59577,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59719,7 +59645,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59780,7 +59705,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -59892,7 +59816,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -59953,7 +59876,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60027,7 +59949,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60098,7 +60019,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60219,7 +60139,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60292,7 +60211,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60387,7 +60305,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60461,7 +60378,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60600,7 +60516,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60663,7 +60578,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60738,7 +60652,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60811,7 +60724,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             ownerKind: string;
@@ -60930,7 +60842,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61004,7 +60915,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61085,7 +60995,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61169,7 +61078,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61656,7 +61564,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61718,7 +61625,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61793,7 +61699,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61865,7 +61770,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -61983,7 +61887,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62041,7 +61944,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62114,7 +62016,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62182,7 +62083,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62300,7 +62200,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             blockId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62360,7 +62259,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             blockId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62434,7 +62332,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             blockId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62504,7 +62401,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             blockId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62623,7 +62519,6 @@ export interface paths {
                             id: string;
                             documentId: string;
                             blockId: string | null;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62688,7 +62583,6 @@ export interface paths {
                             id: string;
                             documentId: string;
                             blockId: string | null;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62764,7 +62658,6 @@ export interface paths {
                             id: string;
                             documentId: string;
                             blockId: string | null;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62839,7 +62732,6 @@ export interface paths {
                             id: string;
                             documentId: string;
                             blockId: string | null;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -62958,7 +62850,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -63018,7 +62909,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -63092,7 +62982,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -63162,7 +63051,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             documentId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -63886,11 +63774,12 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             isDefault: boolean;
-                            isInfrastructure: boolean;
                             type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
+                            /** @description Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead. */
+                            isInfrastructure: boolean;
                             /** @description Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise. */
                             canManage?: boolean;
                         }[];
@@ -63960,7 +63849,6 @@ export interface paths {
                         dedicatedDbConnectionId?: string | null;
                         primaryDomain?: string;
                         isDefault?: boolean;
-                        isInfrastructure?: boolean;
                         namespaceId?: string | null;
                         parentId?: string | null;
                         archivedAt?: string | null;
@@ -63989,11 +63877,12 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             isDefault: boolean;
-                            isInfrastructure: boolean;
                             type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
+                            /** @description Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead. */
+                            isInfrastructure: boolean;
                         };
                     };
                 };
@@ -64091,11 +63980,12 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             isDefault: boolean;
-                            isInfrastructure: boolean;
                             type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
+                            /** @description Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead. */
+                            isInfrastructure: boolean;
                         };
                     };
                 };
@@ -64141,7 +64031,6 @@ export interface paths {
                         dedicatedDbConnectionId?: string | null;
                         primaryDomain?: string;
                         isDefault?: boolean;
-                        isInfrastructure?: boolean;
                         namespaceId?: string | null;
                         parentId?: string | null;
                         archivedAt?: string | null;
@@ -64169,11 +64058,12 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             isDefault: boolean;
-                            isInfrastructure: boolean;
                             type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
+                            /** @description Whether this is a principal's own ecosystem: true exactly when `type` is `workspace` or `persona`. Derived from `type`; read `type` instead. */
+                            isInfrastructure: boolean;
                         };
                     };
                 };
@@ -65619,7 +65509,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             gameId: string;
@@ -65679,7 +65568,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             gameId: string;
@@ -65753,7 +65641,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             gameId: string;
@@ -65823,7 +65710,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             gameId: string;
@@ -65940,7 +65826,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66028,7 +65913,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66117,7 +66001,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66215,7 +66098,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66348,7 +66230,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66416,7 +66297,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66495,7 +66375,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66573,7 +66452,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -66696,7 +66574,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -66772,7 +66649,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -66854,7 +66730,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -66940,7 +66815,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -67088,7 +66962,6 @@ export interface paths {
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -67176,7 +67049,6 @@ export interface paths {
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -67264,7 +67136,6 @@ export interface paths {
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -67362,7 +67233,6 @@ export interface paths {
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -67472,7 +67342,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -67560,7 +67429,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -67649,7 +67517,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -67747,7 +67614,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ecosystemId: string;
                             ownerKind: string;
                             ownerId: string;
@@ -67880,7 +67746,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -67960,7 +67825,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68044,7 +67908,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68134,7 +67997,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68262,7 +68124,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68344,7 +68205,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68429,7 +68289,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68521,7 +68380,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68650,7 +68508,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68720,7 +68577,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68799,7 +68655,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -68879,7 +68734,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -71547,7 +71401,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -71606,7 +71459,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -71679,7 +71531,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -71748,7 +71599,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -71865,7 +71715,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -71946,7 +71795,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -72030,7 +71878,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -72121,7 +71968,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -72249,7 +72095,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             srcId: string;
@@ -72304,7 +72149,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             srcId: string;
@@ -72375,7 +72219,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             srcId: string;
@@ -72440,7 +72283,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             srcId: string;
@@ -72555,7 +72397,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -72641,7 +72482,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -72730,7 +72570,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -72826,7 +72665,6 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ecosystemId: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -72958,7 +72796,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73021,7 +72858,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73096,7 +72932,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73169,7 +73004,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73288,7 +73122,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73351,7 +73184,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73426,7 +73258,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73499,7 +73330,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73618,7 +73448,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73694,7 +73523,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73776,7 +73604,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73862,7 +73689,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -73988,7 +73814,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -74045,7 +73870,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -74117,7 +73941,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -74184,7 +74007,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            customerId: string;
                             ownerKind: string;
                             ownerId: string;
                             deletedAt: string | null;
@@ -76787,8 +76609,10 @@ export interface components {
             id: string;
             /** @description Ecosystem that owns this endpoint */
             ecosystemId: string;
-            /** @description User who registered the endpoint */
-            customerId: string;
+            /** @description Kind of principal that owns the endpoint: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind: string;
+            /** @description Id of the owning principal. */
+            ownerId: string;
             /**
              * Format: uri
              * @description HTTPS-only delivery target URL
@@ -78558,8 +78382,13 @@ export interface components {
             id: string;
             /** @description The community instance this topic belongs to. */
             communityId: string;
-            /** @description Author (server-stamped principal). Omitted on the public surface. */
-            customerId?: string;
+            /**
+             * @description Kind of principal that wrote the topic (omitted on the public surface); null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             title: string;
             categoryId?: string | null;
             isPinned: boolean;
@@ -78586,8 +78415,13 @@ export interface components {
             postNumber: number;
             /** @description The content.markdown doc backing this post’s body. */
             bodyDocumentId: string | null;
-            /** @description Author (server-stamped principal). Omitted on the public surface. */
-            customerId?: string;
+            /**
+             * @description Kind of principal that wrote the post (omitted on the public surface); null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             /** @description Owning ecosystem (present on create only). */
             ecosystemId?: string;
             /** @description The community instance (inherited from the topic; present on create only). */
@@ -78852,8 +78686,13 @@ export interface components {
         };
         MarkdownDocument: {
             id: string;
-            /** @description The CREATOR/author (public routes key on this). */
-            customerId: string;
+            /**
+             * @description Kind of principal that created the doc (public routes key on a customer author); null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             /** @description Ecosystem (tenant) id. */
             ecosystemId: string;
             /**
@@ -78931,7 +78770,7 @@ export interface components {
             id: string;
             documentId: string;
             /** @description The revision WRITER. */
-            customerId: string;
+            writerCustomerId: string;
             deletedAt?: string | null;
             ecosystemId: string;
             /**
@@ -78969,8 +78808,10 @@ export interface components {
         };
         MessagingLogEntry: {
             id: string;
-            /** @description Target user (recipient) id */
-            customerId: string;
+            /** @description Kind of principal that owns the message (the recipient, for a message to a user): 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind: string;
+            /** @description Id of the owning principal. */
+            ownerId: string;
             deletedAt?: string | null;
             /** @description Ecosystem (tenant) id */
             ecosystemId: string;
@@ -79088,7 +78929,10 @@ export interface components {
         };
         Bookmark: {
             id: string;
-            customerId: string;
+            /** @description Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind: string;
+            /** @description Id of the owning principal. */
+            ownerId: string;
             ecosystemId: string;
             targetKind: string;
             targetId: string;
@@ -79106,7 +78950,17 @@ export interface components {
         };
         Reaction: {
             id: string;
-            customerId: string;
+            /** @description Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind?: string;
+            /** @description Id of the owning principal. */
+            ownerId?: string;
+            /**
+             * @description Kind of principal that reacted; null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             ecosystemId: string;
             targetKind: string;
             targetId: string;
@@ -79117,7 +78971,10 @@ export interface components {
         PollVote: {
             id: string;
             ecosystemId: string;
-            customerId: string;
+            /** @description Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind: string;
+            /** @description Id of the owning principal. */
+            ownerId: string;
             optionId: string;
             createdAt: string;
             deletedAt?: string | null;
@@ -79186,8 +79043,13 @@ export interface components {
             updatedAt: string;
             isDeleted: boolean;
             syncVersion: number;
-            /** @description the customer (user) who created the project */
-            customerId: string;
+            /**
+             * @description Kind of principal that created the project; null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             deletedAt?: string | null;
             /** @description the owning ecosystem (tenant scope) */
             ecosystemId: string;
@@ -79282,8 +79144,13 @@ export interface components {
         ProjectIteration: {
             id: string;
             ecosystemId: string;
-            /** @description the customer (user) who created the iteration */
-            customerId?: string;
+            /**
+             * @description Kind of principal that created the iteration; null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             /**
              * @description the kind of principal that OWNS the time-box
              * @enum {string}
@@ -79313,8 +79180,13 @@ export interface components {
         ProjectProgram: {
             id: string;
             ecosystemId: string;
-            /** @description the customer (user) who created the program */
-            customerId?: string;
+            /**
+             * @description Kind of principal that created the program; null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             /**
              * @description the kind of principal that OWNS the program
              * @enum {string}
@@ -79341,8 +79213,10 @@ export interface components {
         ProjectMilestone: {
             id: string;
             ecosystemId: string;
-            /** @description inherited from the owning project by trigger, never sent */
-            customerId?: string;
+            /** @description Kind of principal that owns the milestone (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind?: string;
+            /** @description Id of the owning principal. */
+            ownerId?: string;
             projectId: string;
             /** @description unique among the project’s live milestones */
             name: string;
@@ -79366,8 +79240,10 @@ export interface components {
         ProjectStatusUpdate: {
             id: string;
             ecosystemId: string;
-            /** @description inherited from the owning project by trigger, never sent */
-            customerId?: string;
+            /** @description Kind of principal that owns the status update (inherited from the project): 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind?: string;
+            /** @description Id of the owning principal. */
+            ownerId?: string;
             projectId: string;
             /**
              * @description the reported health. The NEWEST live update’s value is what `Project.health` returns.
@@ -79386,8 +79262,13 @@ export interface components {
         ProjectTemplate: {
             id: string;
             ecosystemId: string;
-            /** @description the customer (user) who created the template */
-            customerId?: string;
+            /**
+             * @description Kind of principal that created the template; null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             /**
              * @description the kind of principal that OWNS the template
              * @enum {string}
@@ -79658,8 +79539,10 @@ export interface components {
             id: string;
             /** @description Ecosystem (tenant) id */
             ecosystemId: string;
-            /** @description Owning user; empty for a global memory */
-            customerId: string;
+            /** @description Kind of principal that owns the memory (the user for a user-scoped memory, else the persona): 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind: string;
+            /** @description Id of the owning principal. */
+            ownerId: string;
             deletedAt?: string | null;
             personaId: string;
             /** @enum {string} */
@@ -80922,7 +80805,17 @@ export interface components {
         };
         FeedItem: {
             id: string;
-            customerId: string;
+            /** @description Kind of principal that owns the feed item: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind: string;
+            /** @description Id of the owning principal. */
+            ownerId: string;
+            /**
+             * @description Kind of principal that wrote the item; null when nobody did (a storage token).
+             * @enum {string|null}
+             */
+            authorKind?: "customer" | "application" | "persona" | null;
+            /** @description Id of that principal. */
+            authorId?: string | null;
             deletedAt?: string | null;
             ecosystemId: string;
             source: string;
@@ -81187,8 +81080,6 @@ export interface components {
         StorageAttachment: {
             id: string;
             ecosystemId: string;
-            /** @description The owning customer, empty when the owner is not a customer. Superseded by ownerKind / ownerId, and kept on the wire for clients that have not moved. */
-            customerId: string;
             /** @description Kind of principal that owns the attachment: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
             ownerKind: string;
             /** @description Id of the owning principal. */
@@ -81321,10 +81212,10 @@ export interface components {
             /** @description "<schema>.<table>", e.g. content.contacts */
             resource: string;
             /**
-             * @description Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem
+             * @description Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem
              * @enum {string}
              */
-            scope: "owner" | "customer" | "ecosystem";
+            scope: "owner" | "author" | "ecosystem";
             /**
              * @description 'route' means /sync/push refuses direct writes; the row's own route owns them
              * @enum {string}

@@ -20,7 +20,6 @@ class GetPersonaMemoryBlocksResponse200Item:
     Attributes:
         id (str):
         ecosystem_id (str):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         deleted_at (None | str):
@@ -36,7 +35,6 @@ class GetPersonaMemoryBlocksResponse200Item:
 
     id: str
     ecosystem_id: str
-    customer_id: str
     owner_kind: str
     owner_id: str
     deleted_at: None | str
@@ -59,8 +57,6 @@ class GetPersonaMemoryBlocksResponse200Item:
         id = self.id
 
         ecosystem_id = self.ecosystem_id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -100,7 +96,6 @@ class GetPersonaMemoryBlocksResponse200Item:
             {
                 "id": id,
                 "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "deletedAt": deleted_at,
@@ -127,8 +122,6 @@ class GetPersonaMemoryBlocksResponse200Item:
         id = d.pop("id")
 
         ecosystem_id = d.pop("ecosystemId")
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -208,7 +201,6 @@ class GetPersonaMemoryBlocksResponse200Item:
         get_persona_memory_blocks_response_200_item = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             deleted_at=deleted_at,

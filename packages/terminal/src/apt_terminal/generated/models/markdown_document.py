@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.markdown_document_author_kind import MarkdownDocumentAuthorKind
 from ..models.markdown_document_kind import MarkdownDocumentKind
 from ..models.markdown_document_owner_kind import MarkdownDocumentOwnerKind
 from ..models.markdown_document_stage import MarkdownDocumentStage
@@ -24,7 +25,6 @@ class MarkdownDocument:
     """
     Attributes:
         id (str):
-        customer_id (str): The CREATOR/author (public routes key on this).
         ecosystem_id (str): Ecosystem (tenant) id.
         owner_kind (MarkdownDocumentOwnerKind): The kind of principal that OWNS the doc (what access scopes by).
         owner_id (str): The owning principal (customer or organization id); server-stamped from the verified ?workspace=
@@ -46,6 +46,9 @@ class MarkdownDocument:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
+        author_kind (MarkdownDocumentAuthorKind | Unset): Kind of principal that created the doc (public routes key on a
+            customer author); null when nobody did (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         deleted_at (None | str | Unset):
         frontmatter (MarkdownDocumentFrontmatterType0 | None | Unset):
         category (None | str | Unset): Optional classification label.
@@ -54,7 +57,6 @@ class MarkdownDocument:
     """
 
     id: str
-    customer_id: str
     ecosystem_id: str
     owner_kind: MarkdownDocumentOwnerKind
     owner_id: str
@@ -70,6 +72,8 @@ class MarkdownDocument:
     created_at: str
     updated_at: str
     is_deleted: bool
+    author_kind: MarkdownDocumentAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
     frontmatter: MarkdownDocumentFrontmatterType0 | None | Unset = UNSET
     category: None | str | Unset = UNSET
@@ -83,8 +87,6 @@ class MarkdownDocument:
         )
 
         id = self.id
-
-        customer_id = self.customer_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -115,6 +117,16 @@ class MarkdownDocument:
         updated_at = self.updated_at
 
         is_deleted = self.is_deleted
+
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
@@ -153,7 +165,6 @@ class MarkdownDocument:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
                 "ecosystemId": ecosystem_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
@@ -171,6 +182,10 @@ class MarkdownDocument:
                 "isDeleted": is_deleted,
             }
         )
+        if author_kind is not UNSET:
+            field_dict["authorKind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["authorId"] = author_id
         if deleted_at is not UNSET:
             field_dict["deletedAt"] = deleted_at
         if frontmatter is not UNSET:
@@ -192,8 +207,6 @@ class MarkdownDocument:
 
         d = dict(src_dict)
         id = d.pop("id")
-
-        customer_id = d.pop("customerId")
 
         ecosystem_id = d.pop("ecosystemId")
 
@@ -224,6 +237,22 @@ class MarkdownDocument:
         updated_at = d.pop("updatedAt")
 
         is_deleted = d.pop("isDeleted")
+
+        _author_kind = d.pop("authorKind", UNSET)
+        author_kind: MarkdownDocumentAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = MarkdownDocumentAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("authorId", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -280,7 +309,6 @@ class MarkdownDocument:
 
         markdown_document = cls(
             id=id,
-            customer_id=customer_id,
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
@@ -296,6 +324,8 @@ class MarkdownDocument:
             created_at=created_at,
             updated_at=updated_at,
             is_deleted=is_deleted,
+            author_kind=author_kind,
+            author_id=author_id,
             deleted_at=deleted_at,
             frontmatter=frontmatter,
             category=category,

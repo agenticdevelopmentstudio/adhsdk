@@ -14,7 +14,6 @@ class GetGamePlayersResponse200Item:
     Attributes:
         id (str):
         ecosystem_id (str):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         game_id (str):
@@ -33,7 +32,6 @@ class GetGamePlayersResponse200Item:
 
     id: str
     ecosystem_id: str
-    customer_id: str
     owner_kind: str
     owner_id: str
     game_id: str
@@ -53,8 +51,6 @@ class GetGamePlayersResponse200Item:
         id = self.id
 
         ecosystem_id = self.ecosystem_id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -94,7 +90,6 @@ class GetGamePlayersResponse200Item:
             {
                 "id": id,
                 "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "gameId": game_id,
@@ -120,8 +115,6 @@ class GetGamePlayersResponse200Item:
         id = d.pop("id")
 
         ecosystem_id = d.pop("ecosystemId")
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -174,7 +167,6 @@ class GetGamePlayersResponse200Item:
         get_game_players_response_200_item = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             game_id=game_id,

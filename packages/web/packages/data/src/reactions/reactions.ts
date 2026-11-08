@@ -27,8 +27,8 @@ const MAX_TARGET_IDS = 200;
 /** One actor's one emoji on one subject. */
 export interface Reaction {
   id: string;
-  /** the user who reacted. */
-  customerId: string;
+  /** the user who reacted (the row's author id). */
+  authorId: string | null;
   targetKind: string;
   targetId: string;
   emoji: string;
@@ -38,7 +38,7 @@ export interface Reaction {
 export function toReaction(r: ReactionRow): Reaction {
   return {
     id: r.id,
-    customerId: r.customerId,
+    authorId: r.authorId,
     targetKind: r.targetKind,
     targetId: r.targetId,
     emoji: r.emoji,
@@ -68,7 +68,7 @@ export function tally(reactions: Reaction[], viewerId: string | null): ReactionT
   for (const r of reactions) {
     const t = byEmoji.get(r.emoji) ?? { emoji: r.emoji, count: 0, mine: null };
     t.count += 1;
-    if (viewerId && r.customerId === viewerId) t.mine = r.id;
+    if (viewerId && r.authorId === viewerId) t.mine = r.id;
     byEmoji.set(r.emoji, t);
   }
   return [...byEmoji.values()].sort((a, b) => b.count - a.count);

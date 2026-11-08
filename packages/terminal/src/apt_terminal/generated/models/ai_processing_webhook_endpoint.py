@@ -18,7 +18,9 @@ class AiProcessingWebhookEndpoint:
     Attributes:
         id (UUID):
         ecosystem_id (str): Ecosystem that owns this endpoint
-        customer_id (str): User who registered the endpoint
+        owner_kind (str): Kind of principal that owns the endpoint: 'customer', 'organization', 'application', 'persona'
+            or 'ecosystem'.
+        owner_id (str): Id of the owning principal.
         url (str): HTTPS-only delivery target URL
         event_types (list[str]): Subscribed event types (e.g. job.succeeded, job.failed)
         active (bool): Whether the endpoint receives deliveries
@@ -29,7 +31,8 @@ class AiProcessingWebhookEndpoint:
 
     id: UUID
     ecosystem_id: str
-    customer_id: str
+    owner_kind: str
+    owner_id: str
     url: str
     event_types: list[str]
     active: bool
@@ -43,7 +46,9 @@ class AiProcessingWebhookEndpoint:
 
         ecosystem_id = self.ecosystem_id
 
-        customer_id = self.customer_id
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         url = self.url
 
@@ -67,7 +72,8 @@ class AiProcessingWebhookEndpoint:
             {
                 "id": id,
                 "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "url": url,
                 "eventTypes": event_types,
                 "active": active,
@@ -87,7 +93,9 @@ class AiProcessingWebhookEndpoint:
 
         ecosystem_id = d.pop("ecosystemId")
 
-        customer_id = d.pop("customerId")
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         url = d.pop("url")
 
@@ -111,7 +119,8 @@ class AiProcessingWebhookEndpoint:
         ai_processing_webhook_endpoint = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             url=url,
             event_types=event_types,
             active=active,

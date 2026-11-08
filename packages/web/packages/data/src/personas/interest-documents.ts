@@ -22,7 +22,8 @@ import { enc } from "../client-helpers";
 export interface InterestDocumentRow {
   id: string;
   /** The CREATOR/author stamp — the rows plane stamps it to the calling principal. */
-  customerId: string;
+  authorKind: string | null;
+  authorId: string | null;
   deletedAt: string | null;
   ecosystemId: string;
   /** The workspace principal the doc belongs to: `customer` or `organization`. */

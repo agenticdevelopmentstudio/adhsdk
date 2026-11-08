@@ -26,7 +26,9 @@ class ProjectMilestone:
         description (str):
         created_at (str):
         updated_at (str):
-        customer_id (str | Unset): inherited from the owning project by trigger, never sent
+        owner_kind (str | Unset): Kind of principal that owns the milestone (inherited from the project): 'customer',
+            'organization', 'application', 'persona' or 'ecosystem'.
+        owner_id (str | Unset): Id of the owning principal.
         target_date (None | str | Unset): date (YYYY-MM-DD); null = undated, an ordinary state — an ordered-but-undated
             plan is a real thing, and requiring a date would only get one invented. Undated milestones sort LAST.
         counts (ProjectMilestoneCounts | Unset): the milestone’s live cards counted by status CATEGORY, every category
@@ -45,7 +47,8 @@ class ProjectMilestone:
     description: str
     created_at: str
     updated_at: str
-    customer_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
     target_date: None | str | Unset = UNSET
     counts: ProjectMilestoneCounts | Unset = UNSET
     created_by: None | str | Unset = UNSET
@@ -68,7 +71,9 @@ class ProjectMilestone:
 
         updated_at = self.updated_at
 
-        customer_id = self.customer_id
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
@@ -107,8 +112,10 @@ class ProjectMilestone:
                 "updatedAt": updated_at,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if owner_kind is not UNSET:
+            field_dict["ownerKind"] = owner_kind
+        if owner_id is not UNSET:
+            field_dict["ownerId"] = owner_id
         if target_date is not UNSET:
             field_dict["targetDate"] = target_date
         if counts is not UNSET:
@@ -141,7 +148,9 @@ class ProjectMilestone:
 
         updated_at = d.pop("updatedAt")
 
-        customer_id = d.pop("customerId", UNSET)
+        owner_kind = d.pop("ownerKind", UNSET)
+
+        owner_id = d.pop("ownerId", UNSET)
 
         def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
@@ -187,7 +196,8 @@ class ProjectMilestone:
             description=description,
             created_at=created_at,
             updated_at=updated_at,
-            customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             target_date=target_date,
             counts=counts,
             created_by=created_by,

@@ -49,7 +49,7 @@ extension MessagingLogEntry {
         errorMessage: String? = nil
     ) -> MessagingLogEntry {
         MessagingLogEntry(
-            id: id, customerId: "c-jane", ecosystemId: "org.acme.shop", channel: channel,
+            id: id, ownerId: "c-jane", ecosystemId: "org.acme.shop", channel: channel,
             recipient: "jane@example.com", subject: "Your order", body: "Shipped today.", templateId: nil,
             status: status, providerId: "pm-1", errorMessage: errorMessage, sentBy: "owner@acme.test",
             origin: "ecosystem", createdAt: "2026-09-03T12:00:00.000Z"

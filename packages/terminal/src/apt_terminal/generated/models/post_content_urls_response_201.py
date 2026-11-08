@@ -13,7 +13,6 @@ class PostContentUrlsResponse201:
     """
     Attributes:
         id (str):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         deleted_at (None | str):
@@ -39,7 +38,6 @@ class PostContentUrlsResponse201:
     """
 
     id: str
-    customer_id: str
     owner_kind: str
     owner_id: str
     deleted_at: None | str
@@ -65,8 +63,6 @@ class PostContentUrlsResponse201:
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -126,7 +122,6 @@ class PostContentUrlsResponse201:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "deletedAt": deleted_at,
@@ -158,8 +153,6 @@ class PostContentUrlsResponse201:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         id = d.pop("id")
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -252,7 +245,6 @@ class PostContentUrlsResponse201:
 
         post_content_urls_response_201 = cls(
             id=id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             deleted_at=deleted_at,

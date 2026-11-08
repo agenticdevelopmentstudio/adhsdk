@@ -14,7 +14,6 @@ class GetDocumentVersionsResponse200Item:
     Attributes:
         id (str):
         document_id (str):
-        customer_id (str):
         owner_kind (str):
         owner_id (str):
         deleted_at (None | str):
@@ -33,7 +32,6 @@ class GetDocumentVersionsResponse200Item:
 
     id: str
     document_id: str
-    customer_id: str
     owner_kind: str
     owner_id: str
     deleted_at: None | str
@@ -53,8 +51,6 @@ class GetDocumentVersionsResponse200Item:
         id = self.id
 
         document_id = self.document_id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -92,7 +88,6 @@ class GetDocumentVersionsResponse200Item:
             {
                 "id": id,
                 "documentId": document_id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "deletedAt": deleted_at,
@@ -118,8 +113,6 @@ class GetDocumentVersionsResponse200Item:
         id = d.pop("id")
 
         document_id = d.pop("documentId")
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -162,7 +155,6 @@ class GetDocumentVersionsResponse200Item:
         get_document_versions_response_200_item = cls(
             id=id,
             document_id=document_id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             deleted_at=deleted_at,

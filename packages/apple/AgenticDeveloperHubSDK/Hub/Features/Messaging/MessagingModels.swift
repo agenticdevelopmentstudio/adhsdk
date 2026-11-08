@@ -49,7 +49,8 @@ public struct MessagingTemplate: Codable, Hashable, Sendable, Identifiable {
 
 public struct MessagingLogEntry: Codable, Hashable, Sendable, Identifiable {
     public var id: String
-    public var customerId: String
+    public var ownerKind: String
+    public var ownerId: String
     public var ecosystemId: String
     public var channel: MessagingChannel
     public var recipient: String
@@ -64,12 +65,14 @@ public struct MessagingLogEntry: Codable, Hashable, Sendable, Identifiable {
     public var createdAt: String?
 
     public init(
-        id: String, customerId: String, ecosystemId: String, channel: MessagingChannel, recipient: String,
+        id: String, ownerKind: String = "customer", ownerId: String, ecosystemId: String,
+        channel: MessagingChannel, recipient: String,
         subject: String? = nil, body: String, templateId: String? = nil, status: String, providerId: String? = nil,
         errorMessage: String? = nil, sentBy: String? = nil, origin: String? = nil, createdAt: String? = nil
     ) {
         self.id = id
-        self.customerId = customerId
+        self.ownerKind = ownerKind
+        self.ownerId = ownerId
         self.ecosystemId = ecosystemId
         self.channel = channel
         self.recipient = recipient

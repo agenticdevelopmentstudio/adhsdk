@@ -22,8 +22,6 @@ class StorageAttachment:
     Attributes:
         id (str):
         ecosystem_id (str):
-        customer_id (str): The owning customer, empty when the owner is not a customer. Superseded by ownerKind /
-            ownerId, and kept on the wire for clients that have not moved.
         owner_kind (str): Kind of principal that owns the attachment: 'customer', 'organization', 'application',
             'persona' or 'ecosystem'.
         owner_id (str): Id of the owning principal.
@@ -48,7 +46,6 @@ class StorageAttachment:
 
     id: str
     ecosystem_id: str
-    customer_id: str
     owner_kind: str
     owner_id: str
     parent_type: str
@@ -77,8 +74,6 @@ class StorageAttachment:
         id = self.id
 
         ecosystem_id = self.ecosystem_id
-
-        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -148,7 +143,6 @@ class StorageAttachment:
             {
                 "id": id,
                 "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "parentType": parent_type,
@@ -188,8 +182,6 @@ class StorageAttachment:
         id = d.pop("id")
 
         ecosystem_id = d.pop("ecosystemId")
-
-        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -280,7 +272,6 @@ class StorageAttachment:
         storage_attachment = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             parent_type=parent_type,
