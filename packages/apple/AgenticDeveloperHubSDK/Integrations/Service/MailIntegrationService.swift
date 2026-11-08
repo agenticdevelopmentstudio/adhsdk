@@ -29,7 +29,8 @@ public actor MailIntegrationService {
     private var lastAttempt: [String: Date] = [:]
     /// Connections being removed. No sync starts for them while the removal awaits.
     private var removing: Set<String> = []
-    /// The browser sign-in in progress, if any. Only one runs at a time.
+    /// The browser sign-in in progress, if any. Only one runs at a time: a new one
+    /// supersedes it.
     private var pendingSignIn: Task<GoogleCredential, Error>?
 
     public init(
@@ -152,10 +153,18 @@ public actor MailIntegrationService {
 
     private func signIn() async throws -> MailAccount {
         let config = try oauthConfig()
-        guard pendingSignIn == nil else { throw RequestFailure("a sign-in is already in progress") }
+        // A sign-in still pending belongs to a client that gave up on it: a panel that was
+        // closed, or an app that quit or crashed while the browser was open. Nothing cancels
+        // its request when that client goes away, and a fresh panel does not know to offer
+        // Cancel, so refusing here would lock Add Account out until the browser flow times
+        // out. The newer request wins; cancelling the old flow also closes its redirect
+        // listener, so its abandoned browser tab can no longer add an account.
+        pendingSignIn?.cancel()
         let flow = signInFlow
         let task = Task { try await flow.signIn(config: config) }
         pendingSignIn = task
+        // Clear the slot only if it is still ours: a superseding sign-in owns it now.
+        func release() { if pendingSignIn == task { pendingSignIn = nil } }
         let credential: GoogleCredential
         do {
             credential = try await withTaskCancellationHandler {
@@ -163,9 +172,9 @@ public actor MailIntegrationService {
             } onCancel: {
                 task.cancel()
             }
-            pendingSignIn = nil
+            release()
         } catch {
-            pendingSignIn = nil
+            release()
             if error is CancellationError || task.isCancelled { throw IntegrationError.signInCancelled }
             throw error
         }

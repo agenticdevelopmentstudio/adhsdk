@@ -150,8 +150,12 @@ private actor Gate {
     }
 
     func waitForArrival() async {
-        if arrivals > 0 { return }
-        await withCheckedContinuation { arrivalWaiters.append($0) }
+        await waitForArrival(count: 1)
+    }
+
+    /// Returns once `count` callers in all have arrived.
+    func waitForArrival(count: Int) async {
+        while arrivals < count { await withCheckedContinuation { arrivalWaiters.append($0) } }
     }
 
     func open() {
@@ -948,17 +952,21 @@ struct MailIntegrationServiceTests {
     }
 
     @Test(.timeLimit(.minutes(1)))
-    func aSecondSignInIsRefusedAndCancelSignInEndsThePendingOne() async throws {
+    func aSecondSignInSupersedesThePendingOneAndCancelSignInEndsIt() async throws {
         let flow = PendingSignIn()
         let harness = try Harness(signInFlow: flow)
         let service = harness.service
         _ = await service.handle(.importOAuthClient(json: clientJSON))
 
+        // The first sign-in's client went away (the app quit with the browser open).
         let first = Task { await service.handle(.signIn) }
         await flow.arrived.waitForArrival()
-        #expect(await service.handle(.signIn) == .failure("a sign-in is already in progress"))
-        #expect(await service.handle(.cancelSignIn) == .ok)
+        // A relaunched panel's Add Account replaces it rather than being locked out.
+        let second = Task { await service.handle(.signIn) }
         #expect(await first.value == .failure("Sign-in was cancelled"))
+        await flow.arrived.waitForArrival(count: 2)
+        #expect(await service.handle(.cancelSignIn) == .ok)
+        #expect(await second.value == .failure("Sign-in was cancelled"))
         #expect(await service.handle(.listAccounts) == .accounts([]))
         #expect(await service.handle(.cancelSignIn) == .ok, "cancelling with nothing pending is harmless")
     }
