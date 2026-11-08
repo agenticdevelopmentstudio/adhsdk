@@ -1,4 +1,5 @@
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 import AppKit
 
 /// Owns one checkout: its status provider, its current branch, the commands
