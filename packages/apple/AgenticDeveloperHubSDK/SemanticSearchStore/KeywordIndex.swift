@@ -22,7 +22,9 @@ enum KeywordIndex {
     /// The best-matching passage of each document, best document first, at
     /// most `limit`. bm25 is lower-is-better; equal ranks fall back to
     /// document id and chunk index so the order is deterministic.
-    static func search(_ conn: Database, query: String, limit: Int) throws -> [SemanticSearchHit] {
+    static func search(
+        _ conn: Database, query: String, limit: Int, filter: SemanticSearchFilter? = nil
+    ) throws -> [SemanticSearchHit] {
         guard limit > 0, let match = matchExpression(for: query) else { return [] }
         let rows = try Row.fetchAll(conn, sql: """
             SELECT id, document_id, chunk_index, title, content, origin FROM (
@@ -33,13 +35,13 @@ enum KeywordIndex {
                            bm25(semantic_passages_fts) AS rank
                     FROM semantic_passages_fts
                     JOIN semantic_passages p ON p.id = semantic_passages_fts.rowid
-                    WHERE semantic_passages_fts MATCH ?
+                    WHERE semantic_passages_fts MATCH ?\(filter.map { " AND " + $0.predicate } ?? "")
                 )
             )
             WHERE document_rank = 1
             ORDER BY rank, document_id, chunk_index
             LIMIT ?
-            """, arguments: [match, limit])
+            """, arguments: StatementArguments([match]) + (filter?.arguments ?? StatementArguments()) + [limit])
         return rows.map { SemanticSearchHit(row: $0, similarity: nil) }
     }
 }

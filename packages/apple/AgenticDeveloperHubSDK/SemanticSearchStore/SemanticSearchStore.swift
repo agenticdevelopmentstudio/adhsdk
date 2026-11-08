@@ -86,6 +86,37 @@ public enum ServerApplyResult: Sendable, Equatable {
     case ignoredStale(currentSourceHash: String)
 }
 
+/// Narrows a search to some of the store's documents.
+///
+/// The store holds whatever documents its app indexes, and an app that
+/// indexes more than one kind (or more than one owner's) searches one slice
+/// at a time. The slice is a SQL subquery returning document ids, written by
+/// the app against its own tables, so the filter runs inside the search and
+/// `limit` counts only documents in the slice.
+public struct SemanticSearchFilter: Sendable {
+    let predicate: String
+    let arguments: StatementArguments
+
+    /// Keeps documents whose id the subquery `documentIDsSQL` returns, for
+    /// example `SELECT id FROM memories WHERE persona_id = ?`.
+    public init(documentIDsSQL: String, arguments: StatementArguments = StatementArguments()) {
+        self.predicate = "p.document_id IN (\(documentIDsSQL))"
+        self.arguments = arguments
+    }
+}
+
+/// A vector that arrived with a document, with the stamp of the model that
+/// made it.
+public struct StagedVector: Sendable, Equatable {
+    public let embedding: [Float]
+    public let stamp: String
+
+    public init(embedding: [Float], stamp: String) {
+        self.embedding = embedding
+        self.stamp = stamp
+    }
+}
+
 /// How combined mode merges its two lists.
 public enum CombinedFusion: Sendable, Equatable {
     /// The server's rule: semantic hits, then new keyword hits.
@@ -147,40 +178,73 @@ public final class SemanticSearchStore: Sendable {
         documentID: String, title: String?, content: String
     ) async throws -> DeviceIndexResult {
         let title = title ?? ""
-        let hash = PassageSourceHash.of(title: title, content: content)
-        let fits = embedder.map { SemanticTokenBudget.fits(embedder: $0, title: title) }
-        let chunks = chunker.chunk(content, fits: fits)
-
-        let inserted: [(id: Int64, content: String)]? = try database.write { conn in
-            try Self.upsertDocument(conn, documentID: documentID, sourceHash: hash, title: title)
-            let serverCurrent = try Bool.fetchOne(conn, sql: """
-                SELECT EXISTS (SELECT 1 FROM semantic_passages
-                               WHERE document_id = ? AND origin = 'server' AND source_hash = ?)
-                """, arguments: [documentID, hash]) ?? false
-            if serverCurrent {
-                try conn.execute(sql: """
-                    DELETE FROM semantic_passages
-                    WHERE document_id = ? AND (origin = 'device' OR source_hash != ?)
-                    """, arguments: [documentID, hash])
-                return nil
-            }
-            try conn.execute(sql: "DELETE FROM semantic_passages WHERE document_id = ?", arguments: [documentID])
-            return try chunks.map { chunk in
-                let id = try Self.insertPassage(conn, documentID: documentID, chunkIndex: chunk.index, title: title,
-                                                content: chunk.content, sourceHash: hash, origin: .device)
-                return (id, chunk.content)
-            }
+        let staged = try database.write { conn in
+            try stageDocument(in: conn, documentID: documentID, title: title, content: content)
         }
-        guard let inserted else { return .serverPassagesCurrent }
         if let embedder {
-            for passage in inserted {
+            for passage in staged.awaitingVector {
                 let vector = try await embedder.embed(passage.content, task: .document(title: title))
                 try database.write { conn in
                     try VectorIndex.store(conn, passageID: passage.id, stamp: embedder.stamp, vector: vector)
                 }
             }
         }
-        return .indexed(passages: inserted.count)
+        return staged.result
+    }
+
+    /// The synchronous half of ``indexDeviceDocument(documentID:title:content:)``,
+    /// run on `conn` so a caller already inside a transaction (a sync pull
+    /// writing the document's own row) makes the text searchable in that same
+    /// transaction. It stores the passages and embeds nothing: keyword search
+    /// finds them at once, and ``embedPending(limit:)`` embeds them later.
+    ///
+    /// `vector` is a vector that arrived with the text. It is kept when the
+    /// text is one passage; it is compared only when its stamp is this
+    /// store's embedder's, and is otherwise re-embedded as pending. Returns
+    /// what happened and the passages still waiting for a vector.
+    @discardableResult
+    public func stageDocument(
+        in conn: Database, documentID: String, title: String?, content: String, vector: StagedVector? = nil
+    ) throws -> (result: DeviceIndexResult, awaitingVector: [(id: Int64, content: String)]) {
+        let title = title ?? ""
+        let hash = PassageSourceHash.of(title: title, content: content)
+        try Self.upsertDocument(conn, documentID: documentID, sourceHash: hash, title: title)
+        let serverCurrent = try Bool.fetchOne(conn, sql: """
+            SELECT EXISTS (SELECT 1 FROM semantic_passages
+                           WHERE document_id = ? AND origin = 'server' AND source_hash = ?)
+            """, arguments: [documentID, hash]) ?? false
+        if serverCurrent {
+            try conn.execute(sql: """
+                DELETE FROM semantic_passages
+                WHERE document_id = ? AND (origin = 'device' OR source_hash != ?)
+                """, arguments: [documentID, hash])
+            return (.serverPassagesCurrent, [])
+        }
+        let fits = embedder.map { SemanticTokenBudget.fits(embedder: $0, title: title) }
+        let chunks = chunker.chunk(content, fits: fits)
+        try conn.execute(sql: "DELETE FROM semantic_passages WHERE document_id = ?", arguments: [documentID])
+        var waiting: [(id: Int64, content: String)] = []
+        for chunk in chunks {
+            let id = try Self.insertPassage(conn, documentID: documentID, chunkIndex: chunk.index, title: title,
+                                            content: chunk.content, sourceHash: hash, origin: .device)
+            if chunks.count == 1, let vector {
+                try VectorIndex.store(conn, passageID: id, stamp: vector.stamp, vector: vector.embedding)
+                if let embedder, vector.stamp == embedder.stamp { continue }
+            }
+            waiting.append((id, chunk.content))
+        }
+        return (.indexed(passages: chunks.count), waiting)
+    }
+
+    /// True when the store already holds passages made from exactly this
+    /// text, so a caller handed the same document again can skip it.
+    public func isCurrent(in conn: Database, documentID: String, title: String?, content: String) throws -> Bool {
+        let hash = PassageSourceHash.of(title: title ?? "", content: content)
+        return try Bool.fetchOne(conn, sql: """
+            SELECT EXISTS (SELECT 1 FROM semantic_documents d
+                           WHERE d.document_id = ? AND d.source_hash = ?
+                             AND EXISTS (SELECT 1 FROM semantic_passages p WHERE p.document_id = d.document_id))
+            """, arguments: [documentID, hash]) ?? false
     }
 
     /// Stores the server's passages for `documentID`, made from the text whose
@@ -212,9 +276,18 @@ public final class SemanticSearchStore: Sendable {
 
     /// Forgets a document and all its passages and vectors.
     public func removeDocument(documentID: String) throws {
-        try database.write { conn in
-            try conn.execute(sql: "DELETE FROM semantic_documents WHERE document_id = ?", arguments: [documentID])
-        }
+        try database.write { conn in try removeDocument(in: conn, documentID: documentID) }
+    }
+
+    /// ``removeDocument(documentID:)`` on `conn`, for a caller already inside a transaction.
+    public func removeDocument(in conn: Database, documentID: String) throws {
+        try conn.execute(sql: "DELETE FROM semantic_documents WHERE document_id = ?", arguments: [documentID])
+    }
+
+    /// Forgets every document, on `conn`: a sign-out or a resync, which
+    /// leaves the next account nothing of the last one's text.
+    public func removeAllDocuments(in conn: Database) throws {
+        try conn.execute(sql: "DELETE FROM semantic_documents")
     }
 
     /// Embeds up to `limit` passages that have no vector from this store's
@@ -261,7 +334,8 @@ public final class SemanticSearchStore: Sendable {
     /// ``CombinedFusion/reciprocalRank`` throws for a `limit` of
     /// ``SearchFusion/shortListLimit`` or less.
     public func search(
-        _ query: String, mode: SearchMode, limit: Int = 10, fusion: CombinedFusion = .serverOrder
+        _ query: String, mode: SearchMode, limit: Int = 10, fusion: CombinedFusion = .serverOrder,
+        filter: SemanticSearchFilter? = nil
     ) async throws -> [SemanticSearchHit] {
         if mode == .combined, fusion == .reciprocalRank, limit <= SearchFusion.shortListLimit {
             throw SearchFusionError.listTooShortForRRF(limit: limit)
@@ -269,13 +343,13 @@ public final class SemanticSearchStore: Sendable {
         guard limit > 0, !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
         switch mode {
         case .keyword:
-            return try keywordSearch(query, limit: limit)
+            return try keywordSearch(query, limit: limit, filter: filter)
         case .semantic:
-            return try await semanticSearch(query, limit: limit)
+            return try await semanticSearch(query, limit: limit, filter: filter)
         case .combined:
-            let keyword = try keywordSearch(query, limit: limit)
+            let keyword = try keywordSearch(query, limit: limit, filter: filter)
             guard embedder != nil else { return keyword }
-            let semantic = try await semanticSearch(query, limit: limit)
+            let semantic = try await semanticSearch(query, limit: limit, filter: filter)
             switch fusion {
             case .serverOrder:
                 return SearchFusion.mergeRanked(semantic: semantic, keyword: keyword, limit: limit) { $0.documentID }
@@ -285,15 +359,19 @@ public final class SemanticSearchStore: Sendable {
         }
     }
 
-    private func keywordSearch(_ query: String, limit: Int) throws -> [SemanticSearchHit] {
-        try database.read { conn in try KeywordIndex.search(conn, query: query, limit: limit) }
+    private func keywordSearch(
+        _ query: String, limit: Int, filter: SemanticSearchFilter?
+    ) throws -> [SemanticSearchHit] {
+        try database.read { conn in try KeywordIndex.search(conn, query: query, limit: limit, filter: filter) }
     }
 
-    private func semanticSearch(_ query: String, limit: Int) async throws -> [SemanticSearchHit] {
+    private func semanticSearch(
+        _ query: String, limit: Int, filter: SemanticSearchFilter?
+    ) async throws -> [SemanticSearchHit] {
         guard let embedder else { throw SemanticSearchStoreError.noEmbedder }
         let vector = try await embedder.embed(query, task: .query)
         return try database.read { conn in
-            try VectorIndex.search(conn, query: vector, stamp: embedder.stamp, limit: limit)
+            try VectorIndex.search(conn, query: vector, stamp: embedder.stamp, limit: limit, filter: filter)
         }
     }
 

@@ -2817,6 +2817,7 @@
 		C43ED82AE193638A3068779D /* MCPServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 489FD907269245B12AEA2188 /* MCPServerConfiguration.swift */; };
 		C468DE316D659AD857608836 /* AgenticDeveloperHubSDKSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA0DB6D4238ACD85E05AD70 /* AgenticDeveloperHubSDKSync.framework */; };
 		C46B1625579DF832B9AFE29A /* BusyOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA45A4F7D1BC5A0CC602367 /* BusyOverlayView.swift */; };
+		C4761BB93B79D869C1199D15 /* SemanticSearchStoreStagingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51998675BFCD4D2640935258 /* SemanticSearchStoreStagingTests.swift */; };
 		C4773C4D505EDA8D1F349EB9 /* AgenticDeveloperHubSDKCoreMacOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 458065B2D1A15C048C8DC044 /* AgenticDeveloperHubSDKCoreMacOS.framework */; };
 		C4796A84F10D1D694E2E7975 /* DocumentEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42850ED53A4AF8854D777191 /* DocumentEditorViewController.swift */; };
 		C47D3AA64F985D60BB74C9E0 /* ReconcileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B6DF8D11CEC22390CF8599 /* ReconcileView.swift */; };
@@ -7322,6 +7323,7 @@
 		513E5802F71C7115CCB52D99 /* NotificationsUITestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsUITestDoubles.swift; sourceTree = "<group>"; };
 		515F497A5672AC269FAF0AB5 /* FormSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSpec.swift; sourceTree = "<group>"; };
 		5193540D6844D976B6C0CF89 /* UniqueNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniqueNameTests.swift; sourceTree = "<group>"; };
+		51998675BFCD4D2640935258 /* SemanticSearchStoreStagingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticSearchStoreStagingTests.swift; sourceTree = "<group>"; };
 		51A1EEF03C088DF99AB0AE6B /* InMemorySecretStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemorySecretStore.swift; sourceTree = "<group>"; };
 		51BDCD2B63439154EEADE13B /* ActivityRunsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityRunsTests.swift; sourceTree = "<group>"; };
 		522B8030E284780480C17FDC /* ComposableTabsArrangeMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsArrangeMode.swift; sourceTree = "<group>"; };
@@ -12176,6 +12178,7 @@
 			children = (
 				2B0465D715553C4448A0E698 /* FakeEmbedder.swift */,
 				424697C15213A5243BB82BEB /* GoldenConformanceTests.swift */,
+				51998675BFCD4D2640935258 /* SemanticSearchStoreStagingTests.swift */,
 				5C620E8CDFB96895829322FF /* SemanticSearchStoreTests.swift */,
 			);
 			name = AgenticDeveloperHubSDKSemanticSearchStoreTests;
@@ -19833,6 +19836,7 @@
 			files = (
 				6F607955B48C76A23EB6B23A /* FakeEmbedder.swift in Sources */,
 				CCD57A65F45ECD6BF0B6DABC /* GoldenConformanceTests.swift in Sources */,
+				C4761BB93B79D869C1199D15 /* SemanticSearchStoreStagingTests.swift in Sources */,
 				6365E5AE6DBA35E3C2FFDCC6 /* SemanticSearchStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

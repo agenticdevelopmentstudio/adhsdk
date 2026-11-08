@@ -25,15 +25,17 @@ enum VectorIndex {
     /// most `limit`, scored by dot product with `query` (cosine, since both
     /// sides are unit length). Equal scores keep document id then chunk
     /// index order.
-    static func search(_ conn: Database, query: [Float], stamp: String, limit: Int) throws -> [SemanticSearchHit] {
+    static func search(
+        _ conn: Database, query: [Float], stamp: String, limit: Int, filter: SemanticSearchFilter? = nil
+    ) throws -> [SemanticSearchHit] {
         guard limit > 0, !query.isEmpty else { return [] }
         let dims = query.count
         let rows = try Row.fetchAll(conn, sql: """
             SELECT v.passage_id, p.document_id, v.embedding
             FROM semantic_vectors v JOIN semantic_passages p ON p.id = v.passage_id
-            WHERE v.semantic_stamp = ?
+            WHERE v.semantic_stamp = ?\(filter.map { " AND " + $0.predicate } ?? "")
             ORDER BY p.document_id, p.chunk_index
-            """, arguments: [stamp])
+            """, arguments: StatementArguments([stamp]) + (filter?.arguments ?? StatementArguments()))
         guard !rows.isEmpty else { return [] }
 
         var matrix = [Float](repeating: 0, count: rows.count * dims)
