@@ -113,9 +113,24 @@ final class NoticeRoutingRulesTests: XCTestCase {
         XCTAssertEqual(styles(again.styles[.fyi]!), [.toast, .system], "fyi already has a system item")
     }
 
-    func testLegacyDeliverNilOrFalseChangesNothing() {
+    func testLegacyDeliverNilChangesNothing() {
         XCTAssertEqual(NoticeRoutingRules.migratingLegacyDeliverSetting(nil, into: .defaults), .defaults)
-        XCTAssertEqual(NoticeRoutingRules.migratingLegacyDeliverSetting(false, into: .defaults), .defaults)
+    }
+
+    /// The setting defaulted to true, so a stored false was a deliberate
+    /// opt-out: every set shows nothing, keeping its snooze and dismiss.
+    func testLegacyDeliverFalseSilencesEverySet() {
+        var rules = NoticeRoutingRules.defaults
+        rules.overrides = [.init(source: "ci", target: .style(.now))]
+        let migrated = NoticeRoutingRules.migratingLegacyDeliverSetting(false, into: rules)
+        for urgency in Notice.Urgency.allCases {
+            let set = migrated.style(for: Notice(source: "app", title: "t", urgency: urgency))
+            XCTAssertTrue(set.presentedItems.isEmpty, "\(urgency)")
+            XCTAssertEqual(migrated.styles[urgency]?.autoDismiss, rules.styles[urgency]?.autoDismiss)
+            XCTAssertEqual(migrated.styles[urgency]?.snooze, rules.styles[urgency]?.snooze)
+        }
+        XCTAssertTrue(migrated.style(for: Notice(source: "ci", title: "t")).presentedItems.isEmpty)
+        XCTAssertEqual(migrated.overrides, rules.overrides)
     }
 
     func testDeliverMigrationLeavesOverridesAlone() {

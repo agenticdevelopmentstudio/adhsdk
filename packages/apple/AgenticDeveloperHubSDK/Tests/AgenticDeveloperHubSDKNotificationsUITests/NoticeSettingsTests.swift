@@ -60,6 +60,24 @@ final class NoticeSettingsTests: XCTestCase {
         XCTAssertFalse(fyiPostsToSystem)
     }
 
+    /// A stored false was the user switching delivery off: it carries over as
+    /// silence, once, and the legacy key is ignored after that.
+    func testStoredFalseMigratesToSilence() {
+        defaults.set(false, forKey: legacyKey)
+        migrate()
+        for urgency in Notice.Urgency.allCases {
+            XCTAssertEqual(rules.styles[urgency]?.items, [], "\(urgency) shows nothing")
+        }
+        XCTAssertNil(defaults.object(forKey: legacyKey))
+        XCTAssertTrue(defaults.bool(forKey: "notice_routing_migrated_v1"))
+
+        // The user turns presentations back on; the migration does not run again.
+        store.set(NoticeRoutingRules.defaults, for: NoticeSettings.routingRules)
+        defaults.set(false, forKey: legacyKey)
+        migrate()
+        XCTAssertEqual(rules, .defaults)
+    }
+
     func testMigrationRunsOnce() {
         defaults.set(true, forKey: legacyKey)
         migrate()

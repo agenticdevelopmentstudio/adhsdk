@@ -131,14 +131,25 @@ public struct NoticeRoutingRules: Codable, Sendable, Equatable {
         styles[urgency] ?? Self.defaultStyle(for: urgency)
     }
 
-    /// The retired "deliver notifications" setting defaulted to true, so only a
-    /// stored `true` is a choice worth carrying over: it adds a Notification
-    /// Center item to `fyi`'s set, once. `nil` and `false` leave the rules alone.
+    /// Carries the retired "deliver notifications" setting over. A stored
+    /// `true` adds a Notification Center item to `fyi`'s set, once. It
+    /// defaulted to true, so a stored `false` was the user switching Rooster
+    /// silent: every set's items are emptied (its snooze and dismiss stay), so
+    /// nothing is presented and notices are only recorded. `nil` leaves the
+    /// rules alone.
     public static func migratingLegacyDeliverSetting(
         _ value: Bool?, into rules: NoticeRoutingRules
     ) -> NoticeRoutingRules {
-        guard value == true else { return rules }
+        guard let value else { return rules }
         var migrated = rules
+        guard value else {
+            for urgency in Notice.Urgency.allCases {
+                var silent = migrated.set(for: urgency)
+                silent.items = []
+                migrated.styles[urgency] = silent
+            }
+            return migrated
+        }
         var fyi = migrated.set(for: .fyi)
         if !fyi.items.contains(where: { $0.style == .system }) {
             fyi.items.append(NoticeProfile(style: .system))

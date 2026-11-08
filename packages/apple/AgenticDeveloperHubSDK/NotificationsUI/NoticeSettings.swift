@@ -21,9 +21,11 @@ public enum NoticeSettings {
     static let migratedMarkerKey = "notice_routing_migrated_v1"
 
     /// Carries a host's retired "deliver notifications" boolean into the
-    /// rules, once: a stored `true` adds a system item to `fyi`'s set. The
-    /// legacy key is removed either way, and a marker keeps a stale value that
-    /// reappears later from undoing the user's choice.
+    /// rules, once: a stored `true` adds a system item to `fyi`'s set, a
+    /// stored `false` empties every set, so nothing is presented (see
+    /// `NoticeRoutingRules.migratingLegacyDeliverSetting`). The legacy key is
+    /// removed either way, and a marker keeps a stale value that reappears
+    /// later from undoing the user's choice.
     public static func migrateLegacyDeliverSetting(
         defaults: UserDefaults,
         legacyKey: String,
@@ -31,7 +33,7 @@ public enum NoticeSettings {
     ) {
         guard !defaults.bool(forKey: migratedMarkerKey) else { return }
         let legacy = defaults.object(forKey: legacyKey) as? Bool
-        if legacy == true {
+        if legacy != nil {
             let current = store.get(routingRules)
             store.set(NoticeRoutingRules.migratingLegacyDeliverSetting(legacy, into: current), for: routingRules)
         }
