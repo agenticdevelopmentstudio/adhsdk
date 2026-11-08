@@ -4,7 +4,6 @@ import AppKit
 /// icon origins share `DesktopIconLayout`'s top-left coordinates.
 final class DesktopIconGridView: NSView {
     var onOpen: ((String) -> Void)?
-    var onSelectionChanged: (() -> Void)?
     /// Called once per drag, with the clamped final origin.
     var onMoveIcon: ((String, CGPoint) -> Void)?
 
@@ -14,7 +13,7 @@ final class DesktopIconGridView: NSView {
     private var metrics: DesktopIconLayout.Metrics = .large
     private var keepArranged = true
     private var savedPositions: [String: CGPoint] = [:]
-    private var dragging: (id: String, grabOffset: CGSize)?
+    private var dragging: (id: String, grabOffset: CGSize, moved: Bool)?
 
     override var isFlipped: Bool { true }
     override var acceptsFirstResponder: Bool { true }
@@ -24,20 +23,12 @@ final class DesktopIconGridView: NSView {
         iconViews.mapValues { $0.frame.origin }
     }
 
-    /// Where icons would sit if arranged right now.
-    var arrangedOrigins: [String: CGPoint] {
-        layoutEngine.arrangedOrigins(for: sortedIdentifiers)
-    }
-
     private var layoutEngine: DesktopIconLayout {
         DesktopIconLayout(metrics: metrics, containerSize: bounds.size)
     }
 
-    private var sortedIdentifiers: [String] {
-        apps.sorted {
-            $0.descriptor.displayName.localizedCaseInsensitiveCompare($1.descriptor.displayName) == .orderedAscending
-        }.map { $0.descriptor.identifier }
-    }
+    /// Apps arrive sorted by name from the view controller.
+    private var sortedIdentifiers: [String] { apps.map { $0.descriptor.identifier } }
 
     func configure(
         apps: [DesktopApp],
@@ -86,7 +77,6 @@ final class DesktopIconGridView: NSView {
         guard identifier != selectedIdentifier else { return }
         selectedIdentifier = identifier
         updateSelection()
-        onSelectionChanged?()
     }
 
     private func updateSelection() {
@@ -110,24 +100,38 @@ final class DesktopIconGridView: NSView {
             onOpen?(id)
             return
         }
-        if !keepArranged, let view = iconViews[id] {
-            dragging = (id, CGSize(width: point.x - view.frame.origin.x, height: point.y - view.frame.origin.y))
-        }
+        beginDrag(id: id, at: point)
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let dragging, let view = iconViews[dragging.id] else { return }
-        let point = convert(event.locationInWindow, from: nil)
-        view.frame.origin = layoutEngine.clamp(CGPoint(
-            x: point.x - dragging.grabOffset.width,
-            y: point.y - dragging.grabOffset.height
-        ))
+        moveDrag(to: convert(event.locationInWindow, from: nil))
     }
 
     override func mouseUp(with event: NSEvent) {
+        endDrag()
+    }
+
+    /// Starts dragging an icon. Only free mode drags.
+    func beginDrag(id: String, at point: CGPoint) {
+        guard !keepArranged, let view = iconViews[id] else { return }
+        let grab = CGSize(width: point.x - view.frame.origin.x, height: point.y - view.frame.origin.y)
+        dragging = (id, grab, false)
+    }
+
+    func moveDrag(to point: CGPoint) {
+        guard let current = dragging, let view = iconViews[current.id] else { return }
+        view.frame.origin = layoutEngine.clamp(CGPoint(
+            x: point.x - current.grabOffset.width,
+            y: point.y - current.grabOffset.height
+        ))
+        dragging?.moved = true
+    }
+
+    /// Reports the final origin, but only when the icon actually moved.
+    func endDrag() {
         guard let finished = dragging else { return }
         dragging = nil
-        guard let view = iconViews[finished.id] else { return }
+        guard finished.moved, let view = iconViews[finished.id] else { return }
         onMoveIcon?(finished.id, view.frame.origin)
     }
 
@@ -138,13 +142,5 @@ final class DesktopIconGridView: NSView {
         } else {
             super.keyDown(with: event)
         }
-    }
-
-    // MARK: Test seams
-
-    func simulateDrag(of identifier: String, to origin: CGPoint) {
-        guard !keepArranged, let view = iconViews[identifier] else { return }
-        view.frame.origin = layoutEngine.clamp(origin)
-        onMoveIcon?(identifier, view.frame.origin)
     }
 }

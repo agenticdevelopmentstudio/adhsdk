@@ -61,12 +61,65 @@ final class DesktopViewControllerTests: XCTestCase {
         XCTAssertFalse(tables.first?.enclosingScrollView?.isHidden ?? true)
     }
 
-    func test_dragEnd_inFreeMode_savesPosition() {
+    func test_dragEnd_inFreeMode_savesPosition() throws {
         settings.keepArranged = false
         let controller = makeController(names: [("a", "Alpha")])
-        let grid = allSubviews(of: controller.view).compactMap { $0 as? DesktopIconGridView }.first
-        grid?.simulateDrag(of: "a", to: CGPoint(x: 300, y: 200))
-        XCTAssertEqual(settings.iconPositions["a"], CGPoint(x: 300, y: 200))
+        let grid = try XCTUnwrap(gridView(of: controller))
+        drag(grid, from: CGPoint(x: 20, y: 20), to: CGPoint(x: 320, y: 220))
+        XCTAssertEqual(settings.iconPositions["a"], CGPoint(x: 308, y: 208))
+    }
+
+    func test_drag_whenKeepArranged_writesNothing() throws {
+        let controller = makeController(names: [("a", "Alpha")])
+        let grid = try XCTUnwrap(gridView(of: controller))
+        drag(grid, from: CGPoint(x: 20, y: 20), to: CGPoint(x: 320, y: 220))
+        XCTAssertEqual(settings.iconPositions, [:])
+        XCTAssertEqual(controller.iconOrigins["a"], CGPoint(x: 8, y: 8))
+    }
+
+    func test_click_withoutMovement_writesNoPosition() throws {
+        settings.keepArranged = false
+        let controller = makeController(names: [("a", "Alpha")])
+        settings.iconPositions = [:]
+        let grid = try XCTUnwrap(gridView(of: controller))
+        drag(grid, from: CGPoint(x: 20, y: 20), to: nil)
+        XCTAssertEqual(settings.iconPositions, [:])
+        XCTAssertEqual(controller.selectedAppIdentifier, "a")
+    }
+
+    func test_turningKeepArrangedOff_inListMode_savesOnePositionPerApp() {
+        settings.iconArrangement = .list
+        let controller = makeController(names: [("b", "Bravo"), ("a", "Alpha")])
+        settings.keepArranged = false
+        withExtendedLifetime(controller) {}
+        XCTAssertEqual(Set(settings.iconPositions.keys), ["a", "b"])
+        XCTAssertEqual(settings.iconPositions["a"], CGPoint(x: 8, y: 8))
+        XCTAssertEqual(settings.iconPositions["b"], CGPoint(x: 8, y: 104))
+    }
+
+    private func gridView(of controller: DesktopViewController) -> DesktopIconGridView? {
+        allSubviews(of: controller.view).compactMap { $0 as? DesktopIconGridView }.first
+    }
+
+    /// Real mouse handlers, driven by synthesized events. Points are in grid coordinates (top-left origin).
+    private func drag(_ grid: DesktopIconGridView, from start: CGPoint, to end: CGPoint?) {
+        let window = grid.window ?? NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled], backing: .buffered, defer: true
+        )
+        if grid.window == nil, let root = grid.superview {
+            window.contentView = root
+        }
+        func event(_ type: NSEvent.EventType, _ point: CGPoint) -> NSEvent {
+            let location = grid.convert(point, to: nil)
+            return NSEvent.mouseEvent(
+                with: type, location: location, modifierFlags: [], timestamp: 0,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1
+            )!
+        }
+        grid.mouseDown(with: event(.leftMouseDown, start))
+        if let end { grid.mouseDragged(with: event(.leftMouseDragged, end)) }
+        grid.mouseUp(with: event(.leftMouseUp, end ?? start))
     }
 
     private func allSubviews(of view: NSView) -> [NSView] {

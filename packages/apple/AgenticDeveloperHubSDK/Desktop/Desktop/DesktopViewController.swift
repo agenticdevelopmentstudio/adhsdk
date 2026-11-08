@@ -16,6 +16,8 @@ public final class DesktopViewController: NSViewController {
     private var lastKeepArranged: Bool
     private var cachedImagePath: String?
     private var cachedImage: NSImage?
+    private var appliedBackground: (hex: String, path: String?)?
+    private var appliedIconState: IconLayerState?
 
     /// Internal seam until the window layer opens windows.
     var onOpenApp: ((String) -> Void)?
@@ -68,20 +70,49 @@ public final class DesktopViewController: NSViewController {
         if lastKeepArranged, !keep {
             // Freeze the arranged positions before the layout switches to free mode.
             lastKeepArranged = keep
-            let origins = gridView.arrangedOrigins
+            let origins = DesktopIconLayout(
+                metrics: Self.metrics(for: settings.iconArrangement),
+                containerSize: view.bounds.size
+            ).arrangedOrigins(for: registry.apps.sortedByName.map { $0.descriptor.identifier })
             if origins != settings.iconPositions { settings.iconPositions = origins }
         }
         lastKeepArranged = keep
         apply()
     }
 
+    private static func metrics(for arrangement: DesktopIconArrangement) -> DesktopIconLayout.Metrics {
+        arrangement == .smallIcons ? .small : .large
+    }
+
+    /// Everything the icon layer shows. When it is unchanged, nothing is redone.
+    private struct IconLayerState: Equatable {
+        let identifiers: [String]
+        let arrangement: DesktopIconArrangement
+        let keepArranged: Bool
+        /// Only the grid shows positions; list mode ignores them.
+        let positions: [String: CGPoint]
+    }
+
     private func apply() {
         guard isViewLoaded else { return }
-        backgroundView.color = NSColor(desktopHex: settings.backgroundColorHex) ?? .windowBackgroundColor
-        backgroundView.image = backgroundImage(for: settings.backgroundImagePath)
-        let apps = registry.apps
+        let hex = settings.backgroundColorHex
+        let path = settings.backgroundImagePath
+        if appliedBackground?.hex != hex || appliedBackground?.path != path {
+            appliedBackground = (hex, path)
+            backgroundView.color = NSColor(desktopHex: hex) ?? .windowBackgroundColor
+            backgroundView.image = backgroundImage(for: path)
+        }
+        let apps = registry.apps.sortedByName
         let arrangement = settings.iconArrangement
         let showList = arrangement == .list
+        let state = IconLayerState(
+            identifiers: apps.map { $0.descriptor.identifier },
+            arrangement: arrangement,
+            keepArranged: settings.keepArranged,
+            positions: showList ? [:] : settings.iconPositions
+        )
+        guard state != appliedIconState else { return }
+        appliedIconState = state
         gridView.isHidden = showList
         listView.isHidden = !showList
         if showList {
@@ -89,9 +120,9 @@ public final class DesktopViewController: NSViewController {
         } else {
             gridView.configure(
                 apps: apps,
-                metrics: arrangement == .smallIcons ? .small : .large,
-                keepArranged: settings.keepArranged,
-                positions: settings.iconPositions
+                metrics: Self.metrics(for: arrangement),
+                keepArranged: state.keepArranged,
+                positions: state.positions
             )
         }
     }
@@ -115,5 +146,15 @@ public final class DesktopViewController: NSViewController {
         guard positions[identifier] != origin else { return }
         positions[identifier] = origin
         settings.iconPositions = positions
+    }
+}
+
+@MainActor
+extension Array where Element == DesktopApp {
+    /// Case-insensitive by display name: the order the Desktop shows Apps in.
+    var sortedByName: [DesktopApp] {
+        sorted {
+            $0.descriptor.displayName.localizedCaseInsensitiveCompare($1.descriptor.displayName) == .orderedAscending
+        }
     }
 }

@@ -1,9 +1,8 @@
 import AppKit
 
-/// The Desktop's list mode: Name, Version and Kind columns, sorted by name.
+/// The Desktop's list mode: Name, Version and Kind columns. Apps arrive sorted by name.
 final class DesktopIconListView: NSScrollView, NSTableViewDataSource, NSTableViewDelegate {
     var onOpen: ((String) -> Void)?
-    var onSelectionChanged: (() -> Void)?
 
     let tableView = ReturnOpeningTableView()
     private var apps: [DesktopApp] = []
@@ -49,9 +48,7 @@ final class DesktopIconListView: NSScrollView, NSTableViewDataSource, NSTableVie
 
     func configure(apps newApps: [DesktopApp]) {
         let kept = selectedIdentifier
-        apps = newApps.sorted {
-            $0.descriptor.displayName.localizedCaseInsensitiveCompare($1.descriptor.displayName) == .orderedAscending
-        }
+        apps = newApps
         tableView.reloadData()
         if let kept, let row = apps.firstIndex(where: { $0.descriptor.identifier == kept }) {
             tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
@@ -106,10 +103,6 @@ final class DesktopIconListView: NSScrollView, NSTableViewDataSource, NSTableVie
             text.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
         ])
         return cell
-    }
-
-    func tableViewSelectionDidChange(_ notification: Notification) {
-        onSelectionChanged?()
     }
 }
 
