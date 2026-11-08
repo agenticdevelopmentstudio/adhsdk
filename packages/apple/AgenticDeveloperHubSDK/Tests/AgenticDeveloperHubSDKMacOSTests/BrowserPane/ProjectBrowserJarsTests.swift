@@ -179,6 +179,81 @@ final class ProjectBrowserJarsTests: XCTestCase {
         XCTAssertEqual(registry.records(repoID: repoID), [record])
     }
 
+    // MARK: - Other engines
+
+    /// An engine beside WebKit, holding sites per jar in memory and noting
+    /// what it was asked to remove.
+    private final class FakeEngine: BrowserJarEngineSiteData {
+        let siteDataLabel = "Chrome: Cookies"
+        var sitesByJar: [UUID: [String]] = [:]
+        var removed: [(site: String, jar: UUID)] = []
+        var cleared: [UUID] = []
+
+        func sites(inJar jarID: UUID) async -> [String] { sitesByJar[jarID] ?? [] }
+
+        func removeSite(_ site: String, fromJar jarID: UUID) async {
+            removed.append((site, jarID))
+            sitesByJar[jarID]?.removeAll { $0 == site }
+        }
+
+        func removeAll(fromJar jarID: UUID) async {
+            cleared.append(jarID)
+            sitesByJar[jarID] = []
+        }
+    }
+
+    /// A Chrome jar lists its sites, and Remove and Clear reach the engine:
+    /// before, the panel read WebKit alone and a Chrome jar showed no sites
+    /// and could not be cleared.
+    func testEngineSitesAreListedRemovedAndCleared() async throws {
+        let registry = try makeRegistry()
+        let repoID = UUID()
+        let record = worktreeJar(repoID, "/src/app/main")
+        try registry.database.insertBrowserJar(record)
+        let engine = FakeEngine()
+        engine.sitesByJar[record.id] = ["b.test", "a.test"]
+        let panel = makePanel(registry, repoID: repoID)
+        panel.engines = [engine]
+        let jar = try XCTUnwrap(panel.jarItems.first)
+
+        await panel.loadSites().value
+        XCTAssertEqual(jar.sites.map(\.displayName), ["a.test", "b.test"])
+        XCTAssertNil(jar.sites[0].record)
+        XCTAssertEqual(ProjectBrowserJarsSettingsPanel.dataLabel(for: jar.sites[0]), "Chrome: Cookies")
+
+        await panel.remove(jar.sites[0])
+        XCTAssertEqual(engine.removed.map(\.site), ["a.test"])
+        XCTAssertEqual(engine.removed.map(\.jar), [record.id])
+        XCTAssertEqual(jar.sites.map(\.displayName), ["b.test"])
+
+        await panel.clear(jar)
+        XCTAssertEqual(engine.cleared, [record.id])
+        XCTAssertTrue(jar.sites.isEmpty)
+    }
+
+    /// One site in both engines is one row, its Data column naming each.
+    func testSiteInBothEnginesIsOneRow() async throws {
+        let registry = try makeRegistry()
+        let repoID = UUID()
+        try registry.database.insertBrowserJar(worktreeJar(repoID, "/src/app/main"))
+        let panel = makePanel(registry, repoID: repoID)
+        let jar = try XCTUnwrap(panel.jarItems.first)
+        let record = try await exampleRecord(in: jar.siteData.dataStore)
+        let engine = FakeEngine()
+        engine.sitesByJar[jar.record.id] = [record.displayName, "only-chrome.test"]
+
+        let sites = ProjectBrowserJarsSettingsPanel.merge(
+            .init(records: [record], engineSites: [(engine, engine.sitesByJar[jar.record.id] ?? [])]),
+            into: jar
+        )
+
+        XCTAssertEqual(sites.map(\.displayName), [record.displayName, "only-chrome.test"])
+        XCTAssertNotNil(sites[0].record)
+        XCTAssertEqual(sites[0].engines.count, 1)
+        XCTAssertTrue(ProjectBrowserJarsSettingsPanel.dataLabel(for: sites[0]).hasPrefix("Safari: "))
+        XCTAssertTrue(ProjectBrowserJarsSettingsPanel.dataLabel(for: sites[0]).hasSuffix("; Chrome: Cookies"))
+    }
+
     // MARK: - Reads compose
 
     /// A Remove pressed while the first read of every jar is still out must

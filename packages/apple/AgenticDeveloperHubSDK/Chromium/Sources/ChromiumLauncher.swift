@@ -139,11 +139,70 @@ public enum ChromiumLauncher {
 
     private static var registeredJarStores = false
 
-    /// Adds the Chromium jar directories to the reconciler's sweep, once.
+    /// Adds the Chromium jar directories to the reconciler's sweep, and their
+    /// site data to the project jars panel, once.
     static func registerJarStores() {
         guard !registeredJarStores else { return }
         registeredJarStores = true
         BrowserJarReconciler.registerEngineStores(jarStores)
+        BrowserJarEngines.register(ChromiumJarSiteData())
+    }
+}
+
+/// A Chrome jar's site data, for the project jars panel: the sites its
+/// profile holds cookies for, and removing them. Chromium is started for a
+/// jar that has a profile, since its storage is Chromium's to open, and left
+/// alone for one that has none.
+///
+/// Cookies are what sign a pane in, and all CEF can reach without a page:
+/// clearing a whole jar also empties its HTTP cache and saved HTTP sign-ins,
+/// but local storage a site wrote stays until the jar itself is removed.
+@MainActor
+final class ChromiumJarSiteData: BrowserJarEngineSiteData {
+
+    let siteDataLabel = "Chrome: Cookies"
+
+    func sites(inJar jarID: UUID) async -> [String] {
+        guard let path = profilePath(for: jarID) else { return [] }
+        let domains = await withCheckedContinuation { (continuation: CheckedContinuation<[String], Never>) in
+            ChromiumRuntime.shared.cookieDomains(inProfileAtPath: path) { continuation.resume(returning: $0) }
+        }
+        return Self.sites(fromCookieDomains: domains)
+    }
+
+    func removeSite(_ site: String, fromJar jarID: UUID) async {
+        await delete(site, fromJar: jarID)
+    }
+
+    func removeAll(fromJar jarID: UUID) async {
+        await delete(nil, fromJar: jarID)
+    }
+
+    /// Folds cookie domains into sites: a domain under another listed one
+    /// (`gist.github.com` under `github.com`) is that site, which is how
+    /// WebKit's records group them. Removing a site removes its domain and
+    /// every domain under it, so the fold and the removal agree.
+    nonisolated static func sites(fromCookieDomains domains: [String]) -> [String] {
+        let unique = Set(domains.map { $0.lowercased() })
+        return unique.filter { domain in
+            !unique.contains { $0 != domain && domain.hasSuffix("." + $0) }
+        }.sorted()
+    }
+
+    private func delete(_ site: String?, fromJar jarID: UUID) async {
+        guard let path = profilePath(for: jarID) else { return }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            ChromiumRuntime.shared.deleteSiteData(site, inProfileAtPath: path) { continuation.resume() }
+        }
+    }
+
+    /// The jar's profile path, with Chromium running, or nil when the jar has
+    /// no profile or Chromium will not start.
+    private func profilePath(for jarID: UUID) -> String? {
+        let directory = ChromiumLauncher.jarProfileDirectory(for: jarID)
+        guard FileManager.default.fileExists(atPath: directory.path),
+              ChromiumLauncher.start() == nil else { return nil }
+        return directory.path
     }
 }
 

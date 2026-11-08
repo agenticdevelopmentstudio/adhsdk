@@ -29,10 +29,13 @@
 #import <objc/runtime.h>
 
 #include <atomic>
+#include <set>
+#include <string>
 
 #include "include/cef_app.h"
 #include "include/cef_application_mac.h"
 #include "include/cef_cookie.h"
+#include "include/cef_request_context.h"
 #include "include/cef_version.h"
 #include "include/wrapper/cef_library_loader.h"
 
@@ -107,6 +110,106 @@ class ADHDeleteCookiesCallback : public CefDeleteCookiesCallback {
   void (^completion_)(void);
   IMPLEMENT_REFCOUNTING(ADHDeleteCookiesCallback);
 };
+
+/// Runs a block when CEF says done. CEF answers on its UI thread, which with
+/// the external message pump is the main thread, so the block runs as is.
+class ADHBlockCompletion : public CefCompletionCallback {
+ public:
+  explicit ADHBlockCompletion(void (^block)(void)) : block_(block) {}
+  void OnComplete() override { block_(); }
+
+ private:
+  void (^block_)(void);
+  IMPLEMENT_REFCOUNTING(ADHBlockCompletion);
+};
+
+/// A cookie's domain without the leading dot a domain cookie carries.
+std::string ADHCookieDomain(const CefCookie& cookie) {
+  std::string domain = CefString(&cookie.domain).ToString();
+  if (!domain.empty() && domain[0] == '.') {
+    domain.erase(0, 1);
+  }
+  return domain;
+}
+
+/// Collects the cookie domains of one profile. CEF releases a visitor when
+/// the visit is over — after the last cookie, or at once when there are none
+/// — so the answer is sent from the destructor, exactly once.
+class ADHCookieDomainsVisitor : public CefCookieVisitor {
+ public:
+  ADHCookieDomainsVisitor(CefRefPtr<CefRequestContext> context, void (^completion)(NSArray<NSString*>*))
+      : context_(context), completion_(completion) {}
+
+  ~ADHCookieDomainsVisitor() override {
+    NSMutableArray<NSString*>* domains = [NSMutableArray arrayWithCapacity:domains_.size()];
+    for (const auto& domain : domains_) {
+      [domains addObject:[NSString stringWithUTF8String:domain.c_str()]];
+    }
+    void (^completion)(NSArray<NSString*>*) = completion_;
+    dispatch_async(dispatch_get_main_queue(), ^{ completion(domains); });
+  }
+
+  bool Visit(const CefCookie& cookie, int /*count*/, int /*total*/, bool& /*deleteCookie*/) override {
+    const std::string domain = ADHCookieDomain(cookie);
+    if (!domain.empty()) {
+      domains_.insert(domain);
+    }
+    return true;
+  }
+
+ private:
+  CefRefPtr<CefRequestContext> context_;  // kept open for the visit
+  void (^completion_)(NSArray<NSString*>*);
+  std::set<std::string> domains_;
+  IMPLEMENT_REFCOUNTING(ADHCookieDomainsVisitor);
+};
+
+/// Deletes one site's cookies as it visits them, then flushes the store so a
+/// read that follows the answer no longer sees them.
+class ADHDeleteSiteCookiesVisitor : public CefCookieVisitor {
+ public:
+  ADHDeleteSiteCookiesVisitor(CefRefPtr<CefRequestContext> context,
+                              CefRefPtr<CefCookieManager> manager,
+                              std::string site,
+                              void (^completion)(void))
+      : context_(context), manager_(manager), site_(std::move(site)), completion_(completion) {}
+
+  ~ADHDeleteSiteCookiesVisitor() override {
+    void (^completion)(void) = completion_;
+    if (!manager_->FlushStore(new ADHBlockCompletion(completion))) {
+      dispatch_async(dispatch_get_main_queue(), ^{ completion(); });
+    }
+  }
+
+  bool Visit(const CefCookie& cookie, int /*count*/, int /*total*/, bool& deleteCookie) override {
+    const std::string domain = ADHCookieDomain(cookie);
+    deleteCookie = domain == site_ || (domain.size() > site_.size() &&
+                                       domain.compare(domain.size() - site_.size(), site_.size(), site_) == 0 &&
+                                       domain[domain.size() - site_.size() - 1] == '.');
+    return true;
+  }
+
+ private:
+  CefRefPtr<CefRequestContext> context_;  // kept open for the visit
+  CefRefPtr<CefCookieManager> manager_;
+  std::string site_;
+  void (^completion_)(void);
+  IMPLEMENT_REFCOUNTING(ADHDeleteSiteCookiesVisitor);
+};
+
+/// A request context on a jar's profile, sharing the storage of any pane open
+/// on it, or null when there is nothing to read: Chromium is not running, or
+/// the directory does not exist and a context would create it.
+CefRefPtr<CefRequestContext> ADHJarProfileContext(NSString* path) {
+  BOOL isDirectory = NO;
+  if (!gRunning.load() || ![NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDirectory] ||
+      !isDirectory) {
+    return nullptr;
+  }
+  CefRequestContextSettings settings;
+  CefString(&settings.cache_path) = std::string(path.fileSystemRepresentation);
+  return CefRequestContext::CreateContext(settings, nullptr);
+}
 
 /// Adds CefAppProtocol to NSApp's class and wraps its `-sendEvent:`. Done
 /// once; a second call would wrap the wrapper.
@@ -380,6 +483,55 @@ static void ADHPumpChromium(void) {
   if (!manager || !manager->DeleteCookies("", "", new ADHDeleteCookiesCallback(completion))) {
     completion();
   }
+}
+
+- (void)cookieDomainsInProfileAtPath:(NSString*)path completion:(void (^)(NSArray<NSString*>*))completion {
+  CefRefPtr<CefRequestContext> context = ADHJarProfileContext(path);
+  if (!context) {
+    completion(@[]);
+    return;
+  }
+  // The callback runs once the profile's cookie store is open; the manager
+  // asked for again then is the same one, ready.
+  context->GetCookieManager(new ADHBlockCompletion(^{
+    CefRefPtr<CefCookieManager> manager = context->GetCookieManager(nullptr);
+    CefRefPtr<CefCookieVisitor> visitor = new ADHCookieDomainsVisitor(context, completion);
+    if (manager) {
+      manager->VisitAllCookies(visitor);
+    }
+  }));
+}
+
+- (void)deleteSiteData:(nullable NSString*)site
+       inProfileAtPath:(NSString*)path
+            completion:(void (^)(void))completion {
+  CefRefPtr<CefRequestContext> context = ADHJarProfileContext(path);
+  if (!context) {
+    completion();
+    return;
+  }
+  const std::string target = site ? std::string(site.lowercaseString.UTF8String) : std::string();
+  context->GetCookieManager(new ADHBlockCompletion(^{
+    CefRefPtr<CefCookieManager> manager = context->GetCookieManager(nullptr);
+    if (!manager) {
+      completion();
+      return;
+    }
+    if (!target.empty()) {
+      CefRefPtr<CefCookieVisitor> visitor = new ADHDeleteSiteCookiesVisitor(context, manager, target, completion);
+      manager->VisitAllCookies(visitor);
+      return;
+    }
+    // The whole jar: every cookie, then the HTTP cache and saved sign-ins.
+    void (^clearRest)(void) = ^{
+      context->ClearHttpCache(new ADHBlockCompletion(^{
+        context->ClearHttpAuthCredentials(new ADHBlockCompletion(completion));
+      }));
+    };
+    if (!manager->DeleteCookies("", "", new ADHDeleteCookiesCallback(clearRest))) {
+      clearRest();
+    }
+  }));
 }
 
 @end

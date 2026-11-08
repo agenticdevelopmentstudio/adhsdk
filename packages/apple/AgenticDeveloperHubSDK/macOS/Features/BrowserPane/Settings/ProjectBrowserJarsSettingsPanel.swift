@@ -54,6 +54,10 @@ public struct ProjectBrowserJars {
 /// own — each expandable to the sites it holds data for, with Remove for a
 /// site and Clear for a whole jar.
 ///
+/// A jar's id names its WebKit store and every registered engine's store
+/// alike (`BrowserJarEngines`), so a jar Safari and Chrome panes share lists,
+/// and clears, both: a site either engine holds is one row.
+///
 /// Clearing a jar a live pane is using does not rebuild or reload that pane.
 /// WebKit allows a store's data to be removed while a web view holds it; only
 /// deleting the store itself needs the web view gone, and that is the
@@ -79,15 +83,31 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
         }
     }
 
-    /// A site row under its jar.
+    /// A site row under its jar: what WebKit keeps for it, what each other
+    /// engine keeps, or both.
     final class SiteItem {
-        let record: WKWebsiteDataRecord
+        let displayName: String
+        let record: WKWebsiteDataRecord?
+        let engines: [any BrowserJarEngineSiteData]
         unowned let jar: JarItem
 
-        init(record: WKWebsiteDataRecord, jar: JarItem) {
+        init(
+            displayName: String,
+            record: WKWebsiteDataRecord?,
+            engines: [any BrowserJarEngineSiteData],
+            jar: JarItem
+        ) {
+            self.displayName = displayName
             self.record = record
+            self.engines = engines
             self.jar = jar
         }
+    }
+
+    /// One read of a jar: WebKit's records and, per engine, its sites.
+    struct JarSites {
+        var records: [WKWebsiteDataRecord]
+        var engineSites: [(engine: any BrowserJarEngineSiteData, sites: [String])]
     }
 
     private let jars: ProjectBrowserJars
@@ -102,6 +122,10 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
     /// How the panel reads one jar's sites. A seam so a test can hold a read
     /// open and decide when, and with what, it answers.
     var readSites: @MainActor (BrowserSiteData) async -> [WKWebsiteDataRecord] = { await $0.records() }
+
+    /// The engines beside WebKit whose jars this panel lists. A seam so a
+    /// test can hand in its own.
+    var engines: [any BrowserJarEngineSiteData] = BrowserJarEngines.siteData
 
     /// The newest read asked for, per jar id. A read whose answer arrives
     /// after a newer one was asked for is dropped, so an older answer can
@@ -172,6 +196,14 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
                     + "nowhere else. Clear empties the selected jar of every site, after "
                     + "asking. Refresh re-reads the list, since pages write while it is "
                     + "open. Browsing history is separate."
+            ),
+            .init(
+                title: "Chrome Panes",
+                body: "A jar holds what Safari panes and Chrome panes keep in it, and a site "
+                    + "either kept is one row; Chrome's part is marked Chrome. For Chrome, "
+                    + "Remove and Clear take away cookies, which is what signs you out, and "
+                    + "Clear also empties Chrome's cache and saved sign-ins. Local storage "
+                    + "a site wrote in a Chrome pane stays until the jar itself goes away."
             ),
             .init(
                 title: "Open Panes",
@@ -284,7 +316,9 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
             // the item still on screen.
             let siteData = previous[record.id]?.siteData ?? jars.provider.siteData(for: record)
             let item = JarItem(record: record, siteData: siteData)
-            item.sites = previous[record.id]?.sites.map { SiteItem(record: $0.record, jar: item) } ?? []
+            item.sites = previous[record.id]?.sites.map {
+                SiteItem(displayName: $0.displayName, record: $0.record, engines: $0.engines, jar: item)
+            } ?? []
             item.hasLoadedSites = previous[record.id]?.hasLoadedSites ?? false
             return item
         }
@@ -312,26 +346,64 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
             return (item.siteData, item.record.id, generation)
         }
         if only == nil { fullLoadTask?.cancel() }
+        let engines = self.engines
         let task = Task { [weak self] in
             for (siteData, jarID, generation) in reads {
                 guard !Task.isCancelled, let self else { return }
-                let records = await self.readSites(siteData)
+                var read = JarSites(records: await self.readSites(siteData), engineSites: [])
+                for engine in engines {
+                    read.engineSites.append((engine, await engine.sites(inJar: jarID)))
+                }
                 guard !Task.isCancelled else { return }
                 guard self.readGenerations[jarID] == generation else { continue }
-                self.apply(records, toJar: jarID)
+                self.apply(read, toJar: jarID)
             }
         }
         if only == nil { fullLoadTask = task }
         return task
     }
 
-    private func apply(_ records: [WKWebsiteDataRecord], toJar jarID: UUID) {
+    private func apply(_ read: JarSites, toJar jarID: UUID) {
         guard let item = jarItems.first(where: { $0.record.id == jarID }) else { return }
         let selection = selectedSiteKey
-        item.sites = records.map { SiteItem(record: $0, jar: item) }
+        item.sites = Self.merge(read, into: item)
         item.hasLoadedSites = true
         outlineView.reloadItem(item, reloadChildren: true)
         restoreSelection(selection)
+    }
+
+    /// One row per site name: WebKit's records in their order, each joined
+    /// by the engines holding the same site, then the sites only another
+    /// engine holds, by name.
+    static func merge(_ read: JarSites, into jar: JarItem) -> [SiteItem] {
+        var enginesBySite: [String: [any BrowserJarEngineSiteData]] = [:]
+        for (engine, sites) in read.engineSites {
+            for site in sites { enginesBySite[site, default: []].append(engine) }
+        }
+        var items = read.records.map { record in
+            SiteItem(
+                displayName: record.displayName,
+                record: record,
+                engines: enginesBySite.removeValue(forKey: record.displayName) ?? [],
+                jar: jar
+            )
+        }
+        for site in enginesBySite.keys.sorted(by: { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }) {
+            items.append(SiteItem(displayName: site, record: nil, engines: enginesBySite[site] ?? [], jar: jar))
+        }
+        return items
+    }
+
+    /// A site row's Data column: WebKit's kinds of data, then each engine's,
+    /// with WebKit's marked Safari only when another engine shares the row.
+    static func dataLabel(for site: SiteItem) -> String {
+        var parts: [String] = []
+        if let record = site.record {
+            let labels = BrowserSiteData.labels(for: record)
+            parts.append(site.engines.isEmpty ? labels : "Safari: \(labels)")
+        }
+        parts += site.engines.map(\.siteDataLabel)
+        return parts.joined(separator: "; ")
     }
 
     // MARK: - Selection
@@ -346,7 +418,7 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
 
     var selectedSiteKey: SiteKey? {
         guard let site = selectedItem as? SiteItem else { return nil }
-        return SiteKey(jarID: site.jar.record.id, displayName: site.record.displayName)
+        return SiteKey(jarID: site.jar.record.id, displayName: site.displayName)
     }
 
     /// Puts the selection back on the same site of the same jar after a
@@ -356,7 +428,7 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
         defer { updateButtons() }
         guard let key else { return }
         let site = jarItems.first { $0.record.id == key.jarID }?
-            .sites.first { $0.record.displayName == key.displayName }
+            .sites.first { $0.displayName == key.displayName }
         let row = site.map { outlineView.row(forItem: $0) } ?? -1
         if row >= 0 {
             outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
@@ -391,14 +463,20 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
     /// in the global topic: it is one site, and the row says which.
     @objc private func removeSite(_ sender: Any?) {
         guard let site = selectedItem as? SiteItem else { return }
-        let jar = site.jar
         Task {
-            await removeSite(site.record, from: jar)
+            await remove(site)
         }
     }
 
-    func removeSite(_ record: WKWebsiteDataRecord, from jar: JarItem) async {
-        await jar.siteData.remove([record])
+    /// Removes a site from its jar in WebKit and in every engine holding it.
+    func remove(_ site: SiteItem) async {
+        let jar = site.jar
+        if let record = site.record {
+            await jar.siteData.remove([record])
+        }
+        for engine in site.engines {
+            await engine.removeSite(site.displayName, fromJar: jar.record.id)
+        }
         await loadSites(of: jar).value
     }
 
@@ -408,8 +486,9 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
         guard let jar = selectedJar else { return }
         ComposableSettings.Alerts.confirmDestructive(
             "Clear all site data in “\(Self.label(for: jar.record))”?",
-            detail: "Cookies, caches and storage for every site in this jar are removed, and you "
-                + "are signed out of them in every pane that uses it. History is not affected.",
+            detail: "Cookies, caches and storage for every site in this jar are removed (for Chrome "
+                + "panes, cookies, the cache and saved sign-ins), and you are signed out of them in "
+                + "every pane that uses it. History is not affected.",
             actionTitle: "Clear",
             on: view.window
         ) { [weak self] confirmed in
@@ -418,8 +497,13 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
         }
     }
 
+    /// Empties a jar in WebKit and in every registered engine, whether or not
+    /// the engine's sites have been read yet.
     func clear(_ jar: JarItem) async {
         await jar.siteData.removeAll()
+        for engine in engines {
+            await engine.removeAll(fromJar: jar.record.id)
+        }
         await loadSites(of: jar).value
     }
 
@@ -460,9 +544,9 @@ extension ProjectBrowserJarsSettingsPanel: NSOutlineViewDataSource, NSOutlineVie
         case (let jar as JarItem, _):
             text = jar.hasLoadedSites ? Self.siteCount(jar.sites.count) : ""
         case (let site as SiteItem, Self.nameColumn):
-            text = site.record.displayName
+            text = site.displayName
         case (let site as SiteItem, _):
-            text = BrowserSiteData.labels(for: site.record)
+            text = Self.dataLabel(for: site)
         default:
             return nil
         }

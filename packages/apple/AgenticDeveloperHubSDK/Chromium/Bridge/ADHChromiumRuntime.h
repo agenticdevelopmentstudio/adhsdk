@@ -70,6 +70,23 @@ NS_SWIFT_NAME(ChromiumRuntime) NS_SWIFT_UI_ACTOR
 /// Removes every cookie of the shared profile.
 - (void)deleteAllCookiesWithCompletion:(void (^)(void))completion;
 
+/// The domains the jar profile at `path` holds cookies for, each without its
+/// leading dot, in no order. Read through a request context on that cache
+/// path, which shares the storage of any pane open on it. Empty when Chromium
+/// is not running or the profile does not exist, which is never created here.
+- (void)cookieDomainsInProfileAtPath:(NSString *)path
+                          completion:(void (^)(NSArray<NSString *> *domains))completion
+    NS_SWIFT_NAME(cookieDomains(inProfileAtPath:completion:));
+
+/// Removes the cookies of one site from the jar profile at `path` — its
+/// domain and every domain under it — or, when `site` is nil, every cookie,
+/// the HTTP cache and saved HTTP sign-ins. Does nothing when Chromium is not
+/// running or the profile does not exist.
+- (void)deleteSiteData:(nullable NSString *)site
+       inProfileAtPath:(NSString *)path
+            completion:(void (^)(void))completion
+    NS_SWIFT_NAME(deleteSiteData(_:inProfileAtPath:completion:));
+
 @end
 
 /// The error domain of `startWithConfiguration:error:`.

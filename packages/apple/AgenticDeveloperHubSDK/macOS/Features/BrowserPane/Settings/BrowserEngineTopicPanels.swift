@@ -313,7 +313,8 @@ final class ChromeBrowserTopicPanel: BrowserTopicPanel {
                 title: "Site Data",
                 body: "Remove All Chrome Cookies signs Chrome panes on the global jar out "
                     + "of every site. Safari's cookies, the browsing history and the jars "
-                    + "of a worktree or a single pane are not affected."
+                    + "of a worktree or a single pane are not affected: those are cleared "
+                    + "in the project's settings, under Cookies and Site Data."
             ))
         }
         return ComposableSettings.PanelHelp(topics: topics)
