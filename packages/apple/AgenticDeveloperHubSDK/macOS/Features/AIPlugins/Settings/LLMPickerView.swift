@@ -30,7 +30,7 @@ import AIPluginKit
 /// the row reads ``noProviderModelText`` and the Choose button is disabled.
 ///
 /// Both the popup's contents and the model row rebuild live: adding, renaming or
-/// removing a configuration in the LLM Providers panel is reflected without an app
+/// removing a configuration in the AI Connections panel is reflected without an app
 /// relaunch (these pickers are long-lived, so a choice list built once in `init`
 /// would go stale).
 @MainActor
@@ -251,7 +251,7 @@ public final class LLMPickerView: NSView, SettingsViewProtocol {
     /// no item, *rewrites the setting* to whatever the popup can actually show.
     ///
     /// Silently leaving the popup on item 0 while the pref kept a dead value (the
-    /// configuration it named was deleted in the LLM Providers panel) meant the
+    /// configuration it named was deleted in the AI Connections panel) meant the
     /// panel showed one provider while the daemon used another, with nothing short
     /// of an explicit re-pick to reconcile them.
     private func syncProviderSelection() {

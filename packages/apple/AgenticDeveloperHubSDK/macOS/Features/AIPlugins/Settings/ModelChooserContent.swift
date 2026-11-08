@@ -7,10 +7,10 @@ import AIPluginKit
 /// list/badge/spec logic is unit-testable without AppKit.
 public enum ModelChooserContent {
 
-    /// Only OpenAI-shaped endpoints serve `GET {baseURL}/models`; gate live fetching
-    /// on plugin identity (mirrors the retired `LLMProvidersView.supportsLiveModels`).
+    /// Only OpenAI-shaped endpoints serve `GET {baseURL}/models`. Which providers
+    /// load their list live at all is `ProviderModelManager`'s call.
     public static func supportsLiveModels(pluginIdentifier: String) -> Bool {
-        pluginIdentifier.hasSuffix(".openai-compatible") || pluginIdentifier.hasSuffix(".openai")
+        ProviderModelManager.isOpenAIStyle(pluginIdentifier: pluginIdentifier)
     }
 
     /// The listed models plus `current` when it isn't already present, so a

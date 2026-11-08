@@ -198,16 +198,16 @@ public final class PersonaTerminalChatViewController: NSViewController {
             fillModels(popup, models: [], providerDefault: nil)
             return
         }
-        fillModels(popup, models: template.models, providerDefault: resolved.model)
+        let manager = ProviderModelManager.forProvider(
+            pluginIdentifier: configuration.pluginIdentifier, template: template,
+            baseURL: resolved.values["baseURL"], apiKey: resolved.values["apiKey"])
+        fillModels(popup, models: manager.list.latestIDs, providerDefault: resolved.model)
 
-        guard ModelChooserContent.supportsLiveModels(pluginIdentifier: configuration.pluginIdentifier)
-        else { return }
-        let baseURL = resolved.values["baseURL"] ?? ""
-        let apiKey = resolved.values["apiKey"]
+        guard manager.hasLiveSource else { return }
         modelFetch = Task { [weak self] in
-            let live = await OpenAIModelCatalog.fetch(baseURL: baseURL, apiKey: apiKey)
+            let live = await manager.refresh()
             guard !Task.isCancelled, !live.isEmpty, let self, let popup = self.modelPopup else { return }
-            self.fillModels(popup, models: live, providerDefault: resolved.model)
+            self.fillModels(popup, models: live.latestIDs, providerDefault: resolved.model)
         }
     }
 

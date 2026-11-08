@@ -36,6 +36,9 @@ public final class ModelChooserViewController: NSViewController {
     static let windowID = "model-chooser"
 
     private let context: ModelChooserContext
+    /// Where this provider's model list comes from, and its last loaded copy.
+    private let modelManager: ProviderModelManager
+    private var modelList: ProviderModelList
     private var items: [ModelPickerItem]
     private var filtered: [ModelPickerItem]
     private var selectedModel: String
@@ -61,6 +64,9 @@ public final class ModelChooserViewController: NSViewController {
     /// this box mean anything — elsewhere it isn't built (see `configureFilterBar`).
     private static let fitFilterTitle = "Fits this Mac"
     private let fitCheckbox = NSButton(checkboxWithTitle: fitFilterTitle, target: nil, action: nil)
+    /// Shows superseded versions too (`claude-opus-4-8` beside `claude-opus-5-5`).
+    /// Hidden when the list has none.
+    private let allVersionsCheckbox = NSButton(checkboxWithTitle: "All versions", target: nil, action: nil)
     private let tableView = ThemedTableView()
     private let tableScroll = NSScrollView()
     /// Canonical composable-settings scroll host: top-anchored, width pinned to
@@ -83,9 +89,15 @@ public final class ModelChooserViewController: NSViewController {
 
     public init(context: ModelChooserContext) {
         self.context = context
-        // Seed from the template (curated) immediately; live list/metadata replace it.
+        // Seed from the last loaded list (or the template's) immediately; the live
+        // list and metadata replace it.
+        let manager = ProviderModelManager.forProvider(
+            pluginIdentifier: context.pluginIdentifier, template: context.template,
+            baseURL: context.baseURL, apiKey: context.apiKey)
+        self.modelManager = manager
+        self.modelList = manager.list
         let listed = ModelChooserContent.offeredModels(
-            listed: context.template.models, current: context.currentModel)
+            listed: manager.list.latestIDs, current: context.currentModel)
         self.items = listed.map { Self.item(for: $0, template: context.template) }
         self.filtered = items
         self.selectedModel = context.currentModel
@@ -138,7 +150,7 @@ public final class ModelChooserViewController: NSViewController {
         splitView.setHoldingPriority(NSLayoutConstraint.Priority(261), forSubviewAt: 0)
         splitView.setHoldingPriority(NSLayoutConstraint.Priority(260), forSubviewAt: 1)
 
-        [useFilter, fitCheckbox, splitView, cancelButton, okButton].forEach {
+        [useFilter, fitCheckbox, allVersionsCheckbox, splitView, cancelButton, okButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview($0)
         }
@@ -161,7 +173,9 @@ public final class ModelChooserViewController: NSViewController {
             useFilter.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16),
             fitCheckbox.leadingAnchor.constraint(equalTo: useFilter.trailingAnchor, constant: 12),
             fitCheckbox.centerYAnchor.constraint(equalTo: useFilter.centerYAnchor),
-            fitCheckbox.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor, constant: -16),
+            fitCheckbox.trailingAnchor.constraint(lessThanOrEqualTo: allVersionsCheckbox.leadingAnchor, constant: -12),
+            allVersionsCheckbox.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -16),
+            allVersionsCheckbox.centerYAnchor.constraint(equalTo: useFilter.centerYAnchor),
 
             splitView.topAnchor.constraint(equalTo: useFilter.bottomAnchor, constant: 8),
             splitView.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16),
@@ -199,9 +213,26 @@ public final class ModelChooserViewController: NSViewController {
         // Only a local server reports a model's size, so only there can the box
         // mean anything; elsewhere it is present but never shown.
         fitCheckbox.isHidden = !LocalProviderModelStore.isLocal(baseURL: context.baseURL)
+        allVersionsCheckbox.target = self
+        allVersionsCheckbox.action = #selector(allVersionsToggled)
+        allVersionsCheckbox.setAccessibilityIdentifier("model-chooser.all-versions")
+        allVersionsCheckbox.toolTip = "Also list older versions of each model"
+        allVersionsCheckbox.isHidden = !modelList.hasOlderVersions
     }
 
     @objc private func fitFilterToggled() { applyFilter() }
+
+    @objc private func allVersionsToggled() { rebuildItems() }
+
+    /// The latest version of each model, or every version with the box on —
+    /// always keeping the current choice.
+    private func rebuildItems() {
+        let ids = allVersionsCheckbox.state == .on ? modelList.allIDs : modelList.latestIDs
+        let listed = ModelChooserContent.offeredModels(listed: ids, current: selectedModel)
+        items = listed.map { Self.item(for: $0, template: context.template) }
+        allVersionsCheckbox.isHidden = !modelList.hasOlderVersions
+        applyFilter()
+    }
 
     private func configureSearchField() {
         searchField.placeholderString = "Filter models"
@@ -274,7 +305,7 @@ public final class ModelChooserViewController: NSViewController {
         descriptionsByModel = LocalProviderModelStore.cachedDescriptions()
         pageStatsByModel = LocalProviderModelStore.cachedPageStats()
         ranksByModel = ArtificialAnalysisStore.cachedRanks()
-        selectRow(filtered.firstIndex { $0.id == selectedModel } ?? 0)
+        applyFilter()   // loads the table before selecting, so the current model sticks
         Task { await loadLiveModels() }
     }
 
@@ -288,26 +319,22 @@ public final class ModelChooserViewController: NSViewController {
         keyboard.stopEscapeMonitor()
     }
 
-    /// Replace the seeded list with the provider's live `/models` (for OpenAI-shaped
-    /// providers), always keeping the current selection; then load metadata for the
-    /// selected model. The catalog and size fetches hit independent endpoints, so
-    /// they run concurrently — the worst case is the slower of the two, not the sum.
+    /// Replace the seeded list with the provider's live one (`ProviderModelManager`),
+    /// always keeping the current selection; then load metadata for the listed
+    /// models. The list and size fetches hit independent endpoints, so they run
+    /// concurrently — the worst case is the slower of the two, not the sum.
     private func loadLiveModels() async {
-        let supportsLive = ModelChooserContent.supportsLiveModels(pluginIdentifier: context.pluginIdentifier)
         let isLocal = LocalProviderModelStore.isLocal(baseURL: context.baseURL)
         let baseURL = context.baseURL
-        let apiKey = context.apiKey
-        async let liveList: [String] = supportsLive
-            ? OpenAIModelCatalog.fetch(baseURL: baseURL, apiKey: apiKey)
-            : []
         async let liveSizes: [String: Int]? = isLocal
             ? LocalProviderModelStore.fetchSizes(baseURL: baseURL)
             : nil
-        let live = await liveList
-        if supportsLive, !live.isEmpty {
-            let listed = ModelChooserContent.offeredModels(listed: live, current: selectedModel)
-            items = listed.map { Self.item(for: $0, template: context.template) }
-            applyFilter()
+        if modelManager.hasLiveSource {
+            let fresh = await modelManager.refresh()
+            if fresh != modelList {
+                modelList = fresh
+                rebuildItems()
+            }
         }
         if isLocal {
             sizesByModel = await liveSizes
@@ -434,6 +461,9 @@ public final class ModelChooserViewController: NSViewController {
     }
 
     private func applyFilter() {
+        // Captured first: the table allows no empty selection, so reloadData
+        // selects a row itself and the delegate overwrites `selectedModel`.
+        let keep = selectedModel
         filtered = ModelChooserContent.filter(
             items,
             query: searchField.stringValue,
@@ -443,9 +473,16 @@ public final class ModelChooserViewController: NSViewController {
                 ? .init(sizes: sizesByModel, physicalRAM: physicalRAM,
                         warnPct: context.warnPct, blockPct: context.blockPct)
                 : nil,
-            keeping: selectedModel)
+            keeping: keep)
+        reloadTable(keeping: keep)
+    }
+
+    /// Reloads the table and puts the selection back on `model`. The table allows
+    /// no empty selection, so a reload selects a row itself and the delegate would
+    /// otherwise make that row the choice.
+    private func reloadTable(keeping model: String) {
         tableView.reloadData()
-        selectRow(filtered.firstIndex { $0.id == selectedModel } ?? 0)
+        selectRow(filtered.firstIndex { $0.id == model } ?? 0)
     }
 
     /// Re-run the filter when late-arriving data would change its answer — sizes
@@ -471,8 +508,7 @@ public final class ModelChooserViewController: NSViewController {
             .foregroundColor: palette.primaryTextColor,
             .font: palette.font(.body)
         ])
-        renderDetail()   // ThemedLabels/PanelView re-theme themselves; rebuild to be safe
-        tableView.reloadData()
+        reloadTable(keeping: selectedModel)   // re-renders the detail too
     }
 
     @objc private func chooseTapped() {

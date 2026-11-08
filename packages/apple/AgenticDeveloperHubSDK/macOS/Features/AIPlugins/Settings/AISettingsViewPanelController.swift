@@ -5,10 +5,10 @@ import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
 import AIPluginKit
 
-/// The "LLM Providers" settings panel — a topic/detail split (like "Theme") with
+/// The "AI Connections" settings panel — a topic/detail split (like "Theme") with
 /// one sub-panel per configured provider, each a Connection card over a Test
 /// Chat card. The sidebar lists the configurations
-/// (titled "Providers" and themed by the framework); selecting one shows its
+/// (titled "Connections" and themed by the framework); selecting one shows its
 /// editor in the detail, whose title is the configuration's name. A footer under
 /// the list carries add (`+`, opens the provider picker) / remove (`−`).
 @MainActor
@@ -28,11 +28,11 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
         self.pluginManager = pluginManager
         self.viewModel = LLMProvidersListViewModel(pluginManager: pluginManager)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: "LLM Providers",
+            title: "AI Connections",
             icon: NSImage(systemSymbolName: "cpu", accessibilityDescription: nil)
         ))
-        // The sidebar lists multiple provider configurations, so title it in plural.
-        sidebarTitle = "Providers"
+        // The sidebar lists multiple connections, so title it in plural.
+        sidebarTitle = "Connections"
     }
 
     public required init?(coder: NSCoder) {
@@ -42,7 +42,7 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
     open override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
-                title: "Providers",
+                title: "Connections",
                 body: "Each row is one configured way of reaching a model — a plugin "
                     + "(Claude, OpenAI, Google, or any OpenAI-compatible endpoint) plus "
                     + "the account details it needs. Add one with +, remove the selected "
