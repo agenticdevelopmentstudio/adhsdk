@@ -199,6 +199,27 @@
       "holds": "AgenticDeveloperHubSDKSyncGRDB. The GRDB-backed sync implementation."
     },
     {
+      "name": "apple-semanticsearch",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/SemanticSearch/"
+      ],
+      "depends_on": [],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKSemanticSearch. Foundation-only semantic search: the TextEmbedder protocol, task prefixes, bundle manifest and stamp, vector maths over Accelerate, the half-float codec, the device chunker and result fusion."
+    },
+    {
+      "name": "apple-semanticsearchstore",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/SemanticSearchStore/"
+      ],
+      "depends_on": [
+        "apple-semanticsearch",
+        "apple-database"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKSemanticSearchStore. The ONNX Runtime embedder, the GRDB vector table, the FTS5 keyword index and SemanticSearchStore."
+    },
+    {
       "name": "apple-markdown",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Markdown/"
@@ -419,6 +440,8 @@
         "apple-database",
         "apple-sync",
         "apple-syncgrdb",
+        "apple-semanticsearch",
+        "apple-semanticsearchstore",
         "apple-language",
         "apple-markdown",
         "apple-activity",
