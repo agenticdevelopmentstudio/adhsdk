@@ -37,7 +37,7 @@ public final class ModelChooserViewController: NSViewController {
 
     private let context: ModelChooserContext
     /// Where this provider's model list comes from, and its last loaded copy.
-    private let modelManager: ProviderModelManager
+    private let modelManager: any ProviderModelManager
     private var modelList: ProviderModelList
     private var items: [ModelPickerItem]
     private var filtered: [ModelPickerItem]
@@ -91,16 +91,18 @@ public final class ModelChooserViewController: NSViewController {
         self.context = context
         // Seed from the last loaded list (or the template's) immediately; the live
         // list and metadata replace it.
-        let manager = ProviderModelManager.forProvider(
+        let manager = ProviderModels.manager(
             pluginIdentifier: context.pluginIdentifier, template: context.template,
             baseURL: context.baseURL, apiKey: context.apiKey)
+        // A bare alias (`opus`) is the model it runs, so it selects that row
+        // rather than adding one of its own.
+        let current = manager.resolve(context.currentModel)
         self.modelManager = manager
         self.modelList = manager.list
-        let listed = ModelChooserContent.offeredModels(
-            listed: manager.list.latestIDs, current: context.currentModel)
-        self.items = listed.map { Self.item(for: $0, template: context.template) }
+        let listed = ModelChooserContent.offeredModels(listed: manager.list.latestIDs, current: current)
+        self.items = listed.map { Self.item(for: $0, template: context.template, manager: manager) }
         self.filtered = items
-        self.selectedModel = context.currentModel
+        self.selectedModel = current
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -110,8 +112,10 @@ public final class ModelChooserViewController: NSViewController {
     /// Everything known about `model` at this provider: the shared catalog's
     /// description/capabilities, this template's context window and prices, and
     /// any curated `modelDetails` copy (which wins).
-    private static func item(for model: String, template: AIPluginDescriptor.ProviderTemplate) -> ModelPickerItem {
-        ModelPickerItem(id: model, info: AIModelCatalog.shared.resolve(model: model, template: template))
+    private static func item(for model: String, template: AIPluginDescriptor.ProviderTemplate,
+                             manager: any ProviderModelManager) -> ModelPickerItem {
+        ModelPickerItem(id: model, title: manager.displayName(for: model),
+                        info: AIModelCatalog.shared.resolve(model: model, template: template))
     }
 
     // MARK: - View tree
@@ -229,7 +233,7 @@ public final class ModelChooserViewController: NSViewController {
     private func rebuildItems() {
         let ids = allVersionsCheckbox.state == .on ? modelList.allIDs : modelList.latestIDs
         let listed = ModelChooserContent.offeredModels(listed: ids, current: selectedModel)
-        items = listed.map { Self.item(for: $0, template: context.template) }
+        items = listed.map { Self.item(for: $0, template: context.template, manager: modelManager) }
         allVersionsCheckbox.isHidden = !modelList.hasOlderVersions
         applyFilter()
     }
@@ -333,6 +337,7 @@ public final class ModelChooserViewController: NSViewController {
             let fresh = await modelManager.refresh()
             if fresh != modelList {
                 modelList = fresh
+                selectedModel = modelManager.resolve(selectedModel)
                 rebuildItems()
             }
         }
@@ -408,13 +413,16 @@ public final class ModelChooserViewController: NSViewController {
         let meta = metadataByModel[selectedModel]
 
         let group = ComposableSettings.GroupView(
-            withHeaderView: Self.wrappingLabel(item.id, role: .primaryText, textRole: .heading))
+            withHeaderView: Self.wrappingLabel(item.title, role: .primaryText, textRole: .heading))
         // Every line below describes the same model, so together they read as
         // one block of prose: continuations tucked against each other, not
         // settings divided from one another by hairlines.
         func addLine(_ text: String, role: ThemeRole, textRole: TextRole) {
             group.addSettingSubview(
                 Self.wrappingLabel(text, role: role, textRole: textRole), style: .continuation)
+        }
+        if item.title != item.id {
+            addLine(item.id, role: .tertiaryText, textRole: .caption)
         }
         let badges = ModelChooserContent.capabilityBadges(item: item, metadata: meta)
         let parts = badges.map { "\($0) ✓" } + [ModelChooserContent.specLine(meta)].compactMap { $0 }
@@ -569,8 +577,9 @@ extension ModelChooserViewController: NSTableViewDataSource, NSTableViewDelegate
             ])
             return view
         }()
+        let query = searchField.stringValue.trimmingCharacters(in: .whitespaces)
         cell.textField?.attributedStringValue = Self.underlinedMatches(
-            filtered[row].id, query: searchField.stringValue.trimmingCharacters(in: .whitespaces))
+            filtered[row].rowText(for: query), query: query)
         return cell
     }
 

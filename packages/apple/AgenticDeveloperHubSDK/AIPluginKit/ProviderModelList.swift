@@ -100,10 +100,54 @@ public enum AnthropicModelFamily {
         return nil
     }
 
+    /// The family a bare alias names — `opus` → `claude-opus` — or nil when `id`
+    /// is not one. The Claude CLI takes these and runs the newest of the family.
+    public static func aliasFamily(of id: String) -> String? {
+        let lower = id.trimmingCharacters(in: .whitespaces).lowercased()
+        guard lower.range(of: #"^[a-z]+$"#, options: .regularExpression) != nil,
+              lower != "claude" else { return nil }
+        return "claude-\(lower)"
+    }
+
+    /// The name a person reads: `claude-opus-5-5` → `Opus 5.5`,
+    /// `claude-3-5-sonnet-20241022` → `Sonnet 3.5 (2024-10-22)`, `opus` → `Opus`.
+    /// Nil for an id in neither naming era.
+    public static func displayName(of id: String) -> String? {
+        let lower = id.trimmingCharacters(in: .whitespaces).lowercased()
+        if aliasFamily(of: lower) != nil { return lower.capitalized }
+        // name, major, minor, date — or major, minor, name, date for the old era.
+        if let parts = captures(#"^claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-(\d{8}))?$"#, in: lower) {
+            return format(name: parts[0], major: parts[1], minor: parts[2], date: parts[3])
+        }
+        if let parts = captures(#"^claude-(\d+)(?:-(\d{1,2}))?-([a-z]+)(?:-(\d{8}))?$"#, in: lower) {
+            return format(name: parts[2], major: parts[0], minor: parts[1], date: parts[3])
+        }
+        return nil
+    }
+
+    private static func format(name: String?, major: String?, minor: String?, date: String?) -> String? {
+        guard let name, let major else { return nil }
+        var text = name.capitalized + " " + major
+        if let minor { text += "." + minor }
+        if let date, date.count == 8 {
+            let chars = Array(date)
+            text += " (\(String(chars[0..<4]))-\(String(chars[4..<6]))-\(String(chars[6..<8])))"
+        }
+        return text
+    }
+
     private static func firstCapture(_ pattern: String, in text: String) -> String? {
+        captures(pattern, in: text)?.first ?? nil
+    }
+
+    /// Every capture group of `pattern`'s first match (nil for a group that did
+    /// not participate), or nil when nothing matches.
+    private static func captures(_ pattern: String, in text: String) -> [String?]? {
         guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range(at: 1), in: text) else { return nil }
-        return String(text[range])
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text))
+        else { return nil }
+        return (1..<match.numberOfRanges).map { index in
+            Range(match.range(at: index), in: text).map { String(text[$0]) }
+        }
     }
 }

@@ -195,31 +195,35 @@ public final class PersonaTerminalChatViewController: NSViewController {
               let template = pluginManager.template(pluginIdentifier: configuration.pluginIdentifier,
                                                     templateId: configuration.templateId),
               let resolved = AIProviderResolver.resolve(configuration, manager: pluginManager) else {
-            fillModels(popup, models: [], providerDefault: nil)
+            fillModels(popup, models: [], providerDefault: nil, manager: nil)
             return
         }
-        let manager = ProviderModelManager.forProvider(
+        let manager = ProviderModels.manager(
             pluginIdentifier: configuration.pluginIdentifier, template: template,
             baseURL: resolved.values["baseURL"], apiKey: resolved.values["apiKey"])
-        fillModels(popup, models: manager.list.latestIDs, providerDefault: resolved.model)
+        fillModels(popup, models: manager.list.latestIDs, providerDefault: resolved.model, manager: manager)
 
         guard manager.hasLiveSource else { return }
         modelFetch = Task { [weak self] in
             let live = await manager.refresh()
             guard !Task.isCancelled, !live.isEmpty, let self, let popup = self.modelPopup else { return }
-            self.fillModels(popup, models: live.latestIDs, providerDefault: resolved.model)
+            self.fillModels(popup, models: live.latestIDs, providerDefault: resolved.model, manager: manager)
         }
     }
 
-    private func fillModels(_ popup: NSPopUpButton, models: [String], providerDefault: String?) {
+    /// Fills the model popup. Items are titled with the manager's names
+    /// (`Opus 5.5`) and carry the model id as their represented object.
+    private func fillModels(_ popup: NSPopUpButton, models: [String], providerDefault: String?,
+                            manager: (any ProviderModelManager)?) {
+        func name(_ id: String) -> String { manager?.displayName(for: id) ?? id }
         popup.removeAllItems()
-        let defaultTitle = providerDefault.map { "Provider default (\($0))" } ?? "Provider default"
+        let defaultTitle = providerDefault.map { "Provider default (\(name($0)))" } ?? "Provider default"
         popup.addItem(withTitle: defaultTitle)
         popup.lastItem?.representedObject = nil
         var offered = models
         if let modelOverride, !offered.contains(modelOverride) { offered.append(modelOverride) }
         for model in offered {
-            popup.addItem(withTitle: model)
+            popup.addItem(withTitle: name(model))
             popup.lastItem?.representedObject = model
         }
         if let modelOverride,
