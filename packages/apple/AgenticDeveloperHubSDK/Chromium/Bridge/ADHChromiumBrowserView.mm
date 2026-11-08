@@ -147,32 +147,20 @@ std::string ADHHost(const std::string& url) {
   return authority;
 }
 
-/// A host's registrable domain, by heuristic: the last two labels, or the
-/// last three when a two-letter country code follows a short second-level
-/// label like `co` in `co.uk`. No public-suffix list ships with the bridge,
-/// so a suffix like `github.io` counts as one site; WebKit's own third-party
-/// test is exact.
-std::string ADHRegistrableDomain(const std::string& host) {
-  if (host.empty() || host.front() == '[' || host.find_first_not_of("0123456789.") == std::string::npos) {
-    return host;
+/// Whether `host` belongs to `site`, a registrable domain as Chromium's own
+/// public-suffix list reduced it (the host of a request's first party for
+/// cookies): the site itself or any name under it. Exact, because the site
+/// is already an eTLD+1, so a name ending in `.site` cannot belong to any
+/// other; an IP literal matches only itself.
+bool ADHHostIsInSite(const std::string& host, const std::string& site) {
+  if (host == site) {
+    return true;
   }
-  size_t last = host.rfind('.');
-  if (last == std::string::npos || last == 0) {
-    return host;
+  if (site.empty() || host.size() <= site.size() + 1) {
+    return false;
   }
-  size_t second = host.rfind('.', last - 1);
-  if (second == std::string::npos) {
-    return host;
-  }
-  std::string secondLabel = host.substr(second + 1, last - second - 1);
-  if (secondLabel.size() <= 3 && host.size() - last - 1 == 2) {
-    if (second == 0) {
-      return host;
-    }
-    size_t third = host.rfind('.', second - 1);
-    return third == std::string::npos ? host : host.substr(third + 1);
-  }
-  return host.substr(second + 1);
+  const size_t dot = host.size() - site.size() - 1;
+  return host[dot] == '.' && host.compare(dot + 1, std::string::npos, site) == 0;
 }
 
 }  // namespace
@@ -471,9 +459,11 @@ class ADHBrowserClient : public CefClient,
         type != RT_SHARED_WORKER && type != RT_SERVICE_WORKER) {
       return RV_CONTINUE;
     }
-    const std::string page = ADHRegistrableDomain(ADHHost(request->GetFirstPartyForCookies().ToString()));
-    const std::string resource = ADHRegistrableDomain(ADHHost(request->GetURL().ToString()));
-    if (page.empty() || resource.empty() || page == resource) {
+    // The first party for cookies is already scheme plus eTLD+1, so the
+    // resource is compared against it as it stands, never re-derived.
+    const std::string page = ADHHost(request->GetFirstPartyForCookies().ToString());
+    const std::string resource = ADHHost(request->GetURL().ToString());
+    if (page.empty() || resource.empty() || ADHHostIsInSite(resource, page)) {
       return RV_CONTINUE;
     }
     return RV_CANCEL;

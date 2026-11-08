@@ -17,7 +17,8 @@ typedef NS_ENUM(NSInteger, ADHChromiumDialogKind) {
 } NS_SWIFT_NAME(ChromiumDialogKind);
 
 /// Which third-party subresources a browser view refuses. Third party means a
-/// registrable domain other than the page's; a document load is never refused.
+/// host outside the page's site (its registrable domain, by Chromium's
+/// public-suffix list); a document load is never refused.
 typedef NS_ENUM(NSInteger, ADHChromiumThirdPartyBlocking) {
     ADHChromiumThirdPartyBlockingNone,
     ADHChromiumThirdPartyBlockingScripts,
