@@ -19,6 +19,8 @@
 #include <cctype>
 #include <cmath>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <string>
 
 #include "include/cef_browser.h"
@@ -163,6 +165,96 @@ bool ADHHostIsInSite(const std::string& host, const std::string& site) {
   return host[dot] == '.' && host.compare(dot + 1, std::string::npos, site) == 0;
 }
 
+/// The Third-Party Content decision for one pane, shared by its client (the
+/// requests a browser carries) and its request context's handler (worker
+/// requests, which carry none). Called on CEF's IO thread.
+class ADHThirdPartyFilter {
+ public:
+  explicit ADHThirdPartyFilter(ADHChromiumThirdPartyBlocking blocking) : blocking_(static_cast<int>(blocking)) {}
+
+  void SetBlocking(ADHChromiumThirdPartyBlocking blocking) { blocking_.store(static_cast<int>(blocking)); }
+
+  cef_return_value_t Decide(CefRefPtr<CefRequest> request) {
+    const int blocking = blocking_.load();
+    const cef_resource_type_t type = request->GetResourceType();
+    // A document load is never refused, the way WebKit's rules never block
+    // the page itself. Its site is remembered for the requests that arrive
+    // with no first party of their own.
+    if (type == RT_MAIN_FRAME) {
+      std::string site = ADHHost(request->GetFirstPartyForCookies().ToString());
+      if (site.empty()) {
+        site = ADHHost(request->GetURL().ToString());
+      }
+      std::lock_guard<std::mutex> lock(mutex_);
+      topSite_ = site;
+      return RV_CONTINUE;
+    }
+    if (blocking == ADHChromiumThirdPartyBlockingNone || type == RT_NAVIGATION_PRELOAD_MAIN_FRAME) {
+      return RV_CONTINUE;
+    }
+    if (blocking == ADHChromiumThirdPartyBlockingScripts && type != RT_SCRIPT && type != RT_WORKER &&
+        type != RT_SHARED_WORKER && type != RT_SERVICE_WORKER) {
+      return RV_CONTINUE;
+    }
+    const std::string resource = ADHHost(request->GetURL().ToString());
+    if (resource.empty()) {
+      return RV_CONTINUE;  // data:, blob: and the like come from the page itself
+    }
+    // The first party for cookies is already scheme plus eTLD+1, so the
+    // resource is compared against it as it stands, never re-derived. A
+    // cross-site or sandboxed frame's requests carry a null one; they are
+    // judged against the top document's site, as WebKit judges every load
+    // against the main document. With neither known, the load is refused:
+    // a filter that cannot tell must not fail open.
+    std::string page = ADHHost(request->GetFirstPartyForCookies().ToString());
+    if (page.empty()) {
+      std::lock_guard<std::mutex> lock(mutex_);
+      page = topSite_;
+    }
+    if (!page.empty() && ADHHostIsInSite(resource, page)) {
+      return RV_CONTINUE;
+    }
+    return RV_CANCEL;
+  }
+
+ private:
+  std::atomic<int> blocking_;
+  std::mutex mutex_;
+  std::string topSite_;
+};
+
+/// A pane's request context handler. Worker requests (service and shared
+/// workers) have no browser, so they never reach the client's resource
+/// handler; they come here and meet the same filter. CEF gives such a request
+/// to any handler among the contexts sharing its storage, so in a jar several
+/// panes share, a worker is judged by one of those panes' settings.
+class ADHRequestContextHandler : public CefRequestContextHandler, public CefResourceRequestHandler {
+ public:
+  explicit ADHRequestContextHandler(std::shared_ptr<ADHThirdPartyFilter> filter) : filter_(std::move(filter)) {}
+
+  CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(CefRefPtr<CefBrowser> browser,
+                                                                 CefRefPtr<CefFrame> /*frame*/,
+                                                                 CefRefPtr<CefRequest> /*request*/,
+                                                                 bool /*is_navigation*/,
+                                                                 bool /*is_download*/,
+                                                                 const CefString& /*request_initiator*/,
+                                                                 bool& /*disable_default_handling*/) override {
+    // A request with a browser is the client's; it never gets here anyway.
+    return browser ? nullptr : this;
+  }
+
+  ReturnValue OnBeforeResourceLoad(CefRefPtr<CefBrowser> /*browser*/,
+                                   CefRefPtr<CefFrame> /*frame*/,
+                                   CefRefPtr<CefRequest> request,
+                                   CefRefPtr<CefCallback> /*callback*/) override {
+    return filter_->Decide(request);
+  }
+
+ private:
+  std::shared_ptr<ADHThirdPartyFilter> filter_;
+  IMPLEMENT_REFCOUNTING(ADHRequestContextHandler);
+};
+
 }  // namespace
 
 /// What the client hands back to the view. Declared here, not in the
@@ -207,10 +299,12 @@ class ADHBrowserClient : public CefClient,
                          public CefDevToolsMessageObserver {
  public:
   ADHBrowserClient(ADHChromiumBrowserView* view, bool acceptsCookies, ADHChromiumThirdPartyBlocking thirdParty)
-      : view_(view), acceptsCookies_(acceptsCookies), thirdParty_(static_cast<int>(thirdParty)) {}
+      : view_(view), acceptsCookies_(acceptsCookies), thirdParty_(std::make_shared<ADHThirdPartyFilter>(thirdParty)) {}
 
   void SetAcceptsCookies(bool accepts) { acceptsCookies_.store(accepts); }
-  void SetThirdPartyBlocking(ADHChromiumThirdPartyBlocking blocking) { thirdParty_.store(static_cast<int>(blocking)); }
+  void SetThirdPartyBlocking(ADHChromiumThirdPartyBlocking blocking) { thirdParty_->SetBlocking(blocking); }
+  /// The filter, for the pane's request context handler to share.
+  std::shared_ptr<ADHThirdPartyFilter> ThirdPartyFilter() const { return thirdParty_; }
 
   /// Drops the view, so a callback still in flight after `close` reports to
   /// nobody.
@@ -445,28 +539,7 @@ class ADHBrowserClient : public CefClient,
                                    CefRefPtr<CefFrame> /*frame*/,
                                    CefRefPtr<CefRequest> request,
                                    CefRefPtr<CefCallback> /*callback*/) override {
-    const int blocking = thirdParty_.load();
-    if (blocking == ADHChromiumThirdPartyBlockingNone) {
-      return RV_CONTINUE;
-    }
-    const cef_resource_type_t type = request->GetResourceType();
-    // A document load is never refused, the way WebKit's rules never block
-    // the page itself.
-    if (type == RT_MAIN_FRAME || type == RT_NAVIGATION_PRELOAD_MAIN_FRAME) {
-      return RV_CONTINUE;
-    }
-    if (blocking == ADHChromiumThirdPartyBlockingScripts && type != RT_SCRIPT && type != RT_WORKER &&
-        type != RT_SHARED_WORKER && type != RT_SERVICE_WORKER) {
-      return RV_CONTINUE;
-    }
-    // The first party for cookies is already scheme plus eTLD+1, so the
-    // resource is compared against it as it stands, never re-derived.
-    const std::string page = ADHHost(request->GetFirstPartyForCookies().ToString());
-    const std::string resource = ADHHost(request->GetURL().ToString());
-    if (page.empty() || resource.empty() || ADHHostIsInSite(resource, page)) {
-      return RV_CONTINUE;
-    }
-    return RV_CANCEL;
+    return thirdParty_->Decide(request);
   }
 
   // MARK: Cookies
@@ -516,7 +589,7 @@ class ADHBrowserClient : public CefClient,
  private:
   __weak ADHChromiumBrowserView* view_;
   std::atomic<bool> acceptsCookies_;
-  std::atomic<int> thirdParty_;
+  std::shared_ptr<ADHThirdPartyFilter> thirdParty_;
   IMPLEMENT_REFCOUNTING(ADHBrowserClient);
 };
 
@@ -647,8 +720,11 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
                         channel(background.blueComponent));
   }
 
-  // nil shares the global context; an empty cache path keeps everything in
-  // memory, gone with the context; a path is a profile of the pane's own.
+  // nil shares the global context's storage; an empty cache path keeps
+  // everything in memory, gone with the context; a path is a profile of the
+  // pane's own. Every pane gets a context of its own all the same, carrying
+  // the handler that filters its worker requests.
+  CefRefPtr<CefRequestContextHandler> contextHandler = new ADHRequestContextHandler(_client->ThirdPartyFilter());
   CefRefPtr<CefRequestContext> context;
   if (_options.cachePath) {
     CefRequestContextSettings contextSettings;
@@ -660,9 +736,9 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
       CefString(&contextSettings.cache_path) = _options.cachePath.UTF8String;
       contextSettings.persist_session_cookies = true;
     }
-    context = CefRequestContext::CreateContext(contextSettings, nullptr);
+    context = CefRequestContext::CreateContext(contextSettings, contextHandler);
   } else {
-    context = CefRequestContext::GetGlobalContext();
+    context = CefRequestContext::CreateContext(CefRequestContext::GetGlobalContext(), contextHandler);
   }
   ADHApplyCookiePolicy(context, _acceptsCookies);
 
