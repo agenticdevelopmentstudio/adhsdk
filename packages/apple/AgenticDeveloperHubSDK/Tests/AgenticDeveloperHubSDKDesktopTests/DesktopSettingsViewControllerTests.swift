@@ -97,4 +97,16 @@ final class DesktopSettingsViewControllerTests: XCTestCase {
         XCTAssertEqual(controller.colorWell.color.desktopHex, "#445566")
         XCTAssertEqual(writes, 2)
     }
+
+    func test_photo_reloadsOnlyWhenPathChanges() {
+        settings.backgroundImagePath = "/tmp/olylo-a.png"
+        let controller = makeController()
+        XCTAssertEqual(controller.photoLoadCount, 1)
+        settings.keepArranged = false
+        settings.iconArrangement = .smallIcons
+        settings.backgroundColorHex = "#010203"
+        XCTAssertEqual(controller.photoLoadCount, 1)
+        settings.backgroundImagePath = "/tmp/olylo-b.png"
+        XCTAssertEqual(controller.photoLoadCount, 2)
+    }
 }

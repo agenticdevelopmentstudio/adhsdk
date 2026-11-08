@@ -13,6 +13,10 @@ public final class DesktopSettingsViewController: NSViewController {
     let keepArrangedCheckbox = NSButton(checkboxWithTitle: "Keep arranged", target: nil, action: nil)
     let removePhotoButton = NSButton(title: "Remove", target: nil, action: nil)
     private let thumbnail = NSImageView()
+    private var loadedPhotoPath: String?
+    private var thumbnailLoaded = false
+    /// Photo loads performed, for tests.
+    private(set) var photoLoadCount = 0
     private let chooseButton = NSButton(title: "Choose…", target: nil, action: nil)
 
     private static let arrangements: [(title: String, value: DesktopIconArrangement)] = [
@@ -65,21 +69,7 @@ public final class DesktopSettingsViewController: NSViewController {
             row("Arrange by:", arrangePopUp),
             row("", keepArrangedCheckbox)
         ]
-        let stack = NSStackView(views: rows)
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 14
-        stack.edgeInsets = NSEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
-        let root = NSView()
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        root.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: root.topAnchor),
-            stack.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            stack.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor),
-            stack.bottomAnchor.constraint(lessThanOrEqualTo: root.bottomAnchor)
-        ])
-        view = root
+        view = DesktopSettingsRows.formView(rows)
         refreshControls()
         // Read-only: refreshing controls never writes.
         subscription = settings.changes.sink { [weak self] _ in
@@ -90,14 +80,7 @@ public final class DesktopSettingsViewController: NSViewController {
     // MARK: Layout
 
     private func row(_ title: String, _ control: NSView) -> NSView {
-        let label = NSTextField(labelWithString: title)
-        label.font = .systemFont(ofSize: 13, weight: .medium)
-        label.alignment = .right
-        label.widthAnchor.constraint(equalToConstant: 110).isActive = true
-        let row = NSStackView(views: [label, control])
-        row.alignment = .firstBaseline
-        row.spacing = 12
-        return row
+        DesktopSettingsRows.labeledRow(title, control, labelWidth: 110)
     }
 
     // MARK: Reflecting settings into controls (never writes)
@@ -113,7 +96,13 @@ public final class DesktopSettingsViewController: NSViewController {
         keepArrangedCheckbox.isEnabled = arrangement != .list
         let path = settings.backgroundImagePath
         removePhotoButton.isEnabled = path != nil
-        thumbnail.image = path.flatMap { NSImage(contentsOfFile: $0) }
+        // Reload only when the path changes; refreshes are frequent.
+        if !thumbnailLoaded || loadedPhotoPath != path {
+            loadedPhotoPath = path
+            thumbnailLoaded = true
+            photoLoadCount += path == nil ? 0 : 1
+            thumbnail.image = path.flatMap { NSImage(contentsOfFile: $0) }
+        }
     }
 
     // MARK: Actions

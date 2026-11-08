@@ -19,23 +19,11 @@ final class DesktopSettingsFormViewController: NSViewController {
     }
 
     override func loadView() {
-        let stack = NSStackView(views: schema.fields.map(row(for:)))
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 14
-        stack.edgeInsets = NSEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
+        var rows = schema.fields.map(row(for:))
         if schema.fields.isEmpty {
-            stack.addArrangedSubview(NSTextField(labelWithString: "This App has no settings."))
+            rows.append(NSTextField(labelWithString: "This App has no settings."))
         }
-        let root = NSView()
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        root.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: root.topAnchor),
-            stack.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            stack.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor)
-        ])
-        view = root
+        view = DesktopSettingsRows.formView(rows)
         refreshControls()
         // Read-only: refreshing controls never writes.
         subscription = settings.changes.sink { [weak self] _ in
@@ -47,10 +35,7 @@ final class DesktopSettingsFormViewController: NSViewController {
 
     private func row(for field: DesktopAppSettingsSchema.Field) -> NSView {
         let control = controlView(for: field)
-        let title = NSTextField(labelWithString: field.label)
-        title.font = .systemFont(ofSize: 13, weight: .medium)
-        var views: [NSView] = [NSStackView(views: [title, control])]
-        (views[0] as? NSStackView)?.spacing = 12
+        var views: [NSView] = [DesktopSettingsRows.labeledRow(field.label, control)]
         if let help = field.help {
             let note = NSTextField(wrappingLabelWithString: help)
             note.font = .systemFont(ofSize: 11)
