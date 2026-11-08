@@ -2279,6 +2279,7 @@
 		9B30C2E0E28BA7C6F230408B /* AgenticDeveloperHubSDKUI-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A2D6DCF1DCC4BC4671793A /* AgenticDeveloperHubSDKUI-macOS.framework */; };
 		9B5908E4E40788DAE7CEE38F /* CodableIgnored.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4100D0D03A453E2B3D9EF7B /* CodableIgnored.swift */; };
 		9B674252FA848980FE38AF24 /* ApiTokensRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DF6DA15CD59316DF515A59 /* ApiTokensRail.swift */; };
+		9B738B8A28C475977442FE92 /* MailRequestAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B440301915F14FB420B51250 /* MailRequestAccessTests.swift */; };
 		9B82477D9A99B6BB4D31BE37 /* AgenticDeveloperHubSDKCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99B0EDCF642AA70D3B9E629F /* AgenticDeveloperHubSDKCore.framework */; };
 		9BD34311DBF82129D857B3C0 /* TextDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F28502AABF01B6573136F74 /* TextDocumentTests.swift */; };
 		9BD35F7288493EC414E5A8D1 /* SpacingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C611BD89785906A14D1B6924 /* SpacingTests.swift */; };
@@ -8162,6 +8163,7 @@
 		B410A52B137BF0AFDDD8EDD3 /* SystemWindowContextsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowContextsModel.swift; sourceTree = "<group>"; };
 		B43374A495B78CA365628356 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		B43D7B3594D4EDC7F3BE2BDF /* SystemWindowContextError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowContextError.swift; sourceTree = "<group>"; };
+		B440301915F14FB420B51250 /* MailRequestAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailRequestAccessTests.swift; sourceTree = "<group>"; };
 		B441C49B5BDD18D8A290C6A9 /* PartnerJobsEditorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerJobsEditorModel.swift; sourceTree = "<group>"; };
 		B47297673548D8ECF2DC6314 /* AppendOnlyFileCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppendOnlyFileCursor.swift; sourceTree = "<group>"; };
 		B48078A10E533EE614E8B10D /* WindowActivationTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowActivationTarget.swift; sourceTree = "<group>"; };
@@ -15055,6 +15057,7 @@
 				8B8103A4A12CF4DEB6630194 /* MailClassificationTests.swift */,
 				DD3BB72625E02616850E56D2 /* MailCommandLineTests.swift */,
 				E407B2D3283E10FC7DCB73E6 /* MailIntegrationServiceTests.swift */,
+				B440301915F14FB420B51250 /* MailRequestAccessTests.swift */,
 				C3C88ABCE2E0C42696F740B2 /* MailSyncSettingsTests.swift */,
 				93441AF223D0CF8F9368C3CB /* MailToolSourceTests.swift */,
 			);
@@ -21174,6 +21177,7 @@
 				973727CC53C7A3332A833A43 /* MailClassificationTests.swift in Sources */,
 				0B035CEBDF34D2F1FC36D318 /* MailCommandLineTests.swift in Sources */,
 				BAC19F5164B74ECE0A5EF3C3 /* MailIntegrationServiceTests.swift in Sources */,
+				9B738B8A28C475977442FE92 /* MailRequestAccessTests.swift in Sources */,
 				DC0D9B81AB100D85B29ED802 /* MailSyncSettingsTests.swift in Sources */,
 				682255950015C619167BE4AC /* MailToolSourceTests.swift in Sources */,
 				2B738D55F8B94657676863FB /* ScriptedMailClient.swift in Sources */,

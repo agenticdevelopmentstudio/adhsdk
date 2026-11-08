@@ -20,6 +20,20 @@ public enum MailRequest: Codable, Sendable, Equatable {
     case getMessage(account: String, id: String)
     /// Messages by our id or Gmail's; labels by Gmail label id or exact name.
     case modifyLabels(account: String, messageIds: [String], add: [String], remove: [String])
+
+    /// True for the requests that read or label mail in accounts already signed in: everything
+    /// `MailCommandLine` and `MailToolSource` send. False for the ones that administer the
+    /// integration (the OAuth client, accounts, sign-in, sync settings), which a host keeps for
+    /// its own UI. The switch is exhaustive so a new request has to be placed on one side.
+    public var isMailboxAccess: Bool {
+        switch self {
+        case .listAccounts, .listLabels, .listMessages, .getMessage, .modifyLabels:
+            return true
+        case .providerStatus, .importOAuthClient, .removeProvider, .signIn, .cancelSignIn,
+             .removeAccount, .updateSettings, .syncNow:
+            return false
+        }
+    }
 }
 
 /// Which messages to list. `since`/`until` are inclusive ISO-8601 strings; `labels` (ids or
