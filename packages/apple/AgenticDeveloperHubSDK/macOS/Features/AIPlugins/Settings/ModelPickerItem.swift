@@ -1,5 +1,6 @@
 import Foundation
 import AIPluginKit
+import AgenticDeveloperHubSDKCore
 
 /// One model row's data for the chooser: its id plus everything known about it —
 /// the shared catalog's facts merged with this provider's terms and any curated
@@ -35,9 +36,11 @@ public struct ModelPickerItem: Equatable, Sendable {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
+    /// The chooser's "any" filter: `needle`'s characters appear in the id, in
+    /// order and case-sensitively (`SubsequenceMatch`). Only the id is searched —
+    /// a scattered-letter match against a paragraph of description matches nearly
+    /// every model, and the id is what the row shows and underlines.
     func matches(_ needle: String) -> Bool {
-        id.lowercased().contains(needle)
-            || (description?.lowercased().contains(needle) ?? false)
-            || (goodFor?.lowercased().contains(needle) ?? false)
+        SubsequenceMatch.indices(of: needle, in: id) != nil
     }
 }

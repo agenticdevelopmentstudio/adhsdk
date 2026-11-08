@@ -159,10 +159,15 @@ struct ModelChooserContentTests {
          ModelPickerItem(id: "mystery-7b")]
     }
 
-    @Test("filter's query keeps matching the id and the description")
+    @Test("filter's query is a case-sensitive, in-order match on the id")
     func filterQuery() {
         #expect(ModelChooserContent.filter(filterItems, query: "coder").map(\.id) == ["coder-7b"])
-        #expect(ModelChooserContent.filter(filterItems, query: "DRAFTING").map(\.id) == ["scribe-7b"])
+        // Letters in order, not side by side.
+        #expect(ModelChooserContent.filter(filterItems, query: "sb7").map(\.id) == ["scribe-7b"])
+        // Case-sensitive.
+        #expect(ModelChooserContent.filter(filterItems, query: "Coder").isEmpty)
+        // The description is no longer searched.
+        #expect(ModelChooserContent.filter(filterItems, query: "drafting").isEmpty)
         #expect(ModelChooserContent.filter(filterItems, query: "  ").count == 3)
     }
 
@@ -200,14 +205,15 @@ struct ModelChooserContentTests {
         #expect(warnFit.keeps("coder-7b"))
     }
 
-    @Test("the chosen model survives every filter")
+    @Test("the chosen model survives the facet and fit filters, not the query")
     func filterKeepsCurrentSelection() {
-        // Nothing may filter the current choice out of the list: the row that lands
-        // at 0 becomes the selection, and the filters re-run by themselves as sizes
-        // and blurbs arrive — so the chosen model could change with nobody touching
-        // anything.
+        // The facet and fit filters re-run by themselves as sizes and blurbs
+        // arrive, so they may not filter the current choice out. The query only
+        // changes when someone types, and a choice that doesn't match it goes.
         #expect(ModelChooserContent.filter(filterItems, query: "coder", keeping: "scribe-7b").map(\.id)
-            == ["coder-7b", "scribe-7b"])
+            == ["coder-7b"])
+        #expect(ModelChooserContent.filter(filterItems, query: "7b", keeping: "scribe-7b").map(\.id)
+            == ["coder-7b", "scribe-7b", "mystery-7b"])
         let fit = ModelChooserContent.FitFilter(
             sizes: ["scribe-7b": 51_000_000_000], physicalRAM: 64_000_000_000)
         #expect(ModelChooserContent.filter(

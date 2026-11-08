@@ -2656,6 +2656,7 @@
 		BCCCC9CE975007C2BCC8ABBA /* MoneyFieldViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A15E02B43BA34F30D6D3A67 /* MoneyFieldViewTests.swift */; };
 		BCE4C5C49B5413B83896D0A2 /* HostDiagnosticSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82E639B6F55036E0EBE616A8 /* HostDiagnosticSink.swift */; };
 		BCE73619817D6E7240883CF4 /* ContextEventFields.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3EE4D53E0B63CAAF3C3EA9 /* ContextEventFields.swift */; };
+		BCF34C4163DB61E0F7FE9405 /* SubsequenceMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6455A4CBA2791ABB1906602A /* SubsequenceMatch.swift */; };
 		BD45FAD8D853997D753BCD21 /* BillingRateResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA1368DFF35FFD7DF2F0FB6 /* BillingRateResolutionTests.swift */; };
 		BD4E2EE7C4C0043BF35AA8A0 /* IngestionErrorLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 717877E725278DBFB18757B8 /* IngestionErrorLogTests.swift */; };
 		BD852CBE138B6EA90CC83CF5 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF87B0CECB72941A6A3F0E77 /* Account.swift */; };
@@ -7149,6 +7150,7 @@
 		6441EE13F826445F4D087DC3 /* universalcontrol-configuration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "universalcontrol-configuration.plist"; sourceTree = "<group>"; };
 		6446C7EDE9B623F16CD88CFC /* ObservableChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableChatViewModelTests.swift; sourceTree = "<group>"; };
 		644840BAD4D184B2F686E803 /* AIProviderConfigKeysTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviderConfigKeysTests.swift; sourceTree = "<group>"; };
+		6455A4CBA2791ABB1906602A /* SubsequenceMatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubsequenceMatch.swift; sourceTree = "<group>"; };
 		64CD4EEB8F9EB4CAD605B3AC /* WorkActivityRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkActivityRecorder.swift; sourceTree = "<group>"; };
 		64D938A94392144A36464927 /* BillingSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillingSettingsPanel.swift; sourceTree = "<group>"; };
 		64DA6AE7A6F9522C238C2D64 /* JSONLImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONLImporter.swift; sourceTree = "<group>"; };
@@ -10810,6 +10812,7 @@
 				609848B4A7B6F32D3994ABA5 /* MathUtils.swift */,
 				8B06584F42BAC35106E27A9C /* SemanticVersion.swift */,
 				02BEED165FCFD8DF1A1565D8 /* SetupStamp.swift */,
+				6455A4CBA2791ABB1906602A /* SubsequenceMatch.swift */,
 				081D90F6BFF6751E148A74FA /* TextFolding.swift */,
 				4D9A0C780702308217D57A33 /* TextSubstitutionFilter.swift */,
 				C7EA69D5413C825D5D095A7F /* UniqueName.swift */,
@@ -21047,6 +21050,7 @@
 				201B8FED66B010D76ADAED13 /* SubprocessChannel+Run.swift in Sources */,
 				16F864C5CB6F1B88E4E1FCC5 /* SubprocessChannel.swift in Sources */,
 				7849CDAA9F2FB11F7C6D1365 /* SubprocessTransport.swift in Sources */,
+				BCF34C4163DB61E0F7FE9405 /* SubsequenceMatch.swift in Sources */,
 				3C0E6F0F0D91B8BC30AB753F /* SummarizeReplyDTO.swift in Sources */,
 				C7F2A72AA38161BB8A3AB973 /* SummaryPreferenceDTOs.swift in Sources */,
 				8C6C6086B92530EC1669A549 /* SyntaxRoleOverrides.swift in Sources */,

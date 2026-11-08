@@ -17,15 +17,50 @@ public enum AIProviderMigration {
         "com.mikefullerton.agenticdeveloperhubsdk.plugin.openai": "openai",
         "com.mikefullerton.agenticdeveloperhubsdk.plugin.openai-compatible": "custom",
         "com.mikefullerton.agenticdeveloperhubsdk.plugin.google": "gemini",
-        "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local": "claude-local",
-        // The plugin IDs from before the SDK was renamed, which settings
-        // written by an older build still carry.
-        "com.agentictoolkit.plugin.claude-api": "anthropic-api",
-        "com.agentictoolkit.plugin.openai": "openai",
-        "com.agentictoolkit.plugin.openai-compatible": "custom",
-        "com.agentictoolkit.plugin.google": "gemini",
-        "com.agentictoolkit.plugin.claude-local": "claude-local"
+        "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local": "claude-local"
     ]
+
+    /// The plugin identifier prefix from before the SDK was renamed. Settings
+    /// written by an older build still carry it, and no installed plugin answers
+    /// to it any more.
+    static let retiredPluginIdentifierPrefix = "com.agentictoolkit.plugin."
+    static let currentPluginIdentifierPrefix = "com.mikefullerton.agenticdeveloperhubsdk.plugin."
+
+    /// `identifier` under the current naming: a retired `com.agentictoolkit`
+    /// identifier becomes its renamed equivalent; anything else is returned as is.
+    public static func currentPluginIdentifier(_ identifier: String) -> String {
+        guard identifier.hasPrefix(retiredPluginIdentifierPrefix) else { return identifier }
+        return currentPluginIdentifierPrefix + identifier.dropFirst(retiredPluginIdentifierPrefix.count)
+    }
+
+    /// `configurations` with every retired plugin identifier renamed, or nil when
+    /// none carried one (so the caller writes nothing).
+    public static func renamingRetiredPluginIdentifiers(
+        _ configurations: [AIProviderConfiguration]
+    ) -> [AIProviderConfiguration]? {
+        var changed = false
+        let renamed = configurations.map { config -> AIProviderConfiguration in
+            let current = currentPluginIdentifier(config.pluginIdentifier)
+            guard current != config.pluginIdentifier else { return config }
+            changed = true
+            return AIProviderConfiguration(
+                id: config.id, name: config.name, pluginIdentifier: current, templateId: config.templateId)
+        }
+        return changed ? renamed : nil
+    }
+
+    /// Rewrite stored configurations that still name a plugin by its retired
+    /// identifier. Runs on every launch, because the one-time migration below
+    /// had already run on installs whose configurations were written before the
+    /// rename — leaving them pointing at a plugin that never loads, so their
+    /// chat failed with `pluginNotAvailable`. Field values, secrets and the model
+    /// are keyed by the configuration's id, so they carry over untouched.
+    @MainActor
+    public static func renameRetiredPluginIdentifiers() {
+        guard let renamed = renamingRetiredPluginIdentifiers(UserSettings.aiProviderConfigurations.value)
+        else { return }
+        UserSettings.aiProviderConfigurations.value = renamed
+    }
 
     public struct FieldWrite: Equatable {
         public let configId: UUID
@@ -52,7 +87,7 @@ public enum AIProviderMigration {
         for descriptor in descriptors {
             let values = oldValues(descriptor)
 
-            let templateId = legacyTemplateId[descriptor.identifier]
+            let templateId = legacyTemplateId[currentPluginIdentifier(descriptor.identifier)]
             let templates = descriptor.resolvedTemplates
             guard let template = templates.first(where: { $0.id == templateId }) ?? templates.first
             else { continue }
