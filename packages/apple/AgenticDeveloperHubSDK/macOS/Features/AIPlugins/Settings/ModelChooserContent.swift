@@ -8,9 +8,9 @@ import AIPluginKit
 public enum ModelChooserContent {
 
     /// Only OpenAI-shaped endpoints serve `GET {baseURL}/models`. Which providers
-    /// load their list live at all is `ProviderModelManager`'s call.
+    /// load their list live at all is `ProviderModels.manager`'s call.
     public static func supportsLiveModels(pluginIdentifier: String) -> Bool {
-        ProviderModelManager.isOpenAIStyle(pluginIdentifier: pluginIdentifier)
+        ProviderModels.isOpenAIStyle(pluginIdentifier: pluginIdentifier)
     }
 
     /// The listed models plus `current` when it isn't already present, so a

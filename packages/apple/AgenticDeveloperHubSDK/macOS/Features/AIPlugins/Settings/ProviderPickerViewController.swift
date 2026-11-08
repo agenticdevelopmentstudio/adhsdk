@@ -679,8 +679,10 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
         if let row {
             let template = row.available.template
             modelsKey = cacheKey(for: row)
+            let manager = modelManager(for: row)
             modelRows = resolvedModels(for: row).map { model in
-                ModelRow(name: model, info: AIModelCatalog.shared.resolve(model: model, template: template))
+                ModelRow(name: model, title: manager.displayName(for: model),
+                         info: AIModelCatalog.shared.resolve(model: model, template: template))
             }
         } else {
             modelsKey = nil
@@ -711,7 +713,7 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
 
     private func updateModelInfo(for model: ModelRow?) {
         let palette = view.resolvedThemeScope.palette
-        let content = model.map { ProviderPickerInfo.model(name: $0.name, info: $0.info, palette: palette) }
+        let content = model.map { ProviderPickerInfo.model(name: $0.title, info: $0.info, palette: palette) }
             ?? ProviderPickerInfo.placeholder(noModelText, palette: palette)
         modelInfoTextView.textStorage?.setAttributedString(content)
     }
@@ -741,8 +743,8 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
     /// The model manager for `row`'s template. The picker has no credentials (it
     /// chooses a provider before one is configured), so a keyed source falls back
     /// to its public catalog.
-    private func modelManager(for row: ProviderPickerRow) -> ProviderModelManager {
-        ProviderModelManager.forProvider(
+    private func modelManager(for row: ProviderPickerRow) -> any ProviderModelManager {
+        ProviderModels.manager(
             pluginIdentifier: row.available.pluginIdentifier, template: row.available.template,
             baseURL: nil, apiKey: nil)
     }
@@ -823,10 +825,12 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
 
 extension ProviderPickerViewController {
 
-    /// One row of the models table: the model's name plus the catalog metadata the
-    /// capability columns and the description pane read.
+    /// One row of the models table: the model's id, the name it is shown by
+    /// (`Opus 5.5`), and the catalog metadata the capability columns and the
+    /// description pane read.
     fileprivate struct ModelRow {
         let name: String
+        let title: String
         let info: AIModelCatalog.ResolvedModel
     }
 }
@@ -852,7 +856,7 @@ extension ProviderPickerViewController: NSTableViewDataSource, NSTableViewDelega
                             color: palette.accentColor, alignment: .center)
             }
             return cell(in: tableView, for: column.identifier,
-                        text: entry.name, color: palette.primaryTextColor)
+                        text: entry.title, color: palette.primaryTextColor)
         }
         guard row >= 0, row < filteredRows.count else { return nil }
         let entry = filteredRows[row]

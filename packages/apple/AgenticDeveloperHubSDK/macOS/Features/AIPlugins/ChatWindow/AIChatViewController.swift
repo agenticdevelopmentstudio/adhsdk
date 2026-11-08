@@ -430,14 +430,17 @@ public final class AIChatViewController: NSViewController, Themeable {
         // static list is empty; others when they ship a list or already have a model
         // chosen.
         var offersModels = false
+        var modelName = currentModel
         if let config = selectedConfiguration, let template {
-            offersModels = ProviderModelManager.forProvider(
+            let manager = ProviderModels.manager(
                 pluginIdentifier: config.pluginIdentifier, template: template,
-                baseURL: nil, apiKey: nil).hasLiveSource
+                baseURL: nil, apiKey: nil)
+            offersModels = manager.hasLiveSource
+            modelName = manager.displayName(for: manager.resolve(currentModel))
         }
         chooseModelButton.isEnabled = template != nil
             && (offersModels || !(template?.models.isEmpty ?? true) || !currentModel.isEmpty)
-        modelValue.stringValue = currentModel.isEmpty ? "None chosen" : currentModel
+        modelValue.stringValue = currentModel.isEmpty ? "None chosen" : modelName
         chooseButton.isEnabled = selectedConfiguration != nil
         applyModelRowTheme(view.resolvedThemeScope.palette)
         onSelectionChange?()

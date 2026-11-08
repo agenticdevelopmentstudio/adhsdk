@@ -54,6 +54,30 @@ struct ProviderModelListTests {
         #expect(AnthropicModelFamily.family(of: "gpt-4o") == nil)
     }
 
+    @Test("Anthropic display names across both naming eras")
+    func anthropicDisplayName() {
+        #expect(AnthropicModelFamily.displayName(of: "claude-opus-5-5") == "Opus 5.5")
+        #expect(AnthropicModelFamily.displayName(of: "claude-fable-5-1") == "Fable 5.1")
+        #expect(AnthropicModelFamily.displayName(of: "claude-opus-5") == "Opus 5")
+        #expect(AnthropicModelFamily.displayName(of: "claude-haiku-4-5-20251001") == "Haiku 4.5 (2025-10-01)")
+        #expect(AnthropicModelFamily.displayName(of: "claude-3-5-sonnet-20241022") == "Sonnet 3.5 (2024-10-22)")
+        #expect(AnthropicModelFamily.displayName(of: "opus") == "Opus")
+        #expect(AnthropicModelFamily.displayName(of: "gpt-4o") == nil)
+    }
+
+    @Test("a bare alias resolves to the latest model of its family")
+    func aliasResolution() {
+        let list = ProviderModelList(models: [
+            Self.model("claude-opus-4-8", "2026-05-28"),
+            Self.model("claude-opus-5-5", "2026-09-22"),
+            Self.model("claude-sonnet-5-5", "2026-09-28")
+        ])
+        #expect(AnthropicModelManager.resolve("opus", in: list) == "claude-opus-5-5")
+        #expect(AnthropicModelManager.resolve("sonnet", in: list) == "claude-sonnet-5-5")
+        #expect(AnthropicModelManager.resolve("haiku", in: list) == "haiku")
+        #expect(AnthropicModelManager.resolve("claude-opus-4-8", in: list) == "claude-opus-4-8")
+    }
+
     @Test("parses the Anthropic /v1/models body")
     func parseAnthropic() throws {
         let body = """

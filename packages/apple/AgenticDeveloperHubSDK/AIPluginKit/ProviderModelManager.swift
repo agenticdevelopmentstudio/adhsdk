@@ -145,72 +145,50 @@ public struct FallbackModelSource: ProviderModelSource {
     }
 }
 
-/// One provider configuration's models: every model it serves and the latest
-/// version of each, loaded live from the provider (or a public catalog) and
-/// cached, with the descriptor's static list as the seed until the first load.
+/// One provider configuration's models: every model it serves, the latest
+/// version of each, and what to call them.
 ///
-/// Which source a provider uses is decided once, in `forProvider`, by the
-/// descriptor template's id — the stable key for "which service is this".
+/// Each provider has its own manager (`AnthropicModelManager`,
+/// `OpenAICompatibleModelManager`, `StaticModelManager`), and
+/// `ProviderModels.manager(...)` picks it from the descriptor template, the
+/// stable key for "which service is this". What they share (the live source,
+/// the cache, the descriptor's list as the seed) is this protocol's extension.
+///
+/// When the list updates: never on a timer. `list` answers at once from the
+/// last successful load, cached across launches, or the descriptor's list
+/// before the first. `refresh()` loads it live, and every view that shows a
+/// model list calls it when it opens (the model chooser, the provider picker,
+/// the persona terminal chat), so the list is as fresh as the last time one
+/// was looked at.
 @MainActor
-public final class ProviderModelManager {
+public protocol ProviderModelManager: AnyObject {
+    /// Where the live list comes from, or nil for a provider with none.
+    var source: (any ProviderModelSource)? { get }
+    /// The descriptor's static list, shown until the first live load.
+    var seed: ProviderModelList { get }
+    /// The name a person reads for `id`.
+    func displayName(for id: String) -> String
+    /// The listed model `id` stands for (an alias resolved to the model it
+    /// runs), or `id` unchanged.
+    func resolve(_ id: String) -> String
+}
 
-    /// source cache key -> last successfully loaded list.
-    private static let cache = UserSetting<[String: ProviderModelList]>(
+/// The cache every manager shares: source cache key -> last loaded list.
+@MainActor
+enum ProviderModelCache {
+    static let setting = UserSetting<[String: ProviderModelList]>(
         "aiplugin.providerModelCache", default: [:])
+}
 
-    public let source: (any ProviderModelSource)?
-    private let seed: ProviderModelList
-
-    public init(source: (any ProviderModelSource)?, seed: [String]) {
-        self.source = source
-        self.seed = ProviderModelList(ids: seed)
-    }
-
-    /// The manager for a provider configuration.
-    ///
-    /// - `anthropic-api`, `claude-max-token`: the account's `/v1/models`, falling
-    ///   back to models.dev when the key is missing or the call fails.
-    /// - `claude-local`: models.dev's Anthropic list (the CLI has no listing of
-    ///   its own; it accepts any full model id through `--model`).
-    /// - OpenAI and OpenAI-compatible plugins: the endpoint's `/models`.
-    /// - anything else: the descriptor's static list, no live source.
-    public static func forProvider(pluginIdentifier: String,
-                                   template: AIPluginDescriptor.ProviderTemplate,
-                                   baseURL: String?, apiKey: String?) -> ProviderModelManager {
-        let resolvedBase = (baseURL?.isEmpty == false ? baseURL : nil)
-            ?? template.defaultValues["baseURL"] ?? ""
-        let modelsDev = ModelsDevModelsSource(provider: "anthropic")
-        let source: (any ProviderModelSource)?
-        switch template.id {
-        case "anthropic-api", "claude-max-token":
-            let oauth = template.defaultValues["authMode"] == "bearer-oauth"
-            source = FallbackModelSource([
-                AnthropicModelsSource(baseURL: resolvedBase, apiKey: apiKey ?? "", oauth: oauth),
-                modelsDev
-            ])
-        case "claude-local":
-            source = ModelsDevModelsSource(provider: "anthropic", excludeDatedSnapshots: true)
-        default:
-            if ProviderModelManager.isOpenAIStyle(pluginIdentifier: pluginIdentifier), !resolvedBase.isEmpty {
-                source = OpenAICompatibleModelsSource(baseURL: resolvedBase, apiKey: apiKey)
-            } else {
-                source = nil
-            }
-        }
-        return ProviderModelManager(source: source, seed: template.models)
-    }
-
-    /// True for plugins whose endpoints answer OpenAI's `GET /models`.
-    public nonisolated static func isOpenAIStyle(pluginIdentifier: String) -> Bool {
-        pluginIdentifier.hasSuffix(".openai") || pluginIdentifier.hasSuffix(".openai-compatible")
-    }
-
+extension ProviderModelManager {
     /// Whether this provider's list can be loaded live.
     public var hasLiveSource: Bool { source != nil }
 
     /// The last loaded list, else the descriptor's static one.
     public var list: ProviderModelList {
-        if let source, let cached = Self.cache.value[source.cacheKey], !cached.isEmpty { return cached }
+        if let source, let cached = ProviderModelCache.setting.value[source.cacheKey], !cached.isEmpty {
+            return cached
+        }
         return seed
     }
 
@@ -220,11 +198,121 @@ public final class ProviderModelManager {
     public func refresh() async -> ProviderModelList {
         guard let source else { return list }
         if let fresh = await source.fetch(), !fresh.isEmpty {
-            var all = Self.cache.value
+            var all = ProviderModelCache.setting.value
             all[source.cacheKey] = fresh
-            Self.cache.value = all
+            ProviderModelCache.setting.value = all
             return fresh
         }
         return list
+    }
+}
+
+/// Anthropic's models, for the API, a Claude subscription token and the local
+/// Claude CLI: the live list, `Opus 5.5`-style names, and the CLI's bare
+/// aliases (`opus`) resolved to the newest model of their family.
+@MainActor
+public final class AnthropicModelManager: ProviderModelManager {
+    /// How this configuration reaches Anthropic, which decides the source.
+    public enum Access: Sendable {
+        /// An API key (`x-api-key`) or a subscription token (`oauth`): the
+        /// account's own `/v1/models`, falling back to models.dev.
+        case api(baseURL: String, apiKey: String?, oauth: Bool)
+        /// The local Claude CLI: no listing of its own (it accepts any full id
+        /// through `--model`), so models.dev's catalog without dated snapshots.
+        case claudeCLI
+    }
+
+    public let source: (any ProviderModelSource)?
+    public let seed: ProviderModelList
+
+    public init(access: Access, seed: [String]) {
+        switch access {
+        case let .api(baseURL, apiKey, oauth):
+            source = FallbackModelSource([
+                AnthropicModelsSource(baseURL: baseURL, apiKey: apiKey ?? "", oauth: oauth),
+                ModelsDevModelsSource(provider: "anthropic")
+            ])
+        case .claudeCLI:
+            source = ModelsDevModelsSource(provider: "anthropic", excludeDatedSnapshots: true)
+        }
+        self.seed = ProviderModelList(models: seed.map {
+            ProviderModel(id: $0, family: AnthropicModelFamily.family(of: $0))
+        })
+    }
+
+    public func displayName(for id: String) -> String {
+        AnthropicModelFamily.displayName(of: id) ?? id
+    }
+
+    public func resolve(_ id: String) -> String {
+        Self.resolve(id, in: list)
+    }
+
+    /// `id` when it is a full model id; for a bare alias, the latest model of
+    /// that family in `list`, or the alias itself when the list has none.
+    public nonisolated static func resolve(_ id: String, in list: ProviderModelList) -> String {
+        guard let family = AnthropicModelFamily.aliasFamily(of: id) else { return id }
+        return list.latestIDs.first { AnthropicModelFamily.family(of: $0) == family } ?? id
+    }
+}
+
+/// An OpenAI or OpenAI-compatible endpoint (OpenAI, Groq, Ollama, ...): its
+/// `/models`, ids only, every one current.
+@MainActor
+public final class OpenAICompatibleModelManager: ProviderModelManager {
+    public let source: (any ProviderModelSource)?
+    public let seed: ProviderModelList
+
+    public init(baseURL: String, apiKey: String?, seed: [String]) {
+        source = baseURL.isEmpty ? nil : OpenAICompatibleModelsSource(baseURL: baseURL, apiKey: apiKey)
+        self.seed = ProviderModelList(ids: seed)
+    }
+
+    public func displayName(for id: String) -> String { id }
+    public func resolve(_ id: String) -> String { id }
+}
+
+/// A provider with no listing: the descriptor's list is the list.
+@MainActor
+public final class StaticModelManager: ProviderModelManager {
+    public let source: (any ProviderModelSource)? = nil
+    public let seed: ProviderModelList
+
+    public init(seed: [String]) { self.seed = ProviderModelList(ids: seed) }
+
+    public func displayName(for id: String) -> String { id }
+    public func resolve(_ id: String) -> String { id }
+}
+
+/// Picks a provider configuration's model manager.
+public enum ProviderModels {
+    /// The manager for a provider configuration, chosen by its template:
+    /// `anthropic-api` and `claude-max-token` use Anthropic over the API,
+    /// `claude-local` Anthropic through the CLI, an OpenAI-style plugin its
+    /// endpoint, and anything else its static list.
+    @MainActor
+    public static func manager(pluginIdentifier: String,
+                               template: AIPluginDescriptor.ProviderTemplate,
+                               baseURL: String?, apiKey: String?) -> any ProviderModelManager {
+        let resolvedBase = (baseURL?.isEmpty == false ? baseURL : nil)
+            ?? template.defaultValues["baseURL"] ?? ""
+        switch template.id {
+        case "anthropic-api", "claude-max-token":
+            let oauth = template.defaultValues["authMode"] == "bearer-oauth"
+            return AnthropicModelManager(
+                access: .api(baseURL: resolvedBase, apiKey: apiKey, oauth: oauth), seed: template.models)
+        case "claude-local":
+            return AnthropicModelManager(access: .claudeCLI, seed: template.models)
+        default:
+            if isOpenAIStyle(pluginIdentifier: pluginIdentifier) {
+                return OpenAICompatibleModelManager(baseURL: resolvedBase, apiKey: apiKey, seed: template.models)
+            }
+            return StaticModelManager(seed: template.models)
+        }
+    }
+
+    /// True for plugins whose endpoints answer OpenAI's `GET /models`.
+    public static func isOpenAIStyle(pluginIdentifier: String) -> Bool {
+        pluginIdentifier.hasSuffix(".openai") || pluginIdentifier.hasSuffix(".openai-compatible")
     }
 }

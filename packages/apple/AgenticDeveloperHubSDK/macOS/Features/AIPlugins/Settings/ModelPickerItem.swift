@@ -11,10 +11,14 @@ import AgenticDeveloperHubSDKCore
 /// reaches the UI without touching this type.
 public struct ModelPickerItem: Equatable, Sendable {
     public let id: String
+    /// What the row shows: the provider's name for the model (`Opus 5.5`), or
+    /// the id when it has none.
+    public let title: String
     public let info: AIModelCatalog.ResolvedModel
 
-    public init(id: String, info: AIModelCatalog.ResolvedModel) {
+    public init(id: String, title: String? = nil, info: AIModelCatalog.ResolvedModel) {
         self.id = id
+        self.title = title ?? id
         self.info = info
     }
 
@@ -36,11 +40,18 @@ public struct ModelPickerItem: Equatable, Sendable {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
-    /// The chooser's "any" filter: `needle`'s characters appear in the id, in
-    /// order and case-sensitively (`SubsequenceMatch`). Only the id is searched —
-    /// a scattered-letter match against a paragraph of description matches nearly
-    /// every model, and the id is what the row shows and underlines.
+    /// The chooser's "any" filter: `needle`'s characters appear in the title or
+    /// the id, in order and case-sensitively (`SubsequenceMatch`). Only those two
+    /// are searched — a scattered-letter match against a paragraph of description
+    /// matches nearly every model.
     func matches(_ needle: String) -> Bool {
-        SubsequenceMatch.indices(of: needle, in: id) != nil
+        SubsequenceMatch.indices(of: needle, in: title) != nil
+            || SubsequenceMatch.indices(of: needle, in: id) != nil
+    }
+
+    /// The text the row shows for `needle`: the title, or the id when only the
+    /// id matched, so the underlined letters always explain the match.
+    func rowText(for needle: String) -> String {
+        needle.isEmpty || SubsequenceMatch.indices(of: needle, in: title) != nil ? title : id
     }
 }
