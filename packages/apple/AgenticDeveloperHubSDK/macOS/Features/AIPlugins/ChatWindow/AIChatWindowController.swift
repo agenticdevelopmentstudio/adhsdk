@@ -107,16 +107,21 @@ public final class AIChatWindowController: SingleWindowController, NSToolbarDele
         window.title = AIChatViewController.title(for: content.selection)
     }
 
-    /// A new chat opens a step down and right of the one in front, rather than
-    /// exactly on top of it, so it is visibly a second window.
+    /// A new chat opens a cascade step down and right of the one in front,
+    /// rather than exactly on top of it, so it is visibly a second window.
+    /// `cascadeTopLeft(from:)`, as the project windows use, keeps it inside the
+    /// screen's visible frame however many chats are opened or wherever the
+    /// front one is parked.
     public override func placeWindowWithoutSavedFrame(_ window: NSWindow) {
         let front = NSApp.orderedWindows.first {
             $0 !== window && $0.isVisible
                 && ($0.windowController as? AIChatWindowController) != nil
         }
         guard let front else { return }
-        let topLeft = NSPoint(x: front.frame.minX + 24, y: front.frame.maxY - 24)
-        window.setFrameTopLeftPoint(topLeft)
+        // The first call puts this window's top left on the front chat's and
+        // answers the next cascade step; the second moves it there.
+        let next = window.cascadeTopLeft(from: NSPoint(x: front.frame.minX, y: front.frame.maxY))
+        window.cascadeTopLeft(from: next)
     }
 
     public override func windowWillClose(_ notification: Notification) {
