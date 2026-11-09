@@ -132,21 +132,15 @@ struct GmailSettingsView: View {
     }
 
     private func confirmRemove(_ account: MailAccount) {
-        let alert = NSAlert()
-        alert.messageText = "Remove \(account.email)?"
-        alert.informativeText = "This signs the account out of Google, removes its stored sign-in "
-            + "and deletes its mail from this Mac."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "Remove")
-        alert.addButton(withTitle: "Cancel")
-        alert.buttons.first?.hasDestructiveAction = true
-        let remove = { Task { await model.remove(accountId: account.id) } }
-        if let window = NSApp.keyWindow {
-            alert.beginSheetModal(for: window) { response in
-                if response == .alertFirstButtonReturn { _ = remove() }
-            }
-        } else if alert.runModal() == .alertFirstButtonReturn {
-            _ = remove()
+        // Cancel is the default (Return) and Esc declines too: `confirmDestructive`.
+        ComposableSettings.Alerts.confirmDestructive(
+            "Remove \(account.email)?",
+            detail: "This signs the account out of Google, removes its stored sign-in "
+                + "and deletes its mail from this Mac.",
+            actionTitle: "Remove", on: NSApp.keyWindow
+        ) { confirmed in
+            guard confirmed else { return }
+            Task { await model.remove(accountId: account.id) }
         }
     }
 

@@ -105,17 +105,14 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
             RefusalFeedback.announce()
             return
         }
-        let alert = NSAlert()
-        alert.messageText = "Remove Gmail?"
-        alert.informativeText = "This removes the OAuth client and every connected Gmail account "
-            + "from this Mac, along with their stored sign-ins."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "Remove")
-        alert.addButton(withTitle: "Cancel")
-        alert.buttons.first?.hasDestructiveAction = true
-
-        let confirmed: () -> Void = { [weak self] in
-            guard let self else { return }
+        // Cancel is the default (Return) and Esc declines too: `confirmDestructive`.
+        ComposableSettings.Alerts.confirmDestructive(
+            "Remove Gmail?",
+            detail: "This removes the OAuth client and every connected Gmail account "
+                + "from this Mac, along with their stored sign-ins.",
+            actionTitle: "Remove", on: view.window
+        ) { [weak self] confirmed in
+            guard confirmed, let self else { return }
             // Unknown (not loaded yet, or the load failed) counts as configured: removing an
             // integration that is not there is harmless, skipping one that is leaks its secrets.
             let mayBeConfigured = self.model.provider?.configured != false
@@ -127,13 +124,6 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
                 self.model.dismissError()
             }
             self.rebuildPanels()
-        }
-        if let window = view.window {
-            alert.beginSheetModal(for: window) { response in
-                if response == .alertFirstButtonReturn { confirmed() }
-            }
-        } else if alert.runModal() == .alertFirstButtonReturn {
-            confirmed()
         }
     }
 }
