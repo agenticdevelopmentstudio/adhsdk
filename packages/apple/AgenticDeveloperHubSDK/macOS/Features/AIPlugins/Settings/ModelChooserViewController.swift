@@ -528,7 +528,11 @@ public final class ModelChooserViewController: NSViewController {
            !confirmLargeModel(prompt) {
             return   // Cancel: stay in the chooser, selection unchanged.
         }
-        finish(with: selectedModel)
+        // A stored alias (`sonnet`) opens on the model it runs today. Choosing
+        // that same row keeps the alias, so the connection goes on following the
+        // newest of the family instead of being pinned to today's release.
+        let unchanged = selectedModel == modelManager.resolve(context.currentModel)
+        finish(with: unchanged ? context.currentModel : selectedModel)
     }
 
     @objc private func cancelTapped() {
