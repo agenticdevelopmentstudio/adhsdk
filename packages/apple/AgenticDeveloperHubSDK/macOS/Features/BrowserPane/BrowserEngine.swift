@@ -196,8 +196,8 @@ public struct BrowserResolvedJar {
 public struct BrowserEngineConfiguration {
     /// The settings the engine follows live.
     public let settings: SettingsStore
-    /// Where the page's console goes; owned by the pane, so it outlives an
-    /// engine rebuilt under it.
+    /// Where the page's console goes: one per tab, handed on by the pane to
+    /// the engine a rebuild puts in that tab, so it outlives the engine.
     public let consoleLog: BrowserConsoleLog
     /// The store the engine keeps its session in.
     public let jar: BrowserResolvedJar

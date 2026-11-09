@@ -107,13 +107,14 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     /// A popup's engine: its view makes no browser of its own, and Chromium
     /// creates the popup's browser into it once `opener` hands the view back
     /// from its popup decision, in the opener's session. Everything else —
-    /// settings, console, cookie policy — is the opener's.
+    /// settings, cookie policy — is the opener's; the console is its own.
     convenience init(popupOf opener: ChromiumBrowserEngine) {
         let options = ChromiumBrowserOptions()
         options.cachePath = opener.options.cachePath
         options.acceptsCookies = opener.browserView.acceptsCookies
         self.init(
-            settings: opener.settings, consoleLog: opener.consoleLog,
+            // The popup is a tab of its own, with a console of its own.
+            settings: opener.settings, consoleLog: BrowserConsoleLog(),
             capturesConsole: opener.capturesConsole, options: options, isPopup: true
         )
     }

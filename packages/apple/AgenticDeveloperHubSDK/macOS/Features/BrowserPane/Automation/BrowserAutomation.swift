@@ -100,9 +100,10 @@ public final class BrowserAutomation: NSObject {
     public static let maximumScreenshotSide: CGFloat = 1568
 
     /// The page being driven. Replaced, never mutated, when the pane rebuilds
-    /// its engine onto another storage jar — see `retarget(to:)`.
+    /// its engine onto another storage jar — see `retarget(to:console:)`.
     public private(set) var driver: BrowserPageDriver
-    public let console: BrowserConsoleLog
+    /// The console of the page being driven; moves with `driver`.
+    public private(set) var console: BrowserConsoleLog
     /// Whether the page's console is being captured at all. Set by the pane
     /// from the Capture Page Console setting it built the current web view
     /// with, so the console tool can say capture is off rather than report
@@ -131,7 +132,8 @@ public final class BrowserAutomation: NSObject {
     /// Points the automation at a new page: the pane's handle, the model's
     /// tools and the drive badge all reach the page through this one object,
     /// so a pane that swaps its engine moves them all by moving this.
-    public func retarget(to driver: BrowserPageDriver) {
+    public func retarget(to driver: BrowserPageDriver, console: BrowserConsoleLog) {
+        self.console = console
         guard driver !== self.driver else { return }
         self.driver = driver
         observeLoading()

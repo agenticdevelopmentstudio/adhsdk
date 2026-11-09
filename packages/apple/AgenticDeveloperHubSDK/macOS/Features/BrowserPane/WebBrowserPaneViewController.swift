@@ -147,9 +147,11 @@ open class WebBrowserPaneViewController: NSViewController {
         isEventsPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
     }
 
-    /// What the page wrote to `console.*` since the last navigation. The
-    /// pane's, so it outlives an engine rebuilt under it.
-    public let consoleLog = BrowserConsoleLog()
+    /// What the page in front wrote to `console.*` since its last
+    /// navigation. Each tab's engine keeps its own, so one tab's messages are
+    /// never reported as another's; a rebuild hands each tab's log on to its
+    /// new engine, so it outlives the engine all the same.
+    public var consoleLog: BrowserConsoleLog { engine.consoleLog }
     /// What this pane delivered to its page, withheld from it, and did around
     /// it (spec section 12). In memory only, and recorded in every build; only
     /// debug builds have a pane that shows it.
@@ -262,10 +264,12 @@ open class WebBrowserPaneViewController: NSViewController {
         self.resolvedJar = jar
         self.capturesConsole = capturesConsole
         self.builtConstructionSettings = BrowserSettings.constructionSnapshot(in: settings)
-        let configuration = BrowserEngineConfiguration(
-            settings: settings, consoleLog: consoleLog, jar: jar, capturesConsole: capturesConsole
-        )
-        let first = makeEngine(configuration)
+        // A fresh console log per engine (`consoleLog`).
+        func configuration() -> BrowserEngineConfiguration {
+            BrowserEngineConfiguration(
+                settings: settings, consoleLog: BrowserConsoleLog(), jar: jar, capturesConsole: capturesConsole)
+        }
+        let first = makeEngine(configuration())
         self.engine = first
         // Every remembered tab gets an engine now and its page when it is
         // first brought forward (`activate`), so a pane that comes back with
@@ -274,7 +278,7 @@ open class WebBrowserPaneViewController: NSViewController {
         let selected = min(max(stored.selectedIndex, 0), max(stored.tabs.count - 1, 0))
         var restored: [BrowserTab] = []
         for (index, entry) in stored.tabs.enumerated() {
-            let tabEngine = index == 0 ? first : makeEngine(configuration)
+            let tabEngine = index == 0 ? first : makeEngine(configuration())
             // The front tab with no address falls back to the Home Page
             // (`restorationURL`, below); a tab behind it was on a blank page.
             let url = entry.url.flatMap { URL(string: $0, encodingInvalidCharacters: false) }
@@ -515,6 +519,8 @@ open class WebBrowserPaneViewController: NSViewController {
         // Where each tab was: a navigation still held for the old engine's
         // rules is where it was going, so it wins over the page it showed;
         // a tab never brought forward keeps the page it is waiting to load.
+        // Each tab's console goes on to its new engine (`consoleLog`).
+        let consoleLogs = tabs.map { $0.engine.consoleLog }
         let destinations = tabs.map { tab -> URL? in
             let shown = tab.engine.url.flatMap { $0 == Self.blankPage ? nil : $0 }
             return tab.engine.heldLoadURL ?? shown ?? tab.requestedURL ?? tab.pendingURL
@@ -529,13 +535,14 @@ open class WebBrowserPaneViewController: NSViewController {
         resolvedJar = jar
         self.capturesConsole = capturesConsole
         builtConstructionSettings = BrowserSettings.constructionSnapshot(in: settings)
-        // What the old engine captured is not this one's to report.
-        if !capturesConsole { consoleLog.clear() }
         jarLabel = jar.jarID == nil ? nil : label
         paneContext.jars?.noteUse(of: jar.jarID, by: self)
-        let configuration = currentConfiguration
-        for (tab, destination) in zip(tabs, destinations) {
-            let made = makeEngine(configuration)
+        for (index, tab) in tabs.enumerated() {
+            let destination = destinations[index]
+            // What the old engine captured is not the new one's to report
+            // when capture is now off.
+            let made = makeEngine(configuration(
+                consoleLog: capturesConsole ? consoleLogs[index] : BrowserConsoleLog()))
             tab.engine = made
             tab.resetVisit()
             wireEngine(made)
@@ -546,7 +553,7 @@ open class WebBrowserPaneViewController: NSViewController {
             tab.pendingURL = destination ?? (tab === activeTab ? nil : Self.blankPage)
         }
         engine = activeTab.engine
-        builtAutomation?.retarget(to: engine)
+        builtAutomation?.retarget(to: engine, console: engine.consoleLog)
         builtAutomation?.isConsoleCaptureOn = capturesConsole
         applyCookiePolicy()
         observeSettings()
@@ -563,8 +570,13 @@ open class WebBrowserPaneViewController: NSViewController {
         startLoad(destination, in: activeTab)
     }
 
-    /// What every engine the pane makes now is made from.
+    /// What every engine the pane makes now is made from, with a console log
+    /// of its own.
     private var currentConfiguration: BrowserEngineConfiguration {
+        configuration(consoleLog: BrowserConsoleLog())
+    }
+
+    private func configuration(consoleLog: BrowserConsoleLog) -> BrowserEngineConfiguration {
         BrowserEngineConfiguration(
             settings: settings, consoleLog: consoleLog, jar: resolvedJar, capturesConsole: capturesConsole)
     }
@@ -877,7 +889,7 @@ open class WebBrowserPaneViewController: NSViewController {
         let responderWasInPage = pageHolds(viewIfLoaded?.window?.firstResponder)
         activeTab = tab
         engine = tab.engine
-        builtAutomation?.retarget(to: engine)
+        builtAutomation?.retarget(to: engine, console: engine.consoleLog)
         // A half-typed address was meant for the tab being left.
         if addressField.currentEditor() != nil { addressField.abortEditing() }
         let shown = engine.url ?? tab.requestedURL ?? tab.pendingURL
@@ -984,7 +996,7 @@ open class WebBrowserPaneViewController: NSViewController {
         tab.content.show(made.view)
         if tab === activeTab {
             engine = made
-            builtAutomation?.retarget(to: made)
+            builtAutomation?.retarget(to: made, console: made.consoleLog)
         }
     }
 
@@ -1088,8 +1100,9 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
             retitle(tab)
         }
         persistTabs()
+        // Every tab's console starts over with its page, front or not.
+        engine.consoleLog.clear()
         guard isFront(engine) else { return }
-        consoleLog.clear()
         rememberAddress()
         jarLabelGate.navigationDidCommit()
     }

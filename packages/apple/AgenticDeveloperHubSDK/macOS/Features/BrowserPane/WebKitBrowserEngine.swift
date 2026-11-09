@@ -257,8 +257,10 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// (`installUserScripts()` clears it), so the popup gets a fresh one.
     convenience init(popupOf opener: WebKitBrowserEngine, configuration webConfiguration: WKWebViewConfiguration) {
         let controller = WKUserContentController()
+        // The popup is a tab of its own, with a console of its own.
+        let consoleLog = BrowserConsoleLog()
         if opener.capturesConsole {
-            controller.add(opener.consoleLog, name: BrowserConsoleLog.handlerName)
+            controller.add(consoleLog, name: BrowserConsoleLog.handlerName)
         }
         webConfiguration.userContentController = controller
         let inherited = opener.appliedThirdPartyContent.map {
@@ -266,7 +268,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         }
         self.init(
             webConfiguration: webConfiguration, settings: opener.settings,
-            consoleLog: opener.consoleLog, capturesConsole: opener.capturesConsole,
+            consoleLog: consoleLog, capturesConsole: opener.capturesConsole,
             contentRuleListProvider: opener.contentRuleListProvider, inheritedRules: inherited
         )
     }
