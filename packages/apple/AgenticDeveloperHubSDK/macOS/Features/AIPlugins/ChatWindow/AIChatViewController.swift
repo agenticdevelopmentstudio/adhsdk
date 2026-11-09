@@ -85,6 +85,9 @@ public final class AIChatViewController: NSViewController, Themeable {
     private var chatAtTop: NSLayoutConstraint?
 
     private var themeObserver: ThemePaletteObserver?
+    /// Follows add/remove/rename edits in Settings, so an open chat never offers a
+    /// connection that was deleted or misses one that was added.
+    private var configurationsObserver: UserSettingObserver<[AIProviderConfiguration]>?
     private var chatView: ChatView?
 
     /// The window's initial content size. Not `preferredContentSize`: setting that
@@ -274,6 +277,9 @@ public final class AIChatViewController: NSViewController, Themeable {
     public override func viewDidLoad() {
         super.viewDidLoad()
         reloadProviders()
+        configurationsObserver = UserSettingObserver(UserSettings.aiProviderConfigurations) { [weak self] _ in
+            self?.refresh()
+        }
     }
 
     /// Hidden means gone, not collapsed: the configuration view leaves the layout
