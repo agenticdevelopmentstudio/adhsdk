@@ -240,12 +240,19 @@ extension ProviderModelManager {
     /// a fallback answered, a list from a more authoritative source stands.
     @discardableResult
     public func refresh() async -> ProviderModelList {
-        guard let source else { return list }
-        if let fresh = await source.load() {
-            var all = ProviderModelCache.setting.value
-            all[fresh.cacheKey] = fresh.list
-            ProviderModelCache.setting.value = all
-        }
+        await refreshLive()
+        return list
+    }
+
+    /// Loads and caches the current list like `refresh()`, but answers nil when
+    /// no source could be reached, rather than the cached or static list a
+    /// caller cannot tell from a successful load.
+    @discardableResult
+    public func refreshLive() async -> ProviderModelList? {
+        guard let source, let fresh = await source.load() else { return nil }
+        var all = ProviderModelCache.setting.value
+        all[fresh.cacheKey] = fresh.list
+        ProviderModelCache.setting.value = all
         return list
     }
 }
