@@ -432,9 +432,10 @@ public final class AIChatViewController: NSViewController, Themeable {
         var offersModels = false
         var modelName = currentModel
         if let config = selectedConfiguration, let template {
+            let values = connectionValues(config: config, template: template)
             let manager = ProviderModels.manager(
                 pluginIdentifier: config.pluginIdentifier, template: template,
-                baseURL: nil, apiKey: nil)
+                baseURL: values["baseURL"], apiKey: values["apiKey"])
             offersModels = manager.hasLiveSource
             modelName = manager.displayName(for: manager.resolve(currentModel))
         }
@@ -446,14 +447,22 @@ public final class AIChatViewController: NSViewController, Themeable {
         onSelectionChange?()
     }
 
+    /// The connection's stored settings (`baseURL`, `apiKey`, …). An
+    /// OpenAI-compatible connection has no model list without its endpoint, so
+    /// the model row and the chooser both need these, not the template's defaults.
+    private func connectionValues(config: AIProviderConfiguration,
+                                  template: AIPluginDescriptor.ProviderTemplate) -> [String: String] {
+        let fields = pluginManager.fields(pluginIdentifier: config.pluginIdentifier, template: template)
+        return AIProviderConfigStore.configValues(for: config, template: template, fields: fields)
+    }
+
     // MARK: - Actions
 
     @objc private func chooseModelAction() {
         guard let window = view.window,
               let config = selectedConfiguration,
               let template = selectedTemplate else { return }
-        let fields = pluginManager.fields(pluginIdentifier: config.pluginIdentifier, template: template)
-        let values = AIProviderConfigStore.configValues(for: config, template: template, fields: fields)
+        let values = connectionValues(config: config, template: template)
         let context = ModelChooserContext(
             pluginIdentifier: config.pluginIdentifier, template: template,
             baseURL: values["baseURL"] ?? "", apiKey: values["apiKey"],

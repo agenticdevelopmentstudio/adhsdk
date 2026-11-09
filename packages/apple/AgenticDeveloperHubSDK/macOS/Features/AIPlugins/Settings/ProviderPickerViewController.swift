@@ -727,7 +727,11 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
     private var noModelText: String {
         guard let row = currentRow() else { return "Select a provider to see the models it serves." }
         guard modelRows.isEmpty else { return "Select a model to see what it can do." }
-        return modelManager(for: row).hasLiveSource
+        // An OpenAI-style endpoint has no source until it has a base URL, which the
+        // picker never has, yet it lists its models once one is configured.
+        let listsLive = modelManager(for: row).hasLiveSource
+            || ProviderModels.isOpenAIStyle(pluginIdentifier: row.available.pluginIdentifier)
+        return listsLive
             ? "This provider lists its models once it's configured and reachable."
             : "This provider doesn't publish a model list."
     }
