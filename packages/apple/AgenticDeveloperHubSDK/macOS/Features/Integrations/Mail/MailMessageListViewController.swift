@@ -98,6 +98,9 @@ final class MailMessageListViewController: NSViewController, NSTableViewDataSour
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        // The table reloads a main-queue hop after the list changes, so a layout pass in
+        // between can still ask for a row the shrunk list no longer has.
+        guard model.messages.indices.contains(row) else { return nil }
         if row == model.messages.count - 1, model.hasMore {
             Task { await model.loadMore() }
         }
