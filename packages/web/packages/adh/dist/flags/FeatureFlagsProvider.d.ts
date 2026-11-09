@@ -7,7 +7,7 @@ import { type ReactNode } from 'react';
  * their own BFF route and their own context around the same three lines.
  *
  * Sources (union; a key absent from all of them ⇒ the flag is OFF):
- *   1. `GET /api/system/feature-flags` — the backend's PUBLIC, unauthenticated flag table, reached
+ *   1. `GET /api/v1/feature_flags` — the backend's PUBLIC, unauthenticated flag table, reached
  *      same-origin through the baseline BFF proxy every site gets from `withAdhConfig`
  *      (websites/next-config-base.mjs). Best-effort: any error leaves the set empty, so local dev
  *      without a backend — and a backend outage in production — simply mean "no flags on".
@@ -63,7 +63,7 @@ export declare function FeatureFlagsProvider({ children, backendFlags, }: {
     /**
      * Fetch the backend's public flag table (default true).
      *
-     * Pass `false` on a site whose backend serves no `/system/feature-flags` route — the builds and
+     * Pass `false` on a site whose backend serves no `/v1/feature_flags` route — the builds and
      * status boards proxy `/api/*` to their OWN Hono backends, which have no flag table, so the
      * request is a guaranteed 404 on every page load. It was silently swallowed, which made the miss
      * invisible: those boards can only ever be driven by the build-time/cookie overrides above, and

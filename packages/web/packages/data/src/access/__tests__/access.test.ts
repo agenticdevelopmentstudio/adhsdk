@@ -14,13 +14,16 @@ beforeEach(() => {
   fetchMock.mockResolvedValue({
     ok: true,
     status: 200,
-    json: async () => ({ features: [] }),
-    text: async () => '{"features":[]}',
+    json: async () => ({ object: "list", data: [], has_more: false, url: "" }),
+    text: async () => '{"object":"list","data":[],"has_more":false,"url":""}',
   });
   vi.stubGlobal("fetch", fetchMock);
 });
 
 const urlOf = () => String(fetchMock.mock.calls[0]![0]);
+
+/** A /v1 list envelope around `data`. */
+const list = (data: unknown[]) => ({ object: "list", data, has_more: false, url: "" });
 
 /** Re-point the shared `fetch` stub at one specific JSON body. */
 const respondWith = (body: unknown) =>
@@ -34,17 +37,17 @@ const respondWith = (body: unknown) =>
 describe("accessApi.listFeatures", () => {
   it("GETs the workspace-scoped features route", async () => {
     await accessApi.listFeatures("acme");
-    expect(urlOf()).toContain("/api/access/features");
+    expect(urlOf()).toContain("/api/v1/access/features");
     expect(urlOf()).toContain("workspace=acme");
   });
 
   it("encodes a workspace slug that needs escaping", async () => {
     await accessApi.listFeatures("a b/c");
-    expect(urlOf()).toContain(`workspace=${encodeURIComponent("a b/c")}`);
+    expect(new URL(urlOf(), "http://x").searchParams.get("workspace")).toBe("a b/c");
   });
 
-  it("unwraps the { features } envelope to the bare array", async () => {
-    respondWith({ features: [{ key: "projects", label: "Projects" }] });
+  it("unwraps the list envelope to the bare array", async () => {
+    respondWith(list([{ key: "projects", label: "Projects" }]));
     await expect(accessApi.listFeatures("acme")).resolves.toEqual([
       { key: "projects", label: "Projects" },
     ]);
@@ -56,12 +59,12 @@ describe("accessApi.listFeatures", () => {
       { key: "personas", label: "Personas" },
       { key: "audiences", label: "Audiences" },
     ];
-    respondWith({ features: rows });
+    respondWith(list(rows));
     await expect(accessApi.listFeatures("acme")).resolves.toEqual(rows);
   });
 
   it("resolves an EMPTY list to an empty array (a valid, if unreadable, shape)", async () => {
-    respondWith({ features: [] });
+    respondWith(list([]));
     await expect(accessApi.listFeatures("acme")).resolves.toEqual([]);
   });
 
@@ -70,33 +73,33 @@ describe("accessApi.listFeatures", () => {
   // plausible shapes review found reaching the caller as usable values via the old bare cast —
   // a crash (`.map` on a string) and a silently-broken editor (`feature: undefined` rows) — so
   // each of these MUST reject, not resolve, for the caller's existing catch/fallback to apply.
-  it("rejects when `features` is a string, not an array", async () => {
-    respondWith({ features: "abc" });
+  it("rejects when `data` is a string, not an array", async () => {
+    respondWith({ data: "abc" });
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
-  it("rejects when `features` is an array of bare strings (no `label`)", async () => {
-    respondWith({ features: ["projects", "personas"] });
+  it("rejects when `data` is an array of bare strings (no `label`)", async () => {
+    respondWith(list(["projects", "personas"]));
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
-  it("rejects when `features` is an object rather than an array", async () => {
-    respondWith({ features: { projects: "Projects" } });
+  it("rejects when `data` is an object rather than an array", async () => {
+    respondWith({ data: { projects: "Projects" } });
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
-  it("rejects when the `features` key is absent entirely", async () => {
+  it("rejects when the `data` key is absent entirely", async () => {
     respondWith({});
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
   it("rejects when a row is missing `label`", async () => {
-    respondWith({ features: [{ key: "projects" }] });
+    respondWith(list([{ key: "projects" }]));
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
   it("rejects when a row's `key` is the wrong type", async () => {
-    respondWith({ features: [{ key: 1, label: "Projects" }] });
+    respondWith(list([{ key: 1, label: "Projects" }]));
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
@@ -105,27 +108,27 @@ describe("accessApi.listFeatures", () => {
   // the empty value is live: the key is what a grant is submitted under, and the label is the sole
   // identifier of the column an admin ticks. Rejecting is the only place either can be caught.
   it("rejects a row whose `key` is the empty string", async () => {
-    respondWith({ features: [{ key: "", label: "Projects" }] });
+    respondWith(list([{ key: "", label: "Projects" }]));
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
   it("rejects a row whose `label` is the empty string", async () => {
-    respondWith({ features: [{ key: "projects", label: "" }] });
+    respondWith(list([{ key: "projects", label: "" }]));
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
   it("rejects the whole list when ONE row among good ones is empty", async () => {
-    respondWith({
-      features: [
+    respondWith(
+      list([
         { key: "projects", label: "Projects" },
         { key: "", label: "" },
-      ],
-    });
+      ]),
+    );
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 
   it("rejects a null row (a `typeof v === 'object'` near-miss)", async () => {
-    respondWith({ features: [null] });
+    respondWith(list([null]));
     await expect(accessApi.listFeatures("acme")).rejects.toThrow();
   });
 });

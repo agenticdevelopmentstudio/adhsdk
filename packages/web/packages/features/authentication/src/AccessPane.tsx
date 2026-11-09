@@ -292,8 +292,8 @@ export function AccessPane({
         actions={form.actions}
         showCreate={false}
         api={{
-          path: "/bucket/access-groups/{groupId}",
-          pathValues: { groupId: form.selectedId },
+          path: "/v1/bucket_access_groups/{id}",
+          pathValues: { id: form.selectedId },
           title: "Access group API",
         }}
         help={help}

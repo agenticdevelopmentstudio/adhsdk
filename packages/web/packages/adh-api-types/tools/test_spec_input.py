@@ -48,6 +48,33 @@ def test_no_arg_and_no_env_var_exits_with_a_helpful_message(monkeypatch):
         raise AssertionError("resolve_spec([]) should have raised SystemExit")
 
 
+def test_url_is_downloaded_to_a_temp_file(monkeypatch):
+    class _Res:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return b'{"openapi": "3.1.0"}'
+
+    seen = []
+
+    def fake_urlopen(url, timeout):
+        seen.append(url)
+        return _Res()
+
+    monkeypatch.setattr(si.urllib.request, "urlopen", fake_urlopen)
+
+    path = si.resolve_spec([si.LIVE_V1_SPEC_URL])
+    try:
+        assert seen == [si.LIVE_V1_SPEC_URL]
+        assert path.read_text() == '{"openapi": "3.1.0"}'
+    finally:
+        path.unlink()
+
+
 def test_nonexistent_path_exits_loudly_rather_than_reading_as_no_spec(tmp_path):
     missing = tmp_path / "does-not-exist.json"
 

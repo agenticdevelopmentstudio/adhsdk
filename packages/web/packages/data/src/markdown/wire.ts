@@ -169,19 +169,19 @@ export interface BucketRow {
   updatedAt: string;
 }
 
-/** `POST /bucket/buckets` body. */
+/** `POST /v1/buckets` body. */
 export interface BucketCreateBody {
   name: string;
   slug: string;
-  metadata: { description?: string };
-  ecosystemId?: string;
+  description?: string;
+  ecosystem_id?: string;
 }
 
-/** `PUT /bucket/buckets/{id}` body. */
+/** `POST /v1/buckets/{id}` body. */
 export interface BucketPutBody {
   name?: string;
   slug?: string;
-  metadata?: { description?: string };
+  description?: string;
 }
 
 /** Backend row for `GET /bucket/bucket-types` (and a single bucket-type). */
@@ -192,10 +192,70 @@ export interface BucketTypeRow {
   name: string;
 }
 
-/** `POST /bucket/bucket-types` body. */
+/** `POST /v1/bucket_types` body. */
 export interface BucketTypeCreateBody {
-  bucketId: string;
-  ecosystemId: string;
-  sqlTableName: string;
+  bucket_id: string;
+  ecosystem_id: string;
+  sql_table_name: string;
+  name: string;
+}
+
+/* ── /v1 wire shapes (snake_case; `created`/`updated` are unix seconds) ──────────────────────
+ * markdown.ts / schemas.ts map these onto the camelCase app rows above. */
+
+/** `/v1/papers` row. The list projection omits `content`. */
+export interface PaperWire {
+  object?: string;
+  id: string;
+  title: string;
+  content?: string;
+  excerpt?: string;
+  category?: string | null;
+  tags?: string[] | null;
+  visibility: "private" | "public";
+  public_route?: string | null;
+}
+
+/** `GET /v1/paper_categories`. */
+export interface PaperCategoriesWire {
+  items?: string[];
+  nodes?: { id: string; name: string; parent_ids: string[]; sort_order: number }[];
+}
+
+/** `POST /v1/paper_categories` 200 body. */
+export interface PaperCategoryWire {
+  id: string;
+  name: string;
+  parent_ids: string[];
+  sort_order: number;
+}
+
+/** `GET /v1/paper_tags`. */
+export interface PaperTagsWire {
+  items?: string[];
+  nodes?: { id: string; label: string }[];
+}
+
+/** `/v1/buckets` row. `description` is a column of its own (the legacy client kept it in `metadata`). */
+export interface BucketWire {
+  object?: string;
+  id: string;
+  ecosystem_id: string;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  kind?: string | null;
+  metadata?: { description?: string } | null;
+  created: number;
+  updated: number;
+}
+
+/** `/v1/bucket_types` row. */
+export interface BucketTypeWire {
+  object?: string;
+  id: string;
+  ecosystem_id: string;
+  bucket_id: string;
+  sql_table_name: string;
   name: string;
 }

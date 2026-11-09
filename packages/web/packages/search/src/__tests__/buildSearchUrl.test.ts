@@ -5,30 +5,29 @@ import type { SearchSource } from '../types'
 const PUBLIC_PAPERS: SearchSource = {
   baseUrl: '/api',
   endpoints: {
-    results: '/public/papers',
-    tags: '/public/papers/tags',
-    categories: '/public/papers/categories',
+    results: '/v1/papers',
+    tags: '/v1/paper_tags',
+    categories: '/v1/paper_categories',
   },
 }
 
 describe('buildSearchUrl', () => {
-  it('joins baseUrl + results path and always sends page + pageSize', () => {
-    const url = buildSearchUrl(PUBLIC_PAPERS, { q: '', tag: '', category: '' }, 1)
-    expect(url).toBe('/api/public/papers?page=1&pageSize=50')
+  it('joins baseUrl + results path and always sends the page size as `limit`', () => {
+    const url = buildSearchUrl(PUBLIC_PAPERS, { q: '', tag: '', category: '' })
+    expect(url).toBe('/api/v1/papers?limit=50')
   })
 
   it('includes only the non-empty filter axes, trimming q', () => {
     const url = buildSearchUrl(
       PUBLIC_PAPERS,
       { q: '  agents  ', tag: 'llm', category: 'theory' },
-      2,
     )
     const params = new URL(url, 'http://x').searchParams
     expect(params.get('q')).toBe('agents')
     expect(params.get('tag')).toBe('llm')
     expect(params.get('category')).toBe('theory')
-    expect(params.get('page')).toBe('2')
-    expect(params.get('pageSize')).toBe('50')
+    expect(params.get('limit')).toBe('50')
+    expect(params.has('page')).toBe(false)
   })
 
   it('honors a source pageSize and custom query-param names', () => {
@@ -38,14 +37,19 @@ describe('buildSearchUrl', () => {
       params: { q: 'query' },
       pageSize: 10,
     }
-    const url = buildSearchUrl(custom, { q: 'x', tag: '', category: '' }, 1)
-    expect(url).toBe('https://api.example.com/search?query=x&page=1&pageSize=10')
+    const url = buildSearchUrl(custom, { q: 'x', tag: '', category: '' })
+    expect(url).toBe('https://api.example.com/search?query=x&limit=10')
+  })
+
+  it('never asks for more than the widest /v1 page', () => {
+    const wide: SearchSource = { ...PUBLIC_PAPERS, pageSize: 500 }
+    expect(buildSearchUrl(wide, { q: 'x', tag: '', category: '' })).toContain('limit=100')
   })
 })
 
 describe('buildFacetUrl', () => {
   it('builds the facet URL or returns null when the source omits it', () => {
-    expect(buildFacetUrl(PUBLIC_PAPERS, 'tags')).toBe('/api/public/papers/tags')
+    expect(buildFacetUrl(PUBLIC_PAPERS, 'tags')).toBe('/api/v1/paper_tags')
     expect(buildFacetUrl({ baseUrl: '/api', endpoints: { results: '/x' } }, 'tags')).toBeNull()
   })
 })
@@ -53,22 +57,22 @@ describe('buildFacetUrl', () => {
 describe('fixedParams', () => {
   const scoped: SearchSource = {
     baseUrl: '/api',
-    endpoints: { results: '/public/papers', tags: '/public/papers/tags' },
+    endpoints: { results: '/v1/papers', tags: '/v1/paper_tags' },
     fixedParams: { author: 'ada' },
   }
 
   it('rides on the results request', () => {
-    const url = buildSearchUrl(scoped, { q: 'edge', category: '', tag: '' }, 1)
+    const url = buildSearchUrl(scoped, { q: 'edge', category: '', tag: '' })
     expect(url).toContain('author=ada')
     expect(url).toContain('q=edge')
   })
 
   it('rides on a facet request', () => {
-    expect(buildFacetUrl(scoped, 'tags')).toBe('/api/public/papers/tags?author=ada')
+    expect(buildFacetUrl(scoped, 'tags')).toBe('/api/v1/paper_tags?author=ada')
   })
 
   it('is absent when the source sets none', () => {
-    const plain: SearchSource = { baseUrl: '/api', endpoints: { results: '/public/papers', tags: '/t' } }
+    const plain: SearchSource = { baseUrl: '/api', endpoints: { results: '/v1/papers', tags: '/t' } }
     expect(buildFacetUrl(plain, 'tags')).toBe('/api/t')
   })
 
@@ -79,10 +83,10 @@ describe('fixedParams', () => {
     // category via `fixedParams` must not let the reader escape it by picking another.
     const scopedByCategory: SearchSource = {
       baseUrl: '/api',
-      endpoints: { results: '/public/papers' },
+      endpoints: { results: '/v1/papers' },
       fixedParams: { category: 'theory' },
     }
-    const url = buildSearchUrl(scopedByCategory, { q: '', tag: '', category: 'other' }, 1)
+    const url = buildSearchUrl(scopedByCategory, { q: '', tag: '', category: 'other' })
     const params = new URL(url, 'http://x').searchParams
     expect(params.get('category')).toBe('theory')
   })
@@ -93,7 +97,7 @@ describe('sourceKeyOf', () => {
     // Two `PaperSearchView`s on one page, differing only by `authorSlug`, produce sources that
     // differ only in `fixedParams`. If this line were ever dropped, `useDocumentSearch`'s effect
     // (keyed on `sourceKeyOf`) would treat them as the SAME source and share results/state.
-    const base: SearchSource = { baseUrl: '/api', endpoints: { results: '/public/papers' } }
+    const base: SearchSource = { baseUrl: '/api', endpoints: { results: '/v1/papers' } }
     const scopedA: SearchSource = { ...base, fixedParams: { author: 'ada' } }
     const scopedB: SearchSource = { ...base, fixedParams: { author: 'ford' } }
     expect(sourceKeyOf(scopedA)).not.toBe(sourceKeyOf(scopedB))

@@ -7,8 +7,8 @@
 // right URL + body AND the row reflects the new state returned by the response.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { authedJson } = vi.hoisted(() => ({ authedJson: vi.fn() }));
-vi.mock("../http", () => ({ authedJson }));
+const { authedJson, listAllV1 } = vi.hoisted(() => ({ authedJson: vi.fn(), listAllV1: vi.fn() }));
+vi.mock("../http", () => ({ authedJson, listAllV1 }));
 
 import {
   schemaOf,
@@ -17,15 +17,18 @@ import {
 } from "../sync-tables";
 
 const row = (o: Partial<EnrollmentRow> & { resource: string }): EnrollmentRow => ({
-  scope: "customer",
-  pushMode: "generic",
-  defaultEnabled: true,
+  scope: "owner",
+  push_mode: "generic",
+  default_enabled: true,
   enabled: true,
   overridden: false,
   ...o,
 });
 
-beforeEach(() => authedJson.mockReset());
+beforeEach(() => {
+  authedJson.mockReset();
+  listAllV1.mockReset();
+});
 
 describe("schemaOf", () => {
   it("reads the schema off the prefix before the first dot", () => {
@@ -40,19 +43,19 @@ describe("schemaOf", () => {
 });
 
 describe("syncTablesApi.get", () => {
-  it("unwraps the catalog from the { tables } response", async () => {
+  it("drains the /v1 list envelope into the catalog", async () => {
     const tables = [row({ resource: "content.feed" })];
-    authedJson.mockResolvedValueOnce({ tables });
+    listAllV1.mockResolvedValueOnce(tables);
     await expect(syncTablesApi.get("eco-1")).resolves.toEqual(tables);
-    expect(authedJson).toHaveBeenCalledWith("/api/admin/sync/tables/eco-1");
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/sync/tables/eco-1");
   });
 });
 
 describe("toggling a row (setOverride)", () => {
-  it("PUTs { enabled: !current } and returns the refreshed catalog reflecting the new state", async () => {
+  it("POSTs { enabled: !current } and returns the refreshed catalog reflecting the new state", async () => {
     // The mocked GET: one row currently synced (enabled: true), no override yet.
     const before = row({ resource: "content.feed", enabled: true, overridden: false });
-    authedJson.mockResolvedValueOnce({ tables: [before] });
+    listAllV1.mockResolvedValueOnce([before]);
     const loaded = await syncTablesApi.get("eco-1");
     const target = loaded[0]!;
 
@@ -67,10 +70,10 @@ describe("toggling a row (setOverride)", () => {
       !target.enabled,
     );
 
-    // The PUT fired with the right URL and body…
+    // The POST fired with the right URL and body…
     expect(authedJson).toHaveBeenLastCalledWith(
-      "/api/admin/sync/tables/eco-1/content.feed",
-      { method: "PUT", body: JSON.stringify({ enabled: false }) },
+      "/api/v1/sync/tables/eco-1/resources/content.feed",
+      { method: "POST", body: JSON.stringify({ enabled: false }) },
     );
     // …and the row reflects the new state from the response (not a hand-patch).
     expect(refreshed).toEqual([after]);
@@ -83,7 +86,7 @@ describe("error propagation (the page's load- and mutation-error branches)", () 
   // `authedJson` throws on non-2xx; the api layer must let that reject rather
   // than swallow it, so the page's `isError`/mutation-error Alerts actually fire.
   it("get REJECTS when the http boundary throws (failed load)", async () => {
-    authedJson.mockRejectedValueOnce(new Error("HTTP 403 Forbidden"));
+    listAllV1.mockRejectedValueOnce(new Error("HTTP 403 Forbidden"));
     await expect(syncTablesApi.get("eco-1")).rejects.toThrow("HTTP 403 Forbidden");
   });
 
@@ -107,16 +110,18 @@ describe("resetting a row (clearOverride)", () => {
     const reset = row({
       resource: "content.feed",
       enabled: true,
-      defaultEnabled: true,
+      default_enabled: true,
       overridden: false,
     });
-    authedJson.mockResolvedValueOnce({ tables: [reset] });
+    authedJson.mockResolvedValueOnce({ id: "content.feed", object: "resource", deleted: true });
+    listAllV1.mockResolvedValueOnce([reset]);
 
     const refreshed = await syncTablesApi.clearOverride("eco-1", "content.feed");
 
-    expect(authedJson).toHaveBeenCalledWith("/api/admin/sync/tables/eco-1/content.feed", {
+    expect(authedJson).toHaveBeenCalledWith("/api/v1/sync/tables/eco-1/resources/content.feed", {
       method: "DELETE",
     });
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/sync/tables/eco-1");
     expect(refreshed).toEqual([reset]);
     expect(refreshed[0]!.overridden).toBe(false);
   });

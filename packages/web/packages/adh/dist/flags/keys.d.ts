@@ -3,7 +3,7 @@
  *  read as "off" rather than accidentally exposing an ungated feature.
  *
  *  These are the `key` column of `system.feature_flags`; the admin console writes them and
- *  GET /system/feature-flags (public, unauthenticated) delivers the enabled ones. */
+ *  GET /v1/feature_flags (public, unauthenticated) delivers the enabled ones. */
 export declare const FLAG: {
     readonly newUserSignups: "new_user_signups";
     readonly newUserInvitations: "new_user_invitations";

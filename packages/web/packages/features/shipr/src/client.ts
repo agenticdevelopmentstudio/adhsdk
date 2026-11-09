@@ -1,3 +1,31 @@
+import { listAllV1, V1_PAGE_MAX, withV1Query, type V1List } from '@adh-sdk/auth/client';
+
+import {
+  shiprConnection,
+  shiprDeclaration,
+  shiprDevRepo,
+  shiprEventPage,
+  shiprForgeRepositories,
+  shiprGroup,
+  shiprOrgDefaults,
+  shiprRepo,
+  shiprRepoDetail,
+  shiprRun,
+  shiprRunStep,
+  shiprTree,
+  type ShiprWireConnection,
+  type ShiprWireDeclaration,
+  type ShiprWireDevRepo,
+  type ShiprWireEventPage,
+  type ShiprWireGroup,
+  type ShiprWireOrgDefaults,
+  type ShiprWireRepo,
+  type ShiprWireRepoDetail,
+  type ShiprWireRepositories,
+  type ShiprWireRun,
+  type ShiprWireRunStep,
+  type ShiprWireTree,
+} from './shipr-wire';
 import type {
   DeclarationResponse,
   EventPage,
@@ -61,15 +89,16 @@ async function ok(res: Response): Promise<void> {
 }
 
 /**
- * The backend mounts the shipr router at `/shipr` (`app.ts`). The `/api` prefix in front
- * of it is the **frontend's** — every fleet site rewrites `/api/:path*` to
- * `${BACKEND_URL}/:path*` in its `next.config.ts`. No backend mount carries `/api`.
+ * shipr's /v1 resources live under `/v1/shipr`. The `/api` prefix in front of it is the
+ * **frontend's** — every fleet site rewrites `/api/:path*` to `${BACKEND_URL}/:path*` in
+ * its `next.config.ts`. No backend mount carries `/api`.
  */
-export const BASE = '/api/shipr';
+export const BASE = '/api/v1/shipr';
 
 /** `shipr.groups` is the one shipr table on GENERIC CRUD (`src/crud/policy.ts`), which is
  *  why folders are created and renamed through a different shape than everything else here
- *  — a bare row in, a bare row out, `PUT` for the update and `204` for the delete. */
+ *  — a bare row in, a bare row out, `POST` on the item for the update and a 200 tombstone
+ *  for the delete. */
 const GROUPS = `${BASE}/groups`;
 
 const seg = encodeURIComponent;
@@ -83,6 +112,41 @@ function query(params: Record<string, string | number | undefined>): string {
     .map(([k, v]) => `${k}=${seg(String(v))}`);
   return parts.length ? `?${parts.join('&')}` : '';
 }
+
+/** `RegisterRequest` as /v1's snake_case body. Absent keys stay absent. */
+function registerWire(body: RegisterRequest): Record<string, unknown> {
+  return {
+    slug: body.slug,
+    ...(body.connectionId !== undefined ? { connection_id: body.connectionId } : {}),
+    ...(body.groupId !== undefined ? { group_id: body.groupId } : {}),
+    ...(body.mainBranch !== undefined ? { main_branch: body.mainBranch } : {}),
+    ...(body.preparedBranch !== undefined ? { prepared_branch: body.preparedBranch } : {}),
+    ...(body.deploymentOwner !== undefined ? { deployment_owner: body.deploymentOwner } : {}),
+    ...(body.deploymentName !== undefined ? { deployment_name: body.deploymentName } : {}),
+    ...(body.provision !== undefined ? { provision: body.provision } : {}),
+  };
+}
+
+/** The `environments` and `options` halves of a run request, in /v1's snake_case. */
+function runScopeWire(
+  body: Pick<RunRequest, 'environments' | 'options'>,
+): Record<string, unknown> {
+  const o = body.options;
+  return {
+    ...(body.environments !== undefined ? { environments: body.environments } : {}),
+    ...(o !== undefined
+      ? {
+          options: {
+            ...(o.sha !== undefined ? { sha: o.sha } : {}),
+            ...(o.shard !== undefined ? { shard: o.shard } : {}),
+            ...(o.groupId !== undefined ? { group_id: o.groupId } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+const accepted = (res: { run_id: string }): RunAccepted => ({ runId: res.run_id });
 
 /**
  * Everything the console can ask the backend for.
@@ -120,15 +184,26 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
 
     /** Every folder and every repository the caller reaches, in ONE request — the HTDV
      *  renders levels, not nodes, so a per-folder fetch would be a round trip per click. */
-    tree: () => send<TreeResponse>(`${BASE}/repos${ws}`, 'GET'),
+    tree: async (): Promise<TreeResponse> =>
+      shiprTree(await send<ShiprWireTree>(`${BASE}/repos${ws}`, 'GET')),
 
     /** The details pane: the repository, its ladder, and its recent runs. */
-    repo: (id: string) => send<RepoDetail>(`${BASE}/repos/${seg(id)}`, 'GET'),
+    repo: async (id: string): Promise<RepoDetail> =>
+      shiprRepoDetail(await send<ShiprWireRepoDetail>(`${BASE}/repos/${seg(id)}`, 'GET')),
 
     /** Move it, reorder it, or change which branches it ships to. Absent keys are absent —
      *  a drag-and-drop sends `{ groupId, position }` and touches nothing else. */
-    updateRepo: (id: string, body: RepoPatch) =>
-      send<Repo>(`${BASE}/repos/${seg(id)}`, 'PATCH', body),
+    updateRepo: async (id: string, body: RepoPatch): Promise<Repo> =>
+      shiprRepo(
+        await send<ShiprWireRepo>(`${BASE}/repos/${seg(id)}`, 'POST', {
+          ...(body.groupId !== undefined ? { group_id: body.groupId } : {}),
+          ...(body.position !== undefined ? { position: body.position } : {}),
+          ...(body.slug !== undefined ? { slug: body.slug } : {}),
+          ...(body.displayName !== undefined ? { display_name: body.displayName } : {}),
+          ...(body.shipBranch !== undefined ? { ship_branch: body.shipBranch } : {}),
+          ...(body.envBranches !== undefined ? { env_branches: body.envBranches } : {}),
+        }),
+      ),
 
 
     // --- folders -----------------------------------------------------------
@@ -138,19 +213,36 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      *  `path` and `depth` are NOT sent and must not be: both are maintained by
      *  `shipr.group_path()`, the trigger migration 0205 installs, which is also what
      *  refuses a cycle and rewrites a subtree when a folder moves. */
-    createGroup: (body: { name: string; parentId?: string | null; position?: number }) =>
-      send<Group>(`${GROUPS}${ws}`, 'POST', body),
+    createGroup: async (body: {
+      name: string;
+      parentId?: string | null;
+      position?: number;
+    }): Promise<Group> =>
+      shiprGroup(
+        await send<ShiprWireGroup>(`${GROUPS}${ws}`, 'POST', {
+          name: body.name,
+          ...(body.parentId !== undefined ? { parent_id: body.parentId } : {}),
+          ...(body.position !== undefined ? { position: body.position } : {}),
+        }),
+      ),
 
     /** Rename it, move it under a different parent, or reorder it among its siblings.
      *
-     *  PUT, not PATCH — generic CRUD's update verb. It still merges: the columns absent
-     *  from `body` keep their stored values. */
-    updateGroup: (
+     *  POST on the item — /v1's update verb. It still merges: the columns absent from
+     *  `body` keep their stored values. */
+    updateGroup: async (
       id: string,
       body: { name?: string; parentId?: string | null; position?: number },
-    ) => send<Group>(`${GROUPS}/${seg(id)}${ws}`, 'PUT', body),
+    ): Promise<Group> =>
+      shiprGroup(
+        await send<ShiprWireGroup>(`${GROUPS}/${seg(id)}${ws}`, 'POST', {
+          ...(body.name !== undefined ? { name: body.name } : {}),
+          ...(body.parentId !== undefined ? { parent_id: body.parentId } : {}),
+          ...(body.position !== undefined ? { position: body.position } : {}),
+        }),
+      ),
 
-    /** Delete it. 204, no body — hence `ok` rather than `json`. */
+    /** Delete it. 200 with a tombstone nobody reads — hence `ok` rather than `json`. */
     deleteGroup: async (id: string) =>
       ok(await fetcher(`${GROUPS}/${seg(id)}${ws}`, { method: 'DELETE' })),
 
@@ -164,8 +256,11 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * them. The backend narrows it to what `register` accepts — a GitHub App installation
      * of the caller's, active — so the register form can offer the list verbatim.
      */
-    connections: () =>
-      send<{ connections: ForgeConnection[] }>(`${BASE}/connections`, 'GET'),
+    connections: async (): Promise<{ connections: ForgeConnection[] }> => ({
+      connections: (await listAllV1<ShiprWireConnection>(`${BASE}/connections`)).map(
+        shiprConnection,
+      ),
+    }),
 
     /**
      * The repositories one connection was granted — the wizard's first question.
@@ -178,10 +273,11 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * rather than an empty one. `readAt` is what stops that being a lie: the wizard says how
      * old the list is, and {@link refreshConnectionRepositories} is how it stops being old.
      */
-    connectionRepositories: (id: string) =>
-      send<{ repositories: ForgeRepository[]; readAt: string }>(
-        `${BASE}/connections/${seg(id)}/repositories`,
-        'GET',
+    connectionRepositories: async (
+      id: string,
+    ): Promise<{ repositories: ForgeRepository[]; readAt: string }> =>
+      shiprForgeRepositories(
+        await send<ShiprWireRepositories>(`${BASE}/connections/${seg(id)}/repositories`, 'GET'),
       ),
 
     /**
@@ -192,10 +288,14 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * installation, a suspended app, a forge that is down — and a caller needs to be able to
      * tell "here is the list" from "here is the list, and it is the one from before".
      */
-    refreshConnectionRepositories: (id: string) =>
-      send<{ repositories: ForgeRepository[]; readAt: string }>(
-        `${BASE}/connections/${seg(id)}/repositories/refresh`,
-        'POST',
+    refreshConnectionRepositories: async (
+      id: string,
+    ): Promise<{ repositories: ForgeRepository[]; readAt: string }> =>
+      shiprForgeRepositories(
+        await send<ShiprWireRepositories>(
+          `${BASE}/connections/${seg(id)}/repositories/refresh`,
+          'POST',
+        ),
       ),
 
     /**
@@ -207,10 +307,22 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * declared slug is exactly the drift the CLI refuses when `--org` is passed alongside
      * `--deployment`.
      */
-    connectionDeclaration: (id: string, slug: string, branch?: string) =>
-      send<DeclarationResponse>(
-        `${BASE}/connections/${seg(id)}/declaration${query({ slug, branch })}`,
-        'GET',
+    connectionDeclaration: async (
+      id: string,
+      slug: string,
+      branch?: string,
+    ): Promise<DeclarationResponse> =>
+      shiprDeclaration(
+        (
+          await send<{ declaration: ShiprWireDeclaration }>(
+            withV1Query(`${BASE}/connections/${seg(id)}`, {
+              'include[]': ['declaration'],
+              slug,
+              branch: branch || undefined,
+            }),
+            'GET',
+          )
+        ).declaration,
       ),
 
     /**
@@ -218,8 +330,14 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * commits. 202: the provisioning itself is a queued run, and `devRepo` is the row it
      * will provision mirrors for.
      */
-    register: (body: RegisterRequest) =>
-      send<RegisterAccepted>(`${BASE}/register${ws}`, 'POST', body),
+    register: async (body: RegisterRequest): Promise<RegisterAccepted> => {
+      const res = await send<{ run_id: string; dev_repo: ShiprWireDevRepo }>(
+        `${BASE}/repos${ws}`,
+        'POST',
+        registerWire(body),
+      );
+      return { runId: res.run_id, devRepo: shiprDevRepo(res.dev_repo) };
+    },
 
     /**
      * Write down where a repository's mirrors GO, and create nothing.
@@ -233,11 +351,18 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * Provisioning it later is `run({ operation: 'register', scopeKind: 'dev_repo', ... })`,
      * which is the identical operation the queue would have run — there is no second path.
      */
-    configure: (body: Omit<RegisterRequest, 'provision'>) =>
-      send<RegisterConfigured>(`${BASE}/register${ws}`, 'POST', {
-        ...body,
-        provision: false,
-      }),
+    configure: async (body: Omit<RegisterRequest, 'provision'>): Promise<RegisterConfigured> => {
+      const res = await send<{
+        dev_repo: ShiprWireDevRepo;
+        mirrors: ShiprWireRepo[];
+        notes?: string[];
+      }>(`${BASE}/repos${ws}`, 'POST', registerWire({ ...body, provision: false }));
+      return {
+        devRepo: shiprDevRepo(res.dev_repo),
+        mirrors: res.mirrors.map(shiprRepo),
+        ...(res.notes !== undefined ? { notes: res.notes } : {}),
+      };
+    },
 
     // --- per-org defaults --------------------------------------------------
 
@@ -249,8 +374,11 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * nobody has configured is simply ABSENT rather than a 404 the caller has to learn to
      * read as "unset".
      */
-    orgDefaults: () =>
-      send<{ orgDefaults: OrgDefaults[] }>(`${BASE}/org-defaults${ws}`, 'GET'),
+    orgDefaults: async (): Promise<{ orgDefaults: OrgDefaults[] }> => ({
+      orgDefaults: (await listAllV1<ShiprWireOrgDefaults>(`${BASE}/org_defaults${ws}`)).map(
+        shiprOrgDefaults,
+      ),
+    }),
 
     /**
      * Set one org's defaults. Upsert — "the defaults for this org" is one row whether or
@@ -262,8 +390,14 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * registered one where the operator put it. Applying it to the ones already there is
      * the dialog's own walk over `updateRepo`.
      */
-    setOrgDefaults: (org: string, body: OrgDefaultsPatch) =>
-      send<OrgDefaults>(`${BASE}/org-defaults/${seg(org)}${ws}`, 'PUT', body),
+    setOrgDefaults: async (org: string, body: OrgDefaultsPatch): Promise<OrgDefaults> =>
+      shiprOrgDefaults(
+        await send<ShiprWireOrgDefaults>(`${BASE}/org_defaults/${seg(org)}${ws}`, 'POST', {
+          ...(body.deploymentOwner !== undefined ? { deployment_owner: body.deploymentOwner } : {}),
+          ...(body.nameSuffix !== undefined ? { name_suffix: body.nameSuffix } : {}),
+          ...(body.envBranches !== undefined ? { env_branches: body.envBranches } : {}),
+        }),
+      ),
 
     /**
      * The toolbar, as one call: an operation and a scope.
@@ -272,21 +406,45 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * folder and everything nested under it, `all` the workspace. A run over a folder walks
      * its repositories ONE AT A TIME in the tree's own order.
      */
-    run: (body: RunRequest) => send<RunAccepted>(`${BASE}/runs${ws}`, 'POST', body),
+    run: async (body: RunRequest): Promise<RunAccepted> =>
+      accepted(
+        await send<{ run_id: string }>(`${BASE}/runs${ws}`, 'POST', {
+          operation: body.operation,
+          scope_kind: body.scopeKind,
+          ...(body.scopeId !== undefined ? { scope_id: body.scopeId } : {}),
+          ...runScopeWire(body),
+        }),
+      ),
 
     /** The four per-repository buttons. Sugar over `run` — same gate, same queue — for the
      *  common case where the scope is the row the operator has selected. */
-    runOnRepo: (
+    runOnRepo: async (
       id: string,
       operation: 'status' | 'prepare' | 'deploy' | 'unregister',
       body: Omit<RunRequest, 'operation' | 'scopeKind' | 'scopeId'> = {},
-    ) => send<RunAccepted>(`${BASE}/repos/${seg(id)}/${operation}`, 'POST', body),
+    ): Promise<RunAccepted> =>
+      accepted(
+        // Unregister is /v1's DELETE on the repository: it answers 202 with the run, takes
+        // no body, and there is nothing to send it.
+        operation === 'unregister'
+          ? await send<{ run_id: string }>(`${BASE}/repos/${seg(id)}`, 'DELETE')
+          : await send<{ run_id: string }>(
+              `${BASE}/repos/${seg(id)}/${operation}`,
+              'POST',
+              runScopeWire(body),
+            ),
+      ),
 
     // --- runs --------------------------------------------------------------
 
     /** The runs the caller may watch, newest first. */
-    runs: (limit?: number) =>
-      send<{ items: Run[] }>(`${BASE}/runs${query({ workspace, limit })}`, 'GET'),
+    runs: async (limit: number = V1_PAGE_MAX): Promise<{ items: Run[] }> => {
+      const page = await send<V1List<ShiprWireRun>>(
+        `${BASE}/runs${query({ workspace, limit })}`,
+        'GET',
+      );
+      return { items: page.data.map(shiprRun) };
+    },
 
     /**
      * Stop a run.
@@ -296,12 +454,18 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * messaging the worker, so the stop lands within a heartbeat wherever the run is being
      * held. Idempotent: a run that has already settled comes back unchanged.
      */
-    cancelRun: (id: string) =>
-      send<{ run: Run }>(`${BASE}/runs/${seg(id)}/cancel`, 'POST'),
+    cancelRun: async (id: string): Promise<{ run: Run }> => ({
+      run: shiprRun(await send<ShiprWireRun>(`${BASE}/runs/${seg(id)}/cancel`, 'POST')),
+    }),
 
     /** One run and its steps, oldest step first — which is the order it walked them. */
-    runDetail: (id: string) =>
-      send<{ run: Run; steps: RunStep[] }>(`${BASE}/runs/${seg(id)}`, 'GET'),
+    runDetail: async (id: string): Promise<{ run: Run; steps: RunStep[] }> => {
+      const res = await send<{ run: ShiprWireRun; steps: ShiprWireRunStep[] }>(
+        `${BASE}/runs/${seg(id)}`,
+        'GET',
+      );
+      return { run: shiprRun(res.run), steps: res.steps.map(shiprRunStep) };
+    },
 
     /**
      * A page of the run's log.
@@ -310,10 +474,13 @@ export function createShiprClient(fetcher: Fetcher, workspace?: string) {
      * — or fall back to this when EventSource is unavailable — without a second notion of
      * position. Send back the `nextSeq` it answered with.
      */
-    events: (id: string, after = 0, limit?: number, repo?: string) =>
-      send<EventPage>(
-        `${BASE}/runs/${seg(id)}/events${query({ after, limit, repo })}`,
-        'GET',
+    events: async (id: string, after = 0, limit?: number, repo?: string): Promise<EventPage> =>
+      shiprEventPage(
+        id,
+        await send<ShiprWireEventPage>(
+          `${BASE}/runs/${seg(id)}/events${query({ after, limit, repo })}`,
+          'GET',
+        ),
       ),
   };
 }

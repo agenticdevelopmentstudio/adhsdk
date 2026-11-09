@@ -33,7 +33,7 @@ import { useExitGate } from "@adh-sdk/ui/hooks/useExitGate";
  * WHY THESE NEED THEIR OWN VIEW. The backend keeps all four off generic CRUD (SKIP_TABLES — the
  * markdown routes own their version-snapshot and marker invariants), so they have no
  * `CRUD_TABLES` entry and the bucket's table detail used to say "these rows can't be browsed
- * here". They can (Mike, 2026-09-24): every one of them is a lens on `/content/markdown`, which
+ * here". They can (Mike, 2026-09-24): every one of them is a lens on `/v1/papers`, which
  * already filters to a shelf — so this is that list, drawn in the same `CrudTable` every other
  * bucket table uses, rather than a second route set that would drift from markdownDocuments.ts.
  */
@@ -98,8 +98,8 @@ const META: CrudTableMeta = {
   key: "content/markdown",
   schema: "content",
   table: "markdown",
-  basePath: "/content/markdown",
-  itemPath: "/content/markdown/{id}",
+  basePath: "/v1/papers",
+  itemPath: "/v1/papers/{id}",
   pkParams: [],
   exposure: "owner",
   columns: ["title", "category", "visibility", "excerpt"].map(col),

@@ -9,7 +9,7 @@ import { Button } from '@adh-sdk/ui/components/button';
 
 /**
  * The listing's photo, on the platform's existing presigned R2 flow:
- * `POST /api/storage/uploads` → `PUT` the bytes straight to R2 → `POST …/complete`.
+ * `POST /api/v1/files` → `PUT` the bytes straight to R2 → `POST /api/v1/files/{id}/complete`.
  *
  * A near-copy of `PersonaAvatarField` (`features/personas`), changing exactly three values:
  * `ownerType` is `registry.entry`, `ownerId` is the entry id, and the preview's `alt` is real
@@ -42,7 +42,7 @@ export function EntryPhotoField({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const presign = useCallback(
-    (id: string) => authedJson<{ url: string }>(`/api/storage/downloads/${id}`),
+    (id: string) => authedJson<{ url: string }>(`/api/v1/files/${encodeURIComponent(id)}/contents`),
     [],
   );
   // Through the platform cache, keyed by the attachment: re-opening this section no longer
@@ -141,37 +141,38 @@ export function EntryPhotoField({
   );
 }
 
+/** `POST /v1/files`'s answer, snake_case. A dedup hit carries no `upload_url`. */
 type UploadInit = {
   attachment: { id: string };
-  uploadUrl?: string;
+  upload_url?: string;
   deduplicated?: boolean;
 };
 
 /** Init → PUT to R2 → complete. Returns the ready attachment id. */
 async function uploadPhoto(entryId: string, file: File): Promise<string> {
   const contentType = file.type || 'application/octet-stream';
-  const init = await authedJson<UploadInit>('/api/storage/uploads', {
+  const init = await authedJson<UploadInit>('/api/v1/files', {
     method: 'POST',
     body: JSON.stringify({
       filename: file.name,
-      contentType,
-      // `ownerType` is a free `z.string().min(1).max(32)` server-side (storage.ts:17), not
+      content_type: contentType,
+      // `owner_type` is a free `z.string().min(1).max(32)` server-side (storage.ts:17), not
       // an allowlist — this string needs no backend change, and the pair is what lets the
       // public entry route presign exactly this entry's images for an anonymous visitor.
-      ownerType: 'registry.entry',
-      ownerId: entryId,
-      sizeBytes: file.size,
+      owner_type: 'registry.entry',
+      owner_id: entryId,
+      size_bytes: file.size,
     }),
   });
-  // A dedup hit returns the existing ready attachment with no uploadUrl — skip the PUT.
-  if (init.uploadUrl) {
-    const put = await fetch(init.uploadUrl, {
+  // A dedup hit returns the existing ready attachment with no upload_url — skip the PUT.
+  if (init.upload_url) {
+    const put = await fetch(init.upload_url, {
       method: 'PUT',
       body: file,
       headers: { 'Content-Type': contentType },
     });
     if (!put.ok) throw new Error(`Upload failed (${put.status}).`);
-    await authedJson(`/api/storage/uploads/${init.attachment.id}/complete`, { method: 'POST' });
+    await authedJson(`/api/v1/files/${init.attachment.id}/complete`, { method: 'POST' });
   }
   return init.attachment.id;
 }

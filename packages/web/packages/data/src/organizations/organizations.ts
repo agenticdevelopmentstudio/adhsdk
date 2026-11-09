@@ -1,6 +1,6 @@
 "use client";
 
-// Organizations API client — the dedicated /organization/organizations routes.
+// Organizations API client — the dedicated /v1/organizations routes.
 // Hand-written on the backend (NOT generic CRUD): creating an org PROVISIONS
 // its ownership chain (namespace + admin team + default ecosystem) and mints
 // its reverse-domain rdid. Authz is split server-side: create is open to any
@@ -18,16 +18,27 @@
 // `workspacesApi.list()` remains the right call for the workspace SWITCHER, which
 // genuinely is asking the membership question.
 
-import { authedJson, authedRequest, isConflict, rethrowConflict } from "../http";
+import { authedJson, authedRequest, isConflict, listAllV1, rethrowConflict, withV1Query } from "../http";
 import { compact, enc } from "../client-helpers";
 import type {
   Organization,
   OrganizationCreateInput,
   OrganizationListRow,
   OrganizationProvisioned,
+  OrganizationProvisionedWire,
   OrganizationRenameInput,
-  OrganizationRestored,
+  OrganizationWire,
 } from "./wire";
+
+const BASE = "/api/v1/organizations";
+
+const toOrganization = (w: OrganizationWire): Organization => ({
+  id: w.id,
+  slug: w.slug,
+  name: w.name,
+  ...(w.description !== undefined ? { description: w.description } : {}),
+  ...(w.rdid !== undefined ? { rdid: w.rdid } : {}),
+});
 
 export type {
   Organization,
@@ -36,7 +47,6 @@ export type {
   OrganizationProvisioned,
   OrganizationRenameInput,
   OrganizationRenamed,
-  OrganizationRestored,
 } from "./wire";
 
 /**
@@ -62,14 +72,18 @@ export const organizationsApi = {
    * and therefore showed the same rows under every workspace — including the one you had open.
    */
   async list(workspaceSlug: string): Promise<OrganizationListRow[]> {
-    return authedJson<OrganizationListRow[]>(
-      `/api/organization/organizations?workspace=${enc(workspaceSlug)}`,
-    );
+    const rows = await listAllV1<OrganizationWire>(withV1Query(BASE, { workspace: workspaceSlug }));
+    return rows.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      ...(r.description !== undefined ? { description: r.description } : {}),
+    }));
   },
 
   /** Resolve an organization by UUID, slug, or reverse-domain rdid. */
   async resolve(key: string): Promise<Organization> {
-    return authedJson<Organization>(`/api/organization/organizations/${enc(key)}`);
+    return toOrganization(await authedJson<OrganizationWire>(`${BASE}/${enc(key)}`));
   },
 
   /**
@@ -90,14 +104,27 @@ export const organizationsApi = {
     workspaceSlug: string,
   ): Promise<OrganizationProvisioned> {
     try {
-      return await authedJson<OrganizationProvisioned>(
-        `/api/organization/organizations?workspace=${enc(workspaceSlug)}`,
+      const w = await authedJson<OrganizationProvisionedWire>(
+        withV1Query(BASE, { workspace: workspaceSlug }),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(input),
+          body: JSON.stringify({ slug: input.slug, name: input.name }),
         },
       );
+      return {
+        organization: toOrganization(w.organization),
+        namespace: {
+          id: w.namespace.id,
+          ownerKind: w.namespace.owner_kind,
+          ownerId: w.namespace.owner_id,
+          slug: w.namespace.slug,
+          name: w.namespace.name,
+          rdid: w.namespace.rdid,
+        },
+        teamId: w.team_id,
+        ecosystem: w.ecosystem,
+      };
     } catch (err) {
       rethrowConflict(err, "An organization with that slug already exists.");
     }
@@ -107,11 +134,13 @@ export const organizationsApi = {
    *  slug: site-admin only (it re-mints the org's global rdid tree). */
   async rename(id: string, input: OrganizationRenameInput): Promise<Organization> {
     try {
-      return await authedJson<Organization>(`/api/organization/organizations/${enc(id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(compact(input)),
-      });
+      return toOrganization(
+        await authedJson<OrganizationWire>(`${BASE}/${enc(id)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(compact(input)),
+        }),
+      );
     } catch (err) {
       rethrowConflict(err, "That organization slug is already taken.");
     }
@@ -121,19 +150,17 @@ export const organizationsApi = {
    *  for anyone to claim. Reversible via {@link restore} while that handle is still free. Org
    *  creator, org-team admin, or site-admin; a 403 surfaces as an inline error. */
   async archive(id: string): Promise<void> {
-    // 204 No Content — authedRequest, not authedJson (nothing to parse).
-    await authedRequest(`/api/organization/organizations/${enc(id)}`, { method: "DELETE" });
+    // A tombstone body the caller never reads — authedRequest, not authedJson.
+    await authedRequest(`${BASE}/${enc(id)}`, { method: "DELETE" });
   },
 
   /** Restore an archived organization to its OWN handle. A conflict means the handle has since
    *  been taken — the org stays archived, and getting it back needs a different slug. */
   async restore(id: string): Promise<Organization> {
     try {
-      const body = await authedJson<OrganizationRestored>(
-        `/api/organization/organizations/${enc(id)}/restore`,
-        { method: "POST" },
+      return toOrganization(
+        await authedJson<OrganizationWire>(`${BASE}/${enc(id)}/restore`, { method: "POST" }),
       );
-      return body.organization;
     } catch (err) {
       // Status-based, not rethrowConflict: the restore route's 409 message
       // ("that organization handle has been taken") doesn't match the

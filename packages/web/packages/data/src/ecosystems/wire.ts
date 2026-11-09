@@ -18,48 +18,56 @@ export type EcosystemType =
   | "container"
   | "product";
 
-/** Backend row for `GET /ecosystem/ecosystems` (and a single ecosystem). */
+/** `/v1/ecosystems` row (list, get, create, update). `created`/`updated` are UNIX seconds. */
 export interface EcosystemRow {
+  object?: "ecosystem";
   id: string;
   name: string;
   description?: string | null;
   region?: string | null;
-  primaryDomain?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  primary_domain?: string | null;
+  created: number;
+  updated: number;
   /** hides the auto-provisioned default ecosystem in `list`/`listChildren`. */
-  isDefault: boolean;
+  is_default: boolean;
   /** the ecosystem's own slug — used to resolve a workspace's ecosystem by slug. */
   slug: string;
   /** `?workspace=` mode only: whether the CALLER may manage this ecosystem's contents
    *  (the org-admin bar). The list itself is membership-gated, so a plain org member
    *  sees org products they cannot open — the UI uses this to present that honestly. */
-  canManage?: boolean;
+  can_manage?: boolean;
   /** Optional on the wire: a backend older than the `type` column omits it, and a row without one
    *  is treated as NOT hub data (see `isHubDataEcosystem`). */
   type?: EcosystemType;
 }
 
-/** `POST /ecosystem/ecosystems` body. */
+/** `POST /v1/ecosystems` body. */
 export interface EcosystemCreateBody {
   id: string;
   slug: string;
   name: string;
   description: string;
   region: string;
-  primaryDomain: string;
+  primary_domain: string;
 }
 
-/** `PUT /ecosystem/ecosystems/{id}` body — generic CRUD PUT accepts a partial body
- *  (createInsertSchema().partial()). `slug` is the RENAME: the address is derived from the
- *  stored slug, so changing it is the move, and the route cascades the new address onto the
- *  handle and every descendant. */
+/** `POST /v1/ecosystems/{id}` body — a partial update. `slug` is the RENAME: the address is
+ *  derived from the stored slug, so changing it is the move, and the route cascades the new
+ *  address onto the handle and every descendant. */
 export interface EcosystemPutBody {
   slug?: string;
   name?: string;
   description?: string;
   region?: string;
-  primaryDomain?: string;
+  primary_domain?: string;
+}
+
+/** The per-ecosystem auth policy as the `auth_settings` include carries it. */
+export interface AuthSettingsWire {
+  signup_mode: "open" | "invite_only" | "closed";
+  login_enabled: boolean;
+  password_enabled: boolean;
+  allowed_providers: string[] | null;
 }
 
 /** `PATCH /registry/identifiers/{rdid}` body — renames an rdid in place. */

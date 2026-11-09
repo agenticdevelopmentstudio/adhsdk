@@ -26,8 +26,8 @@ const DEFAULT_TIMEOUT_MS = 15_000
 const TIMEOUT_REASON = 'mdv-timeout'
 
 /**
- * Read an RFC 9457 problem detail (`application/problem+json`) or a plain-text
- * body and return a human-readable message for the error state (c3).
+ * Read an RFC 9457 problem detail (`application/problem+json`), a /v1 error body or a
+ * plain-text body and return a human-readable message for the error state (c3).
  */
 async function messageFromResponse(res: Response, id: string): Promise<string> {
   const contentType = res.headers.get('content-type') ?? ''
@@ -44,13 +44,80 @@ async function messageFromResponse(res: Response, id: string): Promise<string> {
       // malformed problem+json — fall through to the generic message
     }
   }
+  // /v1 errors are `{ error: { type, code, message, param } }` as plain JSON.
+  try {
+    const v1 = JSON.parse(body) as { error?: { message?: unknown } }
+    const message = v1?.error?.message
+    if (res.status !== 404 && typeof message === 'string' && message) return message
+  } catch {
+    // not JSON — fall through
+  }
   if (res.status === 404) return `Document not found (id: ${id}).`
   return body || `Failed to load document (HTTP ${res.status}).`
 }
 
-/** The default fetcher: GET /api/content/markdown/:id through the host app's forwarder. */
+/** A paper as `GET /v1/papers/:id` sends it (`MarkdownDocument`): snake_case, `created` and
+ *  `updated` in unix seconds. This package carries no auth/API dependency, so the wire shape
+ *  and its one mapping live here. */
+interface PaperWire {
+  id: string
+  owner_kind: string
+  owner_id: string
+  author_kind?: string | null
+  author_id?: string | null
+  ecosystem_id: string
+  deleted_at?: string | null
+  title: string
+  content: string
+  frontmatter?: { [key: string]: unknown } | null
+  category?: string | null
+  tags: string[]
+  visibility: 'private' | 'public'
+  stage: 'draft' | 'final'
+  kind: 'paper' | 'research'
+  public_route?: string | null
+  content_hash: string
+  size_bytes: number
+  current_version: number
+  latest_version_id?: string | null
+  created: number
+  updated: number
+  is_deleted: boolean
+}
+
+const iso = (seconds: number): string => new Date(seconds * 1000).toISOString()
+
+function documentFromWire(w: PaperWire): MarkdownDocument {
+  return {
+    id: w.id,
+    ownerKind: w.owner_kind,
+    ownerId: w.owner_id,
+    authorKind: w.author_kind,
+    authorId: w.author_id,
+    ecosystemId: w.ecosystem_id,
+    deletedAt: w.deleted_at,
+    title: w.title,
+    content: w.content,
+    frontmatter: w.frontmatter,
+    category: w.category,
+    tags: w.tags,
+    visibility: w.visibility,
+    stage: w.stage,
+    kind: w.kind,
+    publicRoute: w.public_route,
+    contentHash: w.content_hash,
+    sizeBytes: w.size_bytes,
+    currentVersion: w.current_version,
+    latestVersionId: w.latest_version_id,
+    createdAt: iso(w.created),
+    updatedAt: iso(w.updated),
+    isDeleted: w.is_deleted,
+  }
+}
+
+/** The default fetcher: GET /api/v1/papers/:id through the host app's forwarder. */
 export const defaultMarkdownFetcher: MarkdownFetcher = async (id, signal) => {
-  const res = await fetch(`/api/content/markdown/${encodeURIComponent(id)}`, {
+  const res = await fetch(`/api/v1/papers/${encodeURIComponent(id)}`, {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
     signal,
@@ -59,7 +126,7 @@ export const defaultMarkdownFetcher: MarkdownFetcher = async (id, signal) => {
     // Throw a message-bearing error so the hook surfaces a readable error state.
     throw new Error(await messageFromResponse(res, id))
   }
-  return (await res.json()) as MarkdownDocument
+  return documentFromWire((await res.json()) as PaperWire)
 }
 
 export interface UseMarkdownDocumentOptions {

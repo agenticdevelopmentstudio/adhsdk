@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from '../context'
 
 // Returning visitors hold a per-site session (tokens) AND a cached copy of the
 // user from a prior visit. The provider renders the signed-in UI IMMEDIATELY
-// from that cache and revalidates /api/auth/me in the background — so the
+// from that cache and revalidates /api/v1/account in the background — so the
 // auth-gated content no longer stares at a "Loading…" gate for a backend
 // round-trip. Capability-gated sites (admin) opt out: a stale cache must never
 // flash privileged UI to a user whose capability was revoked.
@@ -48,7 +48,7 @@ afterEach(() => {
 })
 
 describe('AuthProvider optimistic restore', () => {
-  it('renders the cached user immediately, before /api/auth/me resolves', () => {
+  it('renders the cached user immediately, before /api/v1/account resolves', () => {
     seedSession({ id: 'u1', email: 'a@b.com', name: 'Ada' })
     const meCalls: string[] = []
     vi.stubGlobal(
@@ -68,7 +68,7 @@ describe('AuthProvider optimistic restore', () => {
     // Signed in synchronously from cache — no waitFor, no resolved fetch.
     expect(getByTestId('probe').textContent).toBe('user:Ada')
     // …and the background revalidation was still kicked off.
-    expect(meCalls.some((u) => u.includes('/api/auth/me'))).toBe(true)
+    expect(meCalls.some((u) => u.includes('/api/v1/account'))).toBe(true)
   })
 
   it('reconciles to the freshly fetched user when revalidation returns updated data', async () => {
@@ -76,7 +76,7 @@ describe('AuthProvider optimistic restore', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
-        if (String(input).includes('/api/auth/me')) {
+        if (String(input).includes('/api/v1/account')) {
           return {
             ok: true,
             status: 200,
@@ -119,7 +119,7 @@ describe('AuthProvider optimistic restore', () => {
 
   it('does NOT optimistically render on capability-gated sites — waits for the live check', () => {
     // Even a cached user that LOOKS like an admin must not flash the console: the
-    // cache could be stale (capability revoked). The gate holds until /api/auth/me.
+    // cache could be stale (capability revoked). The gate holds until /api/v1/account.
     // (The first test proves the SAME seed DOES render optimistically without
     // requireCapability — that contrast is what makes this assertion load-bearing.)
     seedSession({ id: 'u1', email: 'a@b.com', name: 'Ada', capabilities: ['admin'] })
@@ -136,7 +136,7 @@ describe('AuthProvider optimistic restore', () => {
 
   it('keeps the session on a transient 5xx revalidation — a valid user is NOT logged out', async () => {
     // The cold-starting backend (the very latency this path hides) can answer
-    // /api/auth/me with a 5xx. That must not evict the already-rendered session.
+    // /api/v1/account with a 5xx. That must not evict the already-rendered session.
     seedSession({ id: 'u1', email: 'a@b.com', name: 'Ada' })
     const calls: string[] = []
     vi.stubGlobal(
@@ -159,7 +159,7 @@ describe('AuthProvider optimistic restore', () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 0))
     })
-    expect(calls.some((u) => u.includes('/api/auth/me'))).toBe(true)
+    expect(calls.some((u) => u.includes('/api/v1/account'))).toBe(true)
     expect(getByTestId('probe').textContent).toBe('user:Ada')
     expect(window.localStorage.getItem(TOKENS_KEY)).not.toBeNull()
     expect(window.localStorage.getItem(USER_KEY)).not.toBeNull()
@@ -170,7 +170,7 @@ describe('AuthProvider optimistic restore', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
-        if (String(input).includes('/api/auth/me')) {
+        if (String(input).includes('/api/v1/account')) {
           return {
             ok: true,
             status: 200,

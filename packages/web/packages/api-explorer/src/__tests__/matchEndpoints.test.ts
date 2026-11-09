@@ -6,23 +6,23 @@ const keys = (matches: Parameters<typeof matchEndpoints>[0]) => matchEndpoints(m
 
 describe("matchEndpoints", () => {
   it("matches a route whatever its placeholders are called", () => {
-    expect(keys([{ method: "get", path: "/ecosystem/client-auth/{ecosystem id}" }])).toEqual([
-      "GET /ecosystem/client-auth/{id}",
+    expect(keys([{ method: "get", path: "/v1/personas/{persona id}" }])).toEqual([
+      "GET /v1/personas/{id}",
     ])
   })
 
   it("takes a route with no method as every method on its path, in method order", () => {
-    expect(keys([{ path: "/auth/me" }])).toEqual(["GET /auth/me", "PATCH /auth/me"])
+    expect(keys([{ path: "/v1/account" }])).toEqual(["GET /v1/account", "POST /v1/account"])
   })
 
   it("keeps the order the page names them in, each once", () => {
     expect(
       keys([
-        { method: "PUT", path: "/ecosystem/applications/{app id}/client-auth" },
-        { method: "GET", path: "/auth/me" },
-        { path: "/auth/me" },
+        { method: "DELETE", path: "/v1/personas/{persona id}" },
+        { method: "GET", path: "/v1/account" },
+        { path: "/v1/account" },
       ]),
-    ).toEqual(["PUT /ecosystem/applications/{appId}/client-auth", "GET /auth/me", "PATCH /auth/me"])
+    ).toEqual(["DELETE /v1/personas/{id}", "GET /v1/account", "POST /v1/account"])
   })
 
   it("leaves out a route the spec does not have", () => {

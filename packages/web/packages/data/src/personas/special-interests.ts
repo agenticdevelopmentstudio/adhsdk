@@ -1,13 +1,16 @@
-// Generic CRUD over `persona.special_interests` — a persona's one or two deep interests.
+// `/v1/special_interests` — a persona's one or two deep interests.
 //
-// Routes: /api/persona/special-interests (list/create), /api/persona/special-interests/{id}
-//         (put/delete).
+// Routes: /api/v1/special_interests (list/create), /api/v1/special_interests/{id}
+//         (post/delete).
 //
-// The list MUST be filtered by persona: generic CRUD scopes to the caller's own rows, so an
+// The list MUST be filtered by persona: the resource scopes to the caller's own rows, so an
 // unfiltered call returns every interest the caller owns across ALL their personas.
-import { authedJson, authedRequest } from "../http";
+import { authedJson, authedRequest, listAllV1, withV1Query } from "../http";
 import { enc } from "../client-helpers";
-import type { SpecialInterestRow } from "./wire";
+import { specialInterestFromWire } from "./mappers";
+import type { SpecialInterestRow, V1SpecialInterest } from "./wire";
+
+const BASE = "/api/v1/special_interests";
 
 /** Create body. `personaId` takes the persona's rdid (`persona.<owner>.<name>`) or its uuid —
  *  the backend resolves either. `slug` is a single rdid segment: [a-z0-9-], no dots. */
@@ -27,26 +30,40 @@ export type SpecialInterestPatch = Partial<Omit<SpecialInterestBody, "personaId"
 
 export const specialInterestsApi = {
   list: (personaId: string) =>
-    authedJson<SpecialInterestRow[]>(
-      `/api/persona/special-interests?personaId=${enc(personaId)}`,
+    listAllV1<V1SpecialInterest>(withV1Query(BASE, { persona_id: personaId })).then((rows) =>
+      rows.map(specialInterestFromWire),
     ),
   create: (body: SpecialInterestBody) =>
-    authedJson<SpecialInterestRow>("/api/persona/special-interests", {
+    authedJson<V1SpecialInterest>(BASE, {
       method: "POST",
-      body: JSON.stringify(body),
-    }),
+      body: JSON.stringify({
+        persona_id: body.personaId,
+        slug: body.slug,
+        general: body.general,
+        topical: body.topical,
+        specific: body.specific,
+        stances: body.stances,
+        position: body.position,
+      }),
+    }).then(specialInterestFromWire),
   update: (id: string, patch: SpecialInterestPatch) => {
-    // Drop the two fields the backend refuses even if a caller passes them through: a real
-    // personaId change is a 400, and bucketId is stripped server-side. Failing here silently is
-    // better than a confusing 400 the user cannot act on.
-    const { personaId: _p, bucketId: _b, ...safe } = patch as Record<string, unknown>;
-    return authedJson<SpecialInterestRow>(`/api/persona/special-interests/${enc(id)}`, {
-      method: "PUT",
-      body: JSON.stringify(safe),
-    });
+    // Build the body from the editable fields only: a real personaId change is a 400 and
+    // bucketId is server-assigned, so even a caller that passes them through (they are not in
+    // the type) cannot send them. Failing here silently is better than a confusing 400 the
+    // user cannot act on.
+    return authedJson<V1SpecialInterest>(`${BASE}/${enc(id)}`, {
+      method: "POST",
+      body: JSON.stringify({
+        slug: patch.slug,
+        general: patch.general,
+        topical: patch.topical,
+        specific: patch.specific,
+        stances: patch.stances,
+        position: patch.position,
+      }),
+    }).then(specialInterestFromWire);
   },
-  delete: (id: string) =>
-    authedRequest(`/api/persona/special-interests/${enc(id)}`, { method: "DELETE" }),
+  delete: (id: string) => authedRequest(`${BASE}/${enc(id)}`, { method: "DELETE" }),
 };
 
 export type { SpecialInterestRow } from "./wire";

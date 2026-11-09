@@ -13,7 +13,7 @@ import { createContext, useContext, type ReactNode } from "react";
 export interface RecordAffordanceProps {
   /** HTTP verb to focus. Defaults to the item read (GET). */
   method?: string;
-  /** Backend-native path (no `/api` prefix), e.g. `/team/teams/{id}`. */
+  /** Backend-native path (no `/api` prefix), e.g. `/v1/teams/{id}`. */
   path: string;
   /** Values for the path placeholders; the affordance hides while any is missing. */
   pathValues: Record<string, string | null | undefined>;

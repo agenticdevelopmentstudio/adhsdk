@@ -45,9 +45,10 @@ export type UserCardPersona = {
 }
 
 /**
- * Structurally matches the `PublicUserProfile` schema in the backend's generated
- * API types. Defined here to keep @adh-sdk/ui free of a dependency on
- * that generated package — pass `SuccessBody<'/public/users/{slug}', 'get'>` directly.
+ * The camelCase domain shape of the `PublicUserProfile` card (`GET /v1/users?handle=`). Defined
+ * here to keep @adh-sdk/ui free of a dependency on the generated API types. The /v1 wire is
+ * snake_case with `created` in unix seconds, so it is NOT passed directly: the caller maps it
+ * (adh's `profile/normalize.ts` does).
  */
 export type UserCardDto = {
   slug: string

@@ -61,7 +61,7 @@ export function SyncPane({ help }: { help?: ReactNode } = {}) {
             {row.overridden && (
               <Badge
                 variant="accent"
-                title={`Default: ${row.defaultEnabled ? "synced" : "not synced"}`}
+                title={`Default: ${row.default_enabled ? "synced" : "not synced"}`}
               >
                 overridden
               </Badge>
@@ -71,7 +71,7 @@ export function SyncPane({ help }: { help?: ReactNode } = {}) {
       },
       { key: "schema", header: "Schema", width: "11rem", value: schemaOf },
       { key: "scope", header: "Scope", width: "9rem", value: (row) => row.scope },
-      { key: "pushMode", header: "Push", width: "7rem", value: (row) => row.pushMode },
+      { key: "pushMode", header: "Push", width: "7rem", value: (row) => row.push_mode },
       {
         key: "enabled",
         header: "Synced",
@@ -87,9 +87,9 @@ export function SyncPane({ help }: { help?: ReactNode } = {}) {
         key: "defaultEnabled",
         header: "Default",
         width: "8rem",
-        value: (row) => syncedLabel(row.defaultEnabled),
+        value: (row) => syncedLabel(row.default_enabled),
         render: (row) => (
-          <span className="text-xs text-apt-text-dim">{syncedLabel(row.defaultEnabled)}</span>
+          <span className="text-xs text-apt-text-dim">{syncedLabel(row.default_enabled)}</span>
         ),
       },
     ],

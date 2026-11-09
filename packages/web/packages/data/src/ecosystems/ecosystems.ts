@@ -1,8 +1,8 @@
-// Ecosystems API client — wired to the real backend (generic CRUD over
-// `ecosystems.ecosystems`, an RDID-addressed table).
+// Ecosystems API client — wired to the real backend (`/v1/ecosystems`, an
+// RDID-addressed resource).
 //
-// Routes: /api/ecosystem/ecosystems (list/create),
-//         /api/ecosystem/ecosystems/{id} (get/update/delete).
+// Routes: /api/v1/ecosystems (list/create),
+//         /api/v1/ecosystems/{id} (get/update[POST]/delete).
 //
 // `ecosystems.ecosystems` is RDID-addressed: its public `id` is the
 // reverse-domain identifier (rdid) — the backend resolves rdid<->uuid at the
@@ -16,7 +16,7 @@
 //   UI name             <->  backend `name`
 //   UI description      <->  backend `description`
 //   UI region           <->  backend `region`
-//   UI domain           <->  backend `primaryDomain`
+//   UI domain           <->  backend `primary_domain`
 //
 // CREATE DOES NOT SET THE ADDRESS. The server DERIVES it from (the owner's parent
 // chain, `slug`) and mints it — so `slug` is the address's LAST SEGMENT, one rdid
@@ -29,14 +29,22 @@
 // dotted rdid can never equal its own leaf.
 //
 // The `identifier` (rdid) IS mutable, and moving it is the SAME `slug` field: update()
-// sends the new last segment in the ordinary PUT, and the route re-derives the address and
+// sends the new last segment in the ordinary update, and the route re-derives the address and
 // cascades it onto the handle and every descendant. There is no second call — see update()'s
 // own doc for why the registry.identifiers PATCH this client used to chase the PUT with was
 // the wrong (non-structural) rename.
 
-import { authedJson, authedRequest, isNotFound, rethrowConflict } from "../http";
+import {
+  authedJson,
+  authedRequest,
+  isNotFound,
+  listAllV1,
+  rethrowConflict,
+  unixToIso,
+  withV1Query,
+} from "../http";
 import { compact, enc, sortByText } from "../client-helpers";
-import type { EcosystemRow, EcosystemCreateBody, EcosystemPutBody, EcosystemType } from "./wire";
+import type { AuthSettingsWire, EcosystemRow, EcosystemCreateBody, EcosystemPutBody, EcosystemType } from "./wire";
 
 export type { EcosystemType };
 
@@ -104,8 +112,8 @@ export interface EcosystemInput {
 }
 
 /** The explicit per-ecosystem auth policy (backend `ecosystem.auth_settings`), served by
- *  the bespoke /ecosystem/auth-settings route (not generic CRUD → hand-declared, like
- *  `capabilities` below, rather than sourced from the OpenAPI spec). */
+ *  the `auth_settings` include of `/v1/ecosystems/{id}` (read with `?include[]=auth_settings`,
+ *  written with `{auth_settings: {...}}`). */
 export type SignupMode = "open" | "invite_only" | "closed";
 export interface AuthSettings {
   signupMode: SignupMode;
@@ -116,7 +124,24 @@ export interface AuthSettings {
   allowedProviders: string[] | null;
 }
 
-const BASE = "/api/ecosystem/ecosystems";
+const BASE = "/api/v1/ecosystems";
+
+export const toAuthSettings = (w: AuthSettingsWire): AuthSettings => ({
+  signupMode: w.signup_mode,
+  loginEnabled: w.login_enabled,
+  passwordEnabled: w.password_enabled,
+  allowedProviders: w.allowed_providers ?? null,
+});
+
+/** A partial {@link AuthSettings} patch as the wire's snake_case body; undefined keys are dropped and
+ *  an explicit `allowedProviders: null` ("all providers") is kept. */
+export const authSettingsPatchToWire = (patch: Partial<AuthSettings>): Partial<AuthSettingsWire> =>
+  compact({
+    signup_mode: patch.signupMode,
+    login_enabled: patch.loginEnabled,
+    password_enabled: patch.passwordEnabled,
+    allowed_providers: patch.allowedProviders,
+  });
 
 export function toEcosystem(r: EcosystemRow): Ecosystem {
   return {
@@ -126,22 +151,22 @@ export function toEcosystem(r: EcosystemRow): Ecosystem {
     name: r.name,
     description: r.description ?? "",
     region: r.region ?? "",
-    domain: r.primaryDomain ?? "",
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
-    ...(r.canManage !== undefined ? { canManage: r.canManage } : {}),
+    domain: r.primary_domain ?? "",
+    createdAt: unixToIso(r.created),
+    updatedAt: unixToIso(r.updated),
+    ...(r.can_manage !== undefined ? { canManage: r.can_manage } : {}),
     ...(r.type !== undefined ? { type: r.type } : {}),
   };
 }
 
 export const ecosystemsApi = {
   async list(): Promise<Ecosystem[]> {
-    const rows = await authedJson<EcosystemRow[]>(BASE);
+    const rows = await listAllV1<EcosystemRow>(BASE);
     // Hide the auto-provisioned default ecosystems (`<rdid>.ecosystem`): they're managed
     // infrastructure, not ecosystems the user created, so listing them would just double
     // the list with "X (default)" siblings. They stay addressable directly by rdid.
     return sortByText(
-      rows.filter((r) => !r.isDefault).map(toEcosystem),
+      rows.filter((r) => !r.is_default).map(toEcosystem),
       (e) => e.name,
     );
   },
@@ -153,7 +178,7 @@ export const ecosystemsApi = {
    *  defaults AND the principal's auto-provisioned infrastructure row, so no client
    *  filter is needed (unlike the unscoped {@link list}). Rows carry `canManage`. */
   async listForWorkspace(workspaceSlug: string): Promise<Ecosystem[]> {
-    const rows = await authedJson<EcosystemRow[]>(`${BASE}?workspace=${enc(workspaceSlug)}`);
+    const rows = await listAllV1<EcosystemRow>(withV1Query(BASE, { workspace: workspaceSlug }));
     return sortByText(rows.map(toEcosystem), (e) => e.name);
   },
 
@@ -174,19 +199,20 @@ export const ecosystemsApi = {
   async workspaceDefaultEcosystemId(
     workspaceSlug?: string,
   ): Promise<{ id: string; canManage: boolean } | null> {
-    const scope = workspaceSlug != null ? `workspace=${enc(workspaceSlug)}&` : "";
-    const rows = await authedJson<EcosystemRow[]>(`${BASE}?${scope}infrastructure=true`);
+    const rows = await listAllV1<EcosystemRow>(
+      withV1Query(BASE, { workspace: workspaceSlug, infrastructure: "true" }),
+    );
     const row = rows[0];
     // `canManage` is annotated by the workspace-mode list: a member can READ the org's infra
     // ecosystem (membership-gated) but only an org admin can MANAGE its contents — the host uses
     // this to show an honest "ask an admin" notice instead of a wall of per-pane 403s.
-    return row ? { id: row.id, canManage: row.canManage !== false } : null;
+    return row ? { id: row.id, canManage: row.can_manage !== false } : null;
   },
 
   /** The id of the workspace's hub-data (`personal` / `organization`) ecosystem, or `null` when the
    *  workspace has none yet (a backend or a user the move has not reached). */
   async hubDataEcosystemId(workspaceSlug: string): Promise<string | null> {
-    const rows = await authedJson<EcosystemRow[]>(`${BASE}?workspace=${enc(workspaceSlug)}`);
+    const rows = await listAllV1<EcosystemRow>(withV1Query(BASE, { workspace: workspaceSlug }));
     return rows.find(isHubDataEcosystem)?.id ?? null;
   },
 
@@ -195,7 +221,7 @@ export const ecosystemsApi = {
    *  excludes the structural defaults), so admins get the same node-scoped set here rather
    *  than every ecosystem. */
   async listChildren(parentId: string): Promise<Ecosystem[]> {
-    const rows = await authedJson<EcosystemRow[]>(`${BASE}?parent=${enc(parentId)}`);
+    const rows = await listAllV1<EcosystemRow>(withV1Query(BASE, { parent: parentId }));
     return sortByText(rows.map(toEcosystem), (e) => e.name);
   },
 
@@ -237,12 +263,12 @@ export const ecosystemsApi = {
         name: input.name,
         description: input.description,
         region: input.region,
-        primaryDomain: input.domain,
+        primary_domain: input.domain,
       };
       const url = opts?.parent
-        ? `${BASE}?parent=${enc(opts.parent)}`
+        ? withV1Query(BASE, { parent: opts.parent })
         : opts?.workspace
-          ? `${BASE}?workspace=${enc(opts.workspace)}`
+          ? withV1Query(BASE, { workspace: opts.workspace })
           : BASE;
       const row = await authedJson<EcosystemRow>(url, {
         method: "POST",
@@ -260,10 +286,10 @@ export const ecosystemsApi = {
   /**
    * Update the mutable fields, and RENAME when `identifier` changes.
    *
-   * A rename is a `slug` change in this one PUT, not a second call: the address is DERIVED from
+   * A rename is a `slug` change in this one POST, not a second call: the address is DERIVED from
    * (parent chain, slug), so the stored slug is the only thing that moves it, and this route
    * cascades the new address onto the handle and every descendant — child ecosystems, apps,
-   * buckets, integrations, the customers scoped under it. This client used to PUT the fields and
+   * buckets, integrations, the customers scoped under it. This client used to update the fields and
    * then PATCH `registry.identifiers`, which is the OTHER, non-structural rename: it retitles the
    * handle and leaves the slug column behind, so the row went on deriving its OLD address, its
    * descendants kept deriving off the old segment, and the next ancestor cascade re-leafed the
@@ -271,7 +297,7 @@ export const ecosystemsApi = {
    * contract, where the handle WAS the stored address.
    *
    * The old two-call sequence needed a 404-recovery branch (the first call could land, the second
-   * fail, and the old id stop resolving). One call has no such window — a failed PUT changes
+   * fail, and the old id stop resolving). One call has no such window — a failed update changes
    * nothing — so there is nothing left to recover.
    */
   async update(id: string, input: Partial<EcosystemInput>): Promise<Ecosystem> {
@@ -298,14 +324,14 @@ export const ecosystemsApi = {
       name: input.name,
       description: input.description,
       region: input.region,
-      primaryDomain: input.domain,
+      primary_domain: input.domain,
     } satisfies EcosystemPutBody);
     // The echoed row carries the address the server DERIVED, which is the authority — never the
     // identifier the caller typed. They agree for a legal leaf; where they don't, the derived one
     // is what exists, and returning the typed one would hand callers an id that resolves to nothing.
     return toEcosystem(
       await authedJson<EcosystemRow>(`${BASE}/${enc(id)}`, {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify(body),
       }),
     );
@@ -341,10 +367,10 @@ export const ecosystemsApi = {
       // Anything else is a real failure and must not be papered over with an arbitrary row.
       if (!isNotFound(err)) throw err;
     }
-    const rows = await authedJson<EcosystemRow[]>(BASE);
+    const rows = await listAllV1<EcosystemRow>(BASE);
     return (
       (rows.find((r) => r.slug === slug) ??
-        rows.find((r) => r.isDefault) ??
+        rows.find((r) => r.is_default) ??
         rows[0])?.id ?? null
     );
   },
@@ -353,15 +379,21 @@ export const ecosystemsApi = {
    *  realm. Absent server-side ⇒ documented defaults (invite_only + login enabled); the
    *  route always returns a full object. `id` is the ecosystem's rdid (or uuid). */
   async authSettings(id: string): Promise<AuthSettings> {
-    return authedJson<AuthSettings>(`/api/ecosystem/auth-settings/${enc(id)}`);
+    const eco = await authedJson<{ auth_settings: AuthSettingsWire }>(
+      withV1Query(`${BASE}/${enc(id)}`, { "include[]": ["auth_settings"] }),
+    );
+    return toAuthSettings(eco.auth_settings);
   },
 
   /** Update the auth policy (partial patch; `compact` drops undefined keys but preserves an
    *  explicit `allowedProviders: null` = "all providers"). Returns the effective policy. */
   async updateAuthSettings(id: string, patch: Partial<AuthSettings>): Promise<AuthSettings> {
-    return authedJson<AuthSettings>(`/api/ecosystem/auth-settings/${enc(id)}`, {
-      method: "PUT",
-      body: JSON.stringify(compact(patch)),
+    const eco = await authedJson<{ auth_settings: AuthSettingsWire }>(`${BASE}/${enc(id)}`, {
+      method: "POST",
+      body: JSON.stringify({
+        auth_settings: authSettingsPatchToWire(patch),
+      }),
     });
+    return toAuthSettings(eco.auth_settings);
   },
 };

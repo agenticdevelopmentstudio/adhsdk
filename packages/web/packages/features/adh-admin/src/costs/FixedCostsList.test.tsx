@@ -25,12 +25,12 @@ const cost = (over: Partial<FixedCost> = {}): FixedCost => ({
   id: "c1",
   provider: "railway",
   label: "Backend service",
-  monthlyMicros: 20_000_000,
-  effectiveFrom: "2020-01-01",
-  effectiveTo: null,
+  monthly_micros: 20_000_000,
+  effective_from: "2020-01-01",
+  effective_to: null,
   note: "",
-  createdAt: "2020-01-01T00:00:00Z",
-  updatedAt: "2020-01-01T00:00:00Z",
+  created: 1577836800,
+  updated: 1577836800,
   ...over,
 });
 
@@ -46,7 +46,7 @@ const button = (name: string) => screen.getByRole("button", { name }) as HTMLBut
 describe("FixedCostsList", () => {
   it("deletes a cost that starts in the future", async () => {
     deleteAsync.mockResolvedValue({ ok: true });
-    selectRow([cost({ effectiveFrom: "2999-01-01" })], "Backend service");
+    selectRow([cost({ effective_from: "2999-01-01" })], "Backend service");
     expect(screen.queryByRole("button", { name: "End cost" })).toBeNull();
     fireEvent.click(button("Delete"));
     await waitFor(() => expect(deleteAsync).toHaveBeenCalledWith("c1"));
@@ -56,7 +56,7 @@ describe("FixedCostsList", () => {
   // The backend lets a cost be deleted while `effectiveFrom >= today`, so today counts as not begun.
   it("deletes a cost that starts today", async () => {
     deleteAsync.mockResolvedValue({ ok: true });
-    selectRow([cost({ effectiveFrom: todayUtc() })], "Backend service");
+    selectRow([cost({ effective_from: todayUtc() })], "Backend service");
     fireEvent.click(button("Delete"));
     await waitFor(() => expect(deleteAsync).toHaveBeenCalledWith("c1"));
   });
@@ -67,7 +67,7 @@ describe("FixedCostsList", () => {
     expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
     fireEvent.click(button("End cost"));
     await waitFor(() =>
-      expect(updateAsync).toHaveBeenCalledWith({ id: "c1", changes: { effectiveTo: todayUtc() } }),
+      expect(updateAsync).toHaveBeenCalledWith({ id: "c1", changes: { effective_to: todayUtc() } }),
     );
     expect(deleteAsync).not.toHaveBeenCalled();
   });

@@ -2,7 +2,7 @@
 // TAGS that `markdownApi.categoryTree()` / `.tagSet()` read.
 //
 // These go to a DIFFERENT surface than everything else in this folder: the generic CRUD
-// door (`/content/categories`, `/content/category-edges`, `/content/keywords`), not
+// door (`/v1/content/categories`, `/v1/content/category_edges`, `/v1/content/keywords`), not
 // `/content/markdown/*`. That is not
 // an inconsistency to tidy away — it is where those operations live. The markdown surface
 // owns exactly one taxonomy write, `POST /content/markdown/categories`, and only because a
@@ -28,24 +28,50 @@
 //      inside the delete's own transaction. A child still filed under another live parent
 //      is untouched. See `deleteCategory` below.
 //
-// PUT is partial (PATCH semantics on the generic layer), so each call sends only the field
+// A POST update is partial on the generic layer, so each call sends only the field
 // it changes and cannot clobber a colour, description or sort order it never asked about.
-import { authedJson, authedRequest } from "../http";
+import { authedJson, authedRequest, listAllV1 } from "../http";
 import { enc } from "../client-helpers";
 import type { MarkdownCategoryEdge, MarkdownCategoryNode, MarkdownKeywordNode } from "./wire";
 
-const CATEGORIES = "/api/content/categories";
-const CATEGORY_EDGES = "/api/content/category-edges";
-const KEYWORDS = "/api/content/keywords";
+const CATEGORIES = "/api/v1/content/categories";
+const CATEGORY_EDGES = "/api/v1/content/category_edges";
+const KEYWORDS = "/api/v1/content/keywords";
+
+interface CategoryWire {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+interface CategoryEdgeWire {
+  id: string;
+  parent_id: string;
+  child_id: string;
+  sort_order: number;
+  deleted_at?: string | null;
+}
+interface KeywordWire {
+  id: string;
+  label: string;
+}
+
+const toEdge = (w: CategoryEdgeWire): MarkdownCategoryEdge => ({
+  id: w.id,
+  parentId: w.parent_id,
+  childId: w.child_id,
+  sortOrder: w.sort_order,
+});
 
 export const taxonomyApi = {
   /** Rename a category. Every doc classified under it follows, because the link points at
    *  the id — the name is not copied onto anything. */
   async renameCategory(id: string, name: string): Promise<MarkdownCategoryNode> {
-    return authedJson<MarkdownCategoryNode>(`${CATEGORIES}/${enc(id)}`, {
-      method: "PUT",
+    const w = await authedJson<CategoryWire>(`${CATEGORIES}/${enc(id)}`, {
+      method: "POST",
       body: JSON.stringify({ name }),
     });
+    // The row carries no parent links; the caller's tree is the source of `parentIds`.
+    return { id: w.id, name: w.name, parentIds: [], sortOrder: w.sort_order };
   },
 
   /** The LIVE parent links of one category — the rows behind its `parentIds`.
@@ -56,7 +82,9 @@ export const taxonomyApi = {
    *  write — which also means they act on the CURRENT links rather than on whatever the
    *  screen was rendered from. */
   async categoryParents(childId: string): Promise<MarkdownCategoryEdge[]> {
-    return authedJson<MarkdownCategoryEdge[]>(`${CATEGORY_EDGES}?childId=${enc(childId)}`);
+    // The collection has no `child_id` filter in the spec, so narrow here (and skip tombstones).
+    const rows = await listAllV1<CategoryEdgeWire>(CATEGORY_EDGES);
+    return rows.filter((e) => e.child_id === childId && !e.deleted_at).map(toEdge);
   },
 
   /** File a category under one more parent.
@@ -70,10 +98,12 @@ export const taxonomyApi = {
    *  that has already filtered its own menu still has to handle both: the graph it filtered
    *  against is a snapshot, and someone else may have moved a branch since. */
   async addCategoryParent(childId: string, parentId: string): Promise<MarkdownCategoryEdge> {
-    return authedJson<MarkdownCategoryEdge>(CATEGORY_EDGES, {
-      method: "POST",
-      body: JSON.stringify({ childId, parentId }),
-    });
+    return toEdge(
+      await authedJson<CategoryEdgeWire>(CATEGORY_EDGES, {
+        method: "POST",
+        body: JSON.stringify({ child_id: childId, parent_id: parentId }),
+      }),
+    );
   },
 
   /** Unfile a category from one parent. Does nothing when the link is already gone, so a
@@ -98,10 +128,11 @@ export const taxonomyApi = {
   /** Rename a tag. Same id-not-text reasoning as a category: every card and document
    *  wearing it follows. */
   async renameTag(id: string, label: string): Promise<MarkdownKeywordNode> {
-    return authedJson<MarkdownKeywordNode>(`${KEYWORDS}/${enc(id)}`, {
-      method: "PUT",
+    const w = await authedJson<KeywordWire>(`${KEYWORDS}/${enc(id)}`, {
+      method: "POST",
       body: JSON.stringify({ label }),
     });
+    return { id: w.id, label: w.label };
   },
 
   /** Retire a tag (tombstone). Unlike a category, re-typing the same label later REVIVES

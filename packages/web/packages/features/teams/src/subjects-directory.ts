@@ -9,7 +9,7 @@
 // (404 → no customer rows beyond what assignments already show), a workspace with no
 // ecosystem lists no teams — partial results beat an all-or-nothing failure.
 
-import { authedJson } from "@adh-sdk/auth/client";
+import { listAllV1 } from "@adh-sdk/auth/client";
 import { api as personasApi } from "@adh-sdk/data/personas";
 import { teamsApi } from "@adh-sdk/data/teams";
 import { ecosystemsApi } from "@adh-sdk/data/ecosystems";
@@ -19,15 +19,15 @@ export async function workspaceSubjectsDirectory(
   workspaceSlug: string,
 ): Promise<AccessSubject[]> {
   const [members, personas, teams] = await Promise.all([
-    authedJson<{ members: Array<{ userId: string; displayName: string | null; email: string | null }> }>(
-      `/api/workspaces/${encodeURIComponent(workspaceSlug)}/members`,
+    listAllV1<{ user_id: string; display_name: string | null; email: string | null }>(
+      `/api/v1/workspaces/${encodeURIComponent(workspaceSlug)}/members`,
     )
-      .then((b) =>
-        b.members.map(
+      .then((rows) =>
+        rows.map(
           (m): AccessSubject => ({
             kind: "customer",
-            id: m.userId,
-            label: m.displayName || m.email || m.userId,
+            id: m.user_id,
+            label: m.display_name || m.email || m.user_id,
           }),
         ),
       )

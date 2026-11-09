@@ -11,7 +11,7 @@ import { PROFILE_FRAME_CLASS } from "./frame";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-/** One hit from `GET /public/users/search`. Structurally the backend's
+/** One hit from `GET /v1/users/search`. Structurally the backend's
  *  `PrincipalSearchHit` (routes/principal-search.ts) — declared here rather than imported so
  *  this package stays free of the generated API types, the same arrangement `UserCardDto`
  *  has in @adh-sdk/ui. `kind` is what makes the merged namespace legible; see the
@@ -20,6 +20,14 @@ type SearchHit = {
   slug: string;
   displayName: string | null;
   avatarUrl: string | null;
+  kind: "user" | "organization";
+};
+
+/** A hit as `/v1/users/search` sends it (`PublicUserSearchHit`), inside a `{object:'list', data}`. */
+type SearchHitWire = {
+  slug: string;
+  display_name: string | null;
+  avatar_url: string | null;
   kind: "user" | "organization";
 };
 
@@ -73,11 +81,17 @@ export function ProfileNotFound(): ReactElement {
     setSearch({ status: "loading" });
     try {
       const res = await fetch(
-        `/api/public/users/search?q=${encodeURIComponent(trimmed)}`,
+        `/api/v1/users/search?q=${encodeURIComponent(trimmed)}`,
         { signal: controller.signal },
       );
       if (!res.ok) throw new Error(`Search failed (${res.status})`);
-      const hits = (await res.json()) as SearchHit[];
+      const page = (await res.json()) as { data: SearchHitWire[] };
+      const hits: SearchHit[] = page.data.map((h) => ({
+        slug: h.slug,
+        displayName: h.display_name,
+        avatarUrl: h.avatar_url,
+        kind: h.kind,
+      }));
       setSearch({ status: "success", hits });
     } catch (err) {
       // Ignore AbortError — a newer request superseded this one.

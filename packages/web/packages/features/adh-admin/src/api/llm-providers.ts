@@ -3,11 +3,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { RequestBody, SuccessBody, components } from "@adh-sdk/adh-api-types";
 import { authedJson, authedRequest } from "./http";
-import { useWindowedList, type WindowedList } from "./windowed";
+import { fetchV1WindowPage, useWindowedList, type WindowedList } from "./windowed";
 
 // ── LLM provider-template catalog ───────────────────────────────────────────
 //
-// Admin-gated CRUD (+ a probe endpoint) over `/persona/provider-templates*`.
+// Admin-gated CRUD (+ a probe endpoint) over `/v1/provider_templates*`.
 // GET is public; POST/PUT/DELETE/verify are admin-only (the backend enforces
 // this — the admin app just happens to be the only caller today). Not a
 // generic-CRUD table: `models` is a nested child list synced declaratively
@@ -21,9 +21,8 @@ import { useWindowedList, type WindowedList } from "./windowed";
 export type ProviderTemplate = components["schemas"]["ProviderTemplate"];
 export type ProviderTemplateModel = components["schemas"]["ProviderTemplateModel"];
 export type ProviderConnectionSpec = components["schemas"]["ProviderConnectionSpec"];
-export type ProviderTemplateList = SuccessBody<"/persona/provider-templates", "get">;
 export type ProviderTemplateVerifyResult = SuccessBody<
-  "/persona/provider-templates/{id}/verify",
+  "/v1/provider_templates/{id}/verify",
   "post"
 >;
 
@@ -31,21 +30,19 @@ export type ProviderTemplateVerifyResult = SuccessBody<
 export type TemplateSyncKeys = components["schemas"]["TemplateSyncKeys"];
 export type CatalogSyncRun = components["schemas"]["CatalogSyncRun"];
 export type CatalogSyncOutcome = components["schemas"]["CatalogSyncOutcome"];
-export type SyncStatusResult = SuccessBody<"/persona/provider-templates/sync-status", "get">;
-export type RunSyncResult = SuccessBody<"/persona/provider-templates/sync", "post">;
-export type TemplateSyncKeysResult = SuccessBody<
-  "/persona/provider-templates/{id}/sync-keys",
-  "get"
+/** `GET /v1/provider_templates?include[]=sync_status` answers the last run per source here. */
+export type SyncStatusResult = NonNullable<
+  SuccessBody<"/v1/provider_templates", "get">["sync_status"]
 >;
+export type RunSyncResult = SuccessBody<"/v1/provider_templates/sync", "post">;
+/** `GET /v1/provider_templates/{id}?include[]=sync_keys`: the mapping sits at `sync_keys.sync_keys`. */
+export type TemplateSyncKeysResult = SuccessBody<"/v1/provider_templates/{id}", "get">;
 
 /** The create body: providerKind/name/baseUrl required, the rest optional. */
-export type CreateProviderTemplateInput = RequestBody<"/persona/provider-templates", "post">;
+export type CreateProviderTemplateInput = RequestBody<"/v1/provider_templates", "post">;
 /** The update body: every field optional; `models` present = full desired set;
  *  `connectionSpec` object replaces, `null` clears, omitted leaves untouched. */
-export type UpdateProviderTemplateInput = RequestBody<
-  "/persona/provider-templates/{id}",
-  "put"
->;
+export type UpdateProviderTemplateInput = RequestBody<"/v1/provider_templates/{id}", "post">;
 
 /**
  * The provider-template catalog as a GROWING WINDOW, in the server's own order.
@@ -61,13 +58,11 @@ export function useProviderTemplateWindow(): WindowedList<ProviderTemplate> {
   return useWindowedList<ProviderTemplate>({
     key: ["admin", "llm-providers", "templates"],
     getRowId: (t) => t.id,
-    // The route's own MAX_PAGE_SIZE. Asking for more is silently clamped, so this is the largest
+    // The route's own maximum page. Asking for more is refused, so this is the largest
     // honest fetch — and most deployments hold the whole catalog in the first one.
     pageSize: 100,
-    fetchPage: (page, pageSize) =>
-      authedJson<ProviderTemplateList>(
-        `/api/persona/provider-templates?page=${page}&pageSize=${pageSize}`,
-      ),
+    fetchPage: (after, pageSize) =>
+      fetchV1WindowPage<ProviderTemplate>("/api/v1/provider_templates", after, pageSize),
   });
 }
 
@@ -75,7 +70,7 @@ export function useCreateProviderTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateProviderTemplateInput) =>
-      authedJson<ProviderTemplate>("/api/persona/provider-templates", {
+      authedJson<ProviderTemplate>("/api/v1/provider_templates", {
         method: "POST",
         body: JSON.stringify(input),
       }),
@@ -88,8 +83,8 @@ export function useUpdateProviderTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...input }: UpdateProviderTemplateInput & { id: string }) =>
-      authedJson<ProviderTemplate>(`/api/persona/provider-templates/${id}`, {
-        method: "PUT",
+      authedJson<ProviderTemplate>(`/api/v1/provider_templates/${id}`, {
+        method: "POST",
         body: JSON.stringify(input),
       }),
     // The sync mapping lives in its OWN query (it isn't on the template DTO), so
@@ -107,7 +102,7 @@ export function useDeleteProviderTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      authedRequest(`/api/persona/provider-templates/${id}`, { method: "DELETE" }),
+      authedRequest(`/api/v1/provider_templates/${id}`, { method: "DELETE" }),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["admin", "llm-providers", "templates"] }),
   });
@@ -131,10 +126,13 @@ export function useVerifyProviderTemplate() {
       baseUrl?: string;
     }) =>
       authedJson<ProviderTemplateVerifyResult>(
-        `/api/persona/provider-templates/${id}/verify`,
+        `/api/v1/provider_templates/${id}/verify`,
         {
           method: "POST",
-          body: JSON.stringify({ apiKey, ...(baseUrl?.trim() ? { baseUrl: baseUrl.trim() } : {}) }),
+          body: JSON.stringify({
+            api_key: apiKey,
+            ...(baseUrl?.trim() ? { base_url: baseUrl.trim() } : {}),
+          }),
         },
       ),
   });
@@ -151,8 +149,13 @@ export function useVerifyProviderTemplate() {
 export function useSyncStatus() {
   return useQuery({
     queryKey: ["llm-sync-status"],
-    queryFn: () =>
-      authedJson<SyncStatusResult>("/api/persona/provider-templates/sync-status"),
+    queryFn: async (): Promise<SyncStatusResult> => {
+      // `limit=1` keeps the page small; only the folded-in `sync_status` is read.
+      const page = await authedJson<SuccessBody<"/v1/provider_templates", "get">>(
+        "/api/v1/provider_templates?include[]=sync_status&limit=1",
+      );
+      return page.sync_status ?? { sources: [] };
+    },
   });
 }
 
@@ -165,7 +168,7 @@ export function useRunSync() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
-      authedJson<RunSyncResult>("/api/persona/provider-templates/sync", { method: "POST" }),
+      authedJson<RunSyncResult>("/api/v1/provider_templates/sync", { method: "POST" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["llm-sync-status"] });
       qc.invalidateQueries({ queryKey: ["admin", "llm-providers", "templates"] });
@@ -188,7 +191,7 @@ export function useTemplateSyncKeys(id: string | null) {
   return useQuery({
     queryKey: syncKeysQueryKey(id),
     queryFn: () =>
-      authedJson<TemplateSyncKeysResult>(`/api/persona/provider-templates/${id}/sync-keys`),
+      authedJson<TemplateSyncKeysResult>(`/api/v1/provider_templates/${id}?include[]=sync_keys`),
     enabled: id !== null,
   });
 }

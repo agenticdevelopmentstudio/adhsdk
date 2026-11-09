@@ -55,7 +55,7 @@ export function VerifyDialog({
   const [formError, setFormError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const busy = verify.isPending;
-  const hasPlaceholders = template ? PLACEHOLDER_RE.test(template.baseUrl) : false;
+  const hasPlaceholders = template ? PLACEHOLDER_RE.test(template.base_url) : false;
 
   function close() {
     if (busy) return;
@@ -104,14 +104,14 @@ export function VerifyDialog({
             label="Base URL override"
             hint={
               hasPlaceholders
-                ? `This template's base URL has {placeholders} (${template?.baseUrl}) — supply a concrete URL to probe.`
+                ? `This template's base URL has {placeholders} (${template?.base_url}) — supply a concrete URL to probe.`
                 : "Optional — leave blank to use the template's stored base URL."
             }
           >
             <Input
               value={baseUrlOverride}
               onChange={(e) => setBaseUrlOverride(e.target.value)}
-              placeholder={template?.baseUrl}
+              placeholder={template?.base_url}
               className="font-mono"
             />
           </Field>

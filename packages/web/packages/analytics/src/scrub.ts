@@ -14,7 +14,7 @@ const DIGIT_RUN = /\d{4,}/g
  * Reduce a URL or path to a low-cardinality, PII-free shape for grouping: keep only the
  * pathname (drop origin + query + hash, which can carry tokens), and replace UUIDs and
  * long-numeric runs — including ones embedded in a segment — with `:id`, so
- * `/api/persona/services/<uuid>` and `/api/users/user-123456` both collapse to `:id`.
+ * `/api/v1/personas/<uuid>` and `/api/v1/users/user-123456` both collapse to `:id`.
  * Non-http(s) URLs (data:/mailto:/blob:/javascript:) carry payload/PII in their
  * "pathname", so they never get emitted.
  */

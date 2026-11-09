@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Generate src/schema.ts from adh's OpenAPI spec, via openapi-typescript.
+"""Generate src/schema.ts from adh's `/v1` OpenAPI spec, via openapi-typescript.
+
+The input is `openapi.v1.json` (adhbackend `src/adh/openapi.v1.json`, or the live
+https://api.agenticdeveloperhub.com/v1/openapi.json); see `_spec_input.py`.
 
 A thin wrapper, not a reimplementation of openapi-typescript's CLI — its only
 job is accepting the spec the same way the other two generators in this

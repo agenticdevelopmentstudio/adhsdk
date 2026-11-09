@@ -20,26 +20,26 @@ vi.mock("@adh-sdk/adh-ui/components/time-series-chart", () => ({
   ),
 }));
 
-const TOKENS = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0 };
+const TOKENS = { input: 0, output: 0, cache_read: 0, cache_write: 0, reasoning: 0 };
 
 const row = (over: Partial<BreakdownRow>): BreakdownRow => ({
   key: "11111111-1111-1111-1111-111111111111",
   label: "Acme",
   requests: 10,
-  serverMs: 100,
-  dbMs: 50,
-  llmTokens: TOKENS,
-  directMicros: 2_000_000,
-  hostingShareMicros: 500_000,
-  estimatedMicros: 2_500_000,
-  unpricedLines: 0,
+  server_ms: 100,
+  db_ms: 50,
+  llm_tokens: TOKENS,
+  direct_micros: 2_000_000,
+  hosting_share_micros: 500_000,
+  estimated_micros: 2_500_000,
+  unpriced_lines: 0,
   ...over,
 });
 
 const page = (rows: BreakdownRow[], total = rows.length): Breakdown => ({
   by: "organization",
   total,
-  fixedMicros: 30_000_000,
+  fixed_micros: 30_000_000,
   rows,
 });
 
@@ -50,7 +50,7 @@ beforeEach(() => {
   useBreakdownDetail.mockReset();
   useBreakdown.mockReturnValue({
     data: page([
-      row({ key: UNATTRIBUTED_KEY, label: "Unattributed", directMicros: null, estimatedMicros: 900_000 }),
+      row({ key: UNATTRIBUTED_KEY, label: "Unattributed", direct_micros: null, estimated_micros: 900_000 }),
       row({}),
       row({ key: "22222222-2222-2222-2222-222222222222", label: "Globex" }),
     ]),

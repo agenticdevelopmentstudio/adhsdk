@@ -38,7 +38,7 @@ import { SyncPanel } from "../llm-providers/SyncPanel";
  */
 
 const KIND_BADGE_VARIANT: Record<
-  ProviderTemplate["providerKind"],
+  ProviderTemplate["provider_kind"],
   "accent" | "blue" | "orange" | "neutral"
 > = {
   openai: "accent",
@@ -48,7 +48,7 @@ const KIND_BADGE_VARIANT: Record<
 };
 
 /** Whether the connect UI knows how to authenticate against this template. */
-const authLabel = (t: ProviderTemplate): string => (t.connectionSpec ? "configured" : "none");
+const authLabel = (t: ProviderTemplate): string => (t.connection_spec ? "configured" : "none");
 
 export function LlmProvidersPane({ help }: { help?: ReactNode } = {}) {
   const router = useRouter();
@@ -84,17 +84,17 @@ export function LlmProvidersPane({ help }: { help?: ReactNode } = {}) {
         key: "providerKind",
         header: "Kind",
         width: "8rem",
-        value: (t) => t.providerKind,
-        render: (t) => <Badge variant={KIND_BADGE_VARIANT[t.providerKind]}>{t.providerKind}</Badge>,
+        value: (t) => t.provider_kind,
+        render: (t) => <Badge variant={KIND_BADGE_VARIANT[t.provider_kind]}>{t.provider_kind}</Badge>,
       },
       {
         key: "baseUrl",
         header: "Base URL",
         width: "minmax(0,1fr)",
-        value: (t) => t.baseUrl,
+        value: (t) => t.base_url,
         render: (t) => (
-          <span className="block truncate font-mono text-xs text-apt-text-muted" title={t.baseUrl}>
-            {t.baseUrl}
+          <span className="block truncate font-mono text-xs text-apt-text-muted" title={t.base_url}>
+            {t.base_url}
           </span>
         ),
       },
@@ -113,7 +113,7 @@ export function LlmProvidersPane({ help }: { help?: ReactNode } = {}) {
         width: "8rem",
         value: authLabel,
         render: (t) =>
-          t.connectionSpec ? (
+          t.connection_spec ? (
             <Badge variant="success">configured</Badge>
           ) : (
             <span className="text-apt-text-dim">none</span>
@@ -125,7 +125,7 @@ export function LlmProvidersPane({ help }: { help?: ReactNode } = {}) {
 
   const facets = useMemo<EditableListFacet<ProviderTemplate>[]>(
     () => [
-      { id: "kind", label: "Kind", valuesOf: (t) => [t.providerKind] },
+      { id: "kind", label: "Kind", valuesOf: (t) => [t.provider_kind] },
       { id: "auth", label: "Auth", valuesOf: (t) => [authLabel(t)] },
     ],
     [],
@@ -159,7 +159,7 @@ export function LlmProvidersPane({ help }: { help?: ReactNode } = {}) {
         title="LLM Providers"
         api={{
           method: "GET",
-          path: "/persona/provider-templates",
+          path: "/v1/provider_templates",
           pathValues: {},
           title: "Provider templates API",
         }}
@@ -236,7 +236,6 @@ export function LlmProvidersPane({ help }: { help?: ReactNode } = {}) {
                 wholeWord="catalog"
                 loaded={catalog.rows.length}
                 showing={list.rows.length}
-                total={catalog.total}
                 hasMore={catalog.hasMore}
                 busy={catalog.isFetchingMore}
                 onLoadMore={catalog.loadMore}

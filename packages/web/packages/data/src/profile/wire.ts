@@ -10,15 +10,22 @@
 // the two together: without the gate, a backend column rename leaves every consumer compiling and
 // the field reading `undefined` in the Profile editor and the public UserCard.
 //
-// Sources, and the operation the gate measures each against:
-//   SocialLink / Address   backend `db/schema/content.ts` (socialLinksInContent /
+// The unsuffixed interfaces are the camelCase APP shapes the UI consumes; the `*Wire` ones are the
+// snake_case `/v1` JSON that profile.ts / usage.ts map them from (`created`/`updated` unix
+// seconds become the ISO `createdAt`/`updatedAt` the app shapes always carried). The gate measures
+// the `*Wire` shapes, since those are what crosses the network.
+//
+// Sources, and the operation the gate measures each wire shape against:
+//   SocialLinkWire / AddressWire backend `db/schema/content.ts` (socialLinksInContent /
 //                          addressesInContent) — these two routes are hand-written
 //                          (`routes/ownerScopedContent.ts`) but keep the generic-CRUD wire shape,
-//                          which is the whole row. GET/POST `/content/social-links`,
-//                          `/content/addresses`.
-//   PrivacyGrant           backend `routes/privacy.ts` — a THREE-column projection, not the row.
-//                          GET `/account/privacy`.
-//   UsageRow               backend `lib/usage/summary.ts` `UsageSummaryRow`. GET `/usage/summary`.
+//                          which is the whole row. GET/POST `/v1/content/social_links`,
+//                          `/v1/content/addresses`.
+//   PrivacyGrantWire       backend `routes/privacy.ts` — a THREE-column projection, not the row.
+//                          Read as `GET /v1/account?include[]=privacy` (`privacy.items`) and
+//                          written by `POST /v1/account` with a `privacy` body; there is no
+//                          standalone privacy route in /v1.
+//   UsageRowWire           backend `lib/usage/summary.ts` `UsageSummaryRow`. GET `/v1/usage/summary`.
 
 // ── Owner-polymorphic profile content ─────────────────────────────────────────────────────
 //
@@ -153,4 +160,93 @@ export interface UsageRow {
   bytes: number;
   tokens: number;
   costMicros: number;
+}
+
+// ── /v1 wire shapes ───────────────────────────────────────────────────────────────────────
+
+/** Columns every owner-scoped `/v1/content/*` row carries. `created`/`updated` are unix seconds. */
+interface OwnerScopedWire {
+  object?: string;
+  id: string;
+  author_kind: string | null;
+  author_id: string | null;
+  deleted_at: string | null;
+  ecosystem_id: string;
+  owner_kind: string;
+  owner_id: string;
+  created: number;
+  updated: number;
+  sync_version: number;
+  sync_stamped_at: string | null;
+  sync_txid: number;
+}
+
+/** `/v1/content/social_links` row. */
+export interface SocialLinkWire extends OwnerScopedWire {
+  platform: string;
+  url: string;
+  handle: string;
+  sort_order: number;
+}
+
+/** `/v1/content/social_links` create/update body. */
+export interface SocialLinkWriteWire {
+  platform: string;
+  url: string;
+  handle: string;
+  sort_order?: number;
+}
+
+/** `/v1/content/addresses` row. */
+export interface AddressWire extends OwnerScopedWire {
+  label: string;
+  line1: string;
+  line2: string;
+  city: string;
+  region: string;
+  postal_code: string;
+  country: string;
+}
+
+/** `/v1/content/addresses` create/update body. */
+export interface AddressWriteWire {
+  label: string;
+  line1: string;
+  line2: string;
+  city: string;
+  region: string;
+  postal_code: string;
+  country: string;
+}
+
+/** One grant as `GET /v1/account?include[]=privacy` (`privacy.items[]`) and the `POST /v1/account`
+ *  `privacy` echo carry it. */
+export interface PrivacyGrantWire {
+  target_table: PrivacyTargetTable;
+  target_id: string;
+  audience_mask: number;
+}
+
+export interface UsageLimitsWire {
+  quota_requests: number | null;
+  quota_bytes: number | null;
+  quota_tokens: number | null;
+  quota_cost_micros: number | null;
+  enforced: boolean;
+}
+
+/** `/v1/usage/summary` row. */
+export interface UsageRowWire {
+  kind: UsageRowKind;
+  scope: UsageScope;
+  principal_id: string;
+  label: string;
+  period_start: string;
+  period_days: number;
+  tier: string;
+  limits: UsageLimitsWire;
+  requests: number;
+  bytes: number;
+  tokens: number;
+  cost_micros: number;
 }

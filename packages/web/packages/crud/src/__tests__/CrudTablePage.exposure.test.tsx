@@ -12,7 +12,7 @@ const viewerUser = (admin: boolean): AuthUser =>
 
 vi.mock('@adh-sdk/auth/client', () => ({
   authedJson: vi.fn(),
-  authedRequest: vi.fn(),
+  listAllV1: vi.fn(),
 }))
 vi.mock('@adh-sdk/auth', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
@@ -20,7 +20,7 @@ vi.mock('@adh-sdk/auth', async (importOriginal) => ({
   useAuth: () => auth,
 }))
 
-const { authedJson } = vi.mocked(await import('@adh-sdk/auth/client'))
+const { authedJson, listAllV1 } = vi.mocked(await import('@adh-sdk/auth/client'))
 const { CrudTablePage } = await import('../CrudTablePage')
 
 const col = (name: string, overrides: Partial<CrudColumn> = {}): CrudColumn => ({
@@ -36,8 +36,8 @@ const table = (name: string, exposure: CrudExposure): CrudTableMeta => ({
   key: `billing/${name}`,
   schema: 'billing',
   table: name,
-  basePath: `/billing/${name}`,
-  itemPath: `/billing/${name}/{id}`,
+  basePath: `/v1/billing/${name}`,
+  itemPath: `/v1/billing/${name}/{id}`,
   pkParams: ['id'],
   exposure,
   columns: [col('id', { serverManaged: true }), col('name')],
@@ -55,7 +55,8 @@ function renderPage(tables: CrudTableMeta[], activeTable?: string) {
 
 beforeEach(() => {
   authedJson.mockReset()
-  authedJson.mockResolvedValue([{ id: 'p1', name: 'Pro' }] as never)
+  listAllV1.mockReset()
+  listAllV1.mockResolvedValue([{ id: 'p1', name: 'Pro' }] as never)
   auth = { user: null, isLoading: false }
 })
 
@@ -86,28 +87,28 @@ describe('CrudTablePage exposure gating', () => {
     expect(screen.getByRole('link', { name: 'subscription-tiers' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'usage-events' })).not.toBeInTheDocument()
     // One LIST, for the one readable table — the hidden one is never fetched.
-    expect(authedJson).toHaveBeenCalledTimes(1)
-    expect(authedJson.mock.calls[0]?.[0]).toContain('/billing/subscription-tiers')
+    expect(listAllV1).toHaveBeenCalledTimes(1)
+    expect(listAllV1.mock.calls[0]?.[0]).toContain('/v1/billing/subscription-tiers')
   })
 
   it('refuses to open a table the URL names but the viewer may not read', () => {
     auth = { user: viewerUser(false), isLoading: false }
     renderPage([TIERS, LEDGER], 'usage-events')
     expect(screen.getByRole('status')).toHaveTextContent('No table “usage-events” here')
-    expect(authedJson).not.toHaveBeenCalled()
+    expect(listAllV1).not.toHaveBeenCalled()
   })
 
   it('says so plainly when nothing in the feature is readable', () => {
     auth = { user: viewerUser(false), isLoading: false }
     renderPage([LEDGER])
     expect(screen.getByRole('status')).toHaveTextContent('No tables here are available to you.')
-    expect(authedJson).not.toHaveBeenCalled()
+    expect(listAllV1).not.toHaveBeenCalled()
   })
 
   it('waits for auth rather than rendering the rail as a non-admin', () => {
     auth = { user: null, isLoading: true }
     renderPage([TIERS, LEDGER])
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    expect(authedJson).not.toHaveBeenCalled()
+    expect(listAllV1).not.toHaveBeenCalled()
   })
 })

@@ -6,7 +6,7 @@
 //
 // Request/response shapes below are TRANSCRIBED from the backend rather than
 // imported from `@adh-sdk/adh-api-types`, unlike hub's original (which typed
-// them as `SuccessBody<'/workspaces/archived', 'get'>`). That package's name starts
+// them as `SuccessBody<'/v1/workspaces', 'get'>`). That package's name starts
 // with `@adh-sdk/adh`, which `tools/check_boundaries.py`'s
 // `_is_vocabulary` check classifies as the adh VOCABULARY tier — this package is
 // MECHANISM tier (see package.json's `comment:tier`) and may never import it. See
@@ -16,10 +16,10 @@
 // move: `components.schemas.ArchivedWorkspace`. Unlike the generated SuccessBody
 // helper, this does NOT auto-track a backend schema change.
 import { useQuery } from "@tanstack/react-query";
-import { authedJson } from "@adh-sdk/auth/client";
+import { listAllV1 } from "@adh-sdk/auth/client";
 
 export interface ArchivedWorkspace {
-  /** The organization id — what POST /organization/organizations/{id}/restore takes */
+  /** The organization id — what POST /v1/organizations/{id}/restore takes */
   id: string;
   slug: string;
   name: string;
@@ -35,12 +35,31 @@ export interface ArchivedWorkspace {
 
 export type ArchivedWorkspaceList = ArchivedWorkspace[];
 
+interface V1ArchivedWorkspace {
+  id: string;
+  slug: string;
+  name: string;
+  type: "organization";
+  archived_at: string;
+  handle_available: boolean;
+  can_restore: boolean;
+}
+
 export const ARCHIVED_WORKSPACES_QUERY_KEY = ["archived-workspaces"] as const;
 
 export function useArchivedWorkspaces() {
   return useQuery<ArchivedWorkspaceList>({
     queryKey: ARCHIVED_WORKSPACES_QUERY_KEY,
-    queryFn: () => authedJson<ArchivedWorkspaceList>("/api/workspaces/archived"),
+    queryFn: async () =>
+      (await listAllV1<V1ArchivedWorkspace>("/api/v1/workspaces?archived=true")).map((w) => ({
+        id: w.id,
+        slug: w.slug,
+        name: w.name,
+        type: w.type,
+        archivedAt: w.archived_at,
+        handleAvailable: w.handle_available,
+        canRestore: w.can_restore,
+      })),
     retry: false,
   });
 }

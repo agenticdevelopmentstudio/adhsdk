@@ -5,7 +5,7 @@
 // toolkit stays decoupled from the hub's generated types without narrowing what a caller
 // can rely on.
 
-// --- API tokens (/auth/tokens) -----------------------------------------------------------
+// --- API tokens (/v1/api_keys) -----------------------------------------------------------
 
 export interface ApiTokenRow {
   id: string;
@@ -32,7 +32,7 @@ export interface MintTokenBody {
   scope?: string[];
 }
 
-// --- Bucket access lists (/bucket/access-groups, /bucket/buckets/{bucketId}/access-groups) --
+// --- Bucket access lists (/v1/bucket_access_groups) --
 
 export type MemberType = "user" | "organization" | "persona" | "app" | "token";
 export type GrantTargetType = "bucket" | "bucket_type" | "row";
@@ -103,4 +103,64 @@ export interface AccessGrantPutBody {
   targetId: string;
   /** comma-separated CRUD subset (or '' for none) */
   crud: string;
+}
+
+// --- /v1 wire shapes (snake_case; `created`/`updated` are unix seconds) ---------------------
+// tokens.ts and bucket-access.ts map these to the camelCase rows above.
+
+export interface ApiTokenWire {
+  object?: string;
+  id: string;
+  name: string;
+  prefix: string;
+  created: number;
+  expires_at: string | null;
+  last_used_at: string | null;
+  scope?: string[] | null;
+}
+
+export interface ApiTokenCreatedWire extends ApiTokenWire {
+  token: string;
+}
+
+export interface AccessGroupWire {
+  object?: string;
+  id: string;
+  ecosystem_id: string;
+  bucket_id: string;
+  name: string;
+  description: string;
+  kind: string;
+  metadata?: Record<string, unknown> | null;
+  created: number;
+  updated: number;
+}
+
+export interface AccessGroupMemberWire {
+  object?: string;
+  id: string;
+  ecosystem_id: string;
+  access_group_id: string;
+  member_type: MemberType;
+  member_id: string;
+  created: number;
+  updated: number;
+}
+
+export interface AccessGrantWire {
+  object?: string;
+  id: string;
+  ecosystem_id: string;
+  access_group_id: string;
+  target_type: GrantTargetType;
+  target_id: string;
+  crud: string;
+  granted_by?: string | null;
+  created: number;
+  updated: number;
+}
+
+export interface AccessGroupDetailWire extends AccessGroupWire {
+  members: AccessGroupMemberWire[];
+  grants: AccessGrantWire[];
 }

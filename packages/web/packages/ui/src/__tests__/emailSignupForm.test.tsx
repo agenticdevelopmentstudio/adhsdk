@@ -99,7 +99,7 @@ describe('EmailSignupForm', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     const [url, init] = callAt(1)
-    expect(url).toBe('https://api.test/public/signup-lists/pk1/signups')
+    expect(url).toBe('https://api.test/v1/signup_lists/pk1/signups')
     expect(init.method).toBe('POST')
     expect(JSON.parse(init.body)).toMatchObject({
       email: 'ada@example.com',
@@ -113,7 +113,7 @@ describe('EmailSignupForm', () => {
     setup()
     await screen.findByText('Launch list')
 
-    expect(callAt(0)[0]).toBe('https://api.test/public/signup-lists/pk1')
+    expect(callAt(0)[0]).toBe('https://api.test/v1/signup_lists/pk1')
   })
 
   // The honeypot is only a defence if it is unreachable by a human: visible to the DOM,
@@ -266,7 +266,7 @@ describe('EmailSignupForm', () => {
 
     // GET, failed POST, refresh GET — and the refresh must address the same public list.
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
-    expect(callAt(2)[0]).toBe('https://api.test/public/signup-lists/pk1')
+    expect(callAt(2)[0]).toBe('https://api.test/v1/signup_lists/pk1')
 
     fetchMock.mockResolvedValueOnce(okPost())
     submitForm()
@@ -419,14 +419,14 @@ describe('EmailSignupForm', () => {
     render(<EmailSignupForm publicKey="pk/1 2&3" apiBaseUrl="https://api.test" />)
     await screen.findByText('Launch list')
 
-    expect(callAt(0)[0]).toBe('https://api.test/public/signup-lists/pk%2F1%202%263')
+    expect(callAt(0)[0]).toBe('https://api.test/v1/signup_lists/pk%2F1%202%263')
 
     fetchMock.mockResolvedValueOnce(okPost())
     typeEmail('ada@example.com')
     submitForm()
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
-    expect(callAt(1)[0]).toBe('https://api.test/public/signup-lists/pk%2F1%202%263/signups')
+    expect(callAt(1)[0]).toBe('https://api.test/v1/signup_lists/pk%2F1%202%263/signups')
   })
 
   // Minor 3: the attribution field the backend stores as `consent_source_url` — the evidence that
@@ -441,10 +441,10 @@ describe('EmailSignupForm', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     const body = JSON.parse(callAt(1)[1].body)
-    expect(body.sourceUrl).toBe(window.location.href)
+    expect(body.source_url).toBe(window.location.href)
     // Decorrelation: `window.location.href` is a real absolute URL, not the empty string a
     // dropped field would compare equal to if the expectation were written loosely.
-    expect(body.sourceUrl).toMatch(/^https?:\/\/.+/)
+    expect(body.source_url).toMatch(/^https?:\/\/.+/)
   })
 
   it('says so when the list is closed instead of offering a form', async () => {
@@ -717,7 +717,7 @@ describe('EmailSignupForm', () => {
     render(<EmailSignupForm publicKey="pk1" apiBaseUrl="https://api.test/" />)
     await screen.findByText('Launch list')
 
-    expect(callAt(0)[0]).toBe('https://api.test/public/signup-lists/pk1')
+    expect(callAt(0)[0]).toBe('https://api.test/v1/signup_lists/pk1')
   })
 
   /**
@@ -742,7 +742,7 @@ describe('EmailSignupForm', () => {
         ok: true,
         json: async () => {
           sink.push(Date.now())
-          return { name: 'Launch list', description: 'Be first to know.', status: 'open', nonce, minAgeMs: FLOOR_MS }
+          return { name: 'Launch list', description: 'Be first to know.', status: 'open', nonce, min_age_ms: FLOOR_MS }
         },
       }))
 

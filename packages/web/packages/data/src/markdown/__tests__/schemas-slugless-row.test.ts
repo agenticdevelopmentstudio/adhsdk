@@ -8,6 +8,7 @@ vi.mock("../../http", async (orig) => ({
 
 import { authedJson } from "../../http";
 import { schemasApi } from "../schemas";
+import { installFetch, respondOnce, v1List } from "../../__tests__/v1-fetch";
 
 // A bucket row with no `slug` — the hub's bucket-types e2e fixture was one — reached
 // schemaValidate's `draft.slug.trim()` the moment the bucket was opened, and the TypeError took
@@ -16,22 +17,26 @@ import { schemasApi } from "../schemas";
 
 const json = vi.mocked(authedJson);
 
-beforeEach(() => json.mockReset());
+beforeEach(() => {
+  json.mockReset();
+  installFetch();
+});
 
 describe("schemasApi — a bucket row without a slug", () => {
   it("maps to an empty slug, never undefined", async () => {
-    json
-      .mockResolvedValueOnce([
+    respondOnce(
+      v1List([
         {
           id: "b-1",
-          ecosystemId: "eco-uuid",
+          object: "bucket",
+          ecosystem_id: "eco-uuid",
           name: "mybucket",
-          metadata: null,
-          createdAt: "2026-01-01T00:00:00Z",
-          updatedAt: "2026-01-01T00:00:00Z",
+          created: 1767225600,
+          updated: 1767225600,
         },
-      ])
-      .mockResolvedValueOnce([]);
+      ]),
+    );
+    respondOnce(v1List([]));
     const [bucket] = await schemasApi.list("eco-uuid");
     expect(bucket).toMatchObject({ slug: "", kind: "custom" });
   });

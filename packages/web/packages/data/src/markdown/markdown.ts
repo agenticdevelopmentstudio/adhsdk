@@ -1,17 +1,16 @@
-// Research documents API client — wired to the backend's markdown-document surface
-// (`/content/markdown`, mounted under the hub's `/api` forward; the hub strips
-// `/api` before forwarding). These hand-written routes are the sole surface for a
-// user's markdown research papers (list/search, CRUD, publish/unpublish); see
-// websites/backend/src/routes/markdownDocuments.ts. Row/body shapes live in
+// Research documents API client — wired to the backend's papers surface
+// (`/v1/papers`, `/v1/paper_categories`, `/v1/paper_tags`, reached through the hub's `/api`
+// forward). That is the sole surface for a user's markdown research papers
+// (list/search, CRUD, publish/unpublish). The wire is snake_case with unix-second
+// timestamps; the camelCase app rows below are mapped at this boundary. Row/body shapes live in
 // ./wire.ts, narrowed from the generated OpenAPI schema (@adh-sdk/adh-api-types) —
 // a generic data client must not import that adh-specific package, so a backend contract
 // change is only caught by keeping wire.ts in sync, not by the build.
-import { authedJson, authedRequest, isConflict } from "../http";
+import { authedJson, authedRequest, isConflict, listAllV1, withV1Query } from "../http";
 import { enc } from "../client-helpers";
 import type {
   MarkdownDocumentRow,
   MarkdownDocumentSummaryRow,
-  MarkdownListResponse,
   MarkdownCreateBody,
   MarkdownUpdateBody,
   MarkdownPublishBody,
@@ -22,6 +21,10 @@ import type {
   MarkdownCategoryCreateBody,
   MarkdownKeywordNode,
   MarkdownTagSetBody,
+  PaperCategoriesWire,
+  PaperCategoryWire,
+  PaperTagsWire,
+  PaperWire,
 } from "./wire";
 
 /** A full document, body included (GET /content/markdown/:id, and the create /
@@ -55,10 +58,9 @@ export interface ResearchFilters {
   tag?: string;
 }
 
-const BASE = "/api/content/markdown";
-// One generous page: a user's own research set is small, and the master list
-// shows everything at once (no pagination UI). 200 is the backend's page cap.
-const PAGE_SIZE = 200;
+const BASE = "/api/v1/papers";
+const CATEGORIES = "/api/v1/paper_categories";
+const TAGS = "/api/v1/paper_tags";
 
 /** List options: the workspace to scope to, and one flag per CORPUS — `noted` for the
  *  owner's notes, `doc` for their docs (the documents in the matching storage bucket).
@@ -81,29 +83,55 @@ export interface MarkdownScope {
   ecosystemId?: string;
 }
 
-function scopeQuery(opts?: MarkdownScope): string {
-  const params = new URLSearchParams();
-  if (opts?.workspace) params.set("workspace", opts.workspace);
-  if (opts?.ecosystemId) params.set("ecosystemId", opts.ecosystemId);
-  const q = params.toString();
-  return q ? `?${q}` : "";
+/** `url` with the workspace/ecosystem scope appended (`workspace`, `ecosystem_id`). */
+function scoped(url: string, opts?: MarkdownScope, extra: Record<string, string | boolean | undefined> = {}): string {
+  return withV1Query(url, {
+    ...extra,
+    workspace: opts?.workspace || undefined,
+    ecosystem_id: opts?.ecosystemId || undefined,
+  });
 }
 
-function listQuery(filters: ResearchFilters, opts?: MarkdownListOptions): string {
-  const params = new URLSearchParams({ pageSize: String(PAGE_SIZE) });
-  const q = filters.q?.trim();
-  if (q) params.set("q", q);
-  const category = filters.category?.trim();
-  if (category) params.set("category", category);
-  const tag = filters.tag?.trim();
-  if (tag) params.set("tag", tag);
-  if (opts?.noted) params.set("noted", "true");
-  if (opts?.doc) params.set("doc", "true");
-  if (opts?.visibility) params.set("visibility", opts.visibility);
-  if (opts?.workspace) params.set("workspace", opts.workspace);
-  if (opts?.ecosystemId) params.set("ecosystemId", opts.ecosystemId);
-  return params.toString();
+function listUrl(filters: ResearchFilters, opts?: MarkdownListOptions): string {
+  return scoped(BASE, opts, {
+    q: filters.q?.trim() || undefined,
+    category: filters.category?.trim() || undefined,
+    tag: filters.tag?.trim() || undefined,
+    noted: opts?.noted ? true : undefined,
+    doc: opts?.doc ? true : undefined,
+    visibility: opts?.visibility,
+  });
 }
+
+const toDocument = (w: PaperWire): ResearchDocument =>
+  withTags({
+    id: w.id,
+    title: w.title,
+    content: w.content ?? "",
+    ...(w.category !== undefined ? { category: w.category } : {}),
+    tags: w.tags ?? [],
+    visibility: w.visibility,
+    ...(w.public_route !== undefined ? { publicRoute: w.public_route } : {}),
+  });
+
+const toSummary = (w: PaperWire): ResearchSummary =>
+  withTags({
+    id: w.id,
+    title: w.title,
+    ...(w.excerpt !== undefined ? { excerpt: w.excerpt } : {}),
+    ...(w.category !== undefined ? { category: w.category } : {}),
+    tags: w.tags ?? [],
+    visibility: w.visibility,
+    ...(w.public_route !== undefined ? { publicRoute: w.public_route } : {}),
+  });
+
+const toCreateWire = (b: CreateMarkdownBody) => ({
+  content: b.content,
+  ...(b.category !== undefined ? { category: b.category } : {}),
+  ...(b.tags !== undefined ? { tags: b.tags } : {}),
+  ...(b.note !== undefined ? { note: b.note } : {}),
+  ...(b.doc !== undefined ? { doc: b.doc } : {}),
+});
 
 /** Guarantee `tags` is an array. The generated types mark it required, but a
  *  backend deploy OLDER than this frontend (before the category/tags migration)
@@ -166,27 +194,23 @@ export const markdownApi = {
     filters: ResearchFilters = {},
     opts?: MarkdownListOptions,
   ): Promise<ResearchSummary[]> {
-    const res = await authedJson<MarkdownListResponse>(
-      `${BASE}?${listQuery(filters, opts)}`,
-    );
-    return res.items.map(withTags);
+    const rows = await listAllV1<PaperWire>(listUrl(filters, opts));
+    return rows.map(toSummary);
   },
 
   /** Fetch one document WITH its body (the master list omits the body). */
   async get(id: string, opts?: MarkdownScope): Promise<ResearchDocument> {
-    return withTags(
-      await authedJson<ResearchDocument>(`${BASE}/${enc(id)}${scopeQuery(opts)}`),
-    );
+    return toDocument(await authedJson<PaperWire>(scoped(`${BASE}/${enc(id)}`, opts)));
   },
 
   async create(
     body: CreateMarkdownBody,
     opts?: MarkdownScope,
   ): Promise<ResearchDocument> {
-    return withTags(
-      await authedJson<ResearchDocument>(`${BASE}${scopeQuery(opts)}`, {
+    return toDocument(
+      await authedJson<PaperWire>(scoped(BASE, opts), {
         method: "POST",
-        body: JSON.stringify(body),
+        body: JSON.stringify(toCreateWire(body)),
       }),
     );
   },
@@ -196,31 +220,31 @@ export const markdownApi = {
     body: UpdateMarkdownBody,
     opts?: MarkdownScope,
   ): Promise<ResearchDocument> {
-    return withTags(
-      await authedJson<ResearchDocument>(`${BASE}/${enc(id)}${scopeQuery(opts)}`, {
-        method: "PUT",
+    return toDocument(
+      await authedJson<PaperWire>(scoped(`${BASE}/${enc(id)}`, opts), {
+        method: "POST",
         body: JSON.stringify(body),
       }),
     );
   },
 
   async remove(id: string, opts?: MarkdownScope): Promise<void> {
-    // 204 No Content — authedRequest, not authedJson (nothing to parse).
-    await authedRequest(`${BASE}/${enc(id)}${scopeQuery(opts)}`, { method: "DELETE" });
+    // A tombstone body the caller never reads — authedRequest, not authedJson.
+    await authedRequest(scoped(`${BASE}/${enc(id)}`, opts), { method: "DELETE" });
   },
 
   /** Is this public route free for this document's author? Answers the same question
    *  `publish` would 409 on, but read-only and without claiming anything — so an editor can
    *  ask while the user types. Excludes the document itself: a published paper's own slug is
-   *  not taken for it. The route is a PATH SEGMENT, hence `enc`. */
+   *  not taken for it. */
   async routeAvailable(
     id: string,
     route: string,
     opts?: MarkdownScope,
   ): Promise<MarkdownRouteAvailability> {
-    return authedJson<MarkdownRouteAvailability>(
-      `${BASE}/${enc(id)}/route-available/${enc(route)}${scopeQuery(opts)}`,
-    );
+    // Spelled as a filter on the collection: `route` names the slug, `excluding` the document
+    // that may keep it.
+    return authedJson<MarkdownRouteAvailability>(scoped(BASE, opts, { route, excluding: id }));
   },
 
   /** Publish under an author-defined public route. The route is unique per
@@ -232,14 +256,11 @@ export const markdownApi = {
     opts?: MarkdownScope,
   ): Promise<ResearchDocument> {
     try {
-      return withTags(
-        await authedJson<ResearchDocument>(
-          `${BASE}/${enc(id)}/publish${scopeQuery(opts)}`,
-          {
-            method: "POST",
-            body: JSON.stringify({ route } satisfies MarkdownPublishBody),
-          },
-        ),
+      return toDocument(
+        await authedJson<PaperWire>(scoped(`${BASE}/${enc(id)}/publish`, opts), {
+          method: "POST",
+          body: JSON.stringify({ route } satisfies MarkdownPublishBody),
+        }),
       );
     } catch (err) {
       if (isConflict(err)) {
@@ -251,8 +272,8 @@ export const markdownApi = {
 
   /** Revert to a private draft and free the public route. */
   async unpublish(id: string, opts?: MarkdownScope): Promise<ResearchDocument> {
-    return withTags(
-      await authedJson<ResearchDocument>(`${BASE}/${enc(id)}/unpublish${scopeQuery(opts)}`, {
+    return toDocument(
+      await authedJson<PaperWire>(scoped(`${BASE}/${enc(id)}/unpublish`, opts), {
         method: "POST",
       }),
     );
@@ -260,11 +281,12 @@ export const markdownApi = {
 
   /** The workspace's existing category NAMES — the autocomplete/browse source for the
    *  category field. The owner's full set (content.categories), distinct + alphabetical
-   *  (GET /content/markdown/categories). `workspace` matters: the backend scopes the
+   *  (GET /v1/paper_categories). `workspace` matters: the backend scopes the
    *  vocabulary to the same owner it scopes the documents to, so an org workspace's
    *  autocomplete must ask for the ORG's names, not the caller's own. */
   async categories(opts?: MarkdownScope): Promise<string[]> {
-    return (await authedJson<StringListBody>(`${BASE}/categories${scopeQuery(opts)}`)).items;
+    const res = await authedJson<StringListBody>(scoped(CATEGORIES, opts));
+    return res.items;
   },
 
   /** The same categories WITH their structure — `parentIds` makes them a DAG. The flat
@@ -275,13 +297,20 @@ export const markdownApi = {
    *  names it DID send as roots, so the rail degrades to one level instead of crashing
    *  or emptying. */
   async categoryTree(opts?: MarkdownScope): Promise<MarkdownCategoryNode[]> {
-    return categoryNodes(
-      await authedJson<MarkdownCategoryTreeBody>(`${BASE}/categories${scopeQuery(opts)}`),
-    );
+    const res = await authedJson<PaperCategoriesWire>(scoped(CATEGORIES, opts));
+    const tree: MarkdownCategoryTreeBody = {
+      items: res.items ?? [],
+      // Left absent (not `[]`) when the response has none, so `categoryNodes` can tell skew
+      // from a legitimately empty workspace.
+      nodes: (Array.isArray(res.nodes)
+        ? res.nodes.map((n) => ({ id: n.id, name: n.name, parentIds: n.parent_ids, sortOrder: n.sort_order }))
+        : undefined) as MarkdownCategoryTreeBody["nodes"],
+    };
+    return categoryNodes(tree);
   },
 
   /** Create a category, optionally under one or more others (POST
-   *  /content/markdown/categories). Re-creating an existing name is idempotent when every
+   *  /v1/paper_categories). Re-creating an existing name is idempotent when every
    *  parent it asks for is ALREADY one of that category's parents; asking for one it does
    *  not have is a 409 — a name is unique per owner, and this call never re-files an
    *  existing category. Adding a parent to a category that exists is
@@ -291,10 +320,14 @@ export const markdownApi = {
     opts?: MarkdownScope,
   ): Promise<MarkdownCategoryNode> {
     try {
-      return await authedJson<MarkdownCategoryNode>(`${BASE}/categories${scopeQuery(opts)}`, {
+      const w = await authedJson<PaperCategoryWire>(scoped(CATEGORIES, opts), {
         method: "POST",
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          name: body.name,
+          ...(body.parentIds !== undefined ? { parent_ids: body.parentIds } : {}),
+        }),
       });
+      return { id: w.id, name: w.name, parentIds: w.parent_ids, sortOrder: w.sort_order };
     } catch (err) {
       if (isConflict(err)) {
         throw new Error(`A category named “${body.name}” already exists somewhere else.`);
@@ -304,9 +337,10 @@ export const markdownApi = {
   },
 
   /** The workspace's existing tag LABELS — the autocomplete/browse source for the tag
-   *  field (GET /content/markdown/tags), same shape + scoping as `categories`. */
+   *  field (GET /v1/paper_tags), same shape + scoping as `categories`. */
   async tags(opts?: MarkdownScope): Promise<string[]> {
-    return (await authedJson<StringListBody>(`${BASE}/tags${scopeQuery(opts)}`)).items;
+    const res = await authedJson<StringListBody>(scoped(TAGS, opts));
+    return res.items;
   },
 
   /** The same tags WITH their row ids — what a manager needs to rename or delete one, and
@@ -314,6 +348,11 @@ export const markdownApi = {
    *  disagree about the workspace's vocabulary; see {@link tagNodes} for the older-backend
    *  degrade. */
   async tagSet(opts?: MarkdownScope): Promise<MarkdownKeywordNode[]> {
-    return tagNodes(await authedJson<MarkdownTagSetBody>(`${BASE}/tags${scopeQuery(opts)}`));
+    const res = await authedJson<PaperTagsWire>(scoped(TAGS, opts));
+    const set: MarkdownTagSetBody = {
+      items: res.items ?? [],
+      nodes: (Array.isArray(res.nodes) ? res.nodes : undefined) as MarkdownTagSetBody["nodes"],
+    };
+    return tagNodes(set);
   },
 };

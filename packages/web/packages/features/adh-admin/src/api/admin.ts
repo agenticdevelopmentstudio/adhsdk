@@ -3,30 +3,35 @@
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
-import { authedJson, authedRequest } from "./http";
+import {
+  authedJson,
+  authedRequest,
+  listAllV1,
+  listV1Page,
+  unixToIso,
+  withV1Query,
+} from "./http";
 import { fetchMemberships, type UserEcosystem } from "./memberships";
-import { useWindowedList } from "./windowed";
+import { fetchV1WindowPage, useWindowedList } from "./windowed";
 
-// The Hono backend has no `/api/admin/*` surface (admin === auth scoping via
-// sibling paths gated by isAdmin(), not a URL prefix). The hooks below target
-// the real backend routes: hand-written admin routes where they exist, and the
-// generic CRUD endpoints (`/api/<schema>/<table>`) otherwise. Where the old
-// Kotlin API returned a purpose-built shape (paginated pages, key→value maps),
-// the adaptation happens here so the consuming pages stay unchanged.
+// Every call here targets the `/api/v1` surface (Stripe-style: snake_case bodies,
+// `{object:'list', data, has_more}` collections, `created` as unix seconds, update as
+// POST on the item path). Where a pane wants the old camelCase / ISO-string shape, the
+// adaptation happens here so the consuming pages stay unchanged.
 
 // ── Users ────────────────────────────────────────────────────────────────
 //
 // Platform users (hub developers + staff) are customers of ecosystem zero
 // (`com.agenticdeveloperhub`) after the identity collapse — the retired
-// `auth.users` table is now `customer.customers`. `GET /api/customer/customers`
-// (generic CRUD) is filtered to the hub ecosystem so this page keeps its old
+// `auth.users` table is now `customer.customers`. `GET /api/v1/customers`
+// is filtered to the hub ecosystem so this page keeps its old
 // meaning: a developer's END-USERS are also customers (of their own ecosystem),
 // and an admin caller (who bypasses tenant scoping) would otherwise see every
 // ecosystem's customers mixed in. The whole list is fetched once and narrowed
 // in the browser — there is no server-side page.
 //
 // Capabilities for the Roles column come from the admin-gated
-// `GET /api/auth/capabilities` (returns every {userId, capability}); the join
+// `GET /api/v1/auth/capabilities` (returns every {user_id, capability}); the join
 // by id still holds because the collapse preserved each developer's UUID.
 
 export interface AdminUserSummary {
@@ -48,21 +53,41 @@ export interface AdminUserSummary {
   ecosystems: UserEcosystem[];
 }
 
-// The raw `customer.customers` row from `GET /api/customer/customers`, sourced
+// The raw `customer.customers` row from `GET /api/v1/customers`, sourced
 // from the OpenAPI spec (@adh-sdk/adh-api-types) rather than hand-written —
 // so a backend schema change surfaces here as a type error, not at runtime.
-type BackendUser = SuccessBody<"/customer/customers", "get">[number];
+type BackendUser = SuccessBody<"/v1/customers", "get">["data"][number];
+
+/** One `{user_id, capability}` grant from `GET /api/v1/auth/capabilities`. */
+export interface CapabilityGrant {
+  user_id: string;
+  capability: string;
+}
 
 // Ecosystem zero — the hub's own ecosystem (`com.agenticdeveloperhub`). Its
 // well-known UUID is fixed infra (backend src/lib/ecosystem.ts HUB_ECOSYSTEM_ID);
 // hardcoded here because that backend constant isn't importable from the frontend.
 const HUB_ECOSYSTEM_ID = "00000000-0000-4000-8000-00000000a001";
 
-/** One row of `GET /registry/identifiers` — see backend src/routes/identifiers.ts. */
+/** One row of `GET /v1/identifiers`, in the camelCase shape the pages consume. */
 export interface RdidMapping {
   rdid: string;
   entityType: string;
   entityId: string;
+}
+
+interface IdentifierWire {
+  rdid: string;
+  entity_type: string;
+  entity_id: string;
+}
+
+/** Every identifier matching `params` (`entity_type`, `entity_ids`, `q`, ...), mapped to `RdidMapping`. */
+export async function listIdentifiers(
+  params: Record<string, string | number | undefined>,
+): Promise<RdidMapping[]> {
+  const rows = await listAllV1<IdentifierWire>(withV1Query("/api/v1/identifiers", params));
+  return rows.map((r) => ({ rdid: r.rdid, entityType: r.entity_type, entityId: r.entity_id }));
 }
 
 /**
@@ -85,9 +110,10 @@ export function useHubEcosystemRdid() {
     // and costs a request on every visit to the page.
     staleTime: Infinity,
     queryFn: async (): Promise<string | null> => {
-      const found = await authedJson<RdidMapping[]>(
-        `/api/registry/identifiers?entityType=ecosystem&entityIds=${HUB_ECOSYSTEM_ID}`,
-      );
+      const found = await listIdentifiers({
+        entity_type: "ecosystem",
+        entity_ids: HUB_ECOSYSTEM_ID,
+      });
       return found[0]?.rdid ?? null;
     },
   });
@@ -110,7 +136,7 @@ export function rdidMapFrom(mappings: RdidMapping[]): Map<string, string> {
  */
 export function toUserRows(
   rows: BackendUser[],
-  caps: { userId: string; capability: string }[],
+  caps: CapabilityGrant[],
   // OPTIONAL and last, so a call site that has only the rows still compiles. Absent, every row's
   // rdid is null and its ecosystems empty — which is what a page rendered before those two
   // lookups land should show.
@@ -118,7 +144,7 @@ export function toUserRows(
   ecosystemsByUserId?: Map<string, UserEcosystem[]>,
 ): AdminUserSummary[] {
   const capsByUser = new Map<string, string[]>();
-  for (const { userId, capability } of caps) {
+  for (const { user_id: userId, capability } of caps) {
     const list = capsByUser.get(userId);
     if (list) list.push(capability);
     else capsByUser.set(userId, [capability]);
@@ -126,28 +152,19 @@ export function toUserRows(
   return rows.map((u) => ({
     id: u.id,
     email: u.email ?? "",
-    name: u.displayName ?? "",
-    avatarUrl: u.avatarUrl ?? "",
+    name: u.display_name ?? "",
+    avatarUrl: u.avatar_url ?? "",
     capabilities: capsByUser.get(u.id) ?? [],
-    createdAt: u.createdAt,
+    createdAt: unixToIso(u.created),
     rdid: rdidByUserId?.get(u.id) ?? null,
     ecosystems: ecosystemsByUserId?.get(u.id) ?? [],
   }));
 }
 
-/**
- * The backend's `LIST_LIMIT` from `crud/factory.ts`, restated.
- *
- * Restated rather than fetched because there is nowhere to fetch it from — the generated list
- * route sends a bare array with no envelope, so the cap is invisible in the response. Kept in step
- * by hand; a stale copy here under-reports truncation, which is why the comparison is `>=`.
- */
-const CUSTOMERS_LIST_LIMIT = 500;
-
 /** Everything the users page needs from the network, before any of it is arranged. */
 export interface AdminUserSource {
   rows: BackendUser[];
-  caps: { userId: string; capability: string }[];
+  caps: CapabilityGrant[];
   rdidByUserId: Map<string, string>;
   ecosystemsByUserId: Map<string, UserEcosystem[]>;
 }
@@ -166,12 +183,8 @@ export function useAdminUsersSource() {
     queryKey: ["admin", "users", "source"],
     queryFn: async (): Promise<AdminUserSource> => {
       const [rows, caps] = await Promise.all([
-        authedJson<BackendUser[]>(
-          `/api/customer/customers?ecosystemId=${HUB_ECOSYSTEM_ID}`,
-        ),
-        authedJson<{ userId: string; capability: string }[]>(
-          "/api/auth/capabilities",
-        ),
+        listAllV1<BackendUser>(`/api/v1/customers?ecosystem_id=${HUB_ECOSYSTEM_ID}`),
+        authedJson<CapabilityGrant[]>("/api/v1/auth/capabilities"),
       ]);
       const userIds = rows.map((u) => u.id);
       // Both lookups are keyed on the SAME id list and neither feeds the other, so they run
@@ -205,11 +218,7 @@ async function fetchRdids(userIds: string[]): Promise<Map<string, string>> {
   for (let i = 0; i < userIds.length; i += CHUNK) {
     const ids = userIds.slice(i, i + CHUNK).join(",");
     try {
-      mappings.push(
-        ...(await authedJson<RdidMapping[]>(
-          `/api/registry/identifiers?entityType=customer&entityIds=${encodeURIComponent(ids)}`,
-        )),
-      );
+      mappings.push(...(await listIdentifiers({ entity_type: "customer", entity_ids: ids })));
     } catch (err) {
       // DEGRADE, don't fail. An unguarded await here made the address column's lookup able to
       // take the user list down with it: one chunk erroring left the page with no users at all,
@@ -238,18 +247,11 @@ export function useAdminUsers() {
         : undefined,
     [source],
   );
-  // A FULL PAGE IS THE ONLY SIGNAL THERE IS. `/customer/customers` is a generated CRUD list and
-  // slices at the backend's `LIST_LIMIT` without reporting a total, so "did we get everybody" can
-  // only be answered by "did we get exactly the cap". Conservative on purpose: a tenant with
-  // exactly 500 users reports possibly-truncated, which costs a strip; the other error costs the
-  // operator a person they searched for and concluded does not exist.
-  const truncated = source != null && source.rows.length >= CUSTOMERS_LIST_LIMIT;
-  return { data, truncated, isLoading, isError, error, refetch };
+  return { data, isLoading, isError, error, refetch };
 }
 
-// Grant/revoke a capability via the admin-gated capabilities endpoints. Generic
-// CRUD can't do this (POST stamps user_id = caller and granted_at is required),
-// so the backend exposes dedicated routes that target any user.
+// Grant/revoke a capability via the admin-gated capabilities endpoints, which
+// target any user (a plain create would stamp the caller).
 
 export function useGrantRole() {
   const qc = useQueryClient();
@@ -257,11 +259,11 @@ export function useGrantRole() {
     mutationFn: (data: { userId: string; role?: string; capability?: string }) => {
       const capability = data.capability ?? data.role;
       if (!capability) throw new Error("grant requires a capability or role");
-      const body: RequestBody<"/auth/capabilities/grant", "post"> = {
-        userId: data.userId,
+      const body: RequestBody<"/v1/auth/capabilities/grant", "post"> = {
+        user_id: data.userId,
         capability,
       };
-      return authedJson("/api/auth/capabilities/grant", {
+      return authedJson("/api/v1/auth/capabilities/grant", {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -274,11 +276,11 @@ export function useRevokeRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, role }: { userId: string; role: string }) => {
-      const body: RequestBody<"/auth/capabilities/revoke", "post"> = {
-        userId,
+      const body: RequestBody<"/v1/auth/capabilities/revoke", "post"> = {
+        user_id: userId,
         capability: role,
       };
-      return authedJson("/api/auth/capabilities/revoke", {
+      return authedJson("/api/v1/auth/capabilities/revoke", {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -291,48 +293,72 @@ export function useDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      authedRequest(`/api/customer/customers/${encodeURIComponent(id)}`, { method: "DELETE" }),
+      authedRequest(`/api/v1/customers/${encodeURIComponent(id)}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
 }
 
 // ── Feature Flags ────────────────────────────────────────────────────────
 //
-// Hand-written split-auth routes at `/api/system/feature-flags`
-// (system.feature_flags — global, no owner scope; public GET, admin mutations).
-// The table is keyed by a serial `id`, which the list response includes, so
-// mutations address rows by id directly — `key` can't be the row identity
-// because the UI edits it in place.
+// `/api/v1/feature_flags` with no `ecosystem` param is the site-wide table
+// (system.feature_flags — global, no owner scope; public GET, admin mutations), so this
+// management view reads ONLY the system rows without any extra scope switch. The table is
+// keyed by a serial `id`, which the row still carries (an undeclared key passes through the
+// /v1 shape unchanged), and the item routes take that id in their `{key}` segment, so mutations
+// address rows by id — a flag's `key` can't be the row identity because the UI edits it in place.
 //
-// Types are spec-derived (@adh-sdk/adh-api-types) now that the route is documented
-// in the OpenAPI surface — a backend schema change surfaces here as a type error.
+// The exported shape stays the camelCase one the panes consume; `toFlag` is the explicit mapper
+// (`created`/`updated` unix seconds → ISO strings).
+
+type FlagWire = SuccessBody<"/v1/feature_flags", "get">["data"][number] & { id: number };
 
 /** A system.feature_flags row (id, key, description, enabled, createdAt, updatedAt). */
-export type FeatureFlag = SuccessBody<"/system/feature-flags", "get">[number];
+export interface FeatureFlag {
+  id: number;
+  key: string;
+  description: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 /** The create body: `key` required, `description`/`enabled` optional. */
-export type CreateFlagBody = RequestBody<"/system/feature-flags", "post">;
+export type CreateFlagBody = RequestBody<"/v1/feature_flags", "post">;
 /** The update body: every field optional (partial patch). */
-export type UpdateFlagBody = RequestBody<"/system/feature-flags/{id}", "put">;
+export type UpdateFlagBody = {
+  key?: string;
+  description?: string;
+  enabled?: boolean;
+};
+
+function toFlag(w: FlagWire): FeatureFlag {
+  return {
+    id: w.id,
+    key: w.key,
+    description: w.description,
+    enabled: w.enabled,
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated),
+  };
+}
 
 export function useAdminFlags() {
   return useQuery({
     queryKey: ["admin", "flags"],
-    // ?scope=system: this management view edits rows by serial `id`, so it must read ONLY
-    // the site-wide system.feature_flags rows. The public GET default also unions in the hub
-    // ecosystem's own product flags (relocated to ecosystem.feature_flags by migration 0123),
-    // which carry id 0 and are managed via the per-ecosystem Feature Flags UI, not here.
-    queryFn: () => authedJson<FeatureFlag[]>("/api/system/feature-flags?scope=system"),
+    queryFn: async (): Promise<FeatureFlag[]> =>
+      (await listAllV1<FlagWire>("/api/v1/feature_flags")).map(toFlag),
   });
 }
 
 export function useCreateFlag() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateFlagBody) =>
-      authedJson<FeatureFlag>("/api/system/feature-flags", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
+    mutationFn: async (data: CreateFlagBody): Promise<FeatureFlag> =>
+      toFlag(
+        await authedJson<FlagWire>("/api/v1/feature_flags", {
+          method: "POST",
+          body: JSON.stringify(data),
+        }),
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "flags"] }),
   });
 }
@@ -340,11 +366,19 @@ export function useCreateFlag() {
 export function useUpdateFlag() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, changes }: { id: number; changes: UpdateFlagBody }) =>
-      authedJson<FeatureFlag>(`/api/system/feature-flags/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(changes),
-      }),
+    mutationFn: async ({
+      id,
+      changes,
+    }: {
+      id: number;
+      changes: UpdateFlagBody;
+    }): Promise<FeatureFlag> =>
+      toFlag(
+        await authedJson<FlagWire>(`/api/v1/feature_flags/${id}`, {
+          method: "POST",
+          body: JSON.stringify(changes),
+        }),
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "flags"] }),
   });
 }
@@ -353,41 +387,66 @@ export function useDeleteFlag() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) =>
-      authedRequest(`/api/system/feature-flags/${id}`, { method: "DELETE" }),
+      authedRequest(`/api/v1/feature_flags/${id}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "flags"] }),
   });
 }
 
 // ── Server Bag ─────────────────────────────────────────────────────────────
 //
-// Hand-written split-auth routes at `/api/system/server-bag` (system.server_bag —
-// global, no owner scope; public GET, admin mutations). The sibling of feature
-// flags, but the value is arbitrary JSON instead of a boolean toggle. Rows are
-// addressed by their `key` (the table's PK), which — unlike a flag's key — is
-// immutable: set once at create, and PUT changes only value/description.
+// `/api/v1/server_bag` (system.server_bag — global, no owner scope; public GET, admin
+// mutations). The sibling of feature flags, but the value is arbitrary JSON instead of a boolean
+// toggle. Rows are addressed by their `key` (the table's PK), which — unlike a flag's key — is
+// immutable: set once at create, and the update changes only value/description. A row has no
+// `id`, so a list walk pages by `key`.
+
+type BagWire = SuccessBody<"/v1/server_bag", "get">["data"][number];
 
 /** A system.server_bag row (key, value, description, createdAt, updatedAt). */
-export type ServerBag = SuccessBody<"/system/server-bag", "get">[number];
+export interface ServerBag {
+  key: string;
+  value: unknown;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
 /** The create body: `key` + `value` required, `description` optional. */
-export type CreateBagBody = RequestBody<"/system/server-bag", "post">;
+export type CreateBagBody = RequestBody<"/v1/server_bag", "post">;
 /** The update body: `value`/`description`, both optional (partial patch). */
-export type UpdateBagBody = RequestBody<"/system/server-bag/{key}", "put">;
+export type UpdateBagBody = { value?: unknown; description?: string };
+
+function toBag(w: BagWire): ServerBag {
+  return {
+    key: w.key,
+    value: w.value,
+    description: w.description,
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated),
+  };
+}
 
 export function useServerBags() {
   return useQuery({
     queryKey: ["admin", "server-bag"],
-    queryFn: () => authedJson<ServerBag[]>("/api/system/server-bag"),
+    queryFn: async (): Promise<ServerBag[]> =>
+      (
+        await listAllV1<BagWire>("/api/v1/server_bag", {}, {
+          cursorOf: (row) => (row as BagWire).key,
+        })
+      ).map(toBag),
   });
 }
 
 export function useCreateBag() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateBagBody) =>
-      authedJson<ServerBag>("/api/system/server-bag", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
+    mutationFn: async (data: CreateBagBody): Promise<ServerBag> =>
+      toBag(
+        await authedJson<BagWire>("/api/v1/server_bag", {
+          method: "POST",
+          body: JSON.stringify(data),
+        }),
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "server-bag"] }),
   });
 }
@@ -395,11 +454,13 @@ export function useCreateBag() {
 export function useUpdateBag() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ key, changes }: { key: string; changes: UpdateBagBody }) =>
-      authedJson<ServerBag>(`/api/system/server-bag/${encodeURIComponent(key)}`, {
-        method: "PUT",
-        body: JSON.stringify(changes),
-      }),
+    mutationFn: async ({ key, changes }: { key: string; changes: UpdateBagBody }): Promise<ServerBag> =>
+      toBag(
+        await authedJson<BagWire>(`/api/v1/server_bag/${encodeURIComponent(key)}`, {
+          method: "POST",
+          body: JSON.stringify(changes),
+        }),
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "server-bag"] }),
   });
 }
@@ -408,18 +469,17 @@ export function useDeleteBag() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (key: string) =>
-      authedRequest(`/api/system/server-bag/${encodeURIComponent(key)}`, { method: "DELETE" }),
+      authedRequest(`/api/v1/server_bag/${encodeURIComponent(key)}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "server-bag"] }),
   });
 }
 
 // ── Access Audit ───────────────────────────────────────────────────────────
 //
-// Admin-only READ of the access audit trail via `GET /api/system/access-audit`
-// (paginated, newest first). Rows are written by the `/access` mutations (workspace
-// role & assignment changes); this is the cross-workspace admin view. Not in the
-// OpenAPI surface, so the row shape is hand-written here to mirror the backend route
-// (backend/src/adh/src/routes/accessAudit.ts).
+// Admin-only READ of the access audit trail via `GET /api/v1/system/access_audit`
+// (newest first, paged by `starting_after`). Rows are written by the `/access` mutations (workspace
+// role & assignment changes); this is the cross-workspace admin view. The row shape the pane
+// consumes is hand-written here and `toAuditEvent` maps the wire row onto it.
 
 /** One `team.access_audit` row, with the acting customer's email resolved server-side. */
 export interface AccessAuditEvent {
@@ -441,11 +501,32 @@ export interface AccessAuditEvent {
   at: string;
 }
 
-export interface AccessAuditPage {
-  items: AccessAuditEvent[];
-  page: number;
-  pageSize: number;
-  total: number;
+type AuditWire = SuccessBody<"/v1/system/access_audit", "get">["data"][number];
+
+/** The audit's before/after payloads are action-shaped JSON; the pane shows them as text. */
+function auditText(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  return typeof v === "string" ? v : JSON.stringify(v);
+}
+
+function toAuditEvent(w: AuditWire): AccessAuditEvent {
+  return {
+    id: w.id,
+    ownerKind: w.owner_kind,
+    ownerId: w.owner_id,
+    actorKind: w.actor_kind,
+    actorId: w.actor_id,
+    actorEmail: w.actor_email ?? null,
+    action: w.action,
+    subjectKind: w.subject_kind ?? "",
+    subjectId: w.subject_id ?? "",
+    targetFeature: w.target_feature ?? "",
+    targetItemId: w.target_item_id ?? "",
+    roleId: w.role_id ?? "",
+    before: auditText(w.before),
+    after: auditText(w.after),
+    at: w.at,
+  };
 }
 
 /**
@@ -453,84 +534,186 @@ export interface AccessAuditPage {
  *
  * The trail is append-only and unbounded, so it is the one admin list that cannot be fetched
  * whole; `useWindowedList` is what lets it still be filtered and sorted like every other one. The
- * server's own cap is 200 rows a request, so that is the step — see backend accessAudit.ts, whose
- * count saturates deliberately to keep a full scan off the table.
+ * step is the widest page `/v1` serves (100).
  */
 export function useAccessAudit() {
   return useWindowedList<AccessAuditEvent>({
     key: ["admin", "access-audit"],
     getRowId: (e) => e.id,
-    pageSize: 200,
-    fetchPage: (page, pageSize) =>
-      authedJson<AccessAuditPage>(
-        `/api/system/access-audit?page=${page}&pageSize=${pageSize}`,
-      ),
+    pageSize: 100,
+    fetchPage: async (after, pageSize) => {
+      const page = await fetchV1WindowPage<AuditWire>("/api/v1/system/access_audit", after, pageSize);
+      return { items: page.items.map(toAuditEvent), hasMore: page.hasMore };
+    },
   });
 }
 
 // ── Messaging ────────────────────────────────────────────────────────────
 //
-// Admin messaging routes are sibling paths under `/api/messaging` gated by
-// isAdmin(): `GET /api/messaging/log` (paginated) and `POST /api/messaging/send`.
+// Admin messaging routes under `/api/v1/messaging` gated by isAdmin(): `GET /messages` (the
+// log) and `POST /messages` (send), plus `status` and `templates`. The shared MessagingSurface
+// still renders a page-numbered log with camelCase rows, so the hooks below adapt to that.
 
-// Spec-typed (was hand-written and had drifted: the log entry claimed `userId`,
-// but the backend returns `ecosystemId`). Names kept so call sites read the same.
-export type MessageLogPage = SuccessBody<"/messaging/log", "get">;
-export type MessageLogEntry = MessageLogPage["items"][number];
-export type AdminSendMessageRequest = RequestBody<"/messaging/send", "post">;
+type MessageWire = SuccessBody<"/v1/messaging/messages", "get">["data"][number];
+
+export interface MessageLogEntry {
+  id: string;
+  channel: string;
+  recipient: string;
+  subject: string | null;
+  body: string;
+  templateId: string | null;
+  status: string;
+  providerId: string | null;
+  errorMessage: string | null;
+  sentBy: string | null;
+  origin: string;
+  createdAt: string;
+}
+export interface MessageLogPage {
+  items: MessageLogEntry[];
+  page: number;
+  pageSize: number;
+  /**
+   * `/v1` lists carry `has_more`, not a count, so this is the smallest figure that makes the
+   * pager honest: exact once the last page is reached, one past this page while more follow.
+   */
+  total: number;
+}
+/** What the send form hands back — camelCase, mapped to the snake_case body in `useSendMessage`. */
+export interface AdminSendMessageRequest {
+  userId: string;
+  channel: "email" | "sms";
+  recipient?: string;
+  subject?: string;
+  body?: string;
+  templateId?: string;
+  templateVars?: Record<string, string>;
+}
+
+function toMessage(w: MessageWire): MessageLogEntry {
+  return {
+    id: w.id,
+    channel: w.channel,
+    recipient: w.recipient,
+    subject: w.subject ?? null,
+    body: w.body,
+    templateId: w.template_id ?? null,
+    status: w.status,
+    providerId: w.provider_id ?? null,
+    errorMessage: w.error_message ?? null,
+    sentBy: w.sent_by ?? null,
+    origin: w.origin,
+    createdAt: unixToIso(w.created),
+  };
+}
 
 export function useMessageLog(page = 1, pageSize = 20) {
   return useQuery({
     queryKey: ["admin", "messaging", "log", page, pageSize],
-    queryFn: () =>
-      authedJson<MessageLogPage>(
-        `/api/messaging/log?page=${page}&pageSize=${pageSize}`,
-      ),
+    queryFn: async (): Promise<MessageLogPage> => {
+      // Cursor paging has no "page N": walk to it, one request per page.
+      let after: string | undefined;
+      let current = await listV1Page<MessageWire>(
+        withV1Query("/api/v1/messaging/messages", { limit: pageSize }),
+      );
+      for (let n = 1; n < page && current.hasMore && current.data.length > 0; n++) {
+        after = current.data[current.data.length - 1]?.id;
+        current = await listV1Page<MessageWire>(
+          withV1Query("/api/v1/messaging/messages", { limit: pageSize, starting_after: after }),
+        );
+      }
+      const items = current.data.map(toMessage);
+      return {
+        items,
+        page,
+        pageSize,
+        total: current.hasMore ? page * pageSize + 1 : (page - 1) * pageSize + items.length,
+      };
+    },
   });
 }
 
 export function useSendMessage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: AdminSendMessageRequest) =>
-      authedJson<SuccessBody<"/messaging/send", "post">>("/api/messaging/send", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: AdminSendMessageRequest) => {
+      const body: Record<string, unknown> = {
+        user_id: data.userId,
+        channel: data.channel,
+        ...(data.recipient !== undefined ? { recipient: data.recipient } : {}),
+        ...(data.subject !== undefined ? { subject: data.subject } : {}),
+        ...(data.body !== undefined ? { body: data.body } : {}),
+        ...(data.templateId !== undefined ? { template_id: data.templateId } : {}),
+        ...(data.templateVars !== undefined ? { template_vars: data.templateVars } : {}),
+      };
+      return authedJson<SuccessBody<"/v1/messaging/messages", "post", 201>>(
+        "/api/v1/messaging/messages",
+        { method: "POST", body: JSON.stringify(body) },
+      );
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "messaging"] }),
   });
 }
 
 // ── Feedback ─────────────────────────────────────────────────────────────
 //
-// Generic CRUD at `/api/content/feedback`, fetched whole. The endpoint has no
-// paging parameters — the page and status arguments this hook used to take were
-// applied to an already-complete array, which is a pager that hid rows the
-// caller had already paid for. The list filters and sorts client-side now.
+// `/api/v1/content/feedback`, fetched whole. The page and status arguments the old hook took
+// were applied to an already-complete array, which is a pager that hid rows the caller had
+// already paid for. The list filters and sorts client-side.
 //
-// LIMITATION: content.feedback carries a `user_id` column, so CRUD
-// owner-scopes the list to the caller — an admin currently sees only their OWN
-// feedback, not every user's. A tenant-wide admin feedback panel needs an
-// admin-gated backend endpoint; swap the URL here once it exists.
+// LIMITATION: content.feedback carries an owner, so the list is owner-scoped to the caller — an
+// admin currently sees only their OWN feedback, not every user's. A tenant-wide admin feedback
+// panel needs an admin-gated backend endpoint; swap the URL here once it exists.
 
-// Raw `content.feedback` row from generic CRUD — sourced from the
-// spec. (The spec resolves the old email/userEmail ambiguity: it's `userEmail`.)
-export type FeedbackSubmission = SuccessBody<
-  "/content/feedback",
-  "get"
->[number];
+type FeedbackWire = SuccessBody<"/v1/content/feedback", "get">["data"][number];
+
+/** A `content.feedback` row in the camelCase shape the pane consumes. */
+export interface FeedbackSubmission {
+  id: string;
+  ecosystemId: string;
+  userEmail: string;
+  category: string;
+  subject: string;
+  body: string;
+  platform: string;
+  appVersion: string;
+  osVersion: string;
+  deviceInfo: string;
+  status: string;
+  adminNotes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function toFeedback(w: FeedbackWire): FeedbackSubmission {
+  return {
+    id: w.id,
+    ecosystemId: w.ecosystem_id,
+    userEmail: w.user_email,
+    category: w.category,
+    subject: w.subject,
+    body: w.body,
+    platform: w.platform,
+    appVersion: w.app_version,
+    osVersion: w.os_version,
+    deviceInfo: w.device_info,
+    status: w.status,
+    adminNotes: w.admin_notes,
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated),
+  };
+}
 
 /** Every submission, newest first. */
 export function useFeedback() {
   return useQuery({
     queryKey: ["admin", "feedback"],
     queryFn: async (): Promise<FeedbackSubmission[]> => {
-      const rows = await authedJson<FeedbackSubmission[]>(
-        "/api/content/feedback",
-      );
-      // Copied before sorting: the array the fetch returned becomes the query
-      // cache's own value, and sorting in place would mutate cached state.
-      return [...rows].sort((a, b) =>
+      const rows = (await listAllV1<FeedbackWire>("/api/v1/content/feedback")).map(toFeedback);
+      // The mapped array becomes the query cache's own value; it is a fresh array, so sorting
+      // in place does not touch anything the fetch handed back.
+      return rows.sort((a, b) =>
         a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0,
       );
     },
@@ -551,13 +734,13 @@ export function useUpdateFeedback() {
     }) => {
       // Only send fields the caller explicitly set, so an absent field is never
       // coerced to null by the partial update. Typed against the spec's update body.
-      const body: Partial<RequestBody<"/content/feedback/{id}", "put">> = {};
+      const body: Partial<RequestBody<"/v1/content/feedback/{id}", "post">> = {};
       if (status !== undefined) body.status = status;
-      if (adminNotes !== undefined) body.adminNotes = adminNotes;
+      if (adminNotes !== undefined) body.admin_notes = adminNotes;
       return authedJson(
-        `/api/content/feedback/${encodeURIComponent(id)}`,
+        `/api/v1/content/feedback/${encodeURIComponent(id)}`,
         {
-          method: "PUT",
+          method: "POST",
           body: JSON.stringify(body),
         },
       );
@@ -567,19 +750,41 @@ export function useUpdateFeedback() {
 }
 
 // ── Messaging status + templates ─────────────────────────────────────────
-export type MessagingStatus = SuccessBody<"/messaging/status", "get">;
-export type MessagingTemplateList = SuccessBody<"/messaging/templates", "get">;
+export type MessagingStatus = SuccessBody<"/v1/messaging/status", "get">;
+
+/** A messaging template in the shape the shared MessagingSurface reads. */
+export interface MessagingTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  htmlBody: string;
+  textBody: string;
+  smsBody?: string;
+  category: string;
+}
+export type MessagingTemplateList = MessagingTemplate[];
+
+type TemplateWire = SuccessBody<"/v1/messaging/templates", "get">["data"][number];
 
 export function useMessagingStatus() {
   return useQuery({
     queryKey: ["admin", "messaging", "status"],
-    queryFn: () => authedJson<MessagingStatus>("/api/messaging/status"),
+    queryFn: () => authedJson<MessagingStatus>("/api/v1/messaging/status"),
   });
 }
 
 export function useMessagingTemplates() {
   return useQuery({
     queryKey: ["admin", "messaging", "templates"],
-    queryFn: () => authedJson<MessagingTemplateList>("/api/messaging/templates"),
+    queryFn: async (): Promise<MessagingTemplateList> =>
+      (await listAllV1<TemplateWire>("/api/v1/messaging/templates")).map((t) => ({
+        id: t.id,
+        name: t.name,
+        subject: t.subject,
+        htmlBody: t.html_body,
+        textBody: t.text_body,
+        ...(t.sms_body !== undefined ? { smsBody: t.sms_body } : {}),
+        category: t.category,
+      })),
   });
 }

@@ -1,7 +1,7 @@
 import { API_ENDPOINTS } from '../generated/endpoints.generated'
 import type { EndpointMeta, EndpointRef } from '../types'
 
-/** The map key for a method+path reference (`"GET /persona/personas/{id}"`). */
+/** The map key for a method+path reference (`"GET /v1/personas/{id}"`). */
 export function endpointKey(ref: EndpointRef | string): string {
   if (typeof ref === 'string') return ref
   return `${ref.method.toUpperCase()} ${ref.path}`

@@ -29,12 +29,44 @@ function entry(patch: Partial<PublicEntry> = {}): PublicEntry {
   };
 }
 
+/** `PublicEntry` as /v1 serves it: snake_case, with the untyped maps keeping their keys. */
+const wireEntry = (e: PublicEntry) => ({
+  slug: e.slug,
+  display_name: e.displayName,
+  summary: e.summary,
+  photo_attachment_id: e.photoAttachmentId,
+  provider_type: e.providerType,
+  category: e.category,
+  keywords: e.keywords,
+  location_text: e.locationText,
+  country_code: e.countryCode,
+  region_code: e.regionCode,
+  geo: e.geo,
+  area_served: e.areaServed,
+  delivery_mode: e.deliveryMode,
+  links: e.links,
+  contact_mode: e.contactMode,
+  languages: e.languages,
+  fields: e.fields,
+  services: e.services.map((s) => ({
+    title: s.title,
+    description: s.description,
+    pricing_model: s.pricingModel,
+    price_min: s.priceMin,
+    price_max: s.priceMax,
+    currency: s.currency,
+    unit: s.unit,
+    delivery_mode: s.deliveryMode,
+  })),
+  image_urls: e.imageUrls,
+});
+
 const page = (body: PublicEntry) =>
   new Response(
     JSON.stringify({
-      registry: { slug: 'coaches', name: 'Coaches', boundSiteId: null },
-      entry: body,
-      jsonLd: {},
+      registry: { slug: 'coaches', name: 'Coaches', bound_site_id: null },
+      entry: wireEntry(body),
+      json_ld: {},
     }),
     { status: 200, headers: { 'content-type': 'application/json' } },
   );
@@ -100,7 +132,7 @@ describe('EntryProfileView', () => {
     mount({ signedIn: true, fetcher, entrySlug: 'a b/c' });
 
     await waitFor(() => expect(fetcher).toHaveBeenCalled());
-    expect(fetcher.mock.calls[0]![0]).toBe('/api/registries/coaches/entries/a%20b%2Fc');
+    expect(fetcher.mock.calls[0]![0]).toBe('/api/v1/registry_entries/a%20b%2Fc?registry=coaches');
   });
 
   it('keeps the anonymous body when the signed-in request fails', async () => {

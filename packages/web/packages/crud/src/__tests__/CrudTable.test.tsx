@@ -18,8 +18,8 @@ const meta: CrudTableMeta = {
   key: 'demo/widgets',
   schema: 'demo',
   table: 'widgets',
-  basePath: '/demo/widgets',
-  itemPath: '/demo/widgets/{id}',
+  basePath: '/v1/demo/widgets',
+  itemPath: '/v1/demo/widgets/{id}',
   pkParams: ['id'],
   exposure: 'owner',
   columns: [

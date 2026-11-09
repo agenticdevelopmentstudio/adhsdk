@@ -1,6 +1,6 @@
 // The demo-chat authoring loop: play one turn of an UNSAVED ink script.
 //
-// Route: POST /api/persona/demo-preview (backend routes/personaDemoPreview.ts). It takes the
+// Route: POST /api/v1/personas/preview (backend routes/personaDemoPreview.ts). It takes the
 // draft source the editor is holding — never a persona id — so a persona being written for the
 // first time can be tried before it has ever been saved.
 //
@@ -15,6 +15,7 @@
 // gives the author their compile diagnostics plus what a visitor meets first, without a second
 // endpoint compiling through a second code path.
 import { authedJson } from "../http";
+import type { V1PersonaPreview } from "./wire";
 
 /** One choice the story would accept next. */
 export interface DemoPreviewChoice {
@@ -91,8 +92,28 @@ export interface DemoPreviewBody {
 
 export const demoPreviewApi = {
   play: (body: DemoPreviewBody) =>
-    authedJson<DemoPreviewTurn>("/api/persona/demo-preview", {
+    authedJson<V1PersonaPreview>("/api/v1/personas/preview", {
       method: "POST",
-      body: JSON.stringify(body),
-    }),
+      body: JSON.stringify({
+        source: body.source,
+        sign_in_line: body.signInLine,
+        message: body.message,
+        history: body.history,
+        can_escalate: body.canEscalate,
+      }),
+    }).then(
+      (r): DemoPreviewTurn => ({
+        text: r.text,
+        onScript: r.on_script,
+        signInLine: r.sign_in_line,
+        budgetExhausted: r.budget_exhausted,
+        choices: r.choices.map((c) => ({
+          text: c.text,
+          keywords: c.keywords,
+          offScript: c.off_script,
+        })),
+        diagnostics: r.diagnostics,
+        tagPlacementHint: r.tag_placement_hint,
+      }),
+    ),
 };

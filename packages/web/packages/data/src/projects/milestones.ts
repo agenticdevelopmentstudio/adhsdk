@@ -1,4 +1,4 @@
-// Project milestones API client — the plan side of the `/api/project/*` surface.
+// Project milestones API client — the plan side of the `/api/v1/*` surface.
 //
 // Unlike an iteration or a program, a milestone IS a thing a board owns: it is a point in ONE
 // project's plan, so every route here hangs off `/project/projects/{id}/milestones` and a
@@ -9,8 +9,9 @@
 // moving a card writes nothing to the milestone and why a stale count is not a state this
 // client can get into.
 
-import { authedJson } from "../http";
+import { authedRequest } from "../http";
 import { compact, enc } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import type {
   MilestoneCounts,
   MilestoneRow,
@@ -19,7 +20,7 @@ import type {
   StatusCategory,
 } from "./wire";
 
-const PROJECTS = "/api/project/projects";
+const PROJECTS = "/api/v1/projects";
 
 const stem = (projectId: string) => `${PROJECTS}/${enc(projectId)}/milestones`;
 
@@ -93,7 +94,7 @@ export const projectMilestonesApi = {
    *  last — a milestone with no date is not overdue and does not belong at the front. Every row
    *  carries its `counts`. */
   async list(projectId: string): Promise<Milestone[]> {
-    const rows = await authedJson<MilestoneRow[]>(stem(projectId));
+    const rows = await v1List<MilestoneRow>(stem(projectId));
     return rows.map(toMilestone);
   },
 
@@ -109,10 +110,7 @@ export const projectMilestonesApi = {
       ...compact({ description: input.description, targetDate: input.targetDate }),
     };
     return toMilestone(
-      await authedJson<MilestoneRow>(stem(projectId), {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<MilestoneRow>(stem(projectId), v1Write("POST", body)),
     );
   },
 
@@ -125,25 +123,22 @@ export const projectMilestonesApi = {
   ): Promise<Milestone> {
     const body: MilestonePatchBody = compact(patch);
     return toMilestone(
-      await authedJson<MilestoneRow>(`${stem(projectId)}/${enc(milestoneId)}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<MilestoneRow>(`${stem(projectId)}/${enc(milestoneId)}`, v1Write("POST", body)),
     );
   },
 
   /**
-   * Remove a point from the plan, DETACHING its cards — the count of those cards comes back.
+   * Remove a point from the plan, DETACHING its cards. The legacy route counted those cards; /v1 answers a delete with a tombstone, so the count is no longer reported.
    *
    * It never refuses, the same way deleting an iteration doesn't and deleting a board COLUMN
    * does: a card must have a status, so a column with cards in it has no defined outcome,
    * whereas "counts toward no milestone" is an ordinary state. The cards themselves are
    * untouched apart from losing the reference.
    */
-  async remove(projectId: string, milestoneId: string): Promise<{ unassigned: number }> {
-    return authedJson<{ unassigned: number }>(
-      `${stem(projectId)}/${enc(milestoneId)}`,
-      { method: "DELETE" },
-    );
+  async remove(projectId: string, milestoneId: string): Promise<{ unassigned?: number }> {
+    // /v1 answers a delete with a tombstone; the legacy count of detached cards is not
+    // carried, so `unassigned` is absent rather than a guessed 0.
+    await authedRequest(`${stem(projectId)}/${enc(milestoneId)}`, { method: "DELETE" });
+    return {};
   },
 };

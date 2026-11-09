@@ -22,12 +22,12 @@ const cost = (over: Partial<FixedCost> = {}): FixedCost => ({
   id: "c1",
   provider: "railway",
   label: "Backend service",
-  monthlyMicros: 20_000_000,
-  effectiveFrom: "2020-01-01",
-  effectiveTo: null,
+  monthly_micros: 20_000_000,
+  effective_from: "2020-01-01",
+  effective_to: null,
   note: "",
-  createdAt: "2020-01-01T00:00:00Z",
-  updatedAt: "2020-01-01T00:00:00Z",
+  created: 1577836800,
+  updated: 1577836800,
   ...over,
 });
 
@@ -47,8 +47,8 @@ describe("FixedCostDialog", () => {
     expect(createAsync).toHaveBeenCalledWith({
       provider: "railway",
       label: "DB",
-      monthlyMicros: 20_100_000,
-      effectiveFrom: "2026-10-01",
+      monthly_micros: 20_100_000,
+      effective_from: "2026-10-01",
     });
   });
 
@@ -70,12 +70,12 @@ describe("FixedCostDialog", () => {
     fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-09-30" } });
     fireEvent.click(save());
     await waitFor(() => expect(updateAsync).toHaveBeenCalled());
-    expect(updateAsync).toHaveBeenCalledWith({ id: "c1", changes: { effectiveTo: "2026-09-30" } });
+    expect(updateAsync).toHaveBeenCalledWith({ id: "c1", changes: { effective_to: "2026-09-30" } });
   });
 
   it("offers the amount on a cost that starts in the future", () => {
-    expect(hasStarted(cost({ effectiveFrom: "2999-01-01" }))).toBe(false);
-    render(<FixedCostDialog cost={cost({ effectiveFrom: "2999-01-01" })} open onClose={vi.fn()} />);
+    expect(hasStarted(cost({ effective_from: "2999-01-01" }))).toBe(false);
+    render(<FixedCostDialog cost={cost({ effective_from: "2999-01-01" })} open onClose={vi.fn()} />);
     expect((screen.getByLabelText("Monthly amount (dollars)") as HTMLInputElement).value).toBe("20");
   });
 

@@ -3,6 +3,11 @@
 // `SuccessBody<...>` / `RequestBody<...>` (from `@adh-sdk/adh-api-types`), which
 // is adh product vocabulary a generic data client must not take on. Each interface carries exactly
 // the fields the `toX()` mappers and call sites touch — no more. Type-only file.
+//
+// These are the clients' APP-FACING shapes: camelCase, ISO `createdAt` / `updatedAt`. The wire
+// itself is /v1 (snake_case, unix-second `created` / `updated`); `../v1-case` maps one onto the
+// other at the request boundary, so a row type here is what the client hands its mappers AFTER
+// that mapping and a body type is what it accepts BEFORE it.
 
 /**
  * A board column's category — the fixed bucket a client reads an UNFAMILIAR board through.

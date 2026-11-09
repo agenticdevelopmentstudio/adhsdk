@@ -15,10 +15,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryClientProvider, notifyManager } from "@tanstack/react-query";
 
 // Only the transport, so the hook, its key and its cache are all the real ones.
-vi.mock("../../http", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../http")>()),
-  authedJson: vi.fn(),
-}));
+// `listAllV1` is routed through the same stub so a list read lands in `authedJson`'s call log too.
+vi.mock("../../http", async (importOriginal) => {
+  const authedJson = vi.fn();
+  return {
+    ...(await importOriginal<typeof import("../../http")>()),
+    authedJson,
+    listAllV1: (url: string) => authedJson(url),
+  };
+});
 
 import { useWorkspaceDefaultEcosystemId } from "../use-workspace-default-ecosystem";
 import { getToolkitQueryClient } from "../../query";
@@ -32,8 +37,8 @@ notifyManager.setScheduler((cb) => cb());
 
 const mockedJson = vi.mocked(authedJson);
 
-/** The one infrastructure row the resolver reads `id` and `canManage` off. */
-const ROW = [{ id: "eco-1", canManage: true }];
+/** The one infrastructure row the resolver reads `id` and `can_manage` off. */
+const ROW = [{ id: "eco-1", can_manage: true }];
 
 /** The app's own client, not one made here: the hook passes `getToolkitQueryClient()` to
  *  `useQuery` explicitly, so a client handed down through a provider is never the one it reads —

@@ -30,6 +30,7 @@ import { useViewer } from './viewer'
 import { ErrorText } from '@adh-sdk/ui/components/error-text'
 import { useAction } from '@adh-sdk/ui/hooks/useAction'
 import { rowKey, useCrudResource } from './useCrudResource'
+import { columnDisplayValue } from './display'
 import type { CrudColumn, CrudRow, CrudTableMeta } from './types'
 import { fieldCaptionClass } from '@adh-sdk/ui/lib/typography'
 
@@ -40,7 +41,7 @@ export interface CrudDataViewProps {
   /** Optional column-equality LIST filter (e.g. `{ sourceProvider: 'reddit' }`),
    *  passed to {@link useCrudResource}. */
   filter?: Record<string, string>
-  /** Optional target-ecosystem scope override (`?ecosystemId=` on every verb) for the
+  /** Optional target-ecosystem scope override (`?ecosystem_id=` on every verb) for the
    *  backend's ecosystem-param-scoped tables — the integration Data tab names the
    *  ecosystem it is configuring, since the caller's JWT ecosystem is never that one.
    *  Passed to {@link useCrudResource}. */
@@ -51,7 +52,7 @@ export interface CrudDataViewProps {
    *  when the view is used standalone. */
   onGuardChange?: (guard: PaneExitGuard | null) => void
   /** Values a NEW row starts with, for columns the surface already knows (a bucket's table view
-   *  seeds `ecosystemId` with the bucket's ecosystem). Without it a create omits the column, the
+   *  seeds `ecosystem_id` with the bucket's ecosystem). Without it a create omits the column, the
    *  backend stamps the CALLER's ecosystem, and the row vanishes from a list filtered to another
    *  one the moment it saves (Mike, 2026-09-24). Only writable columns are seeded, and a seeded
    *  column is PINNED: hidden from the row form, because the surface has already decided it — a
@@ -97,7 +98,7 @@ function formatCellDisplay(value: unknown): string {
  * server values for an existing row, blank defaults for a create draft — so Cancel
  * is a pure revert. Save flushes everything in one pass, dropping each unit's staged
  * state AS it persists (so a partial failure leaves only the un-written units staged
- * and a retry re-sends exactly those): a PUT per dirty existing row, a POST per draft
+ * and a retry re-sends exactly those): an update POST per dirty existing row, a POST per draft
  * (payloads built exactly as {@link CrudRecordForm} does), then one refetch. Delete
  * multi-selects rows and confirms before issuing a DELETE per row. `meta` stays the
  * only required input.
@@ -148,14 +149,14 @@ export function CrudDataView({
   // Cross-ecosystem move (admin): available on any ecosystem-scoped table (one carrying an
   // `ecosystem_id` column), acting on the checked rows — so the SAME generic action reaches every
   // scoped table (personas included), not a per-feature bolt-on.
-  // Column names are the camelCase JSON field names (CrudColumn.name), so the tenant column is
-  // `ecosystemId`, not `ecosystem_id`. Single-pk only — the move endpoint takes one id, and the
+  // Column names are the snake_case JSON field names /v1 serves (CrudColumn.name), so the tenant
+  // column is `ecosystem_id`. Single-pk only — the move endpoint takes one id, and the
   // backend refuses composite keys, so a composite-pk table (e.g. persona_memory.links) must not
   // offer the action.
   const canMove =
     viewerIsAdmin &&
     meta.pkParams.length === 1 &&
-    meta.columns.some((column) => column.name === 'ecosystemId')
+    meta.columns.some((column) => column.name === 'ecosystem_id')
   const [movingOpen, setMovingOpen] = useState(false)
 
   const save = useAction()
@@ -282,7 +283,7 @@ export function CrudDataView({
   // The batch write, unit by unit — each unit's staged state is dropped AS it
   // persists, so a partial failure leaves ONLY the un-written units staged and a
   // retry re-sends exactly those (never re-POSTing an already-created draft or
-  // re-PUTting a saved row). Throws on the first failure; the caller shows it.
+  // re-sending a saved row). Throws on the first failure; the caller shows it.
   const performSave = async () => {
     for (const [key, rowEdits] of Object.entries(edits)) {
       if (draftKeys.includes(key)) continue
@@ -297,7 +298,7 @@ export function CrudDataView({
         continue
       }
       await resource.updateRow(row, buildPayload(meta, mergeDraft(base, rowEdits), 'edit'))
-      dropEdit(key) // persisted — drop its staged edits so a retry won't re-PUT it
+      dropEdit(key) // persisted — drop its staged edits so a retry won't re-send it
     }
     for (const key of draftKeys) {
       await resource.createRow(buildPayload(meta, mergeDraft(draftBaseline, edits[key]), 'create'))
@@ -370,7 +371,7 @@ export function CrudDataView({
   // This table's generic-CRUD endpoint (/<schema>/<table>), seeded with the same list
   // filter + ecosystem scope the view itself uses, so "try it" mirrors what's on screen.
   const apiQuery: Record<string, string> = { ...(filter ?? {}) }
-  if (scopeEcosystemId) apiQuery.ecosystemId = scopeEcosystemId
+  if (scopeEcosystemId) apiQuery.ecosystem_id = scopeEcosystemId
 
   // Hold the whole pane until we know who is looking. Rendering first would mean guessing
   // "non-admin", i.e. showing an admin the read-only surface — no checkbox column, no Create,
@@ -394,7 +395,7 @@ export function CrudDataView({
           // Nested in its host pane's detail, whose own header already holds the toolbar slot.
           hoist={false}
           api={{
-            path: `/${meta.schema}/${meta.table}`,
+            path: meta.basePath,
             pathValues: {},
             queryValues: apiQuery,
             title: `${meta.table} API`,
@@ -673,7 +674,7 @@ function RowList({
                     // "—" the user might think they forgot (Mike, 2026-09-24: "the row is missing
                     // a ton of things that should be there").
                     const text = formatCellDisplay(
-                      buffer?.[column.name] ?? draftBaseline[column.name],
+                      columnDisplayValue(column, buffer?.[column.name] ?? draftBaseline[column.name]),
                     )
                     return (
                       <td
@@ -759,7 +760,7 @@ const ServerRow = memo(function ServerRow({
         </td>
       )}
       {columns.map((column) => {
-        const text = formatCellDisplay(row[column.name])
+        const text = formatCellDisplay(columnDisplayValue(column, row[column.name]))
         return (
           <td
             key={column.name}

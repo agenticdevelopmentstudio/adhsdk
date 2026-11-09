@@ -57,7 +57,8 @@ export {
   markdownDocumentType,
   DOCUMENT_SEARCH_REGISTRY,
 } from './registry/markdown'
-export type { PaperSearchHit, PaperKind } from './registry/markdown'
+export type { PaperSearchHit, PaperSearchHitWire, PaperKind } from './registry/markdown'
+export { paperHitFromWire } from './registry/markdown'
 
 // Per-kind renderer seam (c16): register a future kind's row/preview presentation
 // (badge + accent, row snippet source, optional extra preview section) with no core edit.

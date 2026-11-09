@@ -1,6 +1,7 @@
 // URL/method/body contract tests for the reactions client, plus the two folds a rendering
-// surface depends on. Only the transport (`authedJson`/`authedRequest`) is mocked, so the query
-// building, the envelope unwrap and the mappers all run for real.
+// surface depends on. Single writes mock `authedJson`/`authedRequest`; the list read runs the
+// real /v1 pager over a stubbed `fetch`, so the query building, the envelope unwrap and the
+// mappers all run for real.
 //
 // The emphasis is on the three properties a caller would otherwise have to rediscover the hard
 // way: the batch is chunked against the backend's cap (a long thread must not 400 the whole
@@ -16,8 +17,9 @@ vi.mock("../../http", async (importOriginal) => ({
 }));
 
 import { byTarget, reactionsApi, tally, type Reaction } from "../reactions";
-import type { ReactionRow } from "../wire";
+import type { ReactionWire } from "../wire";
 import { authedJson, authedRequest } from "../../http";
+import { fetchMock, installFetch, paramsAt, pathAt, bodyAt, respondOnce, respondWith, v1List } from "../../__tests__/v1-fetch";
 
 const mockedJson = vi.mocked(authedJson);
 const mockedRequest = vi.mocked(authedRequest);
@@ -25,19 +27,22 @@ const mockedRequest = vi.mocked(authedRequest);
 beforeEach(() => {
   mockedJson.mockReset();
   mockedRequest.mockReset();
+  installFetch();
 });
 
-const row = (id: string, over: Partial<ReactionRow> = {}): ReactionRow => ({
+// A reaction as /v1 sends it: snake_case, a unix-second `created`.
+const row = (id: string, over: Partial<ReactionWire> = {}): ReactionWire => ({
+  object: "reaction",
   id,
-  ownerKind: "customer",
-  ownerId: "cust-1",
-  authorKind: "customer",
-  authorId: "cust-1",
-  ecosystemId: "eco-1",
-  targetKind: "project.comments",
-  targetId: "c1",
+  owner_kind: "customer",
+  owner_id: "cust-1",
+  author_kind: "customer",
+  author_id: "cust-1",
+  ecosystem_id: "eco-1",
+  target_kind: "project.comments",
+  target_id: "c1",
   emoji: "👍",
-  createdAt: `t-${id}`,
+  created: 1767225600,
   ...over,
 });
 
@@ -51,14 +56,17 @@ const reaction = (id: string, over: Partial<Reaction> = {}): Reaction => ({
   ...over,
 });
 
+const targetIdsAt = (n: number) => (paramsAt(n).get("target_ids") ?? "").split(",");
+
 describe("reactionsApi.list", () => {
   it("reads MANY subjects in one request and unwraps the items envelope", async () => {
-    mockedJson.mockResolvedValueOnce({ items: [row("r1"), row("r2", { targetId: "c2" })] });
+    respondWith(v1List([row("r1"), row("r2", { target_id: "c2" })]));
     const out = await reactionsApi.list("project.comments", ["c1", "c2"]);
-    expect(mockedJson).toHaveBeenCalledTimes(1);
-    expect(mockedJson).toHaveBeenCalledWith(
-      "/api/content/reactions?targetKind=project.comments&targetIds=c1%2Cc2",
-    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(pathAt(0)).toBe("/api/v1/content/reactions");
+    expect(paramsAt(0).get("target_kind")).toBe("project.comments");
+    expect(targetIdsAt(0)).toEqual(["c1", "c2"]);
+    expect(out[0]!.createdAt).toBe("2026-01-01T00:00:00.000Z");
     expect(out.map((r) => r.targetId)).toEqual(["c1", "c2"]);
   });
 
@@ -66,34 +74,28 @@ describe("reactionsApi.list", () => {
     // The backend requires at least one subject. A pane whose comments have not landed yet would
     // otherwise send a call it already knows is a 400, and paint the error it caused itself.
     expect(await reactionsApi.list("project.comments", [])).toEqual([]);
-    expect(mockedJson).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("de-duplicates subjects before asking", async () => {
-    mockedJson.mockResolvedValueOnce({ items: [] });
     await reactionsApi.list("project.comments", ["c1", "c1", "c2"]);
-    expect(mockedJson).toHaveBeenCalledWith(
-      "/api/content/reactions?targetKind=project.comments&targetIds=c1%2Cc2",
-    );
+    expect(targetIdsAt(0)).toEqual(["c1", "c2"]);
   });
 
   it("chunks past the backend's cap instead of 400ing the whole read", async () => {
     // 201 subjects is one over the cap. Passing them straight through would fail the entire
     // pane — including the 200 subjects that were fine — on a thread merely being long.
     const ids = Array.from({ length: 201 }, (_, i) => `c${i}`);
-    mockedJson.mockResolvedValue({ items: [] });
     await reactionsApi.list("project.comments", ids);
-    expect(mockedJson).toHaveBeenCalledTimes(2);
-    const [first, second] = mockedJson.mock.calls.map((c) => String(c[0]));
-    expect(first?.split("targetIds=")[1]?.split("%2C")).toHaveLength(200);
-    expect(second?.split("targetIds=")[1]?.split("%2C")).toHaveLength(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const sizes = [targetIdsAt(0).length, targetIdsAt(1).length].sort((a, b) => b - a);
+    expect(sizes).toEqual([200, 1]);
   });
 
   it("merges every chunk's rows into one list", async () => {
     const ids = Array.from({ length: 201 }, (_, i) => `c${i}`);
-    mockedJson
-      .mockResolvedValueOnce({ items: [row("r1")] })
-      .mockResolvedValueOnce({ items: [row("r2", { targetId: "c200" })] });
+    respondOnce(v1List([row("r1")]));
+    respondOnce(v1List([row("r2", { target_id: "c200" })]));
     const out = await reactionsApi.list("project.comments", ids);
     expect(out.map((r) => r.id)).toEqual(["r1", "r2"]);
   });
@@ -103,9 +105,9 @@ describe("reactionsApi writes", () => {
   it("add POSTs the whole subject, since the store is polymorphic", async () => {
     mockedJson.mockResolvedValueOnce(row("r1"));
     const out = await reactionsApi.add("project.comments", "c1", "👍");
-    expect(mockedJson).toHaveBeenCalledWith("/api/content/reactions", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/content/reactions", {
       method: "POST",
-      body: JSON.stringify({ targetKind: "project.comments", targetId: "c1", emoji: "👍" }),
+      body: JSON.stringify({ target_kind: "project.comments", target_id: "c1", emoji: "👍" }),
     });
     expect(out.id).toBe("r1");
   });
@@ -113,7 +115,7 @@ describe("reactionsApi writes", () => {
   it("remove addresses the REACTION's id, not the subject it sits on", async () => {
     // A subject holds many reactions from many people; only the id says which one is yours.
     await reactionsApi.remove("r1");
-    expect(mockedRequest).toHaveBeenCalledWith("/api/content/reactions/r1", { method: "DELETE" });
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/content/reactions/r1", { method: "DELETE" });
   });
 });
 

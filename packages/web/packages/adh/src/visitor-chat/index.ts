@@ -9,7 +9,7 @@ import { parseData, readSseBlocks, toStreamEvent } from './sse'
 // A ChatBackend that streams a live conversation with a PUBLIC persona (bitbag)
 // via the adh backend's unauthenticated visitor-chat path. It:
 //   (a) mints a short-lived visitor token (localStorage), re-minting on expiry/401;
-//   (b) reads GET /persona/bootstrap once for the persona's name + advisory limits;
+//   (b) reads GET /v1/personas/bootstrap once for the persona's name + advisory limits;
 //   (c) lazily creates one visitor conversation (id kept in localStorage) so a
 //       returning visitor with a still-valid token resumes it;
 //   (d) POSTs each turn to the SSE turn route, mapping its events to ChatStreamEvents.
@@ -201,16 +201,18 @@ export class AdhChatBackend implements ChatBackend {
    *  404 on the next turn. See backend routes/visitor.ts + llm/persistence.ts. */
   private async mintToken(): Promise<StoredToken> {
     const res = await this.fetchImpl(
-      `${this.apiBase}/public/personas/${encodeURIComponent(this.slug)}/visitor-tokens`,
+      `${this.apiBase}/v1/personas/${encodeURIComponent(this.slug)}/visitor_tokens`,
       { method: 'POST', headers: { Accept: 'application/json' } },
     )
     if (!res.ok) throw new VisitorGateError(`mint failed (${res.status})`, res.status)
-    const body = parseData<StoredToken>(await res.text())
+    // The /v1 body is snake_case (`expires_at`, `persona_id`); the PERSISTED record keeps its
+    // camelCase keys so a token a visitor already holds in localStorage still reads back.
+    const body = parseData<{ token?: string; expires_at?: string; persona_id?: string }>(await res.text())
     if (!body || !body.token) throw new VisitorGateError('mint returned no token', res.status)
     const rec: StoredToken = {
       token: body.token,
-      expiresAt: body.expiresAt ?? null,
-      personaId: body.personaId,
+      expiresAt: body.expires_at ?? null,
+      personaId: body.persona_id ?? '',
     }
     this.store.set(tokenKey(this.slug), JSON.stringify(rec))
     this.store.remove(convoKey(this.slug))
@@ -240,26 +242,26 @@ export class AdhChatBackend implements ChatBackend {
 
   // --- bootstrap -----------------------------------------------------------
 
-  /** Read GET /persona/bootstrap once (best-effort). Surfaces the persona's name +
+  /** Read GET /v1/personas/bootstrap once (best-effort). Surfaces the persona's name +
    *  advisory limits; a failure never blocks chatting. */
   private async ensureBootstrap(): Promise<void> {
     if (this.bootstrapDone) return
     try {
-      const res = await this.authedFetch('/persona/bootstrap', { headers: { Accept: 'application/json' } })
+      const res = await this.authedFetch('/v1/personas/bootstrap', { headers: { Accept: 'application/json' } })
       // Transient/gate failure — leave UNLATCHED so a later turn retries rather than pinning the
       // persona name to the raw slug (and the length copy to the generic fallback) for the whole
       // session after one blip. A later turn re-attempts; the latch only trips on a real success.
       if (!res.ok) return
       const payload = parseData<{
         persona?: { name?: string }
-        chat?: { limits?: { maxConversationLength?: number } }
+        chat?: { limits?: { max_conversation_length?: number } }
       }>(await res.text())
       if (!payload) return
       const name = payload.persona?.name?.trim()
       this.bootstrapName = name ? name : null
       this.bootstrap = {
         personaName: name ? name : this.slug,
-        maxConversationLength: payload.chat?.limits?.maxConversationLength ?? null,
+        maxConversationLength: payload.chat?.limits?.max_conversation_length ?? null,
       }
       this.onBootstrap?.(this.bootstrap)
       this.bootstrapDone = true // latch only after a definitive success
@@ -274,7 +276,7 @@ export class AdhChatBackend implements ChatBackend {
   private async ensureConversation(): Promise<string> {
     const existing = this.store.get(convoKey(this.slug))
     if (existing) return existing
-    const res = await this.authedFetch('/public/visitor-chat/conversations', {
+    const res = await this.authedFetch('/v1/visitor_chats', {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: '{}',
@@ -291,7 +293,7 @@ export class AdhChatBackend implements ChatBackend {
 
   private turnFetch(id: string, token: string, body: string, signal: AbortSignal): Promise<Response> {
     return this.fetchImpl(
-      `${this.apiBase}/public/visitor-chat/conversations/${encodeURIComponent(id)}/turns`,
+      `${this.apiBase}/v1/visitor_chats/${encodeURIComponent(id)}/turns`,
       {
         method: 'POST',
         headers: {

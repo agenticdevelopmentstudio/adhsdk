@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
-import { authedJson } from "./http";
+import { authedJson, listAllV1, unixToIso } from "./http";
 import { useCreateFlag, useUpdateFlag } from "./admin";
 
 // ── Usage metering: the enforcement switch + the tiers it arms ────────────
@@ -10,8 +10,8 @@ import { useCreateFlag, useUpdateFlag } from "./admin";
 // The platform meters every authenticated request and every LLM turn, but a cap
 // only REFUSES anything when two switches agree: the tier's own `quota_enforced`
 // column, and one global kill switch above all of them. This module reads both
-// and writes both — the read through the admin-gated `GET /api/usage/enforcement`,
-// which also reports the process-level pricing knobs no row can carry.
+// and writes both — the read through the admin-gated `GET /api/v1/usage/enforcement`,
+// which also reports the process-level pricing knobs no row can carry (snake_case, as `/v1` sends it).
 
 /** The `system.feature_flags` key holding the global switch. */
 // Mirrors ENFORCEMENT_FLAG_KEY in the backend's src/lib/usage/enforcement.ts, which
@@ -25,12 +25,12 @@ const ENFORCEMENT_FLAG_DESCRIPTION =
   "Master kill switch above every tier's quota_enforced flag: off means usage is recorded but never refused.";
 
 /** The effective switch, the input that decided it, and the pricing knobs. */
-export type UsageEnforcement = SuccessBody<"/usage/enforcement", "get">;
+export type UsageEnforcement = SuccessBody<"/v1/usage/enforcement", "get">;
 
 export function useUsageEnforcement() {
   return useQuery({
     queryKey: ["admin", "usage", "enforcement"],
-    queryFn: () => authedJson<UsageEnforcement>("/api/usage/enforcement"),
+    queryFn: () => authedJson<UsageEnforcement>("/api/v1/usage/enforcement"),
   });
 }
 
@@ -66,30 +66,115 @@ export function useSetEnforcement() {
 
 // ── Rate-limit tiers ──────────────────────────────────────────────────────
 //
-// `usage.rate_limit_tiers` through generic CRUD (`catalog` exposure: any signed-in
-// caller reads, admins write). One row per tier; principals without an explicit
-// `principal_tiers` assignment fall to the `is_default` row.
+// `/api/v1/usage/rate_limit_tiers` (any signed-in caller reads, admins write). One row per tier;
+// principals without an explicit `principal_tiers` assignment fall to the `is_default` row.
+//
+// The tier editor works in camelCase, so the exported row and patch keep that shape and the two
+// explicit mappers below (`toTier`, `toTierWire`) are the only places that know the wire names.
+
+type TierWire = SuccessBody<"/v1/usage/rate_limit_tiers", "get">["data"][number];
+type TierWireBody = RequestBody<"/v1/usage/rate_limit_tiers/{id}", "post">;
 
 /** A `usage.rate_limit_tiers` row. */
-export type RateLimitTier = SuccessBody<"/usage/rate-limit-tiers", "get">[number];
+export interface RateLimitTier {
+  id: string;
+  slug: string;
+  name: string;
+  rateCapacity: number;
+  rateRefillTokens: number;
+  rateRefillSeconds: number;
+  quotaRequests: number | null;
+  quotaBytes: number | null;
+  quotaTokens: number | null;
+  quotaCostMicros: number | null;
+  quotaPeriodDays: number;
+  quotaEnforced: boolean;
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 /** The partial update body (every column optional). */
-export type UpdateTierBody = RequestBody<"/usage/rate-limit-tiers/{id}", "put">;
+export interface UpdateTierBody {
+  slug?: string;
+  name?: string;
+  rateCapacity?: number;
+  rateRefillTokens?: number;
+  rateRefillSeconds?: number;
+  quotaRequests?: number | null;
+  quotaBytes?: number | null;
+  quotaTokens?: number | null;
+  quotaCostMicros?: number | null;
+  quotaPeriodDays?: number;
+  quotaEnforced?: boolean;
+  isDefault?: boolean;
+  isActive?: boolean;
+}
+
+function toTier(w: TierWire): RateLimitTier {
+  return {
+    id: w.id,
+    slug: w.slug,
+    name: w.name,
+    rateCapacity: w.rate_capacity,
+    rateRefillTokens: w.rate_refill_tokens,
+    rateRefillSeconds: w.rate_refill_seconds,
+    quotaRequests: w.quota_requests,
+    quotaBytes: w.quota_bytes,
+    quotaTokens: w.quota_tokens,
+    quotaCostMicros: w.quota_cost_micros,
+    quotaPeriodDays: w.quota_period_days,
+    quotaEnforced: w.quota_enforced,
+    isDefault: w.is_default,
+    isActive: w.is_active,
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated),
+  };
+}
+
+/** Only the fields the caller set — an absent field must never reach the wire as undefined/null. */
+function toTierWire(b: UpdateTierBody): TierWireBody {
+  const out: TierWireBody = {};
+  if (b.slug !== undefined) out.slug = b.slug;
+  if (b.name !== undefined) out.name = b.name;
+  if (b.rateCapacity !== undefined) out.rate_capacity = b.rateCapacity;
+  if (b.rateRefillTokens !== undefined) out.rate_refill_tokens = b.rateRefillTokens;
+  if (b.rateRefillSeconds !== undefined) out.rate_refill_seconds = b.rateRefillSeconds;
+  if (b.quotaRequests !== undefined) out.quota_requests = b.quotaRequests;
+  if (b.quotaBytes !== undefined) out.quota_bytes = b.quotaBytes;
+  if (b.quotaTokens !== undefined) out.quota_tokens = b.quotaTokens;
+  if (b.quotaCostMicros !== undefined) out.quota_cost_micros = b.quotaCostMicros;
+  if (b.quotaPeriodDays !== undefined) out.quota_period_days = b.quotaPeriodDays;
+  if (b.quotaEnforced !== undefined) out.quota_enforced = b.quotaEnforced;
+  if (b.isDefault !== undefined) out.is_default = b.isDefault;
+  if (b.isActive !== undefined) out.is_active = b.isActive;
+  return out;
+}
 
 export function useRateLimitTiers() {
   return useQuery({
     queryKey: ["admin", "usage", "tiers"],
-    queryFn: () => authedJson<RateLimitTier[]>("/api/usage/rate-limit-tiers"),
+    queryFn: async (): Promise<RateLimitTier[]> =>
+      (await listAllV1<TierWire>("/api/v1/usage/rate_limit_tiers")).map(toTier),
   });
 }
 
 export function useUpdateRateLimitTier() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, changes }: { id: string; changes: UpdateTierBody }) =>
-      authedJson<RateLimitTier>(`/api/usage/rate-limit-tiers/${encodeURIComponent(id)}`, {
-        method: "PUT",
-        body: JSON.stringify(changes),
-      }),
+    mutationFn: async ({
+      id,
+      changes,
+    }: {
+      id: string;
+      changes: UpdateTierBody;
+    }): Promise<RateLimitTier> =>
+      toTier(
+        await authedJson<TierWire>(`/api/v1/usage/rate_limit_tiers/${encodeURIComponent(id)}`, {
+          method: "POST",
+          body: JSON.stringify(toTierWire(changes)),
+        }),
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "usage", "tiers"] }),
   });
 }

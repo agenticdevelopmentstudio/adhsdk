@@ -1,14 +1,45 @@
 // src/profile/normalize.ts
+function iso(seconds) {
+  return new Date(seconds * 1e3).toISOString();
+}
+function personasFromWire(rows) {
+  return rows.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    description: p.description,
+    visibility: p.visibility,
+    createdAt: iso(p.created)
+  }));
+}
 function principalFromUserCard(body) {
-  return { ...body, kind: "user" };
+  return {
+    slug: body.slug,
+    displayName: body.display_name,
+    avatarUrl: body.avatar_url,
+    createdAt: iso(body.created),
+    socialLinks: body.social_links,
+    emails: body.emails,
+    phones: body.phones,
+    addresses: body.addresses.map((a) => ({
+      label: a.label,
+      line1: a.line1,
+      line2: a.line2,
+      city: a.city,
+      region: a.region,
+      postalCode: a.postal_code,
+      country: a.country
+    })),
+    personas: personasFromWire(body.personas),
+    kind: "user"
+  };
 }
 function principalFromOrgCard(body) {
   return {
     slug: body.slug,
-    displayName: body.displayName,
-    createdAt: body.createdAt,
+    displayName: body.display_name,
+    createdAt: iso(body.created),
     description: body.description,
-    personas: body.personas,
+    personas: personasFromWire(body.personas),
     avatarUrl: null,
     socialLinks: [],
     emails: [],
@@ -27,12 +58,12 @@ async function fetchPublicPrincipal(slug) {
     );
   }
   const encoded = encodeURIComponent(slug);
-  const users = await fetch(`${backend}/public/users/${encoded}`, { next: { revalidate: 30 } });
+  const users = await fetch(`${backend}/v1/users?handle=${encoded}`, { next: { revalidate: 30 } });
   if (users.ok) {
     return principalFromUserCard(await users.json());
   }
   if (users.status !== 404) throw new Error(`Failed to fetch profile: ${users.status}`);
-  const orgs = await fetch(`${backend}/public/orgs/${encoded}`, { next: { revalidate: 30 } });
+  const orgs = await fetch(`${backend}/v1/organizations?slug=${encoded}`, { next: { revalidate: 30 } });
   if (orgs.ok) {
     return principalFromOrgCard(await orgs.json());
   }

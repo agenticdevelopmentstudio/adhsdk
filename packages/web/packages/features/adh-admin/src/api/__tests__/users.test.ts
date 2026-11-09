@@ -11,7 +11,7 @@ import type { UserEcosystem } from "../memberships";
 
 type Customer = Parameters<typeof toUserRows>[0][number];
 const user = (o: Partial<Customer> & { id: string }): Customer =>
-  ({ email: null, displayName: null, avatarUrl: "", createdAt: "2026-01-01", ...o }) as unknown as Customer;
+  ({ email: null, display_name: null, avatar_url: "", created: 1767225600, ...o }) as unknown as Customer;
 
 const eco = (o: Partial<UserEcosystem> & { ecosystemId: string }): UserEcosystem => ({
   customerId: `c-${o.ecosystemId}`,
@@ -22,14 +22,14 @@ const eco = (o: Partial<UserEcosystem> & { ecosystemId: string }): UserEcosystem
 
 describe("toUserRows", () => {
   const rows = [
-    user({ id: "1", displayName: "Alice", email: "alice@x.com" }),
-    user({ id: "2", displayName: "Bob", email: "bob@y.com" }),
-    user({ id: "3", displayName: null, email: null }),
+    user({ id: "1", display_name: "Alice", email: "alice@x.com" }),
+    user({ id: "2", display_name: "Bob", email: "bob@y.com" }),
+    user({ id: "3", display_name: null, email: null }),
   ];
   const caps = [
-    { userId: "1", capability: "admin" },
-    { userId: "1", capability: "billing" },
-    { userId: "2", capability: "support" },
+    { user_id: "1", capability: "admin" },
+    { user_id: "1", capability: "billing" },
+    { user_id: "2", capability: "support" },
   ];
 
   it("joins each customer to its capabilities", () => {

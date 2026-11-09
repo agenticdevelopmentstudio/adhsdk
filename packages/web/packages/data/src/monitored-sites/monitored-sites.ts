@@ -1,11 +1,10 @@
-// Status Sites API client — wired to the real backend generic CRUD over the
-// `monitored_sites` schema:
-//   /api/monitoring/site-groups   (groups)
-//   /api/monitoring/sites         (sites)
-//   /api/monitoring/endpoints     (endpoints)
+// Status Sites API client — wired to the /v1 monitoring surface:
+//   /api/v1/monitoring/site_groups   (groups)
+//   /api/v1/monitoring/sites         (sites)
+//   /api/v1/monitoring/endpoints     (endpoints)
 //
-// Returns raw rows (camelCase); this client maps the handful of fields the UI
-// names differently and fills the gaps the backend has no filter params for.
+// The wire is snake_case with unix-second timestamps; this client maps rows onto the camelCase
+// views and fills the gaps the backend has no filter params for.
 //
 // MODEL (matches the DB, NOT the old prototype): a site belongs to EXACTLY ONE
 // group (`sites.site_group_id`, NOT NULL, FK ON DELETE CASCADE). This is a 1:M
@@ -23,8 +22,8 @@
 // the UI doesn't model (description, displayOrder, timeoutMs, …) are left to
 // their server defaults.
 
-import { authedJson, authedRequest } from "../http";
-import { compact, enc, sortByText, workspaceQuery } from "../client-helpers";
+import { authedJson, authedRequest, listAllV1, unixToIso, withV1Query } from "../http";
+import { compact, enc, sortByText } from "../client-helpers";
 import type {
   GroupRow,
   SiteRow,
@@ -111,18 +110,22 @@ export interface UpdateEndpointBody {
 
 export const ENDPOINT_KINDS = ["http", "tcp", "icmp"] as const;
 
-const GROUPS = "/api/monitoring/site-groups";
-const SITES = "/api/monitoring/sites";
-const ENDPOINTS = "/api/monitoring/endpoints";
+const GROUPS = "/api/v1/monitoring/site_groups";
+const SITES = "/api/v1/monitoring/sites";
+const ENDPOINTS = "/api/v1/monitoring/endpoints";
+
+/** `url` with the optional `?workspace=` pin. */
+const scoped = (url: string, opts?: { workspace?: string }): string =>
+  withV1Query(url, { workspace: opts?.workspace || undefined });
 
 export function toGroup(r: GroupRow): SiteGroupView {
   return {
     id: r.id,
     slug: r.slug,
     name: r.name,
-    retentionDays: r.retentionDays,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    retentionDays: r.retention_days,
+    createdAt: unixToIso(r.created),
+    updatedAt: unixToIso(r.updated),
   };
 }
 
@@ -131,30 +134,30 @@ export function toSite(r: SiteRow): SiteView {
     id: r.id,
     slug: r.slug,
     name: r.name,
-    groupId: r.siteGroupId,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    groupId: r.site_group_id,
+    createdAt: unixToIso(r.created),
+    updatedAt: unixToIso(r.updated),
   };
 }
 
 export function toEndpoint(r: EndpointRow): EndpointView {
   return {
     id: r.id,
-    siteId: r.siteId,
+    siteId: r.site_id,
     url: r.url,
     kind: r.kind,
-    expectedStatus: r.expectedStatus,
-    checkIntervalSeconds: r.checkIntervalSeconds,
-    isActive: r.isActive,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    expectedStatus: r.expected_status,
+    checkIntervalSeconds: r.check_interval_seconds,
+    isActive: r.is_active,
+    createdAt: unixToIso(r.created),
+    updatedAt: unixToIso(r.updated),
   };
 }
 
 // --- groups -----------------------------------------------------------------
 
 export async function listGroups(opts?: { workspace?: string }): Promise<SiteGroupView[]> {
-  const rows = await authedJson<GroupRow[]>(`${GROUPS}${workspaceQuery(opts)}`);
+  const rows = await listAllV1<GroupRow>(scoped(GROUPS, opts));
   return sortByText(rows.map(toGroup), (g) => g.name);
 }
 
@@ -162,13 +165,13 @@ export async function createGroup(
   body: CreateGroupBody,
   opts?: { workspace?: string },
 ): Promise<SiteGroupView> {
-  const row = await authedJson<GroupRow>(`${GROUPS}${workspaceQuery(opts)}`, {
+  const row = await authedJson<GroupRow>(scoped(GROUPS, opts), {
     method: "POST",
     body: JSON.stringify(
       compact({
         name: body.name,
         slug: body.slug,
-        retentionDays: body.retentionDays,
+        retention_days: body.retentionDays,
       } satisfies GroupCreateBody),
     ),
   });
@@ -183,10 +186,10 @@ export async function updateGroup(
   const patch = compact({
     name: body.name,
     slug: body.slug,
-    retentionDays: body.retentionDays,
+    retention_days: body.retentionDays,
   } satisfies GroupPutBody);
-  const row = await authedJson<GroupRow>(`${GROUPS}/${enc(id)}${workspaceQuery(opts)}`, {
-    method: "PUT",
+  const row = await authedJson<GroupRow>(scoped(`${GROUPS}/${enc(id)}`, opts), {
+    method: "POST",
     body: JSON.stringify(patch),
   });
   return toGroup(row);
@@ -194,7 +197,7 @@ export async function updateGroup(
 
 export function deleteGroup(id: string, opts?: { workspace?: string }): Promise<void> {
   // FK ON DELETE CASCADE removes the group's sites and their endpoints.
-  return authedRequest(`${GROUPS}/${enc(id)}${workspaceQuery(opts)}`, { method: "DELETE" });
+  return authedRequest(scoped(`${GROUPS}/${enc(id)}`, opts), { method: "DELETE" });
 }
 
 // --- sites ------------------------------------------------------------------
@@ -203,9 +206,9 @@ export async function listSites(opts?: { workspace?: string }): Promise<SiteView
   // The server owner-scopes `sites` identically to `site_groups` now (both carry the same
   // owner columns and honor `?workspace=`), so a single request suffices. The old code also
   // fetched the groups list and intersected on membership — a second GROUPS round-trip AND a
-  // silent-hiding bug: generic-CRUD lists cap at 500, so a >500-group workspace dropped sites
-  // whose group fell past the cap even though the server still monitors them.
-  const rows = await authedJson<SiteRow[]>(`${SITES}${workspaceQuery(opts)}`);
+  // silent-hiding bug: a capped groups list dropped sites whose group fell past the cap even
+  // though the server still monitors them. `listAllV1` drains every page.
+  const rows = await listAllV1<SiteRow>(scoped(SITES, opts));
   return sortByText(rows.map(toSite), (s) => s.name);
 }
 
@@ -216,9 +219,9 @@ export async function createSite(
   const fields: SiteCreateBody = {
     name: body.name,
     slug: body.slug,
-    siteGroupId: body.groupId,
+    site_group_id: body.groupId,
   };
-  const row = await authedJson<SiteRow>(`${SITES}${workspaceQuery(opts)}`, {
+  const row = await authedJson<SiteRow>(scoped(SITES, opts), {
     method: "POST",
     body: JSON.stringify(fields),
   });
@@ -233,10 +236,10 @@ export async function updateSite(
   const patch = compact({
     name: body.name,
     slug: body.slug,
-    siteGroupId: body.groupId,
+    site_group_id: body.groupId,
   } satisfies SitePutBody);
-  const row = await authedJson<SiteRow>(`${SITES}/${enc(id)}${workspaceQuery(opts)}`, {
-    method: "PUT",
+  const row = await authedJson<SiteRow>(scoped(`${SITES}/${enc(id)}`, opts), {
+    method: "POST",
     body: JSON.stringify(patch),
   });
   return toSite(row);
@@ -244,7 +247,7 @@ export async function updateSite(
 
 export function deleteSite(id: string, opts?: { workspace?: string }): Promise<void> {
   // FK ON DELETE CASCADE removes the site's endpoints.
-  return authedRequest(`${SITES}/${enc(id)}${workspaceQuery(opts)}`, { method: "DELETE" });
+  return authedRequest(scoped(`${SITES}/${enc(id)}`, opts), { method: "DELETE" });
 }
 
 // --- endpoints --------------------------------------------------------------
@@ -253,11 +256,8 @@ export async function listEndpoints(
   siteId: string,
   opts?: { workspace?: string },
 ): Promise<EndpointView[]> {
-  // Server-side equality filter on the siteId column; the client filter stays as
-  // a defense-in-depth narrowing (harmless once the server already scoped).
-  const qs = new URLSearchParams({ siteId });
-  if (opts?.workspace) qs.set("workspace", opts.workspace);
-  const rows = await authedJson<EndpointRow[]>(`${ENDPOINTS}?${qs}`);
+  // The /v1 collection declares no `site_id` filter, so the narrowing is done here.
+  const rows = await listAllV1<EndpointRow>(scoped(ENDPOINTS, opts));
   return sortByText(
     rows.map(toEndpoint).filter((e) => e.siteId === siteId),
     (e) => e.url,
@@ -269,16 +269,16 @@ export async function createEndpoint(
   body: CreateEndpointBody,
   opts?: { workspace?: string },
 ): Promise<EndpointView> {
-  const row = await authedJson<EndpointRow>(`${ENDPOINTS}${workspaceQuery(opts)}`, {
+  const row = await authedJson<EndpointRow>(scoped(ENDPOINTS, opts), {
     method: "POST",
     body: JSON.stringify(
       compact({
-        siteId,
+        site_id: siteId,
         url: body.url,
         kind: body.kind,
-        expectedStatus: body.expectedStatus,
-        checkIntervalSeconds: body.checkIntervalSeconds,
-        isActive: body.isActive,
+        expected_status: body.expectedStatus,
+        check_interval_seconds: body.checkIntervalSeconds,
+        is_active: body.isActive,
       } satisfies EndpointCreateBody),
     ),
   });
@@ -293,17 +293,17 @@ export async function updateEndpoint(
   const patch = compact({
     url: body.url,
     kind: body.kind,
-    expectedStatus: body.expectedStatus,
-    checkIntervalSeconds: body.checkIntervalSeconds,
-    isActive: body.isActive,
+    expected_status: body.expectedStatus,
+    check_interval_seconds: body.checkIntervalSeconds,
+    is_active: body.isActive,
   } satisfies EndpointPutBody);
-  const row = await authedJson<EndpointRow>(`${ENDPOINTS}/${enc(id)}${workspaceQuery(opts)}`, {
-    method: "PUT",
+  const row = await authedJson<EndpointRow>(scoped(`${ENDPOINTS}/${enc(id)}`, opts), {
+    method: "POST",
     body: JSON.stringify(patch),
   });
   return toEndpoint(row);
 }
 
 export function deleteEndpoint(id: string, opts?: { workspace?: string }): Promise<void> {
-  return authedRequest(`${ENDPOINTS}/${enc(id)}${workspaceQuery(opts)}`, { method: "DELETE" });
+  return authedRequest(scoped(`${ENDPOINTS}/${enc(id)}`, opts), { method: "DELETE" });
 }

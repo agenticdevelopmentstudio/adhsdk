@@ -2,12 +2,18 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { CRUD_TABLES, CRUD_SCHEMAS } from '@adh-sdk/crud'
-import { ADH_SPEC_PATH, loadAdhSpec, skipNotice } from './adh-spec'
+import {
+  ADH_LEGACY_SPEC_PATH,
+  ADH_SPEC_PATH,
+  loadAdhLegacySpec,
+  loadAdhSpec,
+  skipNotice,
+} from './adh-spec'
 
-// Drift gate: the committed generated module must agree with the committed
-// OpenAPI spec in BOTH directions. When the backend schema changes (spec
-// regenerated), this fails until `pnpm gen:crud-metadata` is rerun — without re-implementing
-// the generator's projection logic here.
+// Drift gate: the committed generated module must agree with adh's /v1 OpenAPI spec
+// in BOTH directions. When the backend schema changes (spec regenerated), this fails
+// until `pnpm gen:crud-metadata` is rerun — without re-implementing the generator's
+// projection logic here.
 
 // Single source of truth, shared with tools/gen_table_metadata.py: the schemas
 // whose generic-CRUD tables the hub edits. The generator and this drift gate read
@@ -18,10 +24,9 @@ const ALLOWED_SCHEMAS = new Set<string>(
 
 type SpecOps = Record<string, unknown>
 
-// Mirror of gen_table_metadata.py's HAND_WRITTEN_BASES: collection paths that
-// match the generic-CRUD signature but are hand-written routes the backend
-// excludes from generic CRUD (src/crud/policy.ts). Both the generator and this
-// gate must drop them, or the two disagree.
+// Mirror of gen_table_metadata.py's HAND_WRITTEN_BASES: legacy bases whose /v1
+// resource matches the generic-CRUD signature but which are hand-written routes the
+// backend excludes from generic CRUD (src/crud/policy.ts).
 const HAND_WRITTEN_BASES = new Set<string>([
   '/content/markdown',
   '/discussion/topics',
@@ -29,12 +34,15 @@ const HAND_WRITTEN_BASES = new Set<string>([
   '/persona/provider-templates',
 ])
 
+const LEGACY_BASE = /^\/([a-z-]+)\/([a-z-]+)$/
+
 // adh's spec is an explicit input (see ./adh-spec) — it does not live in this
 // repo. Unset means no adh checkout: the gate skips, loudly. The empty stub keeps
 // collection-time helpers working in that state.
 type Spec = { paths: Record<string, SpecOps> }
 if (!ADH_SPEC_PATH) skipNotice('CRUD table metadata drift gate')
 const spec: Spec = ADH_SPEC_PATH ? loadAdhSpec<Spec>() : { paths: {} }
+const legacySpec: Spec | null = ADH_LEGACY_SPEC_PATH ? loadAdhLegacySpec<Spec>() : null
 
 /** Optional-chaining walk into the untyped spec — a layout shift returns
  *  undefined for the caller to assert on with a named message, instead of a
@@ -51,28 +59,71 @@ function dig(obj: unknown, ...keys: string[]): unknown {
 const bodyProps = (op: unknown): unknown =>
   dig(op, 'requestBody', 'content', 'application/json', 'schema', 'properties')
 
-/** Spec paths that carry the full generic-CRUD signature, per schema allowlist. */
-function specCrudBases(): string[] {
-  const bases: string[] = []
+/** The legacy `METHOD path` pairs a /v1 operation replays (`x-adh-replaces`). */
+function replaces(op: unknown): Array<[string, string]> {
+  const list = dig(op, 'x-adh-replaces')
+  if (!Array.isArray(list)) return []
+  return list.map((entry) => {
+    const [method, ...rest] = String(entry).split(' ')
+    return [method!.toUpperCase(), rest.join(' ')]
+  })
+}
+
+const escapeRe = (s: string): string => s.replace(/[/\-{}]/g, '\\$&')
+
+/** The legacy generic-CRUD base a /v1 collection + item pair replays, or null. */
+function legacyBaseFor(base: string, item: string): string | null {
+  const coll = spec.paths[base]!
+  const it = spec.paths[item]!
+  for (const [method, legacy] of replaces(coll.get)) {
+    if (method !== 'GET' || !LEGACY_BASE.test(legacy)) continue
+    const itemRe = new RegExp(`^${escapeRe(legacy)}(/\\{[a-zA-Z0-9_]+\\})+$`)
+    const has = (op: unknown, want: string, itemLevel: boolean): boolean =>
+      replaces(op).some(([m, p]) => m === want && (itemLevel ? itemRe.test(p) : p === legacy))
+    if (
+      has(coll.post, 'POST', false) &&
+      has(it.get, 'GET', true) &&
+      has(it.post, 'PUT', true) &&
+      has(it.delete, 'DELETE', true)
+    ) {
+      return legacy
+    }
+  }
+  return null
+}
+
+/** /v1 collection paths that carry the full generic-CRUD signature, per schema allowlist. */
+function specCrudBases(): Map<string, string> {
+  const bases = new Map<string, string>()
   for (const [path, ops] of Object.entries(spec.paths)) {
-    if (HAND_WRITTEN_BASES.has(path)) continue
-    const match = /^\/([a-z-]+)\/([a-z-]+)$/.exec(path)
-    if (!match || !ALLOWED_SCHEMAS.has(match[1]!)) continue
-    if (!('get' in ops) || !('post' in ops)) continue
-    const itemRe = new RegExp(`^${path.replace(/[/-]/g, '\\$&')}(/\\{[a-zA-Z0-9_]+\\})+$`)
+    if (!path.startsWith('/v1/') || !('get' in ops) || !('post' in ops)) continue
+    const itemRe = new RegExp(`^${escapeRe(path)}(/\\{[a-zA-Z0-9_]+\\})+$`)
     const items = Object.entries(spec.paths).filter(
-      ([p, o]) => itemRe.test(p) && 'get' in o && 'put' in o && 'delete' in o,
+      ([p, o]) => itemRe.test(p) && 'get' in o && 'post' in o && 'delete' in o,
     )
-    if (items.length === 1) bases.push(path)
+    if (items.length !== 1) continue
+    const legacy = legacyBaseFor(path, items[0]![0])
+    if (!legacy || HAND_WRITTEN_BASES.has(legacy)) continue
+    if (!ALLOWED_SCHEMAS.has(LEGACY_BASE.exec(legacy)![1]!)) continue
+    bases.set(path, legacy)
   }
   return bases
 }
 
-describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift gate', () => {
+describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.v1.json drift gate', () => {
   it('covers every generic CRUD table in the allowlisted schemas', () => {
-    const expected = new Set(specCrudBases())
+    const expected = new Set(specCrudBases().keys())
     const actual = new Set(Object.values(CRUD_TABLES).map((t) => t.basePath))
     expect(actual).toEqual(expected)
+  })
+
+  it('keys each table by the legacy /<schema>/<table> its /v1 resource replays', () => {
+    const bases = specCrudBases()
+    for (const table of Object.values(CRUD_TABLES)) {
+      expect(bases.get(table.basePath), `${table.key} legacy base`).toBe(
+        `/${table.schema}/${table.table}`,
+      )
+    }
   })
 
   it('every entry has its five operations in the spec', () => {
@@ -82,20 +133,21 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift
       expect(base, `${table.key} base path missing from spec`).toBeDefined()
       expect(item, `${table.key} item path missing from spec`).toBeDefined()
       expect('get' in base! && 'post' in base!).toBe(true)
-      expect('get' in item! && 'put' in item! && 'delete' in item!).toBe(true)
+      expect('get' in item! && 'post' in item! && 'delete' in item!).toBe(true)
     }
   })
 
   it('is internally consistent (keys, paths, pk params, column names)', () => {
     for (const [key, table] of Object.entries(CRUD_TABLES)) {
       expect(table.key).toBe(key)
-      expect(table.basePath).toBe(`/${table.schema}/${table.table}`)
+      expect(table.key).toBe(`${table.schema}/${table.table}`)
+      expect(table.basePath.startsWith('/v1/')).toBe(true)
       expect(table.itemPath.startsWith(`${table.basePath}/`)).toBe(true)
       expect(table.pkParams.length).toBeGreaterThan(0)
       const names = new Set(table.columns.map((c) => c.name))
       expect(names.size).toBe(table.columns.length)
       // every single-pk table keys rows by a real column; composite path params
-      // (threadId/srcId/…) must be row fields too
+      // (scope/principal_id/…) must be row fields too
       for (const param of table.pkParams) {
         expect(names.has(param), `${key} pk param ${param} must be a column`).toBe(true)
       }
@@ -106,13 +158,15 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift
     for (const table of Object.values(CRUD_TABLES)) {
       const props = dig(
         spec.paths[table.basePath],
-        'get', 'responses', '200', 'content', 'application/json', 'schema', 'items', 'properties',
+        'get', 'responses', '200', 'content', 'application/json', 'schema',
+        'properties', 'data', 'items', 'properties',
       )
       expect(props, `${table.key} row schema missing — spec layout shifted?`).toBeDefined()
-      // A list-only field the backend marks `x-list-annotation` is not a column, so the
-      // generator leaves it out (gen_table_metadata.py); the comparison does the same.
+      // `object` names the resource type, and a list-only field the backend marks
+      // `x-list-annotation` is not a column; the generator leaves both out
+      // (gen_table_metadata.py), and the comparison does the same.
       const columnProps = Object.entries(props as Record<string, { 'x-list-annotation'?: unknown }>)
-        .filter(([, prop]) => prop['x-list-annotation'] !== true)
+        .filter(([name, prop]) => name !== 'object' && prop['x-list-annotation'] !== true)
         .map(([name]) => name)
       expect(
         table.columns.map((c) => c.name).sort(),
@@ -121,10 +175,10 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift
     }
   })
 
-  it('createOnly matches POST-minus-PUT body properties for every table', () => {
+  it('createOnly matches create-minus-update body properties for every table', () => {
     for (const table of Object.values(CRUD_TABLES)) {
       const createProps = bodyProps(dig(spec.paths[table.basePath], 'post'))
-      const updateProps = bodyProps(dig(spec.paths[table.itemPath], 'put'))
+      const updateProps = bodyProps(dig(spec.paths[table.itemPath], 'post'))
       expect(createProps, `${table.key} create body missing — spec layout shifted?`).toBeDefined()
       expect(updateProps, `${table.key} update body missing — spec layout shifted?`).toBeDefined()
       const create = new Set(Object.keys(createProps as Record<string, unknown>))
@@ -139,11 +193,14 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift
   })
 
   // The exposure tier the UI filters on is generated from the backend's `x-exposure`, which is
-  // itself emitted from the TABLE_EXPOSURE map the runtime gate enforces. Drift here means the
-  // browser offers a table (or a write) the server will refuse — or, worse, hides one it allows.
-  it('exposure matches the spec x-exposure for every table', () => {
+  // itself emitted from the TABLE_EXPOSURE map the runtime gate enforces. /v1 does not forward
+  // the extension, so the tier comes from the legacy collection the resource replays. Drift here
+  // means the browser offers a table (or a write) the server will refuse — or hides one it allows.
+  it.skipIf(!legacySpec)('exposure matches the legacy x-exposure for every table', () => {
     for (const table of Object.values(CRUD_TABLES)) {
-      const tier = dig(spec.paths[table.basePath], 'x-exposure')
+      const tier =
+        dig(spec.paths[table.basePath], 'x-exposure') ??
+        dig(legacySpec!.paths[`/${table.schema}/${table.table}`], 'x-exposure')
       expect(tier, `${table.key} has no x-exposure — rerun the backend's openapi:dump`).toBeDefined()
       expect(['owner', 'catalog', 'admin']).toContain(tier)
       expect(
@@ -167,15 +224,16 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift
     expect(id?.serverManaged).toBe(false)
   })
 
-  it('spot-checks billing/subscription-tiers shapes', () => {
+  it('spot-checks billing/subscription-tiers shapes (snake_case, unix-second created)', () => {
     const tiers = CRUD_TABLES['billing/subscription-tiers']!
     const byName = new Map(tiers.columns.map((c) => [c.name, c]))
     expect(byName.get('key')?.required).toBe(true)
     expect(byName.get('name')?.required).toBe(true)
     expect(byName.get('id')?.serverManaged).toBe(true)
-    expect(byName.get('createdAt')?.serverManaged).toBe(true)
-    expect(byName.get('isActive')?.type).toBe('boolean')
-    expect(byName.get('displayOrder')?.type).toBe('integer')
+    expect(byName.get('created')?.serverManaged).toBe(true)
+    expect(byName.get('created')?.type).toBe('integer')
+    expect(byName.get('is_active')?.type).toBe('boolean')
+    expect(byName.get('display_order')?.type).toBe('integer')
     expect(byName.get('description')?.nullable).toBe(true)
   })
 
@@ -201,11 +259,10 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift
     }
   })
 
-  // Composite-PK tables are back (usage/principal-tiers keys on scope+principalId,
-  // usage/usage-counters on scope+principalId+periodStart), so this is no longer a
-  // single-key catalog. No dedicated assertion is needed: the param-match test above
-  // already proves every pkParam is a real row column whatever the arity, and the
-  // client handles both (buildItemPath/rowKey walk pkParams in order — only
+  // Composite-PK tables (usage/principal-tiers keys on scope+principal_id,
+  // usage/usage-counters on scope+principal_id+period_start). The param-match test
+  // above already proves every pkParam is a real row column whatever the arity, and
+  // the client handles both (buildItemPath/rowKey walk pkParams in order — only
   // CrudDataView's cross-ecosystem move is single-pk gated, by design).
   it('composite-PK tables key on real row columns', () => {
     const composite = Object.values(CRUD_TABLES).filter((t) => t.pkParams.length > 1)

@@ -1,9 +1,11 @@
 // Local wire types for the storage token-principal client — the backend row + request-body
 // shapes the client reads/sends (see ecosystems/wire.ts for the pattern: these replace the
-// hub's generated `SuccessBody<"/tokens", …>` / `RequestBody<"/tokens", "post">` from
+// hub's generated `SuccessBody<"/v1/api_keys", …>` / `RequestBody<"/v1/api_keys", "post">` from
 // `@adh-sdk/adh-api-types`, adh product vocabulary a generic data client must not
 // take on). Transcribed from the `TokenPrincipal` / `TokenPrincipalCreated` component
-// schemas and the POST body the backend's openapi.json documents for `/tokens`.
+// schemas and the POST body the backend's openapi documents for `/v1/api_keys`. The `*Row`
+// interfaces are the snake_case wire; the unsuffixed ones are the camelCase domain shapes
+// `storage-tokens.ts` maps them to.
 // Type-only file.
 
 /** A minted storage principal as the list returns it. `rdid`/`bucketRdid` are nullable:
@@ -43,4 +45,28 @@ export interface MintTokenPrincipalBody {
   description?: string;
   expiresAt?: string | null;
   ecosystemId?: string;
+}
+
+/** `/v1/api_keys` row as a storage principal. `created` is UNIX seconds. */
+export interface TokenPrincipalRow {
+  id: string;
+  slug: string;
+  description: string;
+  prefix: string;
+  rdid?: string | null;
+  bucket_rdid?: string | null;
+  expires_at?: string | null;
+  last_used_at?: string | null;
+  created: number;
+}
+
+/** The 201 `/v1/api_keys` body for a storage principal. */
+export interface TokenPrincipalCreatedRow {
+  id: string;
+  rdid: string;
+  slug: string;
+  description: string;
+  prefix: string;
+  bucket_rdid: string;
+  token: string;
 }

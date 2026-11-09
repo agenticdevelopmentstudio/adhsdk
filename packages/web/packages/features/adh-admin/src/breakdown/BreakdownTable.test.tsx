@@ -16,13 +16,13 @@ const row = (over: Partial<BreakdownRow>): BreakdownRow => ({
   key: "k",
   label: "Acme",
   requests: 0,
-  serverMs: 0,
-  dbMs: 0,
-  llmTokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0 },
-  directMicros: 0,
-  hostingShareMicros: 0,
-  estimatedMicros: 0,
-  unpricedLines: 0,
+  server_ms: 0,
+  db_ms: 0,
+  llm_tokens: { input: 0, output: 0, cache_read: 0, cache_write: 0, reasoning: 0 },
+  direct_micros: 0,
+  hosting_share_micros: 0,
+  estimated_micros: 0,
+  unpriced_lines: 0,
   ...over,
 });
 
@@ -35,16 +35,16 @@ describe("unattributedLast", () => {
 
 describe("DirectCell", () => {
   it("reads null as Unpriced, a real zero as $0.00, and unpriced lines as a floor", () => {
-    expect(render(<DirectCell row={row({ directMicros: null })} />).container.textContent).toBe(
+    expect(render(<DirectCell row={row({ direct_micros: null })} />).container.textContent).toBe(
       "Unpriced",
     );
     cleanup();
-    expect(render(<DirectCell row={row({ directMicros: 0 })} />).container.textContent).toBe(
+    expect(render(<DirectCell row={row({ direct_micros: 0 })} />).container.textContent).toBe(
       "$0.00",
     );
     cleanup();
     expect(
-      render(<DirectCell row={row({ directMicros: 1_500_000, unpricedLines: 2 })} />).container
+      render(<DirectCell row={row({ direct_micros: 1_500_000, unpriced_lines: 2 })} />).container
         .textContent,
     ).toBe("≥ $1.50");
   });
@@ -58,20 +58,20 @@ describe("EstimatedCell", () => {
   };
 
   it("reads Unpriced, never ≥ $0.00, when all direct cost is unpriced and there is no hosting share", () => {
-    expect(text(row({ directMicros: null, unpricedLines: 3 }))).toBe("Unpriced");
+    expect(text(row({ direct_micros: null, unpriced_lines: 3 }))).toBe("Unpriced");
   });
 
   it("is a floor over the hosting share when the direct cost is unpriced", () => {
     expect(
-      text(row({ directMicros: null, hostingShareMicros: 250_000, estimatedMicros: 250_000, unpricedLines: 3 })),
+      text(row({ direct_micros: null, hosting_share_micros: 250_000, estimated_micros: 250_000, unpriced_lines: 3 })),
     ).toBe("≥ $0.25");
   });
 
   it("is a floor when a priced row has unpriced lines, exact otherwise", () => {
-    expect(text(row({ directMicros: 1_000_000, estimatedMicros: 1_500_000, unpricedLines: 1 }))).toBe(
+    expect(text(row({ direct_micros: 1_000_000, estimated_micros: 1_500_000, unpriced_lines: 1 }))).toBe(
       "≥ $1.50",
     );
-    expect(text(row({ directMicros: 1_000_000, estimatedMicros: 1_500_000 }))).toBe("$1.50");
+    expect(text(row({ direct_micros: 1_000_000, estimated_micros: 1_500_000 }))).toBe("$1.50");
   });
 });
 

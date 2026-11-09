@@ -1,18 +1,18 @@
 // Ecosystem users client — the end-customers who authenticate to an ecosystem.
-// Wired to the real backend generic CRUD over `customer.customers`
-// (/api/customer/customers). `customer.customers` is the platform's end-customer
-// identity / login store, scoped to an ecosystem by `ecosystemId`.
+// Wired to the /v1 customers routes (/api/v1/customers). A customer is the platform's
+// end-customer identity / login store, scoped to an ecosystem by `ecosystem_id`.
 //
-// Field map (UI <-> backend row):
-//   email       <->  email          displayName <-> displayName
-//   externalId  <->  externalId     slug        <-> slug (a short handle)
-//   avatarUrl   <->  avatarUrl      ecosystemId <-> ecosystemId
+// Field map (UI <-> /v1 row):
+//   email       <->  email          displayName <->  display_name
+//   externalId  <->  external_id    slug        <->  slug (a short handle)
+//   avatarUrl   <->  avatar_url     ecosystemId <->  ecosystem_id
+//   createdAt   <->  created (unix seconds)   updatedAt <-> updated
 //
-// `tokenVersion` (session-invalidation counter) and `deletedAt` (soft delete) are
+// `token_version` (session-invalidation counter) and the soft-delete columns are
 // internal auth bookkeeping and intentionally not surfaced on the form.
 
 import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
-import { authedJson, authedRequest } from "@adh-sdk/auth/client";
+import { authedJson, listAllV1, unixToIso, withV1Query } from "@adh-sdk/auth/client";
 import { compact, enc, sortByText } from "@adh-sdk/data";
 
 export interface EcosystemUser {
@@ -35,22 +35,22 @@ export interface EcosystemUserInput {
   avatarUrl: string;
 }
 
-const BASE = "/api/customer/customers";
+const BASE = "/api/v1/customers";
 
 /** The backend `customer.customers` row, sourced from the OpenAPI spec. */
-type CustomerRow = SuccessBody<"/customer/customers", "get">[number];
+type CustomerRow = SuccessBody<"/v1/customers", "get">["data"][number];
 
 export function toUser(r: CustomerRow): EcosystemUser {
   return {
     id: r.id,
-    ecosystemId: r.ecosystemId,
+    ecosystemId: r.ecosystem_id,
     email: r.email ?? "",
-    displayName: r.displayName ?? "",
-    externalId: r.externalId ?? "",
+    displayName: r.display_name ?? "",
+    externalId: r.external_id ?? "",
     slug: r.slug ?? "",
-    avatarUrl: r.avatarUrl ?? "",
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    avatarUrl: r.avatar_url ?? "",
+    createdAt: unixToIso(r.created),
+    updatedAt: unixToIso(r.updated),
   };
 }
 
@@ -63,9 +63,9 @@ export const ecosystemUsersApi = {
     // 2026-10-06). It also filtered only the newest 500 rows of the WHOLE table (the backend's list
     // cap), so even matching ids would have dropped older users. The backend's `?ecosystemId=`
     // filter resolves an rdid to the stored uuid itself (crud/factory.ts, `ecosystemAddrProp`), and
-    // the cap then applies to this ecosystem's rows alone.
-    const url = ecosystemId ? `${BASE}?ecosystemId=${enc(ecosystemId)}` : BASE;
-    const rows = await authedJson<CustomerRow[]>(url);
+    // the cap then applies to this ecosystem's rows alone. `listAllV1` walks the cursor pages.
+    const url = ecosystemId ? withV1Query(BASE, { ecosystem_id: ecosystemId }) : BASE;
+    const rows = await listAllV1<CustomerRow>(url);
     return sortByText(rows.map(toUser), (u) => u.displayName || u.email);
   },
 
@@ -84,15 +84,15 @@ export const ecosystemUsersApi = {
     if (!ecosystemId) {
       throw new Error("Cannot create a user without a selected ecosystem.");
     }
-    const body: RequestBody<"/customer/customers", "post"> = {
-      ecosystemId,
+    const body: RequestBody<"/v1/customers", "post"> = {
+      ecosystem_id: ecosystemId,
       email: input.email || undefined,
-      displayName: input.displayName || undefined,
-      externalId: input.externalId || undefined,
+      display_name: input.displayName || undefined,
+      external_id: input.externalId || undefined,
       // Required: the backend refuses a create with no handle (it has no default to fall
       // back on), so it is sent as given — `userValidate` has already refused an empty one.
       slug: input.slug,
-      avatarUrl: input.avatarUrl || undefined,
+      avatar_url: input.avatarUrl || undefined,
     };
     const row = await authedJson<CustomerRow>(BASE, {
       method: "POST",
@@ -102,7 +102,7 @@ export const ecosystemUsersApi = {
   },
 
   async update(id: string, input: Partial<EcosystemUserInput>): Promise<EcosystemUser> {
-    const fields: Partial<RequestBody<"/customer/customers/{id}", "put">> = {
+    const fields: Partial<RequestBody<"/v1/customers/{id}", "post">> = {
       // "" goes out as NULL for the two columns under a unique index. `toUser` reads NULL back as
       // "", so an SSO user created from an externalId alone (NULL email) comes back with email "",
       // and a save that echoed it wrote '' — a VALUE to Postgres, where NULL is not one: the
@@ -112,19 +112,19 @@ export const ecosystemUsersApi = {
       // Only these two: `slug` and `avatarUrl` are NOT NULL (the wire type refuses null for
       // both), and `displayName` is under no unique index.
       email: input.email === "" ? null : input.email,
-      displayName: input.displayName,
-      externalId: input.externalId === "" ? null : input.externalId,
+      display_name: input.displayName,
+      external_id: input.externalId === "" ? null : input.externalId,
       slug: input.slug,
-      avatarUrl: input.avatarUrl,
+      avatar_url: input.avatarUrl,
     };
     const row = await authedJson<CustomerRow>(`${BASE}/${enc(id)}`, {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify(compact(fields)),
     });
     return toUser(row);
   },
 
-  delete(id: string): Promise<void> {
-    return authedRequest(`${BASE}/${enc(id)}`, { method: "DELETE" });
+  async delete(id: string): Promise<void> {
+    await authedJson<unknown>(`${BASE}/${enc(id)}`, { method: "DELETE" });
   },
 };

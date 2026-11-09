@@ -8,7 +8,7 @@ export const LOCAL_SERVICE = "";
 
 /** How a node asks an OpenAI-compatible model for JSON: "" = unset (the model's catalog entry
  *  decides, else the node probes), "schema" = a strict json_schema, "json" = json_object mode. */
-export type OutputModeChoice = "" | NonNullable<ConfigSetParams["outputMode"]>;
+export type OutputModeChoice = "" | NonNullable<ConfigSetParams["output_mode"]>;
 
 export interface ConfigSetFormState {
   name: string;
@@ -62,16 +62,16 @@ export function withService(f: ConfigSetFormState, serviceId: string): ConfigSet
 
 export function stateFromConfigSet(set: ConfigSet | null): ConfigSetFormState {
   if (!set) return EMPTY_FORM;
-  const { temperature, maxOutputTokens, timeoutMs, outputMode } = set.params;
+  const { temperature, max_output_tokens, timeout_ms, output_mode } = set.params;
   return {
     name: set.name,
     description: set.description ?? "",
     serviceId: set.service?.id ?? LOCAL_SERVICE,
     model: set.model,
     temperature: temperature === undefined ? "" : String(temperature),
-    maxOutputTokens: maxOutputTokens === undefined ? "" : String(maxOutputTokens),
-    timeoutSeconds: timeoutMs === undefined ? "" : String(timeoutMs / 1000),
-    outputMode: outputMode ?? "",
+    maxOutputTokens: max_output_tokens === undefined ? "" : String(max_output_tokens),
+    timeoutSeconds: timeout_ms === undefined ? "" : String(timeout_ms / 1000),
+    outputMode: output_mode ?? "",
   };
 }
 
@@ -93,13 +93,13 @@ export function formBlockedReason(f: ConfigSetFormState): string | null {
 export function buildConfigSetInput(f: ConfigSetFormState): ConfigSetInput {
   const params: NonNullable<ConfigSetInput["params"]> = {};
   if (f.temperature.trim()) params.temperature = Number(f.temperature);
-  if (f.maxOutputTokens.trim()) params.maxOutputTokens = Number(f.maxOutputTokens);
-  if (f.timeoutSeconds.trim()) params.timeoutMs = Math.round(Number(f.timeoutSeconds) * 1000);
-  if (f.outputMode) params.outputMode = f.outputMode;
+  if (f.maxOutputTokens.trim()) params.max_output_tokens = Number(f.maxOutputTokens);
+  if (f.timeoutSeconds.trim()) params.timeout_ms = Math.round(Number(f.timeoutSeconds) * 1000);
+  if (f.outputMode) params.output_mode = f.outputMode;
   return {
     name: f.name.trim(),
     description: f.description.trim() || null,
-    serviceId: f.serviceId === LOCAL_SERVICE ? null : f.serviceId,
+    service_id: f.serviceId === LOCAL_SERVICE ? null : f.serviceId,
     model: f.model.trim(),
     params,
   };

@@ -112,9 +112,9 @@ describe('useAppearanceSettings', () => {
     setMode('dark')
     expect(authedRequest).toHaveBeenCalledTimes(1)
     const [path, init] = authedRequest.mock.calls[0] as [string, RequestInit]
-    expect(path).toBe('/api/me/appearance')
-    expect(init.method).toBe('PUT')
-    // The whole shape, not just the patch — PUT is a full replacement.
-    expect(JSON.parse(String(init.body))).toMatchObject({ colorMode: 'dark' })
+    expect(path).toBe('/api/v1/account')
+    expect(init.method).toBe('POST')
+    // The whole shape, not just the patch, snake_case under the `appearance` include.
+    expect(JSON.parse(String(init.body))).toMatchObject({ appearance: { color_mode: 'dark' } })
   })
 })

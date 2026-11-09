@@ -3,11 +3,21 @@ import { scrubPath, scrubUrl } from '../scrub'
 
 describe('scrubPath', () => {
   it('redacts UUID and long-numeric segments and strips query/hash', () => {
-    expect(scrubPath('/api/persona/services/3f8b1c2d-1234-4abc-89de-0123456789ab')).toBe(
-      '/api/persona/services/:id',
+    expect(scrubPath('/api/v1/personas/3f8b1c2d-1234-4abc-89de-0123456789ab')).toBe(
+      '/api/v1/personas/:id',
     )
-    expect(scrubPath('/api/users/123456?token=secret#frag')).toBe('/api/users/:id')
-    expect(scrubPath('https://api.example.com/api/auth/me?q=1')).toBe('/api/auth/me')
+    expect(scrubPath('/api/v1/users/123456?token=secret#frag')).toBe('/api/v1/users/:id')
+    expect(scrubPath('https://api.example.com/api/v1/account?q=1')).toBe('/api/v1/account')
+  })
+
+  it('scrubs /v1 item paths: the resource and `v1` survive, the id (uuid, long number, embedded) does not', () => {
+    expect(scrubPath('/api/v1/chats/3f8b1c2d-1234-4abc-89de-0123456789ab/messages')).toBe(
+      '/api/v1/chats/:id/messages',
+    )
+    expect(scrubPath('/api/v1/notifications/12345678/read?access_token=secret')).toBe(
+      '/api/v1/notifications/:id/read',
+    )
+    expect(scrubPath('/api/v1/feature_flags')).toBe('/api/v1/feature_flags')
   })
 
   it('keeps low-cardinality segments (versions, short numbers up to 3 digits, words)', () => {

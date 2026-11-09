@@ -58,7 +58,7 @@ export function SyncPanel() {
             <span className="font-mono text-apt-text">{run.source}</span>
             <Badge variant={run.ok ? "success" : "error"}>{run.ok ? "ok" : "failed"}</Badge>
             <span className="text-apt-text-muted">
-              · {formatRelativeTime(run.lastRunAt)} · {finiteCount(run.detail?.modelsUpserted)}{" "}
+              · {formatRelativeTime(run.last_run_at)} · {finiteCount(run.detail?.modelsUpserted)}{" "}
               upserted
             </span>
           </div>

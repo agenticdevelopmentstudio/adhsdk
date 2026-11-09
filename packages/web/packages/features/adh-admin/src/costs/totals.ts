@@ -2,16 +2,16 @@
 
 import type { InsightOverview } from "../api/insight";
 
-type LlmTokens = InsightOverview["points"][number]["llmTokens"];
+type LlmTokens = InsightOverview["points"][number]["llm_tokens"];
 
 /** Input + output + cache tokens. Reasoning is already inside output, so it is not added again. */
 export const llmTokenTotal = (t: LlmTokens): number =>
-  t.input + t.output + t.cacheRead + t.cacheWrite;
+  t.input + t.output + t.cache_read + t.cache_write;
 
 /** A report row's direct money: µUSD (`null` when all of it is unpriced) and its unpriced lines. */
 export interface PricedRow {
-  directMicros: number | null;
-  unpricedLines: number;
+  direct_micros: number | null;
+  unpriced_lines: number;
 }
 
 export interface DirectTotal {
@@ -26,12 +26,12 @@ export interface DirectTotal {
  * total is a floor whenever any row does — not only when a row's money is `null`.
  */
 export function directTotal(rows: readonly PricedRow[]): DirectTotal {
-  const priced = rows.filter((r) => r.directMicros !== null);
+  const priced = rows.filter((r) => r.direct_micros !== null);
   return {
     directMicros:
       priced.length === 0 && rows.length > 0
         ? null
-        : priced.reduce((n, r) => n + r.directMicros!, 0),
-    isFloor: rows.some((r) => r.directMicros === null || r.unpricedLines > 0),
+        : priced.reduce((n, r) => n + r.direct_micros!, 0),
+    isFloor: rows.some((r) => r.direct_micros === null || r.unpriced_lines > 0),
   };
 }

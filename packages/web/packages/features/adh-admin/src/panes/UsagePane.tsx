@@ -262,7 +262,7 @@ export function UsagePane({ help }: { help?: ReactNode } = {}) {
         title="Usage Limits"
         api={{
           method: "GET",
-          path: "/usage/enforcement",
+          path: "/v1/usage/enforcement",
           pathValues: {},
           title: "Usage enforcement API",
         }}
@@ -581,13 +581,13 @@ function GlobalSwitchCard({ state }: { state: UsageEnforcement }) {
           : "Off: usage is still recorded and counted, but no request is ever refused. Every tier’s Enforced box is inert."}
       </p>
 
-      {state.envOverride !== null && (
+      {state.env_override !== null && (
         <Alert variant="accent" className="mt-4">
           <Info />
           <AlertTitle>The deployment environment is deciding this</AlertTitle>
           <AlertDescription>
             <span className="font-mono">USAGE_ENFORCEMENT_ENABLED</span> is set to{" "}
-            <span className="font-mono">{String(state.envOverride)}</span>, and a deploy-time
+            <span className="font-mono">{String(state.env_override)}</span>, and a deploy-time
             override wins over this row in both directions — the break-glass lever for when
             enforcement itself is what&apos;s refusing requests. The switch still edits the stored
             value (currently <strong>{stored ? "on" : "off"}</strong>), which takes effect the
@@ -630,36 +630,36 @@ function KnobsPanel({ state }: { state: UsageEnforcement }) {
   const knobs: { label: string; value: string; env: string; note: string }[] = [
     {
       label: "Unpriced model",
-      value: state.unknownPricePolicy,
+      value: state.unknown_price_policy,
       env: "USAGE_UNKNOWN_PRICE_POLICY",
       note:
-        state.unknownPricePolicy === "ceiling"
+        state.unknown_price_policy === "ceiling"
           ? "charged at the worst-case ceiling below"
-          : state.unknownPricePolicy === "refuse"
+          : state.unknown_price_policy === "refuse"
             ? "no published price, no turn"
             : "charged nothing — unbounded spend on unpriced models",
     },
     {
       label: "Ceiling — input",
-      value: `${dollars(state.unknownPriceInputMicrosPerMToken)} / Mtok`,
+      value: `${dollars(state.unknown_price_input_micros_per_m_token)} / Mtok`,
       env: "USAGE_UNKNOWN_PRICE_INPUT_MICROS_PER_MTOKEN",
-      note: `${state.unknownPriceInputMicrosPerMToken.toLocaleString()} µUSD per million tokens`,
+      note: `${state.unknown_price_input_micros_per_m_token.toLocaleString()} µUSD per million tokens`,
     },
     {
       label: "Ceiling — output",
-      value: `${dollars(state.unknownPriceOutputMicrosPerMToken)} / Mtok`,
+      value: `${dollars(state.unknown_price_output_micros_per_m_token)} / Mtok`,
       env: "USAGE_UNKNOWN_PRICE_OUTPUT_MICROS_PER_MTOKEN",
-      note: `${state.unknownPriceOutputMicrosPerMToken.toLocaleString()} µUSD per million tokens`,
+      note: `${state.unknown_price_output_micros_per_m_token.toLocaleString()} µUSD per million tokens`,
     },
     {
       label: "Turn reserve",
-      value: `${state.turnTokenReserve.toLocaleString()} tokens`,
+      value: `${state.turn_token_reserve.toLocaleString()} tokens`,
       env: "USAGE_TURN_TOKEN_RESERVE",
       note: "claimed up front per signed-in turn, settled to real spend when it ends",
     },
     {
       label: "Event retention",
-      value: `${state.eventRetentionDays} days`,
+      value: `${state.event_retention_days} days`,
       env: "USAGE_EVENT_RETENTION_DAYS",
       note: "age at which a usage_events row is swept; counters are kept forever",
     },
@@ -702,11 +702,11 @@ function KnobsPanel({ state }: { state: UsageEnforcement }) {
  */
 function VisitorFloorPanel({ state }: { state: UsageEnforcement }) {
   const {
-    visitorGlobalDailyTokenBudget: tokens,
-    visitorGlobalDailyCostMicros: cost,
-    visitorTurnTokenReserve: reserve,
-    unknownPricePolicy: policy,
-    unknownPriceOutputMicrosPerMToken: ceilingOut,
+    visitor_global_daily_token_budget: tokens,
+    visitor_global_daily_cost_micros: cost,
+    visitor_turn_token_reserve: reserve,
+    unknown_price_policy: policy,
+    unknown_price_output_micros_per_m_token: ceilingOut,
   } = state;
 
   // What one turn on an unpriced model claims, under today's policy. `free` charges nothing, so

@@ -191,7 +191,7 @@ export function FeedbackPane({ help }: { help?: ReactNode } = {}) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <FeatureTitle
         title="Feedback"
-        api={{ method: "GET", path: "/content/feedback", pathValues: {}, title: "Feedback API" }}
+        api={{ method: "GET", path: "/v1/content/feedback", pathValues: {}, title: "Feedback API" }}
         help={help}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-6 pb-8 pt-2">

@@ -26,14 +26,14 @@ afterEach(() => {
 
 describe('EnvironmentPanel', () => {
   it('reads a bare-array answer as unavailable instead of crashing the page', async () => {
-    answer({ '/api/public/debug-env': [], '/api/system/debug-env': [] })
+    answer({ '/api/public/debug-env': [], '/api/v1/system/debug_env': [] })
     render(<EnvironmentPanel />)
     expect(await screen.findByText('Backend env unavailable.')).toBeTruthy()
   })
 
   it('reads a row off the contract as unavailable too, so no non-string reaches the list', async () => {
     const body = { entries: [{ name: 'API_BACKEND_URL', value: { url: 'x' }, secret: false }] }
-    answer({ '/api/public/debug-env': body, '/api/system/debug-env': body })
+    answer({ '/api/public/debug-env': body, '/api/v1/system/debug_env': body })
     render(<EnvironmentPanel />)
     expect(await screen.findByText('Backend env unavailable.')).toBeTruthy()
   })
@@ -42,8 +42,21 @@ describe('EnvironmentPanel', () => {
     const body = {
       entries: [{ name: 'API_BACKEND_URL', value: 'http://localhost:8080', secret: false }],
     }
-    answer({ '/api/public/debug-env': body, '/api/system/debug-env': body })
+    answer({ '/api/public/debug-env': body, '/api/v1/system/debug_env': body })
     render(<EnvironmentPanel />)
     expect(await screen.findAllByText('API_BACKEND_URL')).toHaveLength(2)
+  })
+
+  it('reads the /v1 list envelope the backend answers', async () => {
+    const site = { entries: [{ name: 'SITE_VAR', value: 'a', secret: false }] }
+    const backend = {
+      object: 'list',
+      data: [{ object: 'system.debug_env', name: 'API_BACKEND_URL', value: 'x', secret: false }],
+      has_more: false,
+      url: '/v1/system/debug_env',
+    }
+    answer({ '/api/public/debug-env': site, '/api/v1/system/debug_env': backend })
+    render(<EnvironmentPanel />)
+    expect(await screen.findByText('API_BACKEND_URL')).toBeTruthy()
   })
 })

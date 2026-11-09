@@ -40,7 +40,8 @@ vi.mock('@adh-sdk/auth/client', async (importOriginal) => ({
       )
     }
     if (FAIL.has(path)) throw FAIL.get(path)
-    return EMPTY.has(path) ? [] : [{ id: 'r1' }]
+    // The /v1 collection envelope, which is what the probe reads `data` from.
+    return { object: 'list', data: EMPTY.has(path) ? [] : [{ id: 'r1' }], has_more: false, url: path }
   },
 }))
 beforeEach(() => {
@@ -82,20 +83,20 @@ const table = (schema: string, name: string, columns: string[]): CrudTableMeta =
   key: `${schema}/${name}`,
   schema,
   table: name,
-  basePath: `/${schema}/${name}`,
-  itemPath: `/${schema}/${name}/{id}`,
+  basePath: `/v1/${schema}/${name}`,
+  itemPath: `/v1/${schema}/${name}/{id}`,
   pkParams: ['id'],
   exposure: 'owner',
   columns: ['id', ...columns].map(col),
 })
 
 const TABLES = [
-  table('bucket', 'buckets', ['ecosystemId']),
-  table('persona', 'personas', ['ownerKind', 'ownerId']),
+  table('bucket', 'buckets', ['ecosystem_id']),
+  table('persona', 'personas', ['owner_kind', 'owner_id']),
   // A global catalog: no workspace owns its rows, so the backend cannot narrow it.
   table('usage', 'rate-limit-tiers', ['name']),
   // Half an owner pair is not one.
-  table('usage', 'counters', ['ownerId']),
+  table('usage', 'counters', ['owner_id']),
 ]
 
 function RailProbe({ levels, children }: CrudShellProps) {
@@ -154,16 +155,16 @@ describe('CrudDataBrowser scoped to a workspace', () => {
   // led by them, that is: a table with no rows is still where its first row gets created, so it
   // stays reachable in a dim secondary group rather than vanishing.
   it('sets tables with no rows, and a schema left with none, apart in an Empty group', async () => {
-    EMPTY.add('/persona/personas')
+    EMPTY.add('/v1/persona/personas')
     render(<CrudDataBrowser basePath="/w/all-data" tables={TABLES} shell={RailProbe} workspace="w" />)
     await screen.findByText('bucket')
     expect(schemaRows()).toEqual(['bucket', '--- Empty', 'persona (No rows yet)'])
     // Each probe is the table's own list, under the view's filter, for one row.
-    expect(probes).toContain('/api/bucket/buckets?workspace=w&limit=1')
+    expect(probes).toContain('/api/v1/bucket/buckets?workspace=w&limit=1')
   })
 
   it('opens an empty table so its first row can be created', async () => {
-    EMPTY.add('/persona/personas')
+    EMPTY.add('/v1/persona/personas')
     render(
       <CrudDataBrowser
         basePath="/w/all-data"
@@ -182,10 +183,10 @@ describe('CrudDataBrowser scoped to a workspace', () => {
 
   it('puts the empty tables of a populated schema under its own Empty divider', async () => {
     const tables = [
-      table('bucket', 'buckets', ['ecosystemId']),
-      table('bucket', 'bucket-types', ['ecosystemId']),
+      table('bucket', 'buckets', ['ecosystem_id']),
+      table('bucket', 'bucket-types', ['ecosystem_id']),
     ]
-    EMPTY.add('/bucket/bucket-types')
+    EMPTY.add('/v1/bucket/bucket-types')
     render(
       <CrudDataBrowser
         basePath="/w/all-data"
@@ -203,7 +204,7 @@ describe('CrudDataBrowser scoped to a workspace', () => {
   // Leaving mid-sweep used to leave every worker draining the queue for an answer nobody would
   // read, overlapping the next mount's sweep.
   it('aborts the probes in flight on unmount, and sends none of the queued ones', async () => {
-    const many = Array.from({ length: 12 }, (_, i) => table('bucket', `t${i}`, ['ecosystemId']))
+    const many = Array.from({ length: 12 }, (_, i) => table('bucket', `t${i}`, ['ecosystem_id']))
     for (const t of many) HOLD.add(t.basePath)
     const { unmount } = render(
       <CrudDataBrowser basePath="/w/all-data" tables={many} shell={RailProbe} workspace="w" />,
@@ -237,8 +238,8 @@ describe('CrudDataBrowser scoped to a workspace', () => {
     await screen.findByText('persona')
     expect(opened).toContain('bucket/buckets {"workspace":"w"}')
     // The new scope's probes have not answered yet.
-    HOLD.add('/bucket/buckets')
-    HOLD.add('/persona/personas')
+    HOLD.add('/v1/bucket/buckets')
+    HOLD.add('/v1/persona/personas')
     rerender(at('x'))
     expect(opened).not.toContain('bucket/buckets {"workspace":"x"}')
     expect(schemaRows()).toEqual(['Loading…'])
@@ -249,8 +250,8 @@ describe('CrudDataBrowser scoped to a workspace', () => {
 // rows, and counting it as "none" told a scope full of data "No data yet.".
 describe('CrudDataBrowser when a has-rows probe fails', () => {
   it('lists every table it couldn’t check, marked so, not "No data yet."', async () => {
-    FAIL.set('/bucket/buckets', new AuthHttpError(500, 'boom'))
-    FAIL.set('/persona/personas', new TypeError('Failed to fetch'))
+    FAIL.set('/v1/bucket/buckets', new AuthHttpError(500, 'boom'))
+    FAIL.set('/v1/persona/personas', new TypeError('Failed to fetch'))
     render(<CrudDataBrowser basePath="/w/all-data" tables={TABLES} shell={RailProbe} workspace="w" />)
     await screen.findByText("bucket (Couldn't check for rows)")
     expect(schemaRows()).toEqual([
@@ -261,15 +262,15 @@ describe('CrudDataBrowser when a has-rows probe fails', () => {
   })
 
   it('lists a table it couldn’t check after the confirmed ones, never hides it', async () => {
-    FAIL.set('/persona/personas', new AuthHttpError(502, 'bad gateway'))
+    FAIL.set('/v1/persona/personas', new AuthHttpError(502, 'bad gateway'))
     render(<CrudDataBrowser basePath="/w/all-data" tables={TABLES} shell={RailProbe} workspace="w" />)
     await screen.findByText('bucket')
     expect(schemaRows()).toEqual(['bucket', "persona (Couldn't check for rows)"])
   })
 
   it('ranks a couldn’t-check table above the Empty group', async () => {
-    FAIL.set('/persona/personas', new AuthHttpError(502, 'bad gateway'))
-    EMPTY.add('/bucket/buckets')
+    FAIL.set('/v1/persona/personas', new AuthHttpError(502, 'bad gateway'))
+    EMPTY.add('/v1/bucket/buckets')
     render(<CrudDataBrowser basePath="/w/all-data" tables={TABLES} shell={RailProbe} workspace="w" />)
     await screen.findByText("persona (Couldn't check for rows)")
     expect(schemaRows()).toEqual([
@@ -280,8 +281,8 @@ describe('CrudDataBrowser when a has-rows probe fails', () => {
   })
 
   it('counts a 403 or a 404 as no rows', async () => {
-    FAIL.set('/bucket/buckets', new AuthHttpError(403, 'forbidden'))
-    FAIL.set('/persona/personas', new AuthHttpError(404, 'not found'))
+    FAIL.set('/v1/bucket/buckets', new AuthHttpError(403, 'forbidden'))
+    FAIL.set('/v1/persona/personas', new AuthHttpError(404, 'not found'))
     render(<CrudDataBrowser basePath="/w/all-data" tables={TABLES} shell={RailProbe} workspace="w" />)
     expect(await screen.findByText('No data yet.')).toBeInTheDocument()
   })
@@ -302,12 +303,12 @@ describe('CrudDataBrowser across remounts', () => {
   )
 
   it('opens the open table on its own probe, without waiting on the rest', async () => {
-    HOLD.add('/bucket/buckets')
+    HOLD.add('/v1/bucket/buckets')
     render(browser({ activeSchema: 'persona', activeTable: 'personas' }))
     expect(await screen.findByTestId('open')).toHaveTextContent(
       'persona/personas {"workspace":"w"}',
     )
-    expect(probes[0]).toBe('/api/persona/personas?workspace=w&limit=1')
+    expect(probes[0]).toBe('/api/v1/persona/personas?workspace=w&limit=1')
     // Nothing unprobed is listed: bucket has not answered, so the rail holds persona alone.
     expect(schemaRows()).toEqual(['persona'])
   })
@@ -331,7 +332,7 @@ describe('CrudDataBrowser across remounts', () => {
   })
 
   it('shows a stale remembered answer on a remount at once, then asks again quietly', async () => {
-    EMPTY.add('/persona/personas')
+    EMPTY.add('/v1/persona/personas')
     const first = render(browser())
     await screen.findByText('bucket')
     first.unmount()
@@ -368,7 +369,7 @@ describe('CrudDataBrowser across remounts', () => {
     const first = render(browser())
     await screen.findByText('persona')
     first.unmount()
-    FAIL.set('/persona/personas', new AuthHttpError(502, 'bad gateway'))
+    FAIL.set('/v1/persona/personas', new AuthHttpError(502, 'bad gateway'))
     probes.length = 0
     staleClock()
     render(browser())
@@ -381,7 +382,7 @@ describe('CrudDataBrowser across remounts', () => {
   })
 
   it('asks again after a sweep that failed', async () => {
-    FAIL.set('/persona/personas', new AuthHttpError(502, 'bad gateway'))
+    FAIL.set('/v1/persona/personas', new AuthHttpError(502, 'bad gateway'))
     const first = render(browser())
     await screen.findByText('bucket')
     first.unmount()
@@ -424,7 +425,7 @@ describe('CrudDataBrowser scoped to an ecosystem', () => {
       />,
     )
     expect(await screen.findByTestId('open')).toHaveTextContent(
-      'bucket/buckets {"workspace":"w","ecosystemId":"ecosystem.ads.ape"}',
+      'bucket/buckets {"workspace":"w","ecosystem_id":"ecosystem.ads.ape"}',
     )
     // The owner-pair table cannot be narrowed to one ecosystem, so it is not offered.
     expect(schemaRows()).toEqual(['bucket'])

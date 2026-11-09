@@ -15,11 +15,13 @@ export interface ThemeWrite {
 }
 /** Every live theme (suite-wide). Empty in production, where the table is untouched;
  *  also [] on 404 so the editor degrades to the baked seeds against a backend that
- *  predates the /themes routes (rather than surfacing a spurious error). */
+ *  predates the /v1/themes routes (rather than surfacing a spurious error). Themes
+ *  have no `id`, so the list pages by `key`. */
 export declare function listThemes(): Promise<StoredTheme[]>;
 export declare function createTheme(theme: ThemeWrite & {
     key: string;
 }): Promise<StoredTheme>;
+/** /v1 updates are a POST on the item path. */
 export declare function updateTheme(key: string, patch: Partial<ThemeWrite>): Promise<StoredTheme>;
 export declare function deleteTheme(key: string): Promise<void>;
 //# sourceMappingURL=themes-client.d.ts.map

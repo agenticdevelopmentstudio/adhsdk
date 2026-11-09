@@ -108,9 +108,9 @@ describe('normalize', () => {
   it('principalFromOrgCard fills the five missing collections with [] and stamps organization', () => {
     const body: OrgCardBody = {
       slug: 'fishlamp',
-      displayName: 'Fish Lamp',
+      display_name: 'Fish Lamp',
       description: 'We make lamps for fish.',
-      createdAt: '2026-01-02T03:04:05.000Z',
+      created: 1767323045,
       personas: [],
     }
     const result = principalFromOrgCard(body)
@@ -125,10 +125,10 @@ describe('normalize', () => {
   it('principalFromUserCard stamps user and passes a populated collection through untouched', () => {
     const body: UserCardBody = {
       slug: 'fishlamp',
-      displayName: 'Fish Lamp',
-      avatarUrl: null,
-      createdAt: '2026-01-02T03:04:05.000Z',
-      socialLinks: [{ platform: 'bluesky', url: 'https://bsky.app/fishlamp', handle: '@fishlamp' }],
+      display_name: 'Fish Lamp',
+      avatar_url: null,
+      created: 1767323045,
+      social_links: [{ platform: 'bluesky', url: 'https://bsky.app/fishlamp', handle: '@fishlamp' }],
       emails: [],
       phones: [],
       addresses: [],
@@ -136,6 +136,6 @@ describe('normalize', () => {
     }
     const result = principalFromUserCard(body)
     expect(result.kind).toBe('user')
-    expect(result.socialLinks).toBe(body.socialLinks)
+    expect(result.socialLinks).toBe(body.social_links)
   })
 })

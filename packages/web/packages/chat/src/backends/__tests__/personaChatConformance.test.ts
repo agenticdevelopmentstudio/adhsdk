@@ -38,7 +38,7 @@ function fixture(
     model: 'claude-opus-5',
     authorize: async (path, init) => {
       calls.push({ path, init })
-      if (path.endsWith('/conversations')) {
+      if (path.endsWith('/v1/chats')) {
         // Held open so a vector can act while the creation POST is still in flight.
         if (opts.conversationGate) await opts.conversationGate
         if (opts.conversationOk === false) return new Response('nope', { status: 500 })
@@ -109,7 +109,7 @@ describe('persona-chat-coordinator conformance', () => {
     await f.backend.send('two', [])
     await f.events(4)
 
-    const created = f.calls.filter((c) => c.path.endsWith('/conversations'))
+    const created = f.calls.filter((c) => c.path.endsWith('/v1/chats'))
     const messages = f.calls.filter((c) => c.path.endsWith('/messages'))
     expect(created).toHaveLength(1)
     expect(messages).toHaveLength(2)
@@ -351,7 +351,7 @@ describe('persona-chat-coordinator conformance', () => {
 
     await f.backend.send('hi', [])
     await settle()
-    const created = f.calls.filter((c) => c.path.endsWith('/conversations'))
+    const created = f.calls.filter((c) => c.path.endsWith('/v1/chats'))
     expect(created).toHaveLength(1)
     const signal = created[0]!.init.signal as AbortSignal | null | undefined
     expect(signal?.aborted).toBe(false)

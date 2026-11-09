@@ -12,7 +12,7 @@ import type { ProfilePrincipal } from '../types'
  * WHICH branch, not how the card itself renders (that is `ProfileView.test.tsx`'s job). The mock
  * renders `children` so a case can still see the section's own output. `useViewerPrincipal` is
  * controlled directly per case, the same way the component's own doc comment says its caller
- * never needs to run it twice. `fetch` stands in for the two anonymous `/api/public/...` calls.
+ * never needs to run it twice. `fetch` stands in for the two anonymous `/api/v1/...` calls.
  */
 vi.mock('../ProfileView', () => ({
   ProfileView: ({ children }: { children?: ReactNode }) => (
@@ -39,6 +39,23 @@ function userCardBody(over: Partial<Omit<ProfilePrincipal, 'kind' | 'description
     avatarUrl: null,
     createdAt: '2026-01-02T03:04:05.000Z',
     socialLinks: [],
+    emails: [],
+    phones: [],
+    addresses: [],
+    personas: [],
+    ...over,
+  }
+}
+
+/** The /v1 wire card: snake_case, `created` in unix seconds, an `object` tag. */
+function userCardWire(over: { slug?: string; display_name?: string | null } = {}) {
+  return {
+    object: 'user',
+    slug: 'fishlamp',
+    display_name: 'Fish Lamp',
+    avatar_url: null,
+    created: Date.parse('2026-01-02T03:04:05.000Z') / 1000,
+    social_links: [],
     emails: [],
     phones: [],
     addresses: [],
@@ -77,8 +94,8 @@ afterEach(() => {
 describe('ProfileFallback', () => {
   it('found: the anonymous lookup resolving a principal renders the section with THAT principal, no viewer', async () => {
     fetchMock.mockImplementation((url: string) => {
-      if (url.includes('/api/public/users/')) {
-        return Promise.resolve(jsonResponse(userCardBody({ slug: 'foundslug', displayName: 'Found Slug' })))
+      if (url.includes('/api/v1/users?handle=')) {
+        return Promise.resolve(jsonResponse(userCardWire({ slug: 'foundslug', display_name: 'Found Slug' })))
       }
       throw new Error(`unexpected fetch: ${url}`)
     })
@@ -96,8 +113,8 @@ describe('ProfileFallback', () => {
 
   it('viewer: a signed-in viewer principal renders the section with THAT principal, even while the anonymous pair is still 404ing both endpoints — the hub-visibility path', async () => {
     fetchMock.mockImplementation((url: string) => {
-      if (url.includes('/api/public/users/')) return Promise.resolve(jsonResponse({}, 404))
-      if (url.includes('/api/public/orgs/')) return Promise.resolve(jsonResponse({}, 404))
+      if (url.includes('/api/v1/users?handle=')) return Promise.resolve(jsonResponse({}, 404))
+      if (url.includes('/api/v1/organizations?slug=')) return Promise.resolve(jsonResponse({}, 404))
       throw new Error(`unexpected fetch: ${url}`)
     })
     viewerResult.current = {
@@ -120,8 +137,8 @@ describe('ProfileFallback', () => {
 
   it('missing: a 404 on both anonymous endpoints with no viewer renders ProfileNotFound, and section is never called', async () => {
     fetchMock.mockImplementation((url: string) => {
-      if (url.includes('/api/public/users/')) return Promise.resolve(jsonResponse({}, 404))
-      if (url.includes('/api/public/orgs/')) return Promise.resolve(jsonResponse({}, 404))
+      if (url.includes('/api/v1/users?handle=')) return Promise.resolve(jsonResponse({}, 404))
+      if (url.includes('/api/v1/organizations?slug=')) return Promise.resolve(jsonResponse({}, 404))
       throw new Error(`unexpected fetch: ${url}`)
     })
     const section = vi.fn()
@@ -134,7 +151,7 @@ describe('ProfileFallback', () => {
 
   it("error: a non-404 failure on the anonymous lookup, with no viewer, renders the reload copy — not ProfileNotFound — and section is never called", async () => {
     fetchMock.mockImplementation((url: string) => {
-      if (url.includes('/api/public/users/')) return Promise.resolve(jsonResponse({}, 500))
+      if (url.includes('/api/v1/users?handle=')) return Promise.resolve(jsonResponse({}, 500))
       throw new Error(`unexpected fetch: ${url}`)
     })
     const section = vi.fn()
@@ -152,8 +169,8 @@ describe('ProfileFallback', () => {
 
   it('race: both anonymous endpoints settle to a 404 while the viewer lookup is still pending — renders the skeleton, not ProfileNotFound', async () => {
     fetchMock.mockImplementation((url: string) => {
-      if (url.includes('/api/public/users/')) return Promise.resolve(jsonResponse({}, 404))
-      if (url.includes('/api/public/orgs/')) return Promise.resolve(jsonResponse({}, 404))
+      if (url.includes('/api/v1/users?handle=')) return Promise.resolve(jsonResponse({}, 404))
+      if (url.includes('/api/v1/organizations?slug=')) return Promise.resolve(jsonResponse({}, 404))
       throw new Error(`unexpected fetch: ${url}`)
     })
     viewerResult.current = { principal: null, pending: true }

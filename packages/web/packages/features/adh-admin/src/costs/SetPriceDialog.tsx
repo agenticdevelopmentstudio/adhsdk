@@ -40,10 +40,10 @@ export function rateInEffect(
         r.category === item.category &&
         r.provider === item.provider &&
         r.sku === item.sku &&
-        r.quantityKey === key &&
-        r.effectiveFrom <= day,
+        r.quantity_key === key &&
+        r.effective_from <= day,
     )
-    .sort((x, y) => y.effectiveFrom.localeCompare(x.effectiveFrom))[0];
+    .sort((x, y) => y.effective_from.localeCompare(x.effective_from))[0];
 }
 
 /** `text` is null until the operator types, so the field keeps showing the current baseline. */
@@ -78,7 +78,7 @@ export function SetPriceDialog({
   // The rate in effect on the chosen day, per key: the baseline the field shows and the
   // "unchanged, don't re-send" check compares against. Recomputed as the date changes.
   const baseline = (key: string) =>
-    item && rates ? rateInEffect(rates, item, key, effectiveFrom)?.microsPerUnit : undefined;
+    item && rates ? rateInEffect(rates, item, key, effectiveFrom)?.micros_per_unit : undefined;
 
   // What each key would send: nothing (blank, unchanged, or already saved), a value, or a field error.
   const plan = keys.map((key) => {
@@ -117,9 +117,9 @@ export function SetPriceDialog({
           category: item.category as CreateRateBody["category"],
           provider: item.provider,
           sku: item.sku,
-          quantityKey: key,
-          microsPerUnit: send!,
-          effectiveFrom,
+          quantity_key: key,
+          micros_per_unit: send!,
+          effective_from: effectiveFrom,
         };
         try {
           await createRate.mutateAsync(body);

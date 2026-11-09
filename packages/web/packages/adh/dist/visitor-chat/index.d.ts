@@ -72,7 +72,7 @@ export declare class AdhChatBackend implements ChatBackend {
      *  request, the bootstrap read included, correctly abandons the old conversation: it belongs to the
      *  dead token and no request under the new one could ever reach it. */
     private authedFetch;
-    /** Read GET /persona/bootstrap once (best-effort). Surfaces the persona's name +
+    /** Read GET /v1/personas/bootstrap once (best-effort). Surfaces the persona's name +
      *  advisory limits; a failure never blocks chatting. */
     private ensureBootstrap;
     /** Reuse the stored conversation (a returning visitor resumes), else create one. */

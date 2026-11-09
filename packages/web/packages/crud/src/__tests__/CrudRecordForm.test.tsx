@@ -9,13 +9,13 @@ const meta: CrudTableMeta = {
   key: 'demo/widgets',
   schema: 'demo',
   table: 'widgets',
-  basePath: '/demo/widgets',
-  itemPath: '/demo/widgets/{id}',
+  basePath: '/v1/demo/widgets',
+  itemPath: '/v1/demo/widgets/{id}',
   pkParams: ['id'],
   exposure: 'owner',
   columns: [
     { name: 'id', type: 'string', required: false, nullable: false, serverManaged: true },
-    { name: 'createdAt', type: 'string', required: false, nullable: false, serverManaged: true },
+    { name: 'created', type: 'string', required: false, nullable: false, serverManaged: true },
     { name: 'name', type: 'string', required: true, nullable: false, serverManaged: false, maxLength: 64 },
     { name: 'count', type: 'integer', required: false, nullable: true, serverManaged: false },
     { name: 'active', type: 'boolean', required: false, nullable: false, serverManaged: false },
@@ -34,8 +34,8 @@ const rdidMeta: CrudTableMeta = {
   key: 'persona/personas',
   schema: 'persona',
   table: 'personas',
-  basePath: '/persona/personas',
-  itemPath: '/persona/personas/{id}',
+  basePath: '/v1/personas',
+  itemPath: '/v1/personas/{id}',
   pkParams: ['id'],
   exposure: 'owner',
   columns: [
@@ -192,7 +192,7 @@ describe('CrudRecordForm', () => {
     expect(screen.getByLabelText(/^config/)).toBeInTheDocument() // textarea
     // server-managed columns never render as fields
     expect(screen.queryByLabelText('id')).toBeNull()
-    expect(screen.queryByLabelText('createdAt')).toBeNull()
+    expect(screen.queryByLabelText('created')).toBeNull()
   })
 
   it('submits the coerced payload', async () => {

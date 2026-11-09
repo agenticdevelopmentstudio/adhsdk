@@ -431,7 +431,7 @@ describe('EntryEditor', () => {
     );
     // The other half of the wiring: EntryIdentityPanel passes the draft's id DOWN as the photo
     // field's `value`, and that download call is the only observable proof it arrived.
-    await waitFor(() => expect(authedJson).toHaveBeenCalledWith('/api/storage/downloads/att_1'));
+    await waitFor(() => expect(authedJson).toHaveBeenCalledWith('/api/v1/files/att_1/contents'));
     await userEvent.type(screen.getByLabelText('One-line summary', { exact: false }), '!');
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
     await waitFor(() => expect(updateEntry).toHaveBeenCalled());

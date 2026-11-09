@@ -12,13 +12,16 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 // Mocked at the transport, not the hooks: `useMessagingStatus` / `useMessagingTemplates` /
 // `useSendMessage` — their cache keys, their `enabled` gating, the reset-on-success — all run
 // for real, which is what makes "the fields cleared, so the report withdrew" a real assertion.
-const { authedJson } = vi.hoisted(() => ({ authedJson: vi.fn() }));
+// Lists (templates, the message log) walk the /v1 collection through `listAllV1`; the status read
+// and the send are `authedJson` calls.
+const { authedJson, listAllV1 } = vi.hoisted(() => ({ authedJson: vi.fn(), listAllV1: vi.fn() }));
 // The transport is `@adh-sdk/auth/client` directly now that this pane and its
 // client live in a package: the hub's `@/api/http` was only ever a re-export of it, so
 // mocking that barrel and mocking this module were always the same interception.
 vi.mock("@adh-sdk/auth/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@adh-sdk/auth/client")>()),
   authedJson,
+  listAllV1,
 }));
 
 import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
@@ -33,9 +36,9 @@ const TEMPLATE = {
   id: "tpl-1",
   name: "Welcome",
   subject: "Welcome, {{name}}",
-  htmlBody: "<p>Hi {{name}}</p>",
-  textBody: "Hi {{name}}",
-  smsBody: null,
+  html_body: "<p>Hi {{name}}</p>",
+  text_body: "Hi {{name}}",
+  sms_body: null,
 };
 
 beforeEach(() => {
@@ -43,10 +46,12 @@ beforeEach(() => {
   // and log concurrently on mount, so a single mockResolvedValue would feed all three the same
   // body and the log table would try to page over a status object.
   authedJson.mockImplementation((url: string) => {
-    if (url.endsWith("/status")) return Promise.resolve({ email: true, sms: true });
-    if (url.endsWith("/messaging/templates")) return Promise.resolve([TEMPLATE]);
-    if (url.includes("/log")) return Promise.resolve({ items: [], total: 0, page: 1, pageSize: 20 });
+    if (url.includes("/messaging/status")) return Promise.resolve({ email: true, sms: true });
     return Promise.resolve({ ok: true });
+  });
+  listAllV1.mockImplementation((url: string) => {
+    if (url.includes("/messaging/templates")) return Promise.resolve([TEMPLATE]);
+    return Promise.resolve([]);
   });
 });
 

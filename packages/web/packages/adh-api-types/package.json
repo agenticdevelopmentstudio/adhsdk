@@ -1,7 +1,7 @@
 {
   "name": "@adh-sdk/adh-api-types",
   "version": "0.1.0",
-  "description": "Everything adh derives from the backend's OpenAPI spec (frontend/src/sites/api/openapi.json): the generated TypeScript response types, the two generators that project the spec into the toolkit's crud + api-explorer packages, and the drift gates that keep those committed artifacts honest.",
+  "description": "Everything adh derives from the backend's /v1 OpenAPI spec (adhbackend src/adh/openapi.v1.json, served at https://api.agenticdeveloperhub.com/v1/openapi.json): the generated TypeScript response types, the two generators that project the spec into the toolkit's crud + api-explorer packages, and the drift gates that keep those committed artifacts honest.",
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
       "types": "./src/index.ts"
     }
   },
-  "comment:generators": "All three generators READ adh's OpenAPI spec, which does NOT live in this repo — it is an explicit INPUT, passed as the first argument or via ADH_OPENAPI_SPEC, never a path derived by counting directories upward. They WRITE INTO sibling packages (crud + api-explorer own the runtime halves). The committed outputs are what ships, so a consumer without an adh checkout builds fine; only regeneration needs the spec. tools/codegen/targets.py drives all three as the `ts`, `crud` and `api-explorer` targets.",
+  "comment:generators": "All three generators READ adh's /v1 OpenAPI spec (openapi.v1.json, a path or URL), which does NOT live in this repo — it is an explicit INPUT, passed as the first argument or via ADH_OPENAPI_SPEC, never a path derived by counting directories upward. They WRITE INTO sibling packages (crud + api-explorer own the runtime halves). The committed outputs are what ships, so a consumer without an adh checkout builds fine; only regeneration needs the spec. tools/codegen/targets.py drives all three as the `ts`, `crud` and `api-explorer` targets.",
   "scripts": {
     "gen": "python3 tools/gen_schema.py",
     "gen:crud-metadata": "python3 tools/gen_table_metadata.py",

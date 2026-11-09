@@ -21,11 +21,11 @@ import type { ChatStatusKind } from "@adh-sdk/data/personas";
 // chats with exactly what the persona declares, not an unsaved draft.
 //
 // Talks through each site's same-origin BFF proxy, which strips the `/api`
-// prefix before forwarding (the backend mounts chat at `/chat`). Conversations
+// prefix before forwarding (the backend mounts chat at `/v1/chats`). Conversations
 // are the backend's persona-chat primitive. See websites/backend/src/routes/chat.ts
 // + src/llm/factory.ts. Auth rides on authedFetch/authedJson, which attach the
 // signed-in session's bearer token.
-const CONVERSATIONS = "/api/chat/conversations";
+const CONVERSATIONS = "/api/v1/chats";
 
 /**
  * The payload of the backend's `award` SSE event (src/llm/service.ts's
@@ -54,7 +54,7 @@ export interface AuthedFetchers {
   authedJson: <T>(path: string, init?: RequestInit) => Promise<T>;
 }
 
-/** The fields we read off POST /chat/conversations (it returns the full DTO). */
+/** The fields we read off POST /v1/chats (type: persona) (it returns the full DTO). */
 interface CreatedConversation {
   id: string;
 }
@@ -145,7 +145,9 @@ export class PersonaChatBackend implements ChatBackend {
     const convo = await this.opts.authedJson<CreatedConversation>(CONVERSATIONS, {
       method: "POST",
       body: JSON.stringify({
-        personaSlug: this.opts.personaSlug,
+        // `type` is the /v1 discriminator: a persona conversation, not a direct message.
+        type: "persona",
+        persona_slug: this.opts.personaSlug,
         // The backend resolves model as persona.model || conversation.model;
         // pass the persona's configured model so an unset persona.model still works.
         model: this.opts.model ?? undefined,

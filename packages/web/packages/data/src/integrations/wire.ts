@@ -3,6 +3,10 @@
 // `@adh-sdk/adh-api-types` (for /integrations/*). These carry full backend-schema fidelity
 // (not just the fields today's call sites touch) so the toolkit stays decoupled from the
 // hub's generated types without narrowing what a caller can rely on.
+//
+// The unsuffixed interfaces are the camelCase domain shapes the UI consumes. The `*Wire` ones at
+// the bottom are the snake_case `/v1/integrations/*` JSON; `integrations.ts` maps them field by
+// field (the `config`, `endpoints`, `fields` and `syncSettings` bags pass through untouched).
 
 /** A provider catalog entry (from GET /integrations/providers). */
 export interface ProviderCatalogEntryRow {
@@ -405,4 +409,93 @@ export interface TransferProviderConfigResultRow {
   connections: number;
   /** Cached repository lists that followed those connections. */
   repositoryCaches: number;
+}
+
+// ── snake_case wire shapes (/v1/integrations/*) ───────────────────────────────
+
+export interface ProviderCatalogEntryWire {
+  provider_id: string;
+  display_name: string;
+  subtitle: string;
+  description: string;
+  links: { label: string; url: string }[];
+  auth_method: ProviderCatalogEntryRow["authMethod"];
+  service_types: string[];
+  capabilities: string[];
+  default_poll_interval_ms: number;
+  config_fields?: NonNullable<ProviderCatalogEntryRow["configFields"]>;
+  testable: boolean;
+}
+
+export interface DeliverabilityWebhookWire {
+  url: string;
+  secret_header: string;
+  secret: string | null;
+  instruction: string;
+}
+
+export interface ProviderConfigWire {
+  id: string;
+  ecosystem_id: string;
+  provider_id: string;
+  name: string;
+  rdid: string | null;
+  config: Record<string, unknown>;
+  has_secret: boolean;
+  deliverability_webhook?: DeliverabilityWebhookWire | null;
+  updated_by?: string | null;
+  created?: number;
+  updated?: number;
+}
+
+export interface ConnectionWire {
+  id: string;
+  provider: string;
+  service_type: string;
+  status: string;
+  display_name: string;
+  username: string;
+  external_account_id: string;
+  last_sync_at?: string | null;
+  last_error?: string | null;
+  created: number;
+  sync_settings?: Record<string, unknown> | null;
+}
+
+export interface AdoptedInstallationWire {
+  installation_id: string;
+  account_login: string;
+  target_type: string;
+  connection_id?: string;
+  skipped?: string;
+  warning?: string;
+}
+
+export interface AdoptInstallationsResultWire {
+  connected: AdoptedInstallationWire[];
+  skipped: AdoptedInstallationWire[];
+}
+
+export interface IntegrationTestResultWire {
+  ok: boolean;
+  summary: string;
+  notes: string[];
+  adopted?: AdoptInstallationsResultWire;
+}
+
+export interface TransferProviderConfigResultWire {
+  config: ProviderConfigWire;
+  connections: number;
+  repository_caches: number;
+}
+
+export interface SyncSettingsResultWire {
+  ok: boolean;
+  sync_settings: Record<string, unknown>;
+}
+
+export interface RegisterInstanceResultWire {
+  state: string;
+  authorize_url: string;
+  client_id: string;
 }

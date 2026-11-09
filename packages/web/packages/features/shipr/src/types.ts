@@ -26,7 +26,7 @@ export type Environment = (typeof ENVIRONMENTS)[number];
  * same five the terminal script does.
  *
  * `register` is the odd one: the other four name a repository that already exists, and
- * register is how one comes to. It therefore posts to `/shipr/register` with a slug
+ * register is how one comes to. It therefore posts to `/v1/shipr/repos` with a slug
  * rather than to `/shipr/repos/:id/register`, and there is no such route.
  */
 export const OPERATIONS = [

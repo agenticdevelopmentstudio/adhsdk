@@ -63,8 +63,8 @@ export function MessagingPane({
     <>
       <DetailHeaderActions
         api={{
-          path: "/messaging/ecosystems/{id}/log",
-          pathValues: { id: ecosystemId },
+          path: "/v1/messaging/messages",
+          pathValues: {},
           title: "Messaging API",
         }}
         help={help}

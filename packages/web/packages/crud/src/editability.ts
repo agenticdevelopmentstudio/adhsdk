@@ -34,19 +34,16 @@ export const EDITABLE_OVERRIDES: EditableOverrides = {}
 const ID_REF_NAMES = new Set([
   'id',
   'rdid',
-  'ownerId',
   'owner_id',
-  'authorId',
-  'customerId',
   'author_id',
   'customer_id',
-  'accountId',
-  'userId',
+  'account_id',
+  'user_id',
 ])
 
-/** Name-suffix convention for foreign-key / ownership / rdid id references:
- *  `somethingId`, `something_id`, `somethingRdid`, `something_rdid`. */
-const ID_REF_SUFFIX = /(Id|_id|Rdid|_rdid)$/
+/** Name-suffix convention for foreign-key / ownership / rdid id references, in the snake_case
+ *  the /v1 API serves: `something_id`, `something_rdid`. */
+const ID_REF_SUFFIX = /(_id|_rdid)$/
 
 /**
  * A column that addresses a row (its own primary key) or references another

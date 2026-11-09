@@ -14,12 +14,13 @@ beforeEach(() => {
     status: 200,
     json: async () => ({
       text: "Hi.",
-      onScript: true,
-      signInLine: false,
-      budgetExhausted: false,
+      object: "persona",
+      on_script: true,
+      sign_in_line: false,
+      budget_exhausted: false,
       choices: [],
       diagnostics: [],
-      tagPlacementHint: "",
+      tag_placement_hint: "",
     }),
     text: async () => "{}",
   });
@@ -31,9 +32,9 @@ const initOf = () => fetchMock.mock.calls[0]![1] ?? {};
 const bodyOf = () => JSON.parse(String(initOf().body));
 
 describe("demoPreviewApi", () => {
-  it("posts the draft source to the persona-prefixed route", async () => {
+  it("posts the draft source to /v1/personas/preview", async () => {
     await demoPreviewApi.play({ source: "Hi.\n-> DONE\n" });
-    expect(urlOf()).toBe("/api/persona/demo-preview");
+    expect(urlOf()).toBe("/api/v1/personas/preview");
     expect(initOf().method).toBe("POST");
     expect(bodyOf().source).toBe("Hi.\n-> DONE\n");
   });
@@ -64,8 +65,8 @@ describe("demoPreviewApi", () => {
     // message duplicated into both would advance the story twice for one turn.
     expect(body.history).toHaveLength(2);
     expect(body.history[1]).toEqual({ role: "assistant", content: "Hi." });
-    expect(body.signInLine).toBe("Sign in and I can actually answer that.");
-    expect(body.canEscalate).toBe(true);
+    expect(body.sign_in_line).toBe("Sign in and I can actually answer that.");
+    expect(body.can_escalate).toBe(true);
   });
 
   it("returns the turn the server reported, escalation included", async () => {
@@ -74,12 +75,12 @@ describe("demoPreviewApi", () => {
       status: 200,
       json: async () => ({
         text: null,
-        onScript: false,
-        signInLine: false,
-        budgetExhausted: false,
-        choices: [{ text: "Yes", keywords: ["yes", "sure"], offScript: false }],
+        on_script: false,
+        sign_in_line: false,
+        budget_exhausted: false,
+        choices: [{ text: "Yes", keywords: ["yes", "sure"], off_script: false }],
         diagnostics: [{ severity: "warning", line: 3, message: "unused knot" }],
-        tagPlacementHint: "Put # match: inside the brackets.",
+        tag_placement_hint: "Put # match: inside the brackets.",
       }),
       text: async () => "{}",
     });
@@ -88,5 +89,8 @@ describe("demoPreviewApi", () => {
     expect(turn.text).toBeNull();
     expect(turn.choices[0]!.keywords).toEqual(["yes", "sure"]);
     expect(turn.diagnostics[0]!.line).toBe(3);
+    expect(turn.onScript).toBe(false);
+    expect(turn.choices[0]!.offScript).toBe(false);
+    expect(turn.tagPlacementHint).toBe("Put # match: inside the brackets.");
   });
 });

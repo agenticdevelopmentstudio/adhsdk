@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react'
 import { AlertModal } from '@adh-sdk/ui/components/alert-modal'
 import { Select } from '@adh-sdk/ui/components/select'
-import { authedJson } from '@adh-sdk/auth/client'
+import { authedJson, listAllV1 } from '@adh-sdk/auth/client'
 import { errorMessage } from '@adh-sdk/ui/lib/errors'
 import { ErrorText } from '@adh-sdk/ui/components/error-text'
 import type { CrudTableMeta } from './types'
 
-/** Minimal shape of GET /api/ecosystem/ecosystems — the manageable set the admin can move into. */
+/** Minimal shape of GET /api/v1/ecosystems — the manageable set the admin can move into. */
 interface EcoOption {
   id: string
   name: string
-  isDefault?: boolean
+  is_default?: boolean
 }
 interface MoveResult {
   moved: Record<string, number>
@@ -20,9 +20,9 @@ interface MoveResult {
 
 /**
  * Confirm-and-move dialog for the All-Data browser's "Move to ecosystem…" action. Picks a
- * destination ecosystem, optionally previews what moves (the backend's `dryRun`, which for
+ * destination ecosystem, optionally previews what moves (the backend's `dry_run`, which for
  * aggregate roots like a persona reports its child rows too), then relocates every selected row
- * via POST /api/ecosystem/move. Admin-only server-side; the caller gates the action's visibility.
+ * via POST /api/v1/ecosystems/move. Admin-only server-side; the caller gates the action's visibility.
  */
 export function MoveToEcosystemDialog({
   meta,
@@ -52,7 +52,7 @@ export function MoveToEcosystemDialog({
     setPreview(null)
     setError(null)
     let live = true
-    authedJson<EcoOption[]>('/api/ecosystem/ecosystems')
+    listAllV1<EcoOption>('/api/v1/ecosystems')
       .then((rows) => {
         if (live) setEcosystems(rows)
       })
@@ -68,10 +68,10 @@ export function MoveToEcosystemDialog({
   async function run(dryRun: boolean): Promise<Record<string, number>> {
     const total: Record<string, number> = {}
     for (const id of rowIds) {
-      const res = await authedJson<MoveResult>('/api/ecosystem/move', {
+      const res = await authedJson<MoveResult>('/api/v1/ecosystems/move', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schema: meta.schema, table: meta.table, id, target, dryRun }),
+        body: JSON.stringify({ schema: meta.schema, table: meta.table, id, target, dry_run: dryRun }),
       })
       for (const [k, v] of Object.entries(res.moved)) total[k] = (total[k] ?? 0) + v
     }
@@ -133,7 +133,7 @@ export function MoveToEcosystemDialog({
           {ecosystems.map((eco) => (
             <option key={eco.id} value={eco.id}>
               {eco.name}
-              {eco.isDefault ? ' (default)' : ''} — {eco.id}
+              {eco.is_default ? ' (default)' : ''} — {eco.id}
             </option>
           ))}
         </Select>

@@ -8,10 +8,15 @@ import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryClientProvider } from "@tanstack/react-query";
 
-vi.mock("../../http", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../http")>()),
-  authedJson: vi.fn(),
-}));
+// `listAllV1` is routed through the same stub so a list read lands in `authedJson`'s call log too.
+vi.mock("../../http", async (importOriginal) => {
+  const authedJson = vi.fn();
+  return {
+    ...(await importOriginal<typeof import("../../http")>()),
+    authedJson,
+    listAllV1: (url: string) => authedJson(url),
+  };
+});
 
 import { useWorkspaceHubEcosystemId, useWorkspaceHubScope } from "../use-workspace-hub-ecosystem";
 import { isHubDataEcosystem, toEcosystem } from "../ecosystems";
@@ -25,9 +30,9 @@ const row = (id: string, extra: Record<string, unknown> = {}) => ({
   id,
   name: id,
   slug: id,
-  isDefault: false,
-  createdAt: "",
-  updatedAt: "",
+  is_default: false,
+  created: 0,
+  updated: 0,
   ...extra,
 });
 
@@ -72,7 +77,7 @@ describe("useWorkspaceHubEcosystemId", () => {
   });
 
   it("falls back to the default ecosystem when the workspace has no hub-data child", async () => {
-    serve([row("p-1", { type: "container" })], [row("infra-2", { canManage: true })]);
+    serve([row("p-1", { type: "container" })], [row("infra-2", { can_manage: true })]);
     mount("acme-old");
     await waitFor(() => expect(screen.getByTestId("probe").textContent).toBe("infra-2"));
   });
@@ -114,7 +119,7 @@ describe("useWorkspaceHubScope", () => {
     );
 
   it("is the hub-data id with the workspace's management flag", async () => {
-    serve([row("hub-9", { type: "organization" })], [row("infra-9", { canManage: false })]);
+    serve([row("hub-9", { type: "organization" })], [row("infra-9", { can_manage: false })]);
     mountScope("acme-scope");
     await waitFor(() => expect(screen.getByTestId("scope").textContent).toBe("hub-9|view"));
   });

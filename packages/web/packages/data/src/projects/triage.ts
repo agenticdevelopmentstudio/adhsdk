@@ -17,8 +17,9 @@
 // There is no `decline`. Declining is `accept`ing into a status in the `canceled` category, which
 // leaves the card findable and says what happened to it; a delete would answer neither.
 
-import { authedJson } from "../http";
-import { compact, enc, workspaceQuery } from "../client-helpers";
+import { V1_PAGE_MAX, withV1Query } from "../http";
+import { compact, enc } from "../client-helpers";
+import { v1Json, v1List, v1Page, v1Write } from "../v1-case";
 import { toWorkItem, type WorkItem } from "./work-items";
 import type {
   WorkItemRow,
@@ -28,9 +29,12 @@ import type {
   PriorityScale,
 } from "./wire";
 
-const PROJECTS = "/api/project/projects";
-const ITEMS = "/api/project/work-items";
-const CROSS = "/api/project/triage";
+/** Both queues are `GET /v1/work_items?triage=true`: one board's with `project=`, the
+ *  cross-board one without. */
+const COLLECTION = "/api/v1/work_items";
+const ITEMS = COLLECTION;
+/** The page the legacy cross-board queue returned when no `limit` was named. */
+const TRIAGE_LIMIT_DEFAULT = 50;
 
 /* ── A queued card, seen from a page that spans boards ────────────────── */
 
@@ -102,8 +106,8 @@ export const projectTriageApi = {
    * `includeUntriaged`.
    */
   async listForProject(projectId: string): Promise<WorkItem[]> {
-    const rows = await authedJson<WorkItemRow[]>(
-      `${PROJECTS}/${enc(projectId)}/triage`,
+    const rows = await v1List<WorkItemRow>(
+      withV1Query(COLLECTION, { triage: "true", project: projectId }),
     );
     return rows.map(toWorkItem);
   },
@@ -117,13 +121,17 @@ export const projectTriageApi = {
    * back instead of assuming. `hasMore` is computed by over-fetching one row, so it is exact.
    */
   async list(opts?: { workspace?: string; limit?: number }): Promise<TriagePage> {
-    const ws = workspaceQuery(opts);
-    const limit =
-      opts?.limit === undefined ? "" : `${ws ? "&" : "?"}limit=${opts.limit}`;
-    const page = await authedJson<TriagePageRow>(`${CROSS}${ws}${limit}`);
+    const limit = Math.min(opts?.limit ?? TRIAGE_LIMIT_DEFAULT, V1_PAGE_MAX);
+    const page = await v1Page<TriageHitRow>(
+      withV1Query(COLLECTION, {
+        triage: "true",
+        workspace: opts?.workspace || undefined,
+        limit,
+      }),
+    );
     return {
-      results: page.results.map(toTriageHit),
-      limit: page.limit,
+      results: page.data.map(toTriageHit),
+      limit,
       hasMore: page.hasMore,
     };
   },
@@ -144,10 +152,7 @@ export const projectTriageApi = {
   async accept(ref: string, placement?: TriageAcceptBody): Promise<WorkItem> {
     const body: TriageAcceptBody = compact(placement ?? {});
     return toWorkItem(
-      await authedJson<WorkItemRow>(`${ITEMS}/${enc(ref)}/triage`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<WorkItemRow>(`${ITEMS}/${enc(ref)}/triage`, v1Write("POST", body)),
     );
   },
 };

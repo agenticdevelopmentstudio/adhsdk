@@ -9,6 +9,7 @@ vi.mock("../../http", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../http")>()),
   authedRequest: vi.fn(),
   authedJson: vi.fn(),
+  listAllV1: vi.fn(),
 }));
 
 import {
@@ -18,7 +19,7 @@ import {
   removalLevels,
   type CatalogFeature,
 } from "../ecosystem-features";
-import { authedRequest, authedJson } from "../../http";
+import { authedRequest, authedJson, listAllV1 } from "../../http";
 import { AuthHttpError } from "@adh-sdk/auth/client";
 
 // Notify observers synchronously — react-query's default scheduler batches into a macrotask,
@@ -27,6 +28,7 @@ notifyManager.setScheduler((cb) => cb());
 
 const mockedRequest = vi.mocked(authedRequest);
 const mockedJson = vi.mocked(authedJson);
+const mockedList = vi.mocked(listAllV1);
 
 /** A status-carrying HTTP error, the shape `isNotFound` duck-types on. */
 const httpError = (status: number) => Object.assign(new Error(`HTTP ${status}`), { status });
@@ -117,7 +119,6 @@ describe("useApplyFeatureChange", () => {
   // `Promise.allSettled` must let every removal run, then fail loudly by name for the ones that
   // didn't make it — not silently drop them.
   it("runs every removal even when one fails, and names the failed keys", async () => {
-    mockedJson.mockResolvedValueOnce({ features: [] }); // no adds requested, but guard anyway
     mockedRequest
       .mockResolvedValueOnce(undefined) // a
       .mockRejectedValueOnce(httpError(500)) // b
@@ -203,24 +204,23 @@ describe("useApplyFeatureChange", () => {
 describe("useApplyFeatureChange — removal order", () => {
   afterEach(() => {
     mockedJson.mockReset();
+    mockedList.mockReset();
     mockedRequest.mockReset();
   });
 
   // `signin-apps` requires `users`: the backend refuses DELETE users with a 409 while signin-apps
   // is still active, so a picker visit that removes BOTH must send signin-apps first and let it
   // settle before users goes out. Sent in parallel, the users DELETE could land first and fail.
-  const CATALOG = {
-    features: [
-      { key: "users", label: "Users", description: "", subscriptionTier: "Free" },
-      {
-        key: "signin-apps",
-        label: "Client Auth",
-        description: "",
-        subscriptionTier: "Free",
-        requiresFeatures: ["users"],
-      },
-    ],
-  };
+  const CATALOG = [
+    { key: "users", label: "Users", description: "", subscription_tier: "Free" },
+    {
+      key: "signin-apps",
+      label: "Client Auth",
+      description: "",
+      subscription_tier: "Free",
+      requires_features: ["users"],
+    },
+  ];
 
   function Probe({ remove }: { remove: string[] }): ReactElement {
     const apply = useApplyFeatureChange("eco-1");
@@ -233,10 +233,7 @@ describe("useApplyFeatureChange — removal order", () => {
   }
 
   it("sends a dependent's DELETE and lets it settle before the DELETE of what it requires", async () => {
-    mockedJson.mockImplementation(async (url: string) => {
-      if (url.endsWith("/catalog")) return CATALOG;
-      throw new Error(`unexpected GET ${url}`);
-    });
+    mockedList.mockResolvedValue(CATALOG);
     const calls: string[] = [];
     let settleSigninApps: () => void = () => undefined;
     mockedRequest.mockImplementation((url: string) => {
@@ -260,40 +257,33 @@ describe("useApplyFeatureChange — removal order", () => {
     });
 
     // signin-apps is in flight; users must not have been sent yet.
-    expect(calls).toEqual(["/api/ecosystem/features/eco-1/signin-apps"]);
+    expect(calls).toEqual(["/api/v1/ecosystems/eco-1/features/signin-apps"]);
 
     await act(async () => {
       settleSigninApps();
     });
 
     expect(calls).toEqual([
-      "/api/ecosystem/features/eco-1/signin-apps",
-      "/api/ecosystem/features/eco-1/users",
+      "/api/v1/ecosystems/eco-1/features/signin-apps",
+      "/api/v1/ecosystems/eco-1/features/users",
     ]);
     expect(screen.getByTestId("status").textContent).toBe("success");
   });
 
   it("orders by the listed catalog: a key whose included feature needs another goes first", async () => {
     // Applications requires nothing itself, but Client Auth comes with it and needs Users.
-    mockedJson.mockImplementation(async (url: string) => {
-      if (url.endsWith("/catalog")) {
-        return {
-          features: [
-            { key: "users", label: "Users", description: "", subscriptionTier: "Free" },
-            { key: "applications", label: "Applications", description: "", subscriptionTier: "Free" },
-            {
-              key: "client-auth",
-              label: "Client Auth",
-              description: "",
-              subscriptionTier: "Free",
-              requiresFeatures: ["users"],
-              includedWith: "applications",
-            },
-          ],
-        };
-      }
-      throw new Error(`unexpected GET ${url}`);
-    });
+    mockedList.mockResolvedValue([
+      { key: "users", label: "Users", description: "", subscription_tier: "Free" },
+      { key: "applications", label: "Applications", description: "", subscription_tier: "Free" },
+      {
+        key: "client-auth",
+        label: "Client Auth",
+        description: "",
+        subscription_tier: "Free",
+        requires_features: ["users"],
+        included_with: "applications",
+      },
+    ]);
     const calls: string[] = [];
     let settleApplications: () => void = () => undefined;
     mockedRequest.mockImplementation((url: string) => {
@@ -316,21 +306,18 @@ describe("useApplyFeatureChange — removal order", () => {
       screen.getByText("go").click();
     });
 
-    expect(calls).toEqual(["/api/ecosystem/features/eco-1/applications"]);
+    expect(calls).toEqual(["/api/v1/ecosystems/eco-1/features/applications"]);
     await act(async () => {
       settleApplications();
     });
     expect(calls).toEqual([
-      "/api/ecosystem/features/eco-1/applications",
-      "/api/ecosystem/features/eco-1/users",
+      "/api/v1/ecosystems/eco-1/features/applications",
+      "/api/v1/ecosystems/eco-1/features/users",
     ]);
   });
 
   it("still sends the required key after its dependent failed, and reports both by the usual rules", async () => {
-    mockedJson.mockImplementation(async (url: string) => {
-      if (url.endsWith("/catalog")) return CATALOG;
-      throw new Error(`unexpected GET ${url}`);
-    });
+    mockedList.mockResolvedValue(CATALOG);
     const calls: string[] = [];
     mockedRequest.mockImplementation((url: string) => {
       calls.push(url);
@@ -348,8 +335,8 @@ describe("useApplyFeatureChange — removal order", () => {
     });
 
     expect(calls).toEqual([
-      "/api/ecosystem/features/eco-1/signin-apps",
-      "/api/ecosystem/features/eco-1/users",
+      "/api/v1/ecosystems/eco-1/features/signin-apps",
+      "/api/v1/ecosystems/eco-1/features/users",
     ]);
     expect(screen.getByTestId("status").textContent).toBe("error");
   });

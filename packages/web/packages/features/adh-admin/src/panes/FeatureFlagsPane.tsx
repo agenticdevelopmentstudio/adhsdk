@@ -165,7 +165,7 @@ export function FeatureFlagsPane({ help }: { help?: ReactNode } = {}) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <FeatureTitle
         title="Feature Flags"
-        api={{ method: "GET", path: "/system/feature-flags", pathValues: {}, title: "Feature flags API" }}
+        api={{ method: "GET", path: "/v1/feature_flags", pathValues: {}, title: "Feature flags API" }}
         help={help}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-6 pb-8 pt-2">

@@ -32,7 +32,7 @@ import { WorkerTokens } from "../processing/WorkerTokens";
 function RetentionStrip() {
   const settings = useProcessingSettings();
   const put = usePutProcessingSettings();
-  const stored = settings.data?.logRetentionDays;
+  const stored = settings.data?.log_retention_days;
   const [text, setText] = useState("");
   // Follow the stored value until the admin starts typing over it; after that a background
   // refetch (another operator saved) must not replace what is in the box.
@@ -71,7 +71,7 @@ function RetentionStrip() {
           disabled={!canSave}
           onClick={() =>
             days !== null &&
-            put.mutate({ logRetentionDays: days }, { onSuccess: () => setTouched(false) })
+            put.mutate({ log_retention_days: days }, { onSuccess: () => setTouched(false) })
           }
         >
           Save retention
@@ -156,17 +156,17 @@ export function AiNodesPane({ help }: { help?: ReactNode } = {}) {
         key: "lastSeenAt",
         header: "Last seen",
         width: "9rem",
-        value: (n) => n.lastSeenAt,
-        render: (n) => <span title={n.lastSeenAt}>{formatRelativeTime(n.lastSeenAt)}</span>,
+        value: (n) => n.last_seen_at,
+        render: (n) => <span title={n.last_seen_at}>{formatRelativeTime(n.last_seen_at)}</span>,
       },
       {
         key: "jobs",
         header: "Done / failed",
         width: "8rem",
         align: "end",
-        value: (n) => n.jobsCompleted,
+        value: (n) => n.jobs_completed,
         render: (n) => (
-          <span className="tabular-nums">{`${n.jobsCompleted} / ${n.jobsFailed}`}</span>
+          <span className="tabular-nums">{`${n.jobs_completed} / ${n.jobs_failed}`}</span>
         ),
       },
     ],
@@ -196,7 +196,7 @@ export function AiNodesPane({ help }: { help?: ReactNode } = {}) {
         title="AI Nodes"
         api={{
           method: "GET",
-          path: "/processing/admin/nodes",
+          path: "/v1/processing/nodes",
           pathValues: {},
           title: "Processing nodes API",
         }}

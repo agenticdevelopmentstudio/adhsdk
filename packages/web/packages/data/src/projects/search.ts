@@ -1,4 +1,4 @@
-// Cross-board work-item search — the one read in `/api/project/*` that starts from no id.
+// Cross-board work-item search — the one read in `/api/v1/*` that starts from no id.
 //
 // Every other list in this domain hangs off something the caller already holds: a board, a
 // time-box, a program. This one answers "where is that card?" across every board the caller
@@ -14,11 +14,13 @@
 // clamps a limit rather than refusing it). Neither is re-derived here: `rank` travels so a
 // consumer can show relative strength, not so it can re-sort a page it only holds part of.
 
-import { authedJson } from "../http";
-import { enc } from "../client-helpers";
-import type { WorkItemSearchHitRow, WorkItemSearchPageRow } from "./wire";
+import { V1_PAGE_MAX, withV1Query } from "../http";
+import { v1Page } from "../v1-case";
+import type { WorkItemSearchHitRow } from "./wire";
 
-const SEARCH = "/api/project/search/work-items";
+const SEARCH = "/api/v1/work_items/search";
+/** The page the legacy search returned when no `limit` was named. */
+const SEARCH_LIMIT_DEFAULT = 20;
 
 /** A card the search matched, and the board it is on. See {@link WorkItemSearchHitRow}. */
 export interface WorkItemSearchHit {
@@ -86,13 +88,13 @@ export const projectSearchApi = {
   async workItems(q: string, opts: WorkItemSearchOptions = {}): Promise<WorkItemSearchPage> {
     const query = q.trim();
     if (!query) return EMPTY_WORK_ITEM_SEARCH;
-    const parts = [`q=${enc(query)}`];
-    if (opts.workspace) parts.push(`workspace=${enc(opts.workspace)}`);
-    if (opts.limit !== undefined) parts.push(`limit=${enc(String(opts.limit))}`);
-    const page = await authedJson<WorkItemSearchPageRow>(`${SEARCH}?${parts.join("&")}`);
+    const limit = Math.min(opts.limit ?? SEARCH_LIMIT_DEFAULT, V1_PAGE_MAX);
+    const page = await v1Page<WorkItemSearchHitRow>(
+      withV1Query(SEARCH, { q: query, workspace: opts.workspace || undefined, limit }),
+    );
     return {
-      results: (page.results ?? []).map(toWorkItemSearchHit),
-      limit: page.limit,
+      results: page.data.map(toWorkItemSearchHit),
+      limit,
       hasMore: page.hasMore,
     };
   },

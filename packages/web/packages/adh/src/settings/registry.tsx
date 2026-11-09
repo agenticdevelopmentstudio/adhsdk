@@ -144,7 +144,7 @@ const PANELS: Record<SettingsTopicId, ReactNode> = {
 };
 
 // Backend endpoint each settings section maps to — drives the FeatureTitle "API"
-// button. Self endpoints (/auth/me) and collections take no path params. Sections
+// button. Self endpoints (/v1/account) and collections take no path params. Sections
 // with no backing endpoint (appearance = local theme, preferences = this browser only,
 // subscription = placeholder) are omitted, so their API button draws disabled.
 //
@@ -153,17 +153,17 @@ const PANELS: Record<SettingsTopicId, ReactNode> = {
 // their old feature routes) and skip this one — which put their API link in a different place,
 // their content centred, and made them read as pages from another site. One title, one place.
 const API_PATHS: Partial<Record<SettingsTopicId, string>> = {
-  account: "/auth/me",
-  security: "/account/mfa",
-  notifications: "/notifications/preferences",
-  usage: "/usage/summary",
-  profile: "/auth/me",
-  social: "/content/social-links",
-  addresses: "/content/addresses",
-  contacts: "/account/contacts",
-  tokens: "/auth/tokens",
-  assistants: "/access/personas/user-actable",
-  archived: "/workspaces/archived",
+  account: "/v1/account",
+  security: "/v1/account/mfa",
+  notifications: "/v1/notification_preferences",
+  usage: "/v1/usage/summary",
+  profile: "/v1/account",
+  social: "/v1/content/social_links",
+  addresses: "/v1/content/addresses",
+  contacts: "/v1/account/contacts",
+  tokens: "/v1/api_keys",
+  assistants: "/v1/personas",
+  archived: "/v1/workspaces",
 };
 
 /** The settings sections (Account, Subscription, Profile) as master-detail

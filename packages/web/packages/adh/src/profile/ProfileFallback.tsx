@@ -92,7 +92,7 @@ export function ProfileFallback({ slug, siteId, section }: ProfileFallbackProps)
     void (async () => {
       try {
         const encoded = encodeURIComponent(slug)
-        const users = await fetch(`/api/public/users/${encoded}`)
+        const users = await fetch(`/api/v1/users?handle=${encoded}`)
         if (cancelled) return
         if (users.ok) {
           const body = (await users.json()) as UserCardBody
@@ -101,7 +101,7 @@ export function ProfileFallback({ slug, siteId, section }: ProfileFallbackProps)
         }
         if (users.status !== 404) return setState({ status: 'error' })
 
-        const orgs = await fetch(`/api/public/orgs/${encoded}`)
+        const orgs = await fetch(`/api/v1/organizations?slug=${encoded}`)
         if (cancelled) return
         if (orgs.ok) {
           const body = (await orgs.json()) as OrgCardBody

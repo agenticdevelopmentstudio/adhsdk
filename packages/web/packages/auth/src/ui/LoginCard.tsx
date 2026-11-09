@@ -361,7 +361,7 @@ export function LoginCard({
   if (challenge) {
     // Central completions, when the password step was central: only these mint the
     // central session, and finishing a central challenge on the site's own
-    // /api/auth/login/mfa is how a login ends up half-done. Omitted in in-site mode,
+    // /api/v1/auth/sessions is how a login ends up half-done. Omitted in in-site mode,
     // where MfaStep's AuthProvider defaults are correct.
     const operations: MfaOperations | undefined = challengeTarget
       ? {

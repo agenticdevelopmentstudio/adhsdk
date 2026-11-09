@@ -119,9 +119,9 @@ describe("markdownApi.routeAvailable", () => {
 
     await markdownApi.routeAvailable("doc 1", "a/b", { workspace: "acme" });
 
-    expect(spy).toHaveBeenCalledWith(
-      "/api/content/markdown/doc%201/route-available/a%2Fb?workspace=acme",
-    );
+    // /v1 spells it as a filter on the collection: route and excluding are query values, so
+    // both are still encoded, and the workspace still rides along.
+    expect(spy).toHaveBeenCalledWith("/api/v1/papers?route=a%2Fb&excluding=doc+1&workspace=acme");
   });
 
   it("returns the backend's verdict unchanged — the reason drives the message", async () => {

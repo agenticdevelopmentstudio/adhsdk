@@ -50,7 +50,6 @@ export {
   type OrganizationProvisioned,
   type OrganizationRenameInput,
   type OrganizationRenamed,
-  type OrganizationRestored,
 } from "./api/organizations";
 export {
   ARCHIVED_WORKSPACES_QUERY_KEY,

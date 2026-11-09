@@ -69,7 +69,7 @@ export function ProcessingConfigsPane({ help }: { help?: ReactNode } = {}) {
         render: (s) => (
           <span className="flex items-center gap-2 truncate font-medium text-apt-text" title={s.name}>
             <span className="truncate">{s.name}</span>
-            {s.isDefault && <Badge variant="success">Default</Badge>}
+            {s.is_default && <Badge variant="success">Default</Badge>}
           </span>
         ),
       },
@@ -111,7 +111,7 @@ export function ProcessingConfigsPane({ help }: { help?: ReactNode } = {}) {
   const selected = list.selectedRows;
   // Resolved from the LIVE rows so a saved set doesn't leave the dialog reading as dirty.
   const editing = useMemo(() => rows.find((s) => s.id === editingId) ?? null, [rows, editingId]);
-  const hasDefault = rows.some((s) => s.isDefault);
+  const hasDefault = rows.some((s) => s.is_default);
 
   async function run(action: () => Promise<unknown>) {
     setActionError(null);
@@ -128,7 +128,7 @@ export function ProcessingConfigsPane({ help }: { help?: ReactNode } = {}) {
         title="Processing Configs"
         api={{
           method: "GET",
-          path: "/processing/admin/config-sets",
+          path: "/v1/processing/config_sets",
           pathValues: {},
           title: "Processing config sets API",
         }}
@@ -182,7 +182,7 @@ export function ProcessingConfigsPane({ help }: { help?: ReactNode } = {}) {
               <Button
                 size="sm"
                 variant="ghost"
-                disabled={selected.length !== 1 || selected[0]!.isDefault}
+                disabled={selected.length !== 1 || selected[0]!.is_default}
                 onClick={() => void run(() => makeDefault.mutateAsync(selected[0]!.id))}
               >
                 <Star data-icon="inline-start" />

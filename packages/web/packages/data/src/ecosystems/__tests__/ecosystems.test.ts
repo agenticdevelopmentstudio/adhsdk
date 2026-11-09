@@ -2,10 +2,15 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Stub only the transport, so the body this client actually puts on the wire is
 // what gets asserted (the create contract lives in that body, not in the mappers).
-vi.mock("../../http", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../http")>()),
-  authedJson: vi.fn(),
-}));
+// `listAllV1` is routed through the same stub so a list read lands in `authedJson`'s call log too.
+vi.mock("../../http", async (importOriginal) => {
+  const authedJson = vi.fn();
+  return {
+    ...(await importOriginal<typeof import("../../http")>()),
+    authedJson,
+    listAllV1: (url: string) => authedJson(url),
+  };
+});
 
 import { ecosystemsApi, toEcosystem } from "../ecosystems";
 import { authedJson } from "../../http";
@@ -23,10 +28,10 @@ function row(id: string, slug: string) {
     name: "N",
     description: null,
     region: null,
-    primaryDomain: null,
-    createdAt: "c",
-    updatedAt: "u",
-    isDefault: false,
+    primary_domain: null,
+    created: 1700000000,
+    updated: 1700000100,
+    is_default: false,
     slug,
   };
 }
@@ -50,16 +55,16 @@ function sentBody(): Record<string, unknown> {
 const draft = { identifier: "", name: "N", description: "", region: "", domain: "" };
 
 describe("toEcosystem", () => {
-  it("maps the rdid id to both id+identifier and primaryDomain→domain", () => {
+  it("maps the rdid id to both id+identifier and primary_domain→domain", () => {
     const e = toEcosystem({
       id: "com.acme",
       name: "Acme",
       description: "desc",
       region: "us-east",
-      primaryDomain: "acme.com",
-      createdAt: "c",
-      updatedAt: "u",
-      isDefault: false,
+      primary_domain: "acme.com",
+      created: 1700000000,
+      updated: 1700000100,
+      is_default: false,
       slug: "acme",
     });
     expect(e.id).toBe("com.acme");
@@ -72,10 +77,10 @@ describe("toEcosystem", () => {
       name: "X",
       description: null,
       region: null,
-      primaryDomain: null,
-      createdAt: "c",
-      updatedAt: "u",
-      isDefault: false,
+      primary_domain: null,
+      created: 1700000000,
+      updated: 1700000100,
+      is_default: false,
       slug: "x",
     });
     expect(e.description).toBe("");
@@ -115,7 +120,7 @@ describe("ecosystemsApi.create", () => {
       { ...draft, identifier: "ecosystem.fishlamp.adh.sub" },
       { parent: "ecosystem.fishlamp.adh" },
     );
-    expect(sentUrl()).toBe("/api/ecosystem/ecosystems?parent=ecosystem.fishlamp.adh");
+    expect(sentUrl()).toBe("/api/v1/ecosystems?parent=ecosystem.fishlamp.adh");
     expect(sentBody().slug).toBe("sub");
   });
 
@@ -125,7 +130,7 @@ describe("ecosystemsApi.create", () => {
       { ...draft, identifier: "ecosystem.fishlamp.adh" },
       { workspace: "fishlamp" },
     );
-    expect(sentUrl()).toBe("/api/ecosystem/ecosystems?workspace=fishlamp");
+    expect(sentUrl()).toBe("/api/v1/ecosystems?workspace=fishlamp");
   });
 });
 
@@ -135,14 +140,14 @@ describe("ecosystemsApi.update", () => {
   // every descendant. Renaming the HANDLE instead (a registry.identifiers PATCH, what this client
   // used to do) is the non-structural rename — the slug column stays behind, the row goes on
   // deriving its old address, and the next ancestor cascade re-leafs the handle back.
-  it("sends the new LEAF as `slug`, in the one PUT", async () => {
+  it("sends the new LEAF as `slug`, in the one POST", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh2", "adh2"));
     await ecosystemsApi.update("ecosystem.fishlamp.adh", {
       identifier: "ecosystem.fishlamp.adh2",
       name: "N",
     });
     expect(mockedJson).toHaveBeenCalledTimes(1);
-    expect(sentUrl()).toBe("/api/ecosystem/ecosystems/ecosystem.fishlamp.adh");
+    expect(sentUrl()).toBe("/api/v1/ecosystems/ecosystem.fishlamp.adh");
     expect(sentBody().slug).toBe("adh2");
     expect(sentBody().name).toBe("N");
   });
@@ -163,7 +168,7 @@ describe("ecosystemsApi.update", () => {
     // `ecosystem.fishlamp.chosen` and every surface that shows the handle disagrees with it.
     // Renaming it back to `adh` is a genuine slug change (`chosen` -> `adh`) that happens to equal
     // the id, and diffing the submitted identifier against the id dropped exactly this save: the
-    // PUT carried no `slug`, the route found nothing addressed to cascade, and the UI reported a
+    // POST carried no `slug`, the route found nothing addressed to cascade, and the UI reported a
     // rename that never happened. It is also the one save that ENDS the drift.
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh", "adh"));
     const saved = await ecosystemsApi.update("ecosystem.fishlamp.adh", {
@@ -203,7 +208,7 @@ describe("ecosystemsApi.workspaceDefaultEcosystemId", () => {
   it("scopes to the workspace principal when given a slug", async () => {
     mockedJson.mockResolvedValueOnce([row("ecosystem.fishlamp", "fishlamp")]);
     const own = await ecosystemsApi.workspaceDefaultEcosystemId("fishlamp");
-    expect(sentUrl()).toBe("/api/ecosystem/ecosystems?workspace=fishlamp&infrastructure=true");
+    expect(sentUrl()).toBe("/api/v1/ecosystems?workspace=fishlamp&infrastructure=true");
     expect(own).toEqual({ id: "ecosystem.fishlamp", canManage: true });
   });
 
@@ -213,7 +218,7 @@ describe("ecosystemsApi.workspaceDefaultEcosystemId", () => {
   it("resolves the CALLER's own row when there is no slug", async () => {
     mockedJson.mockResolvedValueOnce([row("ecosystem.realm.mike", "mike")]);
     const own = await ecosystemsApi.workspaceDefaultEcosystemId();
-    expect(sentUrl()).toBe("/api/ecosystem/ecosystems?infrastructure=true");
+    expect(sentUrl()).toBe("/api/v1/ecosystems?infrastructure=true");
     expect(own?.id).toBe("ecosystem.realm.mike");
   });
 
@@ -224,7 +229,7 @@ describe("ecosystemsApi.workspaceDefaultEcosystemId", () => {
   });
 
   it("carries the server's canManage=false through", async () => {
-    mockedJson.mockResolvedValueOnce([{ ...row("ecosystem.fishlamp", "fishlamp"), canManage: false }]);
+    mockedJson.mockResolvedValueOnce([{ ...row("ecosystem.fishlamp", "fishlamp"), can_manage: false }]);
     expect(await ecosystemsApi.workspaceDefaultEcosystemId("fishlamp")).toEqual({
       id: "ecosystem.fishlamp",
       canManage: false,
@@ -243,7 +248,7 @@ describe("ecosystemsApi.ecosystemIdForSlug", () => {
     mockedJson.mockResolvedValueOnce([row("ecosystem.fishlamp", "fishlamp")]);
     expect(await ecosystemsApi.ecosystemIdForSlug("fishlamp")).toBe("ecosystem.fishlamp");
     expect(mockedJson).toHaveBeenCalledTimes(1);
-    expect(sentUrl()).toBe("/api/ecosystem/ecosystems?workspace=fishlamp&infrastructure=true");
+    expect(sentUrl()).toBe("/api/v1/ecosystems?workspace=fishlamp&infrastructure=true");
   });
 
   // A 404 is "this slug names no workspace" — the one verdict that licenses the scan.
@@ -257,7 +262,7 @@ describe("ecosystemsApi.ecosystemIdForSlug", () => {
   // so it reaches the same fallback without a throw.
   it("falls back when the workspace resolves to no infrastructure row", async () => {
     mockedJson.mockResolvedValueOnce([]);
-    mockedJson.mockResolvedValueOnce([{ ...row("ecosystem.d", "d"), isDefault: true }]);
+    mockedJson.mockResolvedValueOnce([{ ...row("ecosystem.d", "d"), is_default: true }]);
     expect(await ecosystemsApi.ecosystemIdForSlug("fishlamp")).toBe("ecosystem.d");
   });
 

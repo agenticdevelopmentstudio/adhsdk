@@ -14,22 +14,25 @@ const as = <F extends (arg: never) => unknown>(o: Record<string, unknown>): Row<
   o as unknown as Row<F>;
 
 describe("toApp", () => {
-  it("maps id→id+identifier and displayName→name", () => {
+  it("maps id→id+identifier and display_name→name", () => {
     const a = toApp(
       as<typeof toApp>({
         id: "com.acme.app",
-        displayName: "App",
-        consumerKind: "staff",
-        ecosystemId: "e",
-        createdAt: "c",
-        updatedAt: "u",
+        display_name: "App",
+        consumer_kind: "staff",
+        ecosystem_id: "e",
+        created: 1_700_000_000,
+        updated: 1_700_000_060,
       }),
     );
     expect(a.identifier).toBe("com.acme.app");
     expect(a.name).toBe("App");
+    expect(a.ecosystemId).toBe("e");
+    expect(a.createdAt).toBe("2023-11-14T22:13:20.000Z");
+    expect(a.updatedAt).toBe("2023-11-14T22:14:20.000Z");
   });
   it("maps the platform, defaulting a missing or unknown one to web", () => {
-    const row = { id: "i", displayName: "n", consumerKind: "staff", ecosystemId: "e", createdAt: "c", updatedAt: "u" };
+    const row = { id: "i", display_name: "n", consumer_kind: "staff", ecosystem_id: "e", created: 0, updated: 0 };
     expect(toApp(as<typeof toApp>({ ...row, platform: "native" })).platform).toBe("native");
     expect(toApp(as<typeof toApp>({ ...row, platform: "tv" })).platform).toBe("web");
   });

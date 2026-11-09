@@ -1,7 +1,7 @@
 /** Where the authorization server lives, for every module that has to ask it
  *  something. Deliberately import-free: `sso.ts` and `client.ts` both need this and
  *  `sso.ts` already imports `client.ts`, so a home in either one would be a cycle —
- *  and the cycle is what made the second copy (a hard-coded `/api/auth/link-provider`)
+ *  and the cycle is what made the second copy (a hard-coded `/api/v1/account/login_methods`)
  *  look reasonable. One module, one answer, no cycle.
  */
 

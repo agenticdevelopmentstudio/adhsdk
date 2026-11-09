@@ -7,28 +7,100 @@
 // thread stream carries the raw access token in the query string — mirroring the
 // notifications hook.
 //
-// Backend contract (all participant-scoped; src/routes/chat.ts):
-//   GET  /chat/dms                        → { chats: DmChatSummary[] }
-//   POST /chat/dms { recipientId }        → { id, otherUserId, created }; 403 when
+// Backend contract (the /v1 API; all participant-scoped). Requests and JSON answers are
+// snake_case, wrapped in the /v1 list envelope where a collection; the hooks map them onto
+// the camelCase types below. The SSE stream is passed through untouched, so its frames keep
+// the camelCase `DmMessage` shape.
+//   GET  /v1/chats?type=direct&limit      → { object:'list', data: DmChatSummaryWire[], has_more }
+//   POST /v1/chats { type:'direct', recipient_id } → { id, other_user_id, created }; 403 when
 //                                           canContact denies (blocked / dial)
-//   GET  /chat/dms/:id/messages?page&pageSize → { items, total, page, pageSize }
-//   POST /chat/dms/:id/messages { body, clientMessageId? } → the sent message
-//   POST /chat/dms/:id/read { messageId? }               → { success, unreadCount }
-//   GET  /chat/dms/:id/stream?after=<seq>&access_token=<jwt> → SSE `message` events
-//   GET  /presence?userIds=a,b            → { presence: PresenceView[] }
+//   GET  /v1/chats/:id/messages?limit     → { object:'list', data: DmMessageWire[], has_more }
+//   POST /v1/chats/:id/messages { body, client_message_id? } → the sent message
+//   POST /v1/chats/:id/read { message_id? }              → { success, unread_count }
+//   GET  /v1/chats/:id/stream?after=<seq>&access_token=<jwt> → SSE `message` events
+//   GET  /v1/presence?user_ids=a,b        → { object:'list', data: PresenceViewWire[] }
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AuthHttpError, authedJson, authedRequest } from '@adh-sdk/auth/client'
+import { AuthHttpError, authedJson, authedRequest, listV1Page } from '@adh-sdk/auth/client'
 import { useAuth } from '@adh-sdk/auth'
 
 import { connectSse, type SseHandle } from '@adh-sdk/data/stream'
 import { emitLocalChange, subscribeToNotifications } from './use-notifications'
 
 /** Same-origin bases — the Next BFF proxy rewrites `/api/*` onto the backend. */
-const DM_BASE = '/api/chat/dms'
-const PRESENCE_BASE = '/api/presence'
+const DM_BASE = '/api/v1/chats'
+const PRESENCE_BASE = '/api/v1/presence'
 
-// --- wire types (mirror the backend DTOs) ------------------------------------
+// --- wire types (the /v1 JSON, snake_case) ------------------------------------
+
+/** A DM message as `GET/POST /v1/chats/:id/messages` sends it. */
+interface DmMessageWire {
+  id: string
+  chat_id: string
+  sender_participant_id: string | null
+  sender_user_id: string
+  seq: number
+  role: string
+  body: string
+  state: string
+  date_sent: string
+}
+
+interface DmMessagePreviewWire {
+  id: string
+  sender_participant_id: string | null
+  body: string
+  seq: number
+  date_sent: string
+}
+
+/** One row of `GET /v1/chats?type=direct`. */
+interface DmChatSummaryWire {
+  chat_id: string
+  other_user_id: string
+  last_message: DmMessagePreviewWire | null
+  unread_count: number
+}
+
+/** One row of `GET /v1/presence`. */
+interface PresenceViewWire {
+  user_id: string
+  online: boolean
+  last_seen_at: string | null
+}
+
+function messageFromWire(w: DmMessageWire): DmMessage {
+  return {
+    id: w.id,
+    chatId: w.chat_id,
+    senderParticipantId: w.sender_participant_id,
+    senderUserId: w.sender_user_id,
+    seq: w.seq,
+    role: w.role,
+    body: w.body,
+    state: w.state,
+    dateSent: w.date_sent,
+  }
+}
+
+function summaryFromWire(w: DmChatSummaryWire): DmChatSummary {
+  return {
+    chatId: w.chat_id,
+    otherUserId: w.other_user_id,
+    lastMessage: w.last_message
+      ? {
+          id: w.last_message.id,
+          senderParticipantId: w.last_message.sender_participant_id,
+          body: w.last_message.body,
+          seq: w.last_message.seq,
+          dateSent: w.last_message.date_sent,
+        }
+      : null,
+    unreadCount: w.unread_count,
+  }
+}
+
+// --- domain types ---------------------------------------------------------------
 
 /** One direct message, oldest-first within a thread. `senderUserId` is the exact
  *  user id behind the sender (resolved server-side from `senderParticipantId`), so
@@ -55,7 +127,7 @@ export interface DmMessagePreview {
   dateSent: string
 }
 
-/** One row of the caller's DM inbox (`GET /chat/dms`). */
+/** One row of the caller's DM inbox (`GET /v1/chats?type=direct`). */
 export interface DmChatSummary {
   chatId: string
   otherUserId: string
@@ -63,7 +135,7 @@ export interface DmChatSummary {
   unreadCount: number
 }
 
-/** Live presence for a user (`GET /presence`). Server-gated: a hidden or absent
+/** Live presence for a user (`GET /v1/presence`). Server-gated: a hidden or absent
  *  target reports `{ online: false, lastSeenAt: null }`, so real state never leaks. */
 export interface PresenceView {
   userId: string
@@ -99,21 +171,31 @@ async function fetchPresenceMap(userIds: string[]): Promise<Map<string, Presence
   const ids = [...new Set(userIds.filter(Boolean))]
   if (ids.length === 0) return new Map()
   try {
-    const res = await authedJson<{ presence: PresenceView[] }>(
-      `${PRESENCE_BASE}?userIds=${encodeURIComponent(ids.join(','))}`,
+    const page = await listV1Page<PresenceViewWire>(
+      `${PRESENCE_BASE}?user_ids=${encodeURIComponent(ids.join(','))}&limit=${V1_PAGE_MAX}`,
     )
-    return new Map(res.presence.map((view) => [view.userId, view]))
+    return new Map(
+      page.data.map((view): [string, PresenceView] => [
+        view.user_id,
+        { userId: view.user_id, online: view.online, lastSeenAt: view.last_seen_at },
+      ]),
+    )
   } catch {
     return new Map()
   }
 }
 
-/** DM inbox window: the initial size, the step per "Load more", and the ceiling the
- *  backend also caps at. The client grows ONE window (a single `pageSize` request)
- *  rather than accumulating offset pages, so each fetch is one consistent snapshot —
- *  no cross-page drop/duplicate as chats reorder on `updated_at`. */
-const DM_PAGE_SIZE = 100
-const DM_MAX_LIMIT = 500
+/** /v1's largest page (`limit` is 1-100). */
+const V1_PAGE_MAX = 100
+
+/** DM inbox window: one `limit` request, so each fetch is one consistent snapshot — no
+ *  cross-page drop/duplicate as chats reorder on `updated_at`. /v1 caps a page at 100 and
+ *  pages by an `id` cursor that a direct-chat row (`chat_id`) does not carry, so the inbox
+ *  cannot grow past one page the way the old `pageSize` window (ceiling 500) did: the
+ *  window is fixed at 100 and `hasMore` is false once it is full. A gap, recorded in the
+ *  report rather than papered over. */
+const DM_PAGE_SIZE = V1_PAGE_MAX
+const DM_MAX_LIMIT = V1_PAGE_MAX
 
 /**
  * The caller's DM inbox: DM chats newest-updated first, each carrying the other
@@ -127,7 +209,7 @@ const DM_MAX_LIMIT = 500
  */
 export function useDmConversations(): UseDmConversationsResult {
   const [chats, setChats] = useState<DmConversation[]>([])
-  const [total, setTotal] = useState(0)
+  const [more, setMore] = useState(false)
   const [limit, setLimit] = useState(DM_PAGE_SIZE)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -142,18 +224,17 @@ export function useDmConversations(): UseDmConversationsResult {
   const load = useCallback(async (size: number) => {
     const gen = ++generation.current
     try {
-      const res = await authedJson<{ chats: DmChatSummary[]; total?: number }>(
-        `${DM_BASE}?pageSize=${size}`,
-      )
-      const presence = await fetchPresenceMap(res.chats.map((chat) => chat.otherUserId))
+      const page = await listV1Page<DmChatSummaryWire>(`${DM_BASE}?type=direct&limit=${size}`)
+      const summaries = page.data.map(summaryFromWire)
+      const presence = await fetchPresenceMap(summaries.map((chat) => chat.otherUserId))
       if (gen !== generation.current) return
       setChats(
-        res.chats.map((chat) => {
+        summaries.map((chat) => {
           const view = presence.get(chat.otherUserId)
           return { ...chat, online: view?.online ?? false, lastSeenAt: view?.lastSeenAt ?? null }
         }),
       )
-      setTotal(res.total ?? res.chats.length)
+      setMore(page.hasMore)
       setError(null)
       setLoading(false)
       setLoadingMore(false)
@@ -184,9 +265,8 @@ export function useDmConversations(): UseDmConversationsResult {
     setLimit((n) => Math.min(n + DM_PAGE_SIZE, DM_MAX_LIMIT))
   }, [])
 
-  // More exist only if the server reports more AND the window hasn't hit its ceiling
-  // (a single snapshot means chats.length is exact — no dedup-vs-total skew).
-  const hasMore = chats.length < total && limit < DM_MAX_LIMIT
+  // More exist only if the server reports more AND the window hasn't hit its ceiling.
+  const hasMore = more && limit < DM_MAX_LIMIT
   return { chats, loading, error, refetch, hasMore, loadMore, loadingMore }
 }
 
@@ -251,7 +331,7 @@ export function useDmThread(chatId: string | null): UseDmThreadResult {
     setLoading(true)
     setError(null)
 
-    const messagesUrl = `${DM_BASE}/${encodeURIComponent(chatId)}/messages?pageSize=200`
+    const messagesUrl = `${DM_BASE}/${encodeURIComponent(chatId)}/messages?limit=${V1_PAGE_MAX}`
 
     // Merge a freshly-fetched window into the list (dedupe by id, keep seq order).
     const mergeItems = (items: DmMessage[]) => {
@@ -264,19 +344,19 @@ export function useDmThread(chatId: string | null): UseDmThreadResult {
     // The poll fallback's action (armed inside connectSse when SSE is unavailable or
     // dies): refetch the newest window.
     const refetchThread = () => {
-      authedJson<{ items: DmMessage[] }>(messagesUrl)
+      listV1Page<DmMessageWire>(messagesUrl)
         .then((res) => {
-          if (!cancelled) mergeItems(res.items)
+          if (!cancelled) mergeItems(res.data.map(messageFromWire))
         })
         .catch(() => {
           /* keep the last good thread on a transient failure */
         })
     }
 
-    authedJson<{ items: DmMessage[] }>(messagesUrl)
+    listV1Page<DmMessageWire>(messagesUrl)
       .then((res) => {
         if (cancelled) return
-        const items = [...res.items].sort((a, b) => a.seq - b.seq)
+        const items = res.data.map(messageFromWire).sort((a, b) => a.seq - b.seq)
         // Merge (not replace) so a message the user sent DURING this load — the composer
         // is live while loading — isn't clobbered; mergeMessage dedupes by id + keeps seq
         // order, so re-loading the same history is idempotent.
@@ -325,10 +405,11 @@ export function useDmThread(chatId: string | null): UseDmThreadResult {
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.random().toString(16).slice(2)}`
-      const msg = await authedJson<DmMessage>(
+      const wire = await authedJson<DmMessageWire>(
         `${DM_BASE}/${encodeURIComponent(chatId)}/messages`,
-        { method: 'POST', body: JSON.stringify({ body: text, clientMessageId }) },
+        { method: 'POST', body: JSON.stringify({ body: text, client_message_id: clientMessageId }) },
       )
+      const msg = messageFromWire(wire)
       setMessages((prev) => mergeMessage(prev, msg))
       // Refresh the conversation list (preview + ordering + unread).
       emitLocalChange()
@@ -369,9 +450,9 @@ export type StartDmResult = { chatId: string } | { forbidden: true }
  */
 export async function startDm(recipientId: string): Promise<StartDmResult> {
   try {
-    const res = await authedJson<{ id: string; otherUserId: string; created: boolean }>(DM_BASE, {
+    const res = await authedJson<{ id: string; other_user_id: string; created: boolean }>(DM_BASE, {
       method: 'POST',
-      body: JSON.stringify({ recipientId }),
+      body: JSON.stringify({ type: 'direct', recipient_id: recipientId }),
     })
     return { chatId: res.id }
   } catch (err) {

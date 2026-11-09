@@ -1,11 +1,11 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { authedJson, authedRequest } from "./http";
-import type { RdidMapping } from "./admin";
+import { authedJson, authedRequest, listAllV1, withV1Query } from "./http";
+import { listIdentifiers } from "./admin";
 
 /**
- * /customer/memberships — which ecosystems a person is a customer of, and the two admin actions
+ * /v1/customer_memberships — which ecosystems a person is a customer of, and the two admin actions
  * that change it.
  *
  * A person is not one row: `customer.customers` is per-ecosystem, and the same human has one row
@@ -32,11 +32,11 @@ export interface UserEcosystem {
   isHub: boolean;
 }
 
-/** One row of `GET /customer/memberships`. */
+/** One row of `GET /v1/customer_memberships`. */
 interface MembershipRow {
-  userId: string;
-  customerId: string;
-  ecosystemId: string;
+  user_id: string;
+  customer_id: string;
+  ecosystem_id: string;
 }
 
 /** Ecosystem zero — see `HUB_ECOSYSTEM_ID` in admin.ts and backend lib/ecosystem.ts. */
@@ -62,8 +62,8 @@ export async function fetchMemberships(userIds: string[]): Promise<Map<string, U
     const ids = userIds.slice(i, i + CHUNK).join(",");
     try {
       rows.push(
-        ...(await authedJson<MembershipRow[]>(
-          `/api/customer/memberships?userIds=${encodeURIComponent(ids)}`,
+        ...(await listAllV1<MembershipRow>(
+          withV1Query("/api/v1/customer_memberships", { user_ids: ids }),
         )),
       );
     } catch (err) {
@@ -71,18 +71,18 @@ export async function fetchMemberships(userIds: string[]): Promise<Map<string, U
     }
   }
 
-  const rdidByEcosystem = await fetchEcosystemRdids([...new Set(rows.map((r) => r.ecosystemId))]);
+  const rdidByEcosystem = await fetchEcosystemRdids([...new Set(rows.map((r) => r.ecosystem_id))]);
   const out = new Map<string, UserEcosystem[]>();
   for (const row of rows) {
     const entry: UserEcosystem = {
-      customerId: row.customerId,
-      ecosystemId: row.ecosystemId,
-      rdid: rdidByEcosystem.get(row.ecosystemId) ?? null,
-      isHub: row.ecosystemId === HUB_ECOSYSTEM_ID,
+      customerId: row.customer_id,
+      ecosystemId: row.ecosystem_id,
+      rdid: rdidByEcosystem.get(row.ecosystem_id) ?? null,
+      isHub: row.ecosystem_id === HUB_ECOSYSTEM_ID,
     };
-    const list = out.get(row.userId);
+    const list = out.get(row.user_id);
     if (list) list.push(entry);
-    else out.set(row.userId, [entry]);
+    else out.set(row.user_id, [entry]);
   }
   // The hub account first, then the rest by address: the chip an operator is looking for is the
   // one that is NOT the hub, and a stable order stops the cell reshuffling between refetches.
@@ -100,9 +100,7 @@ async function fetchEcosystemRdids(ecosystemIds: string[]): Promise<Map<string, 
   for (let i = 0; i < ecosystemIds.length; i += CHUNK) {
     const ids = ecosystemIds.slice(i, i + CHUNK).join(",");
     try {
-      for (const m of await authedJson<RdidMapping[]>(
-        `/api/registry/identifiers?entityType=ecosystem&entityIds=${encodeURIComponent(ids)}`,
-      )) {
+      for (const m of await listIdentifiers({ entity_type: "ecosystem", entity_ids: ids })) {
         found.set(m.entityId, m.rdid);
       }
     } catch (err) {
@@ -123,10 +121,15 @@ export function useAddToEcosystem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { userId: string; ecosystemId: string }) =>
-      authedJson<{ userId: string; customerId: string; ecosystemId: string; created: boolean }>(
-        "/api/customer/memberships",
-        { method: "POST", body: JSON.stringify(input) },
-      ),
+      authedJson<{
+        user_id: string;
+        customer_id: string;
+        ecosystem_id: string;
+        created: boolean;
+      }>("/api/v1/customer_memberships", {
+        method: "POST",
+        body: JSON.stringify({ user_id: input.userId, ecosystem_id: input.ecosystemId }),
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
 }
@@ -136,7 +139,7 @@ export function useRemoveFromEcosystem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (customerId: string) =>
-      authedRequest(`/api/customer/memberships/${encodeURIComponent(customerId)}`, {
+      authedRequest(`/api/v1/customer_memberships/${encodeURIComponent(customerId)}`, {
         method: "DELETE",
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),

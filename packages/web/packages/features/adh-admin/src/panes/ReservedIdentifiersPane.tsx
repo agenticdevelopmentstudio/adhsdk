@@ -129,7 +129,7 @@ export function ReservedIdentifiersPane({ help }: { help?: ReactNode } = {}) {
   );
 
   const list = useEditableList<ReservedIdentifier>({
-    rows: data?.items,
+    rows: data,
     getRowId: rowId,
     columns,
     facets: [
@@ -192,7 +192,7 @@ export function ReservedIdentifiersPane({ help }: { help?: ReactNode } = {}) {
         title="Reserved Identifiers"
         api={{
           method: "GET",
-          path: "/system/reserved-identifiers",
+          path: "/v1/reserved_identifiers",
           pathValues: {},
           title: "Reserved Identifiers API",
         }}
@@ -224,18 +224,6 @@ export function ReservedIdentifiersPane({ help }: { help?: ReactNode } = {}) {
           loading={isLoading}
           error={error}
           errorTitle="Couldn't load reserved identifiers"
-          // The backend's scans are capped, and the filtering above them is client-side — so a name
-          // beyond the cap answers a search with an empty table, which on THIS surface reads as
-          // "free to use". Said out loud, with the number, so the operator can tell the two apart.
-          truncationNotice={
-            data?.truncated ? (
-              <>
-                Showing {data.total.toLocaleString()} held names, and there are more than this page
-                fetches. <strong>A name missing from this table may still be held</strong> — an empty
-                result here is not proof that a name is free.
-              </>
-            ) : undefined
-          }
           columnWidthsKey="admin-reserved-identifiers"
           // The rdid is the name the operator is looking at; the row id is a composite of three
           // fields and names nothing. Without this the checkbox would fall back to `entityType` and

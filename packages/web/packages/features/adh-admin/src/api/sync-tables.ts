@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { SuccessBody } from "@adh-sdk/adh-api-types";
-import { authedJson } from "./http";
+import { authedJson, listAllV1 } from "./http";
 
 // ── Per-ecosystem offline-sync table enrollment ──────────────────────────────
 //
@@ -12,26 +12,25 @@ import { authedJson } from "./http";
 // code default in the sync registry. `:id` is the ecosystem's rdid OR its raw
 // uuid (the route resolves either).
 //
-// `/admin/sync/tables` is NOT in the OpenAPI surface (@adh-sdk/adh-api-types), so
-// the row/body shapes are hand-written here (as `AccessAuditEvent` in admin.ts
-// does for its undocumented route). The ecosystem picker's list, by contrast,
-// comes from the documented generic-CRUD `/ecosystem/ecosystems`, so that one
-// stays spec-typed.
+// The routes are `/v1/sync/tables/{id}` (list) and
+// `/v1/sync/tables/{id}/resources/{resource}` (POST override, DELETE reset). The row
+// keeps the /v1 wire's snake_case; the ecosystem picker's list comes from the
+// documented `/v1/ecosystems`, so that one is spec-typed.
 //
-// Every mutating call (PUT/DELETE) returns the FULL refreshed catalog, so the
-// hooks re-seed the query cache from `resp.tables` rather than hand-patching one
-// row — the server is the authority on effective/overridden state.
+// Every mutating call returns (or, for DELETE, is followed by a read of) the FULL
+// refreshed catalog, so the hooks re-seed the query cache from it rather than
+// hand-patching one row — the server is the authority on effective/overridden state.
 
 /** One catalog resource's enrollment for an ecosystem (hand-written — see above). */
 export interface EnrollmentRow {
   /** Dotted resource id, e.g. "content.feed", "persona_memory.links". */
   resource: string;
-  /** 'customer' | 'ecosystem' (SyncScope) — display only. */
+  /** 'owner' | 'author' | 'ecosystem' (SyncScope) — display only. */
   scope: string;
   /** 'generic' | 'route' — display only. */
-  pushMode: string;
+  push_mode: string;
   /** The code default this ecosystem inherits absent an override. */
-  defaultEnabled: boolean;
+  default_enabled: boolean;
   /** EFFECTIVE state (override ?? defaultEnabled) — this drives the toggle. */
   enabled: boolean;
   /** True when an explicit per-ecosystem override row exists (badge + reset). */
@@ -42,10 +41,10 @@ interface EnrollmentResponse {
   tables: EnrollmentRow[];
 }
 
-/** An ecosystem row from generic CRUD `GET /ecosystem/ecosystems` (spec-typed). */
-export type EcosystemSummary = SuccessBody<"/ecosystem/ecosystems", "get">[number];
+/** An ecosystem row from `GET /v1/ecosystems` (spec-typed). */
+export type EcosystemSummary = SuccessBody<"/v1/ecosystems", "get">["data"][number];
 
-const base = (ecoId: string) => `/api/admin/sync/tables/${encodeURIComponent(ecoId)}`;
+const base = (ecoId: string) => `/api/v1/sync/tables/${encodeURIComponent(ecoId)}`;
 
 // ── Network shaping (mirrors ecosystemFeatureFlagsApi) ───────────────────────
 //
@@ -54,26 +53,26 @@ const base = (ecoId: string) => `/api/admin/sync/tables/${encodeURIComponent(eco
 export const syncTablesApi = {
   /** The full enrollment catalog for one ecosystem. */
   async get(ecoId: string): Promise<EnrollmentRow[]> {
-    const { tables } = await authedJson<EnrollmentResponse>(base(ecoId));
-    return tables;
+    return listAllV1<EnrollmentRow>(base(ecoId));
   },
 
   /** Set (or flip) an explicit override for one resource; returns the refreshed catalog. */
   async setOverride(ecoId: string, resource: string, enabled: boolean): Promise<EnrollmentRow[]> {
     const { tables } = await authedJson<EnrollmentResponse>(
-      `${base(ecoId)}/${encodeURIComponent(resource)}`,
-      { method: "PUT", body: JSON.stringify({ enabled }) },
+      `${base(ecoId)}/resources/${encodeURIComponent(resource)}`,
+      { method: "POST", body: JSON.stringify({ enabled }) },
     );
     return tables;
   },
 
-  /** Clear a resource's override (revert to the code default); returns the refreshed catalog. */
+  /** Clear a resource's override (revert to the code default); returns the refreshed catalog.
+   *  /v1 answers DELETE with a `deleted` tombstone, not the catalog, so it is re-read. */
   async clearOverride(ecoId: string, resource: string): Promise<EnrollmentRow[]> {
-    const { tables } = await authedJson<EnrollmentResponse>(
-      `${base(ecoId)}/${encodeURIComponent(resource)}`,
+    await authedJson<unknown>(
+      `${base(ecoId)}/resources/${encodeURIComponent(resource)}`,
       { method: "DELETE" },
     );
-    return tables;
+    return syncTablesApi.get(ecoId);
   },
 };
 
@@ -96,15 +95,15 @@ export function schemaOf(row: EnrollmentRow): string {
 // ── Hooks (mirror admin.ts's flags hooks) ────────────────────────────────────
 
 /** Ecosystems for the picker — deleted ones dropped, sorted by name. Admin
- *  bypasses tenant scoping, so this generic-CRUD list returns every ecosystem
- *  (same pattern as useAdminUsers sourcing `/customer/customers`). */
+ *  bypasses tenant scoping, so this list returns every ecosystem
+ *  (same pattern as useAdminUsers sourcing `/v1/customers`). */
 export function useAdminEcosystems() {
   return useQuery({
     queryKey: ["admin", "ecosystems"],
     queryFn: async (): Promise<EcosystemSummary[]> => {
-      const rows = await authedJson<EcosystemSummary[]>("/api/ecosystem/ecosystems");
+      const rows = await listAllV1<EcosystemSummary>("/api/v1/ecosystems");
       return rows
-        .filter((e) => !e.isDeleted)
+        .filter((e) => !e.is_deleted)
         .sort((a, b) => a.name.localeCompare(b.name));
     },
   });

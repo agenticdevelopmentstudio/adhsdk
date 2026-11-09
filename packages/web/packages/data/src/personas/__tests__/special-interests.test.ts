@@ -12,8 +12,8 @@ beforeEach(() => {
   fetchMock.mockResolvedValue({
     ok: true,
     status: 200,
-    json: async () => [],
-    text: async () => "[]",
+    json: async () => ({ object: "list", data: [], has_more: false, url: "/v1/x" }),
+    text: async () => "{}",
   });
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -27,8 +27,8 @@ const initOf = () => fetchMock.mock.calls[0]![1] ?? {};
 describe("specialInterestsApi", () => {
   it("filters the list by persona", async () => {
     await specialInterestsApi.list("persona.acme.bitbag");
-    expect(urlOf()).toContain("/api/persona/special-interests");
-    expect(urlOf()).toContain("personaId=persona.acme.bitbag");
+    expect(urlOf()).toContain("/api/v1/special_interests");
+    expect(urlOf()).toContain("persona_id=persona.acme.bitbag");
   });
 
   it("posts the persona id in the create body", async () => {
@@ -40,8 +40,9 @@ describe("specialInterestsApi", () => {
       specific: "Battlestar Galactica",
       stances: "The Cylons are a libel.",
     });
+    expect(urlOf()).toBe("/api/v1/special_interests");
     expect(initOf().method).toBe("POST");
-    expect(JSON.parse(String(initOf().body)).personaId).toBe("persona.acme.bitbag");
+    expect(JSON.parse(String(initOf().body)).persona_id).toBe("persona.acme.bitbag");
   });
 
   it("never sends personaId or bucketId on an update", async () => {
@@ -53,8 +54,12 @@ describe("specialInterestsApi", () => {
     const body = JSON.parse(String(initOf().body));
     // The backend rejects a personaId change with a 400 and strips bucketId; sending either is a
     // client bug that surfaces as a confusing error, so the client drops them here.
+    expect(urlOf()).toBe("/api/v1/special_interests/i1");
+    expect(initOf().method).toBe("POST");
     expect(body).not.toHaveProperty("personaId");
+    expect(body).not.toHaveProperty("persona_id");
     expect(body).not.toHaveProperty("bucketId");
+    expect(body).not.toHaveProperty("bucket_id");
     expect(body.stances).toBe("Revised.");
   });
 
@@ -64,13 +69,19 @@ describe("specialInterestsApi", () => {
       ok: true,
       status: 200,
       json: async () => ({
+        object: "special_interest",
         id: "i2",
-        personaId: "persona.acme.bitbag",
+        persona_id: "persona.acme.bitbag",
         slug: "philosophy",
         general: "Philosophy",
         topical: null,
         specific: null,
         stances: null,
+        position: 0,
+        bucket_id: null,
+        is_deleted: false,
+        created: 1784937600,
+        updated: 1784937600,
       }),
       text: async () => "{}",
     });
@@ -89,6 +100,8 @@ describe("specialInterestsApi", () => {
     expect(body.specific).toBe(null);
     expect(result.topical).toBe(null);
     expect(result.specific).toBe(null);
+    expect(result.personaId).toBe("persona.acme.bitbag");
+    expect(result.createdAt).toBe("2026-07-25T00:00:00.000Z");
   });
 });
 
@@ -134,21 +147,23 @@ describe("interestDocumentsApi", () => {
       text: async () => JSON.stringify(body),
     });
 
+  const envelope = (data: unknown[]) => ({ object: "list", data, has_more: false, url: "/v1/data/t1" });
+
   it("names the acting persona on every call", async () => {
-    respondWith({ rows: [] });
+    respondWith(envelope([]));
     await interestDocumentsApi.list("b1", "t1", "p-uuid");
-    expect(urlOf()).toContain("/api/bucket/buckets/b1/types/t1/rows");
-    expect(urlOf()).toContain("asType=persona");
-    expect(urlOf()).toContain("asId=p-uuid");
+    expect(urlOf()).toContain("/api/v1/data/t1");
+    expect(urlOf()).toContain("bucket=b1");
+    expect(urlOf()).toContain("as_type=persona");
+    expect(urlOf()).toContain("as_id=p-uuid");
   });
 
-  // The list verb is the ONE on this plane that wraps: `return c.json({ rows })`
-  // (routes/bucketsData.ts). A client typed as `InterestDocumentRow[]` compiles, and the caller
+  // The list verb is the ONE on this plane that wraps (the /v1 list envelope, `{ data }`). A client typed as `InterestDocumentRow[]` compiles, and the caller
   // then does `docs.map(...)` on an object — a TypeError on every successful load, empty corpus
   // included. Nothing catches that unless a test crosses the real client against the real body,
   // so these two assert the RESOLVED VALUE, never just the URL.
-  it("unwraps the { rows } envelope the rows plane answers a list with", async () => {
-    respondWith({ rows: [WIRE_ROW] });
+  it("unwraps the /v1 list envelope the rows plane answers a list with", async () => {
+    respondWith(envelope([WIRE_ROW]));
     const docs = await interestDocumentsApi.list("b1", "t1", "p-uuid");
     expect(Array.isArray(docs)).toBe(true);
     expect(docs).toHaveLength(1);
@@ -157,9 +172,9 @@ describe("interestDocumentsApi", () => {
   });
 
   it("resolves an empty corpus to an empty ARRAY, not to the envelope", async () => {
-    // The first load an author ever does. `{rows: []}` and `[]` are both falsy-length-free, so a
+    // The first load an author ever does. `{data: []}` and `[]` are both falsy-length-free, so a
     // bare-array assumption survives every URL-only test and dies here.
-    respondWith({ rows: [] });
+    respondWith(envelope([]));
     await expect(interestDocumentsApi.list("b1", "t1", "p-uuid")).resolves.toEqual([]);
   });
 
@@ -170,10 +185,31 @@ describe("interestDocumentsApi", () => {
       content: "...",
     });
     expect(initOf().method).toBe("POST");
-    expect(urlOf()).toContain("asId=p-uuid");
-    expect(JSON.parse(String(initOf().body)).title).toBe("Cylon portrayal");
-    // POST answers `c.json(row, 201)` — a BARE row, no envelope. The asymmetry with list is the
+    expect(urlOf()).toContain("/api/v1/data/t1");
+    expect(urlOf()).toContain("as_id=p-uuid");
+    const sent = JSON.parse(String(initOf().body));
+    expect(sent.title).toBe("Cylon portrayal");
+    expect(sent.bucket).toBe("b1");
+    // POST answers a BARE row, no envelope. The asymmetry with list is the
     // whole trap, so pin both ends of it: unwrapping here would be just as wrong.
     expect(created.id).toBe("md-1");
+  });
+
+  it("updates by POST on the row path, bucket in the body", async () => {
+    respondWith(WIRE_ROW);
+    await interestDocumentsApi.update("b1", "t1", "p-uuid", "md-1", { title: "New" });
+    expect(initOf().method).toBe("POST");
+    expect(urlOf()).toContain("/api/v1/data/t1/md-1");
+    expect(urlOf()).toContain("as_type=persona");
+    expect(JSON.parse(String(initOf().body))).toEqual({ bucket: "b1", title: "New" });
+  });
+
+  it("deletes by DELETE on the row path, bucket in the query", async () => {
+    respondWith({ id: "md-1", object: "data", deleted: true });
+    await interestDocumentsApi.delete("b1", "t1", "p-uuid", "md-1");
+    expect(initOf().method).toBe("DELETE");
+    expect(urlOf()).toContain("/api/v1/data/t1/md-1");
+    expect(urlOf()).toContain("bucket=b1");
+    expect(urlOf()).toContain("as_id=p-uuid");
   });
 });

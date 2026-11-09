@@ -1,26 +1,42 @@
 #!/usr/bin/env python3
-"""Generate @adh-sdk/crud's src/generated/table-metadata.ts from the OpenAPI spec.
+"""Generate @adh-sdk/crud's src/generated/table-metadata.ts from adh's /v1 spec.
 
-The backend's generic CRUD subsystem exposes every non-excluded table at
-/<schema-kebab>/<table-kebab> (GET list / POST create) plus an item path
-(GET / PUT / DELETE). The dumped spec (frontend/websites/adh/api/openapi.json) carries
-the full JSON Schema for each table's rows and create body, so it is the single
-authoritative source for what the CRUD UI may edit — this script just projects
-it into a compact runtime module.
+The backend's generic CRUD subsystem serves every non-excluded table on the legacy
+surface at /<schema-kebab>/<table-kebab>, and the /v1 gateway republishes each one
+as a Stripe-style resource: a collection (GET list envelope / POST create) plus one
+item path (GET retrieve / POST update / DELETE tombstone), e.g. /team/teams becomes
+/v1/teams and /v1/teams/{id}. The /v1 spec (openapi.v1.json) carries the full JSON
+Schema for each resource's rows and bodies, in the snake_case the wire uses, so it is
+the authoritative source for what the CRUD UI may edit — this script just projects it
+into a compact runtime module.
 
-A table is recognised as generic CRUD only on the FULL signature — collection
-path with get+post AND exactly one all-path-param descendant with
-get+put+delete. Hand-written routes that share the URL shape (e.g.
-/persona/services, whose item path uses PATCH) don't match and are skipped.
+A /v1 route is recognised as a generic-CRUD table only on the FULL signature:
+  * the collection path has get+post, and exactly one all-path-param descendant has
+    get+post+delete;
+  * its operations replay (`x-adh-replaces`) the five legacy generic-CRUD operations
+    GET L, POST L, GET L/{..}, PUT L/{..}, DELETE L/{..} for one legacy base L of the
+    form /<schema>/<table> whose schema is allow-listed.
+The table's key/schema/table stay those of L, so feature routing (`team/teams`) is
+unchanged; basePath/itemPath are the /v1 paths the runtime calls.
 
-Deterministic output (sorted by table key) so reruns are diff-stable; CI's
-metadata drift test cross-checks the committed module against the spec.
+Exposure. The CRUD browser presents the tier (`owner` / `catalog` / `admin`) the
+backend documents as `x-exposure` on each legacy collection path. The /v1 spec does
+not forward that extension, so it is read from the /v1 collection when present and
+otherwise from the legacy `openapi.json` the /v1 routes replay onto — the second
+argument, `ADH_OPENAPI_LEGACY_SPEC`, or the `openapi.json` beside a local
+`openapi.v1.json` (both are committed side by side in adhbackend `src/adh/`). A table
+with no tier from either fails the run rather than defaulting.
+
+Deterministic output (sorted by table key) so reruns are diff-stable; CI's metadata
+drift test cross-checks the committed module against the spec.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -28,9 +44,8 @@ from _spec_input import resolve_spec
 from _stable_output import keeping_mtime_if_unchanged
 
 PACKAGE_DIR = Path(__file__).resolve().parents[1]
-#  This package now lives INSIDE adhsdk, so the package it writes into
-#  (@adh-sdk/crud, which owns the runtime half) is a sibling. No
-#  repo-crossing walk any more.
+#  This package lives INSIDE adhsdk, so the package it writes into
+#  (@adh-sdk/crud, which owns the runtime half) is a sibling.
 TOOLKIT_PACKAGES = PACKAGE_DIR.parent
 OUT_PATH = TOOLKIT_PACKAGES / "crud" / "src" / "generated" / "table-metadata.ts"
 
@@ -40,48 +55,45 @@ OUT_PATH = TOOLKIT_PACKAGES / "crud" / "src" / "generated" / "table-metadata.ts"
 # gate) so the two can never disagree — edit allowed-schemas.json, not a literal.
 ALLOWED_SCHEMAS = set(json.loads((PACKAGE_DIR / "allowed-schemas.json").read_text()))
 
-# Collection base paths whose URL shape matches the generic-CRUD signature
-# (get+post here, one item path with get+put+delete) but which are NOT generic
-# CRUD — they are hand-written routes the backend explicitly excludes from generic
-# CRUD (src/crud/policy.ts). content.markdown is append-only versioned storage
-# served by a tuned REST surface; projecting it as an editable table would let the
-# hub's generic editor corrupt its version history. Most hand-written routes
-# (e.g. /persona/services, item path uses PATCH) don't match the signature and
-# need no entry — list one here only when it would otherwise be a false positive.
+# Legacy bases whose operations match the generic-CRUD signature but which are NOT
+# generic CRUD — hand-written routes the backend excludes from generic CRUD
+# (src/crud/policy.ts).
 HAND_WRITTEN_BASES = {
+    # append-only versioned storage served by a tuned REST surface; projecting it as an
+    # editable table would let the hub's generic editor corrupt its version history.
     "/content/markdown",
     # discussion.topics / discussion.posts are hand-written (src/routes/discussion.ts):
     # a topic is born atomically WITH its opening post + a versioned markdown body doc,
     # replies compute a per-topic post_number, and edit/pin/lock/delete carry bespoke
-    # author/admin authorization. Projecting them as generic editable tables would let the
-    # hub's generic editor create orphans and bypass that authorization, so exclude both
-    # even though their URL shape now matches the CRUD signature (get+post + get/put/delete).
+    # author/admin authorization.
     "/discussion/topics",
     "/discussion/posts",
     # persona provider templates are hand-written (src/routes/providerTemplates.ts):
-    # public reads, an enveloped {items,total,...} list (not a bare array), a nested
-    # `models` set synced declaratively by PUT, and a /verify probe sub-route. Its URL
-    # shape matches the CRUD signature, but projecting it would emit a zero-column
-    # (the enveloped list hides the row schema) pseudo-table in the hub editor.
+    # public reads, a nested `models` set synced declaratively, and a /verify probe.
     "/persona/provider-templates",
 }
 
-BASE_PATH_RE = re.compile(r"^/([a-z-]+)/([a-z-]+)$")
+LEGACY_BASE_RE = re.compile(r"^/([a-z-]+)/([a-z-]+)$")
 PARAM_RE = re.compile(r"\{([a-zA-Z0-9_]+)\}")
 
-# The authorization tiers the backend documents on each CRUD collection path
-# (`x-exposure`, emitted by src/openapi/build.ts from the same TABLE_EXPOSURE map
-# the runtime gate reads). The browser presents the surface the viewer may
-# actually use instead of letting them discover it as a 403 — see
-# CrudDataBrowser/CrudDataView. NOT a security boundary: the server-side gate is.
+# The authorization tiers the backend documents on each CRUD collection (`x-exposure`,
+# emitted by src/openapi/build.ts from the TABLE_EXPOSURE map the runtime gate reads).
+# NOT a security boundary: the server-side gate is.
 EXPOSURE_TIERS = {"owner", "catalog", "admin"}
+
+# Keys every /v1 resource carries that are not table columns: `object` names the
+# resource type (a const), never a stored field.
+NON_COLUMN_KEYS = {"object"}
+
+LEGACY_ENV_VAR = "ADH_OPENAPI_LEGACY_SPEC"
 
 HEADER = """\
 // GENERATED by @adh-sdk/adh-api-types tools/gen_table_metadata.py — do not
-// edit by hand. Source: adh's frontend/websites/adh/api/openapi.json, which is NOT in
-// this repo — the spec is an explicit input, so regenerate with a path to an adh
+// edit by hand. Source: adh's /v1 spec, openapi.v1.json (plus the legacy openapi.json
+// beside it, for the x-exposure tiers /v1 does not forward), which is NOT in this
+// repo — the spec is an explicit input, so regenerate with a path to an adhbackend
 // checkout:
-//   pnpm --filter @adh-sdk/adh-api-types gen:crud-metadata -- <adh>/frontend/websites/adh/api/openapi.json
+//   pnpm --filter @adh-sdk/adh-api-types gen:crud-metadata -- <adhbackend>/src/adh/openapi.v1.json
 import type { CrudTableMeta } from '../types'
 
 export const CRUD_TABLES: Record<string, CrudTableMeta> = {
@@ -91,6 +103,8 @@ export const CRUD_TABLES: Record<string, CrudTableMeta> = {
 def json_schema_for(operation: dict[str, Any], *path: str) -> dict[str, Any]:
     node: Any = operation
     for key in path:
+        if not isinstance(node, dict):
+            return {}
         node = node.get(key)
         if node is None:
             return {}
@@ -119,51 +133,104 @@ def column_shape(prop: dict[str, Any]) -> tuple[str, bool, list[str] | None, int
     return ctype, nullable, enum, max_length
 
 
-def find_tables(paths: dict[str, Any]) -> list[dict[str, Any]]:
+def replaces(op: dict[str, Any]) -> list[tuple[str, str]]:
+    """The legacy (METHOD, path) pairs a /v1 operation replays onto."""
+    out = []
+    for entry in op.get("x-adh-replaces") or []:
+        method, _, path = str(entry).partition(" ")
+        out.append((method.upper(), path))
+    return out
+
+
+def legacy_base_for(paths: dict[str, Any], base: str, item_path: str) -> str | None:
+    """The one legacy /<schema>/<table> whose five generic-CRUD operations this /v1
+    collection + item replay, or None when the pair is not a generic-CRUD table."""
+    coll, item = paths[base], paths[item_path]
+    for method, legacy in replaces(coll["get"]):
+        if method != "GET" or not LEGACY_BASE_RE.match(legacy):
+            continue
+        item_re = re.compile(re.escape(legacy) + r"(/\{[a-zA-Z0-9_]+\})+$")
+
+        def hits(op: dict[str, Any], want: str, item_level: bool) -> bool:
+            for m, p in replaces(op):
+                if m == want and (item_re.match(p) if item_level else p == legacy):
+                    return True
+            return False
+
+        if (
+            hits(coll["post"], "POST", False)
+            and hits(item["get"], "GET", True)
+            and hits(item["post"], "PUT", True)
+            and hits(item["delete"], "DELETE", True)
+        ):
+            return legacy
+    return None
+
+
+def legacy_exposures(legacy_spec: dict[str, Any] | None) -> dict[str, Any]:
+    if legacy_spec is None:
+        return {}
+    return {
+        path: ops.get("x-exposure")
+        for path, ops in legacy_spec.get("paths", {}).items()
+        if isinstance(ops, dict) and ops.get("x-exposure") is not None
+    }
+
+
+def find_tables(paths: dict[str, Any], legacy_spec: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    exposures = legacy_exposures(legacy_spec)
     tables = []
     for base, ops in paths.items():
-        if base in HAND_WRITTEN_BASES:
-            continue
-        match = BASE_PATH_RE.match(base)
-        if not match or match.group(1) not in ALLOWED_SCHEMAS:
-            continue
-        if "get" not in ops or "post" not in ops:
+        if not base.startswith("/v1/") or "get" not in ops or "post" not in ops:
             continue
         item_re = re.compile(re.escape(base) + r"(/\{[a-zA-Z0-9_]+\})+$")
         items = [
             p
             for p, item_ops in paths.items()
-            if item_re.match(p) and {"get", "put", "delete"} <= set(item_ops)
+            if item_re.match(p) and {"get", "post", "delete"} <= set(item_ops)
         ]
         if len(items) != 1:
             continue
-        schema, table = match.groups()
         item_path = items[0]
+        legacy = legacy_base_for(paths, base, item_path)
+        if legacy is None or legacy in HAND_WRITTEN_BASES:
+            continue
+        schema, table = LEGACY_BASE_RE.match(legacy).groups()  # type: ignore[union-attr]
+        if schema not in ALLOWED_SCHEMAS:
+            continue
 
         # Fail loudly rather than defaulting: a missing tier means the backend added a
         # CRUD table without classifying it, and guessing 'owner' would ship an
         # admin-only table to every viewer as freely browsable.
-        exposure = ops.get("x-exposure")
+        exposure = ops.get("x-exposure", exposures.get(legacy))
         if exposure not in EXPOSURE_TIERS:
             raise SystemExit(
-                f"{schema}/{table}: x-exposure is {exposure!r}, expected one of "
-                f"{sorted(EXPOSURE_TIERS)} — classify the table in TABLE_EXPOSURE "
-                "(backend src/crud/policy.ts) and rerun `pnpm openapi:dump`"
+                f"{schema}/{table}: x-exposure is {exposure!r} on {base} and on the legacy "
+                f"{legacy}, expected one of {sorted(EXPOSURE_TIERS)}. Pass the legacy "
+                f"openapi.json (second argument or {LEGACY_ENV_VAR}), or classify the "
+                "table in TABLE_EXPOSURE (backend src/crud/policy.ts) and rerun "
+                "`pnpm openapi:dump`"
             )
 
         row_schema = json_schema_for(
-            paths[base]["get"], "responses", "200", "content", "application/json", "schema", "items"
+            ops["get"], "responses", "200", "content", "application/json", "schema",
+            "properties", "data", "items",
         )
         create_schema = json_schema_for(
-            paths[base]["post"], "requestBody", "content", "application/json", "schema"
+            ops["post"], "requestBody", "content", "application/json", "schema"
         )
         update_schema = json_schema_for(
-            paths[item_path]["put"], "requestBody", "content", "application/json", "schema"
+            paths[item_path]["post"], "requestBody", "content", "application/json", "schema"
         )
         row_props: dict[str, Any] = row_schema.get("properties", {})
         create_props: dict[str, Any] = create_schema.get("properties", {})
         update_props: dict[str, Any] = update_schema.get("properties", {})
         required = set(create_schema.get("required", []))
+        if not row_props:
+            raise SystemExit(
+                f"{schema}/{table}: GET {base} documents no row schema under "
+                "data.items — the list envelope layout changed?"
+            )
 
         # CrudColumn can express create-only (createOnly) but not edit-only —
         # fail loudly rather than emit metadata that misdescribes the table.
@@ -176,8 +243,10 @@ def find_tables(paths: dict[str, Any]) -> list[dict[str, Any]]:
 
         columns = []
         for name, prop in row_props.items():
+            if name in NON_COLUMN_KEYS:
+                continue
             # A field the list route adds in one mode only (the ecosystem list's workspace-mode
-            # `canManage`) is not a column: the backend marks it `x-list-annotation`
+            # `can_manage`) is not a column: the backend marks it `x-list-annotation`
             # (src/openapi/build.ts DERIVED_READ_FIELDS), and it is absent from every other
             # response. Projecting it would give the CRUD browser a column no table holds.
             if prop.get("x-list-annotation") is True:
@@ -197,7 +266,7 @@ def find_tables(paths: dict[str, Any]) -> list[dict[str, Any]]:
             if max_length is not None:
                 column["maxLength"] = max_length
             # In the create body but stripped (silently) from the update body:
-            # the backend's zod drops it from PUT — client-supplied rdids.
+            # the backend's zod drops it from the update — client-supplied rdids.
             if name in create_props and name not in update_props:
                 column["createOnly"] = True
             columns.append(column)
@@ -215,6 +284,22 @@ def find_tables(paths: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     return sorted(tables, key=lambda t: t["key"])
+
+
+def resolve_legacy_spec(v1_spec: Path, argv: list[str] | None = None) -> Path | None:
+    """The legacy openapi.json that carries `x-exposure`: the second argument, then
+    ADH_OPENAPI_LEGACY_SPEC, then the openapi.json committed beside openapi.v1.json."""
+    args = sys.argv[1:] if argv is None else argv
+    if args and args[0] == "--":
+        args = args[1:]
+    raw = args[1] if len(args) > 1 else os.environ.get(LEGACY_ENV_VAR)
+    if raw:
+        legacy = Path(raw).expanduser().resolve()
+        if not legacy.is_file():
+            raise SystemExit(f"legacy spec not found: {legacy}")
+        return legacy
+    beside = v1_spec.with_name("openapi.json")
+    return beside if beside.is_file() and beside != v1_spec else None
 
 
 def emit_table(table: dict[str, Any]) -> str:
@@ -236,8 +321,11 @@ def emit_table(table: dict[str, Any]) -> str:
 
 
 def main() -> None:
-    spec = json.loads(resolve_spec().read_text(encoding="utf-8"))
-    tables = find_tables(spec["paths"])
+    spec_path = resolve_spec()
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    legacy_path = resolve_legacy_spec(spec_path)
+    legacy = json.loads(legacy_path.read_text(encoding="utf-8")) if legacy_path else None
+    tables = find_tables(spec["paths"], legacy)
     if not tables:
         raise SystemExit("no generic CRUD tables found — spec layout changed?")
     body = "\n".join(emit_table(t) for t in tables)

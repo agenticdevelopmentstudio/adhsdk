@@ -8,6 +8,7 @@ vi.mock("../../http", async (orig) => ({
 
 import { authedJson } from "../../http";
 import { schemasApi } from "../schemas";
+import { fetchMock, installFetch, paramsAt, pathAt, respondWith, v1List } from "../../__tests__/v1-fetch";
 
 // "buckets need unique slugs and rdids" (Mike, 2026-09-24): a bucket's slug is its rdid leaf, so
 // the client sends it, and a slug edit MOVES the bucket's id — everything after the PUT has to
@@ -16,16 +17,20 @@ import { schemasApi } from "../schemas";
 const json = vi.mocked(authedJson);
 const ROW = {
   id: "storage.acme.crm",
-  ecosystemId: "eco-uuid",
+  object: "bucket",
+  ecosystem_id: "eco-uuid",
   name: "Customer CRM",
   slug: "crm",
   kind: "custom",
-  metadata: { description: "" },
-  createdAt: "2026-01-01T00:00:00Z",
-  updatedAt: "2026-01-01T00:00:00Z",
+  description: "",
+  created: 1767225600,
+  updated: 1767225600,
 };
 
-beforeEach(() => json.mockReset());
+beforeEach(() => {
+  json.mockReset();
+  installFetch();
+});
 
 describe("schemasApi — bucket slugs", () => {
   it("create sends the slug and maps it back", async () => {
@@ -42,13 +47,16 @@ describe("schemasApi — bucket slugs", () => {
   });
 
   it("a slug edit re-reads the tables under the NEW id", async () => {
-    json
-      .mockResolvedValueOnce({ ...ROW, id: "storage.acme.customers", slug: "customers" })
-      .mockResolvedValueOnce([]);
+    json.mockResolvedValueOnce({ ...ROW, id: "storage.acme.customers", slug: "customers" });
+    respondWith(v1List([]));
     const saved = await schemasApi.update("storage.acme.crm", { slug: "customers" });
-    expect(json.mock.calls[0]![0]).toBe("/api/bucket/buckets/storage.acme.crm");
+    expect(json.mock.calls[0]![0]).toBe("/api/v1/buckets/storage.acme.crm");
     expect(JSON.parse(json.mock.calls[0]![1]!.body as string)).toEqual({ slug: "customers" });
-    expect(json.mock.calls[1]![0]).toBe("/api/bucket/bucket-types?bucketId=storage.acme.customers");
+    // The tables are re-read off the bucket_types collection (no bucket filter on /v1; the
+    // client narrows to the NEW id).
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(pathAt(0)).toBe("/api/v1/bucket_types");
+    expect(paramsAt(0).get("bucket_id")).toBeNull();
     expect(saved.id).toBe("storage.acme.customers");
   });
 

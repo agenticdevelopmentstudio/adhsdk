@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // The auth-aware fetchers are the seam every data module goes through, so mock those rather
 // than global fetch — that is what the module actually depends on.
 const authedJson = vi.fn();
-const authedRequest = vi.fn();
-vi.mock("../http", () => ({ authedJson, authedRequest }));
+vi.mock("../http", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../http")>()),
+  authedJson,
+}));
 
 const { workspacePrefsApi, readCachedWorkspace, writeCachedWorkspace } = await import(
   "../workspace-prefs"
@@ -13,31 +15,34 @@ const { workspacePrefsApi, readCachedWorkspace, writeCachedWorkspace } = await i
 beforeEach(() => {
   localStorage.clear();
   authedJson.mockReset();
-  authedRequest.mockReset();
-  authedRequest.mockResolvedValue(new Response(null, { status: 200 }));
+  authedJson.mockResolvedValue({});
 });
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe("workspacePrefsApi", () => {
-  it("get() unwraps the { prefs } envelope", async () => {
-    authedJson.mockResolvedValue({ prefs: { slug: "acme" } });
+  it("get() reads the workspace_prefs include of /v1/account and unwraps { prefs }", async () => {
+    authedJson.mockResolvedValue({ object: "account", workspace_prefs: { prefs: { slug: "acme" } } });
     await expect(workspacePrefsApi.get()).resolves.toEqual({ slug: "acme" });
-    expect(authedJson).toHaveBeenCalledWith("/api/me/workspace-prefs");
+    expect(authedJson).toHaveBeenCalledWith("/api/v1/account?include%5B%5D=workspace_prefs");
   });
 
   it("get() returns {} for a user who has never chosen (never a 404 to handle)", async () => {
-    authedJson.mockResolvedValue({ prefs: {} });
+    authedJson.mockResolvedValue({ workspace_prefs: { prefs: {} } });
     await expect(workspacePrefsApi.get()).resolves.toEqual({});
   });
 
-  it("put() PUTs the whole shape as JSON", async () => {
+  it("get() returns {} when the account answers without the include", async () => {
+    authedJson.mockResolvedValue({ object: "account" });
+    await expect(workspacePrefsApi.get()).resolves.toEqual({});
+  });
+
+  it("put() POSTs the whole shape under workspace_prefs", async () => {
     await workspacePrefsApi.put({ slug: "globex" });
-    expect(authedRequest).toHaveBeenCalledWith("/api/me/workspace-prefs", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: "globex" }),
+    expect(authedJson).toHaveBeenCalledWith("/api/v1/account", {
+      method: "POST",
+      body: JSON.stringify({ workspace_prefs: { slug: "globex" } }),
     });
   });
 });

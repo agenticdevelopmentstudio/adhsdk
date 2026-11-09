@@ -39,25 +39,25 @@ export function RunRateHeader({
   error?: unknown;
   onShowUnpriced: () => void;
 }) {
-  const unpriced = runRate?.unpricedItems ?? 0;
+  const unpriced = runRate?.unpriced_items ?? 0;
   // Unpriced items add nothing to the direct figures, so with any of them the figure is a floor
   // and says so (same `≥` as the items table). A month whose direct cost is all unpriced has no
   // figure at all: it reads "Unpriced", never "≥ $0.00". Its projection is still the fixed
   // part, a floor — unless there is no fixed cost either, when it too reads "Unpriced".
-  const allUnpriced = runRate?.directToDateMicros === null;
+  const allUnpriced = runRate?.direct_to_date_micros === null;
   const monthToDate =
     runRate === undefined
       ? "—"
-      : runRate.directToDateMicros === null
+      : runRate.direct_to_date_micros === null
         ? "Unpriced"
-        : formatMicrosFloor(runRate.directToDateMicros, unpriced > 0);
+        : formatMicrosFloor(runRate.direct_to_date_micros, unpriced > 0);
   const projected =
     runRate === undefined
       ? "—"
-      : allUnpriced && runRate.projectedMonthMicros === 0
+      : allUnpriced && runRate.projected_month_micros === 0
         ? "Unpriced"
-        : formatMicrosFloor(runRate.projectedMonthMicros, unpriced > 0);
-  const fixed = runRate === undefined ? "—" : formatMicros(runRate.fixedMonthMicros);
+        : formatMicrosFloor(runRate.projected_month_micros, unpriced > 0);
+  const fixed = runRate === undefined ? "—" : formatMicros(runRate.fixed_month_micros);
   return (
     <section
       aria-label="Run rate"
@@ -83,7 +83,7 @@ export function RunRateHeader({
         <Stat
           label="Month to date"
           value={monthToDate}
-          title={runRate ? `Direct cost over ${runRate.elapsedDays} complete days` : undefined}
+          title={runRate ? `Direct cost over ${runRate.elapsed_days} complete days` : undefined}
         />
         <Stat
           label="Projected month end"

@@ -71,7 +71,7 @@ export function useViewerPrincipal(
       // assumption fetchPublicPrincipal makes on the server. The two bodies are differently
       // shaped, so each branch goes through its own normalizer rather than a bare spread.
       try {
-        const dto = await authedJson<UserCardBody>(`/api/users/${encoded}`)
+        const dto = await authedJson<UserCardBody>(`/api/v1/users?handle=${encoded}`)
         if (live) {
           setWider(principalFromUserCard(dto))
           setPending(false)
@@ -89,7 +89,7 @@ export function useViewerPrincipal(
         }
       }
       try {
-        const dto = await authedJson<OrgCardBody>(`/api/orgs/${encoded}`)
+        const dto = await authedJson<OrgCardBody>(`/api/v1/organizations?slug=${encoded}`)
         if (live) {
           setWider(principalFromOrgCard(dto))
           setPending(false)

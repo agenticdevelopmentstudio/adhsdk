@@ -2,13 +2,13 @@
 
 import { startAuthentication, type PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser'
 import { responseError } from './client'
-import type { BackendTokenFields } from './tokens'
-import type { AuthUser } from './types'
+import { sessionFromV1, type BackendAuthResponse, type BackendTokenFields } from './tokens'
+import type { V1User } from './types'
 
 /** A second factor a user can satisfy at login. `webauthn` is a ceremony, not a code. */
 export type MfaMethod = 'sms' | 'totp' | 'recovery' | 'webauthn'
 
-/** The non-session result of /auth/login when the account has an enrolled factor:
+/** The non-session result of /v1/auth/sessions (202) when the account has an enrolled factor:
  *  a short-lived pending token + the methods the user may satisfy. The bearer of
  *  the token can only ATTEMPT a factor — it is not itself a session. */
 export interface MfaChallenge {
@@ -20,7 +20,11 @@ export interface MfaChallenge {
 /** The methods that are completed by typing a code (vs. the WebAuthn ceremony). */
 export type MfaCodeMethod = Extract<MfaMethod, 'sms' | 'totp' | 'recovery'>
 
-type BackendAuthResponse = BackendTokenFields & { user: AuthUser }
+const SESSIONS_URL = '/api/v1/auth/sessions'
+
+async function readSession(res: Response): Promise<BackendAuthResponse> {
+  return sessionFromV1((await res.json()) as BackendTokenFields & { user: V1User })
+}
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
 
@@ -32,9 +36,9 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' }
  * backend routes/oauthRedirect.ts). Naming them once keeps the two callers from
  * drifting on a path that only fails at runtime.
  */
-export const LOGIN_SMS_PATH = '/auth/login/mfa/sms/send'
-export const MFA_WEBAUTHN_OPTIONS_PATH = '/auth/login/mfa/webauthn/options'
-export const PASSKEY_OPTIONS_PATH = '/auth/login/webauthn/options'
+export const LOGIN_SMS_PATH = '/v1/auth/sms_codes'
+export const MFA_WEBAUTHN_OPTIONS_PATH = '/v1/auth/passkey_challenges'
+export const PASSKEY_OPTIONS_PATH = '/v1/auth/passkey_challenges'
 
 /** A finished WebAuthn ceremony: the opaque assertion, plus the pending token the
  *  options step re-signed for it. Exactly what a verify route consumes — the site's
@@ -78,7 +82,7 @@ export function assertSecondFactor(
   token: string,
   optionsUrl: string,
 ): Promise<WebauthnAssertion> {
-  return runAssertion(optionsUrl, { token }, 'Could not start the passkey check.')
+  return runAssertion(optionsUrl, { method: 'mfa_passkey', token }, 'Could not start the passkey check.')
 }
 
 /** Run the PASSWORDLESS assertion for an account named by identifier (no password
@@ -87,7 +91,7 @@ export function assertPasswordlessPasskey(
   identifier: string,
   optionsUrl: string,
 ): Promise<WebauthnAssertion> {
-  return runAssertion(optionsUrl, { identifier }, 'No passkey is available for this account.')
+  return runAssertion(optionsUrl, { method: 'passkey', identifier }, 'No passkey is available for this account.')
 }
 
 /** Push an SMS login code to the challenged account's verified primary phone. */
@@ -106,37 +110,37 @@ export async function completeLoginCode(
   method: MfaCodeMethod,
   code: string,
 ): Promise<BackendAuthResponse> {
-  const res = await fetch('/api/auth/login/mfa', {
+  const res = await fetch(SESSIONS_URL, {
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify({ token, method, code }),
   })
   if (!res.ok) throw await responseError(res, 'That code didn’t match.')
-  return (await res.json()) as BackendAuthResponse
+  return readSession(res)
 }
 
 /** Complete the second factor with a passkey / security key: run the assertion
  *  ceremony bound to the pending token, then verify it for THIS site's session. */
 export async function completeLoginPasskey(token: string): Promise<BackendAuthResponse> {
   const assertion = await assertSecondFactor(token, `/api${MFA_WEBAUTHN_OPTIONS_PATH}`)
-  const res = await fetch('/api/auth/login/mfa/webauthn', {
+  const res = await fetch(SESSIONS_URL, {
     method: 'POST',
     headers: JSON_HEADERS,
-    body: JSON.stringify(assertion),
+    body: JSON.stringify({ method: 'mfa_passkey', ...assertion }),
   })
   if (!res.ok) throw await responseError(res, 'Passkey verification failed.')
-  return (await res.json()) as BackendAuthResponse
+  return readSession(res)
 }
 
 /** Passwordless passkey login: no password step. Resolve the account by identifier,
  *  run the assertion ceremony, and mint an aal=2 session if the passkey verifies. */
 export async function passwordlessPasskeyLogin(identifier: string): Promise<BackendAuthResponse> {
   const assertion = await assertPasswordlessPasskey(identifier, `/api${PASSKEY_OPTIONS_PATH}`)
-  const res = await fetch('/api/auth/login/webauthn', {
+  const res = await fetch(SESSIONS_URL, {
     method: 'POST',
     headers: JSON_HEADERS,
-    body: JSON.stringify(assertion),
+    body: JSON.stringify({ method: 'passkey', ...assertion }),
   })
   if (!res.ok) throw await responseError(res, 'Passkey login failed.')
-  return (await res.json()) as BackendAuthResponse
+  return readSession(res)
 }

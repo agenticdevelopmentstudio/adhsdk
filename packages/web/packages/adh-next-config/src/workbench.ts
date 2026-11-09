@@ -33,7 +33,7 @@ export type WorkbenchNextConfigOptions = {
  *
  * What they got from `withAdhConfig` and keep: the security-header baseline, the theme
  * font materialization, `devIndicators: false`, the `staleTimes` router-cache default, the
- * `/api/system/*` BFF proxy the shared chrome's feature-flag gate needs, the three build
+ * `/api/v1/feature_flags` BFF proxy the shared chrome's feature-flag gate needs, the three build
  * identity `env` constants, and the workspace-root pin.
  *
  * What they do NOT get, each for a reason:
@@ -49,7 +49,7 @@ export type WorkbenchNextConfigOptions = {
  *   would be the first step toward it being read as fleet coverage, which it is not.)
  * - **No wholesale `/api/:path*` proxy.** That is a site's BFF, wired to a real backend;
  *   `withAdhConfig` never gave the workbenches one and `mergedRewrites`' narrow
- *   `/api/system/*` baseline is what they actually had.
+ *   `/api/v1/feature_flags` baseline is what they actually had.
  */
 export function workbenchNextConfig(options: WorkbenchNextConfigOptions): NextConfig {
   const dir = process.cwd();
@@ -69,10 +69,10 @@ export function workbenchNextConfig(options: WorkbenchNextConfigOptions): NextCo
     },
     headers: mergeHeaders({}),
     async rewrites() {
-      // The shared chrome in `@adh-sdk/adh` reads `/system/feature-flags` from
+      // The shared chrome in `@adh-sdk/adh` reads `/v1/feature_flags` from
       // whatever mounts it, the workbenches included — `mergedRewrites`
       // (`next-config-base.mjs:164`) declared this once for every app for that reason.
-      return [{ source: "/api/system/:path*", destination: `${backendUrl}/system/:path*` }];
+      return [{ source: "/api/v1/feature_flags", destination: `${backendUrl}/v1/feature_flags` }];
     },
     experimental: {
       ...options.experimental,

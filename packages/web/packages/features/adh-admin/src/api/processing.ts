@@ -7,31 +7,31 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { authedJson, authedRequest } from "./http";
+import { authedJson, authedRequest, listAllV1 } from "./http";
 
 // ── AI processing: config sets, nodes, logs, retention ──────────────────────
 //
-// Admin-gated reads and writes over `/processing/admin/*`. Plain functions at the `authedJson`
+// Admin-gated reads and writes over `/v1/processing/*`. Plain functions at the `authedJson`
 // boundary plus a key factory; the panes wrap them in react-query. Types are spec-derived so a
 // backend change fails this file's tsc. No LLM key appears anywhere here: a node receives the
 // provider key with each claimed job. The one secret this file handles is a worker token's raw value,
 // which the backend returns once, on create, and never again.
 
 export type ConfigSet = components["schemas"]["AiProcessingConfigSet"];
-export type ConfigSetInput = RequestBody<"/processing/admin/config-sets", "post">;
+export type ConfigSetInput = RequestBody<"/v1/processing/config_sets", "post">;
 export type ConfigSetParams = components["schemas"]["AiProcessingConfigSetParams"];
 export type ProcessingNode = components["schemas"]["AiProcessingNode"];
 export type NodeLog = components["schemas"]["AiProcessingNodeLog"];
 export type NodeLogPage = components["schemas"]["AiProcessingNodeLogPage"];
 export type LogLevel = NodeLog["level"];
 export type ProcessingSettings = components["schemas"]["AiProcessingSettings"];
-export type ConfigSetList = SuccessBody<"/processing/admin/config-sets", "get">;
-export type NodeList = SuccessBody<"/processing/admin/nodes", "get">;
+export type ConfigSetList = ConfigSet[];
+export type NodeList = ProcessingNode[];
 export type WorkerToken = components["schemas"]["AiProcessingWorkerToken"];
 export type WorkerTokenInput = components["schemas"]["AiProcessingWorkerTokenInput"];
-export type WorkerTokenList = SuccessBody<"/processing/admin/worker-tokens", "get">;
+export type WorkerTokenList = WorkerToken[];
 /** The create response: the listed token plus its raw value, shown this once. */
-export type CreatedWorkerToken = SuccessBody<"/processing/admin/worker-tokens", "post", 201>;
+export type CreatedWorkerToken = SuccessBody<"/v1/processing/worker_tokens", "post", 201>;
 
 export interface NodeLogQuery {
   level?: LogLevel;
@@ -52,26 +52,25 @@ export const processingKeys = {
   workerTokens: () => [...PROCESSING_ADMIN_KEY, "worker-tokens"] as const,
 };
 
-const BASE = "/api/processing/admin";
+const BASE = "/api/v1/processing";
 const send = (method: string, body?: unknown): RequestInit => ({
   method,
   ...(body === undefined ? {} : { body: JSON.stringify(body) }),
 });
 
-export const listConfigSets = () => authedJson<ConfigSetList>(`${BASE}/config-sets`);
+export const listConfigSets = () => listAllV1<ConfigSet>(`${BASE}/config_sets`);
 export const createConfigSet = (input: ConfigSetInput) =>
-  authedJson<ConfigSet>(`${BASE}/config-sets`, send("POST", input));
+  authedJson<ConfigSet>(`${BASE}/config_sets`, send("POST", input));
 export const updateConfigSet = (id: string, input: ConfigSetInput) =>
-  authedJson<ConfigSet>(`${BASE}/config-sets/${encodeURIComponent(id)}`, send("PUT", input));
-// The deletes answer 204 No Content, which `authedJson` rejects as an empty body.
+  authedJson<ConfigSet>(`${BASE}/config_sets/${encodeURIComponent(id)}`, send("POST", input));
 export const deleteConfigSet = (id: string) =>
-  authedRequest(`${BASE}/config-sets/${encodeURIComponent(id)}`, send("DELETE"));
+  authedRequest(`${BASE}/config_sets/${encodeURIComponent(id)}`, send("DELETE"));
 export const setDefaultConfigSet = (id: string) =>
-  authedJson<ConfigSet>(`${BASE}/config-sets/${encodeURIComponent(id)}/default`, send("POST"));
+  authedJson<ConfigSet>(`${BASE}/config_sets/${encodeURIComponent(id)}/make_default`, send("POST"));
 export const clearDefaultConfigSet = () =>
-  authedRequest(`${BASE}/config-sets/default`, send("DELETE"));
+  authedRequest(`${BASE}/config_sets/default`, send("DELETE"));
 
-export const listNodes = () => authedJson<NodeList>(`${BASE}/nodes`);
+export const listNodes = () => listAllV1<ProcessingNode>(`${BASE}/nodes`);
 export const getNode = (id: string) =>
   authedJson<ProcessingNode>(`${BASE}/nodes/${encodeURIComponent(id)}`);
 export const deleteNode = (id: string) =>
@@ -90,13 +89,13 @@ export function listNodeLogs(nodeId: string, query: NodeLogQuery = {}) {
 
 export const getProcessingSettings = () => authedJson<ProcessingSettings>(`${BASE}/settings`);
 export const putProcessingSettings = (settings: ProcessingSettings) =>
-  authedJson<ProcessingSettings>(`${BASE}/settings`, send("PUT", settings));
+  authedJson<ProcessingSettings>(`${BASE}/settings`, send("POST", settings));
 
-export const listWorkerTokens = () => authedJson<WorkerTokenList>(`${BASE}/worker-tokens`);
+export const listWorkerTokens = () => listAllV1<WorkerToken>(`${BASE}/worker_tokens`);
 export const createWorkerToken = (input: WorkerTokenInput) =>
-  authedJson<CreatedWorkerToken>(`${BASE}/worker-tokens`, send("POST", input));
+  authedJson<CreatedWorkerToken>(`${BASE}/worker_tokens`, send("POST", input));
 export const revokeWorkerToken = (id: string) =>
-  authedRequest(`${BASE}/worker-tokens/${encodeURIComponent(id)}`, send("DELETE"));
+  authedRequest(`${BASE}/worker_tokens/${encodeURIComponent(id)}`, send("DELETE"));
 
 // ── react-query hooks ───────────────────────────────────────────────────────
 
@@ -104,7 +103,6 @@ export const useConfigSets = () =>
   useQuery({
     queryKey: processingKeys.configSets(),
     queryFn: listConfigSets,
-    select: (body) => body.configSets,
   });
 
 /** Create (no `id`) or update (with `id`) one config set. */
@@ -146,7 +144,6 @@ export const useNodes = () =>
   useQuery({
     queryKey: processingKeys.nodes(),
     queryFn: listNodes,
-    select: (body) => body.nodes,
     refetchInterval: 30_000,
   });
 
@@ -159,7 +156,7 @@ export const useNodeLogs = (nodeId: string, level?: LogLevel) =>
     queryFn: ({ pageParam }) =>
       listNodeLogs(nodeId, { level, before: pageParam, limit: NODE_LOG_PAGE_SIZE }),
     initialPageParam: undefined as number | undefined,
-    getNextPageParam: (page) => page.nextBefore ?? undefined,
+    getNextPageParam: (page) => page.next_before ?? undefined,
   });
 
 export function useDeleteNode() {
@@ -185,7 +182,6 @@ export const useWorkerTokens = () =>
   useQuery({
     queryKey: processingKeys.workerTokens(),
     queryFn: listWorkerTokens,
-    select: (body) => body.workerTokens,
   });
 
 export function useCreateWorkerToken() {

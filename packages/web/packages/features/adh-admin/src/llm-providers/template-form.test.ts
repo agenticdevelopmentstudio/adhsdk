@@ -33,16 +33,16 @@ const baseForm = (o: Partial<TemplateFormState> = {}): TemplateFormState => ({
 
 const templateFixture = (o: Partial<ProviderTemplate> = {}): ProviderTemplate => ({
   id: "tpl_1",
-  providerKind: "openai",
+  provider_kind: "openai",
   name: "OpenAI",
-  baseUrl: "https://api.openai.com/v1",
-  documentationUrl: null,
-  statusUrl: null,
-  connectionSpec: null,
-  availableVia: null,
+  base_url: "https://api.openai.com/v1",
+  documentation_url: null,
+  status_url: null,
+  connection_spec: null,
+  available_via: null,
   modalities: ["chat", "image"],
-  createdAt: "2026-07-01T00:00:00Z",
-  updatedAt: "2026-07-01T00:00:00Z",
+  created: 1782864000,
+  updated: 1782864000,
   models: [],
   ...o,
 });
@@ -58,8 +58,8 @@ describe("buildTemplateBody: syncKeys gating (the round-trip data-loss guard)", 
       syncKeysLoaded: false,
     });
     // undefined in-memory, and absent after JSON serialization (PUT: untouched).
-    expect(body.syncKeys).toBeUndefined();
-    expect("syncKeys" in wireBody(body)).toBe(false);
+    expect(body.sync_keys).toBeUndefined();
+    expect("sync_keys" in wireBody(body)).toBe(false);
   });
 
   it("sends syncKeys in edit mode once the mapping has loaded", () => {
@@ -67,13 +67,13 @@ describe("buildTemplateBody: syncKeys gating (the round-trip data-loss guard)", 
       editing: true,
       syncKeysLoaded: true,
     });
-    expect(wireBody(body).syncKeys).toEqual({ modelsDev: "openai" });
+    expect(wireBody(body).sync_keys).toEqual({ models_dev: "openai" });
   });
 
   it("sends an explicit null to CLEAR once loaded and all keys are blank", () => {
     const body = buildTemplateBody(baseForm(), { editing: true, syncKeysLoaded: true });
-    expect(body.syncKeys).toBeNull();
-    expect(wireBody(body).syncKeys).toBeNull();
+    expect(body.sync_keys).toBeNull();
+    expect(wireBody(body).sync_keys).toBeNull();
   });
 
   it("always includes syncKeys on create (nothing stored to clobber)", () => {
@@ -81,10 +81,10 @@ describe("buildTemplateBody: syncKeys gating (the round-trip data-loss guard)", 
       editing: false,
       syncKeysLoaded: false,
     });
-    expect(wireBody(withVal).syncKeys).toEqual({ arenaVendor: "OpenAI" });
+    expect(wireBody(withVal).sync_keys).toEqual({ arena_vendor: "OpenAI" });
 
     const empty = buildTemplateBody(baseForm(), { editing: false, syncKeysLoaded: false });
-    expect(wireBody(empty).syncKeys).toBeNull();
+    expect(wireBody(empty).sync_keys).toBeNull();
   });
 
   it("trims sync-key values and drops whitespace-only ones", () => {
@@ -92,7 +92,7 @@ describe("buildTemplateBody: syncKeys gating (the round-trip data-loss guard)", 
       baseForm({ syncModelsDev: "  openai  ", syncOpenrouter: "   " }),
       { editing: true, syncKeysLoaded: true },
     );
-    expect(wireBody(body).syncKeys).toEqual({ modelsDev: "openai" });
+    expect(wireBody(body).sync_keys).toEqual({ models_dev: "openai" });
   });
 
   it("nulls syncKeys when every value is blank/whitespace (loaded)", () => {
@@ -100,7 +100,7 @@ describe("buildTemplateBody: syncKeys gating (the round-trip data-loss guard)", 
       editing: true,
       syncKeysLoaded: true,
     });
-    expect(body.syncKeys).toBeNull();
+    expect(body.sync_keys).toBeNull();
   });
 });
 
@@ -112,30 +112,30 @@ describe("sync-key (re)load: a refreshed mapping must replace a stale cached one
   // would write it straight back, reverting the operator's edit.
   it("applies a later, DIFFERENT fetch so the next save sends the new keys", () => {
     const template = templateFixture();
-    let form = stateFromTemplate(template, { modelsDev: "old" });
+    let form = stateFromTemplate(template, { models_dev: "old" });
     // Arrival 1: the stale cached mapping.
-    form = applySyncKeys(form, { modelsDev: "old" });
+    form = applySyncKeys(form, { models_dev: "old" });
     // Arrival 2: the refetch, carrying what was just saved.
-    form = applySyncKeys(form, { modelsDev: "new" });
+    form = applySyncKeys(form, { models_dev: "new" });
 
     expect(form.syncModelsDev).toBe("new");
     const body = buildTemplateBody(form, { editing: true, syncKeysLoaded: true });
-    expect(wireBody(body).syncKeys).toEqual({ modelsDev: "new" });
+    expect(wireBody(body).sync_keys).toEqual({ models_dev: "new" });
   });
 
   it("signals 'apply' only when the mapping actually changed", () => {
     // Different mapping ⇒ different signature ⇒ the dialog re-applies (re-arms).
-    expect(syncKeysSignature({ modelsDev: "old" })).not.toBe(
-      syncKeysSignature({ modelsDev: "new" }),
+    expect(syncKeysSignature({ models_dev: "old" })).not.toBe(
+      syncKeysSignature({ models_dev: "new" }),
     );
     // Same mapping ⇒ same signature ⇒ skipped, so a background refetch can't
     // clobber an operator's in-progress edit.
-    expect(syncKeysSignature({ modelsDev: "openai", arenaVendor: "OpenAI" })).toBe(
-      syncKeysSignature({ arenaVendor: "OpenAI", modelsDev: "openai" }),
+    expect(syncKeysSignature({ models_dev: "openai", arena_vendor: "OpenAI" })).toBe(
+      syncKeysSignature({ arena_vendor: "OpenAI", models_dev: "openai" }),
     );
     // A cleared mapping is distinct from a populated one (and null ≡ undefined).
     expect(syncKeysSignature(null)).toBe(syncKeysSignature(undefined));
-    expect(syncKeysSignature(null)).not.toBe(syncKeysSignature({ modelsDev: "openai" }));
+    expect(syncKeysSignature(null)).not.toBe(syncKeysSignature({ models_dev: "openai" }));
   });
 
   it("blanks the fields when the stored mapping came back cleared", () => {
@@ -147,19 +147,19 @@ describe("sync-key (re)load: a refreshed mapping must replace a stale cached one
     expect(form.syncOpenrouter).toBe("");
     expect(form.syncArenaVendor).toBe("");
     // …and a save then CLEARS upstream rather than resurrecting the stale mapping.
-    expect(buildTemplateBody(form, { editing: true, syncKeysLoaded: true }).syncKeys).toBeNull();
+    expect(buildTemplateBody(form, { editing: true, syncKeysLoaded: true }).sync_keys).toBeNull();
   });
 
   it("seeds the same fields from a mapping (initial state stays in step)", () => {
     const state = stateFromTemplate(templateFixture(), {
-      modelsDev: "openai",
+      models_dev: "openai",
       openrouter: "openai",
-      arenaVendor: "OpenAI",
+      arena_vendor: "OpenAI",
     });
     expect(applySyncKeys(baseForm(), {
-      modelsDev: "openai",
+      models_dev: "openai",
       openrouter: "openai",
-      arenaVendor: "OpenAI",
+      arena_vendor: "OpenAI",
     })).toMatchObject({
       syncModelsDev: state.syncModelsDev,
       syncOpenrouter: state.syncOpenrouter,
@@ -236,9 +236,9 @@ describe("buildTemplateBody: other fields", () => {
       syncKeysLoaded: false,
     });
     expect(body.name).toBe("OpenAI");
-    expect(body.baseUrl).toBe("https://x");
+    expect(body.base_url).toBe("https://x");
     expect(body.modalities).toBeNull();
-    expect(body.availableVia).toBeNull();
+    expect(body.available_via).toBeNull();
   });
 
   it("builds modalities and availableVia (comma-split, trimmed, blanks dropped)", () => {
@@ -251,7 +251,7 @@ describe("buildTemplateBody: other fields", () => {
       { editing: false, syncKeysLoaded: false },
     );
     expect(body.modalities).toEqual(["chat", "image"]);
-    expect(body.availableVia).toEqual({
+    expect(body.available_via).toEqual({
       note: "via gateways",
       templates: ["OpenRouter", "Vertex AI"],
     });

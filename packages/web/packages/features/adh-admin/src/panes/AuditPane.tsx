@@ -160,7 +160,6 @@ export function AuditPane({ help }: { help?: ReactNode } = {}) {
               noun="events"
               loaded={trail.rows.length}
               showing={list.rows.length}
-              total={trail.total}
               hasMore={trail.hasMore}
               busy={trail.isFetchingMore}
               onLoadMore={trail.loadMore}

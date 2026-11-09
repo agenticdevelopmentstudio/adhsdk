@@ -1,4 +1,4 @@
-// Reactions API client — emoji reactions on ANY subject, wired to `/api/content/reactions`.
+// Reactions API client — emoji reactions on ANY subject, wired to `/api/v1/content/reactions`.
 //
 // The backend store is polymorphic: a reaction names its subject as a free `(targetKind,
 // targetId)` pair, so there is exactly ONE reaction surface for the whole product and a new
@@ -14,11 +14,11 @@
 //   • The list is PUBLIC within the ecosystem (everyone sees who reacted); only writes are
 //     scoped to the actor, so nobody can forge or clear someone else's.
 
-import { authedJson, authedRequest } from "../http";
+import { authedJson, authedRequest, listAllV1, unixToIso, withV1Query } from "../http";
 import { enc } from "../client-helpers";
-import type { ReactionCreateBody, ReactionRow } from "./wire";
+import type { ReactionCreateBody, ReactionWire } from "./wire";
 
-const BASE = "/api/content/reactions";
+const BASE = "/api/v1/content/reactions";
 
 /** The backend's cap on one batched read. Chunking against it lives in `list` so no caller has
  *  to know the number — a thread long enough to exceed it would otherwise 400 the whole pane. */
@@ -35,14 +35,14 @@ export interface Reaction {
   createdAt: string;
 }
 
-export function toReaction(r: ReactionRow): Reaction {
+export function toReaction(r: ReactionWire): Reaction {
   return {
     id: r.id,
-    authorId: r.authorId,
-    targetKind: r.targetKind,
-    targetId: r.targetId,
+    authorId: r.author_id ?? null,
+    targetKind: r.target_kind,
+    targetId: r.target_id,
     emoji: r.emoji,
-    createdAt: r.createdAt,
+    createdAt: unixToIso(r.created),
   };
 }
 
@@ -105,19 +105,19 @@ export const reactionsApi = {
     if (ids.length === 0) return [];
     const pages = await Promise.all(
       chunk(ids, MAX_TARGET_IDS).map((batch) =>
-        authedJson<{ items: ReactionRow[] }>(
-          `${BASE}?targetKind=${enc(targetKind)}&targetIds=${enc(batch.join(","))}`,
+        listAllV1<ReactionWire>(
+          withV1Query(BASE, { target_kind: targetKind, target_ids: batch.join(",") }),
         ),
       ),
     );
-    return pages.flatMap((p) => p.items.map(toReaction));
+    return pages.flatMap((rows) => rows.map(toReaction));
   },
 
   /** React. Idempotent: reacting again with the same emoji returns the reaction already there. */
   async add(targetKind: string, targetId: string, emoji: string): Promise<Reaction> {
-    const payload: ReactionCreateBody = { targetKind, targetId, emoji };
+    const payload: ReactionCreateBody = { target_kind: targetKind, target_id: targetId, emoji };
     return toReaction(
-      await authedJson<ReactionRow>(BASE, {
+      await authedJson<ReactionWire>(BASE, {
         method: "POST",
         body: JSON.stringify(payload),
       }),

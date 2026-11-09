@@ -37,11 +37,11 @@ export interface EndpointResponse {
 }
 
 export interface EndpointMeta {
-  /** `"<METHOD> <path>"`, e.g. `"GET /persona/personas/{id}"` — the map key. */
+  /** `"<METHOD> <path>"`, e.g. `"GET /v1/personas/{id}"` — the map key. */
   key: string
   /** Upper-case HTTP method. */
   method: string
-  /** Backend-native path (no `/api` prefix), e.g. `/persona/personas/{id}`. */
+  /** Backend-native path (no `/api` prefix), e.g. `/v1/personas/{id}`. */
   path: string
   tag?: string
   summary?: string

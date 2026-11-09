@@ -23,10 +23,10 @@ const item = (over: Partial<InsightItem> = {}): InsightItem => ({
   provider: "anthropic",
   sku: "claude-sonnet",
   quantities: { requests: 3 },
-  capturedMicros: 0,
-  costMicros: null,
+  captured_micros: 0,
+  cost_micros: null,
   source: "unpriced",
-  unpricedLines: 1,
+  unpriced_lines: 1,
   lines: 1,
   rates: [],
   ...over,
@@ -36,10 +36,10 @@ const detail: Detail = {
   by: "ecosystem",
   key: "k1",
   label: "Main ecosystem",
-  items: [item(), item({ sku: "priced", source: "rate", costMicros: 1_500_000, unpricedLines: 0 })],
+  items: [item(), item({ sku: "priced", source: "rate", cost_micros: 1_500_000, unpriced_lines: 0 })],
   daily: [
-    { day: "2026-09-01", directMicros: null, unpricedLines: 1, requests: 2 },
-    { day: "2026-09-02", directMicros: 1_500_000, unpricedLines: 0, requests: 1 },
+    { day: "2026-09-01", direct_micros: null, unpriced_lines: 1, requests: 2 },
+    { day: "2026-09-02", direct_micros: 1_500_000, unpriced_lines: 0, requests: 1 },
   ],
 };
 
@@ -68,8 +68,8 @@ describe("BreakdownDetail", () => {
     const priced: Detail = {
       ...detail,
       daily: [
-        { day: "2026-09-01", directMicros: 500_000, unpricedLines: 2, requests: 2 },
-        { day: "2026-09-02", directMicros: 1_500_000, unpricedLines: 0, requests: 1 },
+        { day: "2026-09-01", direct_micros: 500_000, unpriced_lines: 2, requests: 2 },
+        { day: "2026-09-02", direct_micros: 1_500_000, unpriced_lines: 0, requests: 1 },
       ],
     };
     useBreakdownDetail.mockReturnValue({ data: priced, isLoading: false, error: null });
@@ -80,7 +80,7 @@ describe("BreakdownDetail", () => {
   it("totals the range exactly when every day is fully priced", () => {
     const priced: Detail = {
       ...detail,
-      daily: [{ day: "2026-09-02", directMicros: 1_500_000, unpricedLines: 0, requests: 1 }],
+      daily: [{ day: "2026-09-02", direct_micros: 1_500_000, unpriced_lines: 0, requests: 1 }],
     };
     useBreakdownDetail.mockReturnValue({ data: priced, isLoading: false, error: null });
     render(<BreakdownDetail by="ecosystem" itemKey="k1" range={{ from: "a", to: "b" }} onClose={vi.fn()} />);

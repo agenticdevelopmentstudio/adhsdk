@@ -2,8 +2,9 @@
 // and status updates — plus the two mappings those added to existing entities (a project's lead
 // and derived health, a card's milestone).
 //
-// Same arrangement as `projects.test.ts`: only the transport is mocked, so the mappers,
-// `compact` and the query-building run for real. What is worth pinning here is narrower than
+// Same arrangement as `projects.test.ts`: single reads/writes mock `authedJson`, list reads stub
+// `fetch` under the real /v1 pager, so the mappers, `compact`, the camel->snake body mapping and
+// the query-building run for real. /v1 updates are POSTs with snake_case bodies. What is worth pinning here is narrower than
 // "does it call the right URL", and each case says which of these it is:
 //
 //   1. an explicit null that must SURVIVE `compact` (clearing a date, detaching a milestone,
@@ -27,6 +28,7 @@ import { projectStatusUpdatesApi } from "../status-updates";
 import { projectWorkItemsApi, toWorkItem } from "../work-items";
 import type { MilestoneRow, ProjectRow, WorkItemRow } from "../wire";
 import { authedJson, authedRequest } from "../../http";
+import { fetchMock, installFetch, paramsAt, pathAt, respondWith, v1List } from "../../__tests__/v1-fetch";
 
 const mockedJson = vi.mocked(authedJson);
 const mockedRequest = vi.mocked(authedRequest);
@@ -34,6 +36,7 @@ const mockedRequest = vi.mocked(authedRequest);
 beforeEach(() => {
   mockedJson.mockReset();
   mockedRequest.mockReset();
+  installFetch();
 });
 
 /** A minimal project row — every field the mapper reads, none of the ones under test. */
@@ -47,6 +50,21 @@ const projectRow = (extra: Partial<ProjectRow> = {}): ProjectRow => ({
   ecosystemId: "eco",
   createdAt: "c",
   updatedAt: "u",
+  ...extra,
+});
+
+/** A project as /v1 sends it: snake_case, unix `created`/`updated`. */
+const wireProject = (extra: Record<string, unknown> = {}) => ({
+  object: "project",
+  id: "p1",
+  name: "Alpha",
+  description: "",
+  status: "active",
+  color: "#000",
+  key_prefix: "ALP",
+  ecosystem_id: "eco",
+  created: 1767225600,
+  updated: 1767225600,
   ...extra,
 });
 
@@ -67,9 +85,9 @@ describe("projectProgramsApi", () => {
   it("lists off the workspace stem, not under a project", async () => {
     // The route shape IS the design: a program groups boards, so it cannot hang off one of
     // them. Getting this wrong would compile and 404 only at runtime.
-    mockedJson.mockResolvedValueOnce([]);
     await projectProgramsApi.list({ workspace: "acme" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/programs?workspace=acme");
+    expect(pathAt(0)).toBe("/api/v1/programs");
+    expect(paramsAt(0).get("workspace")).toBe("acme");
   });
 
   it("creates with a compacted body against the workspace query", async () => {
@@ -88,14 +106,14 @@ describe("projectProgramsApi", () => {
       { name: "Platform", description: undefined, targetDate: "2026-12-31" },
       { workspace: "acme" },
     );
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/programs?workspace=acme", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/programs?workspace=acme", {
       method: "POST",
-      body: JSON.stringify({ name: "Platform", targetDate: "2026-12-31" }),
+      body: JSON.stringify({ name: "Platform", target_date: "2026-12-31" }),
     });
   });
 
   it("keeps an explicit null on a date so a patch can CLEAR one", async () => {
-    // (1) — `startDate: null` unsets the end; `undefined` would mean "leave it". Dropping the
+    // (1) — `start_date: null` unsets the start; `undefined` would mean "leave it". Dropping the
     // null here would silently turn every clear into a no-op the UI reports as success.
     mockedJson.mockResolvedValueOnce({
       id: "g1",
@@ -109,27 +127,33 @@ describe("projectProgramsApi", () => {
       updatedAt: "u",
     });
     await projectProgramsApi.update("g1", { startDate: null, name: undefined });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/programs/g1", {
-      method: "PATCH",
-      body: JSON.stringify({ startDate: null }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/programs/g1", {
+      method: "POST",
+      body: JSON.stringify({ start_date: null }),
     });
   });
 
-  it("reports a delete as a COUNT of un-assigned boards", async () => {
-    mockedJson.mockResolvedValueOnce({ unassigned: 3 });
-    expect(await projectProgramsApi.remove("g1")).toEqual({ unassigned: 3 });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/programs/g1", { method: "DELETE" });
+  it("deletes at the program's id, and claims no count of un-assigned boards", async () => {
+    // /v1 answers a DELETE with a tombstone `{id, object, deleted}` — the legacy `{unassigned}`
+    // count does not survive the gateway, so the result must not invent one (a guessed 0 would
+    // tell the UI nothing was detached).
+    const out = await projectProgramsApi.remove("g1");
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/programs/g1", { method: "DELETE" });
+    expect(out.unassigned).toBeUndefined();
   });
 
   it("returns the member boards with their OWN healths, unfolded", async () => {
     // The whole reason this is a list and not a rollup: two boards reporting differently have no
     // single honest colour, so the client must be able to show both.
-    mockedJson.mockResolvedValueOnce([
-      projectRow({ id: "p1", health: "at_risk" }),
-      projectRow({ id: "p2", name: "Beta", health: null }),
-    ]);
+    respondWith(
+      v1List([
+        { ...wireProject({ id: "p1" }), health: "at_risk" },
+        { ...wireProject({ id: "p2", name: "Beta" }), health: null },
+      ]),
+    );
     const out = await projectProgramsApi.projects("g1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/programs/g1/projects");
+    expect(pathAt(0)).toBe("/api/v1/projects");
+    expect(paramsAt(0).get("program")).toBe("g1");
     expect(out.map((p) => p.health)).toEqual(["at_risk", null]);
   });
 });
@@ -164,24 +188,24 @@ describe("a project's plan and reported health", () => {
   it("sends both halves of a lead, and both nulls to clear it", async () => {
     mockedJson.mockResolvedValueOnce(projectRow());
     await projectsApi.update("p1", { leadKind: "team", leadId: "t1" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1", {
-      method: "PATCH",
-      body: JSON.stringify({ leadKind: "team", leadId: "t1" }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1", {
+      method: "POST",
+      body: JSON.stringify({ lead_kind: "team", lead_id: "t1" }),
     });
     mockedJson.mockResolvedValueOnce(projectRow());
     await projectsApi.update("p1", { leadKind: null, leadId: null });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1", {
-      method: "PATCH",
-      body: JSON.stringify({ leadKind: null, leadId: null }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1", {
+      method: "POST",
+      body: JSON.stringify({ lead_kind: null, lead_id: null }),
     });
   });
 
   it("keeps an explicit null when detaching a board from its program", async () => {
     mockedJson.mockResolvedValueOnce(projectRow());
     await projectsApi.update("p1", { programId: null });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1", {
-      method: "PATCH",
-      body: JSON.stringify({ programId: null }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1", {
+      method: "POST",
+      body: JSON.stringify({ program_id: null }),
     });
   });
 });
@@ -190,17 +214,16 @@ describe("a project's plan and reported health", () => {
 
 describe("projectMilestonesApi", () => {
   it("lists under the OWNING project, encoding the id", async () => {
-    mockedJson.mockResolvedValueOnce([]);
     await projectMilestonesApi.list("a/b");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/a%2Fb/milestones");
+    expect(pathAt(0)).toBe("/api/v1/projects/a%2Fb/milestones");
   });
 
   it("creates with a compacted body", async () => {
     mockedJson.mockResolvedValueOnce(milestoneRow({ targetDate: "2026-09-30" }));
     await projectMilestonesApi.create("p1", { name: "Beta cut", targetDate: "2026-09-30" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/milestones", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/milestones", {
       method: "POST",
-      body: JSON.stringify({ name: "Beta cut", targetDate: "2026-09-30" }),
+      body: JSON.stringify({ name: "Beta cut", target_date: "2026-09-30" }),
     });
   });
 
@@ -208,9 +231,9 @@ describe("projectMilestonesApi", () => {
     // (1) again — and here the two readings differ visibly: undated milestones sort LAST.
     mockedJson.mockResolvedValueOnce(milestoneRow());
     await projectMilestonesApi.update("p1", "m1", { targetDate: null });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/milestones/m1", {
-      method: "PATCH",
-      body: JSON.stringify({ targetDate: null }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/milestones/m1", {
+      method: "POST",
+      body: JSON.stringify({ target_date: null }),
     });
   });
 
@@ -224,12 +247,13 @@ describe("projectMilestonesApi", () => {
     expect(withCounts.counts?.done).toBe(3);
   });
 
-  it("reports a delete as a COUNT of detached cards", async () => {
-    mockedJson.mockResolvedValueOnce({ unassigned: 2 });
-    expect(await projectMilestonesApi.remove("p1", "m1")).toEqual({ unassigned: 2 });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/milestones/m1", {
+  it("deletes at the milestone's id, and claims no count of detached cards", async () => {
+    // The /v1 tombstone carries no `unassigned`; a guessed 0 would say nothing was detached.
+    const out = await projectMilestonesApi.remove("p1", "m1");
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/projects/p1/milestones/m1", {
       method: "DELETE",
     });
+    expect(out.unassigned).toBeUndefined();
   });
 });
 
@@ -268,9 +292,14 @@ describe("projectStatusUpdatesApi", () => {
   };
 
   it("lists under the project", async () => {
-    mockedJson.mockResolvedValueOnce([updateRow]);
+    respondWith(
+      v1List([
+        { object: "status_update", id: "s1", project_id: "p1", health: "at_risk", body: "vendor slipped", created: 1767225600, updated: 1767225600 },
+      ]),
+    );
     const out = await projectStatusUpdatesApi.list("p1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/status-updates");
+    expect(pathAt(0)).toBe("/api/v1/projects/p1/status_updates");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(out[0]!.health).toBe("at_risk");
     // Unsigned rows exist (an admin-written one); null, never "".
     expect(out[0]!.createdBy).toBeNull();
@@ -279,7 +308,7 @@ describe("projectStatusUpdatesApi", () => {
   it("posts both halves — a health and its explanation", async () => {
     mockedJson.mockResolvedValueOnce(updateRow);
     await projectStatusUpdatesApi.create("p1", { health: "at_risk", body: "vendor slipped" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/status-updates", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/status_updates", {
       method: "POST",
       body: JSON.stringify({ health: "at_risk", body: "vendor slipped" }),
     });
@@ -288,8 +317,8 @@ describe("projectStatusUpdatesApi", () => {
   it("patches only what was sent, so a typo fix does not restate the health", async () => {
     mockedJson.mockResolvedValueOnce(updateRow);
     await projectStatusUpdatesApi.update("p1", "s1", { body: "vendor slipped a week" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/status-updates/s1", {
-      method: "PATCH",
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/status_updates/s1", {
+      method: "POST",
       body: JSON.stringify({ body: "vendor slipped a week" }),
     });
   });
@@ -297,7 +326,7 @@ describe("projectStatusUpdatesApi", () => {
   it("retracts through authedRequest — the route answers 204, with no row", async () => {
     mockedRequest.mockResolvedValueOnce(undefined);
     await projectStatusUpdatesApi.remove("p1", "s1");
-    expect(mockedRequest).toHaveBeenCalledWith("/api/project/projects/p1/status-updates/s1", {
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/projects/p1/status_updates/s1", {
       method: "DELETE",
     });
   });
@@ -330,18 +359,18 @@ describe("a work item's milestone", () => {
     // (1) — same idiom as the iteration's backlog null, and the same failure if it were dropped.
     mockedJson.mockResolvedValueOnce(itemRow());
     await projectWorkItemsApi.update("w1", { milestoneId: null });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1", {
-      method: "PATCH",
-      body: JSON.stringify({ milestoneId: null }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1", {
+      method: "POST",
+      body: JSON.stringify({ milestone_id: null }),
     });
   });
 
   it("can create a card straight onto a milestone", async () => {
     mockedJson.mockResolvedValueOnce(itemRow({ milestoneId: "m1" }));
     await projectWorkItemsApi.create("p1", { title: "T", milestoneId: "m1" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/work-items", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items", {
       method: "POST",
-      body: JSON.stringify({ title: "T", milestoneId: "m1" }),
+      body: JSON.stringify({ project: "p1", title: "T", milestone_id: "m1" }),
     });
   });
 });

@@ -1,5 +1,5 @@
 // Project status-updates API client — the SIGNED reports a board's health is read from, wired
-// to `/api/project/projects/{id}/status-updates`.
+// to `/api/v1/projects/{id}/status_updates`.
 //
 // This is the only writable source of `Project.health`. The backend derives that field from the
 // newest live update on every read and stores no column for it, which has one consequence a
@@ -13,8 +13,9 @@
 // and this one would additionally move a dashboard. Removal is the looser half: the author, or
 // anyone holding the project's sub-item delete verb.
 
-import { authedJson, authedRequest } from "../http";
+import { authedRequest } from "../http";
 import { compact, enc } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import type {
   ProjectHealth,
   StatusUpdateRow,
@@ -22,9 +23,9 @@ import type {
   StatusUpdatePatchBody,
 } from "./wire";
 
-const PROJECTS = "/api/project/projects";
+const PROJECTS = "/api/v1/projects";
 
-const stem = (projectId: string) => `${PROJECTS}/${enc(projectId)}/status-updates`;
+const stem = (projectId: string) => `${PROJECTS}/${enc(projectId)}/status_updates`;
 
 /* ── Status update ────────────────────────────────────────────────────── */
 
@@ -61,7 +62,7 @@ export const projectStatusUpdatesApi = {
   /** The board's reports, NEWEST FIRST — the first row is the one the project's health is read
    *  from, which is why the order is the server's and not a caller's choice. Up to 100. */
   async list(projectId: string): Promise<ProjectStatusUpdate[]> {
-    const rows = await authedJson<StatusUpdateRow[]>(stem(projectId));
+    const rows = await v1List<StatusUpdateRow>(stem(projectId));
     return rows.map(toProjectStatusUpdate);
   },
 
@@ -74,10 +75,7 @@ export const projectStatusUpdatesApi = {
   ): Promise<ProjectStatusUpdate> {
     const body: StatusUpdateCreateBody = { health: input.health, body: input.body };
     return toProjectStatusUpdate(
-      await authedJson<StatusUpdateRow>(stem(projectId), {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<StatusUpdateRow>(stem(projectId), v1Write("POST", body)),
     );
   },
 
@@ -91,10 +89,7 @@ export const projectStatusUpdatesApi = {
   ): Promise<ProjectStatusUpdate> {
     const body: StatusUpdatePatchBody = compact(patch);
     return toProjectStatusUpdate(
-      await authedJson<StatusUpdateRow>(`${stem(projectId)}/${enc(updateId)}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<StatusUpdateRow>(`${stem(projectId)}/${enc(updateId)}`, v1Write("POST", body)),
     );
   },
 

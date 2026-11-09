@@ -1,13 +1,13 @@
 // The bucket ROWS plane for an interest's research corpus.
 //
-// Routes: /api/bucket/buckets/{bucketId}/types/{typeId}/rows (list/create),
-//         /api/bucket/buckets/{bucketId}/types/{typeId}/rows/{rowId} (put/delete).
+// Routes: /api/v1/data/{typeId}?bucket= (list/create),
+//         /api/v1/data/{typeId}/{rowId} (post/delete).
 //
 // Unlike every other client here this one names an ACT-AS principal: the rows plane authorizes
 // through the bucket ACL, and the holder of the grant on an interest bucket is the PERSONA, not
-// the user. So the author fills the corpus by acting as their own persona (`asType=persona`), and
-// the backend checks that the persona is theirs. A call without asType/asId is a 400.
-import { authedJson, authedRequest } from "../http";
+// the user. So the author fills the corpus by acting as their own persona (`as_type=persona`), and
+// the backend checks that the persona is theirs. A call without as_type/as_id is a 400.
+import { authedJson, authedRequest, listAllV1, withV1Query } from "../http";
 import { enc } from "../client-helpers";
 
 /** A `content.markdown` row as the rows plane returns it — the WHOLE row.
@@ -53,46 +53,38 @@ export interface InterestDocumentBody {
   content: string;
 }
 
-/** `?asType=persona&asId=<persona rdid or uuid>` — the act-as principal every call on this plane
+/** `as_type=persona&as_id=<persona rdid or uuid>` — the act-as principal every call on this plane
  *  needs. Either form works: `loadTarget` (routes/bucketsData.ts) resolves an rdid through
  *  `assertActAsOwned` and returns the act-as principal carrying the RESOLVED uuid, which is what
  *  the grant check then matches against `access.group_members.member_id` — the persona uuid
  *  `ensurePersonaReader` stamped into the access group. Pass the rdid: it is what
- *  `GET /persona/personas` returns, and no API surface exposes the uuid at all. */
-function actingAs(personaId: string): string {
-  return `?asType=persona&asId=${enc(personaId)}`;
+ *  `GET /v1/personas` returns, and no API surface exposes the uuid at all. */
+function actingAs(url: string, personaId: string): string {
+  return withV1Query(url, { as_type: "persona", as_id: personaId });
 }
 
-function base(bucketId: string, typeId: string): string {
-  return `/api/bucket/buckets/${enc(bucketId)}/types/${enc(typeId)}/rows`;
+/** `/v1/data/{type}` — the typeId is the path's `type`; the bucket travels as the `bucket`
+ *  query param on a read/delete and as a `bucket` body field on a write. */
+function base(typeId: string): string {
+  return `/api/v1/data/${enc(typeId)}`;
 }
 
 export const interestDocumentsApi = {
-  /** The FIRST PAGE of this interest's corpus, oldest id first.
+  /** Every document in this interest's corpus, oldest id first.
    *
-   *  The verbs on this plane do NOT agree on their response shape: only the list wraps, as
-   *  `c.json({ rows })` (routes/bucketsData.ts), while create and update answer with a bare row.
-   *  So this one unwraps and its siblings must not.
-   *
-   *  Paging is real and this client does not do it: the route's page size defaults to AND is
-   *  capped at `ROW_LIMIT` = 500 (`clampPageSize`, routes/bucketsData.ts), and no `limit`/`offset`
-   *  is sent here, so an interest holding more than 500 documents returns its first 500 and the
-   *  rest are simply not in this array. That is fine for an author-curated corpus and wrong for a
-   *  bulk reader — the ingest script pages with limit+offset until it gets a short page. */
-  list: async (
-    bucketId: string,
-    typeId: string,
-    personaId: string,
-  ): Promise<InterestDocumentRow[]> =>
-    (
-      await authedJson<{ rows: InterestDocumentRow[] }>(
-        `${base(bucketId, typeId)}${actingAs(personaId)}`,
-      )
-    ).rows,
+   *  The collection answers the /v1 list envelope (`{ object: 'list', data, has_more }`), paged
+   *  by `starting_after`, and `listAllV1` walks it to the end — an interest holding more than one
+   *  page of documents is read whole. Rows are an open bag on the wire (the data plane returns the
+   *  table's own columns), so their keys keep the names `InterestDocumentRow` declares. Create and
+   *  update answer a bare row. */
+  list: (bucketId: string, typeId: string, personaId: string): Promise<InterestDocumentRow[]> =>
+    listAllV1<InterestDocumentRow>(
+      actingAs(withV1Query(base(typeId), { bucket: bucketId }), personaId),
+    ),
   create: (bucketId: string, typeId: string, personaId: string, body: InterestDocumentBody) =>
-    authedJson<InterestDocumentRow>(`${base(bucketId, typeId)}${actingAs(personaId)}`, {
+    authedJson<InterestDocumentRow>(actingAs(base(typeId), personaId), {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify({ bucket: bucketId, title: body.title, content: body.content }),
     }),
   update: (
     bucketId: string,
@@ -101,12 +93,13 @@ export const interestDocumentsApi = {
     rowId: string,
     body: Partial<InterestDocumentBody>,
   ) =>
-    authedJson<InterestDocumentRow>(
-      `${base(bucketId, typeId)}/${enc(rowId)}${actingAs(personaId)}`,
-      { method: "PUT", body: JSON.stringify(body) },
-    ),
-  delete: (bucketId: string, typeId: string, personaId: string, rowId: string) =>
-    authedRequest(`${base(bucketId, typeId)}/${enc(rowId)}${actingAs(personaId)}`, {
-      method: "DELETE",
+    authedJson<InterestDocumentRow>(actingAs(`${base(typeId)}/${enc(rowId)}`, personaId), {
+      method: "POST",
+      body: JSON.stringify({ bucket: bucketId, title: body.title, content: body.content }),
     }),
+  delete: (bucketId: string, typeId: string, personaId: string, rowId: string) =>
+    authedRequest(
+      actingAs(withV1Query(`${base(typeId)}/${enc(rowId)}`, { bucket: bucketId }), personaId),
+      { method: "DELETE" },
+    ),
 };

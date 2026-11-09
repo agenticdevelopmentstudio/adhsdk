@@ -40,7 +40,7 @@ import {
   type TemplateFormState,
 } from "./template-form";
 
-type ProviderKind = ProviderTemplate["providerKind"];
+type ProviderKind = ProviderTemplate["provider_kind"];
 const PROVIDER_KINDS: ProviderKind[] = ["openai", "anthropic", "gemini", "external"];
 
 /** The catalog-sync mapping inputs — one row each, identical but for their copy. */
@@ -99,7 +99,7 @@ export function ProviderTemplateDialog({
   // separately (edit mode only). Folding them into `initial` keeps the form from
   // reading dirty the moment they arrive.
   const syncKeysQuery = useTemplateSyncKeys(template?.id ?? null);
-  const loadedSyncKeys = syncKeysQuery.data?.syncKeys;
+  const loadedSyncKeys = syncKeysQuery.data?.sync_keys?.sync_keys;
 
   const initial = useMemo(
     () => stateFromTemplate(template, loadedSyncKeys ?? undefined),
@@ -129,7 +129,7 @@ export function ProviderTemplateDialog({
   const appliedSyncKeys = useRef<string | null>(null);
   useEffect(() => {
     if (!syncKeysQuery.isSuccess) return;
-    const sk = syncKeysQuery.data.syncKeys ?? undefined;
+    const sk = syncKeysQuery.data.sync_keys?.sync_keys ?? undefined;
     const signature = syncKeysSignature(sk);
     if (appliedSyncKeys.current === signature) return;
     appliedSyncKeys.current = signature;
@@ -298,7 +298,7 @@ export function ProviderTemplateDialog({
                   {/* last_synced_at is naive-UTC PG text — formatRelativeTime normalizes
                       the zone before formatting (see sync-format.ts), so the label is
                       correct for a non-UTC operator, not skewed by their offset. */}
-                  {m.lastSyncedAt && <span>· {formatRelativeTime(m.lastSyncedAt)}</span>}
+                  {m.last_synced_at && <span>· {formatRelativeTime(m.last_synced_at)}</span>}
                 </div>
               ))}
             </div>

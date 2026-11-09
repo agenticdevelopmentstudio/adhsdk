@@ -5,7 +5,8 @@
 // vocabulary a generic data client must not take on). Each interface carries
 // exactly the fields the client and its call sites touch, transcribed from the
 // `Gamification*` component schemas the backend's openapi.json documents for
-// `/gamification/realms/{ecosystemId}/*` and `/gamification/replay`.
+// `/v1/gamification/*`. The `*Wire` interfaces at the bottom are the snake_case JSON;
+// `gamification.ts` maps them field by field to the camelCase domain shapes above them.
 // Type-only file.
 
 /** Season board window (`GamificationSeasons`); `null` ⇒ seasons off. */
@@ -165,4 +166,66 @@ export interface RealmEventType {
 export interface RealmEventTypeInput {
   name: string;
   statKey: string;
+}
+
+/** `seasons` as the wire carries it. */
+export type SeasonsWire = { anchor: string; length_days: number } | null;
+
+/** `GET /v1/gamification/config` body. `surfaces` is a JSON map and passes through. */
+export interface RealmConfigWire {
+  ecosystem_id: string;
+  mode: GamingMode;
+  skin: "rpg" | "plain";
+  surfaces: Record<string, boolean>;
+  seasons: SeasonsWire;
+  timezone: string;
+}
+
+/** `POST /v1/gamification/config` body (besides `ecosystem`). */
+export interface RealmConfigInputWire {
+  mode?: GamingMode;
+  skin?: "rpg" | "plain";
+  surfaces?: Record<string, boolean>;
+  seasons?: SeasonsWire;
+  timezone?: string;
+}
+
+export interface ReplayResultWire {
+  subjects: number;
+  badges: number;
+  xp_gained?: number;
+}
+
+/** `/v1/gamification/badges` row (and the catalog's, plus `source`). */
+export interface RealmBadgeWire {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  stat_key?: string | null;
+  comparator?: ">=" | ">" | "=" | null;
+  threshold?: number | null;
+  badge_line?: string | null;
+  tier?: "none" | "bronze" | "silver" | "gold" | "platinum" | null;
+  point_value: number;
+  hidden?: boolean;
+  active?: boolean;
+  subject_type?: string | null;
+  ecosystem_id?: string | null;
+  source?: "default" | "realm";
+}
+
+export interface CatalogLevelWire {
+  name: string;
+  min_points: number;
+  source: "default" | "realm";
+}
+
+export interface RealmEventTypeWire {
+  id: string;
+  ecosystem_id: string;
+  name: string;
+  stat_key: string;
+  created?: number;
+  updated?: number;
 }

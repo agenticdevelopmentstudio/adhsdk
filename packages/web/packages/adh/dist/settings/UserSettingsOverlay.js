@@ -641,17 +641,17 @@ var PANELS = {
   preferences: /* @__PURE__ */ jsx3(HubPreferencesPanel, {})
 };
 var API_PATHS = {
-  account: "/auth/me",
-  security: "/account/mfa",
-  notifications: "/notifications/preferences",
-  usage: "/usage/summary",
-  profile: "/auth/me",
-  social: "/content/social-links",
-  addresses: "/content/addresses",
-  contacts: "/account/contacts",
-  tokens: "/auth/tokens",
-  assistants: "/access/personas/user-actable",
-  archived: "/workspaces/archived"
+  account: "/v1/account",
+  security: "/v1/account/mfa",
+  notifications: "/v1/notification_preferences",
+  usage: "/v1/usage/summary",
+  profile: "/v1/account",
+  social: "/v1/content/social_links",
+  addresses: "/v1/content/addresses",
+  contacts: "/v1/account/contacts",
+  tokens: "/v1/api_keys",
+  assistants: "/v1/personas",
+  archived: "/v1/workspaces"
 };
 function buildSettingsTopics() {
   return SETTINGS_TOPICS.map((t) => {

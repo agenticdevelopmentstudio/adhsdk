@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { authedJson, authedRequest } from '@adh-sdk/auth/client'
+import { authedJson, listAllV1 } from '@adh-sdk/auth/client'
 import { errorMessage } from '@adh-sdk/ui/lib/errors'
 import type { CrudRow, CrudTableMeta } from './types'
 
@@ -9,7 +9,7 @@ import type { CrudRow, CrudTableMeta } from './types'
 const API_BASE = '/api'
 
 /** Substitute a row's primary-key values into the table's item path template,
- *  e.g. '/persona/personas/{id}' + the row. */
+ *  e.g. '/v1/personas/{id}' + the row. */
 export function itemUrl(meta: CrudTableMeta, row: CrudRow): string {
   let path = meta.itemPath
   for (const param of meta.pkParams) {
@@ -27,7 +27,7 @@ export function rowKey(meta: CrudTableMeta, row: CrudRow): string {
 
 /** The scope override every verb carries (see {@link useCrudResource}); empty means "none". */
 function scopeQueryOf(scopeEcosystemId?: string): string {
-  return scopeEcosystemId ? `ecosystemId=${encodeURIComponent(scopeEcosystemId)}` : ''
+  return scopeEcosystemId ? `ecosystem_id=${encodeURIComponent(scopeEcosystemId)}` : ''
 }
 
 /** The URL {@link useCrudResource} lists `meta`'s rows from under `filter` and `scopeEcosystemId`.
@@ -61,7 +61,7 @@ export interface CrudResource {
   create: (values: CrudRow) => Promise<void>
   update: (row: CrudRow, values: CrudRow) => Promise<void>
   remove: (row: CrudRow) => Promise<void>
-  /** Raw mutators — the same authed PUT/POST/DELETE as create/update/remove but
+  /** Raw mutators — the same authed POST/DELETE as create/update/remove but
    *  WITHOUT the trailing re-list, so a batch save (the split editor) can issue
    *  many writes and refresh ONCE at the end. Throw on failure like their
    *  re-listing wrappers. */
@@ -74,11 +74,11 @@ export interface CrudResource {
  *  BFF proxy, authenticated by the shared Bearer client. `filter` narrows the LIST
  *  call (column-equality query params the backend list route ANDs with the
  *  ecosystem scope) — except its `workspace`, which is a SCOPE, not a column: it
- *  rides every write too, because the backend reads `?workspace=` on POST/PUT/DELETE
+ *  rides every write too, because the backend reads `?workspace=` on POST/DELETE
  *  as the owner a create is stamped with and the scope an edit is allowed in. Sent on
  *  the list alone, All Data's workspace view listed an org's rows and then created
  *  under the caller and refused edits to rows another member made (Mike, 2026-09-25). `scopeEcosystemId` names the target
- *  ecosystem on EVERY verb (`?ecosystemId=` — the backend's ecosystem-param scope
+ *  ecosystem on EVERY verb (`?ecosystem_id=` — the backend's ecosystem-param scope
  *  override for the integration synced-data tables, authorized server-side against
  *  the ecosystems the caller manages); without it the backend scopes to the caller's
  *  JWT ecosystem. `error` reflects the list call only; mutation errors are thrown to
@@ -126,7 +126,10 @@ export function useCrudResource(
     setFetching(true)
     setError(null)
     try {
-      const fetched = await authedJson<CrudRow[]>(listId)
+      // The browser lists every row of a table, so it walks the whole collection. A composite-key
+      // table (no `id`) past one page cannot be walked (the gateway pages by id): listAllV1 throws
+      // and the message lands in `error` like any failed list.
+      const fetched = await listAllV1<CrudRow>(listId)
       if (seq !== listSeq.current) return
       loadedFor.current = listId
       setRows(fetched)
@@ -149,7 +152,7 @@ export function useCrudResource(
     void refresh()
   }, [refresh])
 
-  // Raw mutators (no re-list) — the single home for the authed POST/PUT/DELETE
+  // Raw mutators (no re-list) — the single home for the authed POST/DELETE
   // shape, reused by both the re-listing wrappers below and the split editor's
   // batch save (which refreshes once after all writes).
   const createRow = useCallback(
@@ -165,7 +168,7 @@ export function useCrudResource(
   const updateRow = useCallback(
     (row: CrudRow, values: CrudRow) =>
       authedJson<CrudRow>(`${itemUrl(meta, row)}${scopeQuery ? `?${scopeQuery}` : ''}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       }),
@@ -173,9 +176,9 @@ export function useCrudResource(
   )
 
   const removeRow = useCallback(
-    // DELETE answers 204 No Content — authedRequest, not authedJson.
+    // DELETE answers 200 with a `{id, object, deleted: true}` tombstone, which nothing here reads.
     async (row: CrudRow) => {
-      await authedRequest(`${itemUrl(meta, row)}${scopeQuery ? `?${scopeQuery}` : ''}`, {
+      await authedJson<unknown>(`${itemUrl(meta, row)}${scopeQuery ? `?${scopeQuery}` : ''}`, {
         method: 'DELETE',
       })
     },

@@ -23,9 +23,10 @@ export declare function maskValue(value: string): string;
  */
 export declare function collectEnvVars(names: readonly string[], read: (name: string) => string | undefined): EnvVarEntry[];
 /**
- * Read a debug-env response body — `{ entries: EnvVarEntry[] }`, the contract both the
- * hub's `/api/public/debug-env` and the backend's `/api/system/debug-env` answer — or
- * `null` when the body is anything else.
+ * Read a debug-env response body — `{ entries: EnvVarEntry[] }`, the hub's
+ * `/api/public/debug-env` contract, or the /v1 list envelope `{ object: 'list', data: [...] }`
+ * the backend's `/api/v1/system/debug_env` answers (its rows carry an extra `object` tag, which
+ * is harmless) — or `null` when the body is anything else.
  *
  * A reader, not a cast, because the Environment panel hands the result straight to a React
  * state setter, and a setter CALLS a function argument as an updater. A bare `[]` — what

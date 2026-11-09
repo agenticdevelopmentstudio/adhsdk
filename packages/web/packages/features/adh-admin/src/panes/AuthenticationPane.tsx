@@ -148,11 +148,11 @@ interface SecretJwtDraft {
   keyId: string;
 }
 
-type IdentityMapping = ProviderTemplate["identityMapping"];
+type IdentityMapping = ProviderTemplate["identity_mapping"];
 
 function secretJwtDraft(mapping: IdentityMapping | undefined): SecretJwtDraft | null {
-  const jwt = mapping?.clientSecretJwt;
-  return jwt ? { teamId: jwt.teamId, keyId: jwt.keyId } : null;
+  const jwt = mapping?.client_secret_jwt;
+  return jwt ? { teamId: jwt.team_id, keyId: jwt.key_id } : null;
 }
 
 /** The mapping with the admin's keys in it. A blank key is the backend's to refuse. */
@@ -160,13 +160,13 @@ function withSecretJwt(
   mapping: IdentityMapping,
   draft: SecretJwtDraft | null,
 ): IdentityMapping {
-  if (!mapping.clientSecretJwt || !draft) return mapping;
+  if (!mapping.client_secret_jwt || !draft) return mapping;
   return {
     ...mapping,
-    clientSecretJwt: {
-      ...mapping.clientSecretJwt,
-      teamId: draft.teamId.trim(),
-      keyId: draft.keyId.trim(),
+    client_secret_jwt: {
+      ...mapping.client_secret_jwt,
+      team_id: draft.teamId.trim(),
+      key_id: draft.keyId.trim(),
     },
   };
 }
@@ -203,7 +203,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
   const qc = useQueryClient();
 
   const externalClients = useMemo(
-    () => clientsQ.data?.filter((c) => !c.isInternal) ?? [],
+    () => clientsQ.data?.filter((c) => !c.is_internal) ?? [],
     [clientsQ.data],
   );
 
@@ -211,7 +211,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
     queries: externalClients.map((c) => ({
       queryKey: ["admin", "oauth", "clients", c.slug],
       queryFn: () =>
-        authedJson<ClientShowResponse>(`/api/oauth/clients/${c.slug}`),
+        authedJson<ClientShowResponse>(`/api/v1/oauth/clients/${c.slug}`),
     })),
   });
 
@@ -228,8 +228,8 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
       originalSlug: c.slug,
       slug: c.slug,
       name: c.name,
-      origins: [...c.allowedReturnOrigins],
-      originsManaged: c.originsManaged,
+      origins: [...c.allowed_return_origins],
+      originsManaged: c.origins_managed,
       status: "existing",
     }));
 
@@ -251,9 +251,9 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
         slug: p.slug,
         templateSlug: null,
         name: p.name,
-        clientId: p.clientId,
+        clientId: p.client_id,
         clientSecret: "",
-        secretJwt: secretJwtDraft(p.identityMapping),
+        secretJwt: secretJwtDraft(p.identity_mapping),
         globallyEnabled: method?.enabled ?? true,
         enabledForEntryPoint,
         status: "existing",
@@ -344,7 +344,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
           name: first.name,
           clientId: "",
           clientSecret: "",
-          secretJwt: secretJwtDraft(first.identityMapping),
+          secretJwt: secretJwtDraft(first.identity_mapping),
           globallyEnabled: true,
           enabledForEntryPoint,
           status: "new",
@@ -442,8 +442,8 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
           await createClient.mutateAsync({
             slug,
             name: ep.name.trim(),
-            allowedReturnOrigins: origins,
-            defaultEcosystemId: slug,
+            allowed_return_origins: origins,
+            default_ecosystem_id: slug,
           });
         }
       }
@@ -460,12 +460,12 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
           }
           const template = templatesQ.data?.templates[p.templateSlug];
           await createProvider.mutateAsync({
-            templateSlug: p.templateSlug,
+            template_slug: p.templateSlug,
             slug,
-            clientId: p.clientId.trim(),
-            clientSecret: p.clientSecret.trim(),
-            ...(template?.identityMapping.clientSecretJwt
-              ? { identityMapping: withSecretJwt(template.identityMapping, p.secretJwt) }
+            client_id: p.clientId.trim(),
+            client_secret: p.clientSecret.trim(),
+            ...(template?.identity_mapping.client_secret_jwt
+              ? { identity_mapping: withSecretJwt(template.identity_mapping, p.secretJwt) }
               : {}),
           });
         }
@@ -479,7 +479,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
         const nameChanged = orig.name !== ep.name.trim();
         const parsedOrigins = normalizeOrigins(ep.origins);
         const originsChanged = !originsEqual(
-          orig.allowedReturnOrigins,
+          orig.allowed_return_origins,
           parsedOrigins,
         );
         if (slugChanged || nameChanged || originsChanged) {
@@ -500,23 +500,23 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
         if (!orig) continue;
         const slugChanged = orig.slug !== p.slug.trim() && p.slug.trim() !== "";
         const nameChanged = orig.name !== p.name.trim();
-        const clientIdChanged = orig.clientId !== p.clientId.trim();
+        const clientIdChanged = orig.client_id !== p.clientId.trim();
         const secretChanged = p.clientSecret.trim() !== "";
-        const origJwt = orig.identityMapping.clientSecretJwt;
+        const origJwt = orig.identity_mapping.client_secret_jwt;
         const secretJwtChanged =
           !!origJwt &&
           !!p.secretJwt &&
-          (origJwt.teamId !== p.secretJwt.teamId.trim() ||
-            origJwt.keyId !== p.secretJwt.keyId.trim());
+          (origJwt.team_id !== p.secretJwt.teamId.trim() ||
+            origJwt.key_id !== p.secretJwt.keyId.trim());
         if (slugChanged || nameChanged || clientIdChanged || secretChanged || secretJwtChanged) {
           await updateProviderMut.mutateAsync({
             slug: p.originalSlug,
             ...(slugChanged ? { slug: p.slug.trim() } : {}),
-            ...(nameChanged ? { displayName: p.name.trim() } : {}),
-            ...(clientIdChanged ? { clientId: p.clientId.trim() } : {}),
-            ...(secretChanged ? { clientSecret: p.clientSecret.trim() } : {}),
+            ...(nameChanged ? { display_name: p.name.trim() } : {}),
+            ...(clientIdChanged ? { client_id: p.clientId.trim() } : {}),
+            ...(secretChanged ? { client_secret: p.clientSecret.trim() } : {}),
             ...(secretJwtChanged
-              ? { identityMapping: withSecretJwt(orig.identityMapping, p.secretJwt) }
+              ? { identity_mapping: withSecretJwt(orig.identity_mapping, p.secretJwt) }
               : {}),
           });
         }
@@ -968,7 +968,7 @@ function ProviderCard({
                 onChange({
                   templateSlug: e.target.value,
                   name: t?.name ?? provider.name,
-                  secretJwt: secretJwtDraft(t?.identityMapping),
+                  secretJwt: secretJwtDraft(t?.identity_mapping),
                 });
               }}
               disabled={deleted}

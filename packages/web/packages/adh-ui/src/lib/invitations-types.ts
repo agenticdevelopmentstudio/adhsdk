@@ -27,34 +27,35 @@ export const TABLE_PENDING_USERS = "pending_users" as const;
 export const TABLE_INVITATIONS = "invitations" as const;
 
 // ── Backend response shapes ───────────────────────────────────────────────────
-// Field names match what the backend returns; the mappers below map them to the
-// frontend types (requestedDate = createdAt, lastRequestDate = lastRequestAt, etc.).
+// The /v1 wire rows: snake_case, `created`/`updated` in unix seconds. The mappers below
+// map them field by field to the frontend types (requestedDate = created, lastRequestDate =
+// last_request_at, etc.), so the exported view types do not move with the wire.
 
 export interface BackendRequest {
   id: string;
-  pendingUserId: string | null;
+  pending_user_id: string | null;
   name: string;
   email: string | null;
   phone: string | null;
   source: string | null;
   note: string | null;
-  createdAt: string;
-  userNumber: number | null;
+  created: number;
+  user_number: number | null;
 }
 
 export interface BackendPendingUser {
   id: string;
-  userNumber: number;
+  user_number: number;
   name: string;
   email: string | null;
   phone: string | null;
-  invitedCount: number;
-  requestCount: number;
-  lastRequestAt: string | null;
-  lastInviteSentAt: string | null;
-  firstRequestedAt: string;
-  lastSource: string | null;
-  lastNote: string | null;
+  invited_count: number;
+  request_count: number;
+  last_request_at: string | null;
+  last_invite_sent_at: string | null;
+  first_requested_at: string;
+  last_source: string | null;
+  last_note: string | null;
   status: string;
 }
 
@@ -63,27 +64,32 @@ export interface BackendInvite {
   name: string;
   channel: string;
   destination: string;
-  sentBy: string;
-  sentAt: string;
+  sent_by: string;
+  sent_at: string;
   status: string;
 }
 
 export interface BackendAdminNote {
   id: string;
   content: string;
-  createdBy: string;
-  subjectTable: string;
-  subjectId: string;
-  createdAt: string;
-  updatedAt: string;
+  created_by: string;
+  subject_table: string;
+  subject_id: string;
+  created: number;
+  updated: number;
 }
 
 export interface BackendHistoryEntry {
   id: string;
-  actorLabel: string | null;
-  actorId: string | null;
+  actor_label: string | null;
+  actor_id: string | null;
   action: string;
-  createdAt: string;
+  created: number;
+}
+
+/** The `YYYY-MM-DD` day of a unix-seconds timestamp, in UTC. */
+function dayOf(seconds: number): string {
+  return new Date(seconds * 1000).toISOString().slice(0, 10);
 }
 
 // ── Field mapping helpers ─────────────────────────────────────────────────────
@@ -91,11 +97,11 @@ export interface BackendHistoryEntry {
 export function toRequest(r: BackendRequest): InvitationRequest {
   return {
     id: r.id,
-    userNumber: r.userNumber ?? 0,
+    userNumber: r.user_number ?? 0,
     name: r.name,
     email: r.email ?? "",
     phone: r.phone ?? "",
-    requestedDate: r.createdAt.slice(0, 10),
+    requestedDate: dayOf(r.created),
     source: r.source ?? "",
     note: r.note ?? "",
   };
@@ -107,13 +113,13 @@ export function toPendingUser(u: BackendPendingUser): PendingUser {
     name: u.name,
     email: u.email ?? "",
     phone: u.phone ?? "",
-    invitedCount: u.invitedCount,
-    requestCount: u.requestCount,
-    lastRequestDate: u.lastRequestAt ? u.lastRequestAt.slice(0, 10) : null,
-    lastInviteSentDate: u.lastInviteSentAt ? u.lastInviteSentAt.slice(0, 10) : null,
-    requestedDate: u.firstRequestedAt.slice(0, 10),
-    lastSource: u.lastSource ?? "",
-    lastNote: u.lastNote,
+    invitedCount: u.invited_count,
+    requestCount: u.request_count,
+    lastRequestDate: u.last_request_at ? u.last_request_at.slice(0, 10) : null,
+    lastInviteSentDate: u.last_invite_sent_at ? u.last_invite_sent_at.slice(0, 10) : null,
+    requestedDate: u.first_requested_at.slice(0, 10),
+    lastSource: u.last_source ?? "",
+    lastNote: u.last_note,
   };
 }
 
@@ -123,8 +129,8 @@ export function toInvite(i: BackendInvite): Invite {
     name: i.name,
     // The invitations table stores destination (email or phone); use it as email.
     email: i.destination,
-    sentBy: i.sentBy,
-    sentDate: i.sentAt.slice(0, 10),
+    sentBy: i.sent_by,
+    sentDate: i.sent_at.slice(0, 10),
   };
 }
 
@@ -132,19 +138,19 @@ export function toAdminNote(n: BackendAdminNote): AdminNote {
   return {
     id: n.id,
     content: n.content,
-    author: n.createdBy,
-    addedDate: n.createdAt.slice(0, 10),
-    modifiedDate: n.updatedAt.slice(0, 10),
-    subjectTable: n.subjectTable,
-    subjectId: n.subjectId,
+    author: n.created_by,
+    addedDate: dayOf(n.created),
+    modifiedDate: dayOf(n.updated),
+    subjectTable: n.subject_table,
+    subjectId: n.subject_id,
   };
 }
 
 export function toHistoryEntry(h: BackendHistoryEntry): HistoryEntry {
   return {
     id: h.id,
-    actor: h.actorLabel ?? h.actorId ?? "system",
+    actor: h.actor_label ?? h.actor_id ?? "system",
     action: h.action,
-    timestamp: h.createdAt.slice(0, 10),
+    timestamp: dayOf(h.created),
   };
 }

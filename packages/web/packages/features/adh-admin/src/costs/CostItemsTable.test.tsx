@@ -16,10 +16,10 @@ const item = (over: Partial<InsightItem> = {}): InsightItem => ({
   provider: "anthropic",
   sku: "claude-sonnet",
   quantities: { requests: 340, input_tokens: 1_200_000 },
-  capturedMicros: 0,
-  costMicros: null,
+  captured_micros: 0,
+  cost_micros: null,
   source: "unpriced",
-  unpricedLines: 3,
+  unpriced_lines: 3,
   lines: 3,
   rates: [],
   ...over,
@@ -34,26 +34,26 @@ describe("CostCell", () => {
 
   it("formats a priced item, and marks one with unpriced lines as a floor", () => {
     const { container } = render(
-      <CostCell item={item({ source: "rate", costMicros: 1_500_000, unpricedLines: 0 })} />,
+      <CostCell item={item({ source: "rate", cost_micros: 1_500_000, unpriced_lines: 0 })} />,
     );
     expect(container.textContent).toBe("$1.50");
     cleanup();
     const floor = render(
-      <CostCell item={item({ source: "mixed", costMicros: 1_500_000, unpricedLines: 2 })} />,
+      <CostCell item={item({ source: "mixed", cost_micros: 1_500_000, unpriced_lines: 2 })} />,
     );
     expect(floor.container.textContent).toBe("≥ $1.50");
   });
 
   it("shows a customer-key item as a dash: quantity only, never our cost", () => {
     const { container } = render(
-      <CostCell item={item({ source: "customer_key", costMicros: 0, unpricedLines: 0 })} />,
+      <CostCell item={item({ source: "customer_key", cost_micros: 0, unpriced_lines: 0 })} />,
     );
     expect(container.textContent).toBe("—");
   });
 
   it("keeps a real zero as $0.00 (a priced free item is not unpriced)", () => {
     const { container } = render(
-      <CostCell item={item({ source: "rate", costMicros: 0, unpricedLines: 0 })} />,
+      <CostCell item={item({ source: "rate", cost_micros: 0, unpriced_lines: 0 })} />,
     );
     expect(container.textContent).toBe("$0.00");
   });
@@ -75,8 +75,8 @@ describe("CostItemsTable", () => {
         error={undefined}
         items={[
           item(),
-          item({ sku: "byok", source: "customer_key", costMicros: 0, unpricedLines: 0 }),
-          item({ sku: "priced", source: "rate", costMicros: 2_500_000, unpricedLines: 0 }),
+          item({ sku: "byok", source: "customer_key", cost_micros: 0, unpriced_lines: 0 }),
+          item({ sku: "priced", source: "rate", cost_micros: 2_500_000, unpriced_lines: 0 }),
         ]}
       />,
     );

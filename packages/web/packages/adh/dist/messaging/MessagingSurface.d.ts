@@ -2,8 +2,8 @@ import { type ReactElement, type ReactNode } from "react";
 /**
  * The Messaging compose form + log, once, for both scopes that have one.
  *
- * There are two messaging BACKENDS — `/messaging/{status,log,send}` (admin, platform-wide)
- * and `/messaging/ecosystems/:id/{status,log,send}` (one product's own Postmark/Twilio) —
+ * There are two messaging BACKENDS — `/v1/messaging/{status,messages}` (admin, platform-wide)
+ * and `/messaging/ecosystems/:id/{status,log,send}` (no /v1 route yet) (one product's own Postmark/Twilio) —
  * and they answer with the SAME OpenAPI components (`MessagingStatus`, `MessagingLogPage`,
  * `MessagingTemplate`), so the only thing that differed between the two screens was which
  * URL the hooks called. That difference stays with each host; everything a reader sees

@@ -63,7 +63,7 @@ const CHARTS: ChartSpec[] = [
       { key: "bytesOut", label: "Out" },
     ],
     format: formatBytes,
-    value: (p) => ({ bytesIn: p.bytesIn, bytesOut: p.bytesOut }),
+    value: (p) => ({ bytesIn: p.bytes_in, bytesOut: p.bytes_out }),
   },
   {
     title: "Server & DB time",
@@ -72,7 +72,7 @@ const CHARTS: ChartSpec[] = [
       { key: "dbMs", label: "Database" },
     ],
     format: formatDuration,
-    value: (p) => ({ serverMs: p.serverMs, dbMs: p.dbMs }),
+    value: (p) => ({ serverMs: p.server_ms, dbMs: p.db_ms }),
   },
   {
     title: "LLM tokens",
@@ -83,11 +83,11 @@ const CHARTS: ChartSpec[] = [
       { key: "cacheWrite", label: "Cache write" },
     ],
     format: formatCompact,
-    value: ({ llmTokens: t }) => ({
+    value: ({ llm_tokens: t }) => ({
       input: t.input,
       output: t.output,
-      cacheRead: t.cacheRead,
-      cacheWrite: t.cacheWrite,
+      cacheRead: t.cache_read,
+      cacheWrite: t.cache_write,
     }),
   },
   {
@@ -97,14 +97,14 @@ const CHARTS: ChartSpec[] = [
       { key: "smsSegments", label: "SMS" },
     ],
     format: formatCompact,
-    value: (p) => ({ emails: p.emails, smsSegments: p.smsSegments }),
+    value: (p) => ({ emails: p.emails, smsSegments: p.sms_segments }),
   },
   {
     title: "Direct cost",
     series: [{ key: "directMicros", label: "Direct cost" }],
     // An unpriced bucket is `null`: a gap in the line, never a drop to $0.00.
     format: (n) => formatMicros(Math.round(n)),
-    value: (p) => ({ directMicros: p.directMicros }),
+    value: (p) => ({ directMicros: p.direct_micros }),
   },
 ];
 
@@ -129,13 +129,13 @@ export function overviewTotals(points: readonly OverviewPoint[]): OverviewTotals
   const direct = directTotal(points);
   return {
     requests: sum((p) => p.requests),
-    bytesIn: sum((p) => p.bytesIn),
-    bytesOut: sum((p) => p.bytesOut),
-    serverMs: sum((p) => p.serverMs),
-    dbMs: sum((p) => p.dbMs),
-    llmTokens: sum((p) => llmTokenTotal(p.llmTokens)),
+    bytesIn: sum((p) => p.bytes_in),
+    bytesOut: sum((p) => p.bytes_out),
+    serverMs: sum((p) => p.server_ms),
+    dbMs: sum((p) => p.db_ms),
+    llmTokens: sum((p) => llmTokenTotal(p.llm_tokens)),
     emails: sum((p) => p.emails),
-    smsSegments: sum((p) => p.smsSegments),
+    smsSegments: sum((p) => p.sms_segments),
     directMicros: direct.directMicros,
     directIsFloor: direct.isFloor,
   };

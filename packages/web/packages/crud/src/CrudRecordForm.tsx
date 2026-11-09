@@ -40,7 +40,7 @@ export function toDraft(meta: CrudTableMeta, initial?: CrudRow): CrudDraft {
 
 /** Coerce the draft into a request payload. On CREATE, empty/untouched
  *  optional fields are OMITTED (so backend column defaults apply). On EDIT —
- *  the backend's PUT is a partial update — an emptied optional column must
+ *  the backend's update is a partial update — an emptied optional column must
  *  SEND something or the old value silently survives: `null` where nullable,
  *  `''` for plain strings (spec-valid — no minLength on generic-CRUD bodies);
  *  other types can't represent "cleared", so omission is the honest option.
@@ -49,7 +49,7 @@ export function toDraft(meta: CrudTableMeta, initial?: CrudRow): CrudDraft {
 export function buildPayload(meta: CrudTableMeta, draft: CrudDraft, mode: CrudFormMode): CrudRow {
   const payload: CrudRow = {}
   for (const column of writableColumns(meta)) {
-    // createOnly columns (client-supplied rdids) are stripped from PUT by the
+    // createOnly columns (client-supplied rdids) are stripped from the update by the
     // backend — sending them would silently no-op, so skip them on edit before
     // ANY validation (the required throw must never fire for them).
     if (mode === 'edit' && column.createOnly) continue
@@ -132,7 +132,7 @@ export function CrudRecordForm({
   const { draft, patch, dirty } = useDirtyDraft<CrudDraft>(() => toDraft(meta, initial))
   const { busy: saving, error, run } = useAction()
   // On EDIT, an untouched row has nothing to save — gate on dirty so re-submitting the
-  // loaded values (a silent no-op PUT) isn't offered. CREATE has no loaded baseline to
+  // loaded values (a silent no-op update) isn't offered. CREATE has no loaded baseline to
   // diff against — an all-defaults row is a legitimate save, so it stays exempt (same
   // "genuinely create-only" carve-out the rest of the dirty-gating work uses).
   const canSave = mode === 'create' || dirty
@@ -151,7 +151,7 @@ export function CrudRecordForm({
       {writableColumns(meta).map((column) => {
         const label = column.required ? `${column.name} *` : column.name
         // createOnly columns can't change on edit (the backend strips them
-        // from PUT) — show the seeded value, disabled, not a doomed edit. A viewer
+        // from the update) — show the seeded value, disabled, not a doomed edit. A viewer
         // without write access gets the same treatment for every column.
         const disabled = !canWrite || (mode === 'edit' && column.createOnly === true)
         const control = (
