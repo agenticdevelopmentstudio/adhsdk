@@ -75,8 +75,20 @@ public final class AIChatWindowController: SingleWindowController, NSToolbarDele
         }
     }
 
+    /// Ends the chat. A chat scripting built without showing has no window to
+    /// close, and one that is not on screen cannot take a close-button click,
+    /// so both let go of the chat directly; a window on screen closes the way
+    /// its close button would.
     public override func close() {
-        window?.performClose(nil)
+        guard let window else {
+            onClose?(self)
+            return
+        }
+        if window.isVisible {
+            window.performClose(nil)
+        } else {
+            window.close()
+        }
     }
 
     // MARK: - Window
