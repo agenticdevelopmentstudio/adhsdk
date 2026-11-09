@@ -50,12 +50,12 @@ class CampaignCreate:
             {
                 "name": name,
                 "subject": subject,
-                "htmlBody": html_body,
-                "textBody": text_body,
+                "html_body": html_body,
+                "text_body": text_body,
             }
         )
         if from_name is not UNSET:
-            field_dict["fromName"] = from_name
+            field_dict["from_name"] = from_name
 
         return field_dict
 
@@ -66,9 +66,9 @@ class CampaignCreate:
 
         subject = d.pop("subject")
 
-        html_body = d.pop("htmlBody")
+        html_body = d.pop("html_body")
 
-        text_body = d.pop("textBody")
+        text_body = d.pop("text_body")
 
         def _parse_from_name(data: object) -> None | str | Unset:
             if data is None:
@@ -77,7 +77,7 @@ class CampaignCreate:
                 return data
             return cast(None | str | Unset, data)
 
-        from_name = _parse_from_name(d.pop("fromName", UNSET))
+        from_name = _parse_from_name(d.pop("from_name", UNSET))
 
         campaign_create = cls(
             name=name,

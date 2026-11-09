@@ -45,7 +45,7 @@ class SendInvitesBody:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "pendingUserIds": pending_user_ids,
+                "pending_user_ids": pending_user_ids,
             }
         )
         if email is not UNSET:
@@ -60,7 +60,7 @@ class SendInvitesBody:
         from ..models.send_invite_channel import SendInviteChannel
 
         d = dict(src_dict)
-        pending_user_ids = cast(list[str], d.pop("pendingUserIds"))
+        pending_user_ids = cast(list[str], d.pop("pending_user_ids"))
 
         _email = d.pop("email", UNSET)
         email: SendInviteChannel | Unset

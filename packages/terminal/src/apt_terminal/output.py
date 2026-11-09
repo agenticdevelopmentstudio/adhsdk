@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterable, Sequence
+from datetime import UTC, datetime
 from typing import Any
 
 from rich.console import Console
@@ -37,7 +38,7 @@ def emit_table(
     for col in columns:
         t.add_column(col)
     for row in rows:
-        t.add_row(*[_fmt(row.get(c)) for c in columns])
+        t.add_row(*[_fmt_cell(c, row.get(c)) for c in columns])
     _console.print(t)
 
 
@@ -92,6 +93,17 @@ def warn(msg: str) -> None:
 def die(msg: str, code: int = 1) -> None:
     _err_console.print(f"[red]error[/red] {msg}")
     raise SystemExit(code)
+
+
+# /v1 sends a resource's creation and update times as unix seconds under these keys; every
+# other timestamp stays an ISO string. `--json` keeps the wire value, a table reads it as UTC.
+UNIX_TIME_KEYS = frozenset({"created", "updated"})
+
+
+def _fmt_cell(column: str, v: Any) -> str:
+    if column in UNIX_TIME_KEYS and isinstance(v, int) and not isinstance(v, bool):
+        return datetime.fromtimestamp(v, tz=UTC).strftime("%Y-%m-%d %H:%M:%SZ")
+    return _fmt(v)
 
 
 def _fmt(v: Any) -> str:

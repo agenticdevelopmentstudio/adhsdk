@@ -37,8 +37,8 @@ class ChatDefinition:
             refused (a uuid in the path is always read as an id).
         encryption_mode (ChatDefinitionEncryptionMode): Read-only. Only `none` until end-to-end encryption lands.
         built_in (bool): True for `direct` (one-to-one DMs): read-only, present in every ecosystem.
-        created_at (None | str):
-        updated_at (None | str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         deleted_at (None | str): Always null here: a deleted definition is never listed or returned.
     """
 
@@ -57,8 +57,8 @@ class ChatDefinition:
     slug: str
     encryption_mode: ChatDefinitionEncryptionMode
     built_in: bool
-    created_at: None | str
-    updated_at: None | str
+    created: int
+    updated: int
     deleted_at: None | str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -97,11 +97,9 @@ class ChatDefinition:
 
         built_in = self.built_in
 
-        created_at: None | str
-        created_at = self.created_at
+        created = self.created
 
-        updated_at: None | str
-        updated_at = self.updated_at
+        updated = self.updated
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -111,23 +109,23 @@ class ChatDefinition:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
+                "ecosystem_id": ecosystem_id,
                 "name": name,
                 "description": description,
                 "state": state,
-                "maxParticipants": max_participants,
-                "allowInvites": allow_invites,
-                "invitePolicy": invite_policy,
-                "userConfigurable": user_configurable,
-                "personaReplyPolicy": persona_reply_policy,
-                "allowAddedPersonas": allow_added_personas,
-                "personaIds": persona_ids,
+                "max_participants": max_participants,
+                "allow_invites": allow_invites,
+                "invite_policy": invite_policy,
+                "user_configurable": user_configurable,
+                "persona_reply_policy": persona_reply_policy,
+                "allow_added_personas": allow_added_personas,
+                "persona_ids": persona_ids,
                 "slug": slug,
-                "encryptionMode": encryption_mode,
-                "builtIn": built_in,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "deletedAt": deleted_at,
+                "encryption_mode": encryption_mode,
+                "built_in": built_in,
+                "created": created,
+                "updated": updated,
+                "deleted_at": deleted_at,
             }
         )
 
@@ -143,7 +141,7 @@ class ChatDefinition:
                 return data
             return cast(None | str, data)
 
-        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId"))
+        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystem_id"))
 
         name = d.pop("name")
 
@@ -151,20 +149,20 @@ class ChatDefinition:
 
         state = ChatDefinitionState(d.pop("state"))
 
-        max_participants = d.pop("maxParticipants")
+        max_participants = d.pop("max_participants")
 
-        allow_invites = d.pop("allowInvites")
+        allow_invites = d.pop("allow_invites")
 
-        invite_policy = ChatDefinitionInvitePolicy(d.pop("invitePolicy"))
+        invite_policy = ChatDefinitionInvitePolicy(d.pop("invite_policy"))
 
-        user_configurable = d.pop("userConfigurable")
+        user_configurable = d.pop("user_configurable")
 
-        persona_reply_policy = ChatDefinitionPersonaReplyPolicy(d.pop("personaReplyPolicy"))
+        persona_reply_policy = ChatDefinitionPersonaReplyPolicy(d.pop("persona_reply_policy"))
 
-        allow_added_personas = d.pop("allowAddedPersonas")
+        allow_added_personas = d.pop("allow_added_personas")
 
         persona_ids = []
-        _persona_ids = d.pop("personaIds")
+        _persona_ids = d.pop("persona_ids")
         for persona_ids_item_data in _persona_ids:
             persona_ids_item = UUID(persona_ids_item_data)
 
@@ -172,30 +170,20 @@ class ChatDefinition:
 
         slug = d.pop("slug")
 
-        encryption_mode = ChatDefinitionEncryptionMode(d.pop("encryptionMode"))
+        encryption_mode = ChatDefinitionEncryptionMode(d.pop("encryption_mode"))
 
-        built_in = d.pop("builtIn")
+        built_in = d.pop("built_in")
 
-        def _parse_created_at(data: object) -> None | str:
-            if data is None:
-                return data
-            return cast(None | str, data)
+        created = d.pop("created")
 
-        created_at = _parse_created_at(d.pop("createdAt"))
-
-        def _parse_updated_at(data: object) -> None | str:
-            if data is None:
-                return data
-            return cast(None | str, data)
-
-        updated_at = _parse_updated_at(d.pop("updatedAt"))
+        updated = d.pop("updated")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt"))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at"))
 
         chat_definition = cls(
             id=id,
@@ -213,8 +201,8 @@ class ChatDefinition:
             slug=slug,
             encryption_mode=encryption_mode,
             built_in=built_in,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             deleted_at=deleted_at,
         )
 

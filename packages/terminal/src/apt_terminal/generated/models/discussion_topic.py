@@ -24,8 +24,8 @@ class DiscussionTopic:
         is_public (bool):
         reply_count (int):
         last_activity_at (str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         author_kind (DiscussionTopicAuthorKind | Unset): Kind of principal that wrote the topic (omitted on the public
             surface); null when nobody did (a storage token).
         author_id (None | str | Unset): Id of that principal.
@@ -50,8 +50,8 @@ class DiscussionTopic:
     is_public: bool
     reply_count: int
     last_activity_at: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     author_kind: DiscussionTopicAuthorKind | Unset = UNSET
     author_id: None | str | Unset = UNSET
     category_id: None | str | Unset = UNSET
@@ -79,9 +79,9 @@ class DiscussionTopic:
 
         last_activity_at = self.last_activity_at
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         author_kind: str | Unset = UNSET
         if not isinstance(self.author_kind, Unset):
@@ -134,33 +134,33 @@ class DiscussionTopic:
         field_dict.update(
             {
                 "id": id,
-                "communityId": community_id,
+                "community_id": community_id,
                 "title": title,
-                "isPinned": is_pinned,
-                "isLocked": is_locked,
-                "isPublic": is_public,
-                "replyCount": reply_count,
-                "lastActivityAt": last_activity_at,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "is_pinned": is_pinned,
+                "is_locked": is_locked,
+                "is_public": is_public,
+                "reply_count": reply_count,
+                "last_activity_at": last_activity_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if author_kind is not UNSET:
-            field_dict["authorKind"] = author_kind
+            field_dict["author_kind"] = author_kind
         if author_id is not UNSET:
-            field_dict["authorId"] = author_id
+            field_dict["author_id"] = author_id
         if category_id is not UNSET:
-            field_dict["categoryId"] = category_id
+            field_dict["category_id"] = category_id
         if answered_post_id is not UNSET:
-            field_dict["answeredPostId"] = answered_post_id
+            field_dict["answered_post_id"] = answered_post_id
         if excerpt is not UNSET:
             field_dict["excerpt"] = excerpt
         if author_name is not UNSET:
-            field_dict["authorName"] = author_name
+            field_dict["author_name"] = author_name
         if author_slug is not UNSET:
-            field_dict["authorSlug"] = author_slug
+            field_dict["author_slug"] = author_slug
         if author_avatar_url is not UNSET:
-            field_dict["authorAvatarUrl"] = author_avatar_url
+            field_dict["author_avatar_url"] = author_avatar_url
 
         return field_dict
 
@@ -169,25 +169,25 @@ class DiscussionTopic:
         d = dict(src_dict)
         id = d.pop("id")
 
-        community_id = d.pop("communityId")
+        community_id = d.pop("community_id")
 
         title = d.pop("title")
 
-        is_pinned = d.pop("isPinned")
+        is_pinned = d.pop("is_pinned")
 
-        is_locked = d.pop("isLocked")
+        is_locked = d.pop("is_locked")
 
-        is_public = d.pop("isPublic")
+        is_public = d.pop("is_public")
 
-        reply_count = d.pop("replyCount")
+        reply_count = d.pop("reply_count")
 
-        last_activity_at = d.pop("lastActivityAt")
+        last_activity_at = d.pop("last_activity_at")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        _author_kind = d.pop("authorKind", UNSET)
+        _author_kind = d.pop("author_kind", UNSET)
         author_kind: DiscussionTopicAuthorKind | Unset
         if isinstance(_author_kind, Unset):
             author_kind = UNSET
@@ -201,7 +201,7 @@ class DiscussionTopic:
                 return data
             return cast(None | str | Unset, data)
 
-        author_id = _parse_author_id(d.pop("authorId", UNSET))
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_category_id(data: object) -> None | str | Unset:
             if data is None:
@@ -210,7 +210,7 @@ class DiscussionTopic:
                 return data
             return cast(None | str | Unset, data)
 
-        category_id = _parse_category_id(d.pop("categoryId", UNSET))
+        category_id = _parse_category_id(d.pop("category_id", UNSET))
 
         def _parse_answered_post_id(data: object) -> None | str | Unset:
             if data is None:
@@ -219,7 +219,7 @@ class DiscussionTopic:
                 return data
             return cast(None | str | Unset, data)
 
-        answered_post_id = _parse_answered_post_id(d.pop("answeredPostId", UNSET))
+        answered_post_id = _parse_answered_post_id(d.pop("answered_post_id", UNSET))
 
         def _parse_excerpt(data: object) -> None | str | Unset:
             if data is None:
@@ -237,7 +237,7 @@ class DiscussionTopic:
                 return data
             return cast(None | str | Unset, data)
 
-        author_name = _parse_author_name(d.pop("authorName", UNSET))
+        author_name = _parse_author_name(d.pop("author_name", UNSET))
 
         def _parse_author_slug(data: object) -> None | str | Unset:
             if data is None:
@@ -246,7 +246,7 @@ class DiscussionTopic:
                 return data
             return cast(None | str | Unset, data)
 
-        author_slug = _parse_author_slug(d.pop("authorSlug", UNSET))
+        author_slug = _parse_author_slug(d.pop("author_slug", UNSET))
 
         def _parse_author_avatar_url(data: object) -> None | str | Unset:
             if data is None:
@@ -255,7 +255,7 @@ class DiscussionTopic:
                 return data
             return cast(None | str | Unset, data)
 
-        author_avatar_url = _parse_author_avatar_url(d.pop("authorAvatarUrl", UNSET))
+        author_avatar_url = _parse_author_avatar_url(d.pop("author_avatar_url", UNSET))
 
         discussion_topic = cls(
             id=id,
@@ -266,8 +266,8 @@ class DiscussionTopic:
             is_public=is_public,
             reply_count=reply_count,
             last_activity_at=last_activity_at,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             author_kind=author_kind,
             author_id=author_id,
             category_id=category_id,

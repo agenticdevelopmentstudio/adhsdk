@@ -22,8 +22,8 @@ class UsageFixedCost:
         effective_from (datetime.date):
         effective_to (datetime.date | None): Last day it charges (inclusive); null ⇒ still in effect
         note (str):
-        created_at (datetime.datetime):
-        updated_at (datetime.datetime):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: UUID
@@ -33,8 +33,8 @@ class UsageFixedCost:
     effective_from: datetime.date
     effective_to: datetime.date | None
     note: str
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,9 +56,9 @@ class UsageFixedCost:
 
         note = self.note
 
-        created_at = self.created_at.isoformat()
+        created = self.created
 
-        updated_at = self.updated_at.isoformat()
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -67,12 +67,12 @@ class UsageFixedCost:
                 "id": id,
                 "provider": provider,
                 "label": label,
-                "monthlyMicros": monthly_micros,
-                "effectiveFrom": effective_from,
-                "effectiveTo": effective_to,
+                "monthly_micros": monthly_micros,
+                "effective_from": effective_from,
+                "effective_to": effective_to,
                 "note": note,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -87,9 +87,9 @@ class UsageFixedCost:
 
         label = d.pop("label")
 
-        monthly_micros = d.pop("monthlyMicros")
+        monthly_micros = d.pop("monthly_micros")
 
-        effective_from = datetime.date.fromisoformat(d.pop("effectiveFrom"))
+        effective_from = datetime.date.fromisoformat(d.pop("effective_from"))
 
         def _parse_effective_to(data: object) -> datetime.date | None:
             if data is None:
@@ -104,13 +104,13 @@ class UsageFixedCost:
                 pass
             return cast(datetime.date | None, data)
 
-        effective_to = _parse_effective_to(d.pop("effectiveTo"))
+        effective_to = _parse_effective_to(d.pop("effective_to"))
 
         note = d.pop("note")
 
-        created_at = datetime.datetime.fromisoformat(d.pop("createdAt"))
+        created = d.pop("created")
 
-        updated_at = datetime.datetime.fromisoformat(d.pop("updatedAt"))
+        updated = d.pop("updated")
 
         usage_fixed_cost = cls(
             id=id,
@@ -120,8 +120,8 @@ class UsageFixedCost:
             effective_from=effective_from,
             effective_to=effective_to,
             note=note,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         usage_fixed_cost.additional_properties = d

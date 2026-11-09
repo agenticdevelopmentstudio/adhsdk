@@ -40,7 +40,7 @@ class PersonaBootstrapChat:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "conversationsUrl": conversations_url,
+                "conversations_url": conversations_url,
                 "streaming": streaming,
                 "limits": limits,
             }
@@ -55,7 +55,7 @@ class PersonaBootstrapChat:
         )
 
         d = dict(src_dict)
-        conversations_url = d.pop("conversationsUrl")
+        conversations_url = d.pop("conversations_url")
 
         streaming = PersonaBootstrapChatStreaming(d.pop("streaming"))
 

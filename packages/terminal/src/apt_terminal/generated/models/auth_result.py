@@ -39,7 +39,7 @@ class AuthResult:
         field_dict.update(
             {
                 "token": token,
-                "refreshToken": refresh_token,
+                "refresh_token": refresh_token,
                 "user": user,
             }
         )
@@ -53,7 +53,7 @@ class AuthResult:
         d = dict(src_dict)
         token = d.pop("token")
 
-        refresh_token = d.pop("refreshToken")
+        refresh_token = d.pop("refresh_token")
 
         user = User.from_dict(d.pop("user"))
 

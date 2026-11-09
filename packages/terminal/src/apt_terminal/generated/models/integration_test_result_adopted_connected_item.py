@@ -53,13 +53,13 @@ class IntegrationTestResultAdoptedConnectedItem:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "installationId": installation_id,
-                "accountLogin": account_login,
-                "targetType": target_type,
+                "installation_id": installation_id,
+                "account_login": account_login,
+                "target_type": target_type,
             }
         )
         if connection_id is not UNSET:
-            field_dict["connectionId"] = connection_id
+            field_dict["connection_id"] = connection_id
         if skipped is not UNSET:
             field_dict["skipped"] = skipped
         if warning is not UNSET:
@@ -70,13 +70,13 @@ class IntegrationTestResultAdoptedConnectedItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        installation_id = d.pop("installationId")
+        installation_id = d.pop("installation_id")
 
-        account_login = d.pop("accountLogin")
+        account_login = d.pop("account_login")
 
-        target_type = d.pop("targetType")
+        target_type = d.pop("target_type")
 
-        connection_id = d.pop("connectionId", UNSET)
+        connection_id = d.pop("connection_id", UNSET)
 
         skipped = d.pop("skipped", UNSET)
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import inspect
 import json
 import sys
 import types
@@ -9,6 +10,7 @@ from collections.abc import Callable
 from typing import Annotated, Any
 
 import attrs
+import httpx
 import typer
 
 from apt_terminal import errors
@@ -58,7 +60,7 @@ def field_type(model: type, field: attrs.Attribute[Any]) -> object:
     """A field's annotation as a type, not as the string `from __future__ import annotations` leaves.
 
     Since openapi-python-client 0.29 the generated models postpone their annotations, so
-    `field.type` is source text such as `"PostPersonaServicesBodyProviderKind"`. It is
+    `field.type` is source text such as `"PostV1AiServicesBodyProviderKind"`. It is
     evaluated in the model's own module, where the generator imported every enum it names.
     A name that module imports only under TYPE_CHECKING (nested models, never enums)
     cannot resolve and comes back as None, which `enum_type` already treats as "not an enum".
@@ -128,41 +130,120 @@ def build_body(model: type, pairs: list[str]) -> object:
         ) from exc
 
 
+# The /v1 maximum page size. A list command shows everything, so it reads in the biggest
+# pages the server allows and follows `has_more` rather than stopping at the default (10).
+PAGE_SIZE = 100
+
+
+def send(
+    op: Any,
+    *,
+    client_factory: Callable[[], Any],
+    refresh: Callable[[], bool],
+    path_args: tuple[Any, ...] = (),
+    params: dict[str, Any] | None = None,
+    body: object | None = None,
+) -> httpx.Response:
+    """Issue one generated op over raw httpx, retry once on 401 after `refresh`, raise on >=400.
+
+    The request comes from the generated op's own `_get_kwargs` (routes, query names and
+    body serialization stay in one place), but it is sent with raw httpx and the server's
+    raw JSON is what the caller gets. We deliberately do NOT use the generated
+    sync_detailed(): its strict attrs from_dict() raises on any drift between the spec and
+    the live server, and a display tool should show whatever the server actually returned.
+    """
+    kwargs = op._get_kwargs(
+        *path_args, **(params or {}), **({"body": body} if body is not None else {})
+    )
+    resp: httpx.Response = client_factory().get_httpx_client().request(**kwargs)
+    if resp.status_code == 401 and refresh():
+        resp = client_factory().get_httpx_client().request(**kwargs)
+    if resp.status_code >= 400:
+        raise errors.error_for_status(
+            resp.status_code, errors.message_from_bytes(resp.content, f"HTTP {resp.status_code}")
+        )
+    return resp
+
+
+def is_list_envelope(data: object) -> bool:
+    """A /v1 collection: `{"object": "list", "data": [...], "has_more": bool, "url": str}`."""
+    return (
+        isinstance(data, dict) and data.get("object") == "list" and isinstance(data.get("data"), list)
+    )
+
+
+def pages(op: Any) -> bool:
+    """Whether the generated op takes the /v1 cursor parameters."""
+    names = inspect.signature(op._get_kwargs).parameters
+    return "limit" in names and "starting_after" in names
+
+
+def fetch(
+    op: Any,
+    *,
+    client_factory: Callable[[], Any],
+    refresh: Callable[[], bool],
+    path_args: tuple[Any, ...] = (),
+    params: dict[str, Any] | None = None,
+    body: object | None = None,
+) -> Any:
+    """The op's JSON result; a list envelope comes back as the rows of EVERY page.
+
+    A paged op is read `PAGE_SIZE` at a time, passing the last row's id as
+    `starting_after` while the server says `has_more`. Rows without an id (a bare list of
+    strings) cannot be cursored past, so that is where reading stops.
+    """
+    paged = pages(op)
+    query = {**(params or {}), **({"limit": PAGE_SIZE} if paged else {})}
+
+    def one(extra: dict[str, Any]) -> Any:
+        resp = send(
+            op,
+            client_factory=client_factory,
+            refresh=refresh,
+            path_args=path_args,
+            params={**query, **extra},
+            body=body,
+        )
+        try:
+            return resp.json()
+        except ValueError:
+            return None
+
+    data = one({})
+    if not is_list_envelope(data):
+        return data
+    rows: list[Any] = list(data["data"])
+    while paged and data.get("has_more") and rows:
+        last = rows[-1]
+        cursor = last.get("id") if isinstance(last, dict) else None
+        if not cursor:
+            break
+        data = one({"starting_after": cursor})
+        if not is_list_envelope(data) or not data["data"]:
+            break
+        rows.extend(data["data"])
+    return rows
+
+
 def execute(
     op: Any,
     *,
     session: Session,
     path_args: tuple[Any, ...] = (),
+    params: dict[str, Any] | None = None,
     body: object | None = None,
     json_out: bool = False,
 ) -> None:
-    """Call op via raw httpx, retry once on 401, then render or raise."""
-
-    def call(client: Any) -> Any:
-        # Build the request from the generated op's own kwargs (keeps routes +
-        # body serialization in one place), but issue it with raw httpx and
-        # render the server's raw JSON below. We deliberately do NOT use the
-        # generated sync_detailed(): its strict attrs from_dict() raises on any
-        # field drift between the spec and the live server (which we know
-        # exists, e.g. auth token vs accessToken), and a display tool should
-        # show whatever the server actually returned.
-        kwargs = op._get_kwargs(*path_args, **({"body": body} if body is not None else {}))
-        return client.get_httpx_client().request(**kwargs)
-
-    client = session.client_factory()
-    resp = call(client)
-
-    if resp.status_code == 401 and session.refresh():
-        client = session.client_factory()
-        resp = call(client)
-
-    if resp.status_code >= 400:
-        raise errors.error_for_status(resp.status_code, errors.message_from_bytes(resp.content, f"HTTP {resp.status_code}"))
-
-    try:
-        data = resp.json()
-    except ValueError:
-        data = None
+    """Call op as the logged-in user, then render the result or raise."""
+    data = fetch(
+        op,
+        client_factory=session.client_factory,
+        refresh=session.refresh,
+        path_args=path_args,
+        params=params,
+        body=body,
+    )
     render(data, json_out)
 
 
@@ -212,4 +293,7 @@ def build_resource_app(res: Resource, session_getter: Callable[[], Session]) -> 
 def _register_action(app: typer.Typer, action: Action, session_getter: Callable[[], Session]) -> None:
     @app.command(action.name, help=action.help)
     def _action(id: str, json_: JsonOpt = False) -> None:
-        execute(action.op, session=session_getter(), path_args=(id,), json_out=json_)
+        if action.id_param is None:
+            execute(action.op, session=session_getter(), path_args=(id,), json_out=json_)
+        else:
+            execute(action.op, session=session_getter(), params={action.id_param: id}, json_out=json_)

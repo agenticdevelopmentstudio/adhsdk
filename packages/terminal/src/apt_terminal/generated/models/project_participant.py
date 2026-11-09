@@ -62,16 +62,16 @@ class ProjectParticipant:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
-                "participantKind": participant_kind,
-                "participantId": participant_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
+                "participant_kind": participant_kind,
+                "participant_id": participant_id,
                 "role": role,
-                "addedAt": added_at,
+                "added_at": added_at,
             }
         )
         if added_by is not UNSET:
-            field_dict["addedBy"] = added_by
+            field_dict["added_by"] = added_by
 
         return field_dict
 
@@ -80,17 +80,17 @@ class ProjectParticipant:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
-        participant_kind = ProjectParticipantParticipantKind(d.pop("participantKind"))
+        participant_kind = ProjectParticipantParticipantKind(d.pop("participant_kind"))
 
-        participant_id = d.pop("participantId")
+        participant_id = d.pop("participant_id")
 
         role = d.pop("role")
 
-        added_at = d.pop("addedAt")
+        added_at = d.pop("added_at")
 
         def _parse_added_by(data: object) -> None | str | Unset:
             if data is None:
@@ -99,7 +99,7 @@ class ProjectParticipant:
                 return data
             return cast(None | str | Unset, data)
 
-        added_by = _parse_added_by(d.pop("addedBy", UNSET))
+        added_by = _parse_added_by(d.pop("added_by", UNSET))
 
         project_participant = cls(
             id=id,

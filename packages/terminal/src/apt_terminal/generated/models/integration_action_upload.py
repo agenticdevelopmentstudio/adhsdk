@@ -42,12 +42,12 @@ class IntegrationActionUpload:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "uploadToken": upload_token,
-                "fileName": file_name,
+                "upload_token": upload_token,
+                "file_name": file_name,
             }
         )
         if album_id is not UNSET:
-            field_dict["albumId"] = album_id
+            field_dict["album_id"] = album_id
         if description is not UNSET:
             field_dict["description"] = description
 
@@ -56,11 +56,11 @@ class IntegrationActionUpload:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        upload_token = d.pop("uploadToken")
+        upload_token = d.pop("upload_token")
 
-        file_name = d.pop("fileName")
+        file_name = d.pop("file_name")
 
-        album_id = d.pop("albumId", UNSET)
+        album_id = d.pop("album_id", UNSET)
 
         description = d.pop("description", UNSET)
 

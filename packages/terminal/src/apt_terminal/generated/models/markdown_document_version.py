@@ -33,7 +33,7 @@ class MarkdownDocumentVersion:
         content (str):
         content_hash (str):
         size_bytes (int):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         is_deleted (bool):
         deleted_at (None | str | Unset):
         frontmatter (MarkdownDocumentVersionFrontmatterType0 | None | Unset):
@@ -53,7 +53,7 @@ class MarkdownDocumentVersion:
     content: str
     content_hash: str
     size_bytes: int
-    created_at: str
+    created: int
     is_deleted: bool
     deleted_at: None | str | Unset = UNSET
     frontmatter: MarkdownDocumentVersionFrontmatterType0 | None | Unset = UNSET
@@ -89,7 +89,7 @@ class MarkdownDocumentVersion:
 
         size_bytes = self.size_bytes
 
-        created_at = self.created_at
+        created = self.created
 
         is_deleted = self.is_deleted
 
@@ -130,30 +130,30 @@ class MarkdownDocumentVersion:
         field_dict.update(
             {
                 "id": id,
-                "documentId": document_id,
-                "writerCustomerId": writer_customer_id,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "document_id": document_id,
+                "writer_customer_id": writer_customer_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "version": version,
                 "title": title,
                 "content": content,
-                "contentHash": content_hash,
-                "sizeBytes": size_bytes,
-                "createdAt": created_at,
-                "isDeleted": is_deleted,
+                "content_hash": content_hash,
+                "size_bytes": size_bytes,
+                "created": created,
+                "is_deleted": is_deleted,
             }
         )
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if frontmatter is not UNSET:
             field_dict["frontmatter"] = frontmatter
         if author_type is not UNSET:
-            field_dict["authorType"] = author_type
+            field_dict["author_type"] = author_type
         if author_id is not UNSET:
-            field_dict["authorId"] = author_id
+            field_dict["author_id"] = author_id
         if author_name is not UNSET:
-            field_dict["authorName"] = author_name
+            field_dict["author_name"] = author_name
 
         return field_dict
 
@@ -166,15 +166,15 @@ class MarkdownDocumentVersion:
         d = dict(src_dict)
         id = d.pop("id")
 
-        document_id = d.pop("documentId")
+        document_id = d.pop("document_id")
 
-        writer_customer_id = d.pop("writerCustomerId")
+        writer_customer_id = d.pop("writer_customer_id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        owner_kind = MarkdownDocumentVersionOwnerKind(d.pop("ownerKind"))
+        owner_kind = MarkdownDocumentVersionOwnerKind(d.pop("owner_kind"))
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         version = d.pop("version")
 
@@ -182,13 +182,13 @@ class MarkdownDocumentVersion:
 
         content = d.pop("content")
 
-        content_hash = d.pop("contentHash")
+        content_hash = d.pop("content_hash")
 
-        size_bytes = d.pop("sizeBytes")
+        size_bytes = d.pop("size_bytes")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        is_deleted = d.pop("isDeleted")
+        is_deleted = d.pop("is_deleted")
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -197,7 +197,7 @@ class MarkdownDocumentVersion:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         def _parse_frontmatter(
             data: object,
@@ -225,7 +225,7 @@ class MarkdownDocumentVersion:
                 return data
             return cast(None | str | Unset, data)
 
-        author_type = _parse_author_type(d.pop("authorType", UNSET))
+        author_type = _parse_author_type(d.pop("author_type", UNSET))
 
         def _parse_author_id(data: object) -> None | str | Unset:
             if data is None:
@@ -234,7 +234,7 @@ class MarkdownDocumentVersion:
                 return data
             return cast(None | str | Unset, data)
 
-        author_id = _parse_author_id(d.pop("authorId", UNSET))
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_author_name(data: object) -> None | str | Unset:
             if data is None:
@@ -243,7 +243,7 @@ class MarkdownDocumentVersion:
                 return data
             return cast(None | str | Unset, data)
 
-        author_name = _parse_author_name(d.pop("authorName", UNSET))
+        author_name = _parse_author_name(d.pop("author_name", UNSET))
 
         markdown_document_version = cls(
             id=id,
@@ -257,7 +257,7 @@ class MarkdownDocumentVersion:
             content=content,
             content_hash=content_hash,
             size_bytes=size_bytes,
-            created_at=created_at,
+            created=created,
             is_deleted=is_deleted,
             deleted_at=deleted_at,
             frontmatter=frontmatter,

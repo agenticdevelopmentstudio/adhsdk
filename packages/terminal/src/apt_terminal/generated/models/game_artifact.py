@@ -28,8 +28,8 @@ class GameArtifact:
         origin (str):
         visibility (GameArtifactVisibility):
         status (str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         slot (None | str | Unset):
         data (GameArtifactDataType0 | None | Unset):
         text (None | str | Unset):
@@ -49,8 +49,8 @@ class GameArtifact:
     origin: str
     visibility: GameArtifactVisibility
     status: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     slot: None | str | Unset = UNSET
     data: GameArtifactDataType0 | None | Unset = UNSET
     text: None | str | Unset = UNSET
@@ -82,9 +82,9 @@ class GameArtifact:
 
         status = self.status
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         slot: None | str | Unset
         if isinstance(self.slot, Unset):
@@ -147,14 +147,14 @@ class GameArtifact:
         field_dict.update(
             {
                 "id": id,
-                "gameId": game_id,
+                "game_id": game_id,
                 "kind": kind,
                 "role": role,
                 "origin": origin,
                 "visibility": visibility,
                 "status": status,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if slot is not UNSET:
@@ -164,19 +164,19 @@ class GameArtifact:
         if text is not UNSET:
             field_dict["text"] = text
         if content_format is not UNSET:
-            field_dict["contentFormat"] = content_format
+            field_dict["content_format"] = content_format
         if engine_version is not UNSET:
-            field_dict["engineVersion"] = engine_version
+            field_dict["engine_version"] = engine_version
         if summary is not UNSET:
             field_dict["summary"] = summary
         if exposure_count is not UNSET:
-            field_dict["exposureCount"] = exposure_count
+            field_dict["exposure_count"] = exposure_count
         if score is not UNSET:
             field_dict["score"] = score
         if published_at is not UNSET:
-            field_dict["publishedAt"] = published_at
+            field_dict["published_at"] = published_at
         if last_active_at is not UNSET:
-            field_dict["lastActiveAt"] = last_active_at
+            field_dict["last_active_at"] = last_active_at
 
         return field_dict
 
@@ -188,7 +188,7 @@ class GameArtifact:
         d = dict(src_dict)
         id = d.pop("id")
 
-        game_id = d.pop("gameId")
+        game_id = d.pop("game_id")
 
         kind = d.pop("kind")
 
@@ -205,9 +205,9 @@ class GameArtifact:
 
         status = d.pop("status")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_slot(data: object) -> None | str | Unset:
             if data is None:
@@ -251,7 +251,7 @@ class GameArtifact:
                 return data
             return cast(None | str | Unset, data)
 
-        content_format = _parse_content_format(d.pop("contentFormat", UNSET))
+        content_format = _parse_content_format(d.pop("content_format", UNSET))
 
         def _parse_engine_version(data: object) -> None | str | Unset:
             if data is None:
@@ -260,7 +260,7 @@ class GameArtifact:
                 return data
             return cast(None | str | Unset, data)
 
-        engine_version = _parse_engine_version(d.pop("engineVersion", UNSET))
+        engine_version = _parse_engine_version(d.pop("engine_version", UNSET))
 
         def _parse_summary(data: object) -> GameArtifactSummaryType0 | None | Unset:
             if data is None:
@@ -279,7 +279,7 @@ class GameArtifact:
 
         summary = _parse_summary(d.pop("summary", UNSET))
 
-        exposure_count = d.pop("exposureCount", UNSET)
+        exposure_count = d.pop("exposure_count", UNSET)
 
         score = d.pop("score", UNSET)
 
@@ -290,7 +290,7 @@ class GameArtifact:
                 return data
             return cast(None | str | Unset, data)
 
-        published_at = _parse_published_at(d.pop("publishedAt", UNSET))
+        published_at = _parse_published_at(d.pop("published_at", UNSET))
 
         def _parse_last_active_at(data: object) -> None | str | Unset:
             if data is None:
@@ -299,7 +299,7 @@ class GameArtifact:
                 return data
             return cast(None | str | Unset, data)
 
-        last_active_at = _parse_last_active_at(d.pop("lastActiveAt", UNSET))
+        last_active_at = _parse_last_active_at(d.pop("last_active_at", UNSET))
 
         game_artifact = cls(
             id=id,
@@ -309,8 +309,8 @@ class GameArtifact:
             origin=origin,
             visibility=visibility,
             status=status,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             slot=slot,
             data=data,
             text=text,

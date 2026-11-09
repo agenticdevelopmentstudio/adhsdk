@@ -28,8 +28,8 @@ class ProjectIteration:
         end_date (str): date (YYYY-MM-DD), inclusive; never before startDate
         state (ProjectIterationState): derived from startDate/endDate against today (UTC), inclusive at both ends:
             upcoming before the box opens, active within it, completed after
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         is_deleted (bool):
         author_kind (ProjectIterationAuthorKind | Unset): Kind of principal that created the iteration; null when nobody
             did (a storage token).
@@ -48,8 +48,8 @@ class ProjectIteration:
     start_date: str
     end_date: str
     state: ProjectIterationState
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     is_deleted: bool
     author_kind: ProjectIterationAuthorKind | Unset = UNSET
     author_id: None | str | Unset = UNSET
@@ -77,9 +77,9 @@ class ProjectIteration:
 
         state = self.state.value
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         is_deleted = self.is_deleted
 
@@ -112,29 +112,29 @@ class ProjectIteration:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "name": name,
                 "description": description,
-                "startDate": start_date,
-                "endDate": end_date,
+                "start_date": start_date,
+                "end_date": end_date,
                 "state": state,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "isDeleted": is_deleted,
+                "created": created,
+                "updated": updated,
+                "is_deleted": is_deleted,
             }
         )
         if author_kind is not UNSET:
-            field_dict["authorKind"] = author_kind
+            field_dict["author_kind"] = author_kind
         if author_id is not UNSET:
-            field_dict["authorId"] = author_id
+            field_dict["author_id"] = author_id
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if sync_version is not UNSET:
-            field_dict["syncVersion"] = sync_version
+            field_dict["sync_version"] = sync_version
 
         return field_dict
 
@@ -143,29 +143,29 @@ class ProjectIteration:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        owner_kind = ProjectIterationOwnerKind(d.pop("ownerKind"))
+        owner_kind = ProjectIterationOwnerKind(d.pop("owner_kind"))
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         name = d.pop("name")
 
         description = d.pop("description")
 
-        start_date = d.pop("startDate")
+        start_date = d.pop("start_date")
 
-        end_date = d.pop("endDate")
+        end_date = d.pop("end_date")
 
         state = ProjectIterationState(d.pop("state"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        is_deleted = d.pop("isDeleted")
+        is_deleted = d.pop("is_deleted")
 
-        _author_kind = d.pop("authorKind", UNSET)
+        _author_kind = d.pop("author_kind", UNSET)
         author_kind: ProjectIterationAuthorKind | Unset
         if isinstance(_author_kind, Unset):
             author_kind = UNSET
@@ -179,7 +179,7 @@ class ProjectIteration:
                 return data
             return cast(None | str | Unset, data)
 
-        author_id = _parse_author_id(d.pop("authorId", UNSET))
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -188,7 +188,7 @@ class ProjectIteration:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -197,9 +197,9 @@ class ProjectIteration:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
-        sync_version = d.pop("syncVersion", UNSET)
+        sync_version = d.pop("sync_version", UNSET)
 
         project_iteration = cls(
             id=id,
@@ -211,8 +211,8 @@ class ProjectIteration:
             start_date=start_date,
             end_date=end_date,
             state=state,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             is_deleted=is_deleted,
             author_kind=author_kind,
             author_id=author_id,

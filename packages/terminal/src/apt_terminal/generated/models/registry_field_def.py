@@ -38,8 +38,8 @@ class RegistryFieldDef:
             and the registry's owner only. A registrant may TIGHTEN it on their own entry (`valueVisibility` on the entry
             write) but never loosen it, so the value here is an upper bound on what any entry publishes — not necessarily
             what a given entry does.
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         sync_version (int):
         show_if (None | RegistryFieldDefShowIfType0 | Unset): a declarative visibility rule, evaluated fail-open
             (evaluateShowIf)
@@ -58,8 +58,8 @@ class RegistryFieldDef:
     sort_order: int
     config: RegistryFieldDefConfig
     visibility: RegistryFieldDefVisibility
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     sync_version: int
     show_if: None | RegistryFieldDefShowIfType0 | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
@@ -92,9 +92,9 @@ class RegistryFieldDef:
 
         visibility = self.visibility.value
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         sync_version = self.sync_version
 
@@ -117,26 +117,26 @@ class RegistryFieldDef:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "registryId": registry_id,
-                "sectionId": section_id,
+                "ecosystem_id": ecosystem_id,
+                "registry_id": registry_id,
+                "section_id": section_id,
                 "key": key,
                 "type": type_,
                 "label": label,
                 "help": help_,
                 "required": required,
-                "sortOrder": sort_order,
+                "sort_order": sort_order,
                 "config": config,
                 "visibility": visibility,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "syncVersion": sync_version,
+                "created": created,
+                "updated": updated,
+                "sync_version": sync_version,
             }
         )
         if show_if is not UNSET:
-            field_dict["showIf"] = show_if
+            field_dict["show_if"] = show_if
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -150,11 +150,11 @@ class RegistryFieldDef:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        registry_id = d.pop("registryId")
+        registry_id = d.pop("registry_id")
 
-        section_id = d.pop("sectionId")
+        section_id = d.pop("section_id")
 
         key = d.pop("key")
 
@@ -166,17 +166,17 @@ class RegistryFieldDef:
 
         required = d.pop("required")
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
         config = RegistryFieldDefConfig.from_dict(d.pop("config"))
 
         visibility = RegistryFieldDefVisibility(d.pop("visibility"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        sync_version = d.pop("syncVersion")
+        sync_version = d.pop("sync_version")
 
         def _parse_show_if(data: object) -> None | RegistryFieldDefShowIfType0 | Unset:
             if data is None:
@@ -193,7 +193,7 @@ class RegistryFieldDef:
                 pass
             return cast(None | RegistryFieldDefShowIfType0 | Unset, data)
 
-        show_if = _parse_show_if(d.pop("showIf", UNSET))
+        show_if = _parse_show_if(d.pop("show_if", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -202,7 +202,7 @@ class RegistryFieldDef:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         registry_field_def = cls(
             id=id,
@@ -217,8 +217,8 @@ class RegistryFieldDef:
             sort_order=sort_order,
             config=config,
             visibility=visibility,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             sync_version=sync_version,
             show_if=show_if,
             deleted_at=deleted_at,

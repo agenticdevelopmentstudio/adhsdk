@@ -80,8 +80,8 @@ class UsageCostRow:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "costMicros": cost_micros,
-                "unpricedLines": unpriced_lines,
+                "cost_micros": cost_micros,
+                "unpriced_lines": unpriced_lines,
                 "lines": lines,
                 "quantities": quantities,
             }
@@ -89,7 +89,7 @@ class UsageCostRow:
         if day is not UNSET:
             field_dict["day"] = day
         if ecosystem_key is not UNSET:
-            field_dict["ecosystemKey"] = ecosystem_key
+            field_dict["ecosystem_key"] = ecosystem_key
         if category is not UNSET:
             field_dict["category"] = category
         if provider is not UNSET:
@@ -97,7 +97,7 @@ class UsageCostRow:
         if sku is not UNSET:
             field_dict["sku"] = sku
         if paid_by is not UNSET:
-            field_dict["paidBy"] = paid_by
+            field_dict["paid_by"] = paid_by
 
         return field_dict
 
@@ -106,9 +106,9 @@ class UsageCostRow:
         from ..models.usage_cost_row_quantities import UsageCostRowQuantities
 
         d = dict(src_dict)
-        cost_micros = d.pop("costMicros")
+        cost_micros = d.pop("cost_micros")
 
-        unpriced_lines = d.pop("unpricedLines")
+        unpriced_lines = d.pop("unpriced_lines")
 
         lines = d.pop("lines")
 
@@ -121,7 +121,7 @@ class UsageCostRow:
         else:
             day = datetime.date.fromisoformat(_day)
 
-        _ecosystem_key = d.pop("ecosystemKey", UNSET)
+        _ecosystem_key = d.pop("ecosystem_key", UNSET)
         ecosystem_key: UUID | Unset
         if isinstance(_ecosystem_key, Unset):
             ecosystem_key = UNSET
@@ -139,7 +139,7 @@ class UsageCostRow:
 
         sku = d.pop("sku", UNSET)
 
-        _paid_by = d.pop("paidBy", UNSET)
+        _paid_by = d.pop("paid_by", UNSET)
         paid_by: UsageCostRowPaidBy | Unset
         if isinstance(_paid_by, Unset):
             paid_by = UNSET

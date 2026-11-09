@@ -62,9 +62,9 @@ class IntegrationActionSend:
         if bcc is not UNSET:
             field_dict["bcc"] = bcc
         if body_text is not UNSET:
-            field_dict["bodyText"] = body_text
+            field_dict["body_text"] = body_text
         if body_html is not UNSET:
-            field_dict["bodyHtml"] = body_html
+            field_dict["body_html"] = body_html
 
         return field_dict
 
@@ -79,9 +79,9 @@ class IntegrationActionSend:
 
         bcc = cast(list[str], d.pop("bcc", UNSET))
 
-        body_text = d.pop("bodyText", UNSET)
+        body_text = d.pop("body_text", UNSET)
 
-        body_html = d.pop("bodyHtml", UNSET)
+        body_html = d.pop("body_html", UNSET)
 
         integration_action_send = cls(
             to=to,

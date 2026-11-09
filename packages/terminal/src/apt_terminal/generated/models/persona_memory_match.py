@@ -67,10 +67,10 @@ class PersonaMemoryMatch:
         field_dict.update(
             {
                 "id": id,
-                "personaId": persona_id,
+                "persona_id": persona_id,
                 "scope": scope,
                 "slug": slug,
-                "memoryType": memory_type,
+                "memory_type": memory_type,
                 "description": description,
                 "body": body,
                 "confidence": confidence,
@@ -86,13 +86,13 @@ class PersonaMemoryMatch:
         d = dict(src_dict)
         id = d.pop("id")
 
-        persona_id = d.pop("personaId")
+        persona_id = d.pop("persona_id")
 
         scope = PersonaMemoryMatchScope(d.pop("scope"))
 
         slug = d.pop("slug")
 
-        memory_type = PersonaMemoryMatchMemoryType(d.pop("memoryType"))
+        memory_type = PersonaMemoryMatchMemoryType(d.pop("memory_type"))
 
         description = d.pop("description")
 

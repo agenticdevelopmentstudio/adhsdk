@@ -31,7 +31,7 @@ class ListMember:
         unsubscribe_count (int): Opt-out transitions for this membership. A mailbox provider retrying the one-click
             unsubscribe does not increment it; a resubscribe does not reset it.
         emails_sent_count (int):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -47,7 +47,7 @@ class ListMember:
     resubscribed_at: None | str
     unsubscribe_count: int
     emails_sent_count: int
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -82,26 +82,26 @@ class ListMember:
 
         emails_sent_count = self.emails_sent_count
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "contactId": contact_id,
+                "contact_id": contact_id,
                 "email": email,
                 "name": name,
-                "deliveryStatus": delivery_status,
-                "bounceCount": bounce_count,
+                "delivery_status": delivery_status,
+                "bounce_count": bounce_count,
                 "status": status,
-                "consentSourceUrl": consent_source_url,
-                "consentAt": consent_at,
-                "unsubscribedAt": unsubscribed_at,
-                "resubscribedAt": resubscribed_at,
-                "unsubscribeCount": unsubscribe_count,
-                "emailsSentCount": emails_sent_count,
-                "createdAt": created_at,
+                "consent_source_url": consent_source_url,
+                "consent_at": consent_at,
+                "unsubscribed_at": unsubscribed_at,
+                "resubscribed_at": resubscribed_at,
+                "unsubscribe_count": unsubscribe_count,
+                "emails_sent_count": emails_sent_count,
+                "created": created,
             }
         )
 
@@ -112,7 +112,7 @@ class ListMember:
         d = dict(src_dict)
         id = d.pop("id")
 
-        contact_id = d.pop("contactId")
+        contact_id = d.pop("contact_id")
 
         def _parse_email(data: object) -> None | str:
             if data is None:
@@ -128,9 +128,9 @@ class ListMember:
 
         name = _parse_name(d.pop("name"))
 
-        delivery_status = ListMemberDeliveryStatus(d.pop("deliveryStatus"))
+        delivery_status = ListMemberDeliveryStatus(d.pop("delivery_status"))
 
-        bounce_count = d.pop("bounceCount")
+        bounce_count = d.pop("bounce_count")
 
         status = ListMemberStatus(d.pop("status"))
 
@@ -139,29 +139,29 @@ class ListMember:
                 return data
             return cast(None | str, data)
 
-        consent_source_url = _parse_consent_source_url(d.pop("consentSourceUrl"))
+        consent_source_url = _parse_consent_source_url(d.pop("consent_source_url"))
 
-        consent_at = d.pop("consentAt")
+        consent_at = d.pop("consent_at")
 
         def _parse_unsubscribed_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        unsubscribed_at = _parse_unsubscribed_at(d.pop("unsubscribedAt"))
+        unsubscribed_at = _parse_unsubscribed_at(d.pop("unsubscribed_at"))
 
         def _parse_resubscribed_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        resubscribed_at = _parse_resubscribed_at(d.pop("resubscribedAt"))
+        resubscribed_at = _parse_resubscribed_at(d.pop("resubscribed_at"))
 
-        unsubscribe_count = d.pop("unsubscribeCount")
+        unsubscribe_count = d.pop("unsubscribe_count")
 
-        emails_sent_count = d.pop("emailsSentCount")
+        emails_sent_count = d.pop("emails_sent_count")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         list_member = cls(
             id=id,
@@ -177,7 +177,7 @@ class ListMember:
             resubscribed_at=resubscribed_at,
             unsubscribe_count=unsubscribe_count,
             emails_sent_count=emails_sent_count,
-            created_at=created_at,
+            created=created,
         )
 
         list_member.additional_properties = d

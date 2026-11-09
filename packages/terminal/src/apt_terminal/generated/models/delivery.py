@@ -60,8 +60,8 @@ class Delivery:
                 "name": name,
                 "status": status,
                 "attempts": attempts,
-                "lastError": last_error,
-                "sentAt": sent_at,
+                "last_error": last_error,
+                "sent_at": sent_at,
             }
         )
 
@@ -90,14 +90,14 @@ class Delivery:
                 return data
             return cast(None | str, data)
 
-        last_error = _parse_last_error(d.pop("lastError"))
+        last_error = _parse_last_error(d.pop("last_error"))
 
         def _parse_sent_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        sent_at = _parse_sent_at(d.pop("sentAt"))
+        sent_at = _parse_sent_at(d.pop("sent_at"))
 
         delivery = cls(
             id=id,

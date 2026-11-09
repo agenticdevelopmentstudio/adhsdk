@@ -45,7 +45,7 @@ class PublicRegistryEntryResponse:
             {
                 "registry": registry,
                 "entry": entry,
-                "jsonLd": json_ld,
+                "json_ld": json_ld,
             }
         )
 
@@ -66,7 +66,7 @@ class PublicRegistryEntryResponse:
 
         entry = PublicRegistryEntryDetail.from_dict(d.pop("entry"))
 
-        json_ld = PublicRegistryEntryResponseJsonLd.from_dict(d.pop("jsonLd"))
+        json_ld = PublicRegistryEntryResponseJsonLd.from_dict(d.pop("json_ld"))
 
         public_registry_entry_response = cls(
             registry=registry,

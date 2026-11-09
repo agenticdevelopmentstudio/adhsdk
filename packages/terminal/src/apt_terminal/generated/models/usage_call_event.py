@@ -135,34 +135,34 @@ class UsageCallEvent:
             {
                 "id": id,
                 "scope": scope,
-                "principalId": principal_id,
+                "principal_id": principal_id,
                 "route": route,
                 "method": method,
                 "status": status,
-                "occurredAt": occurred_at,
+                "occurred_at": occurred_at,
                 "kind": kind,
             }
         )
         if ecosystem_id is not UNSET:
-            field_dict["ecosystemId"] = ecosystem_id
+            field_dict["ecosystem_id"] = ecosystem_id
         if request_bytes is not UNSET:
-            field_dict["requestBytes"] = request_bytes
+            field_dict["request_bytes"] = request_bytes
         if response_bytes is not UNSET:
-            field_dict["responseBytes"] = response_bytes
+            field_dict["response_bytes"] = response_bytes
         if call_id is not UNSET:
-            field_dict["callId"] = call_id
+            field_dict["call_id"] = call_id
         if parent_call_id is not UNSET:
-            field_dict["parentCallId"] = parent_call_id
+            field_dict["parent_call_id"] = parent_call_id
         if route_pattern is not UNSET:
-            field_dict["routePattern"] = route_pattern
+            field_dict["route_pattern"] = route_pattern
         if duration_ms is not UNSET:
-            field_dict["durationMs"] = duration_ms
+            field_dict["duration_ms"] = duration_ms
         if db_ms is not UNSET:
-            field_dict["dbMs"] = db_ms
+            field_dict["db_ms"] = db_ms
         if db_queries is not UNSET:
-            field_dict["dbQueries"] = db_queries
+            field_dict["db_queries"] = db_queries
         if stream_events is not UNSET:
-            field_dict["streamEvents"] = stream_events
+            field_dict["stream_events"] = stream_events
 
         return field_dict
 
@@ -173,7 +173,7 @@ class UsageCallEvent:
 
         scope = d.pop("scope")
 
-        principal_id = d.pop("principalId")
+        principal_id = d.pop("principal_id")
 
         route = d.pop("route")
 
@@ -181,7 +181,7 @@ class UsageCallEvent:
 
         status = d.pop("status")
 
-        occurred_at = d.pop("occurredAt")
+        occurred_at = d.pop("occurred_at")
 
         kind = d.pop("kind")
 
@@ -192,11 +192,11 @@ class UsageCallEvent:
                 return data
             return cast(None | str | Unset, data)
 
-        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId", UNSET))
+        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystem_id", UNSET))
 
-        request_bytes = d.pop("requestBytes", UNSET)
+        request_bytes = d.pop("request_bytes", UNSET)
 
-        response_bytes = d.pop("responseBytes", UNSET)
+        response_bytes = d.pop("response_bytes", UNSET)
 
         def _parse_call_id(data: object) -> None | Unset | UUID:
             if data is None:
@@ -213,7 +213,7 @@ class UsageCallEvent:
                 pass
             return cast(None | Unset | UUID, data)
 
-        call_id = _parse_call_id(d.pop("callId", UNSET))
+        call_id = _parse_call_id(d.pop("call_id", UNSET))
 
         def _parse_parent_call_id(data: object) -> None | Unset | UUID:
             if data is None:
@@ -230,7 +230,7 @@ class UsageCallEvent:
                 pass
             return cast(None | Unset | UUID, data)
 
-        parent_call_id = _parse_parent_call_id(d.pop("parentCallId", UNSET))
+        parent_call_id = _parse_parent_call_id(d.pop("parent_call_id", UNSET))
 
         def _parse_route_pattern(data: object) -> None | str | Unset:
             if data is None:
@@ -239,7 +239,7 @@ class UsageCallEvent:
                 return data
             return cast(None | str | Unset, data)
 
-        route_pattern = _parse_route_pattern(d.pop("routePattern", UNSET))
+        route_pattern = _parse_route_pattern(d.pop("route_pattern", UNSET))
 
         def _parse_duration_ms(data: object) -> int | None | Unset:
             if data is None:
@@ -248,7 +248,7 @@ class UsageCallEvent:
                 return data
             return cast(int | None | Unset, data)
 
-        duration_ms = _parse_duration_ms(d.pop("durationMs", UNSET))
+        duration_ms = _parse_duration_ms(d.pop("duration_ms", UNSET))
 
         def _parse_db_ms(data: object) -> int | None | Unset:
             if data is None:
@@ -257,7 +257,7 @@ class UsageCallEvent:
                 return data
             return cast(int | None | Unset, data)
 
-        db_ms = _parse_db_ms(d.pop("dbMs", UNSET))
+        db_ms = _parse_db_ms(d.pop("db_ms", UNSET))
 
         def _parse_db_queries(data: object) -> int | None | Unset:
             if data is None:
@@ -266,7 +266,7 @@ class UsageCallEvent:
                 return data
             return cast(int | None | Unset, data)
 
-        db_queries = _parse_db_queries(d.pop("dbQueries", UNSET))
+        db_queries = _parse_db_queries(d.pop("db_queries", UNSET))
 
         def _parse_stream_events(data: object) -> int | None | Unset:
             if data is None:
@@ -275,7 +275,7 @@ class UsageCallEvent:
                 return data
             return cast(int | None | Unset, data)
 
-        stream_events = _parse_stream_events(d.pop("streamEvents", UNSET))
+        stream_events = _parse_stream_events(d.pop("stream_events", UNSET))
 
         usage_call_event = cls(
             id=id,

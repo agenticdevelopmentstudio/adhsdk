@@ -47,7 +47,7 @@ class AccessAuditPage:
             {
                 "items": items,
                 "page": page,
-                "pageSize": page_size,
+                "page_size": page_size,
                 "total": total,
             }
         )
@@ -68,7 +68,7 @@ class AccessAuditPage:
 
         page = d.pop("page")
 
-        page_size = d.pop("pageSize")
+        page_size = d.pop("page_size")
 
         total = d.pop("total")
 

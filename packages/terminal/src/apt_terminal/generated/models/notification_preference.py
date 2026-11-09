@@ -43,7 +43,7 @@ class NotificationPreference:
                 "category": category,
                 "email": email,
                 "sms": sms,
-                "inApp": in_app,
+                "in_app": in_app,
             }
         )
 
@@ -58,7 +58,7 @@ class NotificationPreference:
 
         sms = d.pop("sms")
 
-        in_app = d.pop("inApp")
+        in_app = d.pop("in_app")
 
         notification_preference = cls(
             category=category,

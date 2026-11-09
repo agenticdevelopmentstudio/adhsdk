@@ -19,16 +19,16 @@ class GamificationRealmEventType:
         ecosystem_id (str):
         name (str): The custom event_type key
         stat_key (str): The gamification stat this event bumps
-        created_at (str | Unset):
-        updated_at (str | Unset):
+        created (int | Unset): Unix timestamp, in seconds.
+        updated (int | Unset): Unix timestamp, in seconds.
     """
 
     id: str
     ecosystem_id: str
     name: str
     stat_key: str
-    created_at: str | Unset = UNSET
-    updated_at: str | Unset = UNSET
+    created: int | Unset = UNSET
+    updated: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,24 +40,24 @@ class GamificationRealmEventType:
 
         stat_key = self.stat_key
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
+                "ecosystem_id": ecosystem_id,
                 "name": name,
-                "statKey": stat_key,
+                "stat_key": stat_key,
             }
         )
-        if created_at is not UNSET:
-            field_dict["createdAt"] = created_at
-        if updated_at is not UNSET:
-            field_dict["updatedAt"] = updated_at
+        if created is not UNSET:
+            field_dict["created"] = created
+        if updated is not UNSET:
+            field_dict["updated"] = updated
 
         return field_dict
 
@@ -66,23 +66,23 @@ class GamificationRealmEventType:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
         name = d.pop("name")
 
-        stat_key = d.pop("statKey")
+        stat_key = d.pop("stat_key")
 
-        created_at = d.pop("createdAt", UNSET)
+        created = d.pop("created", UNSET)
 
-        updated_at = d.pop("updatedAt", UNSET)
+        updated = d.pop("updated", UNSET)
 
         gamification_realm_event_type = cls(
             id=id,
             ecosystem_id=ecosystem_id,
             name=name,
             stat_key=stat_key,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         gamification_realm_event_type.additional_properties = d

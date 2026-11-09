@@ -50,7 +50,7 @@ class UsageCostReport:
             {
                 "from": from_,
                 "to": to,
-                "groupBy": group_by,
+                "group_by": group_by,
                 "rows": rows,
             }
         )
@@ -66,7 +66,7 @@ class UsageCostReport:
 
         to = datetime.date.fromisoformat(d.pop("to"))
 
-        group_by = UsageCostReportGroupBy(d.pop("groupBy"))
+        group_by = UsageCostReportGroupBy(d.pop("group_by"))
 
         rows = []
         _rows = d.pop("rows")

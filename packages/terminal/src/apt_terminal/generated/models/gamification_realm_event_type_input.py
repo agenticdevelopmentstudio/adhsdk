@@ -31,7 +31,7 @@ class GamificationRealmEventTypeInput:
         field_dict.update(
             {
                 "name": name,
-                "statKey": stat_key,
+                "stat_key": stat_key,
             }
         )
 
@@ -42,7 +42,7 @@ class GamificationRealmEventTypeInput:
         d = dict(src_dict)
         name = d.pop("name")
 
-        stat_key = d.pop("statKey")
+        stat_key = d.pop("stat_key")
 
         gamification_realm_event_type_input = cls(
             name=name,

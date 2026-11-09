@@ -45,10 +45,10 @@ class ChatParticipant:
         field_dict.update(
             {
                 "id": id,
-                "participantId": participant_id,
+                "participant_id": participant_id,
                 "type": type_,
                 "role": role,
-                "joinedAt": joined_at,
+                "joined_at": joined_at,
             }
         )
 
@@ -59,13 +59,13 @@ class ChatParticipant:
         d = dict(src_dict)
         id = d.pop("id")
 
-        participant_id = d.pop("participantId")
+        participant_id = d.pop("participant_id")
 
         type_ = ChatParticipantType(d.pop("type"))
 
         role = d.pop("role")
 
-        joined_at = d.pop("joinedAt")
+        joined_at = d.pop("joined_at")
 
         chat_participant = cls(
             id=id,

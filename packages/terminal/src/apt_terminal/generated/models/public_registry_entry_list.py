@@ -56,8 +56,8 @@ class PublicRegistryEntryList:
                 "items": items,
                 "total": total,
                 "page": page,
-                "pageSize": page_size,
-                "imageUrls": image_urls,
+                "page_size": page_size,
+                "image_urls": image_urls,
             }
         )
 
@@ -84,9 +84,9 @@ class PublicRegistryEntryList:
 
         page = d.pop("page")
 
-        page_size = d.pop("pageSize")
+        page_size = d.pop("page_size")
 
-        image_urls = PublicRegistryEntryListImageUrls.from_dict(d.pop("imageUrls"))
+        image_urls = PublicRegistryEntryListImageUrls.from_dict(d.pop("image_urls"))
 
         public_registry_entry_list = cls(
             items=items,

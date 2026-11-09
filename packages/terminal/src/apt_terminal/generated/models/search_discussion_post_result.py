@@ -18,7 +18,7 @@ class SearchDiscussionPostResult:
         id (str):
         topic_id (str):
         post_number (int):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         rank (float): ts_rank relevance score
         body_document_id (None | str | Unset):
     """
@@ -26,7 +26,7 @@ class SearchDiscussionPostResult:
     id: str
     topic_id: str
     post_number: int
-    created_at: str
+    created: int
     rank: float
     body_document_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -38,7 +38,7 @@ class SearchDiscussionPostResult:
 
         post_number = self.post_number
 
-        created_at = self.created_at
+        created = self.created
 
         rank = self.rank
 
@@ -53,14 +53,14 @@ class SearchDiscussionPostResult:
         field_dict.update(
             {
                 "id": id,
-                "topicId": topic_id,
-                "postNumber": post_number,
-                "createdAt": created_at,
+                "topic_id": topic_id,
+                "post_number": post_number,
+                "created": created,
                 "rank": rank,
             }
         )
         if body_document_id is not UNSET:
-            field_dict["bodyDocumentId"] = body_document_id
+            field_dict["body_document_id"] = body_document_id
 
         return field_dict
 
@@ -69,11 +69,11 @@ class SearchDiscussionPostResult:
         d = dict(src_dict)
         id = d.pop("id")
 
-        topic_id = d.pop("topicId")
+        topic_id = d.pop("topic_id")
 
-        post_number = d.pop("postNumber")
+        post_number = d.pop("post_number")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         rank = d.pop("rank")
 
@@ -84,13 +84,13 @@ class SearchDiscussionPostResult:
                 return data
             return cast(None | str | Unset, data)
 
-        body_document_id = _parse_body_document_id(d.pop("bodyDocumentId", UNSET))
+        body_document_id = _parse_body_document_id(d.pop("body_document_id", UNSET))
 
         search_discussion_post_result = cls(
             id=id,
             topic_id=topic_id,
             post_number=post_number,
-            created_at=created_at,
+            created=created,
             rank=rank,
             body_document_id=body_document_id,
         )

@@ -38,9 +38,9 @@ class PollTallyOption:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "optionId": option_id,
+                "option_id": option_id,
                 "text": text,
-                "sortOrder": sort_order,
+                "sort_order": sort_order,
                 "votes": votes,
             }
         )
@@ -50,11 +50,11 @@ class PollTallyOption:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        option_id = d.pop("optionId")
+        option_id = d.pop("option_id")
 
         text = d.pop("text")
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
         votes = d.pop("votes")
 

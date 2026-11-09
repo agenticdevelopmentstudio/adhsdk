@@ -47,7 +47,7 @@ class ChatParticipantRemoveResult:
             {
                 "chat": chat,
                 "removed": removed,
-                "newOwner": new_owner,
+                "new_owner": new_owner,
             }
         )
 
@@ -76,7 +76,7 @@ class ChatParticipantRemoveResult:
                 pass
             return cast(ChatParticipant | None, data)
 
-        new_owner = _parse_new_owner(d.pop("newOwner"))
+        new_owner = _parse_new_owner(d.pop("new_owner"))
 
         chat_participant_remove_result = cls(
             chat=chat,

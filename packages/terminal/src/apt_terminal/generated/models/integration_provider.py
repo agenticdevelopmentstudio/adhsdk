@@ -87,12 +87,12 @@ class IntegrationProvider:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "providerId": provider_id,
-                "displayName": display_name,
-                "authMethod": auth_method,
-                "serviceTypes": service_types,
+                "provider_id": provider_id,
+                "display_name": display_name,
+                "auth_method": auth_method,
+                "service_types": service_types,
                 "capabilities": capabilities,
-                "defaultPollIntervalMs": default_poll_interval_ms,
+                "default_poll_interval_ms": default_poll_interval_ms,
                 "subtitle": subtitle,
                 "description": description,
                 "links": links,
@@ -100,7 +100,7 @@ class IntegrationProvider:
             }
         )
         if config_fields is not UNSET:
-            field_dict["configFields"] = config_fields
+            field_dict["config_fields"] = config_fields
 
         return field_dict
 
@@ -114,17 +114,17 @@ class IntegrationProvider:
         )
 
         d = dict(src_dict)
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
-        auth_method = IntegrationProviderAuthMethod(d.pop("authMethod"))
+        auth_method = IntegrationProviderAuthMethod(d.pop("auth_method"))
 
-        service_types = cast(list[str], d.pop("serviceTypes"))
+        service_types = cast(list[str], d.pop("service_types"))
 
         capabilities = cast(list[str], d.pop("capabilities"))
 
-        default_poll_interval_ms = d.pop("defaultPollIntervalMs")
+        default_poll_interval_ms = d.pop("default_poll_interval_ms")
 
         subtitle = d.pop("subtitle")
 
@@ -139,7 +139,7 @@ class IntegrationProvider:
 
         testable = d.pop("testable")
 
-        _config_fields = d.pop("configFields", UNSET)
+        _config_fields = d.pop("config_fields", UNSET)
         config_fields: list[IntegrationProviderConfigFieldsItem] | Unset = UNSET
         if _config_fields is not UNSET:
             config_fields = []

@@ -33,7 +33,7 @@ class BucketAccessGroupList:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "accessGroups": access_groups,
+                "access_groups": access_groups,
             }
         )
 
@@ -45,7 +45,7 @@ class BucketAccessGroupList:
 
         d = dict(src_dict)
         access_groups = []
-        _access_groups = d.pop("accessGroups")
+        _access_groups = d.pop("access_groups")
         for access_groups_item_data in _access_groups:
             access_groups_item = BucketAccessGroup.from_dict(access_groups_item_data)
 

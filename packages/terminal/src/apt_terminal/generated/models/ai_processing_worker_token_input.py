@@ -43,7 +43,7 @@ class AiProcessingWorkerTokenInput:
             }
         )
         if expires_at is not UNSET:
-            field_dict["expiresAt"] = expires_at
+            field_dict["expires_at"] = expires_at
 
         return field_dict
 
@@ -67,7 +67,7 @@ class AiProcessingWorkerTokenInput:
                 pass
             return cast(datetime.datetime | None | Unset, data)
 
-        expires_at = _parse_expires_at(d.pop("expiresAt", UNSET))
+        expires_at = _parse_expires_at(d.pop("expires_at", UNSET))
 
         ai_processing_worker_token_input = cls(
             name=name,

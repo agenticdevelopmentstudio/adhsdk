@@ -54,9 +54,9 @@ class RegistryProvisionedOrganization:
             {
                 "organization": organization,
                 "namespace": namespace,
-                "teamId": team_id,
+                "team_id": team_id,
                 "ecosystem": ecosystem,
-                "hubData": hub_data,
+                "hub_data": hub_data,
             }
         )
 
@@ -76,11 +76,11 @@ class RegistryProvisionedOrganization:
 
         namespace = RegistryNamespace.from_dict(d.pop("namespace"))
 
-        team_id = d.pop("teamId")
+        team_id = d.pop("team_id")
 
         ecosystem = RegistryEcosystem.from_dict(d.pop("ecosystem"))
 
-        hub_data = RegistryProvisionedOrganizationHubData.from_dict(d.pop("hubData"))
+        hub_data = RegistryProvisionedOrganizationHubData.from_dict(d.pop("hub_data"))
 
         registry_provisioned_organization = cls(
             organization=organization,

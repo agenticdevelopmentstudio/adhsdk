@@ -33,8 +33,8 @@ class StorageAttachment:
         size_bytes (int):
         content_hash (str):
         status (StorageAttachmentStatus): 'pending' (presigned, awaiting upload) → 'ready' (bytes confirmed).
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         parent_id (None | str | Unset): Id of the row the attachment hangs off; null for a standalone attachment.
         width (int | None | Unset):
         height (int | None | Unset):
@@ -56,8 +56,8 @@ class StorageAttachment:
     size_bytes: int
     content_hash: str
     status: StorageAttachmentStatus
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     parent_id: None | str | Unset = UNSET
     width: int | None | Unset = UNSET
     height: int | None | Unset = UNSET
@@ -95,9 +95,9 @@ class StorageAttachment:
 
         status = self.status.value
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
@@ -142,33 +142,33 @@ class StorageAttachment:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
-                "parentType": parent_type,
-                "objectKey": object_key,
-                "storageKind": storage_kind,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
+                "parent_type": parent_type,
+                "object_key": object_key,
+                "storage_kind": storage_kind,
                 "filename": filename,
-                "contentType": content_type,
-                "sizeBytes": size_bytes,
-                "contentHash": content_hash,
+                "content_type": content_type,
+                "size_bytes": size_bytes,
+                "content_hash": content_hash,
                 "status": status,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if parent_id is not UNSET:
-            field_dict["parentId"] = parent_id
+            field_dict["parent_id"] = parent_id
         if width is not UNSET:
             field_dict["width"] = width
         if height is not UNSET:
             field_dict["height"] = height
         if duration_ms is not UNSET:
-            field_dict["durationMs"] = duration_ms
+            field_dict["duration_ms"] = duration_ms
         if metadata is not UNSET:
             field_dict["metadata"] = metadata
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -181,31 +181,31 @@ class StorageAttachment:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        owner_kind = d.pop("ownerKind")
+        owner_kind = d.pop("owner_kind")
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
-        parent_type = d.pop("parentType")
+        parent_type = d.pop("parent_type")
 
-        object_key = d.pop("objectKey")
+        object_key = d.pop("object_key")
 
-        storage_kind = d.pop("storageKind")
+        storage_kind = d.pop("storage_kind")
 
         filename = d.pop("filename")
 
-        content_type = d.pop("contentType")
+        content_type = d.pop("content_type")
 
-        size_bytes = d.pop("sizeBytes")
+        size_bytes = d.pop("size_bytes")
 
-        content_hash = d.pop("contentHash")
+        content_hash = d.pop("content_hash")
 
         status = StorageAttachmentStatus(d.pop("status"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
@@ -214,7 +214,7 @@ class StorageAttachment:
                 return data
             return cast(None | str | Unset, data)
 
-        parent_id = _parse_parent_id(d.pop("parentId", UNSET))
+        parent_id = _parse_parent_id(d.pop("parent_id", UNSET))
 
         def _parse_width(data: object) -> int | None | Unset:
             if data is None:
@@ -241,7 +241,7 @@ class StorageAttachment:
                 return data
             return cast(int | None | Unset, data)
 
-        duration_ms = _parse_duration_ms(d.pop("durationMs", UNSET))
+        duration_ms = _parse_duration_ms(d.pop("duration_ms", UNSET))
 
         def _parse_metadata(data: object) -> None | StorageAttachmentMetadataType0 | Unset:
             if data is None:
@@ -267,7 +267,7 @@ class StorageAttachment:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         storage_attachment = cls(
             id=id,
@@ -282,8 +282,8 @@ class StorageAttachment:
             size_bytes=size_bytes,
             content_hash=content_hash,
             status=status,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             parent_id=parent_id,
             width=width,
             height=height,

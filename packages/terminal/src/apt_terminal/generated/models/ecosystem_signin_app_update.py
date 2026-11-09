@@ -50,11 +50,11 @@ class EcosystemSigninAppUpdate:
         if name is not UNSET:
             field_dict["name"] = name
         if allowed_return_origins is not UNSET:
-            field_dict["allowedReturnOrigins"] = allowed_return_origins
+            field_dict["allowed_return_origins"] = allowed_return_origins
         if github_enabled is not UNSET:
-            field_dict["githubEnabled"] = github_enabled
+            field_dict["github_enabled"] = github_enabled
         if redirect_uris is not UNSET:
-            field_dict["redirectUris"] = redirect_uris
+            field_dict["redirect_uris"] = redirect_uris
 
         return field_dict
 
@@ -63,11 +63,11 @@ class EcosystemSigninAppUpdate:
         d = dict(src_dict)
         name = d.pop("name", UNSET)
 
-        allowed_return_origins = cast(list[str], d.pop("allowedReturnOrigins", UNSET))
+        allowed_return_origins = cast(list[str], d.pop("allowed_return_origins", UNSET))
 
-        github_enabled = d.pop("githubEnabled", UNSET)
+        github_enabled = d.pop("github_enabled", UNSET)
 
-        redirect_uris = cast(list[str], d.pop("redirectUris", UNSET))
+        redirect_uris = cast(list[str], d.pop("redirect_uris", UNSET))
 
         ecosystem_signin_app_update = cls(
             name=name,

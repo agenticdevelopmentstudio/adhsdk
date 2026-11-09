@@ -31,7 +31,7 @@ class GamificationSeasonsType0:
         field_dict.update(
             {
                 "anchor": anchor,
-                "lengthDays": length_days,
+                "length_days": length_days,
             }
         )
 
@@ -42,7 +42,7 @@ class GamificationSeasonsType0:
         d = dict(src_dict)
         anchor = d.pop("anchor")
 
-        length_days = d.pop("lengthDays")
+        length_days = d.pop("length_days")
 
         gamification_seasons_type_0 = cls(
             anchor=anchor,

@@ -40,8 +40,8 @@ class Project:
         item_noun_plural (str): what this board calls MANY of its items (DB default 'work items'). Stored rather than
             derived from itemNoun: English pluralisation is not a rule this API can pretend to know ('story' → 'storys'), so
             the word is the author's.
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         is_deleted (bool):
         sync_version (int):
         ecosystem_id (str): the owning ecosystem (tenant scope)
@@ -82,8 +82,8 @@ class Project:
     priority_scale: ProjectPriorityScale
     item_noun: str
     item_noun_plural: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     is_deleted: bool
     sync_version: int
     ecosystem_id: str
@@ -124,9 +124,9 @@ class Project:
 
         item_noun_plural = self.item_noun_plural
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         is_deleted = self.is_deleted
 
@@ -220,40 +220,40 @@ class Project:
                 "description": description,
                 "status": status,
                 "color": color,
-                "estimateScale": estimate_scale,
-                "priorityScale": priority_scale,
-                "itemNoun": item_noun,
-                "itemNounPlural": item_noun_plural,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "isDeleted": is_deleted,
-                "syncVersion": sync_version,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
-                "keyPrefix": key_prefix,
+                "estimate_scale": estimate_scale,
+                "priority_scale": priority_scale,
+                "item_noun": item_noun,
+                "item_noun_plural": item_noun_plural,
+                "created": created,
+                "updated": updated,
+                "is_deleted": is_deleted,
+                "sync_version": sync_version,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
+                "key_prefix": key_prefix,
                 "health": health,
-                "healthUpdatedAt": health_updated_at,
+                "health_updated_at": health_updated_at,
             }
         )
         if author_kind is not UNSET:
-            field_dict["authorKind"] = author_kind
+            field_dict["author_kind"] = author_kind
         if author_id is not UNSET:
-            field_dict["authorId"] = author_id
+            field_dict["author_id"] = author_id
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if archived_at is not UNSET:
-            field_dict["archivedAt"] = archived_at
+            field_dict["archived_at"] = archived_at
         if start_date is not UNSET:
-            field_dict["startDate"] = start_date
+            field_dict["start_date"] = start_date
         if target_date is not UNSET:
-            field_dict["targetDate"] = target_date
+            field_dict["target_date"] = target_date
         if lead_kind is not UNSET:
-            field_dict["leadKind"] = lead_kind
+            field_dict["lead_kind"] = lead_kind
         if lead_id is not UNSET:
-            field_dict["leadId"] = lead_id
+            field_dict["lead_id"] = lead_id
         if program_id is not UNSET:
-            field_dict["programId"] = program_id
+            field_dict["program_id"] = program_id
 
         return field_dict
 
@@ -270,29 +270,29 @@ class Project:
 
         color = d.pop("color")
 
-        estimate_scale = ProjectEstimateScale(d.pop("estimateScale"))
+        estimate_scale = ProjectEstimateScale(d.pop("estimate_scale"))
 
-        priority_scale = ProjectPriorityScale(d.pop("priorityScale"))
+        priority_scale = ProjectPriorityScale(d.pop("priority_scale"))
 
-        item_noun = d.pop("itemNoun")
+        item_noun = d.pop("item_noun")
 
-        item_noun_plural = d.pop("itemNounPlural")
+        item_noun_plural = d.pop("item_noun_plural")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        is_deleted = d.pop("isDeleted")
+        is_deleted = d.pop("is_deleted")
 
-        sync_version = d.pop("syncVersion")
+        sync_version = d.pop("sync_version")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        owner_kind = ProjectOwnerKind(d.pop("ownerKind"))
+        owner_kind = ProjectOwnerKind(d.pop("owner_kind"))
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
-        key_prefix = d.pop("keyPrefix")
+        key_prefix = d.pop("key_prefix")
 
         def _parse_health(
             data: object,
@@ -334,9 +334,9 @@ class Project:
                 return data
             return cast(None | str, data)
 
-        health_updated_at = _parse_health_updated_at(d.pop("healthUpdatedAt"))
+        health_updated_at = _parse_health_updated_at(d.pop("health_updated_at"))
 
-        _author_kind = d.pop("authorKind", UNSET)
+        _author_kind = d.pop("author_kind", UNSET)
         author_kind: ProjectAuthorKind | Unset
         if isinstance(_author_kind, Unset):
             author_kind = UNSET
@@ -350,7 +350,7 @@ class Project:
                 return data
             return cast(None | str | Unset, data)
 
-        author_id = _parse_author_id(d.pop("authorId", UNSET))
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -359,7 +359,7 @@ class Project:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         def _parse_archived_at(data: object) -> None | str | Unset:
             if data is None:
@@ -368,7 +368,7 @@ class Project:
                 return data
             return cast(None | str | Unset, data)
 
-        archived_at = _parse_archived_at(d.pop("archivedAt", UNSET))
+        archived_at = _parse_archived_at(d.pop("archived_at", UNSET))
 
         def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
@@ -377,7 +377,7 @@ class Project:
                 return data
             return cast(None | str | Unset, data)
 
-        start_date = _parse_start_date(d.pop("startDate", UNSET))
+        start_date = _parse_start_date(d.pop("start_date", UNSET))
 
         def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
@@ -386,7 +386,7 @@ class Project:
                 return data
             return cast(None | str | Unset, data)
 
-        target_date = _parse_target_date(d.pop("targetDate", UNSET))
+        target_date = _parse_target_date(d.pop("target_date", UNSET))
 
         def _parse_lead_kind(
             data: object,
@@ -434,7 +434,7 @@ class Project:
                 data,
             )
 
-        lead_kind = _parse_lead_kind(d.pop("leadKind", UNSET))
+        lead_kind = _parse_lead_kind(d.pop("lead_kind", UNSET))
 
         def _parse_lead_id(data: object) -> None | str | Unset:
             if data is None:
@@ -443,7 +443,7 @@ class Project:
                 return data
             return cast(None | str | Unset, data)
 
-        lead_id = _parse_lead_id(d.pop("leadId", UNSET))
+        lead_id = _parse_lead_id(d.pop("lead_id", UNSET))
 
         def _parse_program_id(data: object) -> None | str | Unset:
             if data is None:
@@ -452,7 +452,7 @@ class Project:
                 return data
             return cast(None | str | Unset, data)
 
-        program_id = _parse_program_id(d.pop("programId", UNSET))
+        program_id = _parse_program_id(d.pop("program_id", UNSET))
 
         project = cls(
             id=id,
@@ -464,8 +464,8 @@ class Project:
             priority_scale=priority_scale,
             item_noun=item_noun,
             item_noun_plural=item_noun_plural,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             is_deleted=is_deleted,
             sync_version=sync_version,
             ecosystem_id=ecosystem_id,

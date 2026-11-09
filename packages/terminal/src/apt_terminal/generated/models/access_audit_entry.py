@@ -89,17 +89,17 @@ class AccessAuditEntry:
         field_dict.update(
             {
                 "id": id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
-                "actorKind": actor_kind,
-                "actorId": actor_id,
-                "actorEmail": actor_email,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
+                "actor_kind": actor_kind,
+                "actor_id": actor_id,
+                "actor_email": actor_email,
                 "action": action,
-                "subjectKind": subject_kind,
-                "subjectId": subject_id,
-                "targetFeature": target_feature,
-                "targetItemId": target_item_id,
-                "roleId": role_id,
+                "subject_kind": subject_kind,
+                "subject_id": subject_id,
+                "target_feature": target_feature,
+                "target_item_id": target_item_id,
+                "role_id": role_id,
                 "before": before,
                 "after": after,
                 "at": at,
@@ -113,20 +113,20 @@ class AccessAuditEntry:
         d = dict(src_dict)
         id = d.pop("id")
 
-        owner_kind = d.pop("ownerKind")
+        owner_kind = d.pop("owner_kind")
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
-        actor_kind = d.pop("actorKind")
+        actor_kind = d.pop("actor_kind")
 
-        actor_id = d.pop("actorId")
+        actor_id = d.pop("actor_id")
 
         def _parse_actor_email(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        actor_email = _parse_actor_email(d.pop("actorEmail"))
+        actor_email = _parse_actor_email(d.pop("actor_email"))
 
         action = d.pop("action")
 
@@ -135,35 +135,35 @@ class AccessAuditEntry:
                 return data
             return cast(None | str, data)
 
-        subject_kind = _parse_subject_kind(d.pop("subjectKind"))
+        subject_kind = _parse_subject_kind(d.pop("subject_kind"))
 
         def _parse_subject_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        subject_id = _parse_subject_id(d.pop("subjectId"))
+        subject_id = _parse_subject_id(d.pop("subject_id"))
 
         def _parse_target_feature(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        target_feature = _parse_target_feature(d.pop("targetFeature"))
+        target_feature = _parse_target_feature(d.pop("target_feature"))
 
         def _parse_target_item_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        target_item_id = _parse_target_item_id(d.pop("targetItemId"))
+        target_item_id = _parse_target_item_id(d.pop("target_item_id"))
 
         def _parse_role_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        role_id = _parse_role_id(d.pop("roleId"))
+        role_id = _parse_role_id(d.pop("role_id"))
 
         before = d.pop("before")
 

@@ -97,11 +97,11 @@ class GameEvent:
         field_dict.update(
             {
                 "id": id,
-                "sessionId": session_id,
+                "session_id": session_id,
                 "kind": kind,
                 "seq": seq,
-                "clientEventId": client_event_id,
-                "occurredAt": occurred_at,
+                "client_event_id": client_event_id,
+                "occurred_at": occurred_at,
             }
         )
         if input_ is not UNSET:
@@ -111,7 +111,7 @@ class GameEvent:
         if cost is not UNSET:
             field_dict["cost"] = cost
         if artifact_id is not UNSET:
-            field_dict["artifactId"] = artifact_id
+            field_dict["artifact_id"] = artifact_id
 
         return field_dict
 
@@ -124,15 +124,15 @@ class GameEvent:
         d = dict(src_dict)
         id = d.pop("id")
 
-        session_id = d.pop("sessionId")
+        session_id = d.pop("session_id")
 
         kind = d.pop("kind")
 
         seq = d.pop("seq")
 
-        client_event_id = d.pop("clientEventId")
+        client_event_id = d.pop("client_event_id")
 
-        occurred_at = d.pop("occurredAt")
+        occurred_at = d.pop("occurred_at")
 
         def _parse_input_(data: object) -> GameEventInputType0 | None | Unset:
             if data is None:
@@ -192,7 +192,7 @@ class GameEvent:
                 return data
             return cast(None | str | Unset, data)
 
-        artifact_id = _parse_artifact_id(d.pop("artifactId", UNSET))
+        artifact_id = _parse_artifact_id(d.pop("artifact_id", UNSET))
 
         game_event = cls(
             id=id,

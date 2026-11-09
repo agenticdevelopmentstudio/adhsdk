@@ -57,14 +57,14 @@ class IntegrationActionSubscribe:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "audienceId": audience_id,
+                "audience_id": audience_id,
                 "email": email,
             }
         )
         if first_name is not UNSET:
-            field_dict["firstName"] = first_name
+            field_dict["first_name"] = first_name
         if last_name is not UNSET:
-            field_dict["lastName"] = last_name
+            field_dict["last_name"] = last_name
         if tags is not UNSET:
             field_dict["tags"] = tags
         if fields is not UNSET:
@@ -77,13 +77,13 @@ class IntegrationActionSubscribe:
         from ..models.integration_action_fields import IntegrationActionFields
 
         d = dict(src_dict)
-        audience_id = d.pop("audienceId")
+        audience_id = d.pop("audience_id")
 
         email = d.pop("email")
 
-        first_name = d.pop("firstName", UNSET)
+        first_name = d.pop("first_name", UNSET)
 
-        last_name = d.pop("lastName", UNSET)
+        last_name = d.pop("last_name", UNSET)
 
         tags = cast(list[str], d.pop("tags", UNSET))
 

@@ -56,8 +56,8 @@ class RegistryEntry:
             STORED, but read it as the tighter of the two anyway — the owner's ceiling can move after this map is written
         schema_version (int):
         search_text (str): derived on write from PUBLIC-visible values only
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         sync_version (int):
         photo_attachment_id (None | str | Unset):
         geo (None | RegistryEntryGeoType0 | Unset):
@@ -90,8 +90,8 @@ class RegistryEntry:
     value_visibility: RegistryEntryValueVisibility
     schema_version: int
     search_text: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     sync_version: int
     photo_attachment_id: None | str | Unset = UNSET
     geo: None | RegistryEntryGeoType0 | Unset = UNSET
@@ -155,9 +155,9 @@ class RegistryEntry:
 
         search_text = self.search_text
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         sync_version = self.sync_version
 
@@ -192,43 +192,43 @@ class RegistryEntry:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "registryId": registry_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "ecosystem_id": ecosystem_id,
+                "registry_id": registry_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "slug": slug,
-                "displayName": display_name,
+                "display_name": display_name,
                 "summary": summary,
-                "providerType": provider_type,
+                "provider_type": provider_type,
                 "category": category,
                 "keywords": keywords,
-                "locationText": location_text,
-                "countryCode": country_code,
-                "regionCode": region_code,
-                "areaServed": area_served,
-                "deliveryMode": delivery_mode,
+                "location_text": location_text,
+                "country_code": country_code,
+                "region_code": region_code,
+                "area_served": area_served,
+                "delivery_mode": delivery_mode,
                 "links": links,
-                "contactMode": contact_mode,
+                "contact_mode": contact_mode,
                 "languages": languages,
                 "status": status,
                 "visibility": visibility,
                 "values": values,
-                "valueVisibility": value_visibility,
-                "schemaVersion": schema_version,
-                "searchText": search_text,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "syncVersion": sync_version,
+                "value_visibility": value_visibility,
+                "schema_version": schema_version,
+                "search_text": search_text,
+                "created": created,
+                "updated": updated,
+                "sync_version": sync_version,
             }
         )
         if photo_attachment_id is not UNSET:
-            field_dict["photoAttachmentId"] = photo_attachment_id
+            field_dict["photo_attachment_id"] = photo_attachment_id
         if geo is not UNSET:
             field_dict["geo"] = geo
         if published_at is not UNSET:
-            field_dict["publishedAt"] = published_at
+            field_dict["published_at"] = published_at
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -245,35 +245,35 @@ class RegistryEntry:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        registry_id = d.pop("registryId")
+        registry_id = d.pop("registry_id")
 
-        owner_kind = RegistryEntryOwnerKind(d.pop("ownerKind"))
+        owner_kind = RegistryEntryOwnerKind(d.pop("owner_kind"))
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         slug = d.pop("slug")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
         summary = d.pop("summary")
 
-        provider_type = RegistryEntryProviderType(d.pop("providerType"))
+        provider_type = RegistryEntryProviderType(d.pop("provider_type"))
 
         category = d.pop("category")
 
         keywords = cast(list[str], d.pop("keywords"))
 
-        location_text = d.pop("locationText")
+        location_text = d.pop("location_text")
 
-        country_code = d.pop("countryCode")
+        country_code = d.pop("country_code")
 
-        region_code = d.pop("regionCode")
+        region_code = d.pop("region_code")
 
-        area_served = RegistryEntryAreaServed.from_dict(d.pop("areaServed"))
+        area_served = RegistryEntryAreaServed.from_dict(d.pop("area_served"))
 
-        delivery_mode = RegistryEntryDeliveryMode(d.pop("deliveryMode"))
+        delivery_mode = RegistryEntryDeliveryMode(d.pop("delivery_mode"))
 
         links = []
         _links = d.pop("links")
@@ -282,7 +282,7 @@ class RegistryEntry:
 
             links.append(links_item)
 
-        contact_mode = RegistryEntryContactMode(d.pop("contactMode"))
+        contact_mode = RegistryEntryContactMode(d.pop("contact_mode"))
 
         languages = cast(list[str], d.pop("languages"))
 
@@ -292,17 +292,17 @@ class RegistryEntry:
 
         values = RegistryEntryValues.from_dict(d.pop("values"))
 
-        value_visibility = RegistryEntryValueVisibility.from_dict(d.pop("valueVisibility"))
+        value_visibility = RegistryEntryValueVisibility.from_dict(d.pop("value_visibility"))
 
-        schema_version = d.pop("schemaVersion")
+        schema_version = d.pop("schema_version")
 
-        search_text = d.pop("searchText")
+        search_text = d.pop("search_text")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        sync_version = d.pop("syncVersion")
+        sync_version = d.pop("sync_version")
 
         def _parse_photo_attachment_id(data: object) -> None | str | Unset:
             if data is None:
@@ -311,7 +311,7 @@ class RegistryEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        photo_attachment_id = _parse_photo_attachment_id(d.pop("photoAttachmentId", UNSET))
+        photo_attachment_id = _parse_photo_attachment_id(d.pop("photo_attachment_id", UNSET))
 
         def _parse_geo(data: object) -> None | RegistryEntryGeoType0 | Unset:
             if data is None:
@@ -337,7 +337,7 @@ class RegistryEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        published_at = _parse_published_at(d.pop("publishedAt", UNSET))
+        published_at = _parse_published_at(d.pop("published_at", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -346,7 +346,7 @@ class RegistryEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         registry_entry = cls(
             id=id,
@@ -374,8 +374,8 @@ class RegistryEntry:
             value_visibility=value_visibility,
             schema_version=schema_version,
             search_text=search_text,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             sync_version=sync_version,
             photo_attachment_id=photo_attachment_id,
             geo=geo,

@@ -44,7 +44,7 @@ class CustomerMeUser:
                 "id": id,
                 "email": email,
                 "name": name,
-                "avatarUrl": avatar_url,
+                "avatar_url": avatar_url,
             }
         )
 
@@ -74,7 +74,7 @@ class CustomerMeUser:
                 return data
             return cast(None | str, data)
 
-        avatar_url = _parse_avatar_url(d.pop("avatarUrl"))
+        avatar_url = _parse_avatar_url(d.pop("avatar_url"))
 
         customer_me_user = cls(
             id=id,

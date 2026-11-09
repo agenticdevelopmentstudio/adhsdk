@@ -21,7 +21,7 @@ class ContactMethod:
         value (str):
         verified (bool):
         is_primary (bool):
-        created_at (str | Unset):
+        created (int | Unset): Unix timestamp, in seconds.
     """
 
     id: str
@@ -29,7 +29,7 @@ class ContactMethod:
     value: str
     verified: bool
     is_primary: bool
-    created_at: str | Unset = UNSET
+    created: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,7 +43,7 @@ class ContactMethod:
 
         is_primary = self.is_primary
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -53,11 +53,11 @@ class ContactMethod:
                 "type": type_,
                 "value": value,
                 "verified": verified,
-                "isPrimary": is_primary,
+                "is_primary": is_primary,
             }
         )
-        if created_at is not UNSET:
-            field_dict["createdAt"] = created_at
+        if created is not UNSET:
+            field_dict["created"] = created
 
         return field_dict
 
@@ -72,9 +72,9 @@ class ContactMethod:
 
         verified = d.pop("verified")
 
-        is_primary = d.pop("isPrimary")
+        is_primary = d.pop("is_primary")
 
-        created_at = d.pop("createdAt", UNSET)
+        created = d.pop("created", UNSET)
 
         contact_method = cls(
             id=id,
@@ -82,7 +82,7 @@ class ContactMethod:
             value=value,
             verified=verified,
             is_primary=is_primary,
-            created_at=created_at,
+            created=created,
         )
 
         contact_method.additional_properties = d

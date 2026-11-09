@@ -30,7 +30,7 @@ class TeamMemberCountsCountsItem:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "teamId": team_id,
+                "team_id": team_id,
                 "count": count,
             }
         )
@@ -40,7 +40,7 @@ class TeamMemberCountsCountsItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        team_id = d.pop("teamId")
+        team_id = d.pop("team_id")
 
         count = d.pop("count")
 

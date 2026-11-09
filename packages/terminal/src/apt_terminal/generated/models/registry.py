@@ -33,8 +33,8 @@ class Registry:
         visibility (RegistryVisibility):
         submission_policy (RegistrySubmissionPolicy):
         services_enabled (bool):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         sync_version (int):
         bound_site_id (None | str | Unset): a fleet SITE SLUG this registry is bound to; set by platform admin only,
             never via this API
@@ -55,8 +55,8 @@ class Registry:
     visibility: RegistryVisibility
     submission_policy: RegistrySubmissionPolicy
     services_enabled: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     sync_version: int
     bound_site_id: None | str | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
@@ -91,9 +91,9 @@ class Registry:
 
         services_enabled = self.services_enabled
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         sync_version = self.sync_version
 
@@ -114,28 +114,28 @@ class Registry:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "slug": slug,
                 "name": name,
                 "purpose": purpose,
                 "description": description,
-                "categoryRoot": category_root,
-                "entryTerm": entry_term,
+                "category_root": category_root,
+                "entry_term": entry_term,
                 "tags": tags,
                 "visibility": visibility,
-                "submissionPolicy": submission_policy,
-                "servicesEnabled": services_enabled,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "syncVersion": sync_version,
+                "submission_policy": submission_policy,
+                "services_enabled": services_enabled,
+                "created": created,
+                "updated": updated,
+                "sync_version": sync_version,
             }
         )
         if bound_site_id is not UNSET:
-            field_dict["boundSiteId"] = bound_site_id
+            field_dict["bound_site_id"] = bound_site_id
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -144,11 +144,11 @@ class Registry:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        owner_kind = RegistryOwnerKind(d.pop("ownerKind"))
+        owner_kind = RegistryOwnerKind(d.pop("owner_kind"))
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         slug = d.pop("slug")
 
@@ -158,23 +158,23 @@ class Registry:
 
         description = d.pop("description")
 
-        category_root = d.pop("categoryRoot")
+        category_root = d.pop("category_root")
 
-        entry_term = d.pop("entryTerm")
+        entry_term = d.pop("entry_term")
 
         tags = cast(list[str], d.pop("tags"))
 
         visibility = RegistryVisibility(d.pop("visibility"))
 
-        submission_policy = RegistrySubmissionPolicy(d.pop("submissionPolicy"))
+        submission_policy = RegistrySubmissionPolicy(d.pop("submission_policy"))
 
-        services_enabled = d.pop("servicesEnabled")
+        services_enabled = d.pop("services_enabled")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        sync_version = d.pop("syncVersion")
+        sync_version = d.pop("sync_version")
 
         def _parse_bound_site_id(data: object) -> None | str | Unset:
             if data is None:
@@ -183,7 +183,7 @@ class Registry:
                 return data
             return cast(None | str | Unset, data)
 
-        bound_site_id = _parse_bound_site_id(d.pop("boundSiteId", UNSET))
+        bound_site_id = _parse_bound_site_id(d.pop("bound_site_id", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -192,7 +192,7 @@ class Registry:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         registry = cls(
             id=id,
@@ -209,8 +209,8 @@ class Registry:
             visibility=visibility,
             submission_policy=submission_policy,
             services_enabled=services_enabled,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             sync_version=sync_version,
             bound_site_id=bound_site_id,
             deleted_at=deleted_at,

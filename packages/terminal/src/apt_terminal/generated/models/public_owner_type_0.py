@@ -37,8 +37,8 @@ class PublicOwnerType0:
         field_dict.update(
             {
                 "slug": slug,
-                "displayName": display_name,
-                "avatarUrl": avatar_url,
+                "display_name": display_name,
+                "avatar_url": avatar_url,
             }
         )
 
@@ -54,14 +54,14 @@ class PublicOwnerType0:
                 return data
             return cast(None | str, data)
 
-        display_name = _parse_display_name(d.pop("displayName"))
+        display_name = _parse_display_name(d.pop("display_name"))
 
         def _parse_avatar_url(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        avatar_url = _parse_avatar_url(d.pop("avatarUrl"))
+        avatar_url = _parse_avatar_url(d.pop("avatar_url"))
 
         public_owner_type_0 = cls(
             slug=slug,

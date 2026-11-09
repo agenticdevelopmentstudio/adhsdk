@@ -69,33 +69,33 @@ class AppearanceSettingsPrefs:
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if color_mode is not UNSET:
-            field_dict["colorMode"] = color_mode
+            field_dict["color_mode"] = color_mode
         if reduce_motion is not UNSET:
-            field_dict["reduceMotion"] = reduce_motion
+            field_dict["reduce_motion"] = reduce_motion
         if contrast is not UNSET:
             field_dict["contrast"] = contrast
         if text_size is not UNSET:
-            field_dict["textSize"] = text_size
+            field_dict["text_size"] = text_size
         if spacing is not UNSET:
             field_dict["spacing"] = spacing
         if focus_outlines is not UNSET:
-            field_dict["focusOutlines"] = focus_outlines
+            field_dict["focus_outlines"] = focus_outlines
         if underline_links is not UNSET:
-            field_dict["underlineLinks"] = underline_links
+            field_dict["underline_links"] = underline_links
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        _color_mode = d.pop("colorMode", UNSET)
+        _color_mode = d.pop("color_mode", UNSET)
         color_mode: AppearanceSettingsPrefsColorMode | Unset
         if isinstance(_color_mode, Unset):
             color_mode = UNSET
         else:
             color_mode = AppearanceSettingsPrefsColorMode(_color_mode)
 
-        _reduce_motion = d.pop("reduceMotion", UNSET)
+        _reduce_motion = d.pop("reduce_motion", UNSET)
         reduce_motion: AppearanceSettingsPrefsReduceMotion | Unset
         if isinstance(_reduce_motion, Unset):
             reduce_motion = UNSET
@@ -109,7 +109,7 @@ class AppearanceSettingsPrefs:
         else:
             contrast = AppearanceSettingsPrefsContrast(_contrast)
 
-        _text_size = d.pop("textSize", UNSET)
+        _text_size = d.pop("text_size", UNSET)
         text_size: AppearanceSettingsPrefsTextSize | Unset
         if isinstance(_text_size, Unset):
             text_size = UNSET
@@ -123,9 +123,9 @@ class AppearanceSettingsPrefs:
         else:
             spacing = AppearanceSettingsPrefsSpacing(_spacing)
 
-        focus_outlines = d.pop("focusOutlines", UNSET)
+        focus_outlines = d.pop("focus_outlines", UNSET)
 
-        underline_links = d.pop("underlineLinks", UNSET)
+        underline_links = d.pop("underline_links", UNSET)
 
         appearance_settings_prefs = cls(
             color_mode=color_mode,

@@ -51,7 +51,7 @@ class PublicCommunity:
                 "id": id,
                 "slug": slug,
                 "name": name,
-                "isPublic": is_public,
+                "is_public": is_public,
             }
         )
         if description is not UNSET:
@@ -68,7 +68,7 @@ class PublicCommunity:
 
         name = d.pop("name")
 
-        is_public = d.pop("isPublic")
+        is_public = d.pop("is_public")
 
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:

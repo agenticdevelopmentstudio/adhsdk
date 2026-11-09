@@ -79,10 +79,10 @@ class UsageInsightItem:
                 "provider": provider,
                 "sku": sku,
                 "quantities": quantities,
-                "capturedMicros": captured_micros,
-                "costMicros": cost_micros,
+                "captured_micros": captured_micros,
+                "cost_micros": cost_micros,
                 "source": source,
-                "unpricedLines": unpriced_lines,
+                "unpriced_lines": unpriced_lines,
                 "lines": lines,
                 "rates": rates,
             }
@@ -106,18 +106,18 @@ class UsageInsightItem:
 
         quantities = UsageInsightItemQuantities.from_dict(d.pop("quantities"))
 
-        captured_micros = d.pop("capturedMicros")
+        captured_micros = d.pop("captured_micros")
 
         def _parse_cost_micros(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        cost_micros = _parse_cost_micros(d.pop("costMicros"))
+        cost_micros = _parse_cost_micros(d.pop("cost_micros"))
 
         source = UsageInsightItemSource(d.pop("source"))
 
-        unpriced_lines = d.pop("unpricedLines")
+        unpriced_lines = d.pop("unpriced_lines")
 
         lines = d.pop("lines")
 

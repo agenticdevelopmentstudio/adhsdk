@@ -38,7 +38,7 @@ class PersonaDemoPreviewChoice:
             {
                 "text": text,
                 "keywords": keywords,
-                "offScript": off_script,
+                "off_script": off_script,
             }
         )
 
@@ -51,7 +51,7 @@ class PersonaDemoPreviewChoice:
 
         keywords = cast(list[str], d.pop("keywords"))
 
-        off_script = d.pop("offScript")
+        off_script = d.pop("off_script")
 
         persona_demo_preview_choice = cls(
             text=text,

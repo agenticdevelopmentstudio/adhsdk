@@ -77,17 +77,17 @@ class OrgSheet:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "subjectType": subject_type,
-                "subjectId": subject_id,
+                "subject_type": subject_type,
+                "subject_id": subject_id,
                 "name": name,
                 "slug": slug,
                 "skin": skin,
                 "level": level,
-                "levelTitle": level_title,
+                "level_title": level_title,
                 "xp": xp,
-                "xpIntoLevel": xp_into_level,
-                "xpForNext": xp_for_next,
-                "memberCount": member_count,
+                "xp_into_level": xp_into_level,
+                "xp_for_next": xp_for_next,
+                "member_count": member_count,
                 "stats": stats,
             }
         )
@@ -99,9 +99,9 @@ class OrgSheet:
         from ..models.org_sheet_stats import OrgSheetStats
 
         d = dict(src_dict)
-        subject_type = OrgSheetSubjectType(d.pop("subjectType"))
+        subject_type = OrgSheetSubjectType(d.pop("subject_type"))
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
         name = d.pop("name")
 
@@ -116,15 +116,15 @@ class OrgSheet:
                 return data
             return cast(None | str, data)
 
-        level_title = _parse_level_title(d.pop("levelTitle"))
+        level_title = _parse_level_title(d.pop("level_title"))
 
         xp = d.pop("xp")
 
-        xp_into_level = d.pop("xpIntoLevel")
+        xp_into_level = d.pop("xp_into_level")
 
-        xp_for_next = d.pop("xpForNext")
+        xp_for_next = d.pop("xp_for_next")
 
-        member_count = d.pop("memberCount")
+        member_count = d.pop("member_count")
 
         stats = OrgSheetStats.from_dict(d.pop("stats"))
 

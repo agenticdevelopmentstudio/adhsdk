@@ -27,7 +27,7 @@ class IntegrationActionLabelDelete:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "labelId": label_id,
+                "label_id": label_id,
             }
         )
 
@@ -36,7 +36,7 @@ class IntegrationActionLabelDelete:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        label_id = d.pop("labelId")
+        label_id = d.pop("label_id")
 
         integration_action_label_delete = cls(
             label_id=label_id,

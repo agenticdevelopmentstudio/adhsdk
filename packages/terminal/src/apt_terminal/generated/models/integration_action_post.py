@@ -50,7 +50,7 @@ class IntegrationActionPost:
         if media is not UNSET:
             field_dict["media"] = media
         if reply_to is not UNSET:
-            field_dict["replyTo"] = reply_to
+            field_dict["reply_to"] = reply_to
 
         return field_dict
 
@@ -72,7 +72,7 @@ class IntegrationActionPost:
 
                 media.append(media_item)
 
-        reply_to = d.pop("replyTo", UNSET)
+        reply_to = d.pop("reply_to", UNSET)
 
         integration_action_post = cls(
             text=text,

@@ -18,16 +18,16 @@ class CommunityMember:
         community_id (str):
         customer_id (str):
         role (str): owner | admin | moderator | member
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         bio (None | str | Unset): The member’s one-line "what I’m building" intro for this community.
     """
 
     community_id: str
     customer_id: str
     role: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     bio: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -38,9 +38,9 @@ class CommunityMember:
 
         role = self.role
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         bio: None | str | Unset
         if isinstance(self.bio, Unset):
@@ -52,11 +52,11 @@ class CommunityMember:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "communityId": community_id,
-                "customerId": customer_id,
+                "community_id": community_id,
+                "customer_id": customer_id,
                 "role": role,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if bio is not UNSET:
@@ -67,15 +67,15 @@ class CommunityMember:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        community_id = d.pop("communityId")
+        community_id = d.pop("community_id")
 
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
         role = d.pop("role")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_bio(data: object) -> None | str | Unset:
             if data is None:
@@ -90,8 +90,8 @@ class CommunityMember:
             community_id=community_id,
             customer_id=customer_id,
             role=role,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             bio=bio,
         )
 

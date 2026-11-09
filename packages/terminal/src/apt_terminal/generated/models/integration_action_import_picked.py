@@ -38,23 +38,23 @@ class IntegrationActionImportPicked:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "sessionId": session_id,
-                "albumId": album_id,
+                "session_id": session_id,
+                "album_id": album_id,
             }
         )
         if page_token is not UNSET:
-            field_dict["pageToken"] = page_token
+            field_dict["page_token"] = page_token
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        session_id = d.pop("sessionId")
+        session_id = d.pop("session_id")
 
-        album_id = d.pop("albumId")
+        album_id = d.pop("album_id")
 
-        page_token = d.pop("pageToken", UNSET)
+        page_token = d.pop("page_token", UNSET)
 
         integration_action_import_picked = cls(
             session_id=session_id,

@@ -17,14 +17,14 @@ class WorkItemDependency:
         depends_on_id (str): the work item this one depends on
         title (str): the depended-on item title (joined)
         status (str): the depended-on item statusId (joined)
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
     depends_on_id: str
     title: str
     status: str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,17 +36,17 @@ class WorkItemDependency:
 
         status = self.status
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "dependsOnId": depends_on_id,
+                "depends_on_id": depends_on_id,
                 "title": title,
                 "status": status,
-                "createdAt": created_at,
+                "created": created,
             }
         )
 
@@ -57,20 +57,20 @@ class WorkItemDependency:
         d = dict(src_dict)
         id = d.pop("id")
 
-        depends_on_id = d.pop("dependsOnId")
+        depends_on_id = d.pop("depends_on_id")
 
         title = d.pop("title")
 
         status = d.pop("status")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         work_item_dependency = cls(
             id=id,
             depends_on_id=depends_on_id,
             title=title,
             status=status,
-            created_at=created_at,
+            created=created,
         )
 
         work_item_dependency.additional_properties = d

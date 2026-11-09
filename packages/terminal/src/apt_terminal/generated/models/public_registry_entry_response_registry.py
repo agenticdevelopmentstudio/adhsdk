@@ -37,7 +37,7 @@ class PublicRegistryEntryResponseRegistry:
             {
                 "slug": slug,
                 "name": name,
-                "boundSiteId": bound_site_id,
+                "bound_site_id": bound_site_id,
             }
         )
 
@@ -55,7 +55,7 @@ class PublicRegistryEntryResponseRegistry:
                 return data
             return cast(None | str, data)
 
-        bound_site_id = _parse_bound_site_id(d.pop("boundSiteId"))
+        bound_site_id = _parse_bound_site_id(d.pop("bound_site_id"))
 
         public_registry_entry_response_registry = cls(
             slug=slug,

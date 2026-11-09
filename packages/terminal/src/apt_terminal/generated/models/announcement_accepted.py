@@ -37,7 +37,7 @@ class AnnouncementAccepted:
         field_dict.update(
             {
                 "id": id,
-                "recipientCount": recipient_count,
+                "recipient_count": recipient_count,
                 "status": status,
             }
         )
@@ -49,7 +49,7 @@ class AnnouncementAccepted:
         d = dict(src_dict)
         id = d.pop("id")
 
-        recipient_count = d.pop("recipientCount")
+        recipient_count = d.pop("recipient_count")
 
         status = AnnouncementAcceptedStatus(d.pop("status"))
 

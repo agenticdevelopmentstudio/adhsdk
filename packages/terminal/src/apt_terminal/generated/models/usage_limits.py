@@ -46,10 +46,10 @@ class UsageLimits:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "quotaRequests": quota_requests,
-                "quotaBytes": quota_bytes,
-                "quotaTokens": quota_tokens,
-                "quotaCostMicros": quota_cost_micros,
+                "quota_requests": quota_requests,
+                "quota_bytes": quota_bytes,
+                "quota_tokens": quota_tokens,
+                "quota_cost_micros": quota_cost_micros,
                 "enforced": enforced,
             }
         )
@@ -65,28 +65,28 @@ class UsageLimits:
                 return data
             return cast(int | None, data)
 
-        quota_requests = _parse_quota_requests(d.pop("quotaRequests"))
+        quota_requests = _parse_quota_requests(d.pop("quota_requests"))
 
         def _parse_quota_bytes(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        quota_bytes = _parse_quota_bytes(d.pop("quotaBytes"))
+        quota_bytes = _parse_quota_bytes(d.pop("quota_bytes"))
 
         def _parse_quota_tokens(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        quota_tokens = _parse_quota_tokens(d.pop("quotaTokens"))
+        quota_tokens = _parse_quota_tokens(d.pop("quota_tokens"))
 
         def _parse_quota_cost_micros(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        quota_cost_micros = _parse_quota_cost_micros(d.pop("quotaCostMicros"))
+        quota_cost_micros = _parse_quota_cost_micros(d.pop("quota_cost_micros"))
 
         enforced = d.pop("enforced")
 

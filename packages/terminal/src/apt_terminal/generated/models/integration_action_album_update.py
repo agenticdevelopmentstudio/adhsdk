@@ -38,24 +38,24 @@ class IntegrationActionAlbumUpdate:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "albumId": album_id,
+                "album_id": album_id,
             }
         )
         if title is not UNSET:
             field_dict["title"] = title
         if cover_photo_media_item_id is not UNSET:
-            field_dict["coverPhotoMediaItemId"] = cover_photo_media_item_id
+            field_dict["cover_photo_media_item_id"] = cover_photo_media_item_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        album_id = d.pop("albumId")
+        album_id = d.pop("album_id")
 
         title = d.pop("title", UNSET)
 
-        cover_photo_media_item_id = d.pop("coverPhotoMediaItemId", UNSET)
+        cover_photo_media_item_id = d.pop("cover_photo_media_item_id", UNSET)
 
         integration_action_album_update = cls(
             album_id=album_id,

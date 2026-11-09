@@ -41,7 +41,7 @@ class IntegrationConnectionDataPage:
         field_dict.update(
             {
                 "rows": rows,
-                "nextCursor": next_cursor,
+                "next_cursor": next_cursor,
             }
         )
 
@@ -66,7 +66,7 @@ class IntegrationConnectionDataPage:
                 return data
             return cast(None | str, data)
 
-        next_cursor = _parse_next_cursor(d.pop("nextCursor"))
+        next_cursor = _parse_next_cursor(d.pop("next_cursor"))
 
         integration_connection_data_page = cls(
             rows=rows,

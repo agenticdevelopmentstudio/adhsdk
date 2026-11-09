@@ -44,24 +44,24 @@ class CommunityProfile:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "customerId": customer_id,
+                "customer_id": customer_id,
                 "slug": slug,
-                "avatarUrl": avatar_url,
+                "avatar_url": avatar_url,
             }
         )
         if display_name is not UNSET:
-            field_dict["displayName"] = display_name
+            field_dict["display_name"] = display_name
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
         slug = d.pop("slug")
 
-        avatar_url = d.pop("avatarUrl")
+        avatar_url = d.pop("avatar_url")
 
         def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
@@ -70,7 +70,7 @@ class CommunityProfile:
                 return data
             return cast(None | str | Unset, data)
 
-        display_name = _parse_display_name(d.pop("displayName", UNSET))
+        display_name = _parse_display_name(d.pop("display_name", UNSET))
 
         community_profile = cls(
             customer_id=customer_id,

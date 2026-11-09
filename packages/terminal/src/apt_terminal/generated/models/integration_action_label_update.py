@@ -58,15 +58,15 @@ class IntegrationActionLabelUpdate:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "labelId": label_id,
+                "label_id": label_id,
             }
         )
         if name is not UNSET:
             field_dict["name"] = name
         if label_list_visibility is not UNSET:
-            field_dict["labelListVisibility"] = label_list_visibility
+            field_dict["label_list_visibility"] = label_list_visibility
         if message_list_visibility is not UNSET:
-            field_dict["messageListVisibility"] = message_list_visibility
+            field_dict["message_list_visibility"] = message_list_visibility
         if color is not UNSET:
             field_dict["color"] = color
 
@@ -79,18 +79,18 @@ class IntegrationActionLabelUpdate:
         )
 
         d = dict(src_dict)
-        label_id = d.pop("labelId")
+        label_id = d.pop("label_id")
 
         name = d.pop("name", UNSET)
 
-        _label_list_visibility = d.pop("labelListVisibility", UNSET)
+        _label_list_visibility = d.pop("label_list_visibility", UNSET)
         label_list_visibility: IntegrationGmailLabelListVisibility | Unset
         if isinstance(_label_list_visibility, Unset):
             label_list_visibility = UNSET
         else:
             label_list_visibility = IntegrationGmailLabelListVisibility(_label_list_visibility)
 
-        _message_list_visibility = d.pop("messageListVisibility", UNSET)
+        _message_list_visibility = d.pop("message_list_visibility", UNSET)
         message_list_visibility: IntegrationGmailMessageListVisibility | Unset
         if isinstance(_message_list_visibility, Unset):
             message_list_visibility = UNSET

@@ -30,8 +30,8 @@ class AiProcessingWebhookDelivery:
         attempts (int):
         max_attempts (int):
         next_attempt_at (str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         response_status (int | None | Unset):
         last_error (None | str | Unset):
         delivered_at (None | str | Unset):
@@ -47,8 +47,8 @@ class AiProcessingWebhookDelivery:
     attempts: int
     max_attempts: int
     next_attempt_at: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     response_status: int | None | Unset = UNSET
     last_error: None | str | Unset = UNSET
     delivered_at: None | str | Unset = UNSET
@@ -75,9 +75,9 @@ class AiProcessingWebhookDelivery:
 
         next_attempt_at = self.next_attempt_at
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         response_status: int | None | Unset
         if isinstance(self.response_status, Unset):
@@ -102,25 +102,25 @@ class AiProcessingWebhookDelivery:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "endpointId": endpoint_id,
-                "eventId": event_id,
-                "eventType": event_type,
+                "ecosystem_id": ecosystem_id,
+                "endpoint_id": endpoint_id,
+                "event_id": event_id,
+                "event_type": event_type,
                 "payload": payload,
                 "status": status,
                 "attempts": attempts,
-                "maxAttempts": max_attempts,
-                "nextAttemptAt": next_attempt_at,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "max_attempts": max_attempts,
+                "next_attempt_at": next_attempt_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if response_status is not UNSET:
-            field_dict["responseStatus"] = response_status
+            field_dict["response_status"] = response_status
         if last_error is not UNSET:
-            field_dict["lastError"] = last_error
+            field_dict["last_error"] = last_error
         if delivered_at is not UNSET:
-            field_dict["deliveredAt"] = delivered_at
+            field_dict["delivered_at"] = delivered_at
 
         return field_dict
 
@@ -133,13 +133,13 @@ class AiProcessingWebhookDelivery:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        endpoint_id = UUID(d.pop("endpointId"))
+        endpoint_id = UUID(d.pop("endpoint_id"))
 
-        event_id = UUID(d.pop("eventId"))
+        event_id = UUID(d.pop("event_id"))
 
-        event_type = d.pop("eventType")
+        event_type = d.pop("event_type")
 
         payload = AiProcessingWebhookDeliveryPayload.from_dict(d.pop("payload"))
 
@@ -147,13 +147,13 @@ class AiProcessingWebhookDelivery:
 
         attempts = d.pop("attempts")
 
-        max_attempts = d.pop("maxAttempts")
+        max_attempts = d.pop("max_attempts")
 
-        next_attempt_at = d.pop("nextAttemptAt")
+        next_attempt_at = d.pop("next_attempt_at")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_response_status(data: object) -> int | None | Unset:
             if data is None:
@@ -162,7 +162,7 @@ class AiProcessingWebhookDelivery:
                 return data
             return cast(int | None | Unset, data)
 
-        response_status = _parse_response_status(d.pop("responseStatus", UNSET))
+        response_status = _parse_response_status(d.pop("response_status", UNSET))
 
         def _parse_last_error(data: object) -> None | str | Unset:
             if data is None:
@@ -171,7 +171,7 @@ class AiProcessingWebhookDelivery:
                 return data
             return cast(None | str | Unset, data)
 
-        last_error = _parse_last_error(d.pop("lastError", UNSET))
+        last_error = _parse_last_error(d.pop("last_error", UNSET))
 
         def _parse_delivered_at(data: object) -> None | str | Unset:
             if data is None:
@@ -180,7 +180,7 @@ class AiProcessingWebhookDelivery:
                 return data
             return cast(None | str | Unset, data)
 
-        delivered_at = _parse_delivered_at(d.pop("deliveredAt", UNSET))
+        delivered_at = _parse_delivered_at(d.pop("delivered_at", UNSET))
 
         ai_processing_webhook_delivery = cls(
             id=id,
@@ -193,8 +193,8 @@ class AiProcessingWebhookDelivery:
             attempts=attempts,
             max_attempts=max_attempts,
             next_attempt_at=next_attempt_at,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             response_status=response_status,
             last_error=last_error,
             delivered_at=delivered_at,

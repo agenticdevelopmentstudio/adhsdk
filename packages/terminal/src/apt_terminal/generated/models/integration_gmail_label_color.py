@@ -30,8 +30,8 @@ class IntegrationGmailLabelColor:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "textColor": text_color,
-                "backgroundColor": background_color,
+                "text_color": text_color,
+                "background_color": background_color,
             }
         )
 
@@ -40,9 +40,9 @@ class IntegrationGmailLabelColor:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        text_color = d.pop("textColor")
+        text_color = d.pop("text_color")
 
-        background_color = d.pop("backgroundColor")
+        background_color = d.pop("background_color")
 
         integration_gmail_label_color = cls(
             text_color=text_color,

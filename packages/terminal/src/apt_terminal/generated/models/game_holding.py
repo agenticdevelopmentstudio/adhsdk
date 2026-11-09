@@ -25,8 +25,8 @@ class GameHolding:
         kind (str):
         quantity (int):
         acquired_at (str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         data (GameHoldingDataType0 | None | Unset):
     """
 
@@ -36,8 +36,8 @@ class GameHolding:
     kind: str
     quantity: int
     acquired_at: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     data: GameHoldingDataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -56,9 +56,9 @@ class GameHolding:
 
         acquired_at = self.acquired_at
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         data: dict[str, Any] | None | Unset
         if isinstance(self.data, Unset):
@@ -73,13 +73,13 @@ class GameHolding:
         field_dict.update(
             {
                 "id": id,
-                "gameId": game_id,
-                "artifactId": artifact_id,
+                "game_id": game_id,
+                "artifact_id": artifact_id,
                 "kind": kind,
                 "quantity": quantity,
-                "acquiredAt": acquired_at,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "acquired_at": acquired_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if data is not UNSET:
@@ -94,19 +94,19 @@ class GameHolding:
         d = dict(src_dict)
         id = d.pop("id")
 
-        game_id = d.pop("gameId")
+        game_id = d.pop("game_id")
 
-        artifact_id = d.pop("artifactId")
+        artifact_id = d.pop("artifact_id")
 
         kind = d.pop("kind")
 
         quantity = d.pop("quantity")
 
-        acquired_at = d.pop("acquiredAt")
+        acquired_at = d.pop("acquired_at")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_data(data: object) -> GameHoldingDataType0 | None | Unset:
             if data is None:
@@ -132,8 +132,8 @@ class GameHolding:
             kind=kind,
             quantity=quantity,
             acquired_at=acquired_at,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             data=data,
         )
 

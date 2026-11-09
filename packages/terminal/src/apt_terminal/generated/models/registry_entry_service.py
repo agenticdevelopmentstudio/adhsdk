@@ -27,8 +27,8 @@ class RegistryEntryService:
         unit (str):
         delivery_mode (RegistryEntryServiceDeliveryMode):
         sort_order (int):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         sync_version (int):
         price_min (int | None | Unset):
         price_max (int | None | Unset):
@@ -45,8 +45,8 @@ class RegistryEntryService:
     unit: str
     delivery_mode: RegistryEntryServiceDeliveryMode
     sort_order: int
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     sync_version: int
     price_min: int | None | Unset = UNSET
     price_max: int | None | Unset = UNSET
@@ -74,9 +74,9 @@ class RegistryEntryService:
 
         sort_order = self.sort_order
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         sync_version = self.sync_version
 
@@ -103,26 +103,26 @@ class RegistryEntryService:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "entryId": entry_id,
+                "ecosystem_id": ecosystem_id,
+                "entry_id": entry_id,
                 "title": title,
                 "description": description,
-                "pricingModel": pricing_model,
+                "pricing_model": pricing_model,
                 "currency": currency,
                 "unit": unit,
-                "deliveryMode": delivery_mode,
-                "sortOrder": sort_order,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "syncVersion": sync_version,
+                "delivery_mode": delivery_mode,
+                "sort_order": sort_order,
+                "created": created,
+                "updated": updated,
+                "sync_version": sync_version,
             }
         )
         if price_min is not UNSET:
-            field_dict["priceMin"] = price_min
+            field_dict["price_min"] = price_min
         if price_max is not UNSET:
-            field_dict["priceMax"] = price_max
+            field_dict["price_max"] = price_max
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -131,29 +131,29 @@ class RegistryEntryService:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        entry_id = d.pop("entryId")
+        entry_id = d.pop("entry_id")
 
         title = d.pop("title")
 
         description = d.pop("description")
 
-        pricing_model = RegistryEntryServicePricingModel(d.pop("pricingModel"))
+        pricing_model = RegistryEntryServicePricingModel(d.pop("pricing_model"))
 
         currency = d.pop("currency")
 
         unit = d.pop("unit")
 
-        delivery_mode = RegistryEntryServiceDeliveryMode(d.pop("deliveryMode"))
+        delivery_mode = RegistryEntryServiceDeliveryMode(d.pop("delivery_mode"))
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        sync_version = d.pop("syncVersion")
+        sync_version = d.pop("sync_version")
 
         def _parse_price_min(data: object) -> int | None | Unset:
             if data is None:
@@ -162,7 +162,7 @@ class RegistryEntryService:
                 return data
             return cast(int | None | Unset, data)
 
-        price_min = _parse_price_min(d.pop("priceMin", UNSET))
+        price_min = _parse_price_min(d.pop("price_min", UNSET))
 
         def _parse_price_max(data: object) -> int | None | Unset:
             if data is None:
@@ -171,7 +171,7 @@ class RegistryEntryService:
                 return data
             return cast(int | None | Unset, data)
 
-        price_max = _parse_price_max(d.pop("priceMax", UNSET))
+        price_max = _parse_price_max(d.pop("price_max", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -180,7 +180,7 @@ class RegistryEntryService:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         registry_entry_service = cls(
             id=id,
@@ -193,8 +193,8 @@ class RegistryEntryService:
             unit=unit,
             delivery_mode=delivery_mode,
             sort_order=sort_order,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             sync_version=sync_version,
             price_min=price_min,
             price_max=price_max,

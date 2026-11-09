@@ -21,13 +21,13 @@ class ProjectComment:
         project_id (str):
         work_item_id (str):
         body (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         parent_id (None | str | Unset): the comment this one replies to; null for a top-level comment
         author_kind (ProjectCommentAuthorKind | Unset):
         author_id (None | str | Unset):
         author_label (None | str | Unset):
         edited_at (None | str | Unset): set the first time the body changes; the prior text is in the trail
-        updated_at (str | Unset):
+        updated (int | Unset): Unix timestamp, in seconds.
     """
 
     id: str
@@ -35,13 +35,13 @@ class ProjectComment:
     project_id: str
     work_item_id: str
     body: str
-    created_at: str
+    created: int
     parent_id: None | str | Unset = UNSET
     author_kind: ProjectCommentAuthorKind | Unset = UNSET
     author_id: None | str | Unset = UNSET
     author_label: None | str | Unset = UNSET
     edited_at: None | str | Unset = UNSET
-    updated_at: str | Unset = UNSET
+    updated: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -55,7 +55,7 @@ class ProjectComment:
 
         body = self.body
 
-        created_at = self.created_at
+        created = self.created
 
         parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
@@ -85,32 +85,32 @@ class ProjectComment:
         else:
             edited_at = self.edited_at
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
-                "workItemId": work_item_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
+                "work_item_id": work_item_id,
                 "body": body,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if parent_id is not UNSET:
-            field_dict["parentId"] = parent_id
+            field_dict["parent_id"] = parent_id
         if author_kind is not UNSET:
-            field_dict["authorKind"] = author_kind
+            field_dict["author_kind"] = author_kind
         if author_id is not UNSET:
-            field_dict["authorId"] = author_id
+            field_dict["author_id"] = author_id
         if author_label is not UNSET:
-            field_dict["authorLabel"] = author_label
+            field_dict["author_label"] = author_label
         if edited_at is not UNSET:
-            field_dict["editedAt"] = edited_at
-        if updated_at is not UNSET:
-            field_dict["updatedAt"] = updated_at
+            field_dict["edited_at"] = edited_at
+        if updated is not UNSET:
+            field_dict["updated"] = updated
 
         return field_dict
 
@@ -119,15 +119,15 @@ class ProjectComment:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
-        work_item_id = d.pop("workItemId")
+        work_item_id = d.pop("work_item_id")
 
         body = d.pop("body")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
@@ -136,9 +136,9 @@ class ProjectComment:
                 return data
             return cast(None | str | Unset, data)
 
-        parent_id = _parse_parent_id(d.pop("parentId", UNSET))
+        parent_id = _parse_parent_id(d.pop("parent_id", UNSET))
 
-        _author_kind = d.pop("authorKind", UNSET)
+        _author_kind = d.pop("author_kind", UNSET)
         author_kind: ProjectCommentAuthorKind | Unset
         if isinstance(_author_kind, Unset):
             author_kind = UNSET
@@ -152,7 +152,7 @@ class ProjectComment:
                 return data
             return cast(None | str | Unset, data)
 
-        author_id = _parse_author_id(d.pop("authorId", UNSET))
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_author_label(data: object) -> None | str | Unset:
             if data is None:
@@ -161,7 +161,7 @@ class ProjectComment:
                 return data
             return cast(None | str | Unset, data)
 
-        author_label = _parse_author_label(d.pop("authorLabel", UNSET))
+        author_label = _parse_author_label(d.pop("author_label", UNSET))
 
         def _parse_edited_at(data: object) -> None | str | Unset:
             if data is None:
@@ -170,9 +170,9 @@ class ProjectComment:
                 return data
             return cast(None | str | Unset, data)
 
-        edited_at = _parse_edited_at(d.pop("editedAt", UNSET))
+        edited_at = _parse_edited_at(d.pop("edited_at", UNSET))
 
-        updated_at = d.pop("updatedAt", UNSET)
+        updated = d.pop("updated", UNSET)
 
         project_comment = cls(
             id=id,
@@ -180,13 +180,13 @@ class ProjectComment:
             project_id=project_id,
             work_item_id=work_item_id,
             body=body,
-            created_at=created_at,
+            created=created,
             parent_id=parent_id,
             author_kind=author_kind,
             author_id=author_id,
             author_label=author_label,
             edited_at=edited_at,
-            updated_at=updated_at,
+            updated=updated,
         )
 
         project_comment.additional_properties = d

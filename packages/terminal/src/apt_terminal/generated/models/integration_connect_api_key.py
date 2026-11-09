@@ -50,9 +50,9 @@ class IntegrationConnectApiKey:
         field_dict.update(
             {
                 "type": type_,
-                "providerId": provider_id,
-                "serviceType": service_type,
-                "ecosystemId": ecosystem_id,
+                "provider_id": provider_id,
+                "service_type": service_type,
+                "ecosystem_id": ecosystem_id,
                 "fields": fields,
             }
         )
@@ -66,11 +66,11 @@ class IntegrationConnectApiKey:
         d = dict(src_dict)
         type_ = IntegrationConnectApiKeyType(d.pop("type"))
 
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
-        service_type = d.pop("serviceType")
+        service_type = d.pop("service_type")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
         fields = IntegrationConnectFields.from_dict(d.pop("fields"))
 

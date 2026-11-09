@@ -36,7 +36,7 @@ class VisitorTurnRequest:
             }
         )
         if client_message_id is not UNSET:
-            field_dict["clientMessageId"] = client_message_id
+            field_dict["client_message_id"] = client_message_id
 
         return field_dict
 
@@ -45,7 +45,7 @@ class VisitorTurnRequest:
         d = dict(src_dict)
         message = d.pop("message")
 
-        client_message_id = d.pop("clientMessageId", UNSET)
+        client_message_id = d.pop("client_message_id", UNSET)
 
         visitor_turn_request = cls(
             message=message,

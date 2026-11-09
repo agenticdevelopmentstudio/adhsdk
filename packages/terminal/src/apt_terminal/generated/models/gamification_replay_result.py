@@ -41,7 +41,7 @@ class GamificationReplayResult:
             }
         )
         if xp_gained is not UNSET:
-            field_dict["xpGained"] = xp_gained
+            field_dict["xp_gained"] = xp_gained
 
         return field_dict
 
@@ -52,7 +52,7 @@ class GamificationReplayResult:
 
         badges = d.pop("badges")
 
-        xp_gained = d.pop("xpGained", UNSET)
+        xp_gained = d.pop("xp_gained", UNSET)
 
         gamification_replay_result = cls(
             subjects=subjects,

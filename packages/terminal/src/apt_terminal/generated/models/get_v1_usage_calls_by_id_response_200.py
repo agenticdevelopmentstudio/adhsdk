@@ -1,0 +1,133 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
+from uuid import UUID
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.usage_call_event import UsageCallEvent
+    from ..models.usage_call_ledger import UsageCallLedger
+    from ..models.usage_cost_line import UsageCostLine
+
+
+T = TypeVar("T", bound="GetV1UsageCallsByIdResponse200")
+
+
+@_attrs_define
+class GetV1UsageCallsByIdResponse200:
+    """
+    Attributes:
+        call_id (UUID):
+        events (list[UsageCallEvent]):
+        lines (list[UsageCostLine]):
+        children (list[UsageCallLedger]): Calls this one started (parent_call_id), one level deep
+        object_ (Literal['usage.call'] | Unset):
+    """
+
+    call_id: UUID
+    events: list[UsageCallEvent]
+    lines: list[UsageCostLine]
+    children: list[UsageCallLedger]
+    object_: Literal["usage.call"] | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        call_id = str(self.call_id)
+
+        events = []
+        for events_item_data in self.events:
+            events_item = events_item_data.to_dict()
+            events.append(events_item)
+
+        lines = []
+        for lines_item_data in self.lines:
+            lines_item = lines_item_data.to_dict()
+            lines.append(lines_item)
+
+        children = []
+        for children_item_data in self.children:
+            children_item = children_item_data.to_dict()
+            children.append(children_item)
+
+        object_ = self.object_
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "call_id": call_id,
+                "events": events,
+                "lines": lines,
+                "children": children,
+            }
+        )
+        if object_ is not UNSET:
+            field_dict["object"] = object_
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.usage_call_event import UsageCallEvent
+        from ..models.usage_call_ledger import UsageCallLedger
+        from ..models.usage_cost_line import UsageCostLine
+
+        d = dict(src_dict)
+        call_id = UUID(d.pop("call_id"))
+
+        events = []
+        _events = d.pop("events")
+        for events_item_data in _events:
+            events_item = UsageCallEvent.from_dict(events_item_data)
+
+            events.append(events_item)
+
+        lines = []
+        _lines = d.pop("lines")
+        for lines_item_data in _lines:
+            lines_item = UsageCostLine.from_dict(lines_item_data)
+
+            lines.append(lines_item)
+
+        children = []
+        _children = d.pop("children")
+        for children_item_data in _children:
+            children_item = UsageCallLedger.from_dict(children_item_data)
+
+            children.append(children_item)
+
+        object_ = cast(Literal["usage.call"] | Unset, d.pop("object", UNSET))
+        if object_ != "usage.call" and not isinstance(object_, Unset):
+            raise ValueError(f"object must match const 'usage.call', got '{object_}'")
+
+        get_v1_usage_calls_by_id_response_200 = cls(
+            call_id=call_id,
+            events=events,
+            lines=lines,
+            children=children,
+            object_=object_,
+        )
+
+        get_v1_usage_calls_by_id_response_200.additional_properties = d
+        return get_v1_usage_calls_by_id_response_200
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

@@ -61,12 +61,12 @@ class PublicRegistryService:
             {
                 "title": title,
                 "description": description,
-                "pricingModel": pricing_model,
-                "priceMin": price_min,
-                "priceMax": price_max,
+                "pricing_model": pricing_model,
+                "price_min": price_min,
+                "price_max": price_max,
                 "currency": currency,
                 "unit": unit,
-                "deliveryMode": delivery_mode,
+                "delivery_mode": delivery_mode,
             }
         )
 
@@ -79,27 +79,27 @@ class PublicRegistryService:
 
         description = d.pop("description")
 
-        pricing_model = PublicRegistryServicePricingModel(d.pop("pricingModel"))
+        pricing_model = PublicRegistryServicePricingModel(d.pop("pricing_model"))
 
         def _parse_price_min(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        price_min = _parse_price_min(d.pop("priceMin"))
+        price_min = _parse_price_min(d.pop("price_min"))
 
         def _parse_price_max(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        price_max = _parse_price_max(d.pop("priceMax"))
+        price_max = _parse_price_max(d.pop("price_max"))
 
         currency = d.pop("currency")
 
         unit = d.pop("unit")
 
-        delivery_mode = PublicRegistryServiceDeliveryMode(d.pop("deliveryMode"))
+        delivery_mode = PublicRegistryServiceDeliveryMode(d.pop("delivery_mode"))
 
         public_registry_service = cls(
             title=title,

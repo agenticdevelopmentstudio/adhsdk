@@ -29,7 +29,7 @@ class MessagingLogEntry:
         status (MessagingLogEntryStatus): Send outcome
         origin (MessagingLogEntryOrigin): Sending surface: 'ecosystem' = the per-ecosystem Messaging tool; 'platform' =
             automated/system send (only the admin log shows these)
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         deleted_at (None | str | Unset):
         subject (None | str | Unset):
         template_id (None | str | Unset):
@@ -47,7 +47,7 @@ class MessagingLogEntry:
     body: str
     status: MessagingLogEntryStatus
     origin: MessagingLogEntryOrigin
-    created_at: str
+    created: int
     deleted_at: None | str | Unset = UNSET
     subject: None | str | Unset = UNSET
     template_id: None | str | Unset = UNSET
@@ -75,7 +75,7 @@ class MessagingLogEntry:
 
         origin = self.origin.value
 
-        created_at = self.created_at
+        created = self.created
 
         deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
@@ -118,29 +118,29 @@ class MessagingLogEntry:
         field_dict.update(
             {
                 "id": id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
-                "ecosystemId": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
+                "ecosystem_id": ecosystem_id,
                 "channel": channel,
                 "recipient": recipient,
                 "body": body,
                 "status": status,
                 "origin": origin,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if subject is not UNSET:
             field_dict["subject"] = subject
         if template_id is not UNSET:
-            field_dict["templateId"] = template_id
+            field_dict["template_id"] = template_id
         if provider_id is not UNSET:
-            field_dict["providerId"] = provider_id
+            field_dict["provider_id"] = provider_id
         if error_message is not UNSET:
-            field_dict["errorMessage"] = error_message
+            field_dict["error_message"] = error_message
         if sent_by is not UNSET:
-            field_dict["sentBy"] = sent_by
+            field_dict["sent_by"] = sent_by
 
         return field_dict
 
@@ -149,11 +149,11 @@ class MessagingLogEntry:
         d = dict(src_dict)
         id = d.pop("id")
 
-        owner_kind = d.pop("ownerKind")
+        owner_kind = d.pop("owner_kind")
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
         channel = MessagingLogEntryChannel(d.pop("channel"))
 
@@ -165,7 +165,7 @@ class MessagingLogEntry:
 
         origin = MessagingLogEntryOrigin(d.pop("origin"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -174,7 +174,7 @@ class MessagingLogEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         def _parse_subject(data: object) -> None | str | Unset:
             if data is None:
@@ -192,7 +192,7 @@ class MessagingLogEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        template_id = _parse_template_id(d.pop("templateId", UNSET))
+        template_id = _parse_template_id(d.pop("template_id", UNSET))
 
         def _parse_provider_id(data: object) -> None | str | Unset:
             if data is None:
@@ -201,7 +201,7 @@ class MessagingLogEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        provider_id = _parse_provider_id(d.pop("providerId", UNSET))
+        provider_id = _parse_provider_id(d.pop("provider_id", UNSET))
 
         def _parse_error_message(data: object) -> None | str | Unset:
             if data is None:
@@ -210,7 +210,7 @@ class MessagingLogEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        error_message = _parse_error_message(d.pop("errorMessage", UNSET))
+        error_message = _parse_error_message(d.pop("error_message", UNSET))
 
         def _parse_sent_by(data: object) -> None | str | Unset:
             if data is None:
@@ -219,7 +219,7 @@ class MessagingLogEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        sent_by = _parse_sent_by(d.pop("sentBy", UNSET))
+        sent_by = _parse_sent_by(d.pop("sent_by", UNSET))
 
         messaging_log_entry = cls(
             id=id,
@@ -231,7 +231,7 @@ class MessagingLogEntry:
             body=body,
             status=status,
             origin=origin,
-            created_at=created_at,
+            created=created,
             deleted_at=deleted_at,
             subject=subject,
             template_id=template_id,

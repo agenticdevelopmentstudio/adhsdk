@@ -43,11 +43,11 @@ class PersonaWeeklyRecap:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "weekStart": week_start,
+                "week_start": week_start,
                 "adventures": adventures,
-                "newAllies": new_allies,
-                "reflexesDeltaPct": reflexes_delta_pct,
-                "levelsGained": levels_gained,
+                "new_allies": new_allies,
+                "reflexes_delta_pct": reflexes_delta_pct,
+                "levels_gained": levels_gained,
             }
         )
 
@@ -56,20 +56,20 @@ class PersonaWeeklyRecap:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        week_start = d.pop("weekStart")
+        week_start = d.pop("week_start")
 
         adventures = d.pop("adventures")
 
-        new_allies = d.pop("newAllies")
+        new_allies = d.pop("new_allies")
 
         def _parse_reflexes_delta_pct(data: object) -> float | None:
             if data is None:
                 return data
             return cast(float | None, data)
 
-        reflexes_delta_pct = _parse_reflexes_delta_pct(d.pop("reflexesDeltaPct"))
+        reflexes_delta_pct = _parse_reflexes_delta_pct(d.pop("reflexes_delta_pct"))
 
-        levels_gained = d.pop("levelsGained")
+        levels_gained = d.pop("levels_gained")
 
         persona_weekly_recap = cls(
             week_start=week_start,

@@ -30,8 +30,8 @@ class WorkItem:
         rank (str): board order within the project — an opaque key that sorts ascending by BYTE, so a client compares
             two cards with `<` and never parses one. Set only by the server (a create appends; POST /project/work-
             items/{id}/move reorders), so there is no way — and no need — to send one.
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         is_deleted (bool):
         assignee_kind (None | Unset | WorkItemAssigneeKindType1 | WorkItemAssigneeKindType2Type1 |
             WorkItemAssigneeKindType3Type1):
@@ -66,8 +66,8 @@ class WorkItem:
     priority: int
     labels: list[str]
     rank: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     is_deleted: bool
     assignee_kind: (
         None
@@ -107,9 +107,9 @@ class WorkItem:
 
         rank = self.rank
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         is_deleted = self.is_deleted
 
@@ -190,41 +190,41 @@ class WorkItem:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
                 "title": title,
                 "description": description,
-                "statusId": status_id,
+                "status_id": status_id,
                 "priority": priority,
                 "labels": labels,
                 "rank": rank,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "isDeleted": is_deleted,
+                "created": created,
+                "updated": updated,
+                "is_deleted": is_deleted,
             }
         )
         if assignee_kind is not UNSET:
-            field_dict["assigneeKind"] = assignee_kind
+            field_dict["assignee_kind"] = assignee_kind
         if assignee_id is not UNSET:
-            field_dict["assigneeId"] = assignee_id
+            field_dict["assignee_id"] = assignee_id
         if start_date is not UNSET:
-            field_dict["startDate"] = start_date
+            field_dict["start_date"] = start_date
         if due_date is not UNSET:
-            field_dict["dueDate"] = due_date
+            field_dict["due_date"] = due_date
         if parent_id is not UNSET:
-            field_dict["parentId"] = parent_id
+            field_dict["parent_id"] = parent_id
         if iteration_id is not UNSET:
-            field_dict["iterationId"] = iteration_id
+            field_dict["iteration_id"] = iteration_id
         if milestone_id is not UNSET:
-            field_dict["milestoneId"] = milestone_id
+            field_dict["milestone_id"] = milestone_id
         if estimate is not UNSET:
             field_dict["estimate"] = estimate
         if triaged_at is not UNSET:
-            field_dict["triagedAt"] = triaged_at
+            field_dict["triaged_at"] = triaged_at
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -233,15 +233,15 @@ class WorkItem:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
         title = d.pop("title")
 
         description = d.pop("description")
 
-        status_id = d.pop("statusId")
+        status_id = d.pop("status_id")
 
         priority = d.pop("priority")
 
@@ -249,11 +249,11 @@ class WorkItem:
 
         rank = d.pop("rank")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        is_deleted = d.pop("isDeleted")
+        is_deleted = d.pop("is_deleted")
 
         def _parse_assignee_kind(
             data: object,
@@ -301,7 +301,7 @@ class WorkItem:
                 data,
             )
 
-        assignee_kind = _parse_assignee_kind(d.pop("assigneeKind", UNSET))
+        assignee_kind = _parse_assignee_kind(d.pop("assignee_kind", UNSET))
 
         def _parse_assignee_id(data: object) -> None | str | Unset:
             if data is None:
@@ -310,7 +310,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        assignee_id = _parse_assignee_id(d.pop("assigneeId", UNSET))
+        assignee_id = _parse_assignee_id(d.pop("assignee_id", UNSET))
 
         def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
@@ -319,7 +319,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        start_date = _parse_start_date(d.pop("startDate", UNSET))
+        start_date = _parse_start_date(d.pop("start_date", UNSET))
 
         def _parse_due_date(data: object) -> None | str | Unset:
             if data is None:
@@ -328,7 +328,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        due_date = _parse_due_date(d.pop("dueDate", UNSET))
+        due_date = _parse_due_date(d.pop("due_date", UNSET))
 
         def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
@@ -337,7 +337,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        parent_id = _parse_parent_id(d.pop("parentId", UNSET))
+        parent_id = _parse_parent_id(d.pop("parent_id", UNSET))
 
         def _parse_iteration_id(data: object) -> None | str | Unset:
             if data is None:
@@ -346,7 +346,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        iteration_id = _parse_iteration_id(d.pop("iterationId", UNSET))
+        iteration_id = _parse_iteration_id(d.pop("iteration_id", UNSET))
 
         def _parse_milestone_id(data: object) -> None | str | Unset:
             if data is None:
@@ -355,7 +355,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        milestone_id = _parse_milestone_id(d.pop("milestoneId", UNSET))
+        milestone_id = _parse_milestone_id(d.pop("milestone_id", UNSET))
 
         def _parse_estimate(data: object) -> int | None | Unset:
             if data is None:
@@ -373,7 +373,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        triaged_at = _parse_triaged_at(d.pop("triagedAt", UNSET))
+        triaged_at = _parse_triaged_at(d.pop("triaged_at", UNSET))
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -382,7 +382,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -391,7 +391,7 @@ class WorkItem:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         work_item = cls(
             id=id,
@@ -403,8 +403,8 @@ class WorkItem:
             priority=priority,
             labels=labels,
             rank=rank,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             is_deleted=is_deleted,
             assignee_kind=assignee_kind,
             assignee_id=assignee_id,

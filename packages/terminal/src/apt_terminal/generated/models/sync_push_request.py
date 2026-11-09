@@ -37,7 +37,7 @@ class SyncPushRequest:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "deviceId": device_id,
+                "device_id": device_id,
                 "ops": ops,
             }
         )
@@ -49,7 +49,7 @@ class SyncPushRequest:
         from ..models.sync_push_op import SyncPushOp
 
         d = dict(src_dict)
-        device_id = d.pop("deviceId")
+        device_id = d.pop("device_id")
 
         ops = []
         _ops = d.pop("ops")

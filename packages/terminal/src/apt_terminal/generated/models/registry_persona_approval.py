@@ -29,7 +29,7 @@ class RegistryPersonaApproval:
         tool_name (str): curated tool name, or the gateway tool 'adh_request'
         args (RegistryPersonaApprovalArgs): the frozen invocation payload
         status (RegistryPersonaApprovalStatus):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         subject_id (None | str | Unset): null for self/eco-scoped subjects
         requested_by (None | str | Unset):
         decided_by (None | str | Unset): the human who decided (null until then)
@@ -45,7 +45,7 @@ class RegistryPersonaApproval:
     tool_name: str
     args: RegistryPersonaApprovalArgs
     status: RegistryPersonaApprovalStatus
-    created_at: str
+    created: int
     subject_id: None | str | Unset = UNSET
     requested_by: None | str | Unset = UNSET
     decided_by: None | str | Unset = UNSET
@@ -72,7 +72,7 @@ class RegistryPersonaApproval:
 
         status = self.status.value
 
-        created_at = self.created_at
+        created = self.created
 
         subject_id: None | str | Unset
         if isinstance(self.subject_id, Unset):
@@ -111,23 +111,23 @@ class RegistryPersonaApproval:
         field_dict.update(
             {
                 "id": id,
-                "personaId": persona_id,
-                "subjectKind": subject_kind,
-                "subjectEco": subject_eco,
-                "toolName": tool_name,
+                "persona_id": persona_id,
+                "subject_kind": subject_kind,
+                "subject_eco": subject_eco,
+                "tool_name": tool_name,
                 "args": args,
                 "status": status,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if subject_id is not UNSET:
-            field_dict["subjectId"] = subject_id
+            field_dict["subject_id"] = subject_id
         if requested_by is not UNSET:
-            field_dict["requestedBy"] = requested_by
+            field_dict["requested_by"] = requested_by
         if decided_by is not UNSET:
-            field_dict["decidedBy"] = decided_by
+            field_dict["decided_by"] = decided_by
         if decided_at is not UNSET:
-            field_dict["decidedAt"] = decided_at
+            field_dict["decided_at"] = decided_at
         if result is not UNSET:
             field_dict["result"] = result
 
@@ -145,19 +145,19 @@ class RegistryPersonaApproval:
         d = dict(src_dict)
         id = d.pop("id")
 
-        persona_id = d.pop("personaId")
+        persona_id = d.pop("persona_id")
 
-        subject_kind = RegistryPersonaApprovalSubjectKind(d.pop("subjectKind"))
+        subject_kind = RegistryPersonaApprovalSubjectKind(d.pop("subject_kind"))
 
-        subject_eco = d.pop("subjectEco")
+        subject_eco = d.pop("subject_eco")
 
-        tool_name = d.pop("toolName")
+        tool_name = d.pop("tool_name")
 
         args = RegistryPersonaApprovalArgs.from_dict(d.pop("args"))
 
         status = RegistryPersonaApprovalStatus(d.pop("status"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_subject_id(data: object) -> None | str | Unset:
             if data is None:
@@ -166,7 +166,7 @@ class RegistryPersonaApproval:
                 return data
             return cast(None | str | Unset, data)
 
-        subject_id = _parse_subject_id(d.pop("subjectId", UNSET))
+        subject_id = _parse_subject_id(d.pop("subject_id", UNSET))
 
         def _parse_requested_by(data: object) -> None | str | Unset:
             if data is None:
@@ -175,7 +175,7 @@ class RegistryPersonaApproval:
                 return data
             return cast(None | str | Unset, data)
 
-        requested_by = _parse_requested_by(d.pop("requestedBy", UNSET))
+        requested_by = _parse_requested_by(d.pop("requested_by", UNSET))
 
         def _parse_decided_by(data: object) -> None | str | Unset:
             if data is None:
@@ -184,7 +184,7 @@ class RegistryPersonaApproval:
                 return data
             return cast(None | str | Unset, data)
 
-        decided_by = _parse_decided_by(d.pop("decidedBy", UNSET))
+        decided_by = _parse_decided_by(d.pop("decided_by", UNSET))
 
         def _parse_decided_at(data: object) -> None | str | Unset:
             if data is None:
@@ -193,7 +193,7 @@ class RegistryPersonaApproval:
                 return data
             return cast(None | str | Unset, data)
 
-        decided_at = _parse_decided_at(d.pop("decidedAt", UNSET))
+        decided_at = _parse_decided_at(d.pop("decided_at", UNSET))
 
         def _parse_result(data: object) -> None | RegistryPersonaApprovalResultType0 | Unset:
             if data is None:
@@ -220,7 +220,7 @@ class RegistryPersonaApproval:
             tool_name=tool_name,
             args=args,
             status=status,
-            created_at=created_at,
+            created=created,
             subject_id=subject_id,
             requested_by=requested_by,
             decided_by=decided_by,

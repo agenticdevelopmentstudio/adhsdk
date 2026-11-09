@@ -40,7 +40,7 @@ class ChatConversationCreate:
         if model is not UNSET:
             field_dict["model"] = model
         if persona_slug is not UNSET:
-            field_dict["personaSlug"] = persona_slug
+            field_dict["persona_slug"] = persona_slug
 
         return field_dict
 
@@ -51,7 +51,7 @@ class ChatConversationCreate:
 
         model = d.pop("model", UNSET)
 
-        persona_slug = d.pop("personaSlug", UNSET)
+        persona_slug = d.pop("persona_slug", UNSET)
 
         chat_conversation_create = cls(
             title=title,

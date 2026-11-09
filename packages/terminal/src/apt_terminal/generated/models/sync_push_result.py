@@ -62,7 +62,7 @@ class SyncPushResult:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "opId": op_id,
+                "op_id": op_id,
                 "status": status,
             }
         )
@@ -71,7 +71,7 @@ class SyncPushResult:
         if current is not UNSET:
             field_dict["current"] = current
         if new_version is not UNSET:
-            field_dict["newVersion"] = new_version
+            field_dict["new_version"] = new_version
 
         return field_dict
 
@@ -82,7 +82,7 @@ class SyncPushResult:
         )
 
         d = dict(src_dict)
-        op_id = UUID(d.pop("opId"))
+        op_id = UUID(d.pop("op_id"))
 
         status = SyncPushResultStatus(d.pop("status"))
 
@@ -105,7 +105,7 @@ class SyncPushResult:
 
         current = _parse_current(d.pop("current", UNSET))
 
-        new_version = d.pop("newVersion", UNSET)
+        new_version = d.pop("new_version", UNSET)
 
         sync_push_result = cls(
             op_id=op_id,

@@ -42,24 +42,24 @@ class IntegrationActionModifyLabels:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "messageIds": message_ids,
+                "message_ids": message_ids,
             }
         )
         if add_label_ids is not UNSET:
-            field_dict["addLabelIds"] = add_label_ids
+            field_dict["add_label_ids"] = add_label_ids
         if remove_label_ids is not UNSET:
-            field_dict["removeLabelIds"] = remove_label_ids
+            field_dict["remove_label_ids"] = remove_label_ids
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        message_ids = cast(list[str], d.pop("messageIds"))
+        message_ids = cast(list[str], d.pop("message_ids"))
 
-        add_label_ids = cast(list[str], d.pop("addLabelIds", UNSET))
+        add_label_ids = cast(list[str], d.pop("add_label_ids", UNSET))
 
-        remove_label_ids = cast(list[str], d.pop("removeLabelIds", UNSET))
+        remove_label_ids = cast(list[str], d.pop("remove_label_ids", UNSET))
 
         integration_action_modify_labels = cls(
             message_ids=message_ids,

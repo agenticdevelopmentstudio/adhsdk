@@ -25,8 +25,8 @@ class Chat:
         name (str):
         photo_storage_key (None | str):
         created_by_user_id (None | str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         participants (list[ChatParticipant]): Joined participants, longest-standing first
     """
 
@@ -36,8 +36,8 @@ class Chat:
     name: str
     photo_storage_key: None | str
     created_by_user_id: None | str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     participants: list[ChatParticipant]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -56,9 +56,9 @@ class Chat:
         created_by_user_id: None | str
         created_by_user_id = self.created_by_user_id
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         participants = []
         for participants_item_data in self.participants:
@@ -71,12 +71,12 @@ class Chat:
             {
                 "id": id,
                 "type": type_,
-                "definitionId": definition_id,
+                "definition_id": definition_id,
                 "name": name,
-                "photoStorageKey": photo_storage_key,
-                "createdByUserId": created_by_user_id,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "photo_storage_key": photo_storage_key,
+                "created_by_user_id": created_by_user_id,
+                "created": created,
+                "updated": updated,
                 "participants": participants,
             }
         )
@@ -92,7 +92,7 @@ class Chat:
 
         type_ = ChatType(d.pop("type"))
 
-        definition_id = d.pop("definitionId")
+        definition_id = d.pop("definition_id")
 
         name = d.pop("name")
 
@@ -101,18 +101,18 @@ class Chat:
                 return data
             return cast(None | str, data)
 
-        photo_storage_key = _parse_photo_storage_key(d.pop("photoStorageKey"))
+        photo_storage_key = _parse_photo_storage_key(d.pop("photo_storage_key"))
 
         def _parse_created_by_user_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        created_by_user_id = _parse_created_by_user_id(d.pop("createdByUserId"))
+        created_by_user_id = _parse_created_by_user_id(d.pop("created_by_user_id"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         participants = []
         _participants = d.pop("participants")
@@ -128,8 +128,8 @@ class Chat:
             name=name,
             photo_storage_key=photo_storage_key,
             created_by_user_id=created_by_user_id,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             participants=participants,
         )
 

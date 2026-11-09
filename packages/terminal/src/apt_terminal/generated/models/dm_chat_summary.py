@@ -49,10 +49,10 @@ class DmChatSummary:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "chatId": chat_id,
-                "otherUserId": other_user_id,
-                "lastMessage": last_message,
-                "unreadCount": unread_count,
+                "chat_id": chat_id,
+                "other_user_id": other_user_id,
+                "last_message": last_message,
+                "unread_count": unread_count,
             }
         )
 
@@ -63,9 +63,9 @@ class DmChatSummary:
         from ..models.dm_message_preview_type_0 import DmMessagePreviewType0
 
         d = dict(src_dict)
-        chat_id = d.pop("chatId")
+        chat_id = d.pop("chat_id")
 
-        other_user_id = d.pop("otherUserId")
+        other_user_id = d.pop("other_user_id")
 
         def _parse_last_message(data: object) -> DmMessagePreviewType0 | None:
             if data is None:
@@ -80,9 +80,9 @@ class DmChatSummary:
                 pass
             return cast(DmMessagePreviewType0 | None, data)
 
-        last_message = _parse_last_message(d.pop("lastMessage"))
+        last_message = _parse_last_message(d.pop("last_message"))
 
-        unread_count = d.pop("unreadCount")
+        unread_count = d.pop("unread_count")
 
         dm_chat_summary = cls(
             chat_id=chat_id,

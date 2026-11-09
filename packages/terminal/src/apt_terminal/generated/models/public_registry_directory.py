@@ -49,7 +49,7 @@ class PublicRegistryDirectory:
                 "items": items,
                 "total": total,
                 "page": page,
-                "pageSize": page_size,
+                "page_size": page_size,
             }
         )
 
@@ -71,7 +71,7 @@ class PublicRegistryDirectory:
 
         page = d.pop("page")
 
-        page_size = d.pop("pageSize")
+        page_size = d.pop("page_size")
 
         public_registry_directory = cls(
             items=items,

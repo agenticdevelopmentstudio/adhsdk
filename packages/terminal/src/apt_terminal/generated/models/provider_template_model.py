@@ -25,7 +25,7 @@ class ProviderTemplateModel:
         metadata (None | ProviderTemplateModelMetadataType0):
         source (ProviderTemplateModelSource):
         last_synced_at (None | str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -34,7 +34,7 @@ class ProviderTemplateModel:
     metadata: None | ProviderTemplateModelMetadataType0
     source: ProviderTemplateModelSource
     last_synced_at: None | str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,7 +60,7 @@ class ProviderTemplateModel:
         last_synced_at: None | str
         last_synced_at = self.last_synced_at
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -71,8 +71,8 @@ class ProviderTemplateModel:
                 "description": description,
                 "metadata": metadata,
                 "source": source,
-                "lastSyncedAt": last_synced_at,
-                "createdAt": created_at,
+                "last_synced_at": last_synced_at,
+                "created": created,
             }
         )
 
@@ -118,9 +118,9 @@ class ProviderTemplateModel:
                 return data
             return cast(None | str, data)
 
-        last_synced_at = _parse_last_synced_at(d.pop("lastSyncedAt"))
+        last_synced_at = _parse_last_synced_at(d.pop("last_synced_at"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         provider_template_model = cls(
             id=id,
@@ -129,7 +129,7 @@ class ProviderTemplateModel:
             metadata=metadata,
             source=source,
             last_synced_at=last_synced_at,
-            created_at=created_at,
+            created=created,
         )
 
         provider_template_model.additional_properties = d

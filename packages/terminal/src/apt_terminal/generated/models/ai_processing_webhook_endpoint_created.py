@@ -24,8 +24,8 @@ class AiProcessingWebhookEndpointCreated:
         url (str): HTTPS-only delivery target URL
         event_types (list[str]): Subscribed event types (e.g. job.succeeded, job.failed)
         active (bool): Whether the endpoint receives deliveries
-        created_at (str): ISO 8601 timestamp
-        updated_at (str): ISO 8601 timestamp of last modification
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         secret (str): whsec_-prefixed Standard Webhooks signing secret — returned exactly once. Store it; it cannot be
             retrieved again.
         description (None | str | Unset): Human-readable label
@@ -38,8 +38,8 @@ class AiProcessingWebhookEndpointCreated:
     url: str
     event_types: list[str]
     active: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     secret: str
     description: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -59,9 +59,9 @@ class AiProcessingWebhookEndpointCreated:
 
         active = self.active
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         secret = self.secret
 
@@ -76,14 +76,14 @@ class AiProcessingWebhookEndpointCreated:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "url": url,
-                "eventTypes": event_types,
+                "event_types": event_types,
                 "active": active,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
                 "secret": secret,
             }
         )
@@ -97,21 +97,21 @@ class AiProcessingWebhookEndpointCreated:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        owner_kind = d.pop("ownerKind")
+        owner_kind = d.pop("owner_kind")
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         url = d.pop("url")
 
-        event_types = cast(list[str], d.pop("eventTypes"))
+        event_types = cast(list[str], d.pop("event_types"))
 
         active = d.pop("active")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         secret = d.pop("secret")
 
@@ -132,8 +132,8 @@ class AiProcessingWebhookEndpointCreated:
             url=url,
             event_types=event_types,
             active=active,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             secret=secret,
             description=description,
         )

@@ -55,7 +55,7 @@ class CatalogSyncRun:
         field_dict.update(
             {
                 "source": source,
-                "lastRunAt": last_run_at,
+                "last_run_at": last_run_at,
                 "ok": ok,
             }
         )
@@ -73,7 +73,7 @@ class CatalogSyncRun:
         d = dict(src_dict)
         source = d.pop("source")
 
-        last_run_at = d.pop("lastRunAt")
+        last_run_at = d.pop("last_run_at")
 
         ok = d.pop("ok")
 

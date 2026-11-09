@@ -1,0 +1,87 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar
+
+from attrs import define as _attrs_define
+
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="PostV1ApplicationsBody")
+
+
+@_attrs_define
+class PostV1ApplicationsBody:
+    """
+    Attributes:
+        slug (str):
+        display_name (str):
+        consumer_kind (str):
+        ecosystem_id (str | Unset):
+        platform (str | Unset):
+        id (str | Unset):
+    """
+
+    slug: str
+    display_name: str
+    consumer_kind: str
+    ecosystem_id: str | Unset = UNSET
+    platform: str | Unset = UNSET
+    id: str | Unset = UNSET
+
+    def to_dict(self) -> dict[str, Any]:
+        slug = self.slug
+
+        display_name = self.display_name
+
+        consumer_kind = self.consumer_kind
+
+        ecosystem_id = self.ecosystem_id
+
+        platform = self.platform
+
+        id = self.id
+
+        field_dict: dict[str, Any] = {}
+
+        field_dict.update(
+            {
+                "slug": slug,
+                "display_name": display_name,
+                "consumer_kind": consumer_kind,
+            }
+        )
+        if ecosystem_id is not UNSET:
+            field_dict["ecosystem_id"] = ecosystem_id
+        if platform is not UNSET:
+            field_dict["platform"] = platform
+        if id is not UNSET:
+            field_dict["id"] = id
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        slug = d.pop("slug")
+
+        display_name = d.pop("display_name")
+
+        consumer_kind = d.pop("consumer_kind")
+
+        ecosystem_id = d.pop("ecosystem_id", UNSET)
+
+        platform = d.pop("platform", UNSET)
+
+        id = d.pop("id", UNSET)
+
+        post_v1_applications_body = cls(
+            slug=slug,
+            display_name=display_name,
+            consumer_kind=consumer_kind,
+            ecosystem_id=ecosystem_id,
+            platform=platform,
+            id=id,
+        )
+
+        return post_v1_applications_body

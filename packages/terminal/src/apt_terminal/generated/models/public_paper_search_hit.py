@@ -29,8 +29,8 @@ class PublicPaperSearchHit:
         summary (None | str): Display summary read from the doc frontmatter (jsonb), or null.
         evaluation (None | str): Display evaluation read from the doc frontmatter (jsonb), or null.
         snippet (str): ~200-char match-context excerpt around the first q hit (head of content when q is empty/absent).
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -43,8 +43,8 @@ class PublicPaperSearchHit:
     summary: None | str
     evaluation: None | str
     snippet: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -71,9 +71,9 @@ class PublicPaperSearchHit:
 
         snippet = self.snippet
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -82,15 +82,15 @@ class PublicPaperSearchHit:
                 "id": id,
                 "title": title,
                 "kind": kind,
-                "publicRoute": public_route,
+                "public_route": public_route,
                 "author": author,
                 "category": category,
                 "tags": tags,
                 "summary": summary,
                 "evaluation": evaluation,
                 "snippet": snippet,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -109,7 +109,7 @@ class PublicPaperSearchHit:
 
         kind = PublicPaperSearchHitKind(d.pop("kind"))
 
-        public_route = d.pop("publicRoute")
+        public_route = d.pop("public_route")
 
         author = PublicPaperSearchHitAuthor.from_dict(d.pop("author"))
 
@@ -138,9 +138,9 @@ class PublicPaperSearchHit:
 
         snippet = d.pop("snippet")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         public_paper_search_hit = cls(
             id=id,
@@ -153,8 +153,8 @@ class PublicPaperSearchHit:
             summary=summary,
             evaluation=evaluation,
             snippet=snippet,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         public_paper_search_hit.additional_properties = d

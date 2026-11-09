@@ -85,9 +85,9 @@ class ShiprRunStep:
         if id is not UNSET:
             field_dict["id"] = id
         if run_id is not UNSET:
-            field_dict["runId"] = run_id
+            field_dict["run_id"] = run_id
         if deploy_repo_id is not UNSET:
-            field_dict["deployRepoId"] = deploy_repo_id
+            field_dict["deploy_repo_id"] = deploy_repo_id
         if ordinal is not UNSET:
             field_dict["ordinal"] = ordinal
         if environment is not UNSET:
@@ -108,7 +108,7 @@ class ShiprRunStep:
         d = dict(src_dict)
         id = d.pop("id", UNSET)
 
-        run_id = d.pop("runId", UNSET)
+        run_id = d.pop("run_id", UNSET)
 
         def _parse_deploy_repo_id(data: object) -> None | str | Unset:
             if data is None:
@@ -117,7 +117,7 @@ class ShiprRunStep:
                 return data
             return cast(None | str | Unset, data)
 
-        deploy_repo_id = _parse_deploy_repo_id(d.pop("deployRepoId", UNSET))
+        deploy_repo_id = _parse_deploy_repo_id(d.pop("deploy_repo_id", UNSET))
 
         ordinal = d.pop("ordinal", UNSET)
 

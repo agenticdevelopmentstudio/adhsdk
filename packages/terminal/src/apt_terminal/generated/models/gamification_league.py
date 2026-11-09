@@ -43,7 +43,7 @@ class GamificationLeague:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "statKey": stat_key,
+                "stat_key": stat_key,
                 "league": league,
                 "entries": entries,
             }
@@ -56,7 +56,7 @@ class GamificationLeague:
         from ..models.gamification_board_entry import GamificationBoardEntry
 
         d = dict(src_dict)
-        stat_key = GamificationLeagueStatKey(d.pop("statKey"))
+        stat_key = GamificationLeagueStatKey(d.pop("stat_key"))
 
         league = d.pop("league")
 

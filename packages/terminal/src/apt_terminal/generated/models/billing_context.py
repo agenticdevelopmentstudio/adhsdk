@@ -44,11 +44,11 @@ class BillingContext:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "ecosystemId": ecosystem_id,
-                "billingEnabled": billing_enabled,
-                "canManage": can_manage,
-                "stripeStatus": stripe_status,
-                "webhookPath": webhook_path,
+                "ecosystem_id": ecosystem_id,
+                "billing_enabled": billing_enabled,
+                "can_manage": can_manage,
+                "stripe_status": stripe_status,
+                "webhook_path": webhook_path,
             }
         )
 
@@ -57,15 +57,15 @@ class BillingContext:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        billing_enabled = d.pop("billingEnabled")
+        billing_enabled = d.pop("billing_enabled")
 
-        can_manage = d.pop("canManage")
+        can_manage = d.pop("can_manage")
 
-        stripe_status = BillingContextStripeStatus(d.pop("stripeStatus"))
+        stripe_status = BillingContextStripeStatus(d.pop("stripe_status"))
 
-        webhook_path = d.pop("webhookPath")
+        webhook_path = d.pop("webhook_path")
 
         billing_context = cls(
             ecosystem_id=ecosystem_id,

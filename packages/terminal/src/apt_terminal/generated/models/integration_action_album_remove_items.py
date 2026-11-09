@@ -31,8 +31,8 @@ class IntegrationActionAlbumRemoveItems:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "albumId": album_id,
-                "mediaItemIds": media_item_ids,
+                "album_id": album_id,
+                "media_item_ids": media_item_ids,
             }
         )
 
@@ -41,9 +41,9 @@ class IntegrationActionAlbumRemoveItems:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        album_id = d.pop("albumId")
+        album_id = d.pop("album_id")
 
-        media_item_ids = cast(list[str], d.pop("mediaItemIds"))
+        media_item_ids = cast(list[str], d.pop("media_item_ids"))
 
         integration_action_album_remove_items = cls(
             album_id=album_id,

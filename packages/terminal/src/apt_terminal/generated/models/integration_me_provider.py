@@ -42,10 +42,10 @@ class IntegrationMeProvider:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "providerId": provider_id,
-                "displayName": display_name,
-                "authMethod": auth_method,
-                "serviceTypes": service_types,
+                "provider_id": provider_id,
+                "display_name": display_name,
+                "auth_method": auth_method,
+                "service_types": service_types,
                 "capabilities": capabilities,
             }
         )
@@ -55,13 +55,13 @@ class IntegrationMeProvider:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
-        auth_method = d.pop("authMethod")
+        auth_method = d.pop("auth_method")
 
-        service_types = cast(list[str], d.pop("serviceTypes"))
+        service_types = cast(list[str], d.pop("service_types"))
 
         capabilities = cast(list[str], d.pop("capabilities"))
 

@@ -82,17 +82,17 @@ class UsageInsightOverviewPoint:
             {
                 "start": start,
                 "requests": requests,
-                "bytesIn": bytes_in,
-                "bytesOut": bytes_out,
-                "serverMs": server_ms,
-                "dbMs": db_ms,
-                "llmTokens": llm_tokens,
+                "bytes_in": bytes_in,
+                "bytes_out": bytes_out,
+                "server_ms": server_ms,
+                "db_ms": db_ms,
+                "llm_tokens": llm_tokens,
                 "embeddings": embeddings,
                 "emails": emails,
-                "smsSegments": sms_segments,
-                "storageOps": storage_ops,
-                "directMicros": direct_micros,
-                "unpricedLines": unpriced_lines,
+                "sms_segments": sms_segments,
+                "storage_ops": storage_ops,
+                "direct_micros": direct_micros,
+                "unpriced_lines": unpriced_lines,
             }
         )
 
@@ -107,32 +107,32 @@ class UsageInsightOverviewPoint:
 
         requests = d.pop("requests")
 
-        bytes_in = d.pop("bytesIn")
+        bytes_in = d.pop("bytes_in")
 
-        bytes_out = d.pop("bytesOut")
+        bytes_out = d.pop("bytes_out")
 
-        server_ms = d.pop("serverMs")
+        server_ms = d.pop("server_ms")
 
-        db_ms = d.pop("dbMs")
+        db_ms = d.pop("db_ms")
 
-        llm_tokens = UsageLlmTokens.from_dict(d.pop("llmTokens"))
+        llm_tokens = UsageLlmTokens.from_dict(d.pop("llm_tokens"))
 
         embeddings = d.pop("embeddings")
 
         emails = d.pop("emails")
 
-        sms_segments = d.pop("smsSegments")
+        sms_segments = d.pop("sms_segments")
 
-        storage_ops = d.pop("storageOps")
+        storage_ops = d.pop("storage_ops")
 
         def _parse_direct_micros(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        direct_micros = _parse_direct_micros(d.pop("directMicros"))
+        direct_micros = _parse_direct_micros(d.pop("direct_micros"))
 
-        unpriced_lines = d.pop("unpricedLines")
+        unpriced_lines = d.pop("unpriced_lines")
 
         usage_insight_overview_point = cls(
             start=start,

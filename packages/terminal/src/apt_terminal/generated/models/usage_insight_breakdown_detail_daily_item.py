@@ -41,8 +41,8 @@ class UsageInsightBreakdownDetailDailyItem:
         field_dict.update(
             {
                 "day": day,
-                "directMicros": direct_micros,
-                "unpricedLines": unpriced_lines,
+                "direct_micros": direct_micros,
+                "unpriced_lines": unpriced_lines,
                 "requests": requests,
             }
         )
@@ -59,9 +59,9 @@ class UsageInsightBreakdownDetailDailyItem:
                 return data
             return cast(int | None, data)
 
-        direct_micros = _parse_direct_micros(d.pop("directMicros"))
+        direct_micros = _parse_direct_micros(d.pop("direct_micros"))
 
-        unpriced_lines = d.pop("unpricedLines")
+        unpriced_lines = d.pop("unpriced_lines")
 
         requests = d.pop("requests")
 

@@ -55,9 +55,9 @@ class GamePlayerStat:
         if label is not UNSET:
             field_dict["label"] = label
         if period_type is not UNSET:
-            field_dict["periodType"] = period_type
+            field_dict["period_type"] = period_type
         if period_start is not UNSET:
-            field_dict["periodStart"] = period_start
+            field_dict["period_start"] = period_start
 
         return field_dict
 
@@ -77,9 +77,9 @@ class GamePlayerStat:
 
         label = _parse_label(d.pop("label", UNSET))
 
-        period_type = d.pop("periodType", UNSET)
+        period_type = d.pop("period_type", UNSET)
 
-        period_start = d.pop("periodStart", UNSET)
+        period_start = d.pop("period_start", UNSET)
 
         game_player_stat = cls(
             key=key,

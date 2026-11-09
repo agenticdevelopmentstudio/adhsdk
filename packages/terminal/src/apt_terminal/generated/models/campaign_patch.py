@@ -53,11 +53,11 @@ class CampaignPatch:
         if subject is not UNSET:
             field_dict["subject"] = subject
         if html_body is not UNSET:
-            field_dict["htmlBody"] = html_body
+            field_dict["html_body"] = html_body
         if text_body is not UNSET:
-            field_dict["textBody"] = text_body
+            field_dict["text_body"] = text_body
         if from_name is not UNSET:
-            field_dict["fromName"] = from_name
+            field_dict["from_name"] = from_name
 
         return field_dict
 
@@ -68,9 +68,9 @@ class CampaignPatch:
 
         subject = d.pop("subject", UNSET)
 
-        html_body = d.pop("htmlBody", UNSET)
+        html_body = d.pop("html_body", UNSET)
 
-        text_body = d.pop("textBody", UNSET)
+        text_body = d.pop("text_body", UNSET)
 
         def _parse_from_name(data: object) -> None | str | Unset:
             if data is None:
@@ -79,7 +79,7 @@ class CampaignPatch:
                 return data
             return cast(None | str | Unset, data)
 
-        from_name = _parse_from_name(d.pop("fromName", UNSET))
+        from_name = _parse_from_name(d.pop("from_name", UNSET))
 
         campaign_patch = cls(
             name=name,

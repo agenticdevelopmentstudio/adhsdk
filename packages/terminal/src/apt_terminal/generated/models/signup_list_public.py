@@ -55,7 +55,7 @@ class SignupListPublic:
                 "name": name,
                 "description": description,
                 "status": status,
-                "minAgeMs": min_age_ms,
+                "min_age_ms": min_age_ms,
                 "nonce": nonce,
             }
         )
@@ -76,7 +76,7 @@ class SignupListPublic:
 
         status = SignupListPublicStatus(d.pop("status"))
 
-        min_age_ms = d.pop("minAgeMs")
+        min_age_ms = d.pop("min_age_ms")
 
         nonce = d.pop("nonce")
 

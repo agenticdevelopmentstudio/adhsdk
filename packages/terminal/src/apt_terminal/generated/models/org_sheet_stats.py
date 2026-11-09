@@ -30,8 +30,8 @@ class OrgSheetStats:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "personasPublished": personas_published,
-                "daysActive": days_active,
+                "personas_published": personas_published,
+                "days_active": days_active,
             }
         )
 
@@ -40,9 +40,9 @@ class OrgSheetStats:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        personas_published = d.pop("personasPublished")
+        personas_published = d.pop("personas_published")
 
-        days_active = d.pop("daysActive")
+        days_active = d.pop("days_active")
 
         org_sheet_stats = cls(
             personas_published=personas_published,

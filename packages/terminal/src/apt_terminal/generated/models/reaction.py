@@ -23,7 +23,7 @@ class Reaction:
         target_kind (str):
         target_id (str):
         emoji (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         owner_kind (str | Unset): Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization',
             'application', 'persona' or 'ecosystem'.
         owner_id (str | Unset): Id of the owning principal.
@@ -39,7 +39,7 @@ class Reaction:
     target_kind: str
     target_id: str
     emoji: str
-    created_at: str
+    created: int
     owner_kind: str | Unset = UNSET
     owner_id: str | Unset = UNSET
     author_kind: ReactionAuthorKind | Unset = UNSET
@@ -60,7 +60,7 @@ class Reaction:
 
         emoji = self.emoji
 
-        created_at = self.created_at
+        created = self.created
 
         owner_kind = self.owner_kind
 
@@ -87,24 +87,24 @@ class Reaction:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
-                "ecosystemId": ecosystem_id,
-                "targetKind": target_kind,
-                "targetId": target_id,
+                "customer_id": customer_id,
+                "ecosystem_id": ecosystem_id,
+                "target_kind": target_kind,
+                "target_id": target_id,
                 "emoji": emoji,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if owner_kind is not UNSET:
-            field_dict["ownerKind"] = owner_kind
+            field_dict["owner_kind"] = owner_kind
         if owner_id is not UNSET:
-            field_dict["ownerId"] = owner_id
+            field_dict["owner_id"] = owner_id
         if author_kind is not UNSET:
-            field_dict["authorKind"] = author_kind
+            field_dict["author_kind"] = author_kind
         if author_id is not UNSET:
-            field_dict["authorId"] = author_id
+            field_dict["author_id"] = author_id
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -113,23 +113,23 @@ class Reaction:
         d = dict(src_dict)
         id = d.pop("id")
 
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        target_kind = d.pop("targetKind")
+        target_kind = d.pop("target_kind")
 
-        target_id = d.pop("targetId")
+        target_id = d.pop("target_id")
 
         emoji = d.pop("emoji")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        owner_kind = d.pop("ownerKind", UNSET)
+        owner_kind = d.pop("owner_kind", UNSET)
 
-        owner_id = d.pop("ownerId", UNSET)
+        owner_id = d.pop("owner_id", UNSET)
 
-        _author_kind = d.pop("authorKind", UNSET)
+        _author_kind = d.pop("author_kind", UNSET)
         author_kind: ReactionAuthorKind | Unset
         if isinstance(_author_kind, Unset):
             author_kind = UNSET
@@ -143,7 +143,7 @@ class Reaction:
                 return data
             return cast(None | str | Unset, data)
 
-        author_id = _parse_author_id(d.pop("authorId", UNSET))
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -152,7 +152,7 @@ class Reaction:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         reaction = cls(
             id=id,
@@ -161,7 +161,7 @@ class Reaction:
             target_kind=target_kind,
             target_id=target_id,
             emoji=emoji,
-            created_at=created_at,
+            created=created,
             owner_kind=owner_kind,
             owner_id=owner_id,
             author_kind=author_kind,

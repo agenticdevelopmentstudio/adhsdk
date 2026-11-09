@@ -62,7 +62,7 @@ class GamificationRealmConfig:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "ecosystemId": ecosystem_id,
+                "ecosystem_id": ecosystem_id,
                 "mode": mode,
                 "skin": skin,
                 "surfaces": surfaces,
@@ -81,7 +81,7 @@ class GamificationRealmConfig:
         from ..models.gamification_seasons_type_0 import GamificationSeasonsType0
 
         d = dict(src_dict)
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
         mode = GamificationRealmConfigMode(d.pop("mode"))
 

@@ -61,10 +61,10 @@ class User:
                 "id": id,
                 "email": email,
                 "name": name,
-                "avatarUrl": avatar_url,
+                "avatar_url": avatar_url,
                 "slug": slug,
-                "publicProfileEnabled": public_profile_enabled,
-                "profileVisibility": profile_visibility,
+                "public_profile_enabled": public_profile_enabled,
+                "profile_visibility": profile_visibility,
                 "capabilities": capabilities,
             }
         )
@@ -80,7 +80,7 @@ class User:
 
         name = d.pop("name")
 
-        avatar_url = d.pop("avatarUrl")
+        avatar_url = d.pop("avatar_url")
 
         def _parse_slug(data: object) -> None | str:
             if data is None:
@@ -89,9 +89,9 @@ class User:
 
         slug = _parse_slug(d.pop("slug"))
 
-        public_profile_enabled = d.pop("publicProfileEnabled")
+        public_profile_enabled = d.pop("public_profile_enabled")
 
-        profile_visibility = UserProfileVisibility(d.pop("profileVisibility"))
+        profile_visibility = UserProfileVisibility(d.pop("profile_visibility"))
 
         capabilities = cast(list[str], d.pop("capabilities"))
 

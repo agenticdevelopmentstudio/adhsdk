@@ -35,8 +35,8 @@ class CustomerAuthResult:
         field_dict.update(
             {
                 "token": token,
-                "refreshToken": refresh_token,
-                "customerId": customer_id,
+                "refresh_token": refresh_token,
+                "customer_id": customer_id,
             }
         )
 
@@ -47,9 +47,9 @@ class CustomerAuthResult:
         d = dict(src_dict)
         token = d.pop("token")
 
-        refresh_token = d.pop("refreshToken")
+        refresh_token = d.pop("refresh_token")
 
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
         customer_auth_result = cls(
             token=token,

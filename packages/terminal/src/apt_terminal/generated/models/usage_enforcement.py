@@ -94,16 +94,16 @@ class UsageEnforcement:
             {
                 "enabled": enabled,
                 "source": source,
-                "envOverride": env_override,
+                "env_override": env_override,
                 "flag": flag,
-                "unknownPricePolicy": unknown_price_policy,
-                "unknownPriceInputMicrosPerMToken": unknown_price_input_micros_per_m_token,
-                "unknownPriceOutputMicrosPerMToken": unknown_price_output_micros_per_m_token,
-                "turnTokenReserve": turn_token_reserve,
-                "eventRetentionDays": event_retention_days,
-                "visitorGlobalDailyTokenBudget": visitor_global_daily_token_budget,
-                "visitorGlobalDailyCostMicros": visitor_global_daily_cost_micros,
-                "visitorTurnTokenReserve": visitor_turn_token_reserve,
+                "unknown_price_policy": unknown_price_policy,
+                "unknown_price_input_micros_per_m_token": unknown_price_input_micros_per_m_token,
+                "unknown_price_output_micros_per_m_token": unknown_price_output_micros_per_m_token,
+                "turn_token_reserve": turn_token_reserve,
+                "event_retention_days": event_retention_days,
+                "visitor_global_daily_token_budget": visitor_global_daily_token_budget,
+                "visitor_global_daily_cost_micros": visitor_global_daily_cost_micros,
+                "visitor_turn_token_reserve": visitor_turn_token_reserve,
             }
         )
 
@@ -125,7 +125,7 @@ class UsageEnforcement:
                 return data
             return cast(bool | None, data)
 
-        env_override = _parse_env_override(d.pop("envOverride"))
+        env_override = _parse_env_override(d.pop("env_override"))
 
         def _parse_flag(data: object) -> None | UsageEnforcementFlagType0:
             if data is None:
@@ -142,15 +142,15 @@ class UsageEnforcement:
 
         flag = _parse_flag(d.pop("flag"))
 
-        unknown_price_policy = UsageEnforcementUnknownPricePolicy(d.pop("unknownPricePolicy"))
+        unknown_price_policy = UsageEnforcementUnknownPricePolicy(d.pop("unknown_price_policy"))
 
-        unknown_price_input_micros_per_m_token = d.pop("unknownPriceInputMicrosPerMToken")
+        unknown_price_input_micros_per_m_token = d.pop("unknown_price_input_micros_per_m_token")
 
-        unknown_price_output_micros_per_m_token = d.pop("unknownPriceOutputMicrosPerMToken")
+        unknown_price_output_micros_per_m_token = d.pop("unknown_price_output_micros_per_m_token")
 
-        turn_token_reserve = d.pop("turnTokenReserve")
+        turn_token_reserve = d.pop("turn_token_reserve")
 
-        event_retention_days = d.pop("eventRetentionDays")
+        event_retention_days = d.pop("event_retention_days")
 
         def _parse_visitor_global_daily_token_budget(data: object) -> int | None:
             if data is None:
@@ -158,7 +158,7 @@ class UsageEnforcement:
             return cast(int | None, data)
 
         visitor_global_daily_token_budget = _parse_visitor_global_daily_token_budget(
-            d.pop("visitorGlobalDailyTokenBudget")
+            d.pop("visitor_global_daily_token_budget")
         )
 
         def _parse_visitor_global_daily_cost_micros(data: object) -> int | None:
@@ -167,10 +167,10 @@ class UsageEnforcement:
             return cast(int | None, data)
 
         visitor_global_daily_cost_micros = _parse_visitor_global_daily_cost_micros(
-            d.pop("visitorGlobalDailyCostMicros")
+            d.pop("visitor_global_daily_cost_micros")
         )
 
-        visitor_turn_token_reserve = d.pop("visitorTurnTokenReserve")
+        visitor_turn_token_reserve = d.pop("visitor_turn_token_reserve")
 
         usage_enforcement = cls(
             enabled=enabled,

@@ -64,13 +64,13 @@ class UsageInsightRunRate:
         field_dict.update(
             {
                 "month": month,
-                "elapsedDays": elapsed_days,
-                "daysInMonth": days_in_month,
-                "directToDateMicros": direct_to_date_micros,
-                "fixedMonthMicros": fixed_month_micros,
-                "projectedMonthMicros": projected_month_micros,
-                "unpricedItems": unpriced_items,
-                "byCategory": by_category,
+                "elapsed_days": elapsed_days,
+                "days_in_month": days_in_month,
+                "direct_to_date_micros": direct_to_date_micros,
+                "fixed_month_micros": fixed_month_micros,
+                "projected_month_micros": projected_month_micros,
+                "unpriced_items": unpriced_items,
+                "by_category": by_category,
             }
         )
 
@@ -85,25 +85,25 @@ class UsageInsightRunRate:
         d = dict(src_dict)
         month = d.pop("month")
 
-        elapsed_days = d.pop("elapsedDays")
+        elapsed_days = d.pop("elapsed_days")
 
-        days_in_month = d.pop("daysInMonth")
+        days_in_month = d.pop("days_in_month")
 
         def _parse_direct_to_date_micros(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        direct_to_date_micros = _parse_direct_to_date_micros(d.pop("directToDateMicros"))
+        direct_to_date_micros = _parse_direct_to_date_micros(d.pop("direct_to_date_micros"))
 
-        fixed_month_micros = d.pop("fixedMonthMicros")
+        fixed_month_micros = d.pop("fixed_month_micros")
 
-        projected_month_micros = d.pop("projectedMonthMicros")
+        projected_month_micros = d.pop("projected_month_micros")
 
-        unpriced_items = d.pop("unpricedItems")
+        unpriced_items = d.pop("unpriced_items")
 
         by_category = []
-        _by_category = d.pop("byCategory")
+        _by_category = d.pop("by_category")
         for by_category_item_data in _by_category:
             by_category_item = UsageInsightRunRateByCategoryItem.from_dict(by_category_item_data)
 

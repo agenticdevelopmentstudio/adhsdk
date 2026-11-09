@@ -35,9 +35,9 @@ class IntegrationPickerSessionStart:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "sessionId": session_id,
-                "pickerUri": picker_uri,
-                "expireTime": expire_time,
+                "session_id": session_id,
+                "picker_uri": picker_uri,
+                "expire_time": expire_time,
             }
         )
 
@@ -46,16 +46,16 @@ class IntegrationPickerSessionStart:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        session_id = d.pop("sessionId")
+        session_id = d.pop("session_id")
 
-        picker_uri = d.pop("pickerUri")
+        picker_uri = d.pop("picker_uri")
 
         def _parse_expire_time(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        expire_time = _parse_expire_time(d.pop("expireTime"))
+        expire_time = _parse_expire_time(d.pop("expire_time"))
 
         integration_picker_session_start = cls(
             session_id=session_id,

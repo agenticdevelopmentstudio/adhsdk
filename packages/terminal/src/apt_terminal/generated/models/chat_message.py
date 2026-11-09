@@ -18,14 +18,14 @@ class ChatMessage:
         role (str): e.g. user, assistant, tool, system
         content (str):
         tool_name (None | str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: UUID
     role: str
     content: str
     tool_name: None | str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,7 +38,7 @@ class ChatMessage:
         tool_name: None | str
         tool_name = self.tool_name
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,8 +47,8 @@ class ChatMessage:
                 "id": id,
                 "role": role,
                 "content": content,
-                "toolName": tool_name,
-                "createdAt": created_at,
+                "tool_name": tool_name,
+                "created": created,
             }
         )
 
@@ -68,16 +68,16 @@ class ChatMessage:
                 return data
             return cast(None | str, data)
 
-        tool_name = _parse_tool_name(d.pop("toolName"))
+        tool_name = _parse_tool_name(d.pop("tool_name"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         chat_message = cls(
             id=id,
             role=role,
             content=content,
             tool_name=tool_name,
-            created_at=created_at,
+            created=created,
         )
 
         chat_message.additional_properties = d

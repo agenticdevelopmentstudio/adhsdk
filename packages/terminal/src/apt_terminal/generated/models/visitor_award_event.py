@@ -44,8 +44,8 @@ class VisitorAwardEvent:
         field_dict.update(
             {
                 "badges": badges,
-                "xpGained": xp_gained,
-                "leveledUpTo": leveled_up_to,
+                "xp_gained": xp_gained,
+                "leveled_up_to": leveled_up_to,
             }
         )
 
@@ -63,14 +63,14 @@ class VisitorAwardEvent:
 
             badges.append(badges_item)
 
-        xp_gained = d.pop("xpGained")
+        xp_gained = d.pop("xp_gained")
 
         def _parse_leveled_up_to(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        leveled_up_to = _parse_leveled_up_to(d.pop("leveledUpTo"))
+        leveled_up_to = _parse_leveled_up_to(d.pop("leveled_up_to"))
 
         visitor_award_event = cls(
             badges=badges,

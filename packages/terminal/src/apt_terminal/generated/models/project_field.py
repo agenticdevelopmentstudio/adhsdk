@@ -23,7 +23,7 @@ class ProjectField:
         label (str):
         type_ (ProjectFieldType):
         position (int): field order (ascending)
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         options (list[str] | None | Unset): the choices for a select field (non-empty); null for every other type
     """
 
@@ -34,7 +34,7 @@ class ProjectField:
     label: str
     type_: ProjectFieldType
     position: int
-    created_at: str
+    created: int
     options: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -53,7 +53,7 @@ class ProjectField:
 
         position = self.position
 
-        created_at = self.created_at
+        created = self.created
 
         options: list[str] | None | Unset
         if isinstance(self.options, Unset):
@@ -69,13 +69,13 @@ class ProjectField:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
                 "key": key,
                 "label": label,
                 "type": type_,
                 "position": position,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if options is not UNSET:
@@ -88,9 +88,9 @@ class ProjectField:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
         key = d.pop("key")
 
@@ -100,7 +100,7 @@ class ProjectField:
 
         position = d.pop("position")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_options(data: object) -> list[str] | None | Unset:
             if data is None:
@@ -127,7 +127,7 @@ class ProjectField:
             label=label,
             type_=type_,
             position=position,
-            created_at=created_at,
+            created=created,
             options=options,
         )
 

@@ -26,7 +26,7 @@ class DmCreateRequest:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "recipientId": recipient_id,
+                "recipient_id": recipient_id,
             }
         )
 
@@ -35,7 +35,7 @@ class DmCreateRequest:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        recipient_id = d.pop("recipientId")
+        recipient_id = d.pop("recipient_id")
 
         dm_create_request = cls(
             recipient_id=recipient_id,

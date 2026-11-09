@@ -19,7 +19,7 @@ class SearchDiscussionTopicResult:
         title (str):
         reply_count (int):
         last_activity_at (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         category_id (None | str | Unset):
     """
 
@@ -27,7 +27,7 @@ class SearchDiscussionTopicResult:
     title: str
     reply_count: int
     last_activity_at: str
-    created_at: str
+    created: int
     category_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -40,7 +40,7 @@ class SearchDiscussionTopicResult:
 
         last_activity_at = self.last_activity_at
 
-        created_at = self.created_at
+        created = self.created
 
         category_id: None | str | Unset
         if isinstance(self.category_id, Unset):
@@ -54,13 +54,13 @@ class SearchDiscussionTopicResult:
             {
                 "id": id,
                 "title": title,
-                "replyCount": reply_count,
-                "lastActivityAt": last_activity_at,
-                "createdAt": created_at,
+                "reply_count": reply_count,
+                "last_activity_at": last_activity_at,
+                "created": created,
             }
         )
         if category_id is not UNSET:
-            field_dict["categoryId"] = category_id
+            field_dict["category_id"] = category_id
 
         return field_dict
 
@@ -71,11 +71,11 @@ class SearchDiscussionTopicResult:
 
         title = d.pop("title")
 
-        reply_count = d.pop("replyCount")
+        reply_count = d.pop("reply_count")
 
-        last_activity_at = d.pop("lastActivityAt")
+        last_activity_at = d.pop("last_activity_at")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_category_id(data: object) -> None | str | Unset:
             if data is None:
@@ -84,14 +84,14 @@ class SearchDiscussionTopicResult:
                 return data
             return cast(None | str | Unset, data)
 
-        category_id = _parse_category_id(d.pop("categoryId", UNSET))
+        category_id = _parse_category_id(d.pop("category_id", UNSET))
 
         search_discussion_topic_result = cls(
             id=id,
             title=title,
             reply_count=reply_count,
             last_activity_at=last_activity_at,
-            created_at=created_at,
+            created=created,
             category_id=category_id,
         )
 

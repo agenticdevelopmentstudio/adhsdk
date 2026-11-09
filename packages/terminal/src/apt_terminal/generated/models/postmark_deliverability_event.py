@@ -50,36 +50,36 @@ class PostmarkDeliverabilityEvent:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "RecordType": record_type,
+                "record_type": record_type,
             }
         )
         if type_ is not UNSET:
-            field_dict["Type"] = type_
+            field_dict["type"] = type_
         if email is not UNSET:
-            field_dict["Email"] = email
+            field_dict["email"] = email
         if recipient is not UNSET:
-            field_dict["Recipient"] = recipient
+            field_dict["recipient"] = recipient
         if description is not UNSET:
-            field_dict["Description"] = description
+            field_dict["description"] = description
         if suppress_sending is not UNSET:
-            field_dict["SuppressSending"] = suppress_sending
+            field_dict["suppress_sending"] = suppress_sending
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        record_type = d.pop("RecordType")
+        record_type = d.pop("record_type")
 
-        type_ = d.pop("Type", UNSET)
+        type_ = d.pop("type", UNSET)
 
-        email = d.pop("Email", UNSET)
+        email = d.pop("email", UNSET)
 
-        recipient = d.pop("Recipient", UNSET)
+        recipient = d.pop("recipient", UNSET)
 
-        description = d.pop("Description", UNSET)
+        description = d.pop("description", UNSET)
 
-        suppress_sending = d.pop("SuppressSending", UNSET)
+        suppress_sending = d.pop("suppress_sending", UNSET)
 
         postmark_deliverability_event = cls(
             record_type=record_type,

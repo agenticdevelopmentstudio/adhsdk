@@ -79,16 +79,16 @@ class UsageSummaryRow:
             {
                 "kind": kind,
                 "scope": scope,
-                "principalId": principal_id,
+                "principal_id": principal_id,
                 "label": label,
-                "periodStart": period_start,
-                "periodDays": period_days,
+                "period_start": period_start,
+                "period_days": period_days,
                 "tier": tier,
                 "limits": limits,
                 "requests": requests,
                 "bytes": bytes_,
                 "tokens": tokens,
-                "costMicros": cost_micros,
+                "cost_micros": cost_micros,
             }
         )
 
@@ -103,13 +103,13 @@ class UsageSummaryRow:
 
         scope = UsageSummaryRowScope(d.pop("scope"))
 
-        principal_id = d.pop("principalId")
+        principal_id = d.pop("principal_id")
 
         label = d.pop("label")
 
-        period_start = d.pop("periodStart")
+        period_start = d.pop("period_start")
 
-        period_days = d.pop("periodDays")
+        period_days = d.pop("period_days")
 
         tier = d.pop("tier")
 
@@ -121,7 +121,7 @@ class UsageSummaryRow:
 
         tokens = d.pop("tokens")
 
-        cost_micros = d.pop("costMicros")
+        cost_micros = d.pop("cost_micros")
 
         usage_summary_row = cls(
             kind=kind,

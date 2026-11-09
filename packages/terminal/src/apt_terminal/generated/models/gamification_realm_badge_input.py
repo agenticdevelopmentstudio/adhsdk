@@ -74,11 +74,11 @@ class GamificationRealmBadgeInput:
                 "name": name,
                 "description": description,
                 "icon": icon,
-                "statKey": stat_key,
+                "stat_key": stat_key,
                 "threshold": threshold,
-                "badgeLine": badge_line,
+                "badge_line": badge_line,
                 "tier": tier,
-                "pointValue": point_value,
+                "point_value": point_value,
             }
         )
         if comparator is not UNSET:
@@ -97,15 +97,15 @@ class GamificationRealmBadgeInput:
 
         icon = d.pop("icon")
 
-        stat_key = d.pop("statKey")
+        stat_key = d.pop("stat_key")
 
         threshold = d.pop("threshold")
 
-        badge_line = d.pop("badgeLine")
+        badge_line = d.pop("badge_line")
 
         tier = GamificationRealmBadgeInputTier(d.pop("tier"))
 
-        point_value = d.pop("pointValue")
+        point_value = d.pop("point_value")
 
         _comparator = d.pop("comparator", UNSET)
         comparator: GamificationRealmBadgeInputComparator | Unset

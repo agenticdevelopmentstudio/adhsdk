@@ -20,8 +20,8 @@ class BucketAccessGroupMember:
         access_group_id (str):
         member_type (BucketAccessGroupMemberMemberType):
         member_id (str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -29,8 +29,8 @@ class BucketAccessGroupMember:
     access_group_id: str
     member_type: BucketAccessGroupMemberMemberType
     member_id: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,21 +44,21 @@ class BucketAccessGroupMember:
 
         member_id = self.member_id
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "accessGroupId": access_group_id,
-                "memberType": member_type,
-                "memberId": member_id,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "ecosystem_id": ecosystem_id,
+                "access_group_id": access_group_id,
+                "member_type": member_type,
+                "member_id": member_id,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -69,17 +69,17 @@ class BucketAccessGroupMember:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        access_group_id = d.pop("accessGroupId")
+        access_group_id = d.pop("access_group_id")
 
-        member_type = BucketAccessGroupMemberMemberType(d.pop("memberType"))
+        member_type = BucketAccessGroupMemberMemberType(d.pop("member_type"))
 
-        member_id = d.pop("memberId")
+        member_id = d.pop("member_id")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         bucket_access_group_member = cls(
             id=id,
@@ -87,8 +87,8 @@ class BucketAccessGroupMember:
             access_group_id=access_group_id,
             member_type=member_type,
             member_id=member_id,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         bucket_access_group_member.additional_properties = d

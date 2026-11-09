@@ -37,7 +37,7 @@ class InviteAcceptResult:
             }
         )
         if ecosystem_name is not UNSET:
-            field_dict["ecosystemName"] = ecosystem_name
+            field_dict["ecosystem_name"] = ecosystem_name
 
         return field_dict
 
@@ -46,7 +46,7 @@ class InviteAcceptResult:
         d = dict(src_dict)
         status = InviteAcceptResultStatus(d.pop("status"))
 
-        ecosystem_name = d.pop("ecosystemName", UNSET)
+        ecosystem_name = d.pop("ecosystem_name", UNSET)
 
         invite_accept_result = cls(
             status=status,

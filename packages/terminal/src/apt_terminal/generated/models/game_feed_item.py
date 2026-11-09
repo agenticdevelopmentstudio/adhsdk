@@ -110,7 +110,7 @@ class GameFeedItem:
         field_dict.update(
             {
                 "id": id,
-                "gameId": game_id,
+                "game_id": game_id,
                 "kind": kind,
                 "role": role,
             }
@@ -122,15 +122,15 @@ class GameFeedItem:
         if text is not UNSET:
             field_dict["text"] = text
         if content_format is not UNSET:
-            field_dict["contentFormat"] = content_format
+            field_dict["content_format"] = content_format
         if summary is not UNSET:
             field_dict["summary"] = summary
         if score is not UNSET:
             field_dict["score"] = score
         if exposure_count is not UNSET:
-            field_dict["exposureCount"] = exposure_count
+            field_dict["exposure_count"] = exposure_count
         if published_at is not UNSET:
-            field_dict["publishedAt"] = published_at
+            field_dict["published_at"] = published_at
 
         return field_dict
 
@@ -142,7 +142,7 @@ class GameFeedItem:
         d = dict(src_dict)
         id = d.pop("id")
 
-        game_id = d.pop("gameId")
+        game_id = d.pop("game_id")
 
         kind = d.pop("kind")
 
@@ -195,7 +195,7 @@ class GameFeedItem:
                 return data
             return cast(None | str | Unset, data)
 
-        content_format = _parse_content_format(d.pop("contentFormat", UNSET))
+        content_format = _parse_content_format(d.pop("content_format", UNSET))
 
         def _parse_summary(data: object) -> GameFeedItemSummaryType0 | None | Unset:
             if data is None:
@@ -216,7 +216,7 @@ class GameFeedItem:
 
         score = d.pop("score", UNSET)
 
-        exposure_count = d.pop("exposureCount", UNSET)
+        exposure_count = d.pop("exposure_count", UNSET)
 
         def _parse_published_at(data: object) -> None | str | Unset:
             if data is None:
@@ -225,7 +225,7 @@ class GameFeedItem:
                 return data
             return cast(None | str | Unset, data)
 
-        published_at = _parse_published_at(d.pop("publishedAt", UNSET))
+        published_at = _parse_published_at(d.pop("published_at", UNSET))
 
         game_feed_item = cls(
             id=id,

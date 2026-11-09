@@ -56,8 +56,8 @@ class IntegrationMeActionResult:
             {
                 "ok": ok,
                 "status": status,
-                "actionLogId": action_log_id,
-                "externalId": external_id,
+                "action_log_id": action_log_id,
+                "external_id": external_id,
                 "deduped": deduped,
             }
         )
@@ -75,14 +75,14 @@ class IntegrationMeActionResult:
 
         status = IntegrationMeActionResultStatus(d.pop("status"))
 
-        action_log_id = d.pop("actionLogId")
+        action_log_id = d.pop("action_log_id")
 
         def _parse_external_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        external_id = _parse_external_id(d.pop("externalId"))
+        external_id = _parse_external_id(d.pop("external_id"))
 
         deduped = d.pop("deduped")
 

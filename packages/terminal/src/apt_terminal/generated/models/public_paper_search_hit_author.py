@@ -32,7 +32,7 @@ class PublicPaperSearchHitAuthor:
         field_dict.update(
             {
                 "slug": slug,
-                "displayName": display_name,
+                "display_name": display_name,
             }
         )
 
@@ -48,7 +48,7 @@ class PublicPaperSearchHitAuthor:
                 return data
             return cast(None | str, data)
 
-        display_name = _parse_display_name(d.pop("displayName"))
+        display_name = _parse_display_name(d.pop("display_name"))
 
         public_paper_search_hit_author = cls(
             slug=slug,

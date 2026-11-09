@@ -1,0 +1,155 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, Literal, TypeVar, cast
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="PostV1OauthClientsByIdResponse200")
+
+
+@_attrs_define
+class PostV1OauthClientsByIdResponse200:
+    """
+    Attributes:
+        id (str):
+        slug (str):
+        name (str):
+        allowed_return_origins (list[str]):
+        origins_managed (bool): The deployment sets these return origins, so they cannot be edited here. A site adds its
+            origin on its application.
+        is_internal (bool):
+        object_ (Literal['oauth.client'] | Unset):
+        default_ecosystem_id (None | str | Unset):
+        app_token_prefix (None | str | Unset):
+    """
+
+    id: str
+    slug: str
+    name: str
+    allowed_return_origins: list[str]
+    origins_managed: bool
+    is_internal: bool
+    object_: Literal["oauth.client"] | Unset = UNSET
+    default_ecosystem_id: None | str | Unset = UNSET
+    app_token_prefix: None | str | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        id = self.id
+
+        slug = self.slug
+
+        name = self.name
+
+        allowed_return_origins = self.allowed_return_origins
+
+        origins_managed = self.origins_managed
+
+        is_internal = self.is_internal
+
+        object_ = self.object_
+
+        default_ecosystem_id: None | str | Unset
+        if isinstance(self.default_ecosystem_id, Unset):
+            default_ecosystem_id = UNSET
+        else:
+            default_ecosystem_id = self.default_ecosystem_id
+
+        app_token_prefix: None | str | Unset
+        if isinstance(self.app_token_prefix, Unset):
+            app_token_prefix = UNSET
+        else:
+            app_token_prefix = self.app_token_prefix
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "id": id,
+                "slug": slug,
+                "name": name,
+                "allowed_return_origins": allowed_return_origins,
+                "origins_managed": origins_managed,
+                "is_internal": is_internal,
+            }
+        )
+        if object_ is not UNSET:
+            field_dict["object"] = object_
+        if default_ecosystem_id is not UNSET:
+            field_dict["default_ecosystem_id"] = default_ecosystem_id
+        if app_token_prefix is not UNSET:
+            field_dict["app_token_prefix"] = app_token_prefix
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        id = d.pop("id")
+
+        slug = d.pop("slug")
+
+        name = d.pop("name")
+
+        allowed_return_origins = cast(list[str], d.pop("allowed_return_origins"))
+
+        origins_managed = d.pop("origins_managed")
+
+        is_internal = d.pop("is_internal")
+
+        object_ = cast(Literal["oauth.client"] | Unset, d.pop("object", UNSET))
+        if object_ != "oauth.client" and not isinstance(object_, Unset):
+            raise ValueError(f"object must match const 'oauth.client', got '{object_}'")
+
+        def _parse_default_ecosystem_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        default_ecosystem_id = _parse_default_ecosystem_id(d.pop("default_ecosystem_id", UNSET))
+
+        def _parse_app_token_prefix(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        app_token_prefix = _parse_app_token_prefix(d.pop("app_token_prefix", UNSET))
+
+        post_v1_oauth_clients_by_id_response_200 = cls(
+            id=id,
+            slug=slug,
+            name=name,
+            allowed_return_origins=allowed_return_origins,
+            origins_managed=origins_managed,
+            is_internal=is_internal,
+            object_=object_,
+            default_ecosystem_id=default_ecosystem_id,
+            app_token_prefix=app_token_prefix,
+        )
+
+        post_v1_oauth_clients_by_id_response_200.additional_properties = d
+        return post_v1_oauth_clients_by_id_response_200
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

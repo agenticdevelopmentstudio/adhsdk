@@ -69,18 +69,18 @@ class TeamReachGrant:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "teamId": team_id,
+                "ecosystem_id": ecosystem_id,
+                "team_id": team_id,
                 "permission": permission,
-                "grantedAt": granted_at,
+                "granted_at": granted_at,
             }
         )
         if granted_by is not UNSET:
-            field_dict["grantedBy"] = granted_by
+            field_dict["granted_by"] = granted_by
         if team_name is not UNSET:
-            field_dict["teamName"] = team_name
+            field_dict["team_name"] = team_name
         if team_slug is not UNSET:
-            field_dict["teamSlug"] = team_slug
+            field_dict["team_slug"] = team_slug
 
         return field_dict
 
@@ -89,13 +89,13 @@ class TeamReachGrant:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        team_id = d.pop("teamId")
+        team_id = d.pop("team_id")
 
         permission = d.pop("permission")
 
-        granted_at = d.pop("grantedAt")
+        granted_at = d.pop("granted_at")
 
         def _parse_granted_by(data: object) -> None | str | Unset:
             if data is None:
@@ -104,7 +104,7 @@ class TeamReachGrant:
                 return data
             return cast(None | str | Unset, data)
 
-        granted_by = _parse_granted_by(d.pop("grantedBy", UNSET))
+        granted_by = _parse_granted_by(d.pop("granted_by", UNSET))
 
         def _parse_team_name(data: object) -> None | str | Unset:
             if data is None:
@@ -113,7 +113,7 @@ class TeamReachGrant:
                 return data
             return cast(None | str | Unset, data)
 
-        team_name = _parse_team_name(d.pop("teamName", UNSET))
+        team_name = _parse_team_name(d.pop("team_name", UNSET))
 
         def _parse_team_slug(data: object) -> None | str | Unset:
             if data is None:
@@ -122,7 +122,7 @@ class TeamReachGrant:
                 return data
             return cast(None | str | Unset, data)
 
-        team_slug = _parse_team_slug(d.pop("teamSlug", UNSET))
+        team_slug = _parse_team_slug(d.pop("team_slug", UNSET))
 
         team_reach_grant = cls(
             id=id,

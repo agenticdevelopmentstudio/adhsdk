@@ -41,7 +41,7 @@ class PublicRegistrySection:
                 "key": key,
                 "label": label,
                 "description": description,
-                "sortOrder": sort_order,
+                "sort_order": sort_order,
             }
         )
 
@@ -56,7 +56,7 @@ class PublicRegistrySection:
 
         description = d.pop("description")
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
         public_registry_section = cls(
             key=key,

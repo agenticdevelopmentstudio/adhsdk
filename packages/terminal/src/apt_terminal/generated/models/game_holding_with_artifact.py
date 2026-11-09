@@ -99,23 +99,23 @@ class GameHoldingWithArtifact:
         field_dict.update(
             {
                 "id": id,
-                "gameId": game_id,
-                "artifactId": artifact_id,
+                "game_id": game_id,
+                "artifact_id": artifact_id,
                 "kind": kind,
                 "quantity": quantity,
-                "acquiredAt": acquired_at,
+                "acquired_at": acquired_at,
             }
         )
         if data is not UNSET:
             field_dict["data"] = data
         if artifact_kind is not UNSET:
-            field_dict["artifactKind"] = artifact_kind
+            field_dict["artifact_kind"] = artifact_kind
         if artifact_slot is not UNSET:
-            field_dict["artifactSlot"] = artifact_slot
+            field_dict["artifact_slot"] = artifact_slot
         if artifact_summary is not UNSET:
-            field_dict["artifactSummary"] = artifact_summary
+            field_dict["artifact_summary"] = artifact_summary
         if artifact_visibility is not UNSET:
-            field_dict["artifactVisibility"] = artifact_visibility
+            field_dict["artifact_visibility"] = artifact_visibility
 
         return field_dict
 
@@ -131,15 +131,15 @@ class GameHoldingWithArtifact:
         d = dict(src_dict)
         id = d.pop("id")
 
-        game_id = d.pop("gameId")
+        game_id = d.pop("game_id")
 
-        artifact_id = d.pop("artifactId")
+        artifact_id = d.pop("artifact_id")
 
         kind = d.pop("kind")
 
         quantity = d.pop("quantity")
 
-        acquired_at = d.pop("acquiredAt")
+        acquired_at = d.pop("acquired_at")
 
         def _parse_data(data: object) -> GameHoldingWithArtifactDataType0 | None | Unset:
             if data is None:
@@ -158,7 +158,7 @@ class GameHoldingWithArtifact:
 
         data = _parse_data(d.pop("data", UNSET))
 
-        artifact_kind = d.pop("artifactKind", UNSET)
+        artifact_kind = d.pop("artifact_kind", UNSET)
 
         def _parse_artifact_slot(data: object) -> None | str | Unset:
             if data is None:
@@ -167,7 +167,7 @@ class GameHoldingWithArtifact:
                 return data
             return cast(None | str | Unset, data)
 
-        artifact_slot = _parse_artifact_slot(d.pop("artifactSlot", UNSET))
+        artifact_slot = _parse_artifact_slot(d.pop("artifact_slot", UNSET))
 
         def _parse_artifact_summary(
             data: object,
@@ -188,9 +188,9 @@ class GameHoldingWithArtifact:
                 pass
             return cast(GameHoldingWithArtifactArtifactSummaryType0 | None | Unset, data)
 
-        artifact_summary = _parse_artifact_summary(d.pop("artifactSummary", UNSET))
+        artifact_summary = _parse_artifact_summary(d.pop("artifact_summary", UNSET))
 
-        artifact_visibility = d.pop("artifactVisibility", UNSET)
+        artifact_visibility = d.pop("artifact_visibility", UNSET)
 
         game_holding_with_artifact = cls(
             id=id,

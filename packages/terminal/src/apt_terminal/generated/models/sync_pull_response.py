@@ -52,7 +52,7 @@ class SyncPullResponse:
                 "manifest": manifest,
                 "changes": changes,
                 "cursor": cursor,
-                "hasMore": has_more,
+                "has_more": has_more,
             }
         )
 
@@ -80,7 +80,7 @@ class SyncPullResponse:
 
         cursor = d.pop("cursor")
 
-        has_more = d.pop("hasMore")
+        has_more = d.pop("has_more")
 
         sync_pull_response = cls(
             manifest=manifest,

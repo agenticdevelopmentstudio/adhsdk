@@ -22,8 +22,8 @@ class AiProcessingJob:
         priority (int): Higher value = claimed first; default 0
         attempts (int): Number of claim attempts so far
         max_attempts (int): Maximum allowed claim attempts before dead-lettering
-        created_at (str): Timestamp when the job was enqueued
-        updated_at (str): Timestamp of the last status transition
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: UUID
@@ -34,8 +34,8 @@ class AiProcessingJob:
     priority: int
     attempts: int
     max_attempts: int
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -55,24 +55,24 @@ class AiProcessingJob:
 
         max_attempts = self.max_attempts
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "jobType": job_type,
-                "targetKind": target_kind,
-                "targetId": target_id,
+                "job_type": job_type,
+                "target_kind": target_kind,
+                "target_id": target_id,
                 "status": status,
                 "priority": priority,
                 "attempts": attempts,
-                "maxAttempts": max_attempts,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "max_attempts": max_attempts,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -83,11 +83,11 @@ class AiProcessingJob:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        job_type = d.pop("jobType")
+        job_type = d.pop("job_type")
 
-        target_kind = d.pop("targetKind")
+        target_kind = d.pop("target_kind")
 
-        target_id = d.pop("targetId")
+        target_id = d.pop("target_id")
 
         status = d.pop("status")
 
@@ -95,11 +95,11 @@ class AiProcessingJob:
 
         attempts = d.pop("attempts")
 
-        max_attempts = d.pop("maxAttempts")
+        max_attempts = d.pop("max_attempts")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         ai_processing_job = cls(
             id=id,
@@ -110,8 +110,8 @@ class AiProcessingJob:
             priority=priority,
             attempts=attempts,
             max_attempts=max_attempts,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         ai_processing_job.additional_properties = d

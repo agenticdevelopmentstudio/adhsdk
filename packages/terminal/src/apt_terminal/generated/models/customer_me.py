@@ -41,7 +41,7 @@ class CustomerMe:
         field_dict.update(
             {
                 "user": user,
-                "ecosystemId": ecosystem_id,
+                "ecosystem_id": ecosystem_id,
                 "realm": realm,
             }
         )
@@ -55,7 +55,7 @@ class CustomerMe:
         d = dict(src_dict)
         user = CustomerMeUser.from_dict(d.pop("user"))
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
         realm = CustomerMeRealm(d.pop("realm"))
 

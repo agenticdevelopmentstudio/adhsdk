@@ -103,23 +103,23 @@ class CatalogFeature:
                 "key": key,
                 "label": label,
                 "description": description,
-                "subscriptionTier": subscription_tier,
+                "subscription_tier": subscription_tier,
             }
         )
         if feature_site is not UNSET:
-            field_dict["featureSite"] = feature_site
+            field_dict["feature_site"] = feature_site
         if coming_soon is not UNSET:
-            field_dict["comingSoon"] = coming_soon
+            field_dict["coming_soon"] = coming_soon
         if requires_features is not UNSET:
-            field_dict["requiresFeatures"] = requires_features
+            field_dict["requires_features"] = requires_features
         if allowed_in is not UNSET:
-            field_dict["allowedIn"] = allowed_in
+            field_dict["allowed_in"] = allowed_in
         if workspace_owner_kinds is not UNSET:
-            field_dict["workspaceOwnerKinds"] = workspace_owner_kinds
+            field_dict["workspace_owner_kinds"] = workspace_owner_kinds
         if automatic_in is not UNSET:
-            field_dict["automaticIn"] = automatic_in
+            field_dict["automatic_in"] = automatic_in
         if included_with is not UNSET:
-            field_dict["includedWith"] = included_with
+            field_dict["included_with"] = included_with
 
         return field_dict
 
@@ -132,15 +132,15 @@ class CatalogFeature:
 
         description = d.pop("description")
 
-        subscription_tier = CatalogFeatureSubscriptionTier(d.pop("subscriptionTier"))
+        subscription_tier = CatalogFeatureSubscriptionTier(d.pop("subscription_tier"))
 
-        feature_site = d.pop("featureSite", UNSET)
+        feature_site = d.pop("feature_site", UNSET)
 
-        coming_soon = d.pop("comingSoon", UNSET)
+        coming_soon = d.pop("coming_soon", UNSET)
 
-        requires_features = cast(list[str], d.pop("requiresFeatures", UNSET))
+        requires_features = cast(list[str], d.pop("requires_features", UNSET))
 
-        _allowed_in = d.pop("allowedIn", UNSET)
+        _allowed_in = d.pop("allowed_in", UNSET)
         allowed_in: list[CatalogFeatureAllowedInItem] | Unset = UNSET
         if _allowed_in is not UNSET:
             allowed_in = []
@@ -149,7 +149,7 @@ class CatalogFeature:
 
                 allowed_in.append(allowed_in_item)
 
-        _workspace_owner_kinds = d.pop("workspaceOwnerKinds", UNSET)
+        _workspace_owner_kinds = d.pop("workspace_owner_kinds", UNSET)
         workspace_owner_kinds: list[CatalogFeatureWorkspaceOwnerKindsItem] | Unset = UNSET
         if _workspace_owner_kinds is not UNSET:
             workspace_owner_kinds = []
@@ -160,7 +160,7 @@ class CatalogFeature:
 
                 workspace_owner_kinds.append(workspace_owner_kinds_item)
 
-        _automatic_in = d.pop("automaticIn", UNSET)
+        _automatic_in = d.pop("automatic_in", UNSET)
         automatic_in: list[CatalogFeatureAutomaticInItem] | Unset = UNSET
         if _automatic_in is not UNSET:
             automatic_in = []
@@ -169,7 +169,7 @@ class CatalogFeature:
 
                 automatic_in.append(automatic_in_item)
 
-        included_with = d.pop("includedWith", UNSET)
+        included_with = d.pop("included_with", UNSET)
 
         catalog_feature = cls(
             key=key,

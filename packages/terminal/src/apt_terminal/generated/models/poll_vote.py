@@ -23,7 +23,7 @@ class PollVote:
             'ecosystem'.
         owner_id (str): Id of the owning principal.
         option_id (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         deleted_at (None | str | Unset):
     """
 
@@ -33,7 +33,7 @@ class PollVote:
     owner_kind: str
     owner_id: str
     option_id: str
-    created_at: str
+    created: int
     deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -50,7 +50,7 @@ class PollVote:
 
         option_id = self.option_id
 
-        created_at = self.created_at
+        created = self.created
 
         deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
@@ -63,16 +63,16 @@ class PollVote:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
-                "optionId": option_id,
-                "createdAt": created_at,
+                "ecosystem_id": ecosystem_id,
+                "customer_id": customer_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
+                "option_id": option_id,
+                "created": created,
             }
         )
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -81,17 +81,17 @@ class PollVote:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
-        owner_kind = d.pop("ownerKind")
+        owner_kind = d.pop("owner_kind")
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
-        option_id = d.pop("optionId")
+        option_id = d.pop("option_id")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -100,7 +100,7 @@ class PollVote:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         poll_vote = cls(
             id=id,
@@ -109,7 +109,7 @@ class PollVote:
             owner_kind=owner_kind,
             owner_id=owner_id,
             option_id=option_id,
-            created_at=created_at,
+            created=created,
             deleted_at=deleted_at,
         )
 

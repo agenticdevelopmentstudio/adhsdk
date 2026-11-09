@@ -27,8 +27,8 @@ class ChatInboxEntry:
         name (str):
         photo_storage_key (None | str):
         created_by_user_id (None | str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         participants (list[ChatParticipant]): Joined participants, longest-standing first
         last_message (DmMessagePreviewType0 | None): The chat's most recent message, trimmed to what a chat list
             renders.
@@ -41,8 +41,8 @@ class ChatInboxEntry:
     name: str
     photo_storage_key: None | str
     created_by_user_id: None | str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     participants: list[ChatParticipant]
     last_message: DmMessagePreviewType0 | None
     unread_count: int
@@ -65,9 +65,9 @@ class ChatInboxEntry:
         created_by_user_id: None | str
         created_by_user_id = self.created_by_user_id
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         participants = []
         for participants_item_data in self.participants:
@@ -88,15 +88,15 @@ class ChatInboxEntry:
             {
                 "id": id,
                 "type": type_,
-                "definitionId": definition_id,
+                "definition_id": definition_id,
                 "name": name,
-                "photoStorageKey": photo_storage_key,
-                "createdByUserId": created_by_user_id,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "photo_storage_key": photo_storage_key,
+                "created_by_user_id": created_by_user_id,
+                "created": created,
+                "updated": updated,
                 "participants": participants,
-                "lastMessage": last_message,
-                "unreadCount": unread_count,
+                "last_message": last_message,
+                "unread_count": unread_count,
             }
         )
 
@@ -112,7 +112,7 @@ class ChatInboxEntry:
 
         type_ = ChatType(d.pop("type"))
 
-        definition_id = d.pop("definitionId")
+        definition_id = d.pop("definition_id")
 
         name = d.pop("name")
 
@@ -121,18 +121,18 @@ class ChatInboxEntry:
                 return data
             return cast(None | str, data)
 
-        photo_storage_key = _parse_photo_storage_key(d.pop("photoStorageKey"))
+        photo_storage_key = _parse_photo_storage_key(d.pop("photo_storage_key"))
 
         def _parse_created_by_user_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        created_by_user_id = _parse_created_by_user_id(d.pop("createdByUserId"))
+        created_by_user_id = _parse_created_by_user_id(d.pop("created_by_user_id"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         participants = []
         _participants = d.pop("participants")
@@ -154,9 +154,9 @@ class ChatInboxEntry:
                 pass
             return cast(DmMessagePreviewType0 | None, data)
 
-        last_message = _parse_last_message(d.pop("lastMessage"))
+        last_message = _parse_last_message(d.pop("last_message"))
 
-        unread_count = d.pop("unreadCount")
+        unread_count = d.pop("unread_count")
 
         chat_inbox_entry = cls(
             id=id,
@@ -165,8 +165,8 @@ class ChatInboxEntry:
             name=name,
             photo_storage_key=photo_storage_key,
             created_by_user_id=created_by_user_id,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             participants=participants,
             last_message=last_message,
             unread_count=unread_count,

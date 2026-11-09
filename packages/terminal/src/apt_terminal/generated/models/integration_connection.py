@@ -29,7 +29,7 @@ class IntegrationConnection:
         display_name (str):
         username (str):
         external_account_id (str): Provider-side account id
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         last_sync_at (None | str | Unset): Last successful sync (null = never)
         last_error (None | str | Unset): Last recorded sync error
         sync_settings (IntegrationConnectionSyncSettingsType0 | None | Unset): Caller-tunable sync settings
@@ -44,7 +44,7 @@ class IntegrationConnection:
     display_name: str
     username: str
     external_account_id: str
-    created_at: str
+    created: int
     last_sync_at: None | str | Unset = UNSET
     last_error: None | str | Unset = UNSET
     sync_settings: IntegrationConnectionSyncSettingsType0 | None | Unset = UNSET
@@ -69,7 +69,7 @@ class IntegrationConnection:
 
         external_account_id = self.external_account_id
 
-        created_at = self.created_at
+        created = self.created
 
         last_sync_at: None | str | Unset
         if isinstance(self.last_sync_at, Unset):
@@ -97,20 +97,20 @@ class IntegrationConnection:
             {
                 "id": id,
                 "provider": provider,
-                "serviceType": service_type,
+                "service_type": service_type,
                 "status": status,
-                "displayName": display_name,
+                "display_name": display_name,
                 "username": username,
-                "externalAccountId": external_account_id,
-                "createdAt": created_at,
+                "external_account_id": external_account_id,
+                "created": created,
             }
         )
         if last_sync_at is not UNSET:
-            field_dict["lastSyncAt"] = last_sync_at
+            field_dict["last_sync_at"] = last_sync_at
         if last_error is not UNSET:
-            field_dict["lastError"] = last_error
+            field_dict["last_error"] = last_error
         if sync_settings is not UNSET:
-            field_dict["syncSettings"] = sync_settings
+            field_dict["sync_settings"] = sync_settings
 
         return field_dict
 
@@ -125,17 +125,17 @@ class IntegrationConnection:
 
         provider = d.pop("provider")
 
-        service_type = d.pop("serviceType")
+        service_type = d.pop("service_type")
 
         status = d.pop("status")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
         username = d.pop("username")
 
-        external_account_id = d.pop("externalAccountId")
+        external_account_id = d.pop("external_account_id")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_last_sync_at(data: object) -> None | str | Unset:
             if data is None:
@@ -144,7 +144,7 @@ class IntegrationConnection:
                 return data
             return cast(None | str | Unset, data)
 
-        last_sync_at = _parse_last_sync_at(d.pop("lastSyncAt", UNSET))
+        last_sync_at = _parse_last_sync_at(d.pop("last_sync_at", UNSET))
 
         def _parse_last_error(data: object) -> None | str | Unset:
             if data is None:
@@ -153,7 +153,7 @@ class IntegrationConnection:
                 return data
             return cast(None | str | Unset, data)
 
-        last_error = _parse_last_error(d.pop("lastError", UNSET))
+        last_error = _parse_last_error(d.pop("last_error", UNSET))
 
         def _parse_sync_settings(
             data: object,
@@ -172,7 +172,7 @@ class IntegrationConnection:
                 pass
             return cast(IntegrationConnectionSyncSettingsType0 | None | Unset, data)
 
-        sync_settings = _parse_sync_settings(d.pop("syncSettings", UNSET))
+        sync_settings = _parse_sync_settings(d.pop("sync_settings", UNSET))
 
         integration_connection = cls(
             id=id,
@@ -182,7 +182,7 @@ class IntegrationConnection:
             display_name=display_name,
             username=username,
             external_account_id=external_account_id,
-            created_at=created_at,
+            created=created,
             last_sync_at=last_sync_at,
             last_error=last_error,
             sync_settings=sync_settings,

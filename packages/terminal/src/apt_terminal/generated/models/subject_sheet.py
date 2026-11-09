@@ -84,16 +84,16 @@ class SubjectSheet:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "subjectType": subject_type,
-                "subjectId": subject_id,
+                "subject_type": subject_type,
+                "subject_id": subject_id,
                 "skin": skin,
                 "xp": xp,
                 "level": level,
-                "levelTitle": level_title,
-                "xpIntoLevel": xp_into_level,
-                "xpForNext": xp_for_next,
-                "tenureDays": tenure_days,
-                "streakDays": streak_days,
+                "level_title": level_title,
+                "xp_into_level": xp_into_level,
+                "xp_for_next": xp_for_next,
+                "tenure_days": tenure_days,
+                "streak_days": streak_days,
                 "stats": stats,
                 "trend": trend,
                 "badges": badges,
@@ -109,9 +109,9 @@ class SubjectSheet:
         from ..models.subject_sheet_trend import SubjectSheetTrend
 
         d = dict(src_dict)
-        subject_type = d.pop("subjectType")
+        subject_type = d.pop("subject_type")
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
         skin = d.pop("skin")
 
@@ -124,15 +124,15 @@ class SubjectSheet:
                 return data
             return cast(None | str, data)
 
-        level_title = _parse_level_title(d.pop("levelTitle"))
+        level_title = _parse_level_title(d.pop("level_title"))
 
-        xp_into_level = d.pop("xpIntoLevel")
+        xp_into_level = d.pop("xp_into_level")
 
-        xp_for_next = d.pop("xpForNext")
+        xp_for_next = d.pop("xp_for_next")
 
-        tenure_days = d.pop("tenureDays")
+        tenure_days = d.pop("tenure_days")
 
-        streak_days = d.pop("streakDays")
+        streak_days = d.pop("streak_days")
 
         stats = SubjectSheetStats.from_dict(d.pop("stats"))
 

@@ -20,7 +20,7 @@ class MarkdownDocumentVersionSummary:
         title (str):
         content_hash (str):
         size_bytes (int):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         author_type (None | str | Unset):
         author_id (None | str | Unset):
         author_name (None | str | Unset):
@@ -31,7 +31,7 @@ class MarkdownDocumentVersionSummary:
     title: str
     content_hash: str
     size_bytes: int
-    created_at: str
+    created: int
     author_type: None | str | Unset = UNSET
     author_id: None | str | Unset = UNSET
     author_name: None | str | Unset = UNSET
@@ -48,7 +48,7 @@ class MarkdownDocumentVersionSummary:
 
         size_bytes = self.size_bytes
 
-        created_at = self.created_at
+        created = self.created
 
         author_type: None | str | Unset
         if isinstance(self.author_type, Unset):
@@ -75,17 +75,17 @@ class MarkdownDocumentVersionSummary:
                 "id": id,
                 "version": version,
                 "title": title,
-                "contentHash": content_hash,
-                "sizeBytes": size_bytes,
-                "createdAt": created_at,
+                "content_hash": content_hash,
+                "size_bytes": size_bytes,
+                "created": created,
             }
         )
         if author_type is not UNSET:
-            field_dict["authorType"] = author_type
+            field_dict["author_type"] = author_type
         if author_id is not UNSET:
-            field_dict["authorId"] = author_id
+            field_dict["author_id"] = author_id
         if author_name is not UNSET:
-            field_dict["authorName"] = author_name
+            field_dict["author_name"] = author_name
 
         return field_dict
 
@@ -98,11 +98,11 @@ class MarkdownDocumentVersionSummary:
 
         title = d.pop("title")
 
-        content_hash = d.pop("contentHash")
+        content_hash = d.pop("content_hash")
 
-        size_bytes = d.pop("sizeBytes")
+        size_bytes = d.pop("size_bytes")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_author_type(data: object) -> None | str | Unset:
             if data is None:
@@ -111,7 +111,7 @@ class MarkdownDocumentVersionSummary:
                 return data
             return cast(None | str | Unset, data)
 
-        author_type = _parse_author_type(d.pop("authorType", UNSET))
+        author_type = _parse_author_type(d.pop("author_type", UNSET))
 
         def _parse_author_id(data: object) -> None | str | Unset:
             if data is None:
@@ -120,7 +120,7 @@ class MarkdownDocumentVersionSummary:
                 return data
             return cast(None | str | Unset, data)
 
-        author_id = _parse_author_id(d.pop("authorId", UNSET))
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_author_name(data: object) -> None | str | Unset:
             if data is None:
@@ -129,7 +129,7 @@ class MarkdownDocumentVersionSummary:
                 return data
             return cast(None | str | Unset, data)
 
-        author_name = _parse_author_name(d.pop("authorName", UNSET))
+        author_name = _parse_author_name(d.pop("author_name", UNSET))
 
         markdown_document_version_summary = cls(
             id=id,
@@ -137,7 +137,7 @@ class MarkdownDocumentVersionSummary:
             title=title,
             content_hash=content_hash,
             size_bytes=size_bytes,
-            created_at=created_at,
+            created=created,
             author_type=author_type,
             author_id=author_id,
             author_name=author_name,

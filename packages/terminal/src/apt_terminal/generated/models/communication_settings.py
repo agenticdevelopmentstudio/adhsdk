@@ -35,9 +35,9 @@ class CommunicationSettings:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "dmAudienceMask": dm_audience_mask,
-                "presenceAudienceMask": presence_audience_mask,
-                "appearOffline": appear_offline,
+                "dm_audience_mask": dm_audience_mask,
+                "presence_audience_mask": presence_audience_mask,
+                "appear_offline": appear_offline,
             }
         )
 
@@ -46,11 +46,11 @@ class CommunicationSettings:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        dm_audience_mask = d.pop("dmAudienceMask")
+        dm_audience_mask = d.pop("dm_audience_mask")
 
-        presence_audience_mask = d.pop("presenceAudienceMask")
+        presence_audience_mask = d.pop("presence_audience_mask")
 
-        appear_offline = d.pop("appearOffline")
+        appear_offline = d.pop("appear_offline")
 
         communication_settings = cls(
             dm_audience_mask=dm_audience_mask,

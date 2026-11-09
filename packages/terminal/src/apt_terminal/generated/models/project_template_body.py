@@ -82,13 +82,13 @@ class ProjectTemplateBody:
         if color is not UNSET:
             field_dict["color"] = color
         if estimate_scale is not UNSET:
-            field_dict["estimateScale"] = estimate_scale
+            field_dict["estimate_scale"] = estimate_scale
         if priority_scale is not UNSET:
-            field_dict["priorityScale"] = priority_scale
+            field_dict["priority_scale"] = priority_scale
         if item_noun is not UNSET:
-            field_dict["itemNoun"] = item_noun
+            field_dict["item_noun"] = item_noun
         if item_noun_plural is not UNSET:
-            field_dict["itemNounPlural"] = item_noun_plural
+            field_dict["item_noun_plural"] = item_noun_plural
         if statuses is not UNSET:
             field_dict["statuses"] = statuses
         if milestones is not UNSET:
@@ -110,23 +110,23 @@ class ProjectTemplateBody:
 
         color = d.pop("color", UNSET)
 
-        _estimate_scale = d.pop("estimateScale", UNSET)
+        _estimate_scale = d.pop("estimate_scale", UNSET)
         estimate_scale: ProjectTemplateBodyEstimateScale | Unset
         if isinstance(_estimate_scale, Unset):
             estimate_scale = UNSET
         else:
             estimate_scale = ProjectTemplateBodyEstimateScale(_estimate_scale)
 
-        _priority_scale = d.pop("priorityScale", UNSET)
+        _priority_scale = d.pop("priority_scale", UNSET)
         priority_scale: ProjectTemplateBodyPriorityScale | Unset
         if isinstance(_priority_scale, Unset):
             priority_scale = UNSET
         else:
             priority_scale = ProjectTemplateBodyPriorityScale(_priority_scale)
 
-        item_noun = d.pop("itemNoun", UNSET)
+        item_noun = d.pop("item_noun", UNSET)
 
-        item_noun_plural = d.pop("itemNounPlural", UNSET)
+        item_noun_plural = d.pop("item_noun_plural", UNSET)
 
         _statuses = d.pop("statuses", UNSET)
         statuses: list[ProjectTemplateBodyStatusesItem] | Unset = UNSET

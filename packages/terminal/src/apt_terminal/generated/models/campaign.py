@@ -28,8 +28,8 @@ class Campaign:
         recipient_count (int):
         sent_count (int):
         failed_count (int):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         created_by (None | str | Unset):
         scheduled_at (None | str | Unset):
         started_at (None | str | Unset):
@@ -48,8 +48,8 @@ class Campaign:
     recipient_count: int
     sent_count: int
     failed_count: int
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     created_by: None | str | Unset = UNSET
     scheduled_at: None | str | Unset = UNSET
     started_at: None | str | Unset = UNSET
@@ -82,9 +82,9 @@ class Campaign:
 
         failed_count = self.failed_count
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
@@ -115,29 +115,29 @@ class Campaign:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "listId": list_id,
+                "ecosystem_id": ecosystem_id,
+                "list_id": list_id,
                 "name": name,
                 "subject": subject,
-                "htmlBody": html_body,
-                "textBody": text_body,
-                "fromName": from_name,
+                "html_body": html_body,
+                "text_body": text_body,
+                "from_name": from_name,
                 "status": status,
-                "recipientCount": recipient_count,
-                "sentCount": sent_count,
-                "failedCount": failed_count,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "recipient_count": recipient_count,
+                "sent_count": sent_count,
+                "failed_count": failed_count,
+                "created": created,
+                "updated": updated,
             }
         )
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
         if scheduled_at is not UNSET:
-            field_dict["scheduledAt"] = scheduled_at
+            field_dict["scheduled_at"] = scheduled_at
         if started_at is not UNSET:
-            field_dict["startedAt"] = started_at
+            field_dict["started_at"] = started_at
         if completed_at is not UNSET:
-            field_dict["completedAt"] = completed_at
+            field_dict["completed_at"] = completed_at
 
         return field_dict
 
@@ -146,36 +146,36 @@ class Campaign:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        list_id = d.pop("listId")
+        list_id = d.pop("list_id")
 
         name = d.pop("name")
 
         subject = d.pop("subject")
 
-        html_body = d.pop("htmlBody")
+        html_body = d.pop("html_body")
 
-        text_body = d.pop("textBody")
+        text_body = d.pop("text_body")
 
         def _parse_from_name(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        from_name = _parse_from_name(d.pop("fromName"))
+        from_name = _parse_from_name(d.pop("from_name"))
 
         status = CampaignStatus(d.pop("status"))
 
-        recipient_count = d.pop("recipientCount")
+        recipient_count = d.pop("recipient_count")
 
-        sent_count = d.pop("sentCount")
+        sent_count = d.pop("sent_count")
 
-        failed_count = d.pop("failedCount")
+        failed_count = d.pop("failed_count")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -184,7 +184,7 @@ class Campaign:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         def _parse_scheduled_at(data: object) -> None | str | Unset:
             if data is None:
@@ -193,7 +193,7 @@ class Campaign:
                 return data
             return cast(None | str | Unset, data)
 
-        scheduled_at = _parse_scheduled_at(d.pop("scheduledAt", UNSET))
+        scheduled_at = _parse_scheduled_at(d.pop("scheduled_at", UNSET))
 
         def _parse_started_at(data: object) -> None | str | Unset:
             if data is None:
@@ -202,7 +202,7 @@ class Campaign:
                 return data
             return cast(None | str | Unset, data)
 
-        started_at = _parse_started_at(d.pop("startedAt", UNSET))
+        started_at = _parse_started_at(d.pop("started_at", UNSET))
 
         def _parse_completed_at(data: object) -> None | str | Unset:
             if data is None:
@@ -211,7 +211,7 @@ class Campaign:
                 return data
             return cast(None | str | Unset, data)
 
-        completed_at = _parse_completed_at(d.pop("completedAt", UNSET))
+        completed_at = _parse_completed_at(d.pop("completed_at", UNSET))
 
         campaign = cls(
             id=id,
@@ -226,8 +226,8 @@ class Campaign:
             recipient_count=recipient_count,
             sent_count=sent_count,
             failed_count=failed_count,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             created_by=created_by,
             scheduled_at=scheduled_at,
             started_at=started_at,

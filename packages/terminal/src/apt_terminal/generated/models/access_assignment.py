@@ -70,21 +70,21 @@ class AccessAssignment:
         field_dict.update(
             {
                 "id": id,
-                "subjectKind": subject_kind,
-                "subjectId": subject_id,
-                "scopeFeature": scope_feature,
-                "scopeItemId": scope_item_id,
-                "roleId": role_id,
+                "subject_kind": subject_kind,
+                "subject_id": subject_id,
+                "scope_feature": scope_feature,
+                "scope_item_id": scope_item_id,
+                "role_id": role_id,
             }
         )
         if role_slug is not UNSET:
-            field_dict["roleSlug"] = role_slug
+            field_dict["role_slug"] = role_slug
         if role_name is not UNSET:
-            field_dict["roleName"] = role_name
+            field_dict["role_name"] = role_name
         if granted_by is not UNSET:
-            field_dict["grantedBy"] = granted_by
+            field_dict["granted_by"] = granted_by
         if granted_at is not UNSET:
-            field_dict["grantedAt"] = granted_at
+            field_dict["granted_at"] = granted_at
 
         return field_dict
 
@@ -93,19 +93,19 @@ class AccessAssignment:
         d = dict(src_dict)
         id = d.pop("id")
 
-        subject_kind = AccessAssignmentSubjectKind(d.pop("subjectKind"))
+        subject_kind = AccessAssignmentSubjectKind(d.pop("subject_kind"))
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
-        scope_feature = d.pop("scopeFeature")
+        scope_feature = d.pop("scope_feature")
 
-        scope_item_id = d.pop("scopeItemId")
+        scope_item_id = d.pop("scope_item_id")
 
-        role_id = d.pop("roleId")
+        role_id = d.pop("role_id")
 
-        role_slug = d.pop("roleSlug", UNSET)
+        role_slug = d.pop("role_slug", UNSET)
 
-        role_name = d.pop("roleName", UNSET)
+        role_name = d.pop("role_name", UNSET)
 
         def _parse_granted_by(data: object) -> None | str | Unset:
             if data is None:
@@ -114,9 +114,9 @@ class AccessAssignment:
                 return data
             return cast(None | str | Unset, data)
 
-        granted_by = _parse_granted_by(d.pop("grantedBy", UNSET))
+        granted_by = _parse_granted_by(d.pop("granted_by", UNSET))
 
-        granted_at = d.pop("grantedAt", UNSET)
+        granted_at = d.pop("granted_at", UNSET)
 
         access_assignment = cls(
             id=id,

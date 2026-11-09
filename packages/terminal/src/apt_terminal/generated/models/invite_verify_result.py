@@ -31,7 +31,7 @@ class InviteVerifyResult:
         field_dict.update(
             {
                 "ok": ok,
-                "ecosystemName": ecosystem_name,
+                "ecosystem_name": ecosystem_name,
             }
         )
 
@@ -42,7 +42,7 @@ class InviteVerifyResult:
         d = dict(src_dict)
         ok = d.pop("ok")
 
-        ecosystem_name = d.pop("ecosystemName")
+        ecosystem_name = d.pop("ecosystem_name")
 
         invite_verify_result = cls(
             ok=ok,

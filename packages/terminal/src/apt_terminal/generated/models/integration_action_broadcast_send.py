@@ -27,7 +27,7 @@ class IntegrationActionBroadcastSend:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "broadcastId": broadcast_id,
+                "broadcast_id": broadcast_id,
             }
         )
 
@@ -36,7 +36,7 @@ class IntegrationActionBroadcastSend:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        broadcast_id = d.pop("broadcastId")
+        broadcast_id = d.pop("broadcast_id")
 
         integration_action_broadcast_send = cls(
             broadcast_id=broadcast_id,

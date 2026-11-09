@@ -55,8 +55,8 @@ class SyncEnrollmentRow:
             {
                 "resource": resource,
                 "scope": scope,
-                "pushMode": push_mode,
-                "defaultEnabled": default_enabled,
+                "push_mode": push_mode,
+                "default_enabled": default_enabled,
                 "enabled": enabled,
                 "overridden": overridden,
             }
@@ -71,9 +71,9 @@ class SyncEnrollmentRow:
 
         scope = SyncEnrollmentRowScope(d.pop("scope"))
 
-        push_mode = SyncEnrollmentRowPushMode(d.pop("pushMode"))
+        push_mode = SyncEnrollmentRowPushMode(d.pop("push_mode"))
 
-        default_enabled = d.pop("defaultEnabled")
+        default_enabled = d.pop("default_enabled")
 
         enabled = d.pop("enabled")
 

@@ -74,13 +74,13 @@ class AiProcessingJobLlm:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "configSetId": config_set_id,
-                "configSetName": config_set_name,
+                "config_set_id": config_set_id,
+                "config_set_name": config_set_name,
                 "provider": provider,
                 "model": model,
-                "baseUrl": base_url,
+                "base_url": base_url,
                 "connection": connection,
-                "apiKey": api_key,
+                "api_key": api_key,
                 "params": params,
             }
         )
@@ -103,14 +103,14 @@ class AiProcessingJobLlm:
                 return data
             return cast(None | str, data)
 
-        config_set_id = _parse_config_set_id(d.pop("configSetId"))
+        config_set_id = _parse_config_set_id(d.pop("config_set_id"))
 
         def _parse_config_set_name(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        config_set_name = _parse_config_set_name(d.pop("configSetName"))
+        config_set_name = _parse_config_set_name(d.pop("config_set_name"))
 
         provider = AiProcessingProviderKind(d.pop("provider"))
 
@@ -121,7 +121,7 @@ class AiProcessingJobLlm:
                 return data
             return cast(None | str, data)
 
-        base_url = _parse_base_url(d.pop("baseUrl"))
+        base_url = _parse_base_url(d.pop("base_url"))
 
         def _parse_connection(data: object) -> AiProcessingJobLlmConnectionType0 | None:
             if data is None:
@@ -143,7 +143,7 @@ class AiProcessingJobLlm:
                 return data
             return cast(None | str, data)
 
-        api_key = _parse_api_key(d.pop("apiKey"))
+        api_key = _parse_api_key(d.pop("api_key"))
 
         params = AiProcessingConfigSetParams.from_dict(d.pop("params"))
 

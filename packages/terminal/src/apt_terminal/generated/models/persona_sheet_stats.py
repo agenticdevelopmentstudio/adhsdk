@@ -50,9 +50,9 @@ class PersonaSheetStats:
                 "adventures": adventures,
                 "allies": allies,
                 "turns": turns,
-                "tokensOut": tokens_out,
-                "avgLatencyMs": avg_latency_ms,
-                "daysActive": days_active,
+                "tokens_out": tokens_out,
+                "avg_latency_ms": avg_latency_ms,
+                "days_active": days_active,
             }
         )
 
@@ -67,16 +67,16 @@ class PersonaSheetStats:
 
         turns = d.pop("turns")
 
-        tokens_out = d.pop("tokensOut")
+        tokens_out = d.pop("tokens_out")
 
         def _parse_avg_latency_ms(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        avg_latency_ms = _parse_avg_latency_ms(d.pop("avgLatencyMs"))
+        avg_latency_ms = _parse_avg_latency_ms(d.pop("avg_latency_ms"))
 
-        days_active = d.pop("daysActive")
+        days_active = d.pop("days_active")
 
         persona_sheet_stats = cls(
             adventures=adventures,

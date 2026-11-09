@@ -55,13 +55,13 @@ class MessagingTemplate:
                 "id": id,
                 "name": name,
                 "subject": subject,
-                "htmlBody": html_body,
-                "textBody": text_body,
+                "html_body": html_body,
+                "text_body": text_body,
                 "category": category,
             }
         )
         if sms_body is not UNSET:
-            field_dict["smsBody"] = sms_body
+            field_dict["sms_body"] = sms_body
 
         return field_dict
 
@@ -74,13 +74,13 @@ class MessagingTemplate:
 
         subject = d.pop("subject")
 
-        html_body = d.pop("htmlBody")
+        html_body = d.pop("html_body")
 
-        text_body = d.pop("textBody")
+        text_body = d.pop("text_body")
 
         category = d.pop("category")
 
-        sms_body = d.pop("smsBody", UNSET)
+        sms_body = d.pop("sms_body", UNSET)
 
         messaging_template = cls(
             id=id,

@@ -34,9 +34,9 @@ class UsageStorageQuota:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "quotaBytes": quota_bytes,
-                "usageBytes": usage_bytes,
-                "availableBytes": available_bytes,
+                "quota_bytes": quota_bytes,
+                "usage_bytes": usage_bytes,
+                "available_bytes": available_bytes,
             }
         )
 
@@ -45,11 +45,11 @@ class UsageStorageQuota:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        quota_bytes = d.pop("quotaBytes")
+        quota_bytes = d.pop("quota_bytes")
 
-        usage_bytes = d.pop("usageBytes")
+        usage_bytes = d.pop("usage_bytes")
 
-        available_bytes = d.pop("availableBytes")
+        available_bytes = d.pop("available_bytes")
 
         usage_storage_quota = cls(
             quota_bytes=quota_bytes,

@@ -71,15 +71,15 @@ class ShiprDevRepo:
         if slug is not UNSET:
             field_dict["slug"] = slug
         if display_name is not UNSET:
-            field_dict["displayName"] = display_name
+            field_dict["display_name"] = display_name
         if main_branch is not UNSET:
-            field_dict["mainBranch"] = main_branch
+            field_dict["main_branch"] = main_branch
         if prepared_branch is not UNSET:
-            field_dict["preparedBranch"] = prepared_branch
+            field_dict["prepared_branch"] = prepared_branch
         if declaration_sha is not UNSET:
-            field_dict["declarationSha"] = declaration_sha
+            field_dict["declaration_sha"] = declaration_sha
         if connection_id is not UNSET:
-            field_dict["connectionId"] = connection_id
+            field_dict["connection_id"] = connection_id
 
         return field_dict
 
@@ -97,11 +97,11 @@ class ShiprDevRepo:
                 return data
             return cast(None | str | Unset, data)
 
-        display_name = _parse_display_name(d.pop("displayName", UNSET))
+        display_name = _parse_display_name(d.pop("display_name", UNSET))
 
-        main_branch = d.pop("mainBranch", UNSET)
+        main_branch = d.pop("main_branch", UNSET)
 
-        prepared_branch = d.pop("preparedBranch", UNSET)
+        prepared_branch = d.pop("prepared_branch", UNSET)
 
         def _parse_declaration_sha(data: object) -> None | str | Unset:
             if data is None:
@@ -110,7 +110,7 @@ class ShiprDevRepo:
                 return data
             return cast(None | str | Unset, data)
 
-        declaration_sha = _parse_declaration_sha(d.pop("declarationSha", UNSET))
+        declaration_sha = _parse_declaration_sha(d.pop("declaration_sha", UNSET))
 
         def _parse_connection_id(data: object) -> None | str | Unset:
             if data is None:
@@ -119,7 +119,7 @@ class ShiprDevRepo:
                 return data
             return cast(None | str | Unset, data)
 
-        connection_id = _parse_connection_id(d.pop("connectionId", UNSET))
+        connection_id = _parse_connection_id(d.pop("connection_id", UNSET))
 
         shipr_dev_repo = cls(
             id=id,

@@ -54,7 +54,7 @@ class ShiprRunEvent:
         if seq is not UNSET:
             field_dict["seq"] = seq
         if step_id is not UNSET:
-            field_dict["stepId"] = step_id
+            field_dict["step_id"] = step_id
         if stream is not UNSET:
             field_dict["stream"] = stream
         if text is not UNSET:
@@ -76,7 +76,7 @@ class ShiprRunEvent:
                 return data
             return cast(None | str | Unset, data)
 
-        step_id = _parse_step_id(d.pop("stepId", UNSET))
+        step_id = _parse_step_id(d.pop("step_id", UNSET))
 
         _stream = d.pop("stream", UNSET)
         stream: ShiprRunEventStream | Unset

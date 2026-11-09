@@ -22,7 +22,7 @@ class ProjectStatus:
         label (str):
         category (ProjectStatusCategory):
         position (int): column order (ascending)
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -32,7 +32,7 @@ class ProjectStatus:
     label: str
     category: ProjectStatusCategory
     position: int
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -50,20 +50,20 @@ class ProjectStatus:
 
         position = self.position
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
                 "key": key,
                 "label": label,
                 "category": category,
                 "position": position,
-                "createdAt": created_at,
+                "created": created,
             }
         )
 
@@ -74,9 +74,9 @@ class ProjectStatus:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
         key = d.pop("key")
 
@@ -86,7 +86,7 @@ class ProjectStatus:
 
         position = d.pop("position")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         project_status = cls(
             id=id,
@@ -96,7 +96,7 @@ class ProjectStatus:
             label=label,
             category=category,
             position=position,
-            created_at=created_at,
+            created=created,
         )
 
         project_status.additional_properties = d

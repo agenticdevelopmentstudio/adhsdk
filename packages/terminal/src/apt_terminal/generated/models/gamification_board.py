@@ -44,7 +44,7 @@ class GamificationBoard:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "statKey": stat_key,
+                "stat_key": stat_key,
                 "window": window,
                 "entries": entries,
             }
@@ -57,7 +57,7 @@ class GamificationBoard:
         from ..models.gamification_board_entry import GamificationBoardEntry
 
         d = dict(src_dict)
-        stat_key = GamificationBoardStatKey(d.pop("statKey"))
+        stat_key = GamificationBoardStatKey(d.pop("stat_key"))
 
         window = GamificationBoardWindow(d.pop("window"))
 

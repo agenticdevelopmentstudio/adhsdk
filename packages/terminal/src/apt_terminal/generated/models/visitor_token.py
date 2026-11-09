@@ -36,8 +36,8 @@ class VisitorToken:
         field_dict.update(
             {
                 "token": token,
-                "expiresAt": expires_at,
-                "personaId": persona_id,
+                "expires_at": expires_at,
+                "persona_id": persona_id,
             }
         )
 
@@ -48,9 +48,9 @@ class VisitorToken:
         d = dict(src_dict)
         token = d.pop("token")
 
-        expires_at = d.pop("expiresAt")
+        expires_at = d.pop("expires_at")
 
-        persona_id = d.pop("personaId")
+        persona_id = d.pop("persona_id")
 
         visitor_token = cls(
             token=token,

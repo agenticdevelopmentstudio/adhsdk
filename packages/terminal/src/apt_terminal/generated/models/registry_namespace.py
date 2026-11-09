@@ -53,8 +53,8 @@ class RegistryNamespace:
         field_dict.update(
             {
                 "id": id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "slug": slug,
                 "name": name,
                 "rdid": rdid,
@@ -68,9 +68,9 @@ class RegistryNamespace:
         d = dict(src_dict)
         id = d.pop("id")
 
-        owner_kind = RegistryNamespaceOwnerKind(d.pop("ownerKind"))
+        owner_kind = RegistryNamespaceOwnerKind(d.pop("owner_kind"))
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         def _parse_slug(data: object) -> None | str:
             if data is None:

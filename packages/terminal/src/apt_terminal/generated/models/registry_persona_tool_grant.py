@@ -15,12 +15,12 @@ class RegistryPersonaToolGrant:
     Attributes:
         tool_name (str):
         autonomous (bool): true = this grant skips the approval gate (except acting as self, which always gates)
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     tool_name: str
     autonomous: bool
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -28,15 +28,15 @@ class RegistryPersonaToolGrant:
 
         autonomous = self.autonomous
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "toolName": tool_name,
+                "tool_name": tool_name,
                 "autonomous": autonomous,
-                "createdAt": created_at,
+                "created": created,
             }
         )
 
@@ -45,16 +45,16 @@ class RegistryPersonaToolGrant:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        tool_name = d.pop("toolName")
+        tool_name = d.pop("tool_name")
 
         autonomous = d.pop("autonomous")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         registry_persona_tool_grant = cls(
             tool_name=tool_name,
             autonomous=autonomous,
-            created_at=created_at,
+            created=created,
         )
 
         registry_persona_tool_grant.additional_properties = d

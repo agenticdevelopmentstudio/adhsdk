@@ -26,7 +26,7 @@ class AiProcessingSettings:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "logRetentionDays": log_retention_days,
+                "log_retention_days": log_retention_days,
             }
         )
 
@@ -35,7 +35,7 @@ class AiProcessingSettings:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        log_retention_days = d.pop("logRetentionDays")
+        log_retention_days = d.pop("log_retention_days")
 
         ai_processing_settings = cls(
             log_retention_days=log_retention_days,

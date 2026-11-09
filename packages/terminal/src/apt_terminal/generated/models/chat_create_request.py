@@ -48,9 +48,9 @@ class ChatCreateRequest:
             }
         )
         if user_ids is not UNSET:
-            field_dict["userIds"] = user_ids
+            field_dict["user_ids"] = user_ids
         if persona_ids is not UNSET:
-            field_dict["personaIds"] = persona_ids
+            field_dict["persona_ids"] = persona_ids
         if name is not UNSET:
             field_dict["name"] = name
 
@@ -61,9 +61,9 @@ class ChatCreateRequest:
         d = dict(src_dict)
         definition = d.pop("definition")
 
-        user_ids = cast(list[str], d.pop("userIds", UNSET))
+        user_ids = cast(list[str], d.pop("user_ids", UNSET))
 
-        persona_ids = cast(list[str], d.pop("personaIds", UNSET))
+        persona_ids = cast(list[str], d.pop("persona_ids", UNSET))
 
         name = d.pop("name", UNSET)
 

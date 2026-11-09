@@ -46,8 +46,8 @@ class GameState:
             {
                 "game": game,
                 "state": state,
-                "gameState": game_state,
-                "hasProfile": has_profile,
+                "game_state": game_state,
+                "has_profile": has_profile,
             }
         )
 
@@ -64,9 +64,9 @@ class GameState:
 
         state = GameStateState.from_dict(d.pop("state"))
 
-        game_state = GameStateGameState.from_dict(d.pop("gameState"))
+        game_state = GameStateGameState.from_dict(d.pop("game_state"))
 
-        has_profile = d.pop("hasProfile")
+        has_profile = d.pop("has_profile")
 
         game_state = cls(
             game=game,

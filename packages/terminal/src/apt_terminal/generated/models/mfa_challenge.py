@@ -39,7 +39,7 @@ class MfaChallenge:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "mfaRequired": mfa_required,
+                "mfa_required": mfa_required,
                 "token": token,
                 "methods": methods,
             }
@@ -50,7 +50,7 @@ class MfaChallenge:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        mfa_required = d.pop("mfaRequired")
+        mfa_required = d.pop("mfa_required")
 
         token = d.pop("token")
 

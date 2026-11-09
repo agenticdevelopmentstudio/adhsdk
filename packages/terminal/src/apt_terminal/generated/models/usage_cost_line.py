@@ -101,22 +101,22 @@ class UsageCostLine:
         field_dict.update(
             {
                 "id": id,
-                "callId": call_id,
-                "occurredAt": occurred_at,
+                "call_id": call_id,
+                "occurred_at": occurred_at,
                 "category": category,
                 "provider": provider,
                 "sku": sku,
                 "quantities": quantities,
-                "costMicros": cost_micros,
-                "paidBy": paid_by,
+                "cost_micros": cost_micros,
+                "paid_by": paid_by,
                 "partial": partial,
                 "attempt": attempt,
             }
         )
         if ecosystem_id is not UNSET:
-            field_dict["ecosystemId"] = ecosystem_id
+            field_dict["ecosystem_id"] = ecosystem_id
         if unit_prices is not UNSET:
-            field_dict["unitPrices"] = unit_prices
+            field_dict["unit_prices"] = unit_prices
 
         return field_dict
 
@@ -130,9 +130,9 @@ class UsageCostLine:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        call_id = UUID(d.pop("callId"))
+        call_id = UUID(d.pop("call_id"))
 
-        occurred_at = d.pop("occurredAt")
+        occurred_at = d.pop("occurred_at")
 
         category = UsageCostLineCategory(d.pop("category"))
 
@@ -147,9 +147,9 @@ class UsageCostLine:
                 return data
             return cast(int | None, data)
 
-        cost_micros = _parse_cost_micros(d.pop("costMicros"))
+        cost_micros = _parse_cost_micros(d.pop("cost_micros"))
 
-        paid_by = UsageCostLinePaidBy(d.pop("paidBy"))
+        paid_by = UsageCostLinePaidBy(d.pop("paid_by"))
 
         partial = d.pop("partial")
 
@@ -170,7 +170,7 @@ class UsageCostLine:
                 pass
             return cast(None | Unset | UUID, data)
 
-        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId", UNSET))
+        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystem_id", UNSET))
 
         def _parse_unit_prices(data: object) -> None | Unset | UsageCostLineUnitPricesType0:
             if data is None:
@@ -187,7 +187,7 @@ class UsageCostLine:
                 pass
             return cast(None | Unset | UsageCostLineUnitPricesType0, data)
 
-        unit_prices = _parse_unit_prices(d.pop("unitPrices", UNSET))
+        unit_prices = _parse_unit_prices(d.pop("unit_prices", UNSET))
 
         usage_cost_line = cls(
             id=id,

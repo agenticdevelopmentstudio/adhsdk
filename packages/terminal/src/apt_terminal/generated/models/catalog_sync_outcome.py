@@ -51,9 +51,9 @@ class CatalogSyncOutcome:
             {
                 "source": source,
                 "ok": ok,
-                "templatesTouched": templates_touched,
-                "modelsUpserted": models_upserted,
-                "modelsDeleted": models_deleted,
+                "templates_touched": templates_touched,
+                "models_upserted": models_upserted,
+                "models_deleted": models_deleted,
             }
         )
         if error is not UNSET:
@@ -68,11 +68,11 @@ class CatalogSyncOutcome:
 
         ok = d.pop("ok")
 
-        templates_touched = d.pop("templatesTouched")
+        templates_touched = d.pop("templates_touched")
 
-        models_upserted = d.pop("modelsUpserted")
+        models_upserted = d.pop("models_upserted")
 
-        models_deleted = d.pop("modelsDeleted")
+        models_deleted = d.pop("models_deleted")
 
         error = d.pop("error", UNSET)
 

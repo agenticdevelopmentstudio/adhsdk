@@ -36,9 +36,9 @@ class ClientAuthRegistration:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "clientId": client_id,
-                "allowedReturnOrigins": allowed_return_origins,
-                "redirectUris": redirect_uris,
+                "client_id": client_id,
+                "allowed_return_origins": allowed_return_origins,
+                "redirect_uris": redirect_uris,
             }
         )
 
@@ -47,11 +47,11 @@ class ClientAuthRegistration:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        client_id = d.pop("clientId")
+        client_id = d.pop("client_id")
 
-        allowed_return_origins = cast(list[str], d.pop("allowedReturnOrigins"))
+        allowed_return_origins = cast(list[str], d.pop("allowed_return_origins"))
 
-        redirect_uris = cast(list[str], d.pop("redirectUris"))
+        redirect_uris = cast(list[str], d.pop("redirect_uris"))
 
         client_auth_registration = cls(
             client_id=client_id,

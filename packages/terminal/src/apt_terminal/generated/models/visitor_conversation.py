@@ -21,8 +21,8 @@ class VisitorConversation:
         persona_slug (None | str):
         persona_id (None | str):
         state (VisitorConversationState):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -31,8 +31,8 @@ class VisitorConversation:
     persona_slug: None | str
     persona_id: None | str
     state: VisitorConversationState
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -50,9 +50,9 @@ class VisitorConversation:
 
         state = self.state.value
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -61,11 +61,11 @@ class VisitorConversation:
                 "id": id,
                 "title": title,
                 "model": model,
-                "personaSlug": persona_slug,
-                "personaId": persona_id,
+                "persona_slug": persona_slug,
+                "persona_id": persona_id,
                 "state": state,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -85,20 +85,20 @@ class VisitorConversation:
                 return data
             return cast(None | str, data)
 
-        persona_slug = _parse_persona_slug(d.pop("personaSlug"))
+        persona_slug = _parse_persona_slug(d.pop("persona_slug"))
 
         def _parse_persona_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        persona_id = _parse_persona_id(d.pop("personaId"))
+        persona_id = _parse_persona_id(d.pop("persona_id"))
 
         state = VisitorConversationState(d.pop("state"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         visitor_conversation = cls(
             id=id,
@@ -107,8 +107,8 @@ class VisitorConversation:
             persona_slug=persona_slug,
             persona_id=persona_id,
             state=state,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         visitor_conversation.additional_properties = d

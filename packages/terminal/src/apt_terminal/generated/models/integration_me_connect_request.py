@@ -37,8 +37,8 @@ class IntegrationMeConnectRequest:
         field_dict.update(
             {
                 "type": type_,
-                "providerId": provider_id,
-                "serviceType": service_type,
+                "provider_id": provider_id,
+                "service_type": service_type,
             }
         )
 
@@ -49,9 +49,9 @@ class IntegrationMeConnectRequest:
         d = dict(src_dict)
         type_ = d.pop("type")
 
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
-        service_type = d.pop("serviceType")
+        service_type = d.pop("service_type")
 
         integration_me_connect_request = cls(
             type_=type_,

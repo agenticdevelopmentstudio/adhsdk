@@ -18,8 +18,8 @@ class AuthUserMethod:
         provider (str):
         provider_id (None | str):
         has_credential (bool):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -27,8 +27,8 @@ class AuthUserMethod:
     provider: str
     provider_id: None | str
     has_credential: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,21 +43,21 @@ class AuthUserMethod:
 
         has_credential = self.has_credential
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "userId": user_id,
+                "user_id": user_id,
                 "provider": provider,
-                "providerId": provider_id,
-                "hasCredential": has_credential,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "provider_id": provider_id,
+                "has_credential": has_credential,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -68,7 +68,7 @@ class AuthUserMethod:
         d = dict(src_dict)
         id = d.pop("id")
 
-        user_id = d.pop("userId")
+        user_id = d.pop("user_id")
 
         provider = d.pop("provider")
 
@@ -77,13 +77,13 @@ class AuthUserMethod:
                 return data
             return cast(None | str, data)
 
-        provider_id = _parse_provider_id(d.pop("providerId"))
+        provider_id = _parse_provider_id(d.pop("provider_id"))
 
-        has_credential = d.pop("hasCredential")
+        has_credential = d.pop("has_credential")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         auth_user_method = cls(
             id=id,
@@ -91,8 +91,8 @@ class AuthUserMethod:
             provider=provider,
             provider_id=provider_id,
             has_credential=has_credential,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         auth_user_method.additional_properties = d

@@ -41,8 +41,8 @@ class AdminNotesReconcileBody:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "subjectTable": subject_table,
-                "subjectId": subject_id,
+                "subject_table": subject_table,
+                "subject_id": subject_id,
                 "notes": notes,
             }
         )
@@ -54,9 +54,9 @@ class AdminNotesReconcileBody:
         from ..models.admin_note_input import AdminNoteInput
 
         d = dict(src_dict)
-        subject_table = d.pop("subjectTable")
+        subject_table = d.pop("subject_table")
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
         notes = []
         _notes = d.pop("notes")

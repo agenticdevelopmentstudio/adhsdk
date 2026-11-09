@@ -34,7 +34,7 @@ class FriendEntry:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "friendId": friend_id,
+                "friend_id": friend_id,
                 "friendship": friendship,
             }
         )
@@ -46,7 +46,7 @@ class FriendEntry:
         from ..models.friendship import Friendship
 
         d = dict(src_dict)
-        friend_id = d.pop("friendId")
+        friend_id = d.pop("friend_id")
 
         friendship = Friendship.from_dict(d.pop("friendship"))
 

@@ -32,7 +32,7 @@ class Invitation:
         accepted_customer_id (None | str):
         message_log_id (None | str):
         admin_note (None | str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -50,7 +50,7 @@ class Invitation:
     accepted_customer_id: None | str
     message_log_id: None | str
     admin_note: None | str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -88,28 +88,28 @@ class Invitation:
         admin_note: None | str
         admin_note = self.admin_note
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "pendingUserId": pending_user_id,
+                "ecosystem_id": ecosystem_id,
+                "pending_user_id": pending_user_id,
                 "name": name,
                 "channel": channel,
                 "destination": destination,
-                "tokenHash": token_hash,
+                "token_hash": token_hash,
                 "status": status,
-                "sentBy": sent_by,
-                "sentAt": sent_at,
-                "expiresAt": expires_at,
-                "acceptedAt": accepted_at,
-                "acceptedCustomerId": accepted_customer_id,
-                "messageLogId": message_log_id,
-                "adminNote": admin_note,
-                "createdAt": created_at,
+                "sent_by": sent_by,
+                "sent_at": sent_at,
+                "expires_at": expires_at,
+                "accepted_at": accepted_at,
+                "accepted_customer_id": accepted_customer_id,
+                "message_log_id": message_log_id,
+                "admin_note": admin_note,
+                "created": created,
             }
         )
 
@@ -120,9 +120,9 @@ class Invitation:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        pending_user_id = d.pop("pendingUserId")
+        pending_user_id = d.pop("pending_user_id")
 
         name = d.pop("name")
 
@@ -130,45 +130,45 @@ class Invitation:
 
         destination = d.pop("destination")
 
-        token_hash = d.pop("tokenHash")
+        token_hash = d.pop("token_hash")
 
         status = InvitationStatus(d.pop("status"))
 
-        sent_by = d.pop("sentBy")
+        sent_by = d.pop("sent_by")
 
-        sent_at = d.pop("sentAt")
+        sent_at = d.pop("sent_at")
 
-        expires_at = d.pop("expiresAt")
+        expires_at = d.pop("expires_at")
 
         def _parse_accepted_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        accepted_at = _parse_accepted_at(d.pop("acceptedAt"))
+        accepted_at = _parse_accepted_at(d.pop("accepted_at"))
 
         def _parse_accepted_customer_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        accepted_customer_id = _parse_accepted_customer_id(d.pop("acceptedCustomerId"))
+        accepted_customer_id = _parse_accepted_customer_id(d.pop("accepted_customer_id"))
 
         def _parse_message_log_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        message_log_id = _parse_message_log_id(d.pop("messageLogId"))
+        message_log_id = _parse_message_log_id(d.pop("message_log_id"))
 
         def _parse_admin_note(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        admin_note = _parse_admin_note(d.pop("adminNote"))
+        admin_note = _parse_admin_note(d.pop("admin_note"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         invitation = cls(
             id=id,
@@ -186,7 +186,7 @@ class Invitation:
             accepted_customer_id=accepted_customer_id,
             message_log_id=message_log_id,
             admin_note=admin_note,
-            created_at=created_at,
+            created=created,
         )
 
         invitation.additional_properties = d

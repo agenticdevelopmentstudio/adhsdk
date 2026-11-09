@@ -94,19 +94,19 @@ class ChatDefinitionUpdate:
         if state is not UNSET:
             field_dict["state"] = state
         if max_participants is not UNSET:
-            field_dict["maxParticipants"] = max_participants
+            field_dict["max_participants"] = max_participants
         if allow_invites is not UNSET:
-            field_dict["allowInvites"] = allow_invites
+            field_dict["allow_invites"] = allow_invites
         if invite_policy is not UNSET:
-            field_dict["invitePolicy"] = invite_policy
+            field_dict["invite_policy"] = invite_policy
         if user_configurable is not UNSET:
-            field_dict["userConfigurable"] = user_configurable
+            field_dict["user_configurable"] = user_configurable
         if persona_reply_policy is not UNSET:
-            field_dict["personaReplyPolicy"] = persona_reply_policy
+            field_dict["persona_reply_policy"] = persona_reply_policy
         if allow_added_personas is not UNSET:
-            field_dict["allowAddedPersonas"] = allow_added_personas
+            field_dict["allow_added_personas"] = allow_added_personas
         if persona_ids is not UNSET:
-            field_dict["personaIds"] = persona_ids
+            field_dict["persona_ids"] = persona_ids
         if slug is not UNSET:
             field_dict["slug"] = slug
 
@@ -126,29 +126,29 @@ class ChatDefinitionUpdate:
         else:
             state = ChatDefinitionUpdateState(_state)
 
-        max_participants = d.pop("maxParticipants", UNSET)
+        max_participants = d.pop("max_participants", UNSET)
 
-        allow_invites = d.pop("allowInvites", UNSET)
+        allow_invites = d.pop("allow_invites", UNSET)
 
-        _invite_policy = d.pop("invitePolicy", UNSET)
+        _invite_policy = d.pop("invite_policy", UNSET)
         invite_policy: ChatDefinitionUpdateInvitePolicy | Unset
         if isinstance(_invite_policy, Unset):
             invite_policy = UNSET
         else:
             invite_policy = ChatDefinitionUpdateInvitePolicy(_invite_policy)
 
-        user_configurable = d.pop("userConfigurable", UNSET)
+        user_configurable = d.pop("user_configurable", UNSET)
 
-        _persona_reply_policy = d.pop("personaReplyPolicy", UNSET)
+        _persona_reply_policy = d.pop("persona_reply_policy", UNSET)
         persona_reply_policy: ChatDefinitionUpdatePersonaReplyPolicy | Unset
         if isinstance(_persona_reply_policy, Unset):
             persona_reply_policy = UNSET
         else:
             persona_reply_policy = ChatDefinitionUpdatePersonaReplyPolicy(_persona_reply_policy)
 
-        allow_added_personas = d.pop("allowAddedPersonas", UNSET)
+        allow_added_personas = d.pop("allow_added_personas", UNSET)
 
-        _persona_ids = d.pop("personaIds", UNSET)
+        _persona_ids = d.pop("persona_ids", UNSET)
         persona_ids: list[UUID] | Unset = UNSET
         if _persona_ids is not UNSET:
             persona_ids = []

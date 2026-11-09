@@ -42,7 +42,7 @@ class VisitorAwardBadge:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "badgeId": badge_id,
+                "badge_id": badge_id,
                 "name": name,
                 "icon": icon,
                 "tier": tier,
@@ -55,7 +55,7 @@ class VisitorAwardBadge:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        badge_id = d.pop("badgeId")
+        badge_id = d.pop("badge_id")
 
         name = d.pop("name")
 

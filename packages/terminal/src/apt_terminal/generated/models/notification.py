@@ -28,8 +28,8 @@ class Notification:
         data (NotificationData):
         status (NotificationStatus):
         is_read (bool):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         actor_id (None | str | Unset):
         entity_kind (None | str | Unset):
         entity_id (None | str | Unset):
@@ -46,8 +46,8 @@ class Notification:
     data: NotificationData
     status: NotificationStatus
     is_read: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     actor_id: None | str | Unset = UNSET
     entity_kind: None | str | Unset = UNSET
     entity_id: None | str | Unset = UNSET
@@ -73,9 +73,9 @@ class Notification:
 
         is_read = self.is_read
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         actor_id: None | str | Unset
         if isinstance(self.actor_id, Unset):
@@ -118,29 +118,29 @@ class Notification:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "userId": user_id,
+                "ecosystem_id": ecosystem_id,
+                "user_id": user_id,
                 "category": category,
                 "title": title,
                 "data": data,
                 "status": status,
-                "isRead": is_read,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "is_read": is_read,
+                "created": created,
+                "updated": updated,
             }
         )
         if actor_id is not UNSET:
-            field_dict["actorId"] = actor_id
+            field_dict["actor_id"] = actor_id
         if entity_kind is not UNSET:
-            field_dict["entityKind"] = entity_kind
+            field_dict["entity_kind"] = entity_kind
         if entity_id is not UNSET:
-            field_dict["entityId"] = entity_id
+            field_dict["entity_id"] = entity_id
         if body is not UNSET:
             field_dict["body"] = body
         if dedupe_key is not UNSET:
-            field_dict["dedupeKey"] = dedupe_key
+            field_dict["dedupe_key"] = dedupe_key
         if read_at is not UNSET:
-            field_dict["readAt"] = read_at
+            field_dict["read_at"] = read_at
 
         return field_dict
 
@@ -151,9 +151,9 @@ class Notification:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        user_id = d.pop("userId")
+        user_id = d.pop("user_id")
 
         category = d.pop("category")
 
@@ -163,11 +163,11 @@ class Notification:
 
         status = NotificationStatus(d.pop("status"))
 
-        is_read = d.pop("isRead")
+        is_read = d.pop("is_read")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_actor_id(data: object) -> None | str | Unset:
             if data is None:
@@ -176,7 +176,7 @@ class Notification:
                 return data
             return cast(None | str | Unset, data)
 
-        actor_id = _parse_actor_id(d.pop("actorId", UNSET))
+        actor_id = _parse_actor_id(d.pop("actor_id", UNSET))
 
         def _parse_entity_kind(data: object) -> None | str | Unset:
             if data is None:
@@ -185,7 +185,7 @@ class Notification:
                 return data
             return cast(None | str | Unset, data)
 
-        entity_kind = _parse_entity_kind(d.pop("entityKind", UNSET))
+        entity_kind = _parse_entity_kind(d.pop("entity_kind", UNSET))
 
         def _parse_entity_id(data: object) -> None | str | Unset:
             if data is None:
@@ -194,7 +194,7 @@ class Notification:
                 return data
             return cast(None | str | Unset, data)
 
-        entity_id = _parse_entity_id(d.pop("entityId", UNSET))
+        entity_id = _parse_entity_id(d.pop("entity_id", UNSET))
 
         def _parse_body(data: object) -> None | str | Unset:
             if data is None:
@@ -212,7 +212,7 @@ class Notification:
                 return data
             return cast(None | str | Unset, data)
 
-        dedupe_key = _parse_dedupe_key(d.pop("dedupeKey", UNSET))
+        dedupe_key = _parse_dedupe_key(d.pop("dedupe_key", UNSET))
 
         def _parse_read_at(data: object) -> None | str | Unset:
             if data is None:
@@ -221,7 +221,7 @@ class Notification:
                 return data
             return cast(None | str | Unset, data)
 
-        read_at = _parse_read_at(d.pop("readAt", UNSET))
+        read_at = _parse_read_at(d.pop("read_at", UNSET))
 
         notification = cls(
             id=id,
@@ -232,8 +232,8 @@ class Notification:
             data=data,
             status=status,
             is_read=is_read,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             actor_id=actor_id,
             entity_kind=entity_kind,
             entity_id=entity_id,

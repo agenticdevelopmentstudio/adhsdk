@@ -27,7 +27,7 @@ class ProjectActivity:
             Iteration CRUD itself appends nothing — this table is FK-bound to a project and an iteration has none — but
             committing a card to a box writes work_item.iteration_changed on that card's project, which is where the history
             is legible.
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         work_item_id (None | str | Unset): set when the event is card-scoped
         actor_kind (None | str | Unset):
         actor_id (None | str | Unset):
@@ -39,7 +39,7 @@ class ProjectActivity:
     ecosystem_id: str
     project_id: str
     action: str
-    created_at: str
+    created: int
     work_item_id: None | str | Unset = UNSET
     actor_kind: None | str | Unset = UNSET
     actor_id: None | str | Unset = UNSET
@@ -60,7 +60,7 @@ class ProjectActivity:
 
         action = self.action
 
-        created_at = self.created_at
+        created = self.created
 
         work_item_id: None | str | Unset
         if isinstance(self.work_item_id, Unset):
@@ -99,20 +99,20 @@ class ProjectActivity:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
                 "action": action,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if work_item_id is not UNSET:
-            field_dict["workItemId"] = work_item_id
+            field_dict["work_item_id"] = work_item_id
         if actor_kind is not UNSET:
-            field_dict["actorKind"] = actor_kind
+            field_dict["actor_kind"] = actor_kind
         if actor_id is not UNSET:
-            field_dict["actorId"] = actor_id
+            field_dict["actor_id"] = actor_id
         if actor_label is not UNSET:
-            field_dict["actorLabel"] = actor_label
+            field_dict["actor_label"] = actor_label
         if detail is not UNSET:
             field_dict["detail"] = detail
 
@@ -127,13 +127,13 @@ class ProjectActivity:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
         action = d.pop("action")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_work_item_id(data: object) -> None | str | Unset:
             if data is None:
@@ -142,7 +142,7 @@ class ProjectActivity:
                 return data
             return cast(None | str | Unset, data)
 
-        work_item_id = _parse_work_item_id(d.pop("workItemId", UNSET))
+        work_item_id = _parse_work_item_id(d.pop("work_item_id", UNSET))
 
         def _parse_actor_kind(data: object) -> None | str | Unset:
             if data is None:
@@ -151,7 +151,7 @@ class ProjectActivity:
                 return data
             return cast(None | str | Unset, data)
 
-        actor_kind = _parse_actor_kind(d.pop("actorKind", UNSET))
+        actor_kind = _parse_actor_kind(d.pop("actor_kind", UNSET))
 
         def _parse_actor_id(data: object) -> None | str | Unset:
             if data is None:
@@ -160,7 +160,7 @@ class ProjectActivity:
                 return data
             return cast(None | str | Unset, data)
 
-        actor_id = _parse_actor_id(d.pop("actorId", UNSET))
+        actor_id = _parse_actor_id(d.pop("actor_id", UNSET))
 
         def _parse_actor_label(data: object) -> None | str | Unset:
             if data is None:
@@ -169,7 +169,7 @@ class ProjectActivity:
                 return data
             return cast(None | str | Unset, data)
 
-        actor_label = _parse_actor_label(d.pop("actorLabel", UNSET))
+        actor_label = _parse_actor_label(d.pop("actor_label", UNSET))
 
         def _parse_detail(data: object) -> None | ProjectActivityDetailType0 | Unset:
             if data is None:
@@ -193,7 +193,7 @@ class ProjectActivity:
             ecosystem_id=ecosystem_id,
             project_id=project_id,
             action=action,
-            created_at=created_at,
+            created=created,
             work_item_id=work_item_id,
             actor_kind=actor_kind,
             actor_id=actor_id,

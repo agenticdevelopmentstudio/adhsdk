@@ -41,7 +41,7 @@ class MessagingSendResult:
             }
         )
         if provider_id is not UNSET:
-            field_dict["providerId"] = provider_id
+            field_dict["provider_id"] = provider_id
         if error is not UNSET:
             field_dict["error"] = error
 
@@ -52,7 +52,7 @@ class MessagingSendResult:
         d = dict(src_dict)
         status = MessagingSendResultStatus(d.pop("status"))
 
-        provider_id = d.pop("providerId", UNSET)
+        provider_id = d.pop("provider_id", UNSET)
 
         error = d.pop("error", UNSET)
 

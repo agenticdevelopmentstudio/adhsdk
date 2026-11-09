@@ -36,7 +36,7 @@ class IntegrationActionMediaItem:
             }
         )
         if alt_text is not UNSET:
-            field_dict["altText"] = alt_text
+            field_dict["alt_text"] = alt_text
 
         return field_dict
 
@@ -45,7 +45,7 @@ class IntegrationActionMediaItem:
         d = dict(src_dict)
         url = d.pop("url")
 
-        alt_text = d.pop("altText", UNSET)
+        alt_text = d.pop("alt_text", UNSET)
 
         integration_action_media_item = cls(
             url=url,

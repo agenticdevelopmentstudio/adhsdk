@@ -53,11 +53,11 @@ class RegistryPersonaToolCatalogItem:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "toolName": tool_name,
+                "tool_name": tool_name,
                 "source": source,
-                "displayName": display_name,
+                "display_name": display_name,
                 "description": description,
-                "readOnly": read_only,
+                "read_only": read_only,
                 "granted": granted,
                 "autonomous": autonomous,
             }
@@ -68,7 +68,7 @@ class RegistryPersonaToolCatalogItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        tool_name = d.pop("toolName")
+        tool_name = d.pop("tool_name")
 
         def _parse_source(data: object) -> None | str:
             if data is None:
@@ -77,11 +77,11 @@ class RegistryPersonaToolCatalogItem:
 
         source = _parse_source(d.pop("source"))
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
         description = d.pop("description")
 
-        read_only = d.pop("readOnly")
+        read_only = d.pop("read_only")
 
         granted = d.pop("granted")
 

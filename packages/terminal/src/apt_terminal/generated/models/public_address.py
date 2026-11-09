@@ -55,7 +55,7 @@ class PublicAddress:
                 "line2": line2,
                 "city": city,
                 "region": region,
-                "postalCode": postal_code,
+                "postal_code": postal_code,
                 "country": country,
             }
         )
@@ -75,7 +75,7 @@ class PublicAddress:
 
         region = d.pop("region")
 
-        postal_code = d.pop("postalCode")
+        postal_code = d.pop("postal_code")
 
         country = d.pop("country")
 
