@@ -114,7 +114,9 @@ public final class AIChatViewController: NSViewController, Themeable {
         self.pinsConfiguration = pinsConfiguration && configuration != nil
         let configs = UserSettings.aiProviderConfigurations.value
         self.configurations = configs
-        self.selectedIndex = configuration.flatMap { wanted in
+        let wanted = configuration
+            ?? PluginChatConfigProvider.defaultConfiguration(in: configs, manager: pluginManager)
+        self.selectedIndex = wanted.flatMap { wanted in
             configs.firstIndex { $0.id == wanted.id }
         } ?? (configs.isEmpty ? -1 : 0)
         super.init(nibName: nil, bundle: nil)
@@ -336,7 +338,10 @@ public final class AIChatViewController: NSViewController, Themeable {
         let previous = selectedConfiguration?.id
         configurations = UserSettings.aiProviderConfigurations.value
         let wanted = pinsConfiguration ? previous : (configuration?.id ?? previous)
-        selectedIndex = wanted.flatMap { id in configurations.firstIndex { $0.id == id } }
+        let fallback = pinsConfiguration ? nil
+            : PluginChatConfigProvider.defaultConfiguration(in: configurations, manager: pluginManager)?.id
+        selectedIndex = (wanted ?? fallback).flatMap { id in configurations.firstIndex { $0.id == id } }
+            ?? fallback.flatMap { id in configurations.firstIndex { $0.id == id } }
             ?? (configurations.isEmpty || pinsConfiguration ? -1 : 0)
         let sameProvider = previous != nil && selectedConfiguration?.id == previous
         // A different provider carries its own model, so drop any override and let
