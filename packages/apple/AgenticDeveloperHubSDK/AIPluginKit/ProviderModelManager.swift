@@ -210,9 +210,12 @@ public protocol ProviderModelManager: AnyObject {
 }
 
 /// The cache every manager shares: source cache key -> last loaded list.
+/// The live model lists every provider has loaded, by source cache key.
+/// Public so a view that names a model (an alias resolved against the list)
+/// can observe it and redraw when any refresh lands, wherever it started.
 @MainActor
-enum ProviderModelCache {
-    static let setting = UserSetting<[String: ProviderModelList]>(
+public enum ProviderModelCache {
+    public static let setting = UserSetting<[String: ProviderModelList]>(
         "aiplugin.providerModelCache", default: [:])
 }
 
