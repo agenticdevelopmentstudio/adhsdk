@@ -196,9 +196,21 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
     func webView(
         _ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction
     ) async -> WKNavigationActionPolicy {
-        guard navigationAction.navigationType == .linkActivated || navigationAction.targetFrame == nil,
-              let url = navigationAction.request.url else { return .allow }
-        NSWorkspace.shared.open(url)
-        return .cancel
+        guard let url = navigationAction.request.url else { return .cancel }
+        if navigationAction.navigationType == .linkActivated || navigationAction.targetFrame == nil {
+            NSWorkspace.shared.open(url)
+            return .cancel
+        }
+        // Only the reader's own `loadHTMLString` (an `about:` page) loads in the reader.
+        // Everything else a message can start by itself — a meta refresh, a form submit, a
+        // frame — would put a page the sender chose under the real message headers, with no
+        // address bar to give it away; the CSP and rule list block loads, not navigations,
+        // and both are gone once remote content is allowed.
+        return Self.isReaderOwnPage(url) ? .allow : .cancel
+    }
+
+    /// The page `loadHTMLString(_:baseURL: nil)` puts in the reader.
+    static func isReaderOwnPage(_ url: URL) -> Bool {
+        url.scheme?.lowercased() == "about"
     }
 }
