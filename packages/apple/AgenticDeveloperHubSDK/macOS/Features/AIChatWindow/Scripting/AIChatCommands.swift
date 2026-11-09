@@ -1,4 +1,5 @@
 import AppKit
+import AgenticDeveloperHubSDKCore
 
 @MainActor
 private var coordinator: AIChatCoordinator? {
@@ -37,8 +38,17 @@ public final class SendChatMessageCommand: MainActorScriptCommand, @unchecked Se
             scriptErrorString = "AI Chat is not available."
             return nil
         }
+        // Say what the fix is rather than build a chat that has nothing to talk to.
+        guard !UserSettings.aiProviderConfigurations.value.isEmpty else {
+            scriptErrorNumber = errOSACantAssign
+            scriptErrorString = "No AI connection is configured. Add one in Settings > AI Connections."
+            return nil
+        }
+        let createdChat = aiChat.windows.isEmpty
         aiChat.ensureWindow()
         guard let viewModel = aiChat.viewModel else {
+            // Never leave behind a hidden chat this command made and cannot use.
+            if createdChat { aiChat.windowController?.close() }
             scriptErrorNumber = errOSACantAssign
             scriptErrorString = "Could not create chat view model."
             return nil
