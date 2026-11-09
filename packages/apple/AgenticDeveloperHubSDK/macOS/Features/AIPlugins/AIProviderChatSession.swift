@@ -40,9 +40,11 @@ public final class AIProviderChatSession: ObservableObject {
         self.backend = nil
         let session = LocalChatSession(
             resolvePlugin: { [weak provider] in
-                await MainActor.run {
-                    guard let identifier = provider?.selectedPluginIdentifier, !identifier.isEmpty,
-                          let plugin = try? pluginManager.loadPlugin(identifier: identifier) else { return nil }
+                try await MainActor.run {
+                    guard let identifier = provider?.selectedPluginIdentifier, !identifier.isEmpty else { return nil }
+                    // Thrown, not swallowed: the session reports why the chosen
+                    // connection's plugin would not load.
+                    let plugin = try pluginManager.loadPlugin(identifier: identifier)
                     return PromptedToolCallingPlugin(wrapping: plugin)
                 }
             },
