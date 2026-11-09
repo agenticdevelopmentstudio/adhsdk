@@ -69,13 +69,17 @@ public enum ModelChooserContent {
     /// anything. The typed query is different: it only changes when someone
     /// types, and a model that doesn't match what they typed has no business at
     /// the top of the list (it used to stay there, selected, under any query).
+    ///
+    /// With a query, the rows come back best match first — prefix, then
+    /// contiguous run, then scattered letters (`ModelPickerItem.matchRank`) —
+    /// and in their listed order within each of those.
     public static func filter(_ items: [ModelPickerItem], query: String,
                               uses: Set<ModelUseFacet> = [],
                               descriptions: [String: String] = [:],
                               fit: FitFilter? = nil,
                               keeping: String = "") -> [ModelPickerItem] {
         let needle = query.trimmingCharacters(in: .whitespaces)
-        return items.filter { item in
+        let kept = items.filter { item in
             let matchesQuery = needle.isEmpty || item.matches(needle)
             if item.id == keeping, !keeping.isEmpty { return matchesQuery }
             if !uses.isEmpty {
@@ -85,6 +89,11 @@ public enum ModelChooserContent {
             if let fit, !fit.keeps(item.id) { return false }
             return matchesQuery
         }
+        guard !needle.isEmpty else { return kept }
+        return kept.enumerated()
+            .map { (rank: $0.element.matchRank(needle) ?? Int.max, order: $0.offset, item: $0.element) }
+            .sorted { ($0.rank, $0.order) < ($1.rank, $1.order) }
+            .map(\.item)
     }
 
     /// Capability badges — prefer the live server list (title-cased), else what the

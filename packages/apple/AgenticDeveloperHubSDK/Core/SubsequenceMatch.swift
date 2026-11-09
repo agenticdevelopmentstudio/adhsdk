@@ -38,6 +38,18 @@ public enum SubsequenceMatch {
         return result
     }
 
+    /// How well `needle` matches `haystack`, lower first: 0 when `haystack`
+    /// starts with it, 1 when it occurs as one contiguous run, 2 when its
+    /// characters are only scattered in order, nil when it does not match. A
+    /// list sorts on this so `gpt-5` puts `gpt-5-mini` above `gpt-3.5-turbo`,
+    /// whose letters merely happen to come in that order.
+    public static func rank(of needle: String, in haystack: String) -> Int? {
+        guard !needle.isEmpty else { return 0 }
+        if haystack.hasPrefix(needle) { return 0 }
+        if haystack.contains(needle) { return 1 }
+        return indices(of: needle, in: haystack) == nil ? nil : 2
+    }
+
     /// `indices(of:in:)` as `NSRange`s in `haystack`'s UTF-16 view, one per
     /// matched character, ready for an attributed string.
     public static func ranges(of needle: String, in haystack: String) -> [NSRange]? {
