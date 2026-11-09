@@ -517,7 +517,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // a tab never brought forward keeps the page it is waiting to load.
         let destinations = tabs.map { tab -> URL? in
             let shown = tab.engine.url.flatMap { $0 == Self.blankPage ? nil : $0 }
-            return tab.engine.heldLoadURL ?? shown ?? tab.pendingURL
+            return tab.engine.heldLoadURL ?? shown ?? tab.requestedURL ?? tab.pendingURL
         }
         for tab in tabs {
             tab.engine.teardown()
@@ -560,7 +560,7 @@ open class WebBrowserPaneViewController: NSViewController {
         if refocus { view.window?.makeFirstResponder(engine.view) }
         let destination = activeTab.pendingURL ?? restorationURL
         activeTab.pendingURL = nil
-        engine.load(destination)
+        startLoad(destination, in: activeTab)
     }
 
     /// What every engine the pane makes now is made from.
@@ -786,7 +786,11 @@ open class WebBrowserPaneViewController: NSViewController {
     /// redirect chain or a fragment change reports several — and only when it
     /// differs from what is remembered, since the store is a database write.
     private func rememberAddress() {
-        let address = engine.url.flatMap { $0 == Self.blankPage ? nil : $0.absoluteString }
+        // Until the first commit an engine reports no page at all; the page it
+        // was asked for stands in, and with neither there is nothing new to
+        // say — erasing the stored address then would lose it to a relaunch.
+        guard let current = engine.url ?? activeTab.requestedURL else { return }
+        let address = current == Self.blankPage ? nil : current.absoluteString
         guard address != store.paneStateValue(forKey: Self.addressKey) else { return }
         store.setPaneStateValue(address, forKey: Self.addressKey)
     }
@@ -832,7 +836,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Navigates the pane. Public so a host — a link in a note, a scripting
     /// command — can point it somewhere without going through the field.
     public func load(_ url: URL) {
-        engine.load(url)
+        startLoad(url, in: activeTab)
         view.window?.makeFirstResponder(engine.view)
     }
 
@@ -876,7 +880,7 @@ open class WebBrowserPaneViewController: NSViewController {
         builtAutomation?.retarget(to: engine)
         // A half-typed address was meant for the tab being left.
         if addressField.currentEditor() != nil { addressField.abortEditing() }
-        let shown = engine.url ?? tab.pendingURL
+        let shown = engine.url ?? tab.requestedURL ?? tab.pendingURL
         addressField.stringValue = shown.map { $0 == Self.blankPage ? "" : $0.absoluteString } ?? ""
         browserEngineHistoryDidChange(engine)
         announceTitleChange()
@@ -895,6 +899,13 @@ open class WebBrowserPaneViewController: NSViewController {
     private func loadPendingPage(of tab: BrowserTab) {
         guard let url = tab.pendingURL else { return }
         tab.pendingURL = nil
+        startLoad(url, in: tab)
+    }
+
+    /// Loads `url` in `tab`, remembering it as the tab's page until the
+    /// engine commits one of its own.
+    private func startLoad(_ url: URL, in tab: BrowserTab) {
+        tab.requestedURL = url
         tab.engine.load(url)
     }
 
@@ -936,7 +947,7 @@ open class WebBrowserPaneViewController: NSViewController {
             if pageClosedItself { replaceEngine(of: tab) }
             tab.storedTitle = nil
             tab.pendingURL = nil
-            tab.engine.load(Self.blankPage)
+            startLoad(Self.blankPage, in: tab)
             retitle(tab)
             persistTabs()
             return
@@ -981,8 +992,8 @@ open class WebBrowserPaneViewController: NSViewController {
     private func persistTabs() {
         let stored = StoredBrowserTabs(
             tabs: tabs.map { tab in
-                let url = tab.engine.url.flatMap { $0 == Self.blankPage ? nil : $0.absoluteString }
-                    ?? tab.pendingURL.flatMap { $0 == Self.blankPage ? nil : $0.absoluteString }
+                let url = [tab.engine.url, tab.requestedURL, tab.pendingURL].lazy
+                    .compactMap { $0 }.first { $0 != Self.blankPage }?.absoluteString
                 let title = tab.engine.title.flatMap { $0.isEmpty ? nil : $0 } ?? tab.storedTitle
                 return StoredBrowserTab(url: url, title: title)
             },
@@ -1072,6 +1083,8 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         recordNavigation("commit", of: engine)
         if let tab = tab(for: engine) {
             tab.storedTitle = nil
+            // The engine names its own page from here on.
+            tab.requestedURL = nil
             retitle(tab)
         }
         persistTabs()
@@ -1418,6 +1431,10 @@ private final class BrowserTab {
     let content = BrowserTabContentViewController()
     /// The page to load when the tab is first brought forward.
     var pendingURL: URL?
+    /// The page the tab was last told to load, until its engine commits a
+    /// page: an engine reports no URL before then, and the pane's address
+    /// and stored tabs must not read that gap as "no page".
+    var requestedURL: URL?
     /// The title it was stored under, shown until its page loads.
     var storedTitle: String?
     /// The tab whose page opened this one, which comes forward again when
