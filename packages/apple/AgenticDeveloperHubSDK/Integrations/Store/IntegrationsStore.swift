@@ -11,10 +11,13 @@ public struct MessageQuery: Codable, Sendable, Equatable {
     public var labelIds: [String]
     public var limit: Int
     public var offset: Int
+    /// Only rows after this one in the query's newest-first order. A page that resumes from
+    /// the last row it was given cannot skip or repeat rows when rows ahead of it change.
+    public var after: MessageKey?
 
     public init(
         connectionId: String, since: String? = nil, until: String? = nil, labelIds: [String] = [],
-        limit: Int = 50, offset: Int = 0
+        limit: Int = 50, offset: Int = 0, after: MessageKey? = nil
     ) {
         self.connectionId = connectionId
         self.since = since
@@ -22,6 +25,18 @@ public struct MessageQuery: Codable, Sendable, Equatable {
         self.labelIds = labelIds
         self.limit = limit
         self.offset = offset
+        self.after = after
+    }
+}
+
+/// A message's place in the newest-first order: `internal_date DESC, id`.
+public struct MessageKey: Codable, Sendable, Equatable {
+    public var internalDate: String
+    public var id: String
+
+    public init(internalDate: String, id: String) {
+        self.internalDate = internalDate
+        self.id = id
     }
 }
 
@@ -275,6 +290,10 @@ public final class IntegrationsStore: Sendable {
         for label in query.labelIds {
             clauses.append("EXISTS (SELECT 1 FROM json_each(label_ids) WHERE value = ?)")
             arguments.append(label)
+        }
+        if let after = query.after {
+            clauses.append("(internal_date < ? OR (internal_date = ? AND id > ?))")
+            arguments.append(contentsOf: [after.internalDate, after.internalDate, after.id])
         }
         arguments.append(max(query.limit, 0))
         arguments.append(max(query.offset, 0))

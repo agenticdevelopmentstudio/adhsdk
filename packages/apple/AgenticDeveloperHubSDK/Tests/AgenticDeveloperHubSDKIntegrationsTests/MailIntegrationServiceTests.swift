@@ -704,7 +704,7 @@ struct MailIntegrationServiceTests {
             return
         }
         #expect(first.messages.map(\.gmailId) == ["w1", "w2"])
-        #expect(first.nextCursor == "2")
+        #expect(first.nextCursor != nil)
         #expect(first.messages.allSatisfy { $0.bodyText == nil && $0.bodyHtml == nil })
         #expect(first.messages.first?.labelNames == ["Work"])
         #expect(first.messages.first?.account == account.email)
@@ -715,7 +715,7 @@ struct MailIntegrationServiceTests {
             return
         }
         #expect(second.messages.map(\.gmailId) == ["w3", "w4"])
-        #expect(second.nextCursor == "4")
+        #expect(second.nextCursor != nil)
 
         filter.cursor = second.nextCursor
         guard case .messages(let third) = await harness.service.handle(.listMessages(filter)) else {

@@ -76,6 +76,19 @@ struct IntegrationsStoreTests {
         #expect(page.map(\.externalId) == ["e4", "e3"])
     }
 
+    @Test("a query resumes after a key, unmoved by rows that leave the filter ahead of it")
+    func queryResumesAfterKey() throws {
+        let (store, _) = try makeStore()
+        try store.upsertMessages((1...5).map { message("e\($0)", day: $0) })
+        let first = try store.messages(MessageQuery(connectionId: "c1", limit: 2))
+        #expect(first.map(\.externalId) == ["e5", "e4"])
+        try store.tombstoneMessages(connectionId: "c1", externalIds: ["e5"])
+        let last = try #require(first.last)
+        let next = try store.messages(MessageQuery(
+            connectionId: "c1", limit: 2, after: MessageKey(internalDate: last.internalDate, id: last.id)))
+        #expect(next.map(\.externalId) == ["e3", "e2"])
+    }
+
     @Test("tombstoning by class removes only that class")
     func tombstoneByClassRemovesOnlyThatClass() throws {
         let (store, _) = try makeStore()

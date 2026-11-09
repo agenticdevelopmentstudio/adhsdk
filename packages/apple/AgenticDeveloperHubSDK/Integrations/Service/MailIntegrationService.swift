@@ -456,26 +456,36 @@ public actor MailIntegrationService {
 
     private func listMessages(_ filter: MailMessageFilter) throws -> MailMessagePage {
         let owner = try connection(filter.account)
-        let offset: Int
-        if let cursor = filter.cursor {
-            guard let value = Int(cursor), value >= 0 else { throw RequestFailure("invalid cursor: \(cursor)") }
-            offset = value
-        } else {
-            offset = 0
-        }
+        let after = try filter.cursor.map(Self.decodeCursor)
         let limit = MailMessageFilter.clamp(filter.limit)
         let labels = try store.labels(connectionId: owner.id)
         let labelIds = try Self.resolveLabels(filter.labels, in: labels)
         // One extra row tells whether another page follows.
         let rows = try store.messages(MessageQuery(
             connectionId: owner.id, since: filter.since, until: filter.until, labelIds: labelIds,
-            limit: limit + 1, offset: offset))
+            limit: limit + 1, after: after))
         let names = Self.labelNames(labels)
         let messages = rows.prefix(limit).map {
             Self.mailMessage($0, account: owner.externalAccountId, names: names,
                              includeBodies: filter.includeBodies)
         }
-        return MailMessagePage(messages: messages, nextCursor: rows.count > limit ? String(offset + limit) : nil)
+        let last = rows.count > limit ? rows.prefix(limit).last : nil
+        return MailMessagePage(messages: messages, nextCursor: last.map(Self.encodeCursor))
+    }
+
+    /// A page cursor names the last row it returned, not a count of rows to skip: a sync or a
+    /// label change between pages moves rows in and out of the filter, and an offset would
+    /// then skip or repeat messages.
+    static func encodeCursor(_ row: EmailMessage) -> String {
+        "\(row.internalDate)|\(row.id)"
+    }
+
+    static func decodeCursor(_ cursor: String) throws -> MessageKey {
+        let parts = cursor.split(separator: "|", maxSplits: 1, omittingEmptySubsequences: false)
+        guard parts.count == 2, !parts[0].isEmpty, !parts[1].isEmpty else {
+            throw RequestFailure("invalid cursor: \(cursor)")
+        }
+        return MessageKey(internalDate: String(parts[0]), id: String(parts[1]))
     }
 
     private func modifyLabels(
