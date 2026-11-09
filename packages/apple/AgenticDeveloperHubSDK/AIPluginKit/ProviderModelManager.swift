@@ -1,11 +1,22 @@
+import CryptoKit
 import Foundation
 import AgenticDeveloperHubSDKCore
+
+/// A short, one-way tag for a credential, so a cache key can tell two accounts
+/// apart without the cache (plain user settings) ever holding the secret.
+func credentialTag(_ credential: String?) -> String {
+    let trimmed = credential?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    guard !trimmed.isEmpty else { return "none" }
+    let digest = SHA256.hash(data: Data(trimmed.utf8))
+    return digest.prefix(8).map { String(format: "%02x", $0) }.joined()
+}
 
 /// Somewhere a provider's current model list can be loaded from.
 public protocol ProviderModelSource: Sendable {
     /// Identifies what this source lists, so its result can be cached and shown
-    /// again before the next fetch (an endpoint and, for a keyed API, nothing
-    /// secret — the same account sees the same models).
+    /// again before the next fetch: the endpoint and, for a keyed API, the auth
+    /// mode and a one-way tag of the credential, because different accounts on
+    /// one endpoint can see different models. Never the secret itself.
     var cacheKey: String { get }
     /// Every cache entry this source's results can be stored under, the most
     /// authoritative first. One key for a single source; a fallback chain names
@@ -40,7 +51,9 @@ public struct AnthropicModelsSource: ProviderModelSource {
         self.oauth = oauth
     }
 
-    public var cacheKey: String { "anthropic-api|\(baseURL)" }
+    public var cacheKey: String {
+        "anthropic-api|\(baseURL)|\(oauth ? "oauth" : "key")|\(credentialTag(apiKey))"
+    }
 
     public func fetch() async -> ProviderModelList? {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -136,7 +149,7 @@ public struct OpenAICompatibleModelsSource: ProviderModelSource {
         self.apiKey = apiKey
     }
 
-    public var cacheKey: String { "openai|\(baseURL)" }
+    public var cacheKey: String { "openai|\(baseURL)|\(credentialTag(apiKey))" }
 
     public func fetch() async -> ProviderModelList? {
         let ids = await OpenAIModelCatalog.fetch(baseURL: baseURL, apiKey: apiKey)
