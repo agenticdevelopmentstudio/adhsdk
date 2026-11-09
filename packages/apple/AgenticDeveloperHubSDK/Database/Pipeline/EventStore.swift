@@ -54,6 +54,41 @@ public final class EventStore: @unchecked Sendable {
     private let stateLock = NSLock()
     private var liveWriters = 0
     private var bulkActive = false
+    private var trimBatchCarry: Int?
+
+    /// The batch size the last trim ended on, after shrinking on the write
+    /// deadline or growing back; the next trim starts from it, not its full
+    /// batch, so a size the disk could not take is not retried every pass.
+    var carriedTrimBatch: Int? {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return trimBatchCarry
+        }
+        set {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            trimBatchCarry = newValue
+        }
+    }
+
+    private var vacuumStepCarry: Int?
+
+    /// The vacuum step size the last incremental vacuum ended on; the next one
+    /// starts from it, so a step the disk could not finish inside the write
+    /// deadline is not rolled back again at the start of every pass.
+    var carriedVacuumStep: Int? {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return vacuumStepCarry
+        }
+        set {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            vacuumStepCarry = newValue
+        }
+    }
 
     private static let indexes: [(name: String, sql: String)] = [
         ("events_session_time", "CREATE INDEX IF NOT EXISTS events_session_time ON events(provider, session_id, time)"),
@@ -67,6 +102,10 @@ public final class EventStore: @unchecked Sendable {
          "CREATE INDEX IF NOT EXISTS messages_session_time ON messages(provider, session_id, time)"),
         // The Conversations feed's merged read: every session's messages newest first.
         ("messages_time", "CREATE INDEX IF NOT EXISTS messages_time ON messages(provider, time)"),
+        // The trim's ended-before test (`EventStore.endedBefore`, the same expression
+        // word for word): only the sessions last seen before the cutoff are read.
+        ("sessions_last_seen",
+         "CREATE INDEX IF NOT EXISTS sessions_last_seen ON sessions(MAX(COALESCE(ended_at, as_of), as_of))"),
         // A PostToolUse finding its PreToolUse by tool_use_id. Partial on
         // json_valid(attrs) so the build never fails on a malformed row; a reader
         // must repeat that predicate and the exact expression for the planner to
@@ -278,9 +317,18 @@ public final class EventStore: @unchecked Sendable {
         }
     }
 
-    /// The `store_meta` value under `key`, or nil when it is not set.
+    /// The `store_meta` value under `key`, or nil when it is not set. Read on a
+    /// short-lived read-only connection of its own, never one of the pool's
+    /// readers: maintenance reads can hold all three for minutes, and status
+    /// readers (`/storage`, the backfill's progress) must still answer. The
+    /// store has this file open, so its `-wal` and `-shm` already exist and the
+    /// open creates nothing; it sees every committed write, as a pool read does.
     public func metaValue(forKey key: String) throws -> String? {
-        try pool.read { conn in
+        var configuration = Configuration()
+        configuration.readonly = true
+        let queue = try DatabaseQueue(path: path, configuration: configuration)
+        defer { try? queue.close() }
+        return try queue.read { conn in
             try String.fetchOne(conn, sql: "SELECT value FROM store_meta WHERE key = ?", arguments: [key])
         }
     }
