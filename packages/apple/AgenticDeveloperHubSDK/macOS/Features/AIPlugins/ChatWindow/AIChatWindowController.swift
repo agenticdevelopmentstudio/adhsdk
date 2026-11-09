@@ -38,7 +38,7 @@ public final class AIChatWindowController: SingleWindowController, NSToolbarDele
         self.content = content
         self.index = index
         super.init(windowID: Self.windowID(index: index), contentViewController: content)
-        self.windowTitle = AIChatViewController.title(for: content.selection)
+        self.windowTitle = content.windowTitle
         // No `.fullSizeContentView`: there is no sidebar to run up under the
         // title bar, and the configuration rows would sit beneath the toolbar.
         // The transparent title bar over the themed window background is what
@@ -104,7 +104,7 @@ public final class AIChatWindowController: SingleWindowController, NSToolbarDele
         window.toolbarStyle = .unified
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
-        window.title = AIChatViewController.title(for: content.selection)
+        window.title = content.windowTitle
     }
 
     /// A new chat opens a cascade step down and right of the one in front,
@@ -130,7 +130,7 @@ public final class AIChatWindowController: SingleWindowController, NSToolbarDele
     }
 
     private func updateTitle() {
-        let title = AIChatViewController.title(for: content.selection)
+        let title = content.windowTitle
         windowTitle = title
         window?.title = title
     }
