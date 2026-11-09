@@ -54,6 +54,19 @@ final class DesktopSettingsAppTests: XCTestCase {
         XCTAssertFalse(isShown(controller.menuStyle.popUp, in: controller))
     }
 
+    func test_appearanceRows_alignTheirControlsAtTheTrailingEdge() {
+        let controller = makeController()
+        controller.view.frame = NSRect(x: 0, y: 0, width: 680, height: 460)
+        controller.view.layoutSubtreeIfNeeded()
+        let colorWell = controller.appearance.colorWell
+        let photo = controller.appearance.photoColumn
+        let colorMaxX = colorWell.convert(colorWell.bounds, to: controller.view).maxX
+        let photoMaxX = photo.convert(photo.bounds, to: controller.view).maxX
+        XCTAssertEqual(photoMaxX, colorMaxX, accuracy: 0.5)
+        // Pane inset 20, row inset 12, and the group box's 1pt border.
+        XCTAssertEqual(colorMaxX, 680 - 20 - 12 - 1, accuracy: 0.5)
+    }
+
     func test_selectingMenuBarRow_showsMenuStylePane() {
         let controller = makeController()
         controller.sidebar.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
