@@ -281,8 +281,9 @@ private final class ProviderConfigPanelViewController: ComposableSettings.Settin
             .removeDuplicates()
             .sink { [weak self] name in
                 guard let self, self.descriptor.title != name else { return }
+                // The Test Chat card observes the stored configurations itself; a
+                // refresh from here runs in willSet and reads the old name.
                 self.descriptor.title = name
-                self.chat.refresh()
                 self.onRenamed()
             }
     }
