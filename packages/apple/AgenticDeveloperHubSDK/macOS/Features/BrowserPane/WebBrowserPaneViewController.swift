@@ -1115,8 +1115,11 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// not the user's. Outside an action the same dismissal applies, since the
     /// pane shows no dialogs of its own; the answer is just not reported.
     public func browserEngine(_ engine: BrowserEngine, didRaise dialog: BrowserDialog) {
-        // The message is the page's words and stays out of the log.
-        let reported = builtAutomation?.isActionInFlight == true
+        // The message is the page's words and stays out of the log. Only the
+        // tab in front is the one the agent is driving: a background tab's
+        // dialog is dismissed all the same, but reported against the front
+        // tab's action it would be blamed on a page that never raised it.
+        let reported = isFront(engine) && builtAutomation?.isActionInFlight == true
         eventLog.record(
             channel: "dialog", event: dialog.kind.rawValue, decision: .info,
             detail: reported ? "dismissed, reported to the agent" : "dismissed")
