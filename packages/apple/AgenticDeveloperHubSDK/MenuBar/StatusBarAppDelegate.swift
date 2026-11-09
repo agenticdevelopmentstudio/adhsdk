@@ -459,11 +459,43 @@ public final class StatusBarAppDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
-    /// Show or hide an `exclamationmark.circle.fill` overlay in the
-    /// ``badgeLayout`` status corner of the status bar button. We keep the base image as a template (so AppKit
-    /// handles light/dark inversion) and layer the badge as a tinted subview,
-    /// which preserves its color without fighting the menubar's appearance
-    /// heuristics. `slot` retains the lazily-created subview between refreshes.
+    /// Side of ``statusBadgeImage(tint:accessibility:)``, in points.
+    static let statusBadgeSide: CGFloat = 12
+
+    /// The status badge: a white `!` on a `tint` disc, ringed in white.
+    ///
+    /// Pre-composed and non-template, so it never depends on the base image.
+    /// The status item's image may be a template (black or white with the bar)
+    /// or a coloured bitmap — a red glyph, say, where a bare red symbol would
+    /// vanish. The white ring keeps the disc's edge visible on any of them.
+    static func statusBadgeImage(tint: NSColor, accessibility: String) -> NSImage {
+        let side = statusBadgeSide
+        let config = NSImage.SymbolConfiguration(pointSize: side - 2, weight: .heavy)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [.white, tint]))
+        let symbol = NSImage(
+            systemSymbolName: "exclamationmark.circle.fill",
+            accessibilityDescription: accessibility
+        )?.withSymbolConfiguration(config)
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            NSColor.white.setFill()
+            NSBezierPath(ovalIn: rect).fill()
+            if let symbol {
+                symbol.draw(in: rect.insetBy(dx: 1, dy: 1))
+            } else {
+                tint.setFill()
+                NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1)).fill()
+            }
+            return true
+        }
+        image.isTemplate = false
+        image.accessibilityDescription = accessibility
+        return image
+    }
+
+    /// Show or hide the ``statusBadgeImage(tint:accessibility:)`` overlay in
+    /// the ``badgeLayout`` status corner of the status bar button, as a
+    /// subview over the base image. `slot` retains the lazily-created subview
+    /// between refreshes.
     private func setBadge(
         _ slot: inout NSImageView?,
         on button: NSStatusBarButton,
@@ -475,17 +507,15 @@ public final class StatusBarAppDelegate: NSObject, NSApplicationDelegate {
             if slot == nil {
                 let badge = NSImageView()
                 badge.translatesAutoresizingMaskIntoConstraints = false
-                let config = NSImage.SymbolConfiguration(pointSize: 10, weight: .heavy)
-                badge.image = NSImage(
-                    systemSymbolName: "exclamationmark.circle.fill",
-                    accessibilityDescription: accessibility
-                )?.withSymbolConfiguration(config)
-                badge.contentTintColor = tint
+                badge.image = Self.statusBadgeImage(tint: tint, accessibility: accessibility)
+                badge.setAccessibilityLabel(accessibility)
                 button.addSubview(badge)
+                let side = Self.statusBadgeSide
                 NSLayoutConstraint.activate([
-                    badge.widthAnchor.constraint(equalToConstant: 11),
-                    badge.heightAnchor.constraint(equalToConstant: 11)
-                ] + Self.cornerConstraints(for: badge, in: button, corner: badgeLayout.drawnStatusCorner, inset: 1))
+                    badge.widthAnchor.constraint(equalToConstant: side),
+                    badge.heightAnchor.constraint(equalToConstant: side)
+                ] + Self.cornerConstraints(
+                    for: badge, in: button, corner: badgeLayout.drawnStatusCorner, inset: 0.5))
                 slot = badge
             }
             slot?.isHidden = false

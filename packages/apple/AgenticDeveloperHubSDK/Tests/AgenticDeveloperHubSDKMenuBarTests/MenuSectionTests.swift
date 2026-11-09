@@ -563,6 +563,27 @@ struct CountBadgeTests {
         #expect(!image.isTemplate)   // colored badge must not invert with the menu bar
     }
 
+    @Test("the status badge is a non-template disc ringed in white")
+    func statusBadgeStandsOut() throws {
+        let image = StatusBarAppDelegate.statusBadgeImage(tint: .systemRed, accessibility: "errors")
+        #expect(image.size == NSSize(width: 12, height: 12))
+        #expect(!image.isTemplate)   // its colours must survive any base image
+        let rep = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: 24, pixelsHigh: 24, bitsPerSample: 8,
+            samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        image.draw(in: NSRect(x: 0, y: 0, width: 24, height: 24))
+        NSGraphicsContext.restoreGraphicsState()
+        // The ring: the top edge of the disc is opaque white.
+        let ring = try #require(rep.colorAt(x: 12, y: 0)?.usingColorSpace(.deviceRGB))
+        #expect(ring.alphaComponent > 0.9 && ring.redComponent > 0.9 && ring.blueComponent > 0.9)
+        // Inside, left of the mark: the tint.
+        let fill = try #require(rep.colorAt(x: 6, y: 12)?.usingColorSpace(.deviceRGB))
+        #expect(fill.redComponent > 0.7 && fill.blueComponent < 0.5)
+    }
+
     @Test("badge widens for multi-digit counts")
     func badgeWidensWithCount() {
         let narrow = StatusBarAppDelegate.countBadgeImage(count: 2)
