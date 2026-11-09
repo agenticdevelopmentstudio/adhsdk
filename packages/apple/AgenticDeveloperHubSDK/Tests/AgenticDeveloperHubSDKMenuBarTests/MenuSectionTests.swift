@@ -657,6 +657,12 @@ struct BadgeCornerTests {
         #expect(delegate.iconRedraws == 2)
     }
 
+    @Test("every corner has its own display name, in reading order")
+    func displayNames() {
+        #expect(MenuBarBadgeCorner.allCases.map(\.displayName)
+                == ["Top Left", "Top Right", "Bottom Left", "Bottom Right"])
+    }
+
     @Test("changing the layout before anything is applied redraws nothing")
     func layoutChangeBeforeLaunchIsInert() {
         let delegate = StatusBarAppDelegate(healthProbe: { nil }, composer: MenuComposer(sections: []))

@@ -550,6 +550,17 @@ public enum MenuBarBadgeCorner: String, Sendable, CaseIterable, Codable {
 
     var isLeading: Bool { self == .topLeading || self == .bottomLeading }
     var isTop: Bool { self == .topLeading || self == .topTrailing }
+
+    /// The corner's name for a settings popup ("Top Right"). Kept here, beside
+    /// the enum, so every app that offers the choice labels it the same way.
+    public var displayName: String {
+        switch self {
+        case .topLeading: "Top Left"
+        case .topTrailing: "Top Right"
+        case .bottomLeading: "Bottom Left"
+        case .bottomTrailing: "Bottom Right"
+        }
+    }
 }
 
 /// Where a ``StatusBarAppDelegate`` puts its badges: the green count, and the
