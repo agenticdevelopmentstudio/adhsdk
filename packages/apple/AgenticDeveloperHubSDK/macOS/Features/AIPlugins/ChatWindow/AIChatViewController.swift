@@ -88,6 +88,12 @@ public final class AIChatViewController: NSViewController, Themeable {
     /// Follows add/remove/rename edits in Settings, so an open chat never offers a
     /// connection that was deleted or misses one that was added.
     private var configurationsObserver: UserSettingObserver<[AIProviderConfiguration]>?
+    /// Follows the selected connection's stored model, which another chat on the
+    /// same connection, the settings Test Chat or the host app can change.
+    private var modelObserver: UserSettingObserver<String>?
+    /// The model the transcript last said it was talking to, so a change made
+    /// anywhere is noted once.
+    private var announcedModel = ""
     private var chatView: ChatView?
 
     /// The window's initial content size. Not `preferredContentSize`: setting that
@@ -406,6 +412,7 @@ public final class AIChatViewController: NSViewController, Themeable {
         chatView?.removeFromSuperview()
         chatView = nil
         chatSession = nil
+        modelObserver = nil
 
         guard let config = selectedConfiguration else {
             emptyLabel.isHidden = false
@@ -432,6 +439,24 @@ public final class AIChatViewController: NSViewController, Themeable {
         ])
         chatSession = session
         chatView = view
+        announcedModel = currentModel
+        if let template = selectedTemplate {
+            modelObserver = UserSettingObserver(
+                AIProviderConfigStore.modelSetting(config: config.id, template: template)
+            ) { [weak self] _ in
+                self?.updateModelRow()
+                self?.noteModelChange()
+            }
+        }
+    }
+
+    /// Posts "Model changed to …" into the transcript when the model the chat
+    /// talks to is no longer the one it last announced.
+    private func noteModelChange() {
+        let model = currentModel
+        guard !model.isEmpty, model != announcedModel else { return }
+        announcedModel = model
+        chatSession?.viewModel.noteModelChanged(to: model)
     }
 
     private func updateModelRow() {
@@ -497,13 +522,12 @@ public final class AIChatViewController: NSViewController, Themeable {
     private func selectModel(_ model: String,
                              template: AIPluginDescriptor.ProviderTemplate,
                              config: AIProviderConfiguration) {
-        let previous = currentModel.isEmpty ? template.resolvedDefaultModel : currentModel
         AIProviderConfigStore.modelSetting(config: config.id, template: template).value = model
         // The store now holds the answer, so the presenter's override has to go —
         // leaving it would make the view ignore the choice just made.
         overrideModel = ""
         updateModelRow()
-        if model != previous { chatSession?.viewModel.noteModelChanged(to: model) }
+        noteModelChange()
     }
 
     @objc private func chooseAction() {
