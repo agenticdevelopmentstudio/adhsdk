@@ -107,7 +107,9 @@ public struct GmailSyncWorker: Sendable {
 
     /// Replays history since `cursor`. A changed message is stored unless the settings exclude
     /// its class or it is older than the window; then (or when Gmail no longer has it) it is
-    /// tombstoned. The outcome counts the rows actually written.
+    /// tombstoned. Every row the window has since moved past is tombstoned too, as a full sync
+    /// does, so the window bounds what is kept in steady state — a full sync runs only when
+    /// the cursor is missing or expired. The outcome counts the rows actually written.
     private func incremental(
         connection: IntegrationConnection, since cursor: String
     ) async throws -> (GmailSyncOutcome, String) {
@@ -145,6 +147,7 @@ public struct GmailSyncWorker: Sendable {
             try store.upsertMessages(upserts)
             upserted += upserts.count
         }
+        tombstoned += try store.tombstoneMessages(connectionId: connection.id, olderThan: windowStart)
         return (GmailSyncOutcome(mode: .incremental, upserted: upserted, tombstoned: tombstoned), latest)
     }
 
