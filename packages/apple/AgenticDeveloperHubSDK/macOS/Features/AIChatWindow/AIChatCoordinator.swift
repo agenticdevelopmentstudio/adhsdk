@@ -102,7 +102,10 @@ public final class AIChatCoordinator: AppFeature {
     /// read `viewModel` before any window has been opened.
     public func ensureWindow() {
         guard windows.isEmpty else { return }
-        _ = makeWindow()
+        // The session is built when the view loads, which showing the window
+        // would do; nothing shows this one, so load it here or `viewModel` stays
+        // nil.
+        makeWindow().loadContent()
     }
 
     private func makeWindow() -> AIChatWindowController {
