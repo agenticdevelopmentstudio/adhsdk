@@ -865,6 +865,11 @@ open class WebBrowserPaneViewController: NSViewController {
     /// pane's idea of the page all follow it, and a tab brought forward for
     /// the first time loads its page.
     private func activate(_ tab: BrowserTab) {
+        // Sampled before the swap for the case where the old page is still on
+        // screen (a popup brought forward from code). A click on the strip has
+        // already taken the old page out of the window by the time this runs,
+        // and AppKit hands the focus to the window itself — which is why a
+        // free focus also counts as the page's, below.
         let responderWasInPage = pageHolds(viewIfLoaded?.window?.firstResponder)
         activeTab = tab
         engine = tab.engine
@@ -876,7 +881,11 @@ open class WebBrowserPaneViewController: NSViewController {
         browserEngineHistoryDidChange(engine)
         announceTitleChange()
         loadPendingPage(of: tab)
-        if responderWasInPage { view.window?.makeFirstResponder(engine.view) }
+        if let window = viewIfLoaded?.window {
+            let responder = window.firstResponder
+            let focusIsFree = responder == nil || responder === window
+            if responderWasInPage || focusIsFree { window.makeFirstResponder(engine.view) }
+        }
         rememberAddress()
         persistTabs()
         eventLog.record(channel: "pane", event: "tab", decision: .info, detail: engine.url?.host ?? "")
