@@ -193,6 +193,8 @@ final class DesktopSettingsAppViewController: NSViewController {
             let label = NSTextField(labelWithString: row.0)
             label.font = .systemFont(ofSize: 13)
             label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            // The control hugs its content so it sits at the trailing edge, as in System Settings.
+            row.1.setContentHuggingPriority(.required, for: .horizontal)
             let line = NSStackView(views: [label, row.1])
             line.alignment = .centerY
             line.distribution = .fill
