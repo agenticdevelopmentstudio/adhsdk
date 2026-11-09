@@ -57,6 +57,12 @@ public final class AIChatWindowController: SingleWindowController, NSToolbarDele
     /// own text field won't take synthetically.
     public var chatViewModel: AIChatViewModel? { content.chatViewModel }
 
+    /// Builds the chat's view (and so its session) without showing the window, so
+    /// scripting can drive a chat that was never put on screen.
+    public func loadContent() {
+        content.loadViewIfNeeded()
+    }
+
     /// The provider + model the window is currently pointed at.
     public var selection: AIChatViewController.Selection? { content.selection }
 
