@@ -134,9 +134,11 @@ public final class AIChatViewController: NSViewController, Themeable {
         self.configurations = configs
         let wanted = configuration
             ?? PluginChatConfigProvider.defaultConfiguration(in: configs, manager: pluginManager)
+        // A pinned chat whose configuration has gone shows nothing, as
+        // `refresh` does, rather than quietly running on whatever is first.
         self.selectedIndex = wanted.flatMap { wanted in
             configs.firstIndex { $0.id == wanted.id }
-        } ?? (configs.isEmpty ? -1 : 0)
+        } ?? (configs.isEmpty || self.pinsConfiguration ? -1 : 0)
         super.init(nibName: nil, bundle: nil)
         if let model, !model.isEmpty { self.overrideModel = model }
     }
