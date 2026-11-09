@@ -147,17 +147,19 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
     private var queryIsMirroredSelection = false
     private let keyboard = PickerKeyboardController()
 
-    /// Live model lists fetched for OpenAI-shaped (local/compatible) providers,
-    /// keyed by `cacheKey(for:)` — plugin identifier + template id. The
-    /// OpenAI-compatible plugin exposes many templates (Ollama, Groq, DeepSeek,
-    /// xAI, …) under one shared plugin identifier, each its own picker row;
-    /// keying by plugin identifier alone would let one template's live models
-    /// leak into every sibling template's row. Populated lazily on selection so
-    /// the models table shows the provider's real, current models instead of
-    /// the static snapshot baked into the descriptor. Absent entries (remote
-    /// providers, or a fetch still in flight / failed) fall back to
-    /// `template.models` — see `resolvedModels(for:)`.
+    /// Live model lists loaded this picker session for every provider with a
+    /// live source (Anthropic's rows through their public catalog, OpenAI-shaped
+    /// ones through their endpoint), keyed by `cacheKey(for:)` — plugin
+    /// identifier + template id, because the OpenAI-compatible plugin exposes
+    /// many templates (Ollama, Groq, …) under one plugin identifier and one
+    /// row's models must not leak into its siblings'. Loaded lazily on
+    /// selection. Only a load that succeeded is stored, so a failed one is
+    /// tried again the next time the row is shown; until then the row shows the
+    /// manager's cached or static list — see `resolvedModels(for:)`.
     private var liveModelsByTemplate: [String: [String]] = [:]
+    /// Keys with a load under way, so redrawing the selected row on every
+    /// keystroke starts one fetch, not one per keystroke.
+    private var liveModelsInFlight: Set<String> = []
 
     /// Frame-persistence key, shared with the presenter, so the picker window's
     /// size + location go through the app's `WindowManager` like every other window.
@@ -762,15 +764,19 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
 
     /// Loads `row`'s current model list once per picker session, so the models
     /// table stops showing the static snapshot baked into the descriptor. No-op
-    /// for providers with no live source or already loaded. On success,
-    /// re-renders only if the fetched row is still selected.
+    /// for providers with no live source, already loaded, or loading now. On
+    /// success, re-renders only if the fetched row is still selected; a failure
+    /// stores nothing, so the next selection tries again.
     private func fetchLiveModelsIfNeeded(for row: ProviderPickerRow) {
         let key = cacheKey(for: row)
         let manager = modelManager(for: row)
-        guard manager.hasLiveSource, liveModelsByTemplate[key] == nil else { return }
+        guard manager.hasLiveSource, liveModelsByTemplate[key] == nil,
+              !liveModelsInFlight.contains(key) else { return }
+        liveModelsInFlight.insert(key)
         Task { @MainActor in
-            let list = await manager.refresh()
-            guard !list.isEmpty else { return }
+            let list = await manager.refreshLive()
+            liveModelsInFlight.remove(key)
+            guard let list, !list.isEmpty else { return }
             liveModelsByTemplate[key] = list.latestIDs
             if let cur = currentRow(), cacheKey(for: cur) == key { updateInfo(for: cur) }
         }
