@@ -201,14 +201,24 @@ public final class PersonaTerminalChatViewController: NSViewController {
         let manager = ProviderModels.manager(
             pluginIdentifier: configuration.pluginIdentifier, template: template,
             baseURL: resolved.values["baseURL"], apiKey: resolved.values["apiKey"])
-        fillModels(popup, models: manager.list.latestIDs, providerDefault: resolved.model, manager: manager)
+        fillModels(popup, models: Self.offered(manager.list), providerDefault: resolved.model, manager: manager)
 
         guard manager.hasLiveSource else { return }
         modelFetch = Task { [weak self] in
             let live = await manager.refresh()
             guard !Task.isCancelled, !live.isEmpty, let self, let popup = self.modelPopup else { return }
-            self.fillModels(popup, models: live.latestIDs, providerDefault: resolved.model, manager: manager)
+            self.fillModels(popup, models: Self.offered(live), providerDefault: resolved.model, manager: manager)
         }
+    }
+
+    /// Every model the connection offers, the newest of each family first and
+    /// the older versions and variants after them. The popup has no All
+    /// versions switch like the chooser's, so it lists them all: a persona may
+    /// need a pinned older model or a fast variant.
+    private static func offered(_ list: ProviderModelList) -> [String] {
+        let latest = list.latestIDs
+        let newest = Set(latest)
+        return latest + list.allIDs.filter { !newest.contains($0) }
     }
 
     /// Fills the model popup. Items are titled with the manager's names
