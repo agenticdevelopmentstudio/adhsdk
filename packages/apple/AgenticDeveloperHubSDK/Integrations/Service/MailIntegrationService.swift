@@ -32,6 +32,9 @@ public actor MailIntegrationService {
     /// The browser sign-in in progress, if any. Only one runs at a time: a new one
     /// supersedes it.
     private var pendingSignIn: Task<GoogleCredential, Error>?
+    /// Counts provider removals, so a sign-in that was under way when Gmail was removed can
+    /// tell, after each of its awaits, that the client it signed in with is gone.
+    private var providerGeneration = 0
 
     public init(
         store: IntegrationsStore, secrets: any SecretStoring, signIn: any GoogleSignInFlow = AppAuthGoogleSignIn(),
@@ -133,6 +136,11 @@ public actor MailIntegrationService {
     }
 
     private func removeProvider() async throws {
+        // A sign-in under way belongs to the client being removed: stop its browser flow, and
+        // let one already past it see the change before it saves a credential.
+        providerGeneration += 1
+        pendingSignIn?.cancel()
+        pendingSignIn = nil
         for connection in try store.connections(provider: Self.provider) {
             try await removeAccount(connection)
         }
@@ -164,6 +172,11 @@ public actor MailIntegrationService {
 
     private func signIn() async throws -> MailAccount {
         let config = try oauthConfig()
+        let generation = providerGeneration
+        // Gmail was removed while this sign-in waited: the account must not come back.
+        func ensureProviderKept() throws {
+            if providerGeneration != generation { throw IntegrationError.signInCancelled }
+        }
         // A sign-in still pending belongs to a client that gave up on it: a panel that was
         // closed, or an app that quit or crashed while the browser was open. Nothing cancels
         // its request when that client goes away, and a fresh panel does not know to offer
@@ -189,13 +202,22 @@ public actor MailIntegrationService {
             if error is CancellationError || task.isCancelled { throw IntegrationError.signInCancelled }
             throw error
         }
+        try ensureProviderKept()
         let accessToken = credential.accessToken
         let email = try await makeAPI({ accessToken }).profile().emailAddress.lowercased()
+        try ensureProviderKept()
 
         let id = try existingConnection(email: email)?.id ?? Self.newId()
         // The credential is saved first, so a failed Keychain write leaves no active connection
         // without one.
         try await tokens.store(credential, connectionId: id)
+        // A removal that ran during the save found no connection to forget this credential
+        // through, so it is this sign-in's to forget.
+        guard providerGeneration == generation else {
+            await tokens.revoke(connectionId: id)
+            try? await tokens.forget(connectionId: id)
+            throw IntegrationError.signInCancelled
+        }
         // Re-read after the await: a sync that finished meanwhile wrote a newer cursor and
         // `lastSyncAt`, which a snapshot taken before it would roll back.
         let existing = try existingConnection(email: email)
