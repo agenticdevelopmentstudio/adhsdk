@@ -198,7 +198,14 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
     ) async -> WKNavigationActionPolicy {
         guard let url = navigationAction.request.url else { return .cancel }
         if navigationAction.navigationType == .linkActivated || navigationAction.targetFrame == nil {
-            NSWorkspace.shared.open(url)
+            // A `#section` link within the message scrolls it, in place.
+            if navigationAction.targetFrame != nil, Self.isReaderOwnPage(url), url.fragment != nil {
+                return .allow
+            }
+            // A link opens in the browser, as the header promises — and only a link a browser
+            // would open: any other scheme (smb:, vnc:, ssh:, an app's own) would launch its
+            // handler from one click, with none of the confirmation a browser shows.
+            if Self.opensExternally(url) { NSWorkspace.shared.open(url) }
             return .cancel
         }
         // Only the reader's own `loadHTMLString` (an `about:` page) loads in the reader.
@@ -207,6 +214,13 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
         // address bar to give it away; the CSP and rule list block loads, not navigations,
         // and both are gone once remote content is allowed.
         return Self.isReaderOwnPage(url) ? .allow : .cancel
+    }
+
+    /// The schemes a link in a message may open, in the browser or the mail app.
+    static let externalSchemes: Set<String> = ["http", "https", "mailto"]
+
+    static func opensExternally(_ url: URL) -> Bool {
+        url.scheme.map { externalSchemes.contains($0.lowercased()) } ?? false
     }
 
     /// The page `loadHTMLString(_:baseURL: nil)` puts in the reader.
