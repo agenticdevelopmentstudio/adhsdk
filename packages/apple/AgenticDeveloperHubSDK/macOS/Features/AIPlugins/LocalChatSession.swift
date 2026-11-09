@@ -14,7 +14,7 @@ public final class LocalChatSession: ChatSession, @unchecked Sendable {
     public typealias EventStreamFactory =
         @Sendable (AIRequestSpec, any AIPlugin) -> AsyncThrowingStream<AIStreamEvent, Error>
 
-    private let resolvePlugin: @Sendable () async -> (any AIPlugin)?
+    private let resolvePlugin: @Sendable () async throws -> (any AIPlugin)?
     private let makeContext: @Sendable ([AIChatMessage]) async -> AIChatContext
     private let eventStreamFactory: EventStreamFactory
     /// The tools this session offers, and who it names as the caller of each.
@@ -32,7 +32,7 @@ public final class LocalChatSession: ChatSession, @unchecked Sendable {
     private static let maxToolIterations = 8
 
     public init(
-        resolvePlugin: @escaping @Sendable () async -> (any AIPlugin)?,
+        resolvePlugin: @escaping @Sendable () async throws -> (any AIPlugin)?,
         makeContext: @escaping @Sendable ([AIChatMessage]) async -> AIChatContext,
         eventStreamFactory: @escaping EventStreamFactory = { PluginTransport.run(spec: $0, plugin: $1) },
         toolSource: (any ChatToolSource)? = nil,
@@ -88,7 +88,18 @@ public final class LocalChatSession: ChatSession, @unchecked Sendable {
         appendHistory(AIChatMessage(role: .user, content: userText))
         emit(.stateChanged(.responding))
 
-        guard let plugin = await resolvePlugin() else {
+        // nil is "nothing chosen"; a throw is a chosen provider that would not
+        // load, and saying "configure one" under its name would be wrong.
+        let resolved: (any AIPlugin)?
+        do {
+            resolved = try await resolvePlugin()
+        } catch {
+            let message = "Could not load the AI provider: \(error.localizedDescription)"
+            emit(.turnFailed(ChatError(message: message, isRetryable: false)))
+            emit(.stateChanged(.ready))
+            return
+        }
+        guard let plugin = resolved else {
             emit(.turnFailed(ChatError(message: "No AI provider is configured.", isRetryable: false)))
             emit(.stateChanged(.ready))
             return
