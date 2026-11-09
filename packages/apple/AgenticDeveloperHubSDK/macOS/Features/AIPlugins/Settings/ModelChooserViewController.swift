@@ -405,6 +405,9 @@ public final class ModelChooserViewController: NSViewController {
     }
 
     private func selectRow(_ index: Int) {
+        // OK commits only a row the user can see: a query that leaves the list
+        // empty must not commit whatever an earlier keystroke selected.
+        okButton.isEnabled = filtered.indices.contains(index)
         guard filtered.indices.contains(index) else { renderDetail(); return }
         selectedModel = filtered[index].id
         tableView.selectRowIndexes([index], byExtendingSelection: false)
@@ -533,6 +536,7 @@ public final class ModelChooserViewController: NSViewController {
 
     @objc private func chooseTapped() {
         guard !selectedModel.isEmpty else { finish(with: nil); return }
+        guard filtered.contains(where: { $0.id == selectedModel }) else { return }
         let size = LocalModelServer.size(of: selectedModel, in: sizesByModel)
         if let prompt = ModelChooserContent.warnPrompt(
             model: selectedModel, sizeBytes: size, physicalRAM: physicalRAM,
