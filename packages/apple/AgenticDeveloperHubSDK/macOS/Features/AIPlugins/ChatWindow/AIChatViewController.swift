@@ -35,7 +35,7 @@ public final class AIChatViewController: NSViewController, Themeable {
     public var completion: ((Selection?) -> Void)?
 
     /// Called whenever the provider or the model shown changes — the window
-    /// re-titles itself from ``title(for:)``.
+    /// re-titles itself from ``windowTitle``.
     public var onSelectionChange: (() -> Void)?
 
     /// Shows or completely hides the configuration view (provider + model rows and
@@ -170,6 +170,12 @@ public final class AIChatViewController: NSViewController, Themeable {
         }
     }
 
+    /// The window title for what this chat shows, naming the model as the
+    /// Model row does ("Sonnet 4.6", not `claude-sonnet-4-6`).
+    public var windowTitle: String {
+        Self.title(for: selection.map { Selection(configuration: $0.configuration, model: currentModelName) })
+    }
+
     private var selectedConfiguration: AIProviderConfiguration? {
         guard selectedIndex >= 0, selectedIndex < configurations.count else { return nil }
         return configurations[selectedIndex]
@@ -188,6 +194,17 @@ public final class AIChatViewController: NSViewController, Themeable {
         guard overrideModel.isEmpty else { return overrideModel }
         guard let config = selectedConfiguration, let template = selectedTemplate else { return "" }
         return AIProviderConfigStore.selectedModel(config: config, template: template)
+    }
+
+    /// `currentModel` as people read it: an alias resolved and given its
+    /// display name. Empty when no model is chosen.
+    private var currentModelName: String {
+        let model = currentModel
+        guard !model.isEmpty, let config = selectedConfiguration, let template = selectedTemplate else {
+            return model
+        }
+        let manager = modelManager(config: config, template: template)
+        return manager.displayName(for: manager.resolve(model))
     }
 
     private var selectedTemplate: AIPluginDescriptor.ProviderTemplate? {
@@ -483,7 +500,8 @@ public final class AIChatViewController: NSViewController, Themeable {
         let model = currentModel
         guard !model.isEmpty, model != announcedModel else { return }
         announcedModel = model
-        chatSession?.viewModel.noteModelChanged(to: model)
+        // Compared by id, announced by name, so the note agrees with the row.
+        chatSession?.viewModel.noteModelChanged(to: currentModelName)
     }
 
     private func updateModelRow() {
