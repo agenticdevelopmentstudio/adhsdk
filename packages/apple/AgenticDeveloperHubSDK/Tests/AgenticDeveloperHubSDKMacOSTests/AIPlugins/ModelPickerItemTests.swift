@@ -31,16 +31,29 @@ struct ModelPickerItemTests {
         #expect(ModelPickerItem(id: "m").capabilities == nil)
     }
 
-    @Test("matches searches id, description, and strengths case-insensitively")
+    @Test("matches the title or the id, in order and case-sensitively")
     func matchingFields() {
-        let item = ModelPickerItem(id: "claude-opus", description: "Most capable.",
-                                   tools: true, goodFor: "Hard reasoning")
-        #expect(item.matches("opus"))          // id
-        #expect(item.matches("capable"))        // description
-        #expect(item.matches("reasoning"))      // goodFor
-        #expect(item.matches("OPUS") == false)  // caller lowercases the needle first
-        #expect(item.matches("claude"))
+        let item = ModelPickerItem(
+            id: "claude-opus-5-5", title: "Opus 5.5",
+            info: AIModelCatalog.ResolvedModel(
+                id: "claude-opus-5-5", description: "Most capable.", goodFor: "Hard reasoning", tools: true))
+        #expect(item.matches("Opus"))               // title
+        #expect(item.matches("claude"))             // id
+        #expect(item.matches("cop55"))              // scattered letters, in order, in the id
+        #expect(item.matches("OPUS") == false)      // case-sensitive
+        #expect(item.matches("capable") == false)   // the description isn't searched
+        #expect(item.matches("reasoning") == false) // nor the strengths
         #expect(item.matches("gpt") == false)
+    }
+
+    @Test("the row shows the id when only the id matched")
+    func rowTextFollowsTheMatch() {
+        let item = ModelPickerItem(
+            id: "claude-opus-5-5", title: "Opus 5.5",
+            info: AIModelCatalog.ResolvedModel(id: "claude-opus-5-5"))
+        #expect(item.rowText(for: "") == "Opus 5.5")
+        #expect(item.rowText(for: "Op") == "Opus 5.5")
+        #expect(item.rowText(for: "claude") == "claude-opus-5-5")
     }
 
     @Test("matches ignores tool support text")
@@ -63,6 +76,5 @@ struct ModelPickerItemTests {
         #expect(item.tools == true)
         #expect(item.goodFor == "Long context")
         #expect(item.info.contextWindow == 131_072)
-        #expect(item.matches("shared"))
     }
 }
