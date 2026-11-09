@@ -17,6 +17,8 @@ class PollVote:
     Attributes:
         id (str):
         ecosystem_id (str):
+        customer_id (str): The customer who owns the vote, or '' when the owner is not a customer. Kept for clients
+            built before the pairs; read ownerKind/ownerId instead.
         owner_kind (str): Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or
             'ecosystem'.
         owner_id (str): Id of the owning principal.
@@ -27,6 +29,7 @@ class PollVote:
 
     id: str
     ecosystem_id: str
+    customer_id: str
     owner_kind: str
     owner_id: str
     option_id: str
@@ -38,6 +41,8 @@ class PollVote:
         id = self.id
 
         ecosystem_id = self.ecosystem_id
+
+        customer_id = self.customer_id
 
         owner_kind = self.owner_kind
 
@@ -59,6 +64,7 @@ class PollVote:
             {
                 "id": id,
                 "ecosystemId": ecosystem_id,
+                "customerId": customer_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "optionId": option_id,
@@ -76,6 +82,8 @@ class PollVote:
         id = d.pop("id")
 
         ecosystem_id = d.pop("ecosystemId")
+
+        customer_id = d.pop("customerId")
 
         owner_kind = d.pop("ownerKind")
 
@@ -97,6 +105,7 @@ class PollVote:
         poll_vote = cls(
             id=id,
             ecosystem_id=ecosystem_id,
+            customer_id=customer_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             option_id=option_id,

@@ -78929,6 +78929,11 @@ export interface components {
         };
         Bookmark: {
             id: string;
+            /**
+             * @deprecated
+             * @description The customer who owns the bookmark, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead.
+             */
+            customerId: string;
             /** @description Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
             ownerKind: string;
             /** @description Id of the owning principal. */
@@ -78950,6 +78955,11 @@ export interface components {
         };
         Reaction: {
             id: string;
+            /**
+             * @deprecated
+             * @description The customer who reacted, or '' when the author is not a customer. Kept for clients built before the pairs; read authorKind/authorId instead.
+             */
+            customerId: string;
             /** @description Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
             ownerKind?: string;
             /** @description Id of the owning principal. */
@@ -78971,6 +78981,11 @@ export interface components {
         PollVote: {
             id: string;
             ecosystemId: string;
+            /**
+             * @deprecated
+             * @description The customer who owns the vote, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead.
+             */
+            customerId: string;
             /** @description Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
             ownerKind: string;
             /** @description Id of the owning principal. */

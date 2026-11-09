@@ -17,6 +17,8 @@ class Reaction:
     """
     Attributes:
         id (str):
+        customer_id (str): The customer who reacted, or '' when the author is not a customer. Kept for clients built
+            before the pairs; read authorKind/authorId instead.
         ecosystem_id (str):
         target_kind (str):
         target_id (str):
@@ -32,6 +34,7 @@ class Reaction:
     """
 
     id: str
+    customer_id: str
     ecosystem_id: str
     target_kind: str
     target_id: str
@@ -46,6 +49,8 @@ class Reaction:
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
+
+        customer_id = self.customer_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -82,6 +87,7 @@ class Reaction:
         field_dict.update(
             {
                 "id": id,
+                "customerId": customer_id,
                 "ecosystemId": ecosystem_id,
                 "targetKind": target_kind,
                 "targetId": target_id,
@@ -106,6 +112,8 @@ class Reaction:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         id = d.pop("id")
+
+        customer_id = d.pop("customerId")
 
         ecosystem_id = d.pop("ecosystemId")
 
@@ -148,6 +156,7 @@ class Reaction:
 
         reaction = cls(
             id=id,
+            customer_id=customer_id,
             ecosystem_id=ecosystem_id,
             target_kind=target_kind,
             target_id=target_id,

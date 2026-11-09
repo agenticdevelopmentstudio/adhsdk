@@ -34957,6 +34957,11 @@ public enum Components {
         public struct Bookmark: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/Bookmark/id`.
             public var id: Swift.String
+            /// The customer who owns the bookmark, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Bookmark/customerId`.
+            @available(*, deprecated)
+            public var customerId: Swift.String
             /// Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
             /// - Remark: Generated from `#/components/schemas/Bookmark/ownerKind`.
@@ -34981,6 +34986,7 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - id:
+            ///   - customerId: The customer who owns the bookmark, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead.
             ///   - ownerKind: Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///   - ownerId: Id of the owning principal.
             ///   - ecosystemId:
@@ -34991,6 +34997,7 @@ public enum Components {
             ///   - deletedAt:
             public init(
                 id: Swift.String,
+                customerId: Swift.String,
                 ownerKind: Swift.String,
                 ownerId: Swift.String,
                 ecosystemId: Swift.String,
@@ -35001,6 +35008,7 @@ public enum Components {
                 deletedAt: Swift.String? = nil
             ) {
                 self.id = id
+                self.customerId = customerId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
                 self.ecosystemId = ecosystemId
@@ -35012,6 +35020,7 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case id
+                case customerId
                 case ownerKind
                 case ownerId
                 case ecosystemId
@@ -35069,6 +35078,11 @@ public enum Components {
         public struct Reaction: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/Reaction/id`.
             public var id: Swift.String
+            /// The customer who reacted, or '' when the author is not a customer. Kept for clients built before the pairs; read authorKind/authorId instead.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Reaction/customerId`.
+            @available(*, deprecated)
+            public var customerId: Swift.String
             /// Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
             /// - Remark: Generated from `#/components/schemas/Reaction/ownerKind`.
@@ -35109,6 +35123,7 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - id:
+            ///   - customerId: The customer who reacted, or '' when the author is not a customer. Kept for clients built before the pairs; read authorKind/authorId instead.
             ///   - ownerKind: Kind of principal that owns the reaction (the ecosystem): 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///   - ownerId: Id of the owning principal.
             ///   - authorKind: Kind of principal that reacted; null when nobody did (a storage token).
@@ -35121,6 +35136,7 @@ public enum Components {
             ///   - deletedAt:
             public init(
                 id: Swift.String,
+                customerId: Swift.String,
                 ownerKind: Swift.String? = nil,
                 ownerId: Swift.String? = nil,
                 authorKind: Components.Schemas.Reaction.AuthorKindPayload? = nil,
@@ -35133,6 +35149,7 @@ public enum Components {
                 deletedAt: Swift.String? = nil
             ) {
                 self.id = id
+                self.customerId = customerId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
                 self.authorKind = authorKind
@@ -35146,6 +35163,7 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case id
+                case customerId
                 case ownerKind
                 case ownerId
                 case authorKind
@@ -35164,6 +35182,11 @@ public enum Components {
             public var id: Swift.String
             /// - Remark: Generated from `#/components/schemas/PollVote/ecosystemId`.
             public var ecosystemId: Swift.String
+            /// The customer who owns the vote, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead.
+            ///
+            /// - Remark: Generated from `#/components/schemas/PollVote/customerId`.
+            @available(*, deprecated)
+            public var customerId: Swift.String
             /// Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///
             /// - Remark: Generated from `#/components/schemas/PollVote/ownerKind`.
@@ -35183,6 +35206,7 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - ecosystemId:
+            ///   - customerId: The customer who owns the vote, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead.
             ///   - ownerKind: Kind of principal that owns the vote: 'customer', 'organization', 'application', 'persona' or 'ecosystem'.
             ///   - ownerId: Id of the owning principal.
             ///   - optionId:
@@ -35191,6 +35215,7 @@ public enum Components {
             public init(
                 id: Swift.String,
                 ecosystemId: Swift.String,
+                customerId: Swift.String,
                 ownerKind: Swift.String,
                 ownerId: Swift.String,
                 optionId: Swift.String,
@@ -35199,6 +35224,7 @@ public enum Components {
             ) {
                 self.id = id
                 self.ecosystemId = ecosystemId
+                self.customerId = customerId
                 self.ownerKind = ownerKind
                 self.ownerId = ownerId
                 self.optionId = optionId
@@ -35208,6 +35234,7 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case ecosystemId
+                case customerId
                 case ownerKind
                 case ownerId
                 case optionId

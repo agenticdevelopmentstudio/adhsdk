@@ -8560,6 +8560,7 @@
         "type": "object",
         "required": [
           "id",
+          "customerId",
           "ownerKind",
           "ownerId",
           "ecosystemId",
@@ -8571,6 +8572,11 @@
         "properties": {
           "id": {
             "type": "string"
+          },
+          "customerId": {
+            "type": "string",
+            "deprecated": true,
+            "description": "The customer who owns the bookmark, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead."
           },
           "ownerKind": {
             "type": "string",
@@ -8633,6 +8639,7 @@
         "type": "object",
         "required": [
           "id",
+          "customerId",
           "ecosystemId",
           "targetKind",
           "targetId",
@@ -8642,6 +8649,11 @@
         "properties": {
           "id": {
             "type": "string"
+          },
+          "customerId": {
+            "type": "string",
+            "deprecated": true,
+            "description": "The customer who reacted, or '' when the author is not a customer. Kept for clients built before the pairs; read authorKind/authorId instead."
           },
           "ownerKind": {
             "type": "string",
@@ -8692,6 +8704,7 @@
         "required": [
           "id",
           "ecosystemId",
+          "customerId",
           "ownerKind",
           "ownerId",
           "optionId",
@@ -8703,6 +8716,11 @@
           },
           "ecosystemId": {
             "type": "string"
+          },
+          "customerId": {
+            "type": "string",
+            "deprecated": true,
+            "description": "The customer who owns the vote, or '' when the owner is not a customer. Kept for clients built before the pairs; read ownerKind/ownerId instead."
           },
           "ownerKind": {
             "type": "string",
