@@ -16,7 +16,9 @@ public final class ShowAIChatCommand: MainActorScriptCommand, @unchecked Sendabl
 @objc(HideAIChatCommand)
 public final class HideAIChatCommand: MainActorScriptCommand, @unchecked Sendable {
     public override func performMain() -> Any? {
-        coordinator?.windowController?.dismiss()
+        // Close, not order out: a chat that is only hidden keeps its session and
+        // its ai-chat-N slot, and no command or menu can reach it again.
+        coordinator?.windowController?.close()
         return nil
     }
 }
