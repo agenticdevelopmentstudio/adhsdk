@@ -310,6 +310,7 @@ public final class AIChatViewController: NSViewController, Themeable {
 
         providerPopUp.target = self
         providerPopUp.action = #selector(providerChanged)
+        providerPopUp.setAccessibilityIdentifier("ai-chat.provider")
 
         chooseModelButton.title = "Choose Model…"
         chooseModelButton.bezelStyle = .rounded
