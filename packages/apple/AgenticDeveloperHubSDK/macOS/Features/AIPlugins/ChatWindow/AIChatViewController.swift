@@ -95,6 +95,11 @@ public final class AIChatViewController: NSViewController, Themeable {
     /// decide whether a model list can be loaded at all, so Choose Model wakes
     /// up the moment an endpoint is typed in AI Connections.
     private var fieldObservers: [UserSettingObserver<String>] = []
+    /// Follows every loaded model list. The row resolves an alias (`sonnet`)
+    /// against the cached list to name it, so a refresh from anywhere — this
+    /// chat's own, a chooser that was then cancelled, another window — has to
+    /// redraw it, or it goes on naming a model the alias no longer means.
+    private var modelCacheObserver: UserSettingObserver<[String: ProviderModelList]>?
     /// The model the transcript last said it was talking to, so a change made
     /// anywhere is noted once.
     private var announcedModel = ""
@@ -290,6 +295,9 @@ public final class AIChatViewController: NSViewController, Themeable {
         configurationsObserver = UserSettingObserver(UserSettings.aiProviderConfigurations) { [weak self] _ in
             self?.refresh()
         }
+        modelCacheObserver = UserSettingObserver(ProviderModelCache.setting) { [weak self] _ in
+            self?.updateModelRow()
+        }
     }
 
     /// Hidden means gone, not collapsed: the configuration view leaves the layout
@@ -431,6 +439,12 @@ public final class AIChatViewController: NSViewController, Themeable {
 
         emptyLabel.isHidden = true
         updateModelRow()
+        if let template = selectedTemplate {
+            // Load the provider's current list once per chat; the cache observer
+            // redraws the row when it lands.
+            let manager = modelManager(config: config, template: template)
+            Task { await manager.refresh() }
+        }
 
         let session = AIProviderChatSession(
             configuration: config, pluginManager: pluginManager, toolSource: toolSource)
@@ -479,10 +493,7 @@ public final class AIChatViewController: NSViewController, Themeable {
         var offersModels = false
         var modelName = currentModel
         if let config = selectedConfiguration, let template {
-            let values = connectionValues(config: config, template: template)
-            let manager = ProviderModels.manager(
-                pluginIdentifier: config.pluginIdentifier, template: template,
-                baseURL: values["baseURL"], apiKey: values["apiKey"])
+            let manager = modelManager(config: config, template: template)
             offersModels = manager.hasLiveSource
             modelName = manager.displayName(for: manager.resolve(currentModel))
         }
@@ -492,6 +503,15 @@ public final class AIChatViewController: NSViewController, Themeable {
         chooseButton.isEnabled = selectedConfiguration != nil
         applyModelRowTheme(view.resolvedThemeScope.palette)
         onSelectionChange?()
+    }
+
+    /// The model manager for the connection as it is configured right now.
+    private func modelManager(config: AIProviderConfiguration,
+                              template: AIPluginDescriptor.ProviderTemplate) -> any ProviderModelManager {
+        let values = connectionValues(config: config, template: template)
+        return ProviderModels.manager(
+            pluginIdentifier: config.pluginIdentifier, template: template,
+            baseURL: values["baseURL"], apiKey: values["apiKey"])
     }
 
     /// The connection's stored settings (`baseURL`, `apiKey`, …). An
