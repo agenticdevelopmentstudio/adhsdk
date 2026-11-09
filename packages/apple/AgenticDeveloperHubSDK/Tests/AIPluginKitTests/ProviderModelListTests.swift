@@ -38,6 +38,19 @@ struct ProviderModelListTests {
         #expect(list.latestIDs == ["claude-haiku-4-5"])
     }
 
+    @Test("without dates, the higher version wins whatever the order")
+    func undatedVersionWins() {
+        let list = ProviderModelList(models: [
+            Self.model("claude-3-5-sonnet-20241022", nil),
+            Self.model("claude-3-opus-20240229", nil),
+            Self.model("claude-opus-5-5", nil),
+            Self.model("claude-sonnet-4-5", nil),
+            Self.model("claude-fable-5", nil),
+            Self.model("claude-fable-5-1", nil)
+        ])
+        #expect(list.latestIDs == ["claude-opus-5-5", "claude-sonnet-4-5", "claude-fable-5-1"])
+    }
+
     @Test("models without a family are all kept")
     func unknownFamilyKept() {
         let list = ProviderModelList(ids: ["gpt-4o", "llama3.2"])

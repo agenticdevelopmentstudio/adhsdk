@@ -61,9 +61,11 @@ public struct ProviderModelList: Codable, Sendable, Equatable {
 
     /// The newest model of each family, plus every model whose family is unknown.
     ///
-    /// Within a family the newest release date wins; on a tie (an alias and its
-    /// dated snapshot share a date) the undated alias wins, because it is the name
-    /// a person would type and it tracks the snapshot.
+    /// Within a family the newest release date wins. Without dates (a seed list,
+    /// or a source that gives none) the higher version in the id wins, so
+    /// `claude-sonnet-4-5` beats `claude-3-5-sonnet` whatever order they came in.
+    /// On a full tie (an alias and its dated snapshot) the undated alias wins,
+    /// because it is the name a person would type and it tracks the snapshot.
     public var latestIDs: [String] {
         var newest: [String: ProviderModel] = [:]
         for model in models {
@@ -81,7 +83,16 @@ public struct ProviderModelList: Codable, Sendable, Equatable {
     private static func isNewer(_ model: ProviderModel, than current: ProviderModel) -> Bool {
         let left = model.releaseDate ?? "", right = current.releaseDate ?? ""
         if left != right { return left > right }
+        let newVersion = version(of: model.id), currentVersion = version(of: current.id)
+        if newVersion != currentVersion { return currentVersion.lexicographicallyPrecedes(newVersion) }
         return current.isDatedSnapshot && !model.isDatedSnapshot
+    }
+
+    /// The version numbers in an id, in order — `claude-3-5-sonnet-20241022` →
+    /// `[3, 5]`, `claude-opus-5-5` → `[5, 5]`. Runs of eight or more digits are
+    /// snapshot dates, not versions, and are left out.
+    static func version(of id: String) -> [Int] {
+        id.split { !$0.isNumber }.compactMap { $0.count < 8 ? Int($0) : nil }
     }
 }
 
