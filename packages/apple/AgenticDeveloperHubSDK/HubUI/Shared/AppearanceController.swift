@@ -6,7 +6,8 @@ public enum HubColorMode: String, Sendable, Equatable, CaseIterable {
     case auto, light, dark
 }
 
-/// Spec §2.1: read `/me/appearance` and apply the color mode. Only the
+/// Spec §2.1: read the account's `appearance` sub-resource
+/// (`GET /v1/account?include[]=appearance`) and apply the color mode. Only the
 /// color mode has a native equivalent; the other prefs are web-only.
 ///
 /// "Apply" is deliberately indirect. The native app's look is the *theme's* to
@@ -45,10 +46,12 @@ public final class AppearanceController {
     /// Best-effort: a failure of any kind leaves the current mode in place.
     public func refresh() async {
         do {
-            switch try await environment.client.api.getMeAppearance(.init()) {
+            let query = Operations.GetV1Account.Input.Query(include_lbrack__rbrack_: [.appearance])
+            switch try await environment.client.api.getV1Account(.init(query: query)) {
             case .ok(let response):
-                colorMode = Self.mode(from: try response.body.json)
-            case .unauthorized, .undocumented:
+                guard let appearance = try response.body.json.value2.appearance else { return }
+                colorMode = Self.mode(from: appearance)
+            case .badRequest, .unauthorized, .notFound, .undocumented:
                 return
             }
         } catch {

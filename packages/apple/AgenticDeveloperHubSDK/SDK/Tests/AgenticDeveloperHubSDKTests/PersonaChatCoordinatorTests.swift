@@ -33,7 +33,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
         _ = try await f.coordinator.send(text: "two", attachments: [])
         await f.collector.wait(for: 8)
 
-        XCTAssertEqual(f.requests.requests(matching: "/conversations").count, 1)
+        XCTAssertEqual(f.requests.requests(matching: "/v1/chats").count, 1)
         XCTAssertEqual(f.requests.requests(matching: "/messages").count, 2)
     }
 

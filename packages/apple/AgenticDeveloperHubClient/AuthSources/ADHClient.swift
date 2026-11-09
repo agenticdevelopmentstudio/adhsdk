@@ -17,7 +17,7 @@ import Foundation
 /// It lives in AgenticDeveloperHubAuth, the sign-in tier, which generates only
 /// the sign-in and session operations (``authAPI``). The whole typed API is
 /// `api`, added by AgenticDeveloperHubClient — link that, and
-/// `client.api.getWorkspaces(...)` is there; link only this, and sign-in costs
+/// `client.api.getV1Workspaces(...)` is there; link only this, and sign-in costs
 /// a few thousand lines instead of the full client.
 ///
 /// The transport is the only point of variation: Direct and Daemon produce an

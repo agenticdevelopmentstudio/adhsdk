@@ -4,6 +4,13 @@ import HTTPTypes
 
 /// `StorageTokensDataSource` over `/tokens`. `ecosystemId` is sent as a query key (and mirrored into the
 /// create body) only when the caller scopes to an ecosystem.
+///
+/// List and create stay on the unversioned `/tokens`. Its `/v1` home is `/v1/api_keys`, which it shares
+/// with the personal API tokens (`/auth/tokens`): both variants rank equally and the personal one is
+/// listed first, so the gateway serves every `GET`/`POST /v1/api_keys` from `/auth/tokens`, and a
+/// storage token can be neither listed nor minted through `/v1`. Revoke does move: `DELETE
+/// /v1/api_keys/{id}` tries `/auth/tokens/{id}` first, which answers 404 for an id that is not a personal
+/// token, and the gateway then falls through to `/tokens/{id}`.
 @MainActor
 public final class StorageTokensAdapter: StorageTokensDataSource {
     private let api: HubAPI
@@ -33,6 +40,6 @@ public final class StorageTokensAdapter: StorageTokensDataSource {
     /// to filter a single-row delete, which either does nothing or, if the server validates it, rejects
     /// the revoke when the caller is standing in a different ecosystem than the token was minted in.
     public func revoke(ecosystemID _: String?, id: String) async throws {
-        try await api.send(.delete, "/tokens/\(id)", query: workspace.query)
+        try await api.send(.delete, "/v1/api_keys/\(id)", query: workspace.query)
     }
 }

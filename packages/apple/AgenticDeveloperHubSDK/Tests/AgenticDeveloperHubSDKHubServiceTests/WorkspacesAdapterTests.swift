@@ -8,10 +8,18 @@ import XCTest
 @MainActor
 final class WorkspacesAdapterTests: XCTestCase {
     private static let workspacesJSON = #"""
-    [{"slug":"ada","name":"Ada","type":"individual"},
-     {"slug":"acme","name":"Acme Inc","type":"organization"},
-     {"slug":"acme-core","name":"Core","type":"team"}]
+    {"object":"workspace","slug":"ada","name":"Ada","type":"individual"},
+    {"object":"workspace","slug":"acme","name":"Acme Inc","type":"organization"},
+    {"object":"workspace","slug":"acme-core","name":"Core","type":"team"}
     """#
+
+    private static func account(prefs: String) -> String {
+        #"""
+        {"object":"account","id":"u1","email":"a@b.c","name":"Ada","avatar_url":"","slug":"ada",
+        "public_profile_enabled":false,"profile_visibility":"public","capabilities":[],
+        "workspace_prefs":{"prefs":\#(prefs)}}
+        """#
+    }
 
     private func makeAdapter() -> (WorkspacesAdapter, StubClientTransport) {
         let stub = StubClientTransport()
@@ -27,7 +35,7 @@ final class WorkspacesAdapterTests: XCTestCase {
 
     func testListMapsTypes() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.get, "/workspaces", json: Self.workspacesJSON)
+        stub.on(.get, "/v1/workspaces", json: StubClientTransport.list([Self.workspacesJSON]))
         let list = try await adapter.listWorkspaces()
         XCTAssertEqual(list, [
             HubWorkspace(slug: "ada", name: "Ada", type: .individual),
@@ -38,8 +46,8 @@ final class WorkspacesAdapterTests: XCTestCase {
 
     func testListUnauthorizedIsHubError() async {
         let (adapter, stub) = makeAdapter()
-        stub.on(.get, "/workspaces", status: 401, json: #"{"error":{"message":"expired"}}"#)
-        stub.on(.post, "/auth/refresh", status: 503, json: "")
+        stub.on(.get, "/v1/workspaces", status: 401, json: StubClientTransport.error("expired"))
+        stub.on(.post, "/v1/auth/sessions/refresh", status: 503, json: "")
         do {
             _ = try await adapter.listWorkspaces()
             XCTFail("expected unauthorized")
@@ -50,19 +58,20 @@ final class WorkspacesAdapterTests: XCTestCase {
 
     func testPreferredSlugReadsPrefsEnvelope() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.get, "/me/workspace-prefs", json: #"{"prefs":{"slug":"acme"}}"#)
+        stub.on(.get, "/v1/account", json: Self.account(prefs: #"{"slug":"acme"}"#))
         let slug = try await adapter.preferredSlug()
         XCTAssertEqual(slug, "acme")
-        stub.on(.get, "/me/workspace-prefs", json: #"{"prefs":{}}"#)
+        stub.on(.get, "/v1/account", json: Self.account(prefs: "{}"))
         let none = try await adapter.preferredSlug()
         XCTAssertNil(none)
     }
 
-    func testSetPreferredSlugPutsTheSlug() async throws {
+    func testSetPreferredSlugPostsTheSlug() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.put, "/me/workspace-prefs", json: #"{"prefs":{"slug":"acme"}}"#)
+        stub.on(.post, "/v1/account", json: Self.account(prefs: #"{"slug":"acme"}"#))
         try await adapter.setPreferredSlug("acme")
-        XCTAssertEqual(stub.lastBody(.put, "/me/workspace-prefs")?["slug"] as? String, "acme")
-        XCTAssertEqual(stub.lastRequest(.put, "/me/workspace-prefs")?.headerFields[.authorization], "Bearer jwt")
+        let prefs = stub.lastBody(.post, "/v1/account")?["workspace_prefs"] as? [String: Any]
+        XCTAssertEqual(prefs?["slug"] as? String, "acme")
+        XCTAssertEqual(stub.lastRequest(.post, "/v1/account")?.headerFields[.authorization], "Bearer jwt")
     }
 }

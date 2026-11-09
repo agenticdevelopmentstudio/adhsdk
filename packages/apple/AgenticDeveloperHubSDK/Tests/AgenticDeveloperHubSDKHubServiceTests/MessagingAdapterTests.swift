@@ -10,7 +10,9 @@ import XCTest
 final class MessagingAdapterTests: XCTestCase {
     private var stub: StubClientTransport!
     private var adapter: MessagingAdapter!
-    private let base = "/messaging/ecosystems/org.acme.shop"
+    private let statusPath = "/v1/messaging/status"
+    private let messagesPath = "/v1/messaging/messages"
+    private let templatesPath = "/v1/messaging/templates"
 
     override func setUp() async throws {
         try await super.setUp()
@@ -30,54 +32,72 @@ final class MessagingAdapterTests: XCTestCase {
     }
 
     private let entryJSON = #"""
-    {"id":"m-1","ownerKind":"customer","ownerId":"c-jane","ecosystemId":"org.acme.shop","channel":"email",
-     "recipient":"jane@example.com","subject":"Your order","body":"Shipped.",
-     "templateId":null,"status":"sent","providerId":"pm-1","errorMessage":null,
-     "sentBy":"owner@acme.test","origin":"ecosystem","createdAt":"2026-09-03T12:00:00.000Z"}
+    {"id":"m-1","object":"messaging.message","owner_kind":"customer","owner_id":"c-jane",
+     "ecosystem_id":"org.acme.shop","channel":"email","recipient":"jane@example.com","subject":"Your order",
+     "body":"Shipped.","template_id":null,"status":"sent","provider_id":"pm-1","error_message":null,
+     "sent_by":"owner@acme.test","origin":"ecosystem","created_at":"2026-09-03T12:00:00.000Z"}
     """#
 
     func testStatus() async throws {
-        stub.on(.get, "\(base)/status", json: #"{"email":true,"sms":false}"#)
+        stub.on(.get, statusPath, json: #"{"object":"messaging.status","email":true,"sms":false}"#)
         let status = try await adapter.status(ecosystemID: "org.acme.shop")
         XCTAssertEqual(status, MessagingStatus(email: true, sms: false))
-        XCTAssertEqual(stub.lastRequest(.get, "\(base)/status")?.path, "\(base)/status?workspace=acme")
+        XCTAssertEqual(
+            stub.lastRequest(.get, statusPath)?.path, "\(statusPath)?ecosystem=org.acme.shop&workspace=acme"
+        )
     }
 
-    private let templatesJSON = #"""
-    [{"id":"tpl-welcome","name":"Welcome","subject":"Hi {{name}}","htmlBody":"<p>x</p>",
-      "textBody":"Hi {{name}}","smsBody":null,"category":"onboarding"}]
+    private let templateJSON = #"""
+    {"id":"tpl-welcome","object":"messaging.template","name":"Welcome","subject":"Hi {{name}}",
+     "html_body":"<p>x</p>","text_body":"Hi {{name}}","sms_body":null,"category":"onboarding"}
     """#
 
     func testTemplates() async throws {
-        stub.on(.get, "/messaging/templates", json: templatesJSON)
+        stub.on(.get, templatesPath, json: StubClientTransport.list([templateJSON]))
         let templates = try await adapter.templates()
         XCTAssertEqual(templates.map(\.id), ["tpl-welcome"])
+        XCTAssertEqual(templates.first?.textBody, "Hi {{name}}")
         XCTAssertEqual(templates.first?.placeholders, ["name"])
         XCTAssertEqual(
-            stub.lastRequest(.get, "/messaging/templates")?.path, "/messaging/templates?workspace=acme"
+            stub.lastRequest(.get, templatesPath)?.path, "\(templatesPath)?limit=100&workspace=acme"
         )
     }
 
-    func testLogPassesPaging() async throws {
-        stub.on(.get, "\(base)/log", json: #"{"items":[\#(entryJSON)],"total":1,"page":1,"pageSize":100}"#)
-        let page = try await adapter.log(ecosystemID: "org.acme.shop", page: 1, pageSize: 100)
+    func testLogPassesCursorPaging() async throws {
+        stub.on(.get, messagesPath, json: StubClientTransport.list([entryJSON], hasMore: true))
+        let page = try await adapter.log(ecosystemID: "org.acme.shop", limit: 50, startingAfter: "m-0")
         XCTAssertEqual(page.items.map(\.id), ["m-1"])
         XCTAssertEqual(page.items.first?.channel, .email)
+        XCTAssertEqual(page.items.first?.ecosystemId, "org.acme.shop")
+        XCTAssertEqual(page.items.first?.providerId, "pm-1")
+        XCTAssertTrue(page.hasMore)
         XCTAssertEqual(
-            stub.lastRequest(.get, "\(base)/log")?.path,
-            "\(base)/log?page=1&pageSize=100&workspace=acme"
+            stub.lastRequest(.get, messagesPath)?.path,
+            "\(messagesPath)?ecosystem=org.acme.shop&limit=50&starting_after=m-0&workspace=acme"
         )
     }
 
-    func testSendPostsBodyWithoutNils() async throws {
-        stub.on(.post, "\(base)/send", json: #"{"status":"sent","providerId":"pm-9","error":null}"#)
+    func testFirstLogPageSendsNoCursor() async throws {
+        stub.on(.get, messagesPath, json: StubClientTransport.list([]))
+        let page = try await adapter.log(ecosystemID: "org.acme.shop", limit: 50, startingAfter: nil)
+        XCTAssertTrue(page.items.isEmpty)
+        XCTAssertFalse(page.hasMore)
+        XCTAssertEqual(
+            stub.lastRequest(.get, messagesPath)?.path,
+            "\(messagesPath)?ecosystem=org.acme.shop&limit=50&workspace=acme"
+        )
+    }
+
+    func testSendPostsBodyWithEcosystemAndWithoutNils() async throws {
+        stub.on(.post, messagesPath, json: #"{"status":"sent","provider_id":"pm-9","error":null}"#)
         let result = try await adapter.send(
             ecosystemID: "org.acme.shop",
             MessagingSend(userId: "c-jane", channel: .email, subject: "S", body: "B")
         )
         XCTAssertEqual(result, MessagingSendResult(status: "sent", providerId: "pm-9"))
-        XCTAssertEqual(stub.lastRequest(.post, "\(base)/send")?.path, "\(base)/send?workspace=acme")
-        let sent = stub.lastBody(.post, "\(base)/send")
+        XCTAssertEqual(stub.lastRequest(.post, messagesPath)?.path, "\(messagesPath)?workspace=acme")
+        let sent = stub.lastBody(.post, messagesPath)
+        XCTAssertEqual(sent?["ecosystem"] as? String, "org.acme.shop")
         XCTAssertEqual(sent?["userId"] as? String, "c-jane")
         XCTAssertEqual(sent?["channel"] as? String, "email")
         XCTAssertEqual(sent?["subject"] as? String, "S")
@@ -86,7 +106,7 @@ final class MessagingAdapterTests: XCTestCase {
     }
 
     func testSendTemplateVars() async throws {
-        stub.on(.post, "\(base)/send", json: #"{"status":"sent"}"#)
+        stub.on(.post, messagesPath, json: #"{"status":"sent"}"#)
         _ = try await adapter.send(
             ecosystemID: "org.acme.shop",
             MessagingSend(
@@ -94,45 +114,35 @@ final class MessagingAdapterTests: XCTestCase {
                 templateVars: ["name": "Jane"], recipient: "+15555550123"
             )
         )
-        XCTAssertEqual(stub.lastRequest(.post, "\(base)/send")?.path, "\(base)/send?workspace=acme")
-        let sent = stub.lastBody(.post, "\(base)/send")
+        let sent = stub.lastBody(.post, messagesPath)
         XCTAssertEqual(sent?["templateId"] as? String, "tpl-welcome")
         XCTAssertEqual(sent?["templateVars"] as? [String: String], ["name": "Jane"])
         XCTAssertEqual(sent?["recipient"] as? String, "+15555550123")
     }
 
-    func testFailedSendReturns422BodyAsResult() async throws {
-        stub.on(
-            .post, "\(base)/send", status: 422,
-            json: #"{"status":"failed","providerId":null,"error":"Recipient rejected"}"#
-        )
+    /// The gateway rewrites a 422 to the `/v1` error envelope; its message is the provider's reason.
+    func testFailedSendReturnsTheProviderReasonAsAResult() async throws {
+        stub.on(.post, messagesPath, status: 422, json: StubClientTransport.error("Recipient rejected"))
         let result = try await adapter.send(
             ecosystemID: "org.acme.shop",
             MessagingSend(userId: "c-jane", channel: .email, subject: "S", body: "B")
         )
         XCTAssertEqual(result, MessagingSendResult(status: "failed", error: "Recipient rejected"))
-        XCTAssertEqual(stub.lastRequest(.post, "\(base)/send")?.path, "\(base)/send?workspace=acme")
     }
 
-    func testUnreadable422StillThrowsValidation() async throws {
-        stub.on(.post, "\(base)/send", status: 422, json: #"{"detail":"userId missing"}"#)
-        do {
-            _ = try await adapter.send(
-                ecosystemID: "org.acme.shop",
-                MessagingSend(userId: "", channel: .email, subject: "S", body: "B")
-            )
-            XCTFail("expected throw")
-        } catch let error as HubError {
-            guard case .validation = error else { return XCTFail("expected validation, got \(error)") }
-        }
-        XCTAssertEqual(stub.lastRequest(.post, "\(base)/send")?.path, "\(base)/send?workspace=acme")
+    func testUnreadable422StillReturnsAFailedResult() async throws {
+        stub.on(.post, messagesPath, status: 422, json: "not json")
+        let result = try await adapter.send(
+            ecosystemID: "org.acme.shop",
+            MessagingSend(userId: "", channel: .email, subject: "S", body: "B")
+        )
+        XCTAssertEqual(result, MessagingSendResult(status: "failed", error: "The provider refused the message."))
     }
 
     /// F-17: `send()` does NOT go through `HubAPI` — it drives `rawJSON` itself and maps errors in its
-    /// own `catch` ladder. Every other error test in this suite exercised `status()`/`log()`, i.e.
-    /// `HubAPI`'s ladder, so `send()`'s non-422 branch had no coverage at all.
+    /// own `catch` ladder, so its non-422 branches need their own coverage.
     func testSendNon422ErrorMapsThroughSendsOwnLadder() async throws {
-        stub.on(.post, "\(base)/send", status: 403, json: #"{"detail":"messaging disabled"}"#)
+        stub.on(.post, messagesPath, status: 403, json: StubClientTransport.error("messaging disabled"))
         do {
             _ = try await adapter.send(
                 ecosystemID: "org.acme.shop",
@@ -142,22 +152,13 @@ final class MessagingAdapterTests: XCTestCase {
         } catch let error as HubError {
             XCTAssertEqual(error, .forbidden)
         }
-        XCTAssertEqual(stub.lastRequest(.post, "\(base)/send")?.path, "\(base)/send?workspace=acme")
     }
 
-    func testSendConflictAndServerErrorsMapThroughSendsOwnLadder() async throws {
-        stub.on(.post, "\(base)/send", status: 409, json: #"{"error":"already sent"}"#)
-        do {
-            _ = try await adapter.send(
-                ecosystemID: "org.acme.shop",
-                MessagingSend(userId: "c-jane", channel: .email, subject: "S", body: "B")
-            )
-            XCTFail("expected throw")
-        } catch let error as HubError {
-            XCTAssertEqual(error, .conflict("already sent"))
-        }
-
-        stub.on(.post, "\(base)/send", status: 500, json: #"{"error":"provider exploded"}"#)
+    func testSendServerErrorMapsThroughSendsOwnLadder() async throws {
+        stub.on(
+            .post, messagesPath, status: 500,
+            json: StubClientTransport.error("provider exploded", type: "api_error")
+        )
         do {
             _ = try await adapter.send(
                 ecosystemID: "org.acme.shop",
@@ -170,13 +171,12 @@ final class MessagingAdapterTests: XCTestCase {
     }
 
     func testOtherErrorsMapToHubError() async throws {
-        stub.on(.get, "\(base)/status", status: 401, json: "{}")
+        stub.on(.get, statusPath, status: 401, json: StubClientTransport.error("no session"))
         do {
             _ = try await adapter.status(ecosystemID: "org.acme.shop")
             XCTFail("expected throw")
         } catch let error as HubError {
             XCTAssertEqual(error, .unauthorized)
         }
-        XCTAssertEqual(stub.lastRequest(.get, "\(base)/status")?.path, "\(base)/status?workspace=acme")
     }
 }

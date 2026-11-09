@@ -23,7 +23,9 @@ public enum RawRequestError: Error, Sendable, Equatable {
 }
 
 extension JSONDecoder {
-    /// ISO-8601 with or without fractional seconds — what the hub backend emits.
+    /// The hub backend's two date encodings: the /v1 API's `created`/`updated`
+    /// are unix timestamps in seconds; every other date is ISO-8601, with or
+    /// without fractional seconds.
     public static let adhDefault: JSONDecoder = {
         let decoder = JSONDecoder()
         // Format styles, not ISO8601DateFormatter: the strategy closure is
@@ -31,7 +33,11 @@ extension JSONDecoder {
         let fractional = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
         let plain = Date.ISO8601FormatStyle()
         decoder.dateDecodingStrategy = .custom { decoder in
-            let text = try decoder.singleValueContainer().decode(String.self)
+            let container = try decoder.singleValueContainer()
+            if let seconds = try? container.decode(Double.self) {
+                return Date(timeIntervalSince1970: seconds)
+            }
+            let text = try container.decode(String.self)
             if let date = (try? fractional.parse(text)) ?? (try? plain.parse(text)) { return date }
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "not an ISO-8601 date: \(text)"))
         }
@@ -64,11 +70,11 @@ extension ADHClient {
         "raw \(method.rawValue) \(path)"
     }
 
-    /// `POST /auth/revoke` — the one raw route the session layer itself sends
-    /// (from ``signOut()``). Named here so `signOut` and the refresh
+    /// `POST /v1/auth/sessions/revoke` — a raw route the session layer itself
+    /// sends (from ``signOut()``). Named here so `signOut` and the refresh
     /// middleware's exemption always describe the same request.
     static let revokeMethod: HTTPRequest.Method = .post
-    static let revokePath = "/auth/revoke"
+    static let revokePath = "/v1/auth/sessions/revoke"
     static let revokeRawOperationID = rawOperationID(method: revokeMethod, path: revokePath)
 
     /// `headers` is applied *after* the defaults below, so a caller can

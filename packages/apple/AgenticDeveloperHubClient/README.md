@@ -7,8 +7,8 @@ through either of two interchangeable transports chosen at runtime:
 2. **Daemon** — HTTP to the local `adhd` daemon (a transparent caching
    reverse-proxy) at `http://127.0.0.1:22850`.
 
-The typed surface is generated from the backend's OpenAPI document with Apple's
-[swift-openapi-generator]; the transports are `ClientTransport` conformers, so the
+The typed surface is generated from the backend's Stripe-style `/v1` OpenAPI
+document (`openapi.v1.json`) with Apple's [swift-openapi-generator]; the transports are `ClientTransport` conformers, so the
 generated client is byte-identical across both paths. A resolver picks the daemon
 when it is reachable and falls back to Direct otherwise — the client always works.
 
@@ -29,7 +29,7 @@ try await client.login(email: "me@example.com", password: "…")
 
 // Call any operation on the full generated API surface.
 let health = try await client.api.getHealth()
-let me = try await client.api.getApiAuthMe()
+let me = try await client.api.getV1Account()
 ```
 
 Force a transport explicitly when you don't want resolution:
@@ -59,7 +59,7 @@ the client.
 ### Auth convenience wrappers
 
 `login` / `createAPIToken` / `adopt` / `logout` are thin ergonomics over the
-generated ops (`client.api.postApiAuthLogin`, …):
+generated `/v1` ops (`client.api.postV1AuthSessions`, `postV1ApiKeys`, …):
 
 - `login(email:password:)` persists the returned JWT.
 - `createAPIToken(name:expiresAt:)` returns the raw token but **does not** persist
@@ -73,7 +73,7 @@ instead of the bearer-only `AuthenticationMiddleware`:
 
 - `Session` = `Credentials` + optional refresh token; `SessionStore` refines
   `CredentialStore` (`KeychainSessionStore`, `InMemorySessionStore`).
-- On a 401 for a JWT session the middleware `POST /auth/refresh {refreshToken}`,
+- On a 401 for a JWT session the middleware `POST /v1/auth/sessions/refresh {refreshToken}`,
   saves the rotated pair, and retries the request once. Only an explicit 401/403
   from refresh clears the session (and calls `onSessionExpired`); 5xx/transport
   failures keep it. Login-family operations and refresh itself are exempt.
@@ -82,41 +82,45 @@ instead of the bearer-only `AuthenticationMiddleware`:
   `signOut()` (revokes, then clears), `currentUser()`.
 - `rawJSON(method:path:query:body:)` sends a route through the same middleware
   chain without a generated operation; use it only for routes missing from
-  `openapi.json`, or whose committed schema is stale enough that the generated
-  operation cannot express the real request. Today there is exactly one such
-  case: `POST /auth/revoke`, which the backend accepts with a
-  `{"refreshToken": …}` body while the committed document still describes it
-  as bodiless — so `signOut()` sends it raw (and the refresh middleware exempts
-  it from refresh-and-retry).
+  `openapi.v1.json`, or whose documented schema cannot express the real request.
+  Today there are three such cases:
+  - `POST /v1/auth/sessions/revoke`, which the backend accepts with a
+    `{"refreshToken": …}` body while the document describes it as bodiless — so
+    `signOut()` sends it raw (and the refresh middleware exempts it from
+    refresh-and-retry).
+  - `POST /v1/auth/sessions/refresh`, whose `{"refreshToken": …}` body is
+    likewise undeclared; the refresh middleware sends it raw.
+  - The OAuth code exchange behind `exchangeOAuthCode`, which the `/v1` document
+    does not describe at all.
 
 ## Regenerating the client
 
-The OpenAPI spec snapshot (`openapi.json`) and the generated sources
+The `/v1` OpenAPI spec snapshot (`openapi.v1.json`) and the generated sources
 (`Sources/Generated/`) are **committed**; regeneration is an explicit, reviewable
 step (not a per-build plugin — build-tool plugins are unreliable inside an
 XcodeGen `.xcodeproj`).
 
 ```bash
-# Regenerate from the committed openapi.json snapshot:
+# Regenerate from the committed openapi.v1.json snapshot:
 python3 scripts/generate.py
 
-# Or refresh the snapshot from the live backend first, then regenerate:
+# Or refresh the snapshot from the live backend (GET /v1/openapi.json) first:
 python3 scripts/generate.py --refresh-spec
+
+# Or generate from a locally dumped spec, which refreshes the snapshot:
+python3 scripts/generate.py --spec /path/to/openapi.v1.json
 ```
 
-`generate.py` clones swift-openapi-generator `1.12.2` into a gitignored `.tooling/`,
-applies deterministic spec patches (see below), and writes
-`Sources/Generated/{Client,Types}.swift`. Commit the diff. If the spec is
-unchanged, re-running produces no diff.
+`generate.py` clones swift-openapi-generator `1.12.2` into a gitignored `.tooling/`
+and generates both targets from the snapshot as-is (no spec patches):
+`Sources/Generated/{Client,Types}.swift` for the full client and
+`AuthSources/Generated/{HubAuthClient,Types}.swift` for the auth-only one. Commit
+the diff. If the spec is unchanged, re-running produces no diff.
 
-**Spec patches** (`patch_spec()` in `generate.py`) work around defects in the
-backend's runtime-generated (smiley4) OpenAPI document, applied to a temp copy so
-`openapi.json` stays a pristine upstream snapshot:
-
-1. `{"$ref": "*"}` placeholders → `{}` (free-form JSON).
-2. Inject a `default` response where an operation declares none.
-3. Declare string-typed path parameters for `{placeholders}` the spec uses but
-   never declares.
+The `/v1` wire is snake_case, with unix-seconds `created`/`updated`, lists in a
+`{object: "list", data, has_more, url}` envelope paged by `limit` and
+`starting_after`, and every error as `{error: {type, code?, message}}`
+(`Components.Schemas.StripeError`).
 
 **After adding/removing any source or test file, re-run `xcodegen generate`** —
 XcodeGen enumerates files at generation time, so new files are invisible to the

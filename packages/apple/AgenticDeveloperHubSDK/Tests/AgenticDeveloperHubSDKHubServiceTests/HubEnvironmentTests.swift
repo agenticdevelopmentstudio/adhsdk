@@ -8,8 +8,8 @@ import XCTest
 @MainActor
 final class HubEnvironmentTests: XCTestCase {
     private static let userJSON = #"""
-    {"id":"u1","email":"a@b.c","name":"Ada","avatarUrl":"","slug":"ada","publicProfileEnabled":false,
-    "profileVisibility":"public","capabilities":[]}
+    {"object":"account","id":"u1","email":"a@b.c","name":"Ada","avatar_url":"","slug":"ada",
+    "public_profile_enabled":false,"profile_visibility":"public","capabilities":[]}
     """#
 
     func testBootstrapTakesTheSourceTransportKind() async {
@@ -52,7 +52,7 @@ final class HubEnvironmentTests: XCTestCase {
 
     func testDaemonNoStoreSuccessMarksServedFromCacheAndClearsOnFreshResponse() async throws {
         let stub = StubClientTransport()
-        stub.on(.get, "/auth/me", headers: ["cache-control": "no-store"], json: Self.userJSON)
+        stub.on(.get, "/v1/account", headers: ["cache-control": "no-store"], json: Self.userJSON)
         let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt", kind: .jwt)))
         let env = await HubEnvironment.bootstrap(
             sessionStore: store,
@@ -66,7 +66,7 @@ final class HubEnvironmentTests: XCTestCase {
         XCTAssertTrue(marked)
         XCTAssertEqual(changes, 1)
 
-        stub.on(.get, "/auth/me", json: Self.userJSON)
+        stub.on(.get, "/v1/account", json: Self.userJSON)
         _ = try await env.client.currentUser()
         let cleared = await waitUntil { !env.servedFromCache }
         XCTAssertTrue(cleared)
@@ -75,7 +75,7 @@ final class HubEnvironmentTests: XCTestCase {
 
     func testDirectNoStoreNeverMarksServedFromCache() async throws {
         let stub = StubClientTransport()
-        stub.on(.get, "/auth/me", headers: ["cache-control": "no-store"], json: Self.userJSON)
+        stub.on(.get, "/v1/account", headers: ["cache-control": "no-store"], json: Self.userJSON)
         let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt", kind: .jwt)))
         let env = await HubEnvironment.bootstrap(
             sessionStore: store,
@@ -109,8 +109,8 @@ final class HubEnvironmentTests: XCTestCase {
 
     func testSessionExpiryFromMiddlewareReachesTheMainActorCallback() async {
         let stub = StubClientTransport()
-        stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"expired"}}"#)
-        stub.on(.post, "/auth/refresh", status: 401, json: #"{"error":"refresh rejected"}"#)
+        stub.on(.get, "/v1/account", status: 401, json: StubClientTransport.error("expired"))
+        stub.on(.post, "/v1/auth/sessions/refresh", status: 401, json: StubClientTransport.error("refresh rejected"))
         let store = InMemorySessionStore(
             HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r1")
         )
@@ -130,7 +130,7 @@ final class HubEnvironmentTests: XCTestCase {
         let called = await waitUntil { expired == 1 }
         XCTAssertTrue(called)
         XCTAssertNil(store.currentSession())
-        XCTAssertEqual(stub.requestCount(.post, "/auth/refresh"), 1)
+        XCTAssertEqual(stub.requestCount(.post, "/v1/auth/sessions/refresh"), 1)
     }
 
     /// Regression (launch hang): `bootstrap` is the first `await` the macOS

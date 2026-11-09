@@ -88,16 +88,14 @@ public struct MessagingLogEntry: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
+/// One cursor page of the message log, newest first: `hasMore` says rows exist past the last item,
+/// whose `id` is the next page's `startingAfter`.
 public struct MessagingLogPage: Codable, Hashable, Sendable {
     public var items: [MessagingLogEntry]
-    public var total: Int
-    public var page: Int
-    public var pageSize: Int
-    public init(items: [MessagingLogEntry], total: Int, page: Int, pageSize: Int) {
+    public var hasMore: Bool
+    public init(items: [MessagingLogEntry], hasMore: Bool) {
         self.items = items
-        self.total = total
-        self.page = page
-        self.pageSize = pageSize
+        self.hasMore = hasMore
     }
 }
 
@@ -138,6 +136,6 @@ public struct MessagingSendResult: Codable, Hashable, Sendable {
 public protocol MessagingDataSource: AnyObject, Sendable {
     func status(ecosystemID: String) async throws -> MessagingStatus
     func templates() async throws -> [MessagingTemplate]
-    func log(ecosystemID: String, page: Int, pageSize: Int) async throws -> MessagingLogPage
+    func log(ecosystemID: String, limit: Int, startingAfter: String?) async throws -> MessagingLogPage
     func send(ecosystemID: String, _ message: MessagingSend) async throws -> MessagingSendResult
 }

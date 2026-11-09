@@ -173,7 +173,7 @@ public final class MessagingTopic: EcosystemTopicProvider {
     private func logChild(for ecosystem: Ecosystem, path: [HTDVItem]) async throws -> HTDVChild {
         let page: MessagingLogPage
         do {
-            page = try await dataSource.log(ecosystemID: ecosystem.id, page: 1, pageSize: Self.logPageSize)
+            page = try await dataSource.log(ecosystemID: ecosystem.id, limit: Self.logPageSize, startingAfter: nil)
         } catch {
             throw HubError.wrap(error)
         }

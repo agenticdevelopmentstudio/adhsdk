@@ -11,11 +11,15 @@ final class SignInViewModelTests: XCTestCase {
     // `nonisolated`: plain immutable `String` literals, safe to read from the
     // `@Sendable` route-handler closures below as well as from the main actor.
     private nonisolated static let userJSON =
-        #"{"id":"u1","email":"a@b.c","name":"Ada","avatarUrl":"","slug":"ada","publicProfileEnabled":false,"# +
-        #""profileVisibility":"public","capabilities":[]}"#
-    private nonisolated static let authJSON = #"{"token":"jwt-1","refreshToken":"r-1","user":\#(userJSON)}"#
+        #"{"object":"account","id":"u1","email":"a@b.c","name":"Ada","avatar_url":"","slug":"ada","# +
+        #""public_profile_enabled":false,"profile_visibility":"public","capabilities":[]}"#
+    private nonisolated static let authJSON = #"{"token":"jwt-1","refresh_token":"r-1","user":\#(userJSON)}"#
+    /// `/oauth/signin/exchange` is unversioned and outside the /v1 document, so its body stays camelCase.
+    private nonisolated static let exchangeJSON =
+        #"{"token":"jwt-1","refreshToken":"r-1","user":{"id":"u1","email":"a@b.c","name":"Ada","avatarUrl":"","#
+        + #""slug":"ada","publicProfileEnabled":false,"profileVisibility":"public","capabilities":[]}}"#
     private nonisolated static let mfaJSON =
-        #"{"mfaRequired":true,"token":"mfa-tok","methods":["totp","sms","webauthn","recovery"]}"#
+        #"{"token":"mfa-tok","methods":["totp","sms","webauthn","recovery"]}"#
     private static let ada = HubUser(id: "u1", email: "a@b.c", name: "Ada", slug: "ada", avatarURL: nil)
 
     private static func passkeyOptionsJSON(token: String) -> String {
@@ -138,7 +142,7 @@ final class SignInViewModelTests: XCTestCase {
 
     func testSubmitCredentialsSignsInAndFiresOnSignedIn() async {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login", status: 200, json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 200, json: Self.authJSON)
         harness.viewModel.setEmail("a@b.c")
         harness.viewModel.setPassword("pw")
         await harness.viewModel.submitCredentials()
@@ -150,7 +154,7 @@ final class SignInViewModelTests: XCTestCase {
 
     func testSubmitCredentialsWithBadPasswordShowsTheMessage() async {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login", status: 401, json: #"{"error":{"message":"bad"}}"#)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 401, json: StubClientTransport.error("bad"))
         harness.viewModel.setEmail("a@b.c")
         harness.viewModel.setPassword("wrong")
         await harness.viewModel.submitCredentials()
@@ -162,7 +166,7 @@ final class SignInViewModelTests: XCTestCase {
 
     func testTransportFailureShowsTheOfflineMessage() async {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login") { _, _ in throw URLError(.notConnectedToInternet) }
+        harness.stub.on(.post, "/v1/auth/sessions") { _, _ in throw URLError(.notConnectedToInternet) }
         harness.viewModel.setEmail("a@b.c")
         harness.viewModel.setPassword("pw")
         await harness.viewModel.submitCredentials()
@@ -173,18 +177,18 @@ final class SignInViewModelTests: XCTestCase {
     func testSubmitCredentialsIgnoredWhenNotSubmittable() async {
         let harness = makeHarness()
         await harness.viewModel.submitCredentials()
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/login"), 0)
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sessions"), 0)
     }
 
     func testSecondSubmitWhileBusyDoesNotFireASecondRequest() async {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login") { _, _ in .init(status: 200, json: Self.authJSON) }
+        harness.stub.on(.post, "/v1/auth/sessions") { _, _ in .init(status: 200, json: Self.authJSON) }
         harness.viewModel.setEmail("a@b.c")
         harness.viewModel.setPassword("pw")
         async let first: Void = harness.viewModel.submitCredentials()
         async let second: Void = harness.viewModel.submitCredentials()
         _ = await (first, second)
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/login"), 1)
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sessions"), 1)
         XCTAssertEqual(harness.signedIn.values, [Self.ada])
     }
 
@@ -214,7 +218,7 @@ final class SignInViewModelTests: XCTestCase {
     // MARK: MFA
 
     private func enterMfa(_ harness: Harness) async {
-        harness.stub.on(.post, "/auth/login", status: 202, json: Self.mfaJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 202, json: Self.mfaJSON)
         harness.viewModel.setEmail("a@b.c")
         harness.viewModel.setPassword("pw")
         await harness.viewModel.submitCredentials()
@@ -304,23 +308,24 @@ final class SignInViewModelTests: XCTestCase {
     func testSecondSubmitCodeWhileBusyDoesNotFireASecondRequest() async {
         let harness = makeHarness()
         await enterMfa(harness)
-        harness.stub.on(.post, "/auth/login/mfa") { _, _ in .init(status: 200, json: Self.authJSON) }
+        harness.stub.on(.post, "/v1/auth/sessions") { _, _ in .init(status: 200, json: Self.authJSON) }
         harness.viewModel.setCode("123456")
         async let first: Void = harness.viewModel.submitCode()
         async let second: Void = harness.viewModel.submitCode()
         _ = await (first, second)
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/login/mfa"), 1)
+        // One route serves every sign-in step: the password step that opened the challenge, plus exactly one code.
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sessions"), 2)
         XCTAssertEqual(harness.signedIn.values, [Self.ada])
     }
 
     func testSubmitCodeCompletesMfa() async {
         let harness = makeHarness()
         await enterMfa(harness)
-        harness.stub.on(.post, "/auth/login/mfa", status: 200, json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 200, json: Self.authJSON)
         harness.viewModel.setCode("123456")
         await harness.viewModel.submitCode()
         XCTAssertEqual(harness.signedIn.values, [Self.ada])
-        let body = harness.stub.lastBody(.post, "/auth/login/mfa") ?? [:]
+        let body = harness.stub.lastBody(.post, "/v1/auth/sessions") ?? [:]
         XCTAssertEqual(body["token"] as? String, "mfa-tok")
         XCTAssertEqual(body["method"] as? String, "totp")
         XCTAssertEqual(body["code"] as? String, "123456")
@@ -329,7 +334,7 @@ final class SignInViewModelTests: XCTestCase {
     func testWrongCodeShowsMessageAndStaysInMfa() async {
         let harness = makeHarness()
         await enterMfa(harness)
-        harness.stub.on(.post, "/auth/login/mfa", status: 401, json: #"{"error":{"message":"bad code"}}"#)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 401, json: StubClientTransport.error("bad code"))
         harness.viewModel.setCode("000000")
         await harness.viewModel.submitCode()
         XCTAssertEqual(harness.viewModel.state.errorMessage, "Invalid email or password.")
@@ -340,23 +345,23 @@ final class SignInViewModelTests: XCTestCase {
     func testSendCodeShowsCodeSent() async {
         let harness = makeHarness()
         await enterMfa(harness)
-        harness.stub.on(.post, "/auth/login/mfa/sms/send", status: 202, json: #"{"ok":true}"#)
+        harness.stub.on(.post, "/v1/auth/sms_codes", status: 202, json: #"{"object":"auth.sms_code","ok":true}"#)
         harness.viewModel.selectMethod(.sms)
         await harness.viewModel.sendCode()
         XCTAssertEqual(harness.viewModel.state.infoMessage, SignInViewModel.codeSentMessage)
         XCTAssertNil(harness.viewModel.state.errorMessage)
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/login/mfa/sms/send"), 1)
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sms_codes"), 1)
     }
 
     func testSuccessfulRetryClearsStaleMessages() async {
         let harness = makeHarness()
         await enterMfa(harness)
         harness.viewModel.selectMethod(.sms)
-        harness.stub.on(.post, "/auth/login/mfa/sms/send", status: 202, json: #"{"ok":true}"#)
+        harness.stub.on(.post, "/v1/auth/sms_codes", status: 202, json: #"{"object":"auth.sms_code","ok":true}"#)
         await harness.viewModel.sendCode()
         XCTAssertEqual(harness.viewModel.state.infoMessage, SignInViewModel.codeSentMessage)
 
-        harness.stub.on(.post, "/auth/login/mfa", status: 401, json: #"{"error":{"message":"bad code"}}"#)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 401, json: StubClientTransport.error("bad code"))
         harness.viewModel.setCode("000000")
         await harness.viewModel.submitCode()
         XCTAssertEqual(harness.viewModel.state.errorMessage, "Invalid email or password.")
@@ -371,7 +376,7 @@ final class SignInViewModelTests: XCTestCase {
         // Nor must a later successful call leave a stale info message
         // behind, even though the success path itself never touches
         // `infoMessage` — pins `run()`'s `state.infoMessage = nil`.
-        harness.stub.on(.post, "/auth/login/mfa", status: 200, json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 200, json: Self.authJSON)
         harness.viewModel.setCode("123456")
         await harness.viewModel.submitCode()
         XCTAssertEqual(harness.signedIn.values, [Self.ada])
@@ -381,20 +386,21 @@ final class SignInViewModelTests: XCTestCase {
     func testSecondSendCodeWhileBusyDoesNotFireASecondRequest() async {
         let harness = makeHarness()
         await enterMfa(harness)
-        harness.stub.on(.post, "/auth/login/mfa/sms/send") { _, _ in .init(status: 202, json: #"{"ok":true}"#) }
+        let sent = #"{"object":"auth.sms_code","ok":true}"#
+        harness.stub.on(.post, "/v1/auth/sms_codes") { _, _ in .init(status: 202, json: sent) }
         harness.viewModel.selectMethod(.sms)
         async let first: Void = harness.viewModel.sendCode()
         async let second: Void = harness.viewModel.sendCode()
         _ = await (first, second)
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/login/mfa/sms/send"), 1)
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sms_codes"), 1)
     }
 
     func testMfaPasskeyCompletesSignIn() async {
         let harness = makeHarness()
         await enterMfa(harness)
-        let mfaWebauthnPath = "/auth/login/mfa/webauthn/options"
+        let mfaWebauthnPath = "/v1/auth/passkey_challenges"
         harness.stub.on(.post, mfaWebauthnPath, status: 200, json: Self.passkeyOptionsJSON(token: "mfa-tok"))
-        harness.stub.on(.post, "/auth/login/mfa/webauthn", status: 200, json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 200, json: Self.authJSON)
         harness.viewModel.selectMethod(.webauthn)
         await harness.viewModel.usePasskey()
         XCTAssertEqual(harness.signedIn.values, [Self.ada])
@@ -424,22 +430,22 @@ final class SignInViewModelTests: XCTestCase {
 
     func testUsePasskeySignsIn() async {
         let harness = makeHarness()
-        let webauthnOptionsPath = "/auth/login/webauthn/options"
+        let webauthnOptionsPath = "/v1/auth/passkey_challenges"
         harness.stub.on(.post, webauthnOptionsPath, status: 200, json: Self.passkeyOptionsJSON(token: "pk-tok"))
-        harness.stub.on(.post, "/auth/login/webauthn", status: 200, json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 200, json: Self.authJSON)
         harness.viewModel.setEmail("a@b.c")
         await harness.viewModel.usePasskey()
         XCTAssertEqual(harness.signedIn.values, [Self.ada])
-        let optionsBody = harness.stub.lastBody(.post, "/auth/login/webauthn/options") ?? [:]
+        let optionsBody = harness.stub.lastBody(.post, "/v1/auth/passkey_challenges") ?? [:]
         XCTAssertEqual(optionsBody["identifier"] as? String, "a@b.c")
     }
 
     func testSecondUsePasskeyWhileBusyDoesNotFireASecondRequest() async {
         let harness = makeHarness()
-        let webauthnOptionsPath = "/auth/login/webauthn/options"
+        let webauthnOptionsPath = "/v1/auth/passkey_challenges"
         let optionsJSON = Self.passkeyOptionsJSON(token: "pk-tok")
         harness.stub.on(.post, webauthnOptionsPath) { _, _ in .init(status: 200, json: optionsJSON) }
-        harness.stub.on(.post, "/auth/login/webauthn") { _, _ in .init(status: 200, json: Self.authJSON) }
+        harness.stub.on(.post, "/v1/auth/sessions") { _, _ in .init(status: 200, json: Self.authJSON) }
         harness.viewModel.setEmail("a@b.c")
         async let first: Void = harness.viewModel.usePasskey()
         async let second: Void = harness.viewModel.usePasskey()
@@ -450,7 +456,7 @@ final class SignInViewModelTests: XCTestCase {
 
     func testPasskeyCancelIsSilent() async {
         let harness = makeHarness(passkey: .cancel)
-        let webauthnOptionsPath = "/auth/login/webauthn/options"
+        let webauthnOptionsPath = "/v1/auth/passkey_challenges"
         harness.stub.on(.post, webauthnOptionsPath, status: 200, json: Self.passkeyOptionsJSON(token: "pk-tok"))
         harness.viewModel.setEmail("a@b.c")
         await harness.viewModel.usePasskey()
@@ -463,7 +469,7 @@ final class SignInViewModelTests: XCTestCase {
 
     func testSocialSignInExchangesTheCode() async {
         let harness = makeHarness(social: .code("abc123"))
-        harness.stub.on(.post, "/oauth/signin/exchange", status: 200, json: Self.authJSON)
+        harness.stub.on(.post, "/oauth/signin/exchange", status: 200, json: Self.exchangeJSON)
         await harness.viewModel.signInWithSocial(.github)
         XCTAssertEqual(harness.signedIn.values, [Self.ada])
         XCTAssertEqual((harness.stub.lastBody(.post, "/oauth/signin/exchange") ?? [:])["code"] as? String, "abc123")
@@ -471,7 +477,7 @@ final class SignInViewModelTests: XCTestCase {
 
     func testSecondSignInWithSocialWhileBusyDoesNotFireASecondRequest() async {
         let harness = makeHarness(social: .code("abc123"))
-        harness.stub.on(.post, "/oauth/signin/exchange") { _, _ in .init(status: 200, json: Self.authJSON) }
+        harness.stub.on(.post, "/oauth/signin/exchange") { _, _ in .init(status: 200, json: Self.exchangeJSON) }
         async let first: Void = harness.viewModel.signInWithSocial(.github)
         async let second: Void = harness.viewModel.signInWithSocial(.github)
         _ = await (first, second)
@@ -518,7 +524,7 @@ final class SignInViewModelTests: XCTestCase {
 
     func testSocialRejectionNeverBlamesAPassword() async {
         let harness = makeHarness(social: .code("abc123"))
-        harness.stub.on(.post, "/oauth/signin/exchange", status: 401, json: #"{"error":{"message":"bad code"}}"#)
+        harness.stub.on(.post, "/oauth/signin/exchange", status: 401, json: StubClientTransport.error("bad code"))
         await harness.viewModel.signInWithSocial(.github)
         XCTAssertEqual(harness.viewModel.state.errorMessage, "The hub didn't accept that sign-in. Please try again.")
     }

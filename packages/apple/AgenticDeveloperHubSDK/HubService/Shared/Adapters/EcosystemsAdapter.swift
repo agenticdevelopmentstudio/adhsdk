@@ -15,7 +15,7 @@ public final class EcosystemsAdapter: EcosystemsDataSource {
     }
 
     public func list() async throws -> [Ecosystem] {
-        try await api.get("/ecosystem/ecosystems", query: workspace.query, as: [Ecosystem].self)
+        try await api.list("/v1/ecosystems", query: workspace.query, as: Ecosystem.self)
     }
 
     /// `parent=` ALONE, matching the web reference implementation
@@ -25,16 +25,16 @@ public final class EcosystemsAdapter: EcosystemsDataSource {
     /// and the child list read empty for a product that has children. Every other call here keeps
     /// `workspace`; this is the one endpoint the web deliberately does not send it on.
     public func children(of parentID: String) async throws -> [Ecosystem] {
-        try await api.get("/ecosystem/ecosystems", query: ["parent": parentID], as: [Ecosystem].self)
+        try await api.list("/v1/ecosystems", query: ["parent": parentID], as: Ecosystem.self)
     }
 
     public func get(id: String) async throws -> Ecosystem {
-        try await api.get("/ecosystem/ecosystems/\(id)", query: workspace.query, as: Ecosystem.self)
+        try await api.get("/v1/ecosystems/\(id)", query: workspace.query, as: Ecosystem.self)
     }
 
     public func infrastructureID() async throws -> String {
-        let rows = try await api.get(
-            "/ecosystem/ecosystems", query: query(["infrastructure": "true"]), as: [Ecosystem].self
+        let rows = try await api.list(
+            "/v1/ecosystems", query: query(["infrastructure": "true"]), as: Ecosystem.self
         )
         guard let first = rows.first else {
             throw HubError.unexpected("No infrastructure ecosystem for workspace \(workspace.slug)")
@@ -42,22 +42,26 @@ public final class EcosystemsAdapter: EcosystemsDataSource {
         return first.id
     }
 
+    /// Stays on the unversioned `/registry/identifiers/{rdid}/exists`: `/v1` serves it only as an
+    /// undocumented passthrough, and `GET /v1/identifiers/{rdid}` is not a substitute — it resolves a
+    /// live mapping, while `exists` also counts reserved addresses and retired aliases still inside
+    /// their retention window, which a new identifier must not take either.
     public func identifierExists(_ identifier: String) async throws -> Bool {
         try await api.get("/registry/identifiers/\(identifier)/exists", as: ExistsResponse.self).exists
     }
 
     public func create(_ input: EcosystemCreate, parentID: String?) async throws -> Ecosystem {
         try await api.send(
-            .post, "/ecosystem/ecosystems", query: query(["parent": parentID]), body: input, as: Ecosystem.self
+            .post, "/v1/ecosystems", query: query(["parent": parentID]), body: input, as: Ecosystem.self
         )
     }
 
     public func update(id: String, _ input: EcosystemUpdate) async throws -> Ecosystem {
-        try await api.send(.put, "/ecosystem/ecosystems/\(id)", query: workspace.query, body: input, as: Ecosystem.self)
+        try await api.send(.post, "/v1/ecosystems/\(id)", query: workspace.query, body: input, as: Ecosystem.self)
     }
 
     public func delete(id: String) async throws {
-        try await api.send(.delete, "/ecosystem/ecosystems/\(id)", query: workspace.query)
+        try await api.send(.delete, "/v1/ecosystems/\(id)", query: workspace.query)
     }
 
     /// The workspace query plus extra pairs; nil values are dropped.

@@ -2,7 +2,7 @@ import AgenticDeveloperHubSDKHub
 import Foundation
 import HTTPTypes
 
-/// `SigninAppsDataSource` over `/ecosystem/signin-apps/{id}`.
+/// `SigninAppsDataSource` over `/v1/ecosystems/{id}/signin_apps`.
 @MainActor
 public final class SigninAppsAdapter: SigninAppsDataSource {
     private let api: HubAPI
@@ -14,11 +14,11 @@ public final class SigninAppsAdapter: SigninAppsDataSource {
     }
 
     private func path(_ ecosystemID: String, _ id: String? = nil) -> String {
-        id.map { "/ecosystem/signin-apps/\(ecosystemID)/\($0)" } ?? "/ecosystem/signin-apps/\(ecosystemID)"
+        id.map { "/v1/ecosystems/\(ecosystemID)/signin_apps/\($0)" } ?? "/v1/ecosystems/\(ecosystemID)/signin_apps"
     }
 
     public func list(ecosystemID: String) async throws -> [SigninApp] {
-        try await api.get(path(ecosystemID), query: workspace.query, as: [SigninApp].self)
+        try await api.list(path(ecosystemID), query: workspace.query, as: SigninApp.self)
     }
 
     public func create(ecosystemID: String, _ body: SigninAppCreate) async throws -> SigninApp {
@@ -26,7 +26,7 @@ public final class SigninAppsAdapter: SigninAppsDataSource {
     }
 
     public func update(ecosystemID: String, id: String, _ body: SigninAppUpdate) async throws -> SigninApp {
-        try await api.send(.patch, path(ecosystemID, id), query: workspace.query, body: body, as: SigninApp.self)
+        try await api.send(.post, path(ecosystemID, id), query: workspace.query, body: body, as: SigninApp.self)
     }
 
     public func delete(ecosystemID: String, id: String) async throws {

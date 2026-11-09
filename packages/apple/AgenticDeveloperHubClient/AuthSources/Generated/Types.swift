@@ -11,226 +11,196 @@ import struct Foundation.Date
 #endif
 /// A type that performs HTTP operations defined by the OpenAPI document.
 public protocol APIProtocol: Sendable {
-    /// Sign in (may require a second factor)
-    ///
-    /// - Remark: HTTP `POST /auth/login`.
-    /// - Remark: Generated from `#/paths//auth/login/post`.
-    func postAuthLogin(_ input: Operations.PostAuthLogin.Input) async throws -> Operations.PostAuthLogin.Output
-    /// Send the SMS login code to the verified primary phone
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/sms/send`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post`.
-    func postAuthLoginMfaSmsSend(_ input: Operations.PostAuthLoginMfaSmsSend.Input) async throws -> Operations.PostAuthLoginMfaSmsSend.Output
-    /// Complete login by satisfying the second factor → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/post`.
-    func postAuthLoginMfa(_ input: Operations.PostAuthLoginMfa.Input) async throws -> Operations.PostAuthLoginMfa.Output
-    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post`.
-    func postAuthLoginMfaWebauthnOptions(_ input: Operations.PostAuthLoginMfaWebauthnOptions.Input) async throws -> Operations.PostAuthLoginMfaWebauthnOptions.Output
-    /// WebAuthn 2nd-factor: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/post`.
-    func postAuthLoginMfaWebauthn(_ input: Operations.PostAuthLoginMfaWebauthn.Input) async throws -> Operations.PostAuthLoginMfaWebauthn.Output
-    /// Passwordless passkey: assertion options for an account
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/options/post`.
-    func postAuthLoginWebauthnOptions(_ input: Operations.PostAuthLoginWebauthnOptions.Input) async throws -> Operations.PostAuthLoginWebauthnOptions.Output
-    /// Passwordless passkey: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/post`.
-    func postAuthLoginWebauthn(_ input: Operations.PostAuthLoginWebauthn.Input) async throws -> Operations.PostAuthLoginWebauthn.Output
-    /// Rotate refresh token → new JWT
-    ///
-    /// - Remark: HTTP `POST /auth/refresh`.
-    /// - Remark: Generated from `#/paths//auth/refresh/post`.
-    func postAuthRefresh(_ input: Operations.PostAuthRefresh.Input) async throws -> Operations.PostAuthRefresh.Output
     /// Current user
     ///
     /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
     ///
-    /// - Remark: HTTP `GET /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/get`.
-    func getAuthMe(_ input: Operations.GetAuthMe.Input) async throws -> Operations.GetAuthMe.Output
+    /// Replaces GET /auth/me, GET /account/privacy (include privacy), GET /me/appearance (include appearance), GET /me/communication-settings (include communication_settings), GET /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `GET /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)`.
+    func getV1Account(_ input: Operations.GetV1Account.Input) async throws -> Operations.GetV1Account.Output
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
     ///
-    /// - Remark: HTTP `PATCH /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/patch`.
-    func patchAuthMe(_ input: Operations.PatchAuthMe.Input) async throws -> Operations.PatchAuthMe.Output
+    /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `POST /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)`.
+    func postV1Account(_ input: Operations.PostV1Account.Input) async throws -> Operations.PostV1Account.Output
     /// List the caller’s API tokens (metadata only; raw values never returned)
     ///
-    /// - Remark: HTTP `GET /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/get`.
-    func getAuthTokens(_ input: Operations.GetAuthTokens.Input) async throws -> Operations.GetAuthTokens.Output
+    /// Replaces GET /auth/tokens, GET /tokens.
+    ///
+    /// - Remark: HTTP `GET /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)`.
+    func getV1ApiKeys(_ input: Operations.GetV1ApiKeys.Input) async throws -> Operations.GetV1ApiKeys.Output
     /// Mint an API token (raw value shown once)
     ///
-    /// - Remark: HTTP `POST /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/post`.
-    func postAuthTokens(_ input: Operations.PostAuthTokens.Input) async throws -> Operations.PostAuthTokens.Output
-    /// Trade a single-use exchange code → token + refreshToken + user
+    /// Replaces POST /auth/tokens, POST /tokens.
     ///
-    /// - Remark: HTTP `POST /oauth/signin/exchange`.
-    /// - Remark: Generated from `#/paths//oauth/signin/exchange/post`.
-    func postOauthSigninExchange(_ input: Operations.PostOauthSigninExchange.Input) async throws -> Operations.PostOauthSigninExchange.Output
+    /// - Remark: HTTP `POST /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)`.
+    func postV1ApiKeys(_ input: Operations.PostV1ApiKeys.Input) async throws -> Operations.PostV1ApiKeys.Output
+    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
+    ///
+    /// Replaces POST /auth/login/mfa/webauthn/options, POST /auth/login/webauthn/options.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/passkey_challenges`.
+    /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)`.
+    func postV1AuthPasskeyChallenges(_ input: Operations.PostV1AuthPasskeyChallenges.Input) async throws -> Operations.PostV1AuthPasskeyChallenges.Output
+    /// Sign in (may require a second factor)
+    ///
+    /// Replaces POST /auth/login, POST /auth/login/mfa, POST /auth/login/mfa/webauthn, POST /auth/login/webauthn.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)`.
+    func postV1AuthSessions(_ input: Operations.PostV1AuthSessions.Input) async throws -> Operations.PostV1AuthSessions.Output
+    /// Rotate refresh token → new JWT
+    ///
+    /// Replaces POST /auth/refresh.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/refresh`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/refresh/post(postV1AuthSessionsRefresh)`.
+    func postV1AuthSessionsRefresh(_ input: Operations.PostV1AuthSessionsRefresh.Input) async throws -> Operations.PostV1AuthSessionsRefresh.Output
+    /// Sign out (revoke refresh token)
+    ///
+    /// Replaces POST /auth/revoke.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/revoke`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/revoke/post(postV1AuthSessionsRevoke)`.
+    func postV1AuthSessionsRevoke(_ input: Operations.PostV1AuthSessionsRevoke.Input) async throws -> Operations.PostV1AuthSessionsRevoke.Output
+    /// Send the SMS login code to the verified primary phone
+    ///
+    /// Replaces POST /auth/login/mfa/sms/send.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sms_codes`.
+    /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)`.
+    func postV1AuthSmsCodes(_ input: Operations.PostV1AuthSmsCodes.Input) async throws -> Operations.PostV1AuthSmsCodes.Output
 }
 
 /// Convenience overloads for operation inputs.
 extension APIProtocol {
-    /// Sign in (may require a second factor)
-    ///
-    /// - Remark: HTTP `POST /auth/login`.
-    /// - Remark: Generated from `#/paths//auth/login/post`.
-    public func postAuthLogin(
-        headers: Operations.PostAuthLogin.Input.Headers = .init(),
-        body: Operations.PostAuthLogin.Input.Body? = nil
-    ) async throws -> Operations.PostAuthLogin.Output {
-        try await postAuthLogin(Operations.PostAuthLogin.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Send the SMS login code to the verified primary phone
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/sms/send`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post`.
-    public func postAuthLoginMfaSmsSend(
-        headers: Operations.PostAuthLoginMfaSmsSend.Input.Headers = .init(),
-        body: Operations.PostAuthLoginMfaSmsSend.Input.Body? = nil
-    ) async throws -> Operations.PostAuthLoginMfaSmsSend.Output {
-        try await postAuthLoginMfaSmsSend(Operations.PostAuthLoginMfaSmsSend.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Complete login by satisfying the second factor → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/post`.
-    public func postAuthLoginMfa(
-        headers: Operations.PostAuthLoginMfa.Input.Headers = .init(),
-        body: Operations.PostAuthLoginMfa.Input.Body? = nil
-    ) async throws -> Operations.PostAuthLoginMfa.Output {
-        try await postAuthLoginMfa(Operations.PostAuthLoginMfa.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post`.
-    public func postAuthLoginMfaWebauthnOptions(
-        headers: Operations.PostAuthLoginMfaWebauthnOptions.Input.Headers = .init(),
-        body: Operations.PostAuthLoginMfaWebauthnOptions.Input.Body? = nil
-    ) async throws -> Operations.PostAuthLoginMfaWebauthnOptions.Output {
-        try await postAuthLoginMfaWebauthnOptions(Operations.PostAuthLoginMfaWebauthnOptions.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// WebAuthn 2nd-factor: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/post`.
-    public func postAuthLoginMfaWebauthn(
-        headers: Operations.PostAuthLoginMfaWebauthn.Input.Headers = .init(),
-        body: Operations.PostAuthLoginMfaWebauthn.Input.Body? = nil
-    ) async throws -> Operations.PostAuthLoginMfaWebauthn.Output {
-        try await postAuthLoginMfaWebauthn(Operations.PostAuthLoginMfaWebauthn.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Passwordless passkey: assertion options for an account
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/options/post`.
-    public func postAuthLoginWebauthnOptions(
-        headers: Operations.PostAuthLoginWebauthnOptions.Input.Headers = .init(),
-        body: Operations.PostAuthLoginWebauthnOptions.Input.Body? = nil
-    ) async throws -> Operations.PostAuthLoginWebauthnOptions.Output {
-        try await postAuthLoginWebauthnOptions(Operations.PostAuthLoginWebauthnOptions.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Passwordless passkey: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/post`.
-    public func postAuthLoginWebauthn(
-        headers: Operations.PostAuthLoginWebauthn.Input.Headers = .init(),
-        body: Operations.PostAuthLoginWebauthn.Input.Body? = nil
-    ) async throws -> Operations.PostAuthLoginWebauthn.Output {
-        try await postAuthLoginWebauthn(Operations.PostAuthLoginWebauthn.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Rotate refresh token → new JWT
-    ///
-    /// - Remark: HTTP `POST /auth/refresh`.
-    /// - Remark: Generated from `#/paths//auth/refresh/post`.
-    public func postAuthRefresh(headers: Operations.PostAuthRefresh.Input.Headers = .init()) async throws -> Operations.PostAuthRefresh.Output {
-        try await postAuthRefresh(Operations.PostAuthRefresh.Input(headers: headers))
-    }
     /// Current user
     ///
     /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
     ///
-    /// - Remark: HTTP `GET /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/get`.
-    public func getAuthMe(headers: Operations.GetAuthMe.Input.Headers = .init()) async throws -> Operations.GetAuthMe.Output {
-        try await getAuthMe(Operations.GetAuthMe.Input(headers: headers))
+    /// Replaces GET /auth/me, GET /account/privacy (include privacy), GET /me/appearance (include appearance), GET /me/communication-settings (include communication_settings), GET /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `GET /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)`.
+    public func getV1Account(
+        query: Operations.GetV1Account.Input.Query = .init(),
+        headers: Operations.GetV1Account.Input.Headers = .init()
+    ) async throws -> Operations.GetV1Account.Output {
+        try await getV1Account(Operations.GetV1Account.Input(
+            query: query,
+            headers: headers
+        ))
     }
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
     ///
-    /// - Remark: HTTP `PATCH /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/patch`.
-    public func patchAuthMe(
-        headers: Operations.PatchAuthMe.Input.Headers = .init(),
-        body: Operations.PatchAuthMe.Input.Body? = nil
-    ) async throws -> Operations.PatchAuthMe.Output {
-        try await patchAuthMe(Operations.PatchAuthMe.Input(
+    /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `POST /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)`.
+    public func postV1Account(
+        headers: Operations.PostV1Account.Input.Headers = .init(),
+        body: Operations.PostV1Account.Input.Body
+    ) async throws -> Operations.PostV1Account.Output {
+        try await postV1Account(Operations.PostV1Account.Input(
             headers: headers,
             body: body
         ))
     }
     /// List the caller’s API tokens (metadata only; raw values never returned)
     ///
-    /// - Remark: HTTP `GET /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/get`.
-    public func getAuthTokens(headers: Operations.GetAuthTokens.Input.Headers = .init()) async throws -> Operations.GetAuthTokens.Output {
-        try await getAuthTokens(Operations.GetAuthTokens.Input(headers: headers))
+    /// Replaces GET /auth/tokens, GET /tokens.
+    ///
+    /// - Remark: HTTP `GET /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)`.
+    public func getV1ApiKeys(
+        query: Operations.GetV1ApiKeys.Input.Query = .init(),
+        headers: Operations.GetV1ApiKeys.Input.Headers = .init()
+    ) async throws -> Operations.GetV1ApiKeys.Output {
+        try await getV1ApiKeys(Operations.GetV1ApiKeys.Input(
+            query: query,
+            headers: headers
+        ))
     }
     /// Mint an API token (raw value shown once)
     ///
-    /// - Remark: HTTP `POST /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/post`.
-    public func postAuthTokens(
-        headers: Operations.PostAuthTokens.Input.Headers = .init(),
-        body: Operations.PostAuthTokens.Input.Body? = nil
-    ) async throws -> Operations.PostAuthTokens.Output {
-        try await postAuthTokens(Operations.PostAuthTokens.Input(
+    /// Replaces POST /auth/tokens, POST /tokens.
+    ///
+    /// - Remark: HTTP `POST /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)`.
+    public func postV1ApiKeys(
+        headers: Operations.PostV1ApiKeys.Input.Headers = .init(),
+        body: Operations.PostV1ApiKeys.Input.Body
+    ) async throws -> Operations.PostV1ApiKeys.Output {
+        try await postV1ApiKeys(Operations.PostV1ApiKeys.Input(
             headers: headers,
             body: body
         ))
     }
-    /// Trade a single-use exchange code → token + refreshToken + user
+    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
     ///
-    /// - Remark: HTTP `POST /oauth/signin/exchange`.
-    /// - Remark: Generated from `#/paths//oauth/signin/exchange/post`.
-    public func postOauthSigninExchange(
-        headers: Operations.PostOauthSigninExchange.Input.Headers = .init(),
-        body: Operations.PostOauthSigninExchange.Input.Body? = nil
-    ) async throws -> Operations.PostOauthSigninExchange.Output {
-        try await postOauthSigninExchange(Operations.PostOauthSigninExchange.Input(
+    /// Replaces POST /auth/login/mfa/webauthn/options, POST /auth/login/webauthn/options.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/passkey_challenges`.
+    /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)`.
+    public func postV1AuthPasskeyChallenges(
+        headers: Operations.PostV1AuthPasskeyChallenges.Input.Headers = .init(),
+        body: Operations.PostV1AuthPasskeyChallenges.Input.Body
+    ) async throws -> Operations.PostV1AuthPasskeyChallenges.Output {
+        try await postV1AuthPasskeyChallenges(Operations.PostV1AuthPasskeyChallenges.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Sign in (may require a second factor)
+    ///
+    /// Replaces POST /auth/login, POST /auth/login/mfa, POST /auth/login/mfa/webauthn, POST /auth/login/webauthn.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)`.
+    public func postV1AuthSessions(
+        headers: Operations.PostV1AuthSessions.Input.Headers = .init(),
+        body: Operations.PostV1AuthSessions.Input.Body
+    ) async throws -> Operations.PostV1AuthSessions.Output {
+        try await postV1AuthSessions(Operations.PostV1AuthSessions.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Rotate refresh token → new JWT
+    ///
+    /// Replaces POST /auth/refresh.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/refresh`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/refresh/post(postV1AuthSessionsRefresh)`.
+    public func postV1AuthSessionsRefresh(headers: Operations.PostV1AuthSessionsRefresh.Input.Headers = .init()) async throws -> Operations.PostV1AuthSessionsRefresh.Output {
+        try await postV1AuthSessionsRefresh(Operations.PostV1AuthSessionsRefresh.Input(headers: headers))
+    }
+    /// Sign out (revoke refresh token)
+    ///
+    /// Replaces POST /auth/revoke.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/revoke`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/revoke/post(postV1AuthSessionsRevoke)`.
+    public func postV1AuthSessionsRevoke(headers: Operations.PostV1AuthSessionsRevoke.Input.Headers = .init()) async throws -> Operations.PostV1AuthSessionsRevoke.Output {
+        try await postV1AuthSessionsRevoke(Operations.PostV1AuthSessionsRevoke.Input(headers: headers))
+    }
+    /// Send the SMS login code to the verified primary phone
+    ///
+    /// Replaces POST /auth/login/mfa/sms/send.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sms_codes`.
+    /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)`.
+    public func postV1AuthSmsCodes(
+        headers: Operations.PostV1AuthSmsCodes.Input.Headers = .init(),
+        body: Operations.PostV1AuthSmsCodes.Input.Body
+    ) async throws -> Operations.PostV1AuthSmsCodes.Output {
+        try await postV1AuthSmsCodes(Operations.PostV1AuthSmsCodes.Input(
             headers: headers,
             body: body
         ))
@@ -299,79 +269,6 @@ public enum Servers {
 public enum Components {
     /// Types generated from the `#/components/schemas` section of the OpenAPI document.
     public enum Schemas {
-        /// - Remark: Generated from `#/components/schemas/Error`.
-        public struct _Error: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/Error/error`.
-            public struct _ErrorPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Error/error/message`.
-                public var message: Swift.String?
-                /// - Remark: Generated from `#/components/schemas/Error/error/code`.
-                public var code: Swift.String?
-                /// - Remark: Generated from `#/components/schemas/Error/error/OwnedPayload`.
-                public struct OwnedPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Error/error/OwnedPayload/table`.
-                    public var table: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Error/error/OwnedPayload/rows`.
-                    public var rows: Swift.Int
-                    /// Creates a new `OwnedPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - table:
-                    ///   - rows:
-                    public init(
-                        table: Swift.String,
-                        rows: Swift.Int
-                    ) {
-                        self.table = table
-                        self.rows = rows
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case table
-                        case rows
-                    }
-                }
-                /// present when code is still_owns_data: the tables still owned, with counts
-                ///
-                /// - Remark: Generated from `#/components/schemas/Error/error/owned`.
-                public typealias OwnedPayload = [Components.Schemas._Error._ErrorPayload.OwnedPayloadPayload]
-                /// present when code is still_owns_data: the tables still owned, with counts
-                ///
-                /// - Remark: Generated from `#/components/schemas/Error/error/owned`.
-                public var owned: Components.Schemas._Error._ErrorPayload.OwnedPayload?
-                /// Creates a new `_ErrorPayload`.
-                ///
-                /// - Parameters:
-                ///   - message:
-                ///   - code:
-                ///   - owned: present when code is still_owns_data: the tables still owned, with counts
-                public init(
-                    message: Swift.String? = nil,
-                    code: Swift.String? = nil,
-                    owned: Components.Schemas._Error._ErrorPayload.OwnedPayload? = nil
-                ) {
-                    self.message = message
-                    self.code = code
-                    self.owned = owned
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case message
-                    case code
-                    case owned
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Error/error`.
-            public var error: Components.Schemas._Error._ErrorPayload?
-            /// Creates a new `_Error`.
-            ///
-            /// - Parameters:
-            ///   - error:
-            public init(error: Components.Schemas._Error._ErrorPayload? = nil) {
-                self.error = error
-            }
-            public enum CodingKeys: String, CodingKey {
-                case error
-            }
-        }
         /// - Remark: Generated from `#/components/schemas/User`.
         public struct User: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/User/id`.
@@ -380,17 +277,17 @@ public enum Components {
             public var email: Swift.String
             /// - Remark: Generated from `#/components/schemas/User/name`.
             public var name: Swift.String
-            /// - Remark: Generated from `#/components/schemas/User/avatarUrl`.
+            /// - Remark: Generated from `#/components/schemas/User/avatar_url`.
             public var avatarUrl: Swift.String
             /// - Remark: Generated from `#/components/schemas/User/slug`.
             public var slug: Swift.String?
             /// Whether the public profile card is visible at /public/users/:slug
             ///
-            /// - Remark: Generated from `#/components/schemas/User/publicProfileEnabled`.
+            /// - Remark: Generated from `#/components/schemas/User/public_profile_enabled`.
             public var publicProfileEnabled: Swift.Bool
             /// The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
             ///
-            /// - Remark: Generated from `#/components/schemas/User/profileVisibility`.
+            /// - Remark: Generated from `#/components/schemas/User/profile_visibility`.
             @frozen public enum ProfileVisibilityPayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case _public = "public"
                 case hub = "hub"
@@ -398,7 +295,7 @@ public enum Components {
             }
             /// The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
             ///
-            /// - Remark: Generated from `#/components/schemas/User/profileVisibility`.
+            /// - Remark: Generated from `#/components/schemas/User/profile_visibility`.
             public var profileVisibility: Components.Schemas.User.ProfileVisibilityPayload
             /// - Remark: Generated from `#/components/schemas/User/capabilities`.
             public var capabilities: [Swift.String]
@@ -436,10 +333,10 @@ public enum Components {
                 case id
                 case email
                 case name
-                case avatarUrl
+                case avatarUrl = "avatar_url"
                 case slug
-                case publicProfileEnabled
-                case profileVisibility
+                case publicProfileEnabled = "public_profile_enabled"
+                case profileVisibility = "profile_visibility"
                 case capabilities
             }
         }
@@ -451,7 +348,7 @@ public enum Components {
             public var token: Swift.String
             /// Opaque refresh token (rotated on use)
             ///
-            /// - Remark: Generated from `#/components/schemas/AuthResult/refreshToken`.
+            /// - Remark: Generated from `#/components/schemas/AuthResult/refresh_token`.
             public var refreshToken: Swift.String
             /// - Remark: Generated from `#/components/schemas/AuthResult/user`.
             public var user: Components.Schemas.User
@@ -472,7 +369,7 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case token
-                case refreshToken
+                case refreshToken = "refresh_token"
                 case user
             }
         }
@@ -482,7 +379,7 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/RefreshResult/token`.
             public var token: Swift.String
-            /// - Remark: Generated from `#/components/schemas/RefreshResult/refreshToken`.
+            /// - Remark: Generated from `#/components/schemas/RefreshResult/refresh_token`.
             public var refreshToken: Swift.String
             /// Creates a new `RefreshResult`.
             ///
@@ -498,51 +395,7 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case token
-                case refreshToken
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/MfaChallenge`.
-        public struct MfaChallenge: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/MfaChallenge/mfaRequired`.
-            public var mfaRequired: Swift.Bool
-            /// Short-lived MFA pending token
-            ///
-            /// - Remark: Generated from `#/components/schemas/MfaChallenge/token`.
-            public var token: Swift.String
-            /// - Remark: Generated from `#/components/schemas/MfaChallenge/MethodsPayload`.
-            @frozen public enum MethodsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                case sms = "sms"
-                case totp = "totp"
-                case webauthn = "webauthn"
-                case recovery = "recovery"
-            }
-            /// Second factors the user can satisfy
-            ///
-            /// - Remark: Generated from `#/components/schemas/MfaChallenge/methods`.
-            public typealias MethodsPayload = [Components.Schemas.MfaChallenge.MethodsPayloadPayload]
-            /// Second factors the user can satisfy
-            ///
-            /// - Remark: Generated from `#/components/schemas/MfaChallenge/methods`.
-            public var methods: Components.Schemas.MfaChallenge.MethodsPayload
-            /// Creates a new `MfaChallenge`.
-            ///
-            /// - Parameters:
-            ///   - mfaRequired:
-            ///   - token: Short-lived MFA pending token
-            ///   - methods: Second factors the user can satisfy
-            public init(
-                mfaRequired: Swift.Bool,
-                token: Swift.String,
-                methods: Components.Schemas.MfaChallenge.MethodsPayload
-            ) {
-                self.mfaRequired = mfaRequired
-                self.token = token
-                self.methods = methods
-            }
-            public enum CodingKeys: String, CodingKey {
-                case mfaRequired
-                case token
-                case methods
+                case refreshToken = "refresh_token"
             }
         }
         /// - Remark: Generated from `#/components/schemas/ApiToken`.
@@ -555,11 +408,13 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/ApiToken/prefix`.
             public var prefix: Swift.String
-            /// - Remark: Generated from `#/components/schemas/ApiToken/createdAt`.
-            public var createdAt: Swift.String
-            /// - Remark: Generated from `#/components/schemas/ApiToken/expiresAt`.
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ApiToken/created`.
+            public var created: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/ApiToken/expires_at`.
             public var expiresAt: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/ApiToken/lastUsedAt`.
+            /// - Remark: Generated from `#/components/schemas/ApiToken/last_used_at`.
             public var lastUsedAt: Swift.String?
             /// REST path prefixes this token may reach (e.g. ["/content/markdown"], optional ":read" suffix, "*" = all). null = legacy curated-only.
             ///
@@ -571,7 +426,7 @@ public enum Components {
             ///   - id:
             ///   - name:
             ///   - prefix: Non-secret leading chars, for display
-            ///   - createdAt:
+            ///   - created: Unix timestamp, in seconds.
             ///   - expiresAt:
             ///   - lastUsedAt:
             ///   - scope: REST path prefixes this token may reach (e.g. ["/content/markdown"], optional ":read" suffix, "*" = all). null = legacy curated-only.
@@ -579,7 +434,7 @@ public enum Components {
                 id: Swift.String,
                 name: Swift.String,
                 prefix: Swift.String,
-                createdAt: Swift.String,
+                created: Swift.Int,
                 expiresAt: Swift.String? = nil,
                 lastUsedAt: Swift.String? = nil,
                 scope: [Swift.String]? = nil
@@ -587,7 +442,7 @@ public enum Components {
                 self.id = id
                 self.name = name
                 self.prefix = prefix
-                self.createdAt = createdAt
+                self.created = created
                 self.expiresAt = expiresAt
                 self.lastUsedAt = lastUsedAt
                 self.scope = scope
@@ -596,9 +451,9 @@ public enum Components {
                 case id
                 case name
                 case prefix
-                case createdAt
-                case expiresAt
-                case lastUsedAt
+                case created
+                case expiresAt = "expires_at"
+                case lastUsedAt = "last_used_at"
                 case scope
             }
         }
@@ -646,6 +501,283 @@ public enum Components {
                 try self.value2.encode(to: encoder)
             }
         }
+        /// - Remark: Generated from `#/components/schemas/CommunicationSettings`.
+        public struct CommunicationSettings: Codable, Hashable, Sendable {
+            /// AUDIENCE bitmask of who may DM the user (0 = nobody; default PUBLIC|HUB = 3)
+            ///
+            /// - Remark: Generated from `#/components/schemas/CommunicationSettings/dm_audience_mask`.
+            public var dmAudienceMask: Swift.Int
+            /// AUDIENCE bitmask of who may see the user presence (0 = nobody; default PUBLIC|HUB = 3)
+            ///
+            /// - Remark: Generated from `#/components/schemas/CommunicationSettings/presence_audience_mask`.
+            public var presenceAudienceMask: Swift.Int
+            /// When true, presence is hidden from EVERYONE regardless of the mask
+            ///
+            /// - Remark: Generated from `#/components/schemas/CommunicationSettings/appear_offline`.
+            public var appearOffline: Swift.Bool
+            /// Creates a new `CommunicationSettings`.
+            ///
+            /// - Parameters:
+            ///   - dmAudienceMask: AUDIENCE bitmask of who may DM the user (0 = nobody; default PUBLIC|HUB = 3)
+            ///   - presenceAudienceMask: AUDIENCE bitmask of who may see the user presence (0 = nobody; default PUBLIC|HUB = 3)
+            ///   - appearOffline: When true, presence is hidden from EVERYONE regardless of the mask
+            public init(
+                dmAudienceMask: Swift.Int,
+                presenceAudienceMask: Swift.Int,
+                appearOffline: Swift.Bool
+            ) {
+                self.dmAudienceMask = dmAudienceMask
+                self.presenceAudienceMask = presenceAudienceMask
+                self.appearOffline = appearOffline
+            }
+            public enum CodingKeys: String, CodingKey {
+                case dmAudienceMask = "dm_audience_mask"
+                case presenceAudienceMask = "presence_audience_mask"
+                case appearOffline = "appear_offline"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppearanceSettings`.
+        public struct AppearanceSettings: Codable, Hashable, Sendable {
+            /// Empty object when the user has never saved a preference (client defaults apply)
+            ///
+            /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs`.
+            public struct PrefsPayload: Codable, Hashable, Sendable {
+                /// The user's colour scheme; 'auto' follows the operating system
+                ///
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/color_mode`.
+                @frozen public enum ColorModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case auto = "auto"
+                    case light = "light"
+                    case dark = "dark"
+                }
+                /// The user's colour scheme; 'auto' follows the operating system
+                ///
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/color_mode`.
+                public var colorMode: Components.Schemas.AppearanceSettings.PrefsPayload.ColorModePayload?
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/reduce_motion`.
+                @frozen public enum ReduceMotionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case auto = "auto"
+                    case on = "on"
+                    case off = "off"
+                }
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/reduce_motion`.
+                public var reduceMotion: Components.Schemas.AppearanceSettings.PrefsPayload.ReduceMotionPayload?
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/contrast`.
+                @frozen public enum ContrastPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case _default = "default"
+                    case high = "high"
+                    case extraHigh = "extra-high"
+                }
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/contrast`.
+                public var contrast: Components.Schemas.AppearanceSettings.PrefsPayload.ContrastPayload?
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/text_size`.
+                @frozen public enum TextSizePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case _default = "default"
+                    case small = "small"
+                    case large = "large"
+                    case extraLarge = "extra-large"
+                }
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/text_size`.
+                public var textSize: Components.Schemas.AppearanceSettings.PrefsPayload.TextSizePayload?
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/spacing`.
+                @frozen public enum SpacingPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case compact = "compact"
+                    case comfortable = "comfortable"
+                    case spacious = "spacious"
+                }
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/spacing`.
+                public var spacing: Components.Schemas.AppearanceSettings.PrefsPayload.SpacingPayload?
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/focus_outlines`.
+                public var focusOutlines: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs/underline_links`.
+                public var underlineLinks: Swift.Bool?
+                /// Creates a new `PrefsPayload`.
+                ///
+                /// - Parameters:
+                ///   - colorMode: The user's colour scheme; 'auto' follows the operating system
+                ///   - reduceMotion:
+                ///   - contrast:
+                ///   - textSize:
+                ///   - spacing:
+                ///   - focusOutlines:
+                ///   - underlineLinks:
+                public init(
+                    colorMode: Components.Schemas.AppearanceSettings.PrefsPayload.ColorModePayload? = nil,
+                    reduceMotion: Components.Schemas.AppearanceSettings.PrefsPayload.ReduceMotionPayload? = nil,
+                    contrast: Components.Schemas.AppearanceSettings.PrefsPayload.ContrastPayload? = nil,
+                    textSize: Components.Schemas.AppearanceSettings.PrefsPayload.TextSizePayload? = nil,
+                    spacing: Components.Schemas.AppearanceSettings.PrefsPayload.SpacingPayload? = nil,
+                    focusOutlines: Swift.Bool? = nil,
+                    underlineLinks: Swift.Bool? = nil
+                ) {
+                    self.colorMode = colorMode
+                    self.reduceMotion = reduceMotion
+                    self.contrast = contrast
+                    self.textSize = textSize
+                    self.spacing = spacing
+                    self.focusOutlines = focusOutlines
+                    self.underlineLinks = underlineLinks
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case colorMode = "color_mode"
+                    case reduceMotion = "reduce_motion"
+                    case contrast
+                    case textSize = "text_size"
+                    case spacing
+                    case focusOutlines = "focus_outlines"
+                    case underlineLinks = "underline_links"
+                }
+            }
+            /// Empty object when the user has never saved a preference (client defaults apply)
+            ///
+            /// - Remark: Generated from `#/components/schemas/AppearanceSettings/prefs`.
+            public var prefs: Components.Schemas.AppearanceSettings.PrefsPayload
+            /// Creates a new `AppearanceSettings`.
+            ///
+            /// - Parameters:
+            ///   - prefs: Empty object when the user has never saved a preference (client defaults apply)
+            public init(prefs: Components.Schemas.AppearanceSettings.PrefsPayload) {
+                self.prefs = prefs
+            }
+            public enum CodingKeys: String, CodingKey {
+                case prefs
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WorkspacePrefs`.
+        public struct WorkspacePrefs: Codable, Hashable, Sendable {
+            /// Empty object when the user has never chosen a workspace (the client falls back to their personal one)
+            ///
+            /// - Remark: Generated from `#/components/schemas/WorkspacePrefs/prefs`.
+            public struct PrefsPayload: Codable, Hashable, Sendable {
+                /// The workspace the user's /home chooser last landed on (a workspace slug)
+                ///
+                /// - Remark: Generated from `#/components/schemas/WorkspacePrefs/prefs/slug`.
+                public var slug: Swift.String?
+                /// Creates a new `PrefsPayload`.
+                ///
+                /// - Parameters:
+                ///   - slug: The workspace the user's /home chooser last landed on (a workspace slug)
+                public init(slug: Swift.String? = nil) {
+                    self.slug = slug
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case slug
+                }
+            }
+            /// Empty object when the user has never chosen a workspace (the client falls back to their personal one)
+            ///
+            /// - Remark: Generated from `#/components/schemas/WorkspacePrefs/prefs`.
+            public var prefs: Components.Schemas.WorkspacePrefs.PrefsPayload
+            /// Creates a new `WorkspacePrefs`.
+            ///
+            /// - Parameters:
+            ///   - prefs: Empty object when the user has never chosen a workspace (the client falls back to their personal one)
+            public init(prefs: Components.Schemas.WorkspacePrefs.PrefsPayload) {
+                self.prefs = prefs
+            }
+            public enum CodingKeys: String, CodingKey {
+                case prefs
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/PrivacyGrant`.
+        public struct PrivacyGrant: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/PrivacyGrant/target_table`.
+            @frozen public enum TargetTablePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case avatar = "avatar"
+                case socialLinks = "social_links"
+                case addresses = "addresses"
+                case contactMethods = "contact_methods"
+            }
+            /// - Remark: Generated from `#/components/schemas/PrivacyGrant/target_table`.
+            public var targetTable: Components.Schemas.PrivacyGrant.TargetTablePayload
+            /// - Remark: Generated from `#/components/schemas/PrivacyGrant/target_id`.
+            public var targetId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/PrivacyGrant/audience_mask`.
+            public var audienceMask: Swift.Int
+            /// Creates a new `PrivacyGrant`.
+            ///
+            /// - Parameters:
+            ///   - targetTable:
+            ///   - targetId:
+            ///   - audienceMask:
+            public init(
+                targetTable: Components.Schemas.PrivacyGrant.TargetTablePayload,
+                targetId: Swift.String,
+                audienceMask: Swift.Int
+            ) {
+                self.targetTable = targetTable
+                self.targetId = targetId
+                self.audienceMask = audienceMask
+            }
+            public enum CodingKeys: String, CodingKey {
+                case targetTable = "target_table"
+                case targetId = "target_id"
+                case audienceMask = "audience_mask"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/StripeError`.
+        public struct StripeError: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/StripeError/error`.
+            public struct _ErrorPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/StripeError/error/type`.
+                @frozen public enum _TypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case invalidRequestError = "invalid_request_error"
+                    case authenticationError = "authentication_error"
+                    case permissionError = "permission_error"
+                    case rateLimitError = "rate_limit_error"
+                    case idempotencyError = "idempotency_error"
+                    case apiError = "api_error"
+                }
+                /// - Remark: Generated from `#/components/schemas/StripeError/error/type`.
+                public var _type: Components.Schemas.StripeError._ErrorPayload._TypePayload
+                /// A stable, machine-readable reason, e.g. `resource_missing`.
+                ///
+                /// - Remark: Generated from `#/components/schemas/StripeError/error/code`.
+                public var code: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/StripeError/error/message`.
+                public var message: Swift.String
+                /// The parameter the error is about, when there is one.
+                ///
+                /// - Remark: Generated from `#/components/schemas/StripeError/error/param`.
+                public var param: Swift.String?
+                /// Creates a new `_ErrorPayload`.
+                ///
+                /// - Parameters:
+                ///   - _type:
+                ///   - code: A stable, machine-readable reason, e.g. `resource_missing`.
+                ///   - message:
+                ///   - param: The parameter the error is about, when there is one.
+                public init(
+                    _type: Components.Schemas.StripeError._ErrorPayload._TypePayload,
+                    code: Swift.String? = nil,
+                    message: Swift.String,
+                    param: Swift.String? = nil
+                ) {
+                    self._type = _type
+                    self.code = code
+                    self.message = message
+                    self.param = param
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case _type = "type"
+                    case code
+                    case message
+                    case param
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/StripeError/error`.
+            public var error: Components.Schemas.StripeError._ErrorPayload
+            /// Creates a new `StripeError`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            public init(error: Components.Schemas.StripeError._ErrorPayload) {
+                self.error = error
+            }
+            public enum CodingKeys: String, CodingKey {
+                case error
+            }
+        }
     }
     /// Types generated from the `#/components/parameters` section of the OpenAPI document.
     public enum Parameters {}
@@ -659,2241 +791,209 @@ public enum Components {
 
 /// API operations, with input and output types, generated from `#/paths` in the OpenAPI document.
 public enum Operations {
-    /// Sign in (may require a second factor)
-    ///
-    /// - Remark: HTTP `POST /auth/login`.
-    /// - Remark: Generated from `#/paths//auth/login/post`.
-    public enum PostAuthLogin {
-        public static let id: Swift.String = "post/auth/login"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/login/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLogin.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLogin.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthLogin.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/login/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// Email address
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/POST/requestBody/json/email`.
-                    public var email: Swift.String?
-                    /// User id (login handle)
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/POST/requestBody/json/slug`.
-                    public var slug: Swift.String?
-                    /// Email, user id, or a verified phone number (E.164) — classified server-side
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/POST/requestBody/json/identifier`.
-                    public var identifier: Swift.String?
-                    /// - Remark: Generated from `#/paths/auth/login/POST/requestBody/json/password`.
-                    public var password: Swift.String
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - email: Email address
-                    ///   - slug: User id (login handle)
-                    ///   - identifier: Email, user id, or a verified phone number (E.164) — classified server-side
-                    ///   - password:
-                    public init(
-                        email: Swift.String? = nil,
-                        slug: Swift.String? = nil,
-                        identifier: Swift.String? = nil,
-                        password: Swift.String
-                    ) {
-                        self.email = email
-                        self.slug = slug
-                        self.identifier = identifier
-                        self.password = password
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case email
-                        case slug
-                        case identifier
-                        case password
-                    }
-                }
-                /// - Remark: Generated from `#/paths/auth/login/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthLogin.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostAuthLogin.Input.Body?
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostAuthLogin.Input.Headers = .init(),
-                body: Operations.PostAuthLogin.Input.Body? = nil
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/POST/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AuthResult)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AuthResult {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLogin.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLogin.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// token + refreshToken + user
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/post/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostAuthLogin.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostAuthLogin.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Accepted: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/POST/responses/202/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/POST/responses/202/content/application\/json`.
-                    case json(Components.Schemas.MfaChallenge)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.MfaChallenge {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLogin.Output.Accepted.Body
-                /// Creates a new `Accepted`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLogin.Output.Accepted.Body) {
-                    self.body = body
-                }
-            }
-            /// second factor required
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/post/responses/202`.
-            ///
-            /// HTTP response code: `202 accepted`.
-            case accepted(Operations.PostAuthLogin.Output.Accepted)
-            /// The associated value of the enum case if `self` is `.accepted`.
-            ///
-            /// - Throws: An error if `self` is not `.accepted`.
-            /// - SeeAlso: `.accepted`.
-            public var accepted: Operations.PostAuthLogin.Output.Accepted {
-                get throws {
-                    switch self {
-                    case let .accepted(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "accepted",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLogin.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLogin.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthLogin.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthLogin.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Send the SMS login code to the verified primary phone
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/sms/send`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post`.
-    public enum PostAuthLoginMfaSmsSend {
-        public static let id: Swift.String = "post/auth/login/mfa/sms/send"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfaSmsSend.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfaSmsSend.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthLoginMfaSmsSend.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// MFA pending token
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/requestBody/json/token`.
-                    public var token: Swift.String
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - token: MFA pending token
-                    public init(token: Swift.String) {
-                        self.token = token
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case token
-                    }
-                }
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthLoginMfaSmsSend.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostAuthLoginMfaSmsSend.Input.Body?
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostAuthLoginMfaSmsSend.Input.Headers = .init(),
-                body: Operations.PostAuthLoginMfaSmsSend.Input.Body? = nil
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Accepted: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/202/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/202/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/202/content/json/ok`.
-                        public var ok: Swift.Bool
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - ok:
-                        public init(ok: Swift.Bool) {
-                            self.ok = ok
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case ok
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/202/content/application\/json`.
-                    case json(Operations.PostAuthLoginMfaSmsSend.Output.Accepted.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostAuthLoginMfaSmsSend.Output.Accepted.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaSmsSend.Output.Accepted.Body
-                /// Creates a new `Accepted`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaSmsSend.Output.Accepted.Body) {
-                    self.body = body
-                }
-            }
-            /// code sent
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post/responses/202`.
-            ///
-            /// HTTP response code: `202 accepted`.
-            case accepted(Operations.PostAuthLoginMfaSmsSend.Output.Accepted)
-            /// The associated value of the enum case if `self` is `.accepted`.
-            ///
-            /// - Throws: An error if `self` is not `.accepted`.
-            /// - SeeAlso: `.accepted`.
-            public var accepted: Operations.PostAuthLoginMfaSmsSend.Output.Accepted {
-                get throws {
-                    switch self {
-                    case let .accepted(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "accepted",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaSmsSend.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaSmsSend.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostAuthLoginMfaSmsSend.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostAuthLoginMfaSmsSend.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaSmsSend.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaSmsSend.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthLoginMfaSmsSend.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthLoginMfaSmsSend.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Conflict: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/409/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/409/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaSmsSend.Output.Conflict.Body
-                /// Creates a new `Conflict`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaSmsSend.Output.Conflict.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post/responses/409`.
-            ///
-            /// HTTP response code: `409 conflict`.
-            case conflict(Operations.PostAuthLoginMfaSmsSend.Output.Conflict)
-            /// The associated value of the enum case if `self` is `.conflict`.
-            ///
-            /// - Throws: An error if `self` is not `.conflict`.
-            /// - SeeAlso: `.conflict`.
-            public var conflict: Operations.PostAuthLoginMfaSmsSend.Output.Conflict {
-                get throws {
-                    switch self {
-                    case let .conflict(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "conflict",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct UnprocessableContent: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/422/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/422/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaSmsSend.Output.UnprocessableContent.Body
-                /// Creates a new `UnprocessableContent`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaSmsSend.Output.UnprocessableContent.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post/responses/422`.
-            ///
-            /// HTTP response code: `422 unprocessableContent`.
-            case unprocessableContent(Operations.PostAuthLoginMfaSmsSend.Output.UnprocessableContent)
-            /// The associated value of the enum case if `self` is `.unprocessableContent`.
-            ///
-            /// - Throws: An error if `self` is not `.unprocessableContent`.
-            /// - SeeAlso: `.unprocessableContent`.
-            public var unprocessableContent: Operations.PostAuthLoginMfaSmsSend.Output.UnprocessableContent {
-                get throws {
-                    switch self {
-                    case let .unprocessableContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unprocessableContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct TooManyRequests: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/429/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/sms/send/POST/responses/429/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaSmsSend.Output.TooManyRequests.Body
-                /// Creates a new `TooManyRequests`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaSmsSend.Output.TooManyRequests.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post/responses/429`.
-            ///
-            /// HTTP response code: `429 tooManyRequests`.
-            case tooManyRequests(Operations.PostAuthLoginMfaSmsSend.Output.TooManyRequests)
-            /// The associated value of the enum case if `self` is `.tooManyRequests`.
-            ///
-            /// - Throws: An error if `self` is not `.tooManyRequests`.
-            /// - SeeAlso: `.tooManyRequests`.
-            public var tooManyRequests: Operations.PostAuthLoginMfaSmsSend.Output.TooManyRequests {
-                get throws {
-                    switch self {
-                    case let .tooManyRequests(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "tooManyRequests",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Complete login by satisfying the second factor → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/post`.
-    public enum PostAuthLoginMfa {
-        public static let id: Swift.String = "post/auth/login/mfa"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/login/mfa/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfa.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfa.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthLoginMfa.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/login/mfa/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// MFA pending token
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/requestBody/json/token`.
-                    public var token: Swift.String
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/requestBody/json/method`.
-                    @frozen public enum MethodPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                        case sms = "sms"
-                        case totp = "totp"
-                        case recovery = "recovery"
-                    }
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/requestBody/json/method`.
-                    public var method: Operations.PostAuthLoginMfa.Input.Body.JsonPayload.MethodPayload
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/requestBody/json/code`.
-                    public var code: Swift.String
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - token: MFA pending token
-                    ///   - method:
-                    ///   - code:
-                    public init(
-                        token: Swift.String,
-                        method: Operations.PostAuthLoginMfa.Input.Body.JsonPayload.MethodPayload,
-                        code: Swift.String
-                    ) {
-                        self.token = token
-                        self.method = method
-                        self.code = code
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case token
-                        case method
-                        case code
-                    }
-                }
-                /// - Remark: Generated from `#/paths/auth/login/mfa/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthLoginMfa.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostAuthLoginMfa.Input.Body?
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostAuthLoginMfa.Input.Headers = .init(),
-                body: Operations.PostAuthLoginMfa.Input.Body? = nil
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AuthResult)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AuthResult {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfa.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfa.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// token + refreshToken + user
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/post/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostAuthLoginMfa.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostAuthLoginMfa.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfa.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfa.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/post/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostAuthLoginMfa.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostAuthLoginMfa.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfa.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfa.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthLoginMfa.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthLoginMfa.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Conflict: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/409/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/POST/responses/409/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfa.Output.Conflict.Body
-                /// Creates a new `Conflict`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfa.Output.Conflict.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/post/responses/409`.
-            ///
-            /// HTTP response code: `409 conflict`.
-            case conflict(Operations.PostAuthLoginMfa.Output.Conflict)
-            /// The associated value of the enum case if `self` is `.conflict`.
-            ///
-            /// - Throws: An error if `self` is not `.conflict`.
-            /// - SeeAlso: `.conflict`.
-            public var conflict: Operations.PostAuthLoginMfa.Output.Conflict {
-                get throws {
-                    switch self {
-                    case let .conflict(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "conflict",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post`.
-    public enum PostAuthLoginMfaWebauthnOptions {
-        public static let id: Swift.String = "post/auth/login/mfa/webauthn/options"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfaWebauthnOptions.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfaWebauthnOptions.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthLoginMfaWebauthnOptions.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// MFA pending token
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/requestBody/json/token`.
-                    public var token: Swift.String
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - token: MFA pending token
-                    public init(token: Swift.String) {
-                        self.token = token
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case token
-                    }
-                }
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthLoginMfaWebauthnOptions.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostAuthLoginMfaWebauthnOptions.Input.Body?
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostAuthLoginMfaWebauthnOptions.Input.Headers = .init(),
-                body: Operations.PostAuthLoginMfaWebauthnOptions.Input.Body? = nil
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// PublicKeyCredentialRequestOptionsJSON
-                        ///
-                        /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/200/content/json/options`.
-                        public struct OptionsPayload: Codable, Hashable, Sendable {
-                            /// A container of undocumented properties.
-                            public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
-                            /// Creates a new `OptionsPayload`.
-                            ///
-                            /// - Parameters:
-                            ///   - additionalProperties: A container of undocumented properties.
-                            public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
-                                self.additionalProperties = additionalProperties
-                            }
-                            public init(from decoder: any Swift.Decoder) throws {
-                                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
-                            }
-                            public func encode(to encoder: any Swift.Encoder) throws {
-                                try encoder.encodeAdditionalProperties(additionalProperties)
-                            }
-                        }
-                        /// PublicKeyCredentialRequestOptionsJSON
-                        ///
-                        /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/200/content/json/options`.
-                        public var options: Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body.JsonPayload.OptionsPayload
-                        /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/200/content/json/token`.
-                        public var token: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - options: PublicKeyCredentialRequestOptionsJSON
-                        ///   - token:
-                        public init(
-                            options: Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body.JsonPayload.OptionsPayload,
-                            token: Swift.String
-                        ) {
-                            self.options = options
-                            self.token = token
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case options
-                            case token
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/200/content/application\/json`.
-                    case json(Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// options + next pending token
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaWebauthnOptions.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaWebauthnOptions.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostAuthLoginMfaWebauthnOptions.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostAuthLoginMfaWebauthnOptions.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaWebauthnOptions.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaWebauthnOptions.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthLoginMfaWebauthnOptions.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthLoginMfaWebauthnOptions.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct UnprocessableContent: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/422/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/options/POST/responses/422/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaWebauthnOptions.Output.UnprocessableContent.Body
-                /// Creates a new `UnprocessableContent`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaWebauthnOptions.Output.UnprocessableContent.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post/responses/422`.
-            ///
-            /// HTTP response code: `422 unprocessableContent`.
-            case unprocessableContent(Operations.PostAuthLoginMfaWebauthnOptions.Output.UnprocessableContent)
-            /// The associated value of the enum case if `self` is `.unprocessableContent`.
-            ///
-            /// - Throws: An error if `self` is not `.unprocessableContent`.
-            /// - SeeAlso: `.unprocessableContent`.
-            public var unprocessableContent: Operations.PostAuthLoginMfaWebauthnOptions.Output.UnprocessableContent {
-                get throws {
-                    switch self {
-                    case let .unprocessableContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unprocessableContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// WebAuthn 2nd-factor: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/post`.
-    public enum PostAuthLoginMfaWebauthn {
-        public static let id: Swift.String = "post/auth/login/mfa/webauthn"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfaWebauthn.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginMfaWebauthn.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthLoginMfaWebauthn.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/requestBody/json/token`.
-                    public var token: Swift.String
-                    /// AuthenticationResponseJSON
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/requestBody/json/response`.
-                    public struct ResponsePayload: Codable, Hashable, Sendable {
-                        /// A container of undocumented properties.
-                        public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
-                        /// Creates a new `ResponsePayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - additionalProperties: A container of undocumented properties.
-                        public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
-                            self.additionalProperties = additionalProperties
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
-                        }
-                        public func encode(to encoder: any Swift.Encoder) throws {
-                            try encoder.encodeAdditionalProperties(additionalProperties)
-                        }
-                    }
-                    /// AuthenticationResponseJSON
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/requestBody/json/response`.
-                    public var response: Operations.PostAuthLoginMfaWebauthn.Input.Body.JsonPayload.ResponsePayload
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - token:
-                    ///   - response: AuthenticationResponseJSON
-                    public init(
-                        token: Swift.String,
-                        response: Operations.PostAuthLoginMfaWebauthn.Input.Body.JsonPayload.ResponsePayload
-                    ) {
-                        self.token = token
-                        self.response = response
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case token
-                        case response
-                    }
-                }
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthLoginMfaWebauthn.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostAuthLoginMfaWebauthn.Input.Body?
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostAuthLoginMfaWebauthn.Input.Headers = .init(),
-                body: Operations.PostAuthLoginMfaWebauthn.Input.Body? = nil
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AuthResult)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AuthResult {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaWebauthn.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaWebauthn.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// token + refreshToken + user
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/post/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostAuthLoginMfaWebauthn.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostAuthLoginMfaWebauthn.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/mfa/webauthn/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginMfaWebauthn.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginMfaWebauthn.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthLoginMfaWebauthn.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthLoginMfaWebauthn.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Passwordless passkey: assertion options for an account
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/options/post`.
-    public enum PostAuthLoginWebauthnOptions {
-        public static let id: Swift.String = "post/auth/login/webauthn/options"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginWebauthnOptions.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginWebauthnOptions.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthLoginWebauthnOptions.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// Email or login slug
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/requestBody/json/identifier`.
-                    public var identifier: Swift.String
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - identifier: Email or login slug
-                    public init(identifier: Swift.String) {
-                        self.identifier = identifier
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case identifier
-                    }
-                }
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthLoginWebauthnOptions.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostAuthLoginWebauthnOptions.Input.Body?
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostAuthLoginWebauthnOptions.Input.Headers = .init(),
-                body: Operations.PostAuthLoginWebauthnOptions.Input.Body? = nil
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/200/content/json/options`.
-                        public struct OptionsPayload: Codable, Hashable, Sendable {
-                            /// A container of undocumented properties.
-                            public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
-                            /// Creates a new `OptionsPayload`.
-                            ///
-                            /// - Parameters:
-                            ///   - additionalProperties: A container of undocumented properties.
-                            public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
-                                self.additionalProperties = additionalProperties
-                            }
-                            public init(from decoder: any Swift.Decoder) throws {
-                                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
-                            }
-                            public func encode(to encoder: any Swift.Encoder) throws {
-                                try encoder.encodeAdditionalProperties(additionalProperties)
-                            }
-                        }
-                        /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/200/content/json/options`.
-                        public var options: Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body.JsonPayload.OptionsPayload
-                        /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/200/content/json/token`.
-                        public var token: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - options:
-                        ///   - token:
-                        public init(
-                            options: Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body.JsonPayload.OptionsPayload,
-                            token: Swift.String
-                        ) {
-                            self.options = options
-                            self.token = token
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case options
-                            case token
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/200/content/application\/json`.
-                    case json(Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// options + login challenge token
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/webauthn/options/post/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostAuthLoginWebauthnOptions.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostAuthLoginWebauthnOptions.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginWebauthnOptions.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginWebauthnOptions.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/webauthn/options/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthLoginWebauthnOptions.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthLoginWebauthnOptions.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct UnprocessableContent: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/422/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/options/POST/responses/422/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginWebauthnOptions.Output.UnprocessableContent.Body
-                /// Creates a new `UnprocessableContent`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginWebauthnOptions.Output.UnprocessableContent.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/webauthn/options/post/responses/422`.
-            ///
-            /// HTTP response code: `422 unprocessableContent`.
-            case unprocessableContent(Operations.PostAuthLoginWebauthnOptions.Output.UnprocessableContent)
-            /// The associated value of the enum case if `self` is `.unprocessableContent`.
-            ///
-            /// - Throws: An error if `self` is not `.unprocessableContent`.
-            /// - SeeAlso: `.unprocessableContent`.
-            public var unprocessableContent: Operations.PostAuthLoginWebauthnOptions.Output.UnprocessableContent {
-                get throws {
-                    switch self {
-                    case let .unprocessableContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unprocessableContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Passwordless passkey: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/post`.
-    public enum PostAuthLoginWebauthn {
-        public static let id: Swift.String = "post/auth/login/webauthn"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginWebauthn.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthLoginWebauthn.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthLoginWebauthn.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/requestBody/json/token`.
-                    public var token: Swift.String
-                    /// AuthenticationResponseJSON
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/requestBody/json/response`.
-                    public struct ResponsePayload: Codable, Hashable, Sendable {
-                        /// A container of undocumented properties.
-                        public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
-                        /// Creates a new `ResponsePayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - additionalProperties: A container of undocumented properties.
-                        public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
-                            self.additionalProperties = additionalProperties
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
-                        }
-                        public func encode(to encoder: any Swift.Encoder) throws {
-                            try encoder.encodeAdditionalProperties(additionalProperties)
-                        }
-                    }
-                    /// AuthenticationResponseJSON
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/requestBody/json/response`.
-                    public var response: Operations.PostAuthLoginWebauthn.Input.Body.JsonPayload.ResponsePayload
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - token:
-                    ///   - response: AuthenticationResponseJSON
-                    public init(
-                        token: Swift.String,
-                        response: Operations.PostAuthLoginWebauthn.Input.Body.JsonPayload.ResponsePayload
-                    ) {
-                        self.token = token
-                        self.response = response
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case token
-                        case response
-                    }
-                }
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthLoginWebauthn.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostAuthLoginWebauthn.Input.Body?
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostAuthLoginWebauthn.Input.Headers = .init(),
-                body: Operations.PostAuthLoginWebauthn.Input.Body? = nil
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AuthResult)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AuthResult {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginWebauthn.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginWebauthn.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// token + refreshToken + user
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/webauthn/post/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostAuthLoginWebauthn.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostAuthLoginWebauthn.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/login/webauthn/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthLoginWebauthn.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthLoginWebauthn.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/login/webauthn/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthLoginWebauthn.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthLoginWebauthn.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Rotate refresh token → new JWT
-    ///
-    /// - Remark: HTTP `POST /auth/refresh`.
-    /// - Remark: Generated from `#/paths//auth/refresh/post`.
-    public enum PostAuthRefresh {
-        public static let id: Swift.String = "post/auth/refresh"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/refresh/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthRefresh.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthRefresh.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostAuthRefresh.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            public init(headers: Operations.PostAuthRefresh.Input.Headers = .init()) {
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/refresh/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/refresh/POST/responses/200/content/application\/json`.
-                    case json(Components.Schemas.RefreshResult)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.RefreshResult {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthRefresh.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthRefresh.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// token + refreshToken
-            ///
-            /// - Remark: Generated from `#/paths//auth/refresh/post/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostAuthRefresh.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostAuthRefresh.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/refresh/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/refresh/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostAuthRefresh.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthRefresh.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//auth/refresh/post/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthRefresh.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthRefresh.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
     /// Current user
     ///
     /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
     ///
-    /// - Remark: HTTP `GET /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/get`.
-    public enum GetAuthMe {
-        public static let id: Swift.String = "get/auth/me"
+    /// Replaces GET /auth/me, GET /account/privacy (include privacy), GET /me/appearance (include appearance), GET /me/communication-settings (include communication_settings), GET /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `GET /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)`.
+    public enum GetV1Account {
+        public static let id: Swift.String = "getV1Account"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/me/GET/header`.
+            /// - Remark: Generated from `#/paths/v1/account/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/account/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/account/GET/query/Include_lbrack__rbrack_Payload`.
+                @frozen public enum IncludeLbrackRbrackPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case privacy = "privacy"
+                    case appearance = "appearance"
+                    case communicationSettings = "communication_settings"
+                    case workspacePrefs = "workspace_prefs"
+                }
+                /// - Remark: Generated from `#/paths/v1/account/GET/query/include[]`.
+                public typealias Include_lbrack__rbrack_Payload = [Operations.GetV1Account.Input.Query.IncludeLbrackRbrackPayloadPayload]
+                /// Extra fields to compute and attach to the response.
+                ///
+                /// - Remark: Generated from `#/paths/v1/account/GET/query/include[]`.
+                public var include_lbrack__rbrack_: Operations.GetV1Account.Input.Query.Include_lbrack__rbrack_Payload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///   - include_lbrack__rbrack_: Extra fields to compute and attach to the response.
+                public init(
+                    expand_lbrack__rbrack_: [Swift.String]? = nil,
+                    include_lbrack__rbrack_: Operations.GetV1Account.Input.Query.Include_lbrack__rbrack_Payload? = nil
+                ) {
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                    self.include_lbrack__rbrack_ = include_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1Account.Input.Query
+            /// - Remark: Generated from `#/paths/v1/account/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetAuthMe.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1Account.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetAuthMe.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1Account.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GetAuthMe.Input.Headers
+            public var headers: Operations.GetV1Account.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
+            ///   - query:
             ///   - headers:
-            public init(headers: Operations.GetAuthMe.Input.Headers = .init()) {
+            public init(
+                query: Operations.GetV1Account.Input.Query = .init(),
+                headers: Operations.GetV1Account.Input.Headers = .init()
+            ) {
+                self.query = query
                 self.headers = headers
             }
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.User)
+                    /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value1/value1`.
+                            public struct Value1Payload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value1/value1/object`.
+                                @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case account = "account"
+                                }
+                                /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value1/value1/object`.
+                                public var object: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload.ObjectPayload?
+                                /// Creates a new `Value1Payload`.
+                                ///
+                                /// - Parameters:
+                                ///   - object:
+                                public init(object: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload.ObjectPayload? = nil) {
+                                    self.object = object
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case object
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value1/value1`.
+                            public var value1: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value1/value2`.
+                            public var value2: Components.Schemas.User
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - value1:
+                            ///   - value2:
+                            public init(
+                                value1: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload,
+                                value2: Components.Schemas.User
+                            ) {
+                                self.value1 = value1
+                                self.value2 = value2
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                self.value1 = try .init(from: decoder)
+                                self.value2 = try .init(from: decoder)
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try self.value1.encode(to: encoder)
+                                try self.value2.encode(to: encoder)
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value1`.
+                        public var value1: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2`.
+                        public struct Value2Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2/privacy`.
+                            public struct PrivacyPayload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2/privacy/items`.
+                                public var items: [Components.Schemas.PrivacyGrant]
+                                /// Creates a new `PrivacyPayload`.
+                                ///
+                                /// - Parameters:
+                                ///   - items:
+                                public init(items: [Components.Schemas.PrivacyGrant]) {
+                                    self.items = items
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case items
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2/privacy`.
+                            public var privacy: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value2Payload.PrivacyPayload?
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2/appearance`.
+                            public var appearance: Components.Schemas.AppearanceSettings?
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2/communication_settings`.
+                            public var communicationSettings: Components.Schemas.CommunicationSettings?
+                            /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2/workspace_prefs`.
+                            public var workspacePrefs: Components.Schemas.WorkspacePrefs?
+                            /// Creates a new `Value2Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - privacy:
+                            ///   - appearance:
+                            ///   - communicationSettings:
+                            ///   - workspacePrefs:
+                            public init(
+                                privacy: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value2Payload.PrivacyPayload? = nil,
+                                appearance: Components.Schemas.AppearanceSettings? = nil,
+                                communicationSettings: Components.Schemas.CommunicationSettings? = nil,
+                                workspacePrefs: Components.Schemas.WorkspacePrefs? = nil
+                            ) {
+                                self.privacy = privacy
+                                self.appearance = appearance
+                                self.communicationSettings = communicationSettings
+                                self.workspacePrefs = workspacePrefs
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case privacy
+                                case appearance
+                                case communicationSettings = "communication_settings"
+                                case workspacePrefs = "workspace_prefs"
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/json/value2`.
+                        public var value2: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value2Payload
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Operations.GetV1Account.Output.Ok.Body.JsonPayload.Value2Payload
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/account/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1Account.Output.Ok.Body.JsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.User {
+                    public var json: Operations.GetV1Account.Output.Ok.Body.JsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2903,26 +1003,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GetAuthMe.Output.Ok.Body
+                public var body: Operations.GetV1Account.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GetAuthMe.Output.Ok.Body) {
+                public init(body: Operations.GetV1Account.Output.Ok.Body) {
                     self.body = body
                 }
             }
             /// user
             ///
-            /// - Remark: Generated from `#/paths//auth/me/get/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GetAuthMe.Output.Ok)
+            case ok(Operations.GetV1Account.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetAuthMe.Output.Ok {
+            public var ok: Operations.GetV1Account.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -2935,16 +1035,16 @@ public enum Operations {
                     }
                 }
             }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/GET/responses/401/content`.
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/account/GET/responses/400/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/account/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2954,26 +1054,77 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GetAuthMe.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
+                public var body: Operations.GetV1Account.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GetAuthMe.Output.Unauthorized.Body) {
+                public init(body: Operations.GetV1Account.Output.BadRequest.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/me/get/responses/401`.
+            /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetV1Account.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetV1Account.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/account/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/account/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1Account.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1Account.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetAuthMe.Output.Unauthorized)
+            case unauthorized(Operations.GetV1Account.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetAuthMe.Output.Unauthorized {
+            public var unauthorized: Operations.GetV1Account.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -2987,15 +1138,15 @@ public enum Operations {
                 }
             }
             public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/GET/responses/404/content`.
+                /// - Remark: Generated from `#/paths/v1/account/GET/responses/404/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/GET/responses/404/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/account/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3005,26 +1156,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GetAuthMe.Output.NotFound.Body
+                public var body: Operations.GetV1Account.Output.NotFound.Body
                 /// Creates a new `NotFound`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GetAuthMe.Output.NotFound.Body) {
+                public init(body: Operations.GetV1Account.Output.NotFound.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/me/get/responses/404`.
+            /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
-            case notFound(Operations.GetAuthMe.Output.NotFound)
+            case notFound(Operations.GetV1Account.Output.NotFound)
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.GetAuthMe.Output.NotFound {
+            public var notFound: Operations.GetV1Account.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
@@ -3070,90 +1221,350 @@ public enum Operations {
     }
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
     ///
-    /// - Remark: HTTP `PATCH /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/patch`.
-    public enum PatchAuthMe {
-        public static let id: Swift.String = "patch/auth/me"
+    /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `POST /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)`.
+    public enum PostV1Account {
+        public static let id: Swift.String = "postV1Account"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/me/PATCH/header`.
+            /// - Remark: Generated from `#/paths/v1/account/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PatchAuthMe.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1Account.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PatchAuthMe.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1Account.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.PatchAuthMe.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody`.
+            public var headers: Operations.PostV1Account.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// At least one profile field is required.
-                ///
-                /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/json`.
+                /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json`.
                 public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/json/name`.
-                    public var name: Swift.String?
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/json/slug`.
-                    public var slug: Swift.String?
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/json/avatarUrl`.
-                    public var avatarUrl: Swift.String?
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/json/publicProfileEnabled`.
-                    public var publicProfileEnabled: Swift.Bool?
-                    /// The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
+                    /// At least one profile field is required.
                     ///
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/json/profileVisibility`.
-                    @frozen public enum ProfileVisibilityPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                        case _public = "public"
-                        case hub = "hub"
-                        case _private = "private"
+                    /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1`.
+                    public struct Value1Payload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1/name`.
+                        public var name: Swift.String?
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1/slug`.
+                        public var slug: Swift.String?
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1/avatar_url`.
+                        public var avatarUrl: Swift.String?
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1/public_profile_enabled`.
+                        public var publicProfileEnabled: Swift.Bool?
+                        /// The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1/profile_visibility`.
+                        @frozen public enum ProfileVisibilityPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case _public = "public"
+                            case hub = "hub"
+                            case _private = "private"
+                        }
+                        /// The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1/profile_visibility`.
+                        public var profileVisibility: Operations.PostV1Account.Input.Body.JsonPayload.Value1Payload.ProfileVisibilityPayload?
+                        /// Creates a new `Value1Payload`.
+                        ///
+                        /// - Parameters:
+                        ///   - name:
+                        ///   - slug:
+                        ///   - avatarUrl:
+                        ///   - publicProfileEnabled:
+                        ///   - profileVisibility: The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
+                        public init(
+                            name: Swift.String? = nil,
+                            slug: Swift.String? = nil,
+                            avatarUrl: Swift.String? = nil,
+                            publicProfileEnabled: Swift.Bool? = nil,
+                            profileVisibility: Operations.PostV1Account.Input.Body.JsonPayload.Value1Payload.ProfileVisibilityPayload? = nil
+                        ) {
+                            self.name = name
+                            self.slug = slug
+                            self.avatarUrl = avatarUrl
+                            self.publicProfileEnabled = publicProfileEnabled
+                            self.profileVisibility = profileVisibility
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case name
+                            case slug
+                            case avatarUrl = "avatar_url"
+                            case publicProfileEnabled = "public_profile_enabled"
+                            case profileVisibility = "profile_visibility"
+                        }
                     }
-                    /// The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
+                    /// At least one profile field is required.
                     ///
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/json/profileVisibility`.
-                    public var profileVisibility: Operations.PatchAuthMe.Input.Body.JsonPayload.ProfileVisibilityPayload?
+                    /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value1`.
+                    public var value1: Operations.PostV1Account.Input.Body.JsonPayload.Value1Payload
+                    /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2`.
+                    public struct Value2Payload: Codable, Hashable, Sendable {
+                        /// Updates `privacy`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/privacy`.
+                        public struct PrivacyPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/privacy/target_table`.
+                            @frozen public enum TargetTablePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case avatar = "avatar"
+                                case socialLinks = "social_links"
+                                case addresses = "addresses"
+                                case contactMethods = "contact_methods"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/privacy/target_table`.
+                            public var targetTable: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.PrivacyPayload.TargetTablePayload
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/privacy/target_id`.
+                            public var targetId: Swift.String
+                            /// Bitmask of audiences: 1=PUBLIC, 2=HUB (or their OR, 3). 0 = only-me. TEAM/ORG/AI bits are rejected with 400.
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/privacy/audience_mask`.
+                            public var audienceMask: Swift.Int
+                            /// Creates a new `PrivacyPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - targetTable:
+                            ///   - targetId:
+                            ///   - audienceMask: Bitmask of audiences: 1=PUBLIC, 2=HUB (or their OR, 3). 0 = only-me. TEAM/ORG/AI bits are rejected with 400.
+                            public init(
+                                targetTable: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.PrivacyPayload.TargetTablePayload,
+                                targetId: Swift.String,
+                                audienceMask: Swift.Int
+                            ) {
+                                self.targetTable = targetTable
+                                self.targetId = targetId
+                                self.audienceMask = audienceMask
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case targetTable = "target_table"
+                                case targetId = "target_id"
+                                case audienceMask = "audience_mask"
+                            }
+                        }
+                        /// Updates `privacy`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/privacy`.
+                        public var privacy: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.PrivacyPayload?
+                        /// Updates `appearance`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance`.
+                        public struct AppearancePayload: Codable, Hashable, Sendable {
+                            /// The user's colour scheme; 'auto' follows the operating system
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/color_mode`.
+                            @frozen public enum ColorModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case auto = "auto"
+                                case light = "light"
+                                case dark = "dark"
+                            }
+                            /// The user's colour scheme; 'auto' follows the operating system
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/color_mode`.
+                            public var colorMode: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.ColorModePayload?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/reduce_motion`.
+                            @frozen public enum ReduceMotionPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case auto = "auto"
+                                case on = "on"
+                                case off = "off"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/reduce_motion`.
+                            public var reduceMotion: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.ReduceMotionPayload?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/contrast`.
+                            @frozen public enum ContrastPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case _default = "default"
+                                case high = "high"
+                                case extraHigh = "extra-high"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/contrast`.
+                            public var contrast: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.ContrastPayload?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/text_size`.
+                            @frozen public enum TextSizePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case _default = "default"
+                                case small = "small"
+                                case large = "large"
+                                case extraLarge = "extra-large"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/text_size`.
+                            public var textSize: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.TextSizePayload?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/spacing`.
+                            @frozen public enum SpacingPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case compact = "compact"
+                                case comfortable = "comfortable"
+                                case spacious = "spacious"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/spacing`.
+                            public var spacing: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.SpacingPayload?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/focus_outlines`.
+                            public var focusOutlines: Swift.Bool?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance/underline_links`.
+                            public var underlineLinks: Swift.Bool?
+                            /// Creates a new `AppearancePayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - colorMode: The user's colour scheme; 'auto' follows the operating system
+                            ///   - reduceMotion:
+                            ///   - contrast:
+                            ///   - textSize:
+                            ///   - spacing:
+                            ///   - focusOutlines:
+                            ///   - underlineLinks:
+                            public init(
+                                colorMode: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.ColorModePayload? = nil,
+                                reduceMotion: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.ReduceMotionPayload? = nil,
+                                contrast: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.ContrastPayload? = nil,
+                                textSize: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.TextSizePayload? = nil,
+                                spacing: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload.SpacingPayload? = nil,
+                                focusOutlines: Swift.Bool? = nil,
+                                underlineLinks: Swift.Bool? = nil
+                            ) {
+                                self.colorMode = colorMode
+                                self.reduceMotion = reduceMotion
+                                self.contrast = contrast
+                                self.textSize = textSize
+                                self.spacing = spacing
+                                self.focusOutlines = focusOutlines
+                                self.underlineLinks = underlineLinks
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case colorMode = "color_mode"
+                                case reduceMotion = "reduce_motion"
+                                case contrast
+                                case textSize = "text_size"
+                                case spacing
+                                case focusOutlines = "focus_outlines"
+                                case underlineLinks = "underline_links"
+                            }
+                        }
+                        /// Updates `appearance`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/appearance`.
+                        public var appearance: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload?
+                        /// Updates `communication_settings`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/communication_settings`.
+                        public struct CommunicationSettingsPayload: Codable, Hashable, Sendable {
+                            /// AUDIENCE bitmask of who may DM the user (0 = nobody; default PUBLIC|HUB = 3)
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/communication_settings/dm_audience_mask`.
+                            public var dmAudienceMask: Swift.Int
+                            /// AUDIENCE bitmask of who may see the user presence (0 = nobody; default PUBLIC|HUB = 3)
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/communication_settings/presence_audience_mask`.
+                            public var presenceAudienceMask: Swift.Int
+                            /// When true, presence is hidden from EVERYONE regardless of the mask
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/communication_settings/appear_offline`.
+                            public var appearOffline: Swift.Bool
+                            /// Creates a new `CommunicationSettingsPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - dmAudienceMask: AUDIENCE bitmask of who may DM the user (0 = nobody; default PUBLIC|HUB = 3)
+                            ///   - presenceAudienceMask: AUDIENCE bitmask of who may see the user presence (0 = nobody; default PUBLIC|HUB = 3)
+                            ///   - appearOffline: When true, presence is hidden from EVERYONE regardless of the mask
+                            public init(
+                                dmAudienceMask: Swift.Int,
+                                presenceAudienceMask: Swift.Int,
+                                appearOffline: Swift.Bool
+                            ) {
+                                self.dmAudienceMask = dmAudienceMask
+                                self.presenceAudienceMask = presenceAudienceMask
+                                self.appearOffline = appearOffline
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case dmAudienceMask = "dm_audience_mask"
+                                case presenceAudienceMask = "presence_audience_mask"
+                                case appearOffline = "appear_offline"
+                            }
+                        }
+                        /// Updates `communication_settings`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/communication_settings`.
+                        public var communicationSettings: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.CommunicationSettingsPayload?
+                        /// Updates `workspace_prefs`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/workspace_prefs`.
+                        public struct WorkspacePrefsPayload: Codable, Hashable, Sendable {
+                            /// The workspace the user's /home chooser last landed on (a workspace slug)
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/workspace_prefs/slug`.
+                            public var slug: Swift.String?
+                            /// Creates a new `WorkspacePrefsPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - slug: The workspace the user's /home chooser last landed on (a workspace slug)
+                            public init(slug: Swift.String? = nil) {
+                                self.slug = slug
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case slug
+                            }
+                        }
+                        /// Updates `workspace_prefs`.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2/workspace_prefs`.
+                        public var workspacePrefs: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.WorkspacePrefsPayload?
+                        /// Creates a new `Value2Payload`.
+                        ///
+                        /// - Parameters:
+                        ///   - privacy: Updates `privacy`.
+                        ///   - appearance: Updates `appearance`.
+                        ///   - communicationSettings: Updates `communication_settings`.
+                        ///   - workspacePrefs: Updates `workspace_prefs`.
+                        public init(
+                            privacy: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.PrivacyPayload? = nil,
+                            appearance: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.AppearancePayload? = nil,
+                            communicationSettings: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.CommunicationSettingsPayload? = nil,
+                            workspacePrefs: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload.WorkspacePrefsPayload? = nil
+                        ) {
+                            self.privacy = privacy
+                            self.appearance = appearance
+                            self.communicationSettings = communicationSettings
+                            self.workspacePrefs = workspacePrefs
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case privacy
+                            case appearance
+                            case communicationSettings = "communication_settings"
+                            case workspacePrefs = "workspace_prefs"
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/json/value2`.
+                    public var value2: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload
                     /// Creates a new `JsonPayload`.
                     ///
                     /// - Parameters:
-                    ///   - name:
-                    ///   - slug:
-                    ///   - avatarUrl:
-                    ///   - publicProfileEnabled:
-                    ///   - profileVisibility: The principal's page-level profile visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
+                    ///   - value1: At least one profile field is required.
+                    ///   - value2:
                     public init(
-                        name: Swift.String? = nil,
-                        slug: Swift.String? = nil,
-                        avatarUrl: Swift.String? = nil,
-                        publicProfileEnabled: Swift.Bool? = nil,
-                        profileVisibility: Operations.PatchAuthMe.Input.Body.JsonPayload.ProfileVisibilityPayload? = nil
+                        value1: Operations.PostV1Account.Input.Body.JsonPayload.Value1Payload,
+                        value2: Operations.PostV1Account.Input.Body.JsonPayload.Value2Payload
                     ) {
-                        self.name = name
-                        self.slug = slug
-                        self.avatarUrl = avatarUrl
-                        self.publicProfileEnabled = publicProfileEnabled
-                        self.profileVisibility = profileVisibility
+                        self.value1 = value1
+                        self.value2 = value2
                     }
-                    public enum CodingKeys: String, CodingKey {
-                        case name
-                        case slug
-                        case avatarUrl
-                        case publicProfileEnabled
-                        case profileVisibility
+                    public init(from decoder: any Swift.Decoder) throws {
+                        self.value1 = try .init(from: decoder)
+                        self.value2 = try .init(from: decoder)
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try self.value1.encode(to: encoder)
+                        try self.value2.encode(to: encoder)
                     }
                 }
-                /// - Remark: Generated from `#/paths/auth/me/PATCH/requestBody/content/application\/json`.
-                case json(Operations.PatchAuthMe.Input.Body.JsonPayload)
+                /// - Remark: Generated from `#/paths/v1/account/POST/requestBody/content/application\/json`.
+                case json(Operations.PostV1Account.Input.Body.JsonPayload)
             }
-            public var body: Operations.PatchAuthMe.Input.Body?
+            public var body: Operations.PostV1Account.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
             ///   - body:
             public init(
-                headers: Operations.PatchAuthMe.Input.Headers = .init(),
-                body: Operations.PatchAuthMe.Input.Body? = nil
+                headers: Operations.PostV1Account.Input.Headers = .init(),
+                body: Operations.PostV1Account.Input.Body
             ) {
                 self.headers = headers
                 self.body = body
@@ -3161,15 +1572,123 @@ public enum Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.User)
+                    /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value1/value1`.
+                            public struct Value1Payload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value1/value1/object`.
+                                @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case account = "account"
+                                }
+                                /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value1/value1/object`.
+                                public var object: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload.ObjectPayload?
+                                /// Creates a new `Value1Payload`.
+                                ///
+                                /// - Parameters:
+                                ///   - object:
+                                public init(object: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload.ObjectPayload? = nil) {
+                                    self.object = object
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case object
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value1/value1`.
+                            public var value1: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload
+                            /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value1/value2`.
+                            public var value2: Components.Schemas.User
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - value1:
+                            ///   - value2:
+                            public init(
+                                value1: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value1Payload.Value1Payload,
+                                value2: Components.Schemas.User
+                            ) {
+                                self.value1 = value1
+                                self.value2 = value2
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                self.value1 = try .init(from: decoder)
+                                self.value2 = try .init(from: decoder)
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try self.value1.encode(to: encoder)
+                                try self.value2.encode(to: encoder)
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value2`.
+                        public struct Value2Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value2/privacy`.
+                            public var privacy: Components.Schemas.PrivacyGrant?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value2/appearance`.
+                            public var appearance: Components.Schemas.AppearanceSettings?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value2/communication_settings`.
+                            public var communicationSettings: Components.Schemas.CommunicationSettings?
+                            /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value2/workspace_prefs`.
+                            public var workspacePrefs: Components.Schemas.WorkspacePrefs?
+                            /// Creates a new `Value2Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - privacy:
+                            ///   - appearance:
+                            ///   - communicationSettings:
+                            ///   - workspacePrefs:
+                            public init(
+                                privacy: Components.Schemas.PrivacyGrant? = nil,
+                                appearance: Components.Schemas.AppearanceSettings? = nil,
+                                communicationSettings: Components.Schemas.CommunicationSettings? = nil,
+                                workspacePrefs: Components.Schemas.WorkspacePrefs? = nil
+                            ) {
+                                self.privacy = privacy
+                                self.appearance = appearance
+                                self.communicationSettings = communicationSettings
+                                self.workspacePrefs = workspacePrefs
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case privacy
+                                case appearance
+                                case communicationSettings = "communication_settings"
+                                case workspacePrefs = "workspace_prefs"
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/json/value2`.
+                        public var value2: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value2Payload
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Operations.PostV1Account.Output.Ok.Body.JsonPayload.Value2Payload
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/account/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1Account.Output.Ok.Body.JsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.User {
+                    public var json: Operations.PostV1Account.Output.Ok.Body.JsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3179,26 +1698,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PatchAuthMe.Output.Ok.Body
+                public var body: Operations.PostV1Account.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PatchAuthMe.Output.Ok.Body) {
+                public init(body: Operations.PostV1Account.Output.Ok.Body) {
                     self.body = body
                 }
             }
             /// user (same shape as GET /auth/me)
             ///
-            /// - Remark: Generated from `#/paths//auth/me/patch/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.PatchAuthMe.Output.Ok)
+            case ok(Operations.PostV1Account.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.PatchAuthMe.Output.Ok {
+            public var ok: Operations.PostV1Account.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -3212,15 +1731,15 @@ public enum Operations {
                 }
             }
             public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/400/content`.
+                /// - Remark: Generated from `#/paths/v1/account/POST/responses/400/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/400/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/account/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3230,26 +1749,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PatchAuthMe.Output.BadRequest.Body
+                public var body: Operations.PostV1Account.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PatchAuthMe.Output.BadRequest.Body) {
+                public init(body: Operations.PostV1Account.Output.BadRequest.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/me/patch/responses/400`.
+            /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PatchAuthMe.Output.BadRequest)
+            case badRequest(Operations.PostV1Account.Output.BadRequest)
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
             /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PatchAuthMe.Output.BadRequest {
+            public var badRequest: Operations.PostV1Account.Output.BadRequest {
                 get throws {
                     switch self {
                     case let .badRequest(response):
@@ -3263,15 +1782,15 @@ public enum Operations {
                 }
             }
             public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/401/content`.
+                /// - Remark: Generated from `#/paths/v1/account/POST/responses/401/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/account/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3281,26 +1800,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PatchAuthMe.Output.Unauthorized.Body
+                public var body: Operations.PostV1Account.Output.Unauthorized.Body
                 /// Creates a new `Unauthorized`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PatchAuthMe.Output.Unauthorized.Body) {
+                public init(body: Operations.PostV1Account.Output.Unauthorized.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/me/patch/responses/401`.
+            /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PatchAuthMe.Output.Unauthorized)
+            case unauthorized(Operations.PostV1Account.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PatchAuthMe.Output.Unauthorized {
+            public var unauthorized: Operations.PostV1Account.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -3314,15 +1833,15 @@ public enum Operations {
                 }
             }
             public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/404/content`.
+                /// - Remark: Generated from `#/paths/v1/account/POST/responses/404/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/404/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/account/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3332,26 +1851,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PatchAuthMe.Output.NotFound.Body
+                public var body: Operations.PostV1Account.Output.NotFound.Body
                 /// Creates a new `NotFound`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PatchAuthMe.Output.NotFound.Body) {
+                public init(body: Operations.PostV1Account.Output.NotFound.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/me/patch/responses/404`.
+            /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)/responses/404`.
             ///
             /// HTTP response code: `404 notFound`.
-            case notFound(Operations.PatchAuthMe.Output.NotFound)
+            case notFound(Operations.PostV1Account.Output.NotFound)
             /// The associated value of the enum case if `self` is `.notFound`.
             ///
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.PatchAuthMe.Output.NotFound {
+            public var notFound: Operations.PostV1Account.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
@@ -3365,15 +1884,15 @@ public enum Operations {
                 }
             }
             public struct Conflict: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/409/content`.
+                /// - Remark: Generated from `#/paths/v1/account/POST/responses/409/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/me/PATCH/responses/409/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/account/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3383,26 +1902,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PatchAuthMe.Output.Conflict.Body
+                public var body: Operations.PostV1Account.Output.Conflict.Body
                 /// Creates a new `Conflict`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PatchAuthMe.Output.Conflict.Body) {
+                public init(body: Operations.PostV1Account.Output.Conflict.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/me/patch/responses/409`.
+            /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)/responses/409`.
             ///
             /// HTTP response code: `409 conflict`.
-            case conflict(Operations.PatchAuthMe.Output.Conflict)
+            case conflict(Operations.PostV1Account.Output.Conflict)
             /// The associated value of the enum case if `self` is `.conflict`.
             ///
             /// - Throws: An error if `self` is not `.conflict`.
             /// - SeeAlso: `.conflict`.
-            public var conflict: Operations.PatchAuthMe.Output.Conflict {
+            public var conflict: Operations.PostV1Account.Output.Conflict {
                 get throws {
                     switch self {
                     case let .conflict(response):
@@ -3448,42 +1967,174 @@ public enum Operations {
     }
     /// List the caller’s API tokens (metadata only; raw values never returned)
     ///
-    /// - Remark: HTTP `GET /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/get`.
-    public enum GetAuthTokens {
-        public static let id: Swift.String = "get/auth/tokens"
+    /// Replaces GET /auth/tokens, GET /tokens.
+    ///
+    /// - Remark: HTTP `GET /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)`.
+    public enum GetV1ApiKeys {
+        public static let id: Swift.String = "getV1ApiKeys"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/tokens/GET/header`.
+            /// - Remark: Generated from `#/paths/v1/api_keys/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Page size, 1–100 (default 10).
+                ///
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Cursor: an object id; returns the page after it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/query/starting_after`.
+                public var startingAfter: Swift.String?
+                /// Cursor: an object id; returns the page before it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/query/ending_before`.
+                public var endingBefore: Swift.String?
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - limit: Page size, 1–100 (default 10).
+                ///   - startingAfter: Cursor: an object id; returns the page after it.
+                ///   - endingBefore: Cursor: an object id; returns the page before it.
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(
+                    limit: Swift.Int? = nil,
+                    startingAfter: Swift.String? = nil,
+                    endingBefore: Swift.String? = nil,
+                    expand_lbrack__rbrack_: [Swift.String]? = nil
+                ) {
+                    self.limit = limit
+                    self.startingAfter = startingAfter
+                    self.endingBefore = endingBefore
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1ApiKeys.Input.Query
+            /// - Remark: Generated from `#/paths/v1/api_keys/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetAuthTokens.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ApiKeys.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetAuthTokens.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ApiKeys.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GetAuthTokens.Input.Headers
+            public var headers: Operations.GetV1ApiKeys.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
+            ///   - query:
             ///   - headers:
-            public init(headers: Operations.GetAuthTokens.Input.Headers = .init()) {
+            public init(
+                query: Operations.GetV1ApiKeys.Input.Query = .init(),
+                headers: Operations.GetV1ApiKeys.Input.Headers = .init()
+            ) {
+                self.query = query
                 self.headers = headers
             }
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/tokens/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/tokens/GET/responses/200/content/application\/json`.
-                    case json([Components.Schemas.ApiToken])
+                    /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case list = "list"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/object`.
+                        public var object: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.ObjectPayload
+                        /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/DataPayload`.
+                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/DataPayload/value1`.
+                            public struct Value1Payload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/DataPayload/value1/object`.
+                                @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case apiKey = "api_key"
+                                }
+                                /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/DataPayload/value1/object`.
+                                public var object: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload?
+                                /// Creates a new `Value1Payload`.
+                                ///
+                                /// - Parameters:
+                                ///   - object:
+                                public init(object: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload? = nil) {
+                                    self.object = object
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case object
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/DataPayload/value1`.
+                            public var value1: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload
+                            /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/DataPayload/value2`.
+                            public var value2: Components.Schemas.ApiToken
+                            /// Creates a new `DataPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - value1:
+                            ///   - value2:
+                            public init(
+                                value1: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload,
+                                value2: Components.Schemas.ApiToken
+                            ) {
+                                self.value1 = value1
+                                self.value2 = value2
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                self.value1 = try .init(from: decoder)
+                                self.value2 = try .init(from: decoder)
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try self.value1.encode(to: encoder)
+                                try self.value2.encode(to: encoder)
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/data`.
+                        public typealias DataPayload = [Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.DataPayloadPayload]
+                        /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/data`.
+                        public var data: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.DataPayload
+                        /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/has_more`.
+                        public var hasMore: Swift.Bool
+                        /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/json/url`.
+                        public var url: Swift.String
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - data:
+                        ///   - hasMore:
+                        ///   - url:
+                        public init(
+                            object: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.ObjectPayload,
+                            data: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.DataPayload,
+                            hasMore: Swift.Bool,
+                            url: Swift.String
+                        ) {
+                            self.object = object
+                            self.data = data
+                            self.hasMore = hasMore
+                            self.url = url
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case data
+                            case hasMore = "has_more"
+                            case url
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: [Components.Schemas.ApiToken] {
+                    public var json: Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3493,26 +2144,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GetAuthTokens.Output.Ok.Body
+                public var body: Operations.GetV1ApiKeys.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GetAuthTokens.Output.Ok.Body) {
+                public init(body: Operations.GetV1ApiKeys.Output.Ok.Body) {
                     self.body = body
                 }
             }
             /// API tokens
             ///
-            /// - Remark: Generated from `#/paths//auth/tokens/get/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GetAuthTokens.Output.Ok)
+            case ok(Operations.GetV1ApiKeys.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetAuthTokens.Output.Ok {
+            public var ok: Operations.GetV1ApiKeys.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -3526,15 +2177,15 @@ public enum Operations {
                 }
             }
             public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/tokens/GET/responses/401/content`.
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/401/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/tokens/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3544,26 +2195,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GetAuthTokens.Output.Unauthorized.Body
+                public var body: Operations.GetV1ApiKeys.Output.Unauthorized.Body
                 /// Creates a new `Unauthorized`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GetAuthTokens.Output.Unauthorized.Body) {
+                public init(body: Operations.GetV1ApiKeys.Output.Unauthorized.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/tokens/get/responses/401`.
+            /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetAuthTokens.Output.Unauthorized)
+            case unauthorized(Operations.GetV1ApiKeys.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetAuthTokens.Output.Unauthorized {
+            public var unauthorized: Operations.GetV1ApiKeys.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -3571,6 +2222,108 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ApiKeys.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ApiKeys.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1ApiKeys.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1ApiKeys.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/api_keys/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ApiKeys.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ApiKeys.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1ApiKeys.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1ApiKeys.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }
@@ -3609,68 +2362,142 @@ public enum Operations {
     }
     /// Mint an API token (raw value shown once)
     ///
-    /// - Remark: HTTP `POST /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/post`.
-    public enum PostAuthTokens {
-        public static let id: Swift.String = "post/auth/tokens"
+    /// Replaces POST /auth/tokens, POST /tokens.
+    ///
+    /// - Remark: HTTP `POST /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)`.
+    public enum PostV1ApiKeys {
+        public static let id: Swift.String = "postV1ApiKeys"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/auth/tokens/POST/header`.
+            /// - Remark: Generated from `#/paths/v1/api_keys/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthTokens.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ApiKeys.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostAuthTokens.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ApiKeys.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.PostAuthTokens.Input.Headers
-            /// - Remark: Generated from `#/paths/auth/tokens/POST/requestBody`.
+            public var headers: Operations.PostV1ApiKeys.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/tokens/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/auth/tokens/POST/requestBody/json/name`.
-                    public var name: Swift.String
-                    /// - Remark: Generated from `#/paths/auth/tokens/POST/requestBody/json/expiresAt`.
-                    public var expiresAt: Foundation.Date?
-                    /// REST path prefixes the token may reach
-                    ///
-                    /// - Remark: Generated from `#/paths/auth/tokens/POST/requestBody/json/scope`.
-                    public var scope: [Swift.String]?
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - name:
-                    ///   - expiresAt:
-                    ///   - scope: REST path prefixes the token may reach
-                    public init(
-                        name: Swift.String,
-                        expiresAt: Foundation.Date? = nil,
-                        scope: [Swift.String]? = nil
-                    ) {
-                        self.name = name
-                        self.expiresAt = expiresAt
-                        self.scope = scope
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json`.
+                @frozen public enum JsonPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case1`.
+                    public struct Case1Payload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case1/name`.
+                        public var name: Swift.String
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case1/expires_at`.
+                        public var expiresAt: Foundation.Date?
+                        /// REST path prefixes the token may reach
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case1/scope`.
+                        public var scope: [Swift.String]?
+                        /// Creates a new `Case1Payload`.
+                        ///
+                        /// - Parameters:
+                        ///   - name:
+                        ///   - expiresAt:
+                        ///   - scope: REST path prefixes the token may reach
+                        public init(
+                            name: Swift.String,
+                            expiresAt: Foundation.Date? = nil,
+                            scope: [Swift.String]? = nil
+                        ) {
+                            self.name = name
+                            self.expiresAt = expiresAt
+                            self.scope = scope
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case name
+                            case expiresAt = "expires_at"
+                            case scope
+                        }
                     }
-                    public enum CodingKeys: String, CodingKey {
-                        case name
-                        case expiresAt
-                        case scope
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case1`.
+                    case case1(Operations.PostV1ApiKeys.Input.Body.JsonPayload.Case1Payload)
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case2`.
+                    public struct Case2Payload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case2/name`.
+                        public var name: Swift.String
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case2/description`.
+                        public var description: Swift.String?
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case2/expires_at`.
+                        public var expiresAt: Foundation.Date?
+                        /// The ecosystem (rdid or uuid; must be manageable by the caller) the token — and its isolated bucket — binds to. Omitted: the owner’s own ecosystem.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case2/ecosystem_id`.
+                        public var ecosystemId: Swift.String?
+                        /// Creates a new `Case2Payload`.
+                        ///
+                        /// - Parameters:
+                        ///   - name:
+                        ///   - description:
+                        ///   - expiresAt:
+                        ///   - ecosystemId: The ecosystem (rdid or uuid; must be manageable by the caller) the token — and its isolated bucket — binds to. Omitted: the owner’s own ecosystem.
+                        public init(
+                            name: Swift.String,
+                            description: Swift.String? = nil,
+                            expiresAt: Foundation.Date? = nil,
+                            ecosystemId: Swift.String? = nil
+                        ) {
+                            self.name = name
+                            self.description = description
+                            self.expiresAt = expiresAt
+                            self.ecosystemId = ecosystemId
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case name
+                            case description
+                            case expiresAt = "expires_at"
+                            case ecosystemId = "ecosystem_id"
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/json/case2`.
+                    case case2(Operations.PostV1ApiKeys.Input.Body.JsonPayload.Case2Payload)
+                    public init(from decoder: any Swift.Decoder) throws {
+                        var errors: [any Swift.Error] = []
+                        do {
+                            self = .case1(try .init(from: decoder))
+                            return
+                        } catch {
+                            errors.append(error)
+                        }
+                        do {
+                            self = .case2(try .init(from: decoder))
+                            return
+                        } catch {
+                            errors.append(error)
+                        }
+                        throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                            type: Self.self,
+                            codingPath: decoder.codingPath,
+                            errors: errors
+                        )
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        switch self {
+                        case let .case1(value):
+                            try value.encode(to: encoder)
+                        case let .case2(value):
+                            try value.encode(to: encoder)
+                        }
                     }
                 }
-                /// - Remark: Generated from `#/paths/auth/tokens/POST/requestBody/content/application\/json`.
-                case json(Operations.PostAuthTokens.Input.Body.JsonPayload)
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/requestBody/content/application\/json`.
+                case json(Operations.PostV1ApiKeys.Input.Body.JsonPayload)
             }
-            public var body: Operations.PostAuthTokens.Input.Body?
+            public var body: Operations.PostV1ApiKeys.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
             ///   - body:
             public init(
-                headers: Operations.PostAuthTokens.Input.Headers = .init(),
-                body: Operations.PostAuthTokens.Input.Body? = nil
+                headers: Operations.PostV1ApiKeys.Input.Headers = .init(),
+                body: Operations.PostV1ApiKeys.Input.Body
             ) {
                 self.headers = headers
                 self.body = body
@@ -3678,15 +2505,61 @@ public enum Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/tokens/POST/responses/201/content`.
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/tokens/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.ApiTokenCreated)
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case apiKey = "api_key"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content/json/value1/object`.
+                            public var object: Operations.PostV1ApiKeys.Output.Created.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1ApiKeys.Output.Created.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content/json/value1`.
+                        public var value1: Operations.PostV1ApiKeys.Output.Created.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content/json/value2`.
+                        public var value2: Components.Schemas.ApiTokenCreated
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1ApiKeys.Output.Created.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.ApiTokenCreated
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/201/content/application\/json`.
+                    case json(Operations.PostV1ApiKeys.Output.Created.Body.JsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ApiTokenCreated {
+                    public var json: Operations.PostV1ApiKeys.Output.Created.Body.JsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3696,26 +2569,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PostAuthTokens.Output.Created.Body
+                public var body: Operations.PostV1ApiKeys.Output.Created.Body
                 /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthTokens.Output.Created.Body) {
+                public init(body: Operations.PostV1ApiKeys.Output.Created.Body) {
                     self.body = body
                 }
             }
             /// API token + raw value (shown once)
             ///
-            /// - Remark: Generated from `#/paths//auth/tokens/post/responses/201`.
+            /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)/responses/201`.
             ///
             /// HTTP response code: `201 created`.
-            case created(Operations.PostAuthTokens.Output.Created)
+            case created(Operations.PostV1ApiKeys.Output.Created)
             /// The associated value of the enum case if `self` is `.created`.
             ///
             /// - Throws: An error if `self` is not `.created`.
             /// - SeeAlso: `.created`.
-            public var created: Operations.PostAuthTokens.Output.Created {
+            public var created: Operations.PostV1ApiKeys.Output.Created {
                 get throws {
                     switch self {
                     case let .created(response):
@@ -3729,15 +2602,15 @@ public enum Operations {
                 }
             }
             public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/tokens/POST/responses/400/content`.
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/400/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/tokens/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3747,26 +2620,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PostAuthTokens.Output.BadRequest.Body
+                public var body: Operations.PostV1ApiKeys.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthTokens.Output.BadRequest.Body) {
+                public init(body: Operations.PostV1ApiKeys.Output.BadRequest.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/tokens/post/responses/400`.
+            /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostAuthTokens.Output.BadRequest)
+            case badRequest(Operations.PostV1ApiKeys.Output.BadRequest)
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
             /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostAuthTokens.Output.BadRequest {
+            public var badRequest: Operations.PostV1ApiKeys.Output.BadRequest {
                 get throws {
                     switch self {
                     case let .badRequest(response):
@@ -3780,15 +2653,15 @@ public enum Operations {
                 }
             }
             public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/auth/tokens/POST/responses/401/content`.
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/401/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/auth/tokens/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3798,26 +2671,1384 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PostAuthTokens.Output.Unauthorized.Body
+                public var body: Operations.PostV1ApiKeys.Output.Unauthorized.Body
                 /// Creates a new `Unauthorized`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PostAuthTokens.Output.Unauthorized.Body) {
+                public init(body: Operations.PostV1ApiKeys.Output.Unauthorized.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//auth/tokens/post/responses/401`.
+            /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostAuthTokens.Output.Unauthorized)
+            case unauthorized(Operations.PostV1ApiKeys.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostAuthTokens.Output.Unauthorized {
+            public var unauthorized: Operations.PostV1ApiKeys.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ApiKeys.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ApiKeys.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1ApiKeys.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1ApiKeys.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ApiKeys.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ApiKeys.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1ApiKeys.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1ApiKeys.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/api_keys/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ApiKeys.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ApiKeys.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1ApiKeys.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1ApiKeys.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
+    ///
+    /// Replaces POST /auth/login/mfa/webauthn/options, POST /auth/login/webauthn/options.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/passkey_challenges`.
+    /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)`.
+    public enum PostV1AuthPasskeyChallenges {
+        public static let id: Swift.String = "postV1AuthPasskeyChallenges"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthPasskeyChallenges.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthPasskeyChallenges.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1AuthPasskeyChallenges.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json`.
+                public struct JsonPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1`.
+                    @frozen public enum Value1Payload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case1`.
+                        public struct Case1Payload: Codable, Hashable, Sendable {
+                            /// MFA pending token
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case1/token`.
+                            public var token: Swift.String
+                            /// Creates a new `Case1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - token: MFA pending token
+                            public init(token: Swift.String) {
+                                self.token = token
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case token
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case1`.
+                        case case1(Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value1Payload.Case1Payload)
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case2`.
+                        public struct Case2Payload: Codable, Hashable, Sendable {
+                            /// Email or login slug
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case2/identifier`.
+                            public var identifier: Swift.String
+                            /// Creates a new `Case2Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - identifier: Email or login slug
+                            public init(identifier: Swift.String) {
+                                self.identifier = identifier
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case identifier
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case2`.
+                        case case2(Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value1Payload.Case2Payload)
+                        public init(from decoder: any Swift.Decoder) throws {
+                            var errors: [any Swift.Error] = []
+                            do {
+                                self = .case1(try .init(from: decoder))
+                                return
+                            } catch {
+                                errors.append(error)
+                            }
+                            do {
+                                self = .case2(try .init(from: decoder))
+                                return
+                            } catch {
+                                errors.append(error)
+                            }
+                            throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                                type: Self.self,
+                                codingPath: decoder.codingPath,
+                                errors: errors
+                            )
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            switch self {
+                            case let .case1(value):
+                                try value.encode(to: encoder)
+                            case let .case2(value):
+                                try value.encode(to: encoder)
+                            }
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1`.
+                    public var value1: Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value1Payload
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value2`.
+                    public struct Value2Payload: Codable, Hashable, Sendable {
+                        /// Selects which kind of object this call works on.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value2/method`.
+                        @frozen public enum MethodPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case mfaPasskey = "mfa_passkey"
+                            case passkey = "passkey"
+                        }
+                        /// Selects which kind of object this call works on.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value2/method`.
+                        public var method: Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value2Payload.MethodPayload
+                        /// Creates a new `Value2Payload`.
+                        ///
+                        /// - Parameters:
+                        ///   - method: Selects which kind of object this call works on.
+                        public init(method: Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value2Payload.MethodPayload) {
+                            self.method = method
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case method
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value2`.
+                    public var value2: Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value2Payload
+                    /// Creates a new `JsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - value1:
+                    ///   - value2:
+                    public init(
+                        value1: Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value1Payload,
+                        value2: Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload.Value2Payload
+                    ) {
+                        self.value1 = value1
+                        self.value2 = value2
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        self.value1 = try .init(from: decoder)
+                        self.value2 = try .init(from: decoder)
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try self.value1.encode(to: encoder)
+                        try self.value2.encode(to: encoder)
+                    }
+                }
+                /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/content/application\/json`.
+                case json(Operations.PostV1AuthPasskeyChallenges.Input.Body.JsonPayload)
+            }
+            public var body: Operations.PostV1AuthPasskeyChallenges.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.PostV1AuthPasskeyChallenges.Input.Headers = .init(),
+                body: Operations.PostV1AuthPasskeyChallenges.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case auth_passkeyChallenge = "auth.passkey_challenge"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content/json/object`.
+                        public var object: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body.JsonPayload.ObjectPayload?
+                        /// PublicKeyCredentialRequestOptionsJSON
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content/json/options`.
+                        public struct OptionsPayload: Codable, Hashable, Sendable {
+                            /// A container of undocumented properties.
+                            public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                            /// Creates a new `OptionsPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - additionalProperties: A container of undocumented properties.
+                            public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                                self.additionalProperties = additionalProperties
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try encoder.encodeAdditionalProperties(additionalProperties)
+                            }
+                        }
+                        /// PublicKeyCredentialRequestOptionsJSON
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content/json/options`.
+                        public var options: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body.JsonPayload.OptionsPayload
+                        /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content/json/token`.
+                        public var token: Swift.String
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - options: PublicKeyCredentialRequestOptionsJSON
+                        ///   - token:
+                        public init(
+                            object: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
+                            options: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body.JsonPayload.OptionsPayload,
+                            token: Swift.String
+                        ) {
+                            self.object = object
+                            self.options = options
+                            self.token = token
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case options
+                            case token
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// options + next pending token
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1AuthPasskeyChallenges.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1AuthPasskeyChallenges.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthPasskeyChallenges.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthPasskeyChallenges.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1AuthPasskeyChallenges.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1AuthPasskeyChallenges.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthPasskeyChallenges.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthPasskeyChallenges.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1AuthPasskeyChallenges.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1AuthPasskeyChallenges.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthPasskeyChallenges.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthPasskeyChallenges.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1AuthPasskeyChallenges.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1AuthPasskeyChallenges.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Sign in (may require a second factor)
+    ///
+    /// Replaces POST /auth/login, POST /auth/login/mfa, POST /auth/login/mfa/webauthn, POST /auth/login/webauthn.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)`.
+    public enum PostV1AuthSessions {
+        public static let id: Swift.String = "postV1AuthSessions"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSessions.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSessions.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1AuthSessions.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json`.
+                public struct JsonPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1`.
+                    @frozen public enum Value1Payload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case1`.
+                        public struct Case1Payload: Codable, Hashable, Sendable {
+                            /// Email address
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case1/email`.
+                            public var email: Swift.String?
+                            /// User id (login handle)
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case1/slug`.
+                            public var slug: Swift.String?
+                            /// Email, user id, or a verified phone number (E.164) — classified server-side
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case1/identifier`.
+                            public var identifier: Swift.String?
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case1/password`.
+                            public var password: Swift.String
+                            /// Creates a new `Case1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - email: Email address
+                            ///   - slug: User id (login handle)
+                            ///   - identifier: Email, user id, or a verified phone number (E.164) — classified server-side
+                            ///   - password:
+                            public init(
+                                email: Swift.String? = nil,
+                                slug: Swift.String? = nil,
+                                identifier: Swift.String? = nil,
+                                password: Swift.String
+                            ) {
+                                self.email = email
+                                self.slug = slug
+                                self.identifier = identifier
+                                self.password = password
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case email
+                                case slug
+                                case identifier
+                                case password
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case1`.
+                        case case1(Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload.Case1Payload)
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case2`.
+                        public struct Case2Payload: Codable, Hashable, Sendable {
+                            /// MFA pending token
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case2/token`.
+                            public var token: Swift.String
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case2/method`.
+                            @frozen public enum MethodPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case sms = "sms"
+                                case totp = "totp"
+                                case recovery = "recovery"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case2/method`.
+                            public var method: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload.Case2Payload.MethodPayload
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case2/code`.
+                            public var code: Swift.String
+                            /// Creates a new `Case2Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - token: MFA pending token
+                            ///   - method:
+                            ///   - code:
+                            public init(
+                                token: Swift.String,
+                                method: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload.Case2Payload.MethodPayload,
+                                code: Swift.String
+                            ) {
+                                self.token = token
+                                self.method = method
+                                self.code = code
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case token
+                                case method
+                                case code
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case2`.
+                        case case2(Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload.Case2Payload)
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case3`.
+                        public struct Case3Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case3/token`.
+                            public var token: Swift.String
+                            /// AuthenticationResponseJSON
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case3/response`.
+                            public struct ResponsePayload: Codable, Hashable, Sendable {
+                                /// A container of undocumented properties.
+                                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                                /// Creates a new `ResponsePayload`.
+                                ///
+                                /// - Parameters:
+                                ///   - additionalProperties: A container of undocumented properties.
+                                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                                    self.additionalProperties = additionalProperties
+                                }
+                                public init(from decoder: any Swift.Decoder) throws {
+                                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                                }
+                                public func encode(to encoder: any Swift.Encoder) throws {
+                                    try encoder.encodeAdditionalProperties(additionalProperties)
+                                }
+                            }
+                            /// AuthenticationResponseJSON
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case3/response`.
+                            public var response: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload.Case3Payload.ResponsePayload
+                            /// Creates a new `Case3Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - token:
+                            ///   - response: AuthenticationResponseJSON
+                            public init(
+                                token: Swift.String,
+                                response: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload.Case3Payload.ResponsePayload
+                            ) {
+                                self.token = token
+                                self.response = response
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case token
+                                case response
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1/case3`.
+                        case case3(Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload.Case3Payload)
+                        public init(from decoder: any Swift.Decoder) throws {
+                            var errors: [any Swift.Error] = []
+                            do {
+                                self = .case1(try .init(from: decoder))
+                                return
+                            } catch {
+                                errors.append(error)
+                            }
+                            do {
+                                self = .case2(try .init(from: decoder))
+                                return
+                            } catch {
+                                errors.append(error)
+                            }
+                            do {
+                                self = .case3(try .init(from: decoder))
+                                return
+                            } catch {
+                                errors.append(error)
+                            }
+                            throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                                type: Self.self,
+                                codingPath: decoder.codingPath,
+                                errors: errors
+                            )
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            switch self {
+                            case let .case1(value):
+                                try value.encode(to: encoder)
+                            case let .case2(value):
+                                try value.encode(to: encoder)
+                            case let .case3(value):
+                                try value.encode(to: encoder)
+                            }
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value1`.
+                    public var value1: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value2`.
+                    public struct Value2Payload: Codable, Hashable, Sendable {
+                        /// Selects which kind of object this call works on.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value2/method`.
+                        @frozen public enum MethodPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case password = "password"
+                            case sms = "sms"
+                            case totp = "totp"
+                            case recovery = "recovery"
+                            case mfaPasskey = "mfa_passkey"
+                            case passkey = "passkey"
+                        }
+                        /// Selects which kind of object this call works on.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value2/method`.
+                        public var method: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value2Payload.MethodPayload
+                        /// Creates a new `Value2Payload`.
+                        ///
+                        /// - Parameters:
+                        ///   - method: Selects which kind of object this call works on.
+                        public init(method: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value2Payload.MethodPayload) {
+                            self.method = method
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case method
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/json/value2`.
+                    public var value2: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value2Payload
+                    /// Creates a new `JsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - value1:
+                    ///   - value2:
+                    public init(
+                        value1: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value1Payload,
+                        value2: Operations.PostV1AuthSessions.Input.Body.JsonPayload.Value2Payload
+                    ) {
+                        self.value1 = value1
+                        self.value2 = value2
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        self.value1 = try .init(from: decoder)
+                        self.value2 = try .init(from: decoder)
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try self.value1.encode(to: encoder)
+                        try self.value2.encode(to: encoder)
+                    }
+                }
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/requestBody/content/application\/json`.
+                case json(Operations.PostV1AuthSessions.Input.Body.JsonPayload)
+            }
+            public var body: Operations.PostV1AuthSessions.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.PostV1AuthSessions.Input.Headers = .init(),
+                body: Operations.PostV1AuthSessions.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case auth_session = "auth.session"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1AuthSessions.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1AuthSessions.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1AuthSessions.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.AuthResult
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1AuthSessions.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.AuthResult
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1AuthSessions.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1AuthSessions.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSessions.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSessions.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// token + refreshToken + user
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1AuthSessions.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1AuthSessions.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSessions.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSessions.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1AuthSessions.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1AuthSessions.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSessions.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSessions.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1AuthSessions.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1AuthSessions.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSessions.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSessions.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1AuthSessions.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1AuthSessions.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Rotate refresh token → new JWT
+    ///
+    /// Replaces POST /auth/refresh.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/refresh`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/refresh/post(postV1AuthSessionsRefresh)`.
+    public enum PostV1AuthSessionsRefresh {
+        public static let id: Swift.String = "postV1AuthSessionsRefresh"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSessionsRefresh.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSessionsRefresh.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1AuthSessionsRefresh.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            public init(headers: Operations.PostV1AuthSessionsRefresh.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case auth_session = "auth.session"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.RefreshResult
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.RefreshResult
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1AuthSessionsRefresh.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// token + refreshToken
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sessions/refresh/post(postV1AuthSessionsRefresh)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1AuthSessionsRefresh.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1AuthSessionsRefresh.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/refresh/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSessionsRefresh.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSessionsRefresh.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sessions/refresh/post(postV1AuthSessionsRefresh)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1AuthSessionsRefresh.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1AuthSessionsRefresh.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -3861,70 +4092,65 @@ public enum Operations {
             }
         }
     }
-    /// Trade a single-use exchange code → token + refreshToken + user
+    /// Sign out (revoke refresh token)
     ///
-    /// - Remark: HTTP `POST /oauth/signin/exchange`.
-    /// - Remark: Generated from `#/paths//oauth/signin/exchange/post`.
-    public enum PostOauthSigninExchange {
-        public static let id: Swift.String = "post/oauth/signin/exchange"
+    /// Replaces POST /auth/revoke.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/revoke`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/revoke/post(postV1AuthSessionsRevoke)`.
+    public enum PostV1AuthSessionsRevoke {
+        public static let id: Swift.String = "postV1AuthSessionsRevoke"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/header`.
+            /// - Remark: Generated from `#/paths/v1/auth/sessions/revoke/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostOauthSigninExchange.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSessionsRevoke.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostOauthSigninExchange.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSessionsRevoke.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.PostOauthSigninExchange.Input.Headers
-            /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/requestBody/json/code`.
-                    public var code: Swift.String
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - code:
-                    public init(code: Swift.String) {
-                        self.code = code
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case code
-                    }
-                }
-                /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/requestBody/content/application\/json`.
-                case json(Operations.PostOauthSigninExchange.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostOauthSigninExchange.Input.Body?
+            public var headers: Operations.PostV1AuthSessionsRevoke.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostOauthSigninExchange.Input.Headers = .init(),
-                body: Operations.PostOauthSigninExchange.Input.Body? = nil
-            ) {
+            public init(headers: Operations.PostV1AuthSessionsRevoke.Input.Headers = .init()) {
                 self.headers = headers
-                self.body = body
             }
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/auth/sessions/revoke/POST/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AuthResult)
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/revoke/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/revoke/POST/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case auth_session = "auth.session"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/sessions/revoke/POST/responses/200/content/json/object`.
+                        public var object: Operations.PostV1AuthSessionsRevoke.Output.Ok.Body.JsonPayload.ObjectPayload?
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        public init(object: Operations.PostV1AuthSessionsRevoke.Output.Ok.Body.JsonPayload.ObjectPayload? = nil) {
+                            self.object = object
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/sessions/revoke/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1AuthSessionsRevoke.Output.Ok.Body.JsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AuthResult {
+                    public var json: Operations.PostV1AuthSessionsRevoke.Output.Ok.Body.JsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3934,26 +4160,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PostOauthSigninExchange.Output.Ok.Body
+                public var body: Operations.PostV1AuthSessionsRevoke.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PostOauthSigninExchange.Output.Ok.Body) {
+                public init(body: Operations.PostV1AuthSessionsRevoke.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// token + refreshToken + user
+            /// OK
             ///
-            /// - Remark: Generated from `#/paths//oauth/signin/exchange/post/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/auth/sessions/revoke/post(postV1AuthSessionsRevoke)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.PostOauthSigninExchange.Output.Ok)
+            case ok(Operations.PostV1AuthSessionsRevoke.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostOauthSigninExchange.Output.Ok {
+            public var ok: Operations.PostV1AuthSessionsRevoke.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -3966,16 +4192,132 @@ public enum Operations {
                     }
                 }
             }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/responses/400/content`.
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Send the SMS login code to the verified primary phone
+    ///
+    /// Replaces POST /auth/login/mfa/sms/send.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sms_codes`.
+    /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)`.
+    public enum PostV1AuthSmsCodes {
+        public static let id: Swift.String = "postV1AuthSmsCodes"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSmsCodes.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AuthSmsCodes.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1AuthSmsCodes.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/requestBody/json`.
+                public struct JsonPayload: Codable, Hashable, Sendable {
+                    /// MFA pending token
+                    ///
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/requestBody/json/token`.
+                    public var token: Swift.String
+                    /// Creates a new `JsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - token: MFA pending token
+                    public init(token: Swift.String) {
+                        self.token = token
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case token
+                    }
+                }
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/requestBody/content/application\/json`.
+                case json(Operations.PostV1AuthSmsCodes.Input.Body.JsonPayload)
+            }
+            public var body: Operations.PostV1AuthSmsCodes.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.PostV1AuthSmsCodes.Input.Headers = .init(),
+                body: Operations.PostV1AuthSmsCodes.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Accepted: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/202/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/202/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/202/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case auth_smsCode = "auth.sms_code"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/202/content/json/object`.
+                        public var object: Operations.PostV1AuthSmsCodes.Output.Accepted.Body.JsonPayload.ObjectPayload?
+                        /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/202/content/json/ok`.
+                        public var ok: Swift.Bool
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - ok:
+                        public init(
+                            object: Operations.PostV1AuthSmsCodes.Output.Accepted.Body.JsonPayload.ObjectPayload? = nil,
+                            ok: Swift.Bool
+                        ) {
+                            self.object = object
+                            self.ok = ok
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case ok
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/202/content/application\/json`.
+                    case json(Operations.PostV1AuthSmsCodes.Output.Accepted.Body.JsonPayload)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Operations.PostV1AuthSmsCodes.Output.Accepted.Body.JsonPayload {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3985,26 +4327,77 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PostOauthSigninExchange.Output.BadRequest.Body
+                public var body: Operations.PostV1AuthSmsCodes.Output.Accepted.Body
+                /// Creates a new `Accepted`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSmsCodes.Output.Accepted.Body) {
+                    self.body = body
+                }
+            }
+            /// code sent
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)/responses/202`.
+            ///
+            /// HTTP response code: `202 accepted`.
+            case accepted(Operations.PostV1AuthSmsCodes.Output.Accepted)
+            /// The associated value of the enum case if `self` is `.accepted`.
+            ///
+            /// - Throws: An error if `self` is not `.accepted`.
+            /// - SeeAlso: `.accepted`.
+            public var accepted: Operations.PostV1AuthSmsCodes.Output.Accepted {
+                get throws {
+                    switch self {
+                    case let .accepted(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "accepted",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSmsCodes.Output.BadRequest.Body
                 /// Creates a new `BadRequest`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PostOauthSigninExchange.Output.BadRequest.Body) {
+                public init(body: Operations.PostV1AuthSmsCodes.Output.BadRequest.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//oauth/signin/exchange/post/responses/400`.
+            /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)/responses/400`.
             ///
             /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostOauthSigninExchange.Output.BadRequest)
+            case badRequest(Operations.PostV1AuthSmsCodes.Output.BadRequest)
             /// The associated value of the enum case if `self` is `.badRequest`.
             ///
             /// - Throws: An error if `self` is not `.badRequest`.
             /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostOauthSigninExchange.Output.BadRequest {
+            public var badRequest: Operations.PostV1AuthSmsCodes.Output.BadRequest {
                 get throws {
                     switch self {
                     case let .badRequest(response):
@@ -4018,15 +4411,15 @@ public enum Operations {
                 }
             }
             public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/responses/401/content`.
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/401/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/oauth/signin/exchange/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas._Error)
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas._Error {
+                    public var json: Components.Schemas.StripeError {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -4036,26 +4429,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.PostOauthSigninExchange.Output.Unauthorized.Body
+                public var body: Operations.PostV1AuthSmsCodes.Output.Unauthorized.Body
                 /// Creates a new `Unauthorized`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.PostOauthSigninExchange.Output.Unauthorized.Body) {
+                public init(body: Operations.PostV1AuthSmsCodes.Output.Unauthorized.Body) {
                     self.body = body
                 }
             }
             /// Error
             ///
-            /// - Remark: Generated from `#/paths//oauth/signin/exchange/post/responses/401`.
+            /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)/responses/401`.
             ///
             /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostOauthSigninExchange.Output.Unauthorized)
+            case unauthorized(Operations.PostV1AuthSmsCodes.Output.Unauthorized)
             /// The associated value of the enum case if `self` is `.unauthorized`.
             ///
             /// - Throws: An error if `self` is not `.unauthorized`.
             /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostOauthSigninExchange.Output.Unauthorized {
+            public var unauthorized: Operations.PostV1AuthSmsCodes.Output.Unauthorized {
                 get throws {
                     switch self {
                     case let .unauthorized(response):
@@ -4063,6 +4456,159 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSmsCodes.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSmsCodes.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1AuthSmsCodes.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1AuthSmsCodes.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSmsCodes.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSmsCodes.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1AuthSmsCodes.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1AuthSmsCodes.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct TooManyRequests: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/429/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/auth/sms_codes/POST/responses/429/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AuthSmsCodes.Output.TooManyRequests.Body
+                /// Creates a new `TooManyRequests`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AuthSmsCodes.Output.TooManyRequests.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)/responses/429`.
+            ///
+            /// HTTP response code: `429 tooManyRequests`.
+            case tooManyRequests(Operations.PostV1AuthSmsCodes.Output.TooManyRequests)
+            /// The associated value of the enum case if `self` is `.tooManyRequests`.
+            ///
+            /// - Throws: An error if `self` is not `.tooManyRequests`.
+            /// - SeeAlso: `.tooManyRequests`.
+            public var tooManyRequests: Operations.PostV1AuthSmsCodes.Output.TooManyRequests {
+                get throws {
+                    switch self {
+                    case let .tooManyRequests(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "tooManyRequests",
                             response: self
                         )
                     }
