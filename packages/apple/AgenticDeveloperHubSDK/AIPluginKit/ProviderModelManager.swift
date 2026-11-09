@@ -7,8 +7,23 @@ public protocol ProviderModelSource: Sendable {
     /// again before the next fetch (an endpoint and, for a keyed API, nothing
     /// secret — the same account sees the same models).
     var cacheKey: String { get }
+    /// Every cache entry this source's results can be stored under, the most
+    /// authoritative first. One key for a single source; a fallback chain names
+    /// each of its sources' keys.
+    var cacheKeys: [String] { get }
     /// The provider's models, or nil when the source could not be reached.
     func fetch() async -> ProviderModelList?
+    /// The provider's models and the cache key of the source that answered.
+    func load() async -> (cacheKey: String, list: ProviderModelList)?
+}
+
+extension ProviderModelSource {
+    public var cacheKeys: [String] { [cacheKey] }
+
+    public func load() async -> (cacheKey: String, list: ProviderModelList)? {
+        guard let list = await fetch(), !list.isEmpty else { return nil }
+        return (cacheKey, list)
+    }
 }
 
 /// The Anthropic API's `GET /v1/models`: every model the account can call, with
@@ -137,9 +152,17 @@ public struct FallbackModelSource: ProviderModelSource {
 
     public var cacheKey: String { sources.first?.cacheKey ?? "" }
 
+    public var cacheKeys: [String] { sources.flatMap(\.cacheKeys) }
+
     public func fetch() async -> ProviderModelList? {
+        await load()?.list
+    }
+
+    /// The first source that answers, under its own key: a public catalog that
+    /// stood in for a keyed account must never land in the account's entry.
+    public func load() async -> (cacheKey: String, list: ProviderModelList)? {
         for source in sources {
-            if let list = await source.fetch(), !list.isEmpty { return list }
+            if let answer = await source.load() { return answer }
         }
         return nil
     }
@@ -184,24 +207,28 @@ extension ProviderModelManager {
     /// Whether this provider's list can be loaded live.
     public var hasLiveSource: Bool { source != nil }
 
-    /// The last loaded list, else the descriptor's static one.
+    /// The last loaded list from the most authoritative source that has
+    /// answered (the account's own list before a public catalog), else the
+    /// descriptor's static one.
     public var list: ProviderModelList {
-        if let source, let cached = ProviderModelCache.setting.value[source.cacheKey], !cached.isEmpty {
-            return cached
+        guard let source else { return seed }
+        let cache = ProviderModelCache.setting.value
+        for key in source.cacheKeys {
+            if let cached = cache[key], !cached.isEmpty { return cached }
         }
         return seed
     }
 
-    /// Loads the current list from the source and caches it. On failure the
-    /// previous list stands.
+    /// Loads the current list from the source and caches it under the key of
+    /// the source that answered, then returns `list`. On failure, or when only
+    /// a fallback answered, a list from a more authoritative source stands.
     @discardableResult
     public func refresh() async -> ProviderModelList {
         guard let source else { return list }
-        if let fresh = await source.fetch(), !fresh.isEmpty {
+        if let fresh = await source.load() {
             var all = ProviderModelCache.setting.value
-            all[source.cacheKey] = fresh
+            all[fresh.cacheKey] = fresh.list
             ProviderModelCache.setting.value = all
-            return fresh
         }
         return list
     }
