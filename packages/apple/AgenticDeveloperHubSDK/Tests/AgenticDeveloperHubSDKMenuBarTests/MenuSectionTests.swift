@@ -663,6 +663,43 @@ struct BadgeCornerTests {
                 == ["Top Left", "Top Right", "Bottom Left", "Bottom Right"])
     }
 
+    @Test("a status badge sharing the count's corner is drawn above or below it")
+    func collidingStatusMoves() {
+        for corner in MenuBarBadgeCorner.allCases {
+            let layout = MenuBarBadgeLayout(count: corner, status: corner)
+            #expect(layout.drawnStatusCorner == corner.verticalNeighbor)
+            #expect(layout.drawnStatusCorner.isLeading == corner.isLeading)
+        }
+        #expect(MenuBarBadgeLayout.standard.drawnStatusCorner == .bottomTrailing)
+    }
+
+    @Test("moving one badge onto the other's corner swaps them")
+    func separatedSwaps() {
+        let previous = MenuBarBadgeLayout.standard  // count top right, status bottom right
+        let countMoved = MenuBarBadgeLayout(count: .bottomTrailing, status: .bottomTrailing)
+        #expect(countMoved.separated(from: previous)
+                == MenuBarBadgeLayout(count: .bottomTrailing, status: .topTrailing))
+        let statusMoved = MenuBarBadgeLayout(count: .topTrailing, status: .topTrailing)
+        #expect(statusMoved.separated(from: previous)
+                == MenuBarBadgeLayout(count: .bottomTrailing, status: .topTrailing))
+        let apart = MenuBarBadgeLayout(count: .topLeading, status: .bottomTrailing)
+        #expect(apart.separated(from: previous) == apart)
+    }
+
+    @Test("separating never leaves the two badges in one corner")
+    func separatedIsAlwaysApart() {
+        let corners = MenuBarBadgeCorner.allCases
+        for previousCount in corners {
+            for previousStatus in corners {
+                for next in corners {
+                    let previous = MenuBarBadgeLayout(count: previousCount, status: previousStatus)
+                    let result = MenuBarBadgeLayout(count: next, status: next).separated(from: previous)
+                    #expect(result.count != result.status)
+                }
+            }
+        }
+    }
+
     @Test("changing the layout before anything is applied redraws nothing")
     func layoutChangeBeforeLaunchIsInert() {
         let delegate = StatusBarAppDelegate(healthProbe: { nil }, composer: MenuComposer(sections: []))

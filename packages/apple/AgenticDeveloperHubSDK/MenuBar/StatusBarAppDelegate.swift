@@ -485,7 +485,7 @@ public final class StatusBarAppDelegate: NSObject, NSApplicationDelegate {
                 NSLayoutConstraint.activate([
                     badge.widthAnchor.constraint(equalToConstant: 11),
                     badge.heightAnchor.constraint(equalToConstant: 11)
-                ] + Self.cornerConstraints(for: badge, in: button, corner: badgeLayout.status, inset: 1))
+                ] + Self.cornerConstraints(for: badge, in: button, corner: badgeLayout.drawnStatusCorner, inset: 1))
                 slot = badge
             }
             slot?.isHidden = false
@@ -551,6 +551,16 @@ public enum MenuBarBadgeCorner: String, Sendable, CaseIterable, Codable {
     var isLeading: Bool { self == .topLeading || self == .bottomLeading }
     var isTop: Bool { self == .topLeading || self == .topTrailing }
 
+    /// The corner above or below this one, on the same side.
+    public var verticalNeighbor: MenuBarBadgeCorner {
+        switch self {
+        case .topLeading: .bottomLeading
+        case .bottomLeading: .topLeading
+        case .topTrailing: .bottomTrailing
+        case .bottomTrailing: .topTrailing
+        }
+    }
+
     /// The corner's name for a settings popup ("Top Right"). Kept here, beside
     /// the enum, so every app that offers the choice labels it the same way.
     public var displayName: String {
@@ -576,6 +586,29 @@ public struct MenuBarBadgeLayout: Sendable, Equatable {
 
     /// Count top right, status bottom right.
     public static let standard = MenuBarBadgeLayout(count: .topTrailing, status: .bottomTrailing)
+
+    /// Where the status badge is drawn: its own corner, unless the count
+    /// already holds it, in which case the corner above or below on the same
+    /// side. Two badges pinned into one corner would cover each other, and the
+    /// hidden one may be the failure signal.
+    public var drawnStatusCorner: MenuBarBadgeCorner {
+        status == count ? status.verticalNeighbor : status
+    }
+
+    /// This layout with the two badges kept apart, for a settings UI: when
+    /// the badge that just moved landed on the other's corner, the other takes
+    /// the corner the moved one left. A layout whose corners differ is
+    /// returned as is.
+    public func separated(from previous: MenuBarBadgeLayout) -> MenuBarBadgeLayout {
+        guard count == status else { return self }
+        if count != previous.count {
+            return MenuBarBadgeLayout(count: count, status: previous.count)
+        }
+        if status != previous.status {
+            return MenuBarBadgeLayout(count: previous.status, status: status)
+        }
+        return MenuBarBadgeLayout(count: count, status: drawnStatusCorner)
+    }
 }
 
 /// Which overlay badge the status item shows. Unreachable wins over alert — when
