@@ -91,6 +91,10 @@ public final class AIChatViewController: NSViewController, Themeable {
     /// Follows the selected connection's stored model, which another chat on the
     /// same connection, the settings Test Chat or the host app can change.
     private var modelObserver: UserSettingObserver<String>?
+    /// Follows the selected connection's fields (Base URL, API key, …), which
+    /// decide whether a model list can be loaded at all, so Choose Model wakes
+    /// up the moment an endpoint is typed in AI Connections.
+    private var fieldObservers: [UserSettingObserver<String>] = []
     /// The model the transcript last said it was talking to, so a change made
     /// anywhere is noted once.
     private var announcedModel = ""
@@ -414,6 +418,7 @@ public final class AIChatViewController: NSViewController, Themeable {
         chatView = nil
         chatSession = nil
         modelObserver = nil
+        fieldObservers = []
 
         guard let config = selectedConfiguration else {
             emptyLabel.isHidden = false
@@ -447,6 +452,11 @@ public final class AIChatViewController: NSViewController, Themeable {
             ) { [weak self] _ in
                 self?.updateModelRow()
                 self?.noteModelChange()
+            }
+            let fields = pluginManager.fields(pluginIdentifier: config.pluginIdentifier, template: template)
+            fieldObservers = fields.map { field in
+                let setting = AIProviderConfigStore.fieldSetting(config: config.id, field: field)
+                return UserSettingObserver(setting) { [weak self] _ in self?.updateModelRow() }
             }
         }
     }
