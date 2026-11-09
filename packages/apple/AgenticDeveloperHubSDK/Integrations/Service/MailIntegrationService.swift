@@ -114,7 +114,7 @@ public actor MailIntegrationService {
 
     private func providerStatus() throws -> MailProviderStatus {
         guard let config = try store.providerConfig(providerId: Self.provider),
-              let secret = secrets.get(forKey: GoogleTokenProvider.clientSecretKey) else {
+              let secret = try clientSecret() else {
             return MailProviderStatus(configured: false, clientId: nil)
         }
         return MailProviderStatus(
@@ -143,10 +143,21 @@ public actor MailIntegrationService {
     /// The imported OAuth client; `notConfigured` without both its id and secret.
     private func oauthConfig() throws -> GoogleOAuthClientConfig {
         guard let config = try store.providerConfig(providerId: Self.provider),
-              let secret = secrets.get(forKey: GoogleTokenProvider.clientSecretKey) else {
+              let secret = try clientSecret() else {
             throw IntegrationError.notConfigured
         }
         return GoogleOAuthClientConfig(clientId: config.clientId, clientSecret: secret)
+    }
+
+    /// The stored OAuth client secret, or nil when none is stored. A Keychain that could not
+    /// be read (locked, or access denied) throws, rather than reading as "not configured" and
+    /// sending the user to import a client they already have.
+    private func clientSecret() throws -> String? {
+        do {
+            return try secrets.read(forKey: GoogleTokenProvider.clientSecretKey)
+        } catch {
+            throw IntegrationError.keychain("Could not read the OAuth client secret: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Accounts
