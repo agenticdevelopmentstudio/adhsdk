@@ -512,10 +512,12 @@ public final class ModelChooserViewController: NSViewController {
         // nothing in this window (see `applySecondaryActionTheme`).
         cancelButton.applySecondaryActionTheme(palette)
         // A checkbox's title takes the system label color, not the theme's.
-        fitCheckbox.attributedTitle = NSAttributedString(string: Self.fitFilterTitle, attributes: [
+        let checkboxTitle: [NSAttributedString.Key: Any] = [
             .foregroundColor: palette.primaryTextColor,
             .font: palette.font(.body)
-        ])
+        ]
+        fitCheckbox.attributedTitle = NSAttributedString(string: Self.fitFilterTitle, attributes: checkboxTitle)
+        allVersionsCheckbox.attributedTitle = NSAttributedString(string: "All versions", attributes: checkboxTitle)
         reloadTable(keeping: selectedModel)   // re-renders the detail too
     }
 
