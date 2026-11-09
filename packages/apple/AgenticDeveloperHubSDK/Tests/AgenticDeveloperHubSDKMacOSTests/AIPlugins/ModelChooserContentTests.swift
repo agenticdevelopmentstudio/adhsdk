@@ -171,6 +171,26 @@ struct ModelChooserContentTests {
         #expect(ModelChooserContent.filter(filterItems, query: "  ").count == 3)
     }
 
+    @Test("filter lists a prefix, then a contiguous run, then scattered letters")
+    func filterRanks() {
+        let items = [ModelPickerItem(id: "gpt-3.5-turbo"),
+                     ModelPickerItem(id: "openai/gpt-5"),
+                     ModelPickerItem(id: "gpt-5-mini"),
+                     ModelPickerItem(id: "gpt-5")]
+        #expect(ModelChooserContent.filter(items, query: "gpt-5").map(\.id)
+                == ["gpt-5-mini", "gpt-5", "openai/gpt-5", "gpt-3.5-turbo"])
+        // No query: the listed order stands.
+        #expect(ModelChooserContent.filter(items, query: "").map(\.id) == items.map(\.id))
+    }
+
+    @Test("rank orders prefix, run, scattered, none")
+    func subsequenceRank() {
+        #expect(SubsequenceMatch.rank(of: "gpt", in: "gpt-5") == 0)
+        #expect(SubsequenceMatch.rank(of: "gpt-5", in: "openai/gpt-5") == 1)
+        #expect(SubsequenceMatch.rank(of: "gpt-5", in: "gpt-3.5-turbo") == 2)
+        #expect(SubsequenceMatch.rank(of: "GPT", in: "gpt-5") == nil)
+    }
+
     @Test("filter narrows by what a model is good for, keeping unknowns")
     func filterUses() {
         // mystery-7b has no prose at all, so no evidence either way — it stays.

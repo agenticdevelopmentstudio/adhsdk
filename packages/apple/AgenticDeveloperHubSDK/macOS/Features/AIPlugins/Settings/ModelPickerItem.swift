@@ -45,13 +45,24 @@ public struct ModelPickerItem: Equatable, Sendable {
     /// are searched — a scattered-letter match against a paragraph of description
     /// matches nearly every model.
     func matches(_ needle: String) -> Bool {
-        SubsequenceMatch.indices(of: needle, in: title) != nil
-            || SubsequenceMatch.indices(of: needle, in: id) != nil
+        matchRank(needle) != nil
+    }
+
+    /// How well `needle` matches this row (`SubsequenceMatch.rank`), the better
+    /// of the title and the id; nil when neither matches.
+    func matchRank(_ needle: String) -> Int? {
+        [SubsequenceMatch.rank(of: needle, in: title), SubsequenceMatch.rank(of: needle, in: id)]
+            .compactMap { $0 }.min()
     }
 
     /// The text the row shows for `needle`: the title, or the id when only the
-    /// id matched, so the underlined letters always explain the match.
+    /// id matched or the id matched better, so the underlined letters always
+    /// explain the row's place in the list.
     func rowText(for needle: String) -> String {
-        needle.isEmpty || SubsequenceMatch.indices(of: needle, in: title) != nil ? title : id
+        guard !needle.isEmpty, let titleRank = SubsequenceMatch.rank(of: needle, in: title) else {
+            return needle.isEmpty ? title : id
+        }
+        let idRank = SubsequenceMatch.rank(of: needle, in: id) ?? Int.max
+        return idRank < titleRank ? id : title
     }
 }
