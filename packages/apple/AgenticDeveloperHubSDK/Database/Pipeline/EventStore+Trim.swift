@@ -165,37 +165,52 @@ extension EventStore {
     /// Throws `EventStoreError.bulkLoadInProgress` during a bulk load, before any
     /// delete. A batch that fails throws `EventStoreTrimFailure` carrying what the
     /// committed batches before it deleted.
-    public func trim(olderThan cutoff: Double, batch: Int = 500, deadline: Date) throws -> EventStoreTrimResult {
-        try withMaintenance { try trimRows(olderThan: cutoff, batch: batch, until: Self.monotonic(deadline)) }
+    ///
+    /// `maxTurnId` bounds the timed turns stage to `turns.id <= maxTurnId`: a
+    /// caller whose summaries have read the turns only up to some id passes it,
+    /// so a turn stored after that read stays until the summaries count it. nil
+    /// is unbounded. Untimed turns are never summarised by day and are not bounded.
+    public func trim(olderThan cutoff: Double, maxTurnId: Int64? = nil, batch: Int = 500,
+                     deadline: Date) throws -> EventStoreTrimResult {
+        try withMaintenance {
+            try trimRows(olderThan: cutoff, maxTurnId: maxTurnId, batch: batch, until: Self.monotonic(deadline))
+        }
     }
 
-    private func trimRows(olderThan cutoff: Double, batch: Int, until end: ContinuousClock.Instant) throws
-        -> EventStoreTrimResult {
-        let limit = max(1, batch)
+    private func trimRows(olderThan cutoff: Double, maxTurnId: Int64?, batch: Int,
+                          until end: ContinuousClock.Instant) throws -> EventStoreTrimResult {
+        let fullBatch = max(1, batch)
+        var limit = min(fullBatch, carriedTrimBatch ?? fullBatch)
+        defer { carriedTrimBatch = limit }
         var result = EventStoreTrimResult(finished: false)
         var ranBatch = false
 
         /// Runs `sql` (bound to `arguments` + the limit) until a batch deletes fewer
         /// than `limit` rows; false when the deadline stopped it first. With `batchWork`,
-        /// that runs instead of `sql` and returns the rows it deleted.
+        /// that runs instead of `sql`, given the batch size, and returns the rows it deleted.
         func drain(_ sql: String, _ arguments: StatementArguments,
                    into field: WritableKeyPath<EventStoreTrimResult, Int>,
-                   batchWork: ((Database) throws -> Int)? = nil) throws -> Bool {
+                   batchWork: ((Database, Int) throws -> Int)? = nil) throws -> Bool {
             while true {
                 if ranBatch && ContinuousClock.now >= end { return false }
                 let deleted: Int
+                let started = ContinuousClock.now
                 do {
-                    deleted = try pool.write(deadline: nil) { conn -> Int in
-                        if let batchWork { return try batchWork(conn) }
-                        try conn.execute(sql: sql, arguments: arguments + [limit])
-                        return conn.changesCount
+                    deleted = try Self.shrinkingOnDeadline(&limit) { size in
+                        try pool.write(deadline: nil) { conn -> Int in
+                            if let batchWork { return try batchWork(conn, size) }
+                            try conn.execute(sql: sql, arguments: arguments + [size])
+                            return conn.changesCount
+                        }
                     }
                 } catch {
                     throw EventStoreTrimFailure(partial: result, underlying: error)
                 }
                 ranBatch = true
                 result[keyPath: field] += deleted
-                if deleted < limit { return true }
+                let used = limit
+                limit = Self.grownTrimBatch(limit, upTo: fullBatch, took: ContinuousClock.now - started)
+                if deleted < used { return true }
             }
         }
 
@@ -221,25 +236,17 @@ extension EventStore {
                 """, [provider, cutoff], into: \.messages) else { return result }
         }
 
-        guard try drain("", [], into: \.turns, batchWork: { conn in
-            try Self.foldAndDeleteTurns(olderThan: cutoff, limit: limit, conn)
+        guard try drain("", [], into: \.turns, batchWork: { conn, size in
+            try Self.foldAndDeleteTurns(olderThan: cutoff, maxTurnId: maxTurnId, limit: size, conn)
         }) else { return result }
 
         // The untimed rows of sessions that ended before the cutoff.
-        guard try drain("""
-            DELETE FROM events WHERE id IN (
-                SELECT e.id FROM events e JOIN sessions s
-                  ON s.provider = e.provider AND s.session_id = e.session_id
-                WHERE e.time <= 0 AND \(Self.endedBefore) LIMIT ?)
-            """, [cutoff], into: \.events) else { return result }
-        guard try drain("""
-            DELETE FROM messages WHERE id IN (
-                SELECT m.id FROM messages m JOIN sessions s
-                  ON s.provider = m.provider AND s.session_id = m.session_id
-                WHERE m.time <= 0 AND \(Self.endedBefore) LIMIT ?)
-            """, [cutoff], into: \.messages) else { return result }
-        guard try drain("", [], into: \.turns, batchWork: { conn in
-            try Self.foldAndDeleteTurns(untimedOfSessionsEndedBefore: cutoff, limit: limit, conn)
+        guard try drain("DELETE FROM events WHERE id IN (\(Self.untimedRows(of: "events")))",
+                        [cutoff], into: \.events) else { return result }
+        guard try drain("DELETE FROM messages WHERE id IN (\(Self.untimedRows(of: "messages")))",
+                        [cutoff], into: \.messages) else { return result }
+        guard try drain("", [], into: \.turns, batchWork: { conn, size in
+            try Self.foldAndDeleteTurns(untimedOfSessionsEndedBefore: cutoff, limit: size, conn)
         }) else { return result }
 
         guard try drain("""
@@ -259,32 +266,83 @@ extension EventStore {
         return result
     }
 
+    /// The smallest batch `shrinkingOnDeadline` halves down to.
+    static let minimumTrimBatch = 25
+
+    /// Runs one batch of `limit` rows; a batch ejected by the write deadline rolled
+    /// back whole, so it is run again at half the size, down to
+    /// ``minimumTrimBatch``, and `limit` keeps the size that went through for the
+    /// rest of the pass. Every deleted row updates each of the table's indexes, and
+    /// on a slow disk that a replay is also writing, 500 of them could run past the
+    /// deadline, which failed the stage and left the pass unfinished. A batch at the
+    /// minimum that still runs out throws the deadline error.
+    static func shrinkingOnDeadline<T>(_ limit: inout Int, minimum: Int = minimumTrimBatch,
+                                       _ body: (Int) throws -> T) throws -> T {
+        while true {
+            do {
+                return try body(limit)
+            } catch BoundedDatabaseError.deadlineExceeded where limit > minimum {
+                limit = max(minimum, limit / 2)
+            }
+        }
+    }
+
+    /// A batch that went through faster than this doubles the next one, back up
+    /// to the caller's full batch: well inside the 60 s write deadline, so a
+    /// shrink the disk needed only for a while does not last.
+    static let trimGrowthCeiling: Duration = .seconds(10)
+
+    /// `limit` doubled, capped at `fullBatch`, when the batch that used it took
+    /// under ``trimGrowthCeiling`` (a batch that shrank first took the deadline
+    /// at least, so it never grows); otherwise `limit`.
+    static func grownTrimBatch(_ limit: Int, upTo fullBatch: Int, took: Duration) -> Int {
+        guard took < trimGrowthCeiling, limit < fullBatch else { return limit }
+        return min(fullBatch, limit * 2)
+    }
+
     /// One batch of the turns stage, inside the caller's write transaction: picks the
     /// oldest `limit` turns before `cutoff`, adds their sums to `trimmed_turns` (per
     /// provider, session and model), records their keys in `trimmed_turn_keys`, then
     /// deletes them. The fold and the delete commit together or not at all, so a
     /// crash between them cannot count a turn twice or lose it; a turn whose key is
     /// already recorded (stored again by a replay into this file) is deleted without
-    /// being added again. Returns the turns deleted.
-    static func foldAndDeleteTurns(olderThan cutoff: Double, limit: Int, _ conn: Database) throws -> Int {
+    /// being added again. Returns the turns deleted. `maxTurnId` keeps every turn
+    /// with a larger id (nil: no bound).
+    static func foldAndDeleteTurns(olderThan cutoff: Double, maxTurnId: Int64? = nil, limit: Int,
+                                   _ conn: Database) throws -> Int {
         try foldAndDeleteTurns(selecting: """
-            SELECT id FROM turns WHERE time > 0 AND time < ? ORDER BY time, id LIMIT ?
-            """, arguments: [cutoff, limit], conn)
+            SELECT id FROM turns WHERE time > 0 AND time < ? AND id <= ? ORDER BY time, id LIMIT ?
+            """, arguments: [cutoff, maxTurnId ?? Int64.max, limit], conn)
     }
 
     /// One batch of untimed turns (`time <= 0`) of sessions that ended before
     /// `cutoff` (``endedBefore``), folded and deleted like any other.
     static func foldAndDeleteTurns(untimedOfSessionsEndedBefore cutoff: Double, limit: Int,
                                    _ conn: Database) throws -> Int {
-        try foldAndDeleteTurns(selecting: """
-            SELECT t.id FROM turns t JOIN sessions s ON s.provider = t.provider AND s.session_id = t.session_id
-            WHERE t.time <= 0 AND \(endedBefore) LIMIT ?
-            """, arguments: [cutoff, limit], conn)
+        try foldAndDeleteTurns(selecting: untimedRows(of: "turns"), arguments: [cutoff, limit], conn)
+    }
+
+    /// The ids (one `?` for the cutoff, one for the limit) of `table`'s untimed rows
+    /// (`time <= 0`) whose session ``endedBefore`` the cutoff. CROSS JOIN keeps
+    /// `sessions` the outer loop, searched through `sessions_last_seen`, with each
+    /// session's untimed rows found by its `(provider, session_id, time)` index;
+    /// left to itself the planner scanned all of `messages_session_time`.
+    static func untimedRows(of table: String) -> String {
+        """
+        SELECT r.id FROM sessions s CROSS JOIN \(table) r
+          ON r.provider = s.provider AND r.session_id = s.session_id AND r.time <= 0
+        WHERE \(endedBefore) LIMIT ?
+        """
     }
 
     /// A session the trim may remove (its rows first): ended (`status = 'ended'`
     /// or `ended_at IS NOT NULL`), not `active`, last observed before the bound
-    /// cutoff. Alias `s`; one `?`.
+    /// cutoff. Alias `s`; one `?`. The last term is the expression of the
+    /// `sessions_last_seen` index, word for word, so the planner reads only the
+    /// sessions seen before the cutoff instead of the whole table: on a USB disk a
+    /// full scan of 9600 sessions took 45 s, every pass scanned it four times
+    /// inside write transactions, and a pass that had nothing to delete ran past
+    /// the 60 s write deadline.
     static let endedBefore = """
         (s.status = 'ended' OR s.ended_at IS NOT NULL)
           AND s.status IS NOT 'active'
@@ -345,8 +403,9 @@ extension EventStore {
         }
     }
 
-    /// Runs `PRAGMA incremental_vacuum(pagesPerStep)` until the freelist is empty,
-    /// a step frees nothing, or `deadline` passes (the first step always runs), then
+    /// Runs `PRAGMA incremental_vacuum` in steps of up to `pagesPerStep` pages
+    /// (``vacuumSteps(pagesPerStep:carry:until:_:)``) until the freelist is empty, a step
+    /// frees nothing, or `deadline` passes (the first step always runs), then
     /// checkpoints the WAL with TRUNCATE so the file on disk shrinks. Returns the
     /// pages freed, or nil without touching the file when `auto_vacuum` is not 2
     /// (INCREMENTAL): a file created before the store set it cannot vacuum this way.
@@ -362,18 +421,26 @@ extension EventStore {
     private func vacuumPages(pagesPerStep: Int, until end: ContinuousClock.Instant) throws -> Int? {
         let mode = try pool.read { conn in try Int.fetchOne(conn, sql: "PRAGMA auto_vacuum") ?? 0 }
         guard mode == 2 else { return nil }
-        let step = max(1, pagesPerStep)
-        var freed = 0
-        while true {
-            let (stepFreed, remaining) = try pool.writeWithoutTransaction(deadline: nil) { conn -> (Int, Int) in
+        var carry = carriedVacuumStep
+        defer { carriedVacuumStep = carry }
+        let cacheBefore = try pool.writeWithoutTransaction(deadline: nil) { conn in
+            let size = try Int.fetchOne(conn, sql: "PRAGMA cache_size") ?? -2000
+            try conn.execute(sql: "PRAGMA cache_size = \(-Self.vacuumCacheKiB)")
+            return size
+        }
+        defer {
+            _ = try? pool.writeWithoutTransaction(deadline: nil) { conn in
+                try conn.execute(sql: "PRAGMA cache_size = \(cacheBefore)")
+            }
+        }
+        let freed = try Self.vacuumSteps(pagesPerStep: pagesPerStep, carry: &carry, until: end) { size in
+            try pool.writeWithoutTransaction(deadline: Self.vacuumStepDeadline) { conn -> (Int, Int) in
                 let before = try Int.fetchOne(conn, sql: "PRAGMA freelist_count") ?? 0
                 guard before > 0 else { return (0, 0) }
-                try conn.execute(sql: "PRAGMA incremental_vacuum(\(step))")
+                try conn.execute(sql: "PRAGMA incremental_vacuum(\(size))")
                 let after = try Int.fetchOne(conn, sql: "PRAGMA freelist_count") ?? 0
                 return (before - after, after)
             }
-            freed += stepFreed
-            if remaining == 0 || stepFreed == 0 || ContinuousClock.now >= end { break }
         }
         if freed > 0 {
             try pool.writeWithoutTransaction(deadline: nil) { conn in
@@ -383,8 +450,78 @@ extension EventStore {
         return freed
     }
 
-    /// This store's file: sizes on disk and page accounting.
+    /// The writer's page cache while a vacuum runs, in KiB (256 MiB), put back to
+    /// what it was afterwards. Every page `incremental_vacuum` moves walks the
+    /// freelist's trunk pages for a slot (one trunk per ~1022 free pages at 4 KiB);
+    /// with SQLite's 2000 KiB default, 2.68 M free pages (about 2600 trunks) did
+    /// not fit, every move re-read the chain from a USB disk, and a pass freed
+    /// nothing in half an hour. 256 MiB holds the chain of about 65 M free pages.
+    static let vacuumCacheKiB = 262_144
+
+    /// The smallest step ``vacuumSteps(pagesPerStep:carry:until:_:)`` halves down to.
+    /// Deep in a 2 M-page freelist one page cost 40 ms and more, so the smallest
+    /// step has to fit the step deadline there too.
+    static let minimumVacuumStep = 16
+
+    /// The write deadline of one vacuum step, shorter than the pool's 60 s: an
+    /// ejected step rolls back whole, so the deadline is the work it throws away.
+    /// At 60 s two passes freed nothing, each spending its 300 s on ejected steps.
+    static let vacuumStepDeadline: Duration = .seconds(30)
+
+    /// The size of the vacuum step after one that went through in `took`: doubled
+    /// (up to `fullStep`) under ``trimGrowthCeiling``, halved (down to `minimum`)
+    /// over twice it, otherwise unchanged. The cost of a page depends on where its
+    /// slot sits in the freelist, so a pass that walks into a slow stretch has to
+    /// shrink before the step deadline ejects it, not after.
+    static func nextVacuumStep(_ size: Int, upTo fullStep: Int, minimum: Int, took: Duration) -> Int {
+        if took > trimGrowthCeiling * 2 { return max(minimum, size / 2) }
+        return grownTrimBatch(size, upTo: fullStep, took: took)
+    }
+
+    /// Runs `step(size)`, one committed `incremental_vacuum(size)`, until no free
+    /// page is left, a step frees nothing, or `end` passes (the first step always
+    /// runs), and returns the pages freed. A step the write deadline ejected rolled
+    /// back whole, so it runs again at half the size, down to ``minimumVacuumStep``;
+    /// a step that went through sizes the next by its time
+    /// (``nextVacuumStep(_:upTo:minimum:took:)``). On a slow USB disk one step of 2048 pages once ran past
+    /// the 60 s deadline, which failed the pass. A step at the minimum that still runs
+    /// out throws the deadline error; the steps before it stay committed.
+    ///
+    /// The first step runs at `carry` (the size the last vacuum ended on, nil: full),
+    /// and `carry` is left at the size this one ended on. Halving stops once `end`
+    /// has passed: each ejected step costs the full deadline, and retrying past the
+    /// end once stretched a 300 s pass to 1028 s for half a megabyte, every pass
+    /// starting over at 2048 pages the disk could no longer take.
+    static func vacuumSteps(pagesPerStep: Int, carry: inout Int?, until end: ContinuousClock.Instant,
+                            _ step: (Int) throws -> (freed: Int, remaining: Int)) throws -> Int {
+        let fullStep = max(1, pagesPerStep)
+        let minimum = min(fullStep, minimumVacuumStep)
+        var size = max(minimum, min(fullStep, carry ?? fullStep))
+        defer { carry = size }
+        var freed = 0
+        while true {
+            let started = ContinuousClock.now
+            let stepFreed: Int
+            let remaining: Int
+            do {
+                (stepFreed, remaining) = try step(size)
+            } catch BoundedDatabaseError.deadlineExceeded where size > minimum {
+                size = max(minimum, size / 2)
+                if ContinuousClock.now >= end { return freed }
+                continue
+            }
+            freed += stepFreed
+            size = nextVacuumStep(size, upTo: fullStep, minimum: minimum, took: ContinuousClock.now - started)
+            if remaining == 0 || stepFreed == 0 || ContinuousClock.now >= end { return freed }
+        }
+    }
+
+    /// This store's file: sizes on disk and page accounting. Read on a
+    /// connection of its own, never one of the pool's readers: a usage recount
+    /// can hold every reader for minutes, and a status read must not wait
+    /// behind it. The store is open, so its `-wal` and `-shm` exist and
+    /// `SQLiteFileStats` opens the file read-only, WAL frames included.
     public func fileStats() throws -> StoreFileStats {
-        try pool.read { conn in try StoreFileStats.read(path: path, conn) }
+        try SQLiteFileStats.stats(path: path)
     }
 }

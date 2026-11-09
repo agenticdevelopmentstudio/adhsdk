@@ -79,6 +79,36 @@ public enum ClaudeTurnGrouping: Sendable {
     case all, model, session
 }
 
+/// One turn as `claudeTurnArrivals` reads it: `time` is nil for another
+/// provider's turn or an untimed one; `rawRef` is the archive record it came from.
+public struct ClaudeTurnArrival: Sendable, Equatable {
+    public let id: Int64
+    public let time: Double?
+    public let sessionId: String
+    public let model: String
+    public let inputTokens: Int
+    public let outputTokens: Int
+    public let cacheReadTokens: Int
+    public let cacheCreationTokens: Int
+    public let cacheCreation1hTokens: Int
+    public let rawRef: Int64?
+
+    public init(id: Int64, time: Double?, sessionId: String = "", model: String = "", inputTokens: Int = 0,
+                outputTokens: Int = 0, cacheReadTokens: Int = 0, cacheCreationTokens: Int = 0,
+                cacheCreation1hTokens: Int = 0, rawRef: Int64? = nil) {
+        self.id = id
+        self.time = time
+        self.sessionId = sessionId
+        self.model = model
+        self.inputTokens = inputTokens
+        self.outputTokens = outputTokens
+        self.cacheReadTokens = cacheReadTokens
+        self.cacheCreationTokens = cacheCreationTokens
+        self.cacheCreation1hTokens = cacheCreation1hTokens
+        self.rawRef = rawRef
+    }
+}
+
 /// Token totals of one (key, model) group of Claude turns. `key` is `"all"`,
 /// the model or the session id, per the read's `ClaudeTurnGrouping`; `model`
 /// is "" for turns that carried none.
@@ -424,10 +454,24 @@ extension DaemonDatabase {
     /// (the provider first). A ranged read leaves out turns stored before
     /// `claudeEarliestKnownEventTime` — a line with no timestamp sits at the
     /// epoch, and a range must never catch it.
-    private static func claudeTurnFilter(
-        since: Double?, until: Double?, toolName: String?
+    ///
+    /// A ranged read that names no sessions binds the provider through
+    /// ``claudeProviderOfTimeRead`` so `turns_time` answers it; one scoped to
+    /// sessions (`sessionScoped`) keeps `provider = ?` for `turns_session`.
+    ///
+    /// `throughTurnId` keeps only turns with `id <= throughTurnId`, and
+    /// `afterTurnId` only those with `id > afterTurnId` (nil: no bound).
+    static func claudeTurnFilter(
+        since: Double?, until: Double?, toolName: String?, sessionScoped: Bool, throughTurnId: Int64? = nil,
+        afterTurnId: Int64? = nil
     ) -> (conditions: [String], arguments: [any DatabaseValueConvertible]) {
-        var conditions = ["provider = ?"]
+        let ranged = since != nil || until != nil
+        // An id range alone must drive the read by rowid: given `provider = ?`
+        // the planner walks `turns_session` instead, i.e. every Claude turn on
+        // every chunk. The unary `+` takes the column off the index.
+        let idRanged = afterTurnId != nil && !ranged && !sessionScoped
+        var conditions = [ranged && !sessionScoped ? claudeProviderOfTimeRead
+                          : idRanged ? "+provider = ?" : "provider = ?"]
         var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name]
         if since != nil || until != nil {
             conditions.append("time >= ?")
@@ -445,6 +489,14 @@ extension DaemonDatabase {
             conditions.append("tool_name = ?")
             arguments.append(toolName)
         }
+        if let throughTurnId {
+            conditions.append("id <= ?")
+            arguments.append(throughTurnId)
+        }
+        if let afterTurnId {
+            conditions.append("id > ?")
+            arguments.append(afterTurnId)
+        }
         return (conditions, arguments)
     }
 
@@ -459,6 +511,10 @@ extension DaemonDatabase {
     /// - `topKeys`: keep only the that-many keys with the most turns (ties by
     ///   key), every model row of each. Without session ids the cut is made in
     ///   SQL, so a whole-history read never materialises every group.
+    /// - `throughTurnId`: count only turns with `turns.id` at most this (nil: all)
+    ///   — what a summary that has read the turns up to an id needs.
+    /// - `afterTurnId`: count only turns with `turns.id` above this (nil: all);
+    ///   with `throughTurnId` it bounds one chunk of a whole-store scan.
     /// - `deadline`: nil is the store's read deadline; a whole-store scan
     ///   (repricing) passes `DaemonDatabase.maintenanceReadDeadline`.
     public func claudeTurnTotals(
@@ -468,11 +524,15 @@ extension DaemonDatabase {
         sessionIds: [String]? = nil,
         groupBy: ClaudeTurnGrouping = .all,
         topKeys: Int? = nil,
+        throughTurnId: Int64? = nil,
+        afterTurnId: Int64? = nil,
         deadline: Duration? = nil
     ) throws -> [ClaudeTurnTotals] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
-        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: toolName)
+        let filter = Self.claudeTurnFilter(
+            since: since, until: until, toolName: toolName, sessionScoped: unique != nil,
+            throughTurnId: throughTurnId, afterTurnId: afterTurnId)
         let keySQL: String
         switch groupBy {
         case .all: keySQL = "'all'"
@@ -562,13 +622,16 @@ extension DaemonDatabase {
 
     /// Every Claude turn's (session, time) in `[since, until)` (epoch seconds),
     /// ordered by session then time — what the active-hours walk needs. Untimed
-    /// turns are left out. `sessionIds` and `deadline` as in `claudeTurnTotals`.
+    /// turns are left out. `sessionIds`, `throughTurnId` and `deadline` as in
+    /// `claudeTurnTotals`.
     public func claudeTurnTimes(
-        since: Double, until: Double, sessionIds: [String]?, deadline: Duration? = nil
+        since: Double, until: Double, sessionIds: [String]?, throughTurnId: Int64? = nil,
+        deadline: Duration? = nil
     ) throws -> [(sessionId: String, time: Double)] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
-        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: nil)
+        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: nil, sessionScoped: unique != nil,
+                                           throughTurnId: throughTurnId)
         func fetch(_ conn: Database, _ chunk: [String]?) throws -> [(sessionId: String, time: Double)] {
             var conditions = filter.conditions
             var arguments = filter.arguments

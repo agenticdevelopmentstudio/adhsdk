@@ -323,15 +323,21 @@ extension DaemonDatabase {
     /// So it cannot throw at all: the only caller gets the logged version, and
     /// the revision is recorded only on success, so a failed pass simply runs
     /// again next launch.
-    public func repriceSessionMetricsIfNeeded() {
+    ///
+    /// The scan is read in `chunkTurns`-sized `turns.id` ranges, each its own
+    /// read under its own deadline. One whole-store grouped read outlived even
+    /// the 900 s maintenance deadline on a 19 GB store, and since progress is
+    /// recorded only on success it failed again on every launch, so costs were
+    /// never repriced at all.
+    public func repriceSessionMetricsIfNeeded(chunkTurns: Int64 = 100_000) {
         do {
-            try repriceSessionMetrics()
+            try repriceSessionMetrics(chunkTurns: max(chunkTurns, 1))
         } catch {
             logger.error("repricing failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
-    private func repriceSessionMetrics() throws {
+    private func repriceSessionMetrics(chunkTurns: Int64) throws {
         let recorded = (try? setting(for: Self.pricingRevisionKey)) ?? nil
         guard recorded != String(TranscriptPricing.revision) else { return }
 
@@ -349,9 +355,25 @@ extension DaemonDatabase {
         // store's 30 s read deadline, so it gets the maintenance one.
         // Turns the storage trim folded away count too (`claudeTrimmedTurnTotals`),
         // the same sums `sessionMetricsFromTurns` adds.
-        let live = try claudeTurnTotals(groupBy: .session, deadline: Self.maintenanceReadDeadline)
+        //
+        // The trimmed sums are read FIRST. A trim during the scan moves turns
+        // from `turns` into `trimmed_turns`: one from a range already read was
+        // counted there and is not in the earlier trimmed read, and one from a
+        // range not yet read is in neither, so the session comes up short and
+        // the `turn_count` guard below keeps its cost. Read the other way round,
+        // a turn could be counted twice.
         let trimmed = try claudeTrimmedTurnTotals(deadline: Self.maintenanceReadDeadline)
-        for group in live + trimmed {
+        var groups = trimmed
+        let highest = try turnsMaxId(deadline: Self.maintenanceReadDeadline)
+        var after: Int64 = 0
+        while after < highest {
+            let through = min(after + chunkTurns, highest)
+            groups += try claudeTurnTotals(
+                groupBy: .session, throughTurnId: through, afterTurnId: after,
+                deadline: Self.maintenanceReadDeadline)
+            after = through
+        }
+        for group in groups {
             turnCounts[group.key, default: 0] += group.turnCount
             costs[group.key, default: 0] += TranscriptPricing.cost(
                 model: group.model,

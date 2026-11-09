@@ -23,11 +23,16 @@ public struct TrimReportDTO: Codable, Sendable, Equatable {
     public let finished: Bool
     /// A stage that failed; the counts are still what was deleted.
     public let error: String?
+    /// True when `events.db` still holds many free pages after a finished pass,
+    /// so the next pass comes back soon to vacuum them. Nil from a daemon that
+    /// predates the field.
+    public let vacuumPending: Bool?
 
     public init(
         startedAt: Double, finishedAt: Double, cutoff: Double? = nil, waitingFor: String? = nil,
         events: Int = 0, messages: Int = 0, turns: Int = 0, sessions: Int = 0, rateLimitSnapshots: Int = 0,
-        reclaimedBytes: Int64 = 0, vacuum: String = "skipped", finished: Bool = true, error: String? = nil
+        reclaimedBytes: Int64 = 0, vacuum: String = "skipped", finished: Bool = true, error: String? = nil,
+        vacuumPending: Bool? = nil
     ) {
         self.startedAt = startedAt
         self.finishedAt = finishedAt
@@ -42,6 +47,7 @@ public struct TrimReportDTO: Codable, Sendable, Equatable {
         self.vacuum = vacuum
         self.finished = finished
         self.error = error
+        self.vacuumPending = vacuumPending
     }
 }
 

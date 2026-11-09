@@ -55,6 +55,63 @@ final class EventStoreTrimTests: XCTestCase {
 
     // MARK: - trim
 
+    /// A batch ejected by the write deadline is run again at half the size, and the
+    /// size that went through is kept; at the minimum the deadline error is thrown.
+    func testABatchThatRunsOutOfTimeIsRetriedSmaller() throws {
+        var limit = 500
+        var tried: [Int] = []
+        let deleted = try EventStore.shrinkingOnDeadline(&limit) { size in
+            tried.append(size)
+            if size > 100 { throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000) }
+            return size
+        }
+        XCTAssertEqual(tried, [500, 250, 125, 62])
+        XCTAssertEqual(deleted, 62)
+        XCTAssertEqual(limit, 62)
+
+        var floor = 50
+        XCTAssertThrowsError(try EventStore.shrinkingOnDeadline(&floor) { _ in
+            throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)
+        }) { error in
+            XCTAssertEqual(error as? BoundedDatabaseError,
+                           .deadlineExceeded(lane: "write", elapsedMs: 60_000))
+        }
+        XCTAssertEqual(floor, EventStore.minimumTrimBatch)
+    }
+
+    func testAFastBatchGrowsTheNextBackToTheFullBatch() {
+        XCTAssertEqual(EventStore.grownTrimBatch(62, upTo: 500, took: .seconds(1)), 124)
+        XCTAssertEqual(EventStore.grownTrimBatch(400, upTo: 500, took: .seconds(1)), 500)
+        XCTAssertEqual(EventStore.grownTrimBatch(500, upTo: 500, took: .seconds(1)), 500)
+        XCTAssertEqual(EventStore.grownTrimBatch(62, upTo: 500, took: .seconds(10)), 62)
+        XCTAssertEqual(EventStore.grownTrimBatch(62, upTo: 500, took: .seconds(70)), 62)
+    }
+
+    func testTheNextTrimStartsFromTheBatchTheLastOneEndedOn() throws {
+        let store = try makeStore()
+        var batch = NormalizedBatch()
+        for index in 0..<20 {
+            batch.messages.append(message("m\(index)", session: "s1", at: Double(index * 10)))
+        }
+        batch.sessions = [SessionUpsert(sessionID: "s1", asOf: date(0), status: "active", startedAt: date(0))]
+        try store.write(batch, provider: "mock")
+        XCTAssertNil(store.carriedTrimBatch)
+
+        // A carried size below the full batch is where the next trim starts, and
+        // fast batches grow it back.
+        store.carriedTrimBatch = 1
+        let result = try store.trim(olderThan: date(100).timeIntervalSince1970, batch: 500, deadline: future)
+        XCTAssertEqual(result, EventStoreTrimResult(events: 0, messages: 10, turns: 0, sessions: 0, finished: true))
+        let carried = try XCTUnwrap(store.carriedTrimBatch)
+        XCTAssertGreaterThan(carried, 1)
+        XCTAssertLessThanOrEqual(carried, 500)
+
+        // Never above the batch the caller passes.
+        store.carriedTrimBatch = 1000
+        _ = try store.trim(olderThan: date(150).timeIntervalSince1970, batch: 3, deadline: future)
+        XCTAssertEqual(store.carriedTrimBatch, 3)
+    }
+
     func testTrimDeletesExactlyTheRowsOlderThanTheCutoff() throws {
         let store = try makeStore()
         var batch = NormalizedBatch()
@@ -79,6 +136,29 @@ final class EventStoreTrimTests: XCTestCase {
         // A second pass finds nothing.
         XCTAssertEqual(try store.trim(olderThan: cutoff, deadline: future),
                        EventStoreTrimResult(events: 0, messages: 0, turns: 0, sessions: 0, finished: true))
+    }
+
+    /// `maxTurnId` keeps every old timed turn with a higher id; events and
+    /// messages are trimmed as usual.
+    func testMaxTurnIdKeepsNewerTurns() throws {
+        let store = try makeStore()
+        var batch = NormalizedBatch()
+        for index in 0..<4 {
+            batch.events.append(event("e\(index)", session: "s1", at: Double(index)))
+            batch.turns.append(turn("t\(index)", session: "s1", at: Double(index)))
+            batch.messages.append(message("m\(index)", session: "s1", at: Double(index)))
+        }
+        batch.sessions = [SessionUpsert(sessionID: "s1", asOf: date(0), status: "active", startedAt: date(0))]
+        try store.write(batch, provider: "mock")
+        let ids = try store.read { conn in try Int64.fetchAll(conn, sql: "SELECT id FROM turns ORDER BY id") }
+
+        let result = try store.trim(olderThan: date(100).timeIntervalSince1970, maxTurnId: ids[1], deadline: future)
+
+        XCTAssertEqual(result, EventStoreTrimResult(events: 4, messages: 4, turns: 2, sessions: 0, finished: true))
+        XCTAssertEqual(try store.read { conn in try Int64.fetchAll(conn, sql: "SELECT id FROM turns ORDER BY id") },
+                       Array(ids[2...]))
+        // With no bound, the rest go.
+        XCTAssertEqual(try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future).turns, 2)
     }
 
     func testTrimDeletesOnlyEndedSessionsLeftEmpty() throws {
@@ -208,6 +288,124 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertEqual(after.path, store.path)
     }
 
+    /// The vacuum's large page cache is the vacuum's alone: the writer's cache
+    /// size is back to what it was once the vacuum returns.
+    func testIncrementalVacuumPutsTheWritersCacheSizeBack() throws {
+        let store = try makeStore()
+        let padding = NormalizedValue.string(String(repeating: "x", count: 400))
+        var batch = NormalizedBatch()
+        batch.events = (0..<2_000).map { event("e\($0)", session: "s", at: 1, attrs: ["pad": padding]) }
+        try store.write(batch, provider: "mock")
+        _ = try store.trim(olderThan: date(100).timeIntervalSince1970, batch: 2000, deadline: future)
+        let cacheSize = {
+            try store.pool.writeWithoutTransaction { conn in try Int.fetchOne(conn, sql: "PRAGMA cache_size") }
+        }
+        let before = try cacheSize()
+
+        XCTAssertGreaterThan(try store.incrementalVacuum(pagesPerStep: 64, deadline: future) ?? 0, 0)
+
+        XCTAssertEqual(try cacheSize(), before)
+        XCTAssertNotEqual(before, -EventStore.vacuumCacheKiB)
+    }
+
+    /// A vacuum step ejected by the write deadline runs again at half the size and
+    /// the vacuum carries on; a quick step grows the next back to the full size.
+    func testAVacuumStepThatRunsOutOfTimeIsRetriedSmaller() throws {
+        var tried: [Int] = []
+        var left = 3000
+        var carry: Int?
+        let freed = try EventStore.vacuumSteps(pagesPerStep: 2048, carry: &carry,
+                                               until: .now + .seconds(3600)) { size in
+            tried.append(size)
+            if size > 600 && tried.count == 1 {
+                throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)
+            }
+            let step = min(size, left)
+            left -= step
+            return (step, left)
+        }
+        XCTAssertEqual(tried, [2048, 1024, 2048])
+        XCTAssertEqual(freed, 3000)
+        XCTAssertEqual(left, 0)
+        XCTAssertEqual(carry, 2048)
+    }
+
+    /// A vacuum starts from the step size the last one ended on, not the full step.
+    func testAVacuumStartsFromTheCarriedStep() throws {
+        var tried: [Int] = []
+        var left = 1000
+        var carry: Int? = 256
+        _ = try EventStore.vacuumSteps(pagesPerStep: 2048, carry: &carry, until: .now + .seconds(3600)) { size in
+            tried.append(size)
+            if tried.count == 1 {
+                throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)
+            }
+            let step = min(size, left)
+            left -= step
+            return (step, left)
+        }
+        XCTAssertEqual(tried.prefix(2), [256, 128])
+        XCTAssertEqual(left, 0)
+    }
+
+    /// Out of pass time, an ejected step is not retried: the vacuum returns what it
+    /// freed and carries the halved size to the next pass.
+    func testAVacuumOutOfPassTimeStopsHalvingAndCarriesTheSmallerStep() throws {
+        var tried: [Int] = []
+        var carry: Int?
+        let freed = try EventStore.vacuumSteps(pagesPerStep: 2048, carry: &carry, until: .now) { size in
+            tried.append(size)
+            throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)
+        }
+        XCTAssertEqual(tried, [2048])
+        XCTAssertEqual(freed, 0)
+        XCTAssertEqual(carry, 1024)
+    }
+
+    /// At the minimum step the deadline error is thrown, after the steps that went through.
+    func testAVacuumStepAtTheMinimumThatRunsOutOfTimeThrows() {
+        var tried: [Int] = []
+        var carry: Int?
+        XCTAssertThrowsError(try EventStore.vacuumSteps(pagesPerStep: 256, carry: &carry,
+                                                               until: .now + .seconds(3600)) { size in
+            tried.append(size)
+            if tried.count == 1 { return (size, 10_000) }
+            throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)
+        }) { error in
+            XCTAssertEqual(error as? BoundedDatabaseError, .deadlineExceeded(lane: "write", elapsedMs: 60_000))
+        }
+        XCTAssertEqual(tried, [256, 256, 128, 64, 32, EventStore.minimumVacuumStep])
+    }
+
+    /// A step that went through slowly halves the next before the deadline can eject
+    /// it; a quick one doubles it; one in between keeps its size.
+    func testTheNextVacuumStepFollowsTheTimeTheLastOneTook() {
+        let ceiling = EventStore.trimGrowthCeiling
+        XCTAssertEqual(EventStore.nextVacuumStep(512, upTo: 2048, minimum: 16, took: ceiling * 3), 256)
+        XCTAssertEqual(EventStore.nextVacuumStep(16, upTo: 2048, minimum: 16, took: ceiling * 3), 16)
+        XCTAssertEqual(EventStore.nextVacuumStep(512, upTo: 2048, minimum: 16, took: ceiling / 2), 1024)
+        XCTAssertEqual(EventStore.nextVacuumStep(512, upTo: 2048, minimum: 16, took: ceiling * 3 / 2), 512)
+        XCTAssertLessThan(ceiling * 2, EventStore.vacuumStepDeadline)
+    }
+
+    /// The trim's ended-before test reads sessions through `sessions_last_seen`, and
+    /// the untimed stages keep sessions outside, never scanning a whole table.
+    func testTheTrimFindsEndedSessionsThroughTheirIndex() throws {
+        let store = try makeStore()
+        let plan = { (sql: String) in
+            try store.pool.read { conn in
+                try Row.fetchAll(conn, sql: "EXPLAIN QUERY PLAN " + sql, arguments: [0, 25])
+                    .map { row -> String in row["detail"] }.joined(separator: " | ")
+            }
+        }
+        let plans = try ["events", "messages", "turns"].map { try plan(EventStore.untimedRows(of: $0)) }
+            + [try plan("SELECT 1 FROM sessions s WHERE \(EventStore.endedBefore) LIMIT ?")]
+        for found in plans {
+            XCTAssertTrue(found.contains("sessions_last_seen"), found)
+            XCTAssertFalse(found.contains("SCAN"), found)
+        }
+    }
+
     func testIncrementalVacuumIsUnavailableWithoutIncrementalAutoVacuum() throws {
         let filePath = path("legacy.db")
         do {
@@ -244,6 +442,37 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertGreaterThan(stats.pageCount, 0)
         XCTAssertEqual(try SQLiteFileStats.stats(path: store.path).pageSize, stats.pageSize)
         XCTAssertEqual(try SQLiteFileStats.stats(path: store.path).autoVacuum, 2)
+    }
+
+    /// A status read answers while long maintenance reads hold every reader.
+    func testFileStatsAndMetaValueAnswerWhileEveryReaderIsHeld() throws {
+        let store = try makeStore()
+        var batch = NormalizedBatch()
+        batch.events = [event("e", session: "s", at: 1)]
+        try store.write(batch, provider: "mock")
+        try store.setMetaValue("42", forKey: "probe")
+
+        let release = DispatchSemaphore(value: 0)
+        let holding = DispatchGroup()
+        let finished = DispatchGroup()
+        for _ in 0..<3 {
+            holding.enter()
+            finished.enter()
+            DispatchQueue.global().async {
+                _ = try? store.read { _ in holding.leave(); release.wait() }
+                finished.leave()
+            }
+        }
+        XCTAssertEqual(holding.wait(timeout: .now() + 10), .success, "every reader is held")
+        let answered = expectation(description: "fileStats answers")
+        DispatchQueue.global().async {
+            XCTAssertGreaterThan((try? store.fileStats().pageCount) ?? 0, 0)
+            XCTAssertEqual(try? store.metaValue(forKey: "probe"), "42")
+            answered.fulfill()
+        }
+        wait(for: [answered], timeout: 5)
+        for _ in 0..<3 { release.signal() }
+        XCTAssertEqual(finished.wait(timeout: .now() + 10), .success)
     }
 
     func testSQLiteFileStatsThrowsOnAMissingFileAndNeverCreatesIt() {

@@ -1,6 +1,7 @@
 import XCTest
 import Foundation
 import GRDB
+import os
 import AgenticToolkitCore
 @testable import AgenticToolkitDatabase
 
@@ -44,6 +45,8 @@ final class TrimServiceTests: XCTestCase {
     private func service(
         historyDays: Int = 7, covered: String?, eventStore: EventStore?? = .none,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
+        turnsReadThrough: (@Sendable () -> Int64?)? = nil,
+        willTrimEvents: (@Sendable (Double) throws -> Void)? = nil,
         hold: TrimHold? = nil,
         holdFails: Bool = false,
         extra: [@Sendable (Double, Date) throws -> Int] = []
@@ -51,6 +54,7 @@ final class TrimServiceTests: XCTestCase {
         TrimService(
             database: database, eventStore: eventStore ?? store, historyDays: historyDays,
             coveredThroughDay: { covered }, snapshotsReadThrough: snapshotsReadThrough,
+            turnsReadThrough: turnsReadThrough, willTrimEvents: willTrimEvents,
             hold: {
                 if holdFails { throw HoldUnreadable() }
                 return hold
@@ -293,6 +297,45 @@ final class TrimServiceTests: XCTestCase {
         XCTAssertTrue(report.vacuum.hasPrefix("incremental"), report.vacuum)
     }
 
+    /// With time to spare the vacuum empties the freelist, so nothing is pending.
+    func testAVacuumWithTimeToSpareLeavesNothingPending() throws {
+        try storeRows("s", daysAgo: 60)
+        let report = try service(covered: Self.day(1)).run(deadline: future)
+        XCTAssertTrue(report.finished)
+        XCTAssertFalse(report.vacuumPending)
+        XCTAssertEqual(try store.fileStats().freelistCount, 0)
+    }
+
+    /// Pending above 10 % free pages, and only for an incremental store: a store
+    /// no pass can vacuum never asks to come back.
+    func testVacuumPendingMatrix() {
+        func stats(_ pages: Int, _ free: Int, autoVacuum: Int = 2) -> StoreFileStats {
+            StoreFileStats(path: "x", bytes: 0, pageSize: 4096, pageCount: pages, freelistCount: free,
+                           autoVacuum: autoVacuum)
+        }
+        XCTAssertTrue(TrimService.vacuumPending(stats(100, 11)))
+        XCTAssertTrue(TrimService.vacuumPending(stats(4_947_249, 3_749_219)))
+        XCTAssertFalse(TrimService.vacuumPending(stats(100, 10)))
+        XCTAssertFalse(TrimService.vacuumPending(stats(100, 0)))
+        XCTAssertFalse(TrimService.vacuumPending(stats(0, 0)))
+        XCTAssertFalse(TrimService.vacuumPending(stats(100, 90, autoVacuum: 0)))
+        XCTAssertFalse(TrimService.vacuumPending(stats(100, 90, autoVacuum: 1)))
+    }
+
+    /// A report stored before `vacuumPending` existed still decodes, as false;
+    /// the field survives a round trip and reaches the DTO.
+    func testAStoredReportWithoutVacuumPendingDecodesAsFalse() throws {
+        let old = Data("""
+            {"startedAt":1,"finishedAt":2,"events":0,"messages":0,"turns":0,"sessions":0,
+             "rateLimitSnapshots":0,"reclaimedBytes":0,"vacuum":"incremental","finished":true}
+            """.utf8)
+        XCTAssertFalse(try JSONDecoder().decode(TrimReport.self, from: old).vacuumPending)
+        let pending = TrimReport(startedAt: 1, finishedAt: 2, vacuumPending: true)
+        let back = try JSONDecoder().decode(TrimReport.self, from: JSONEncoder().encode(pending))
+        XCTAssertEqual(back, pending)
+        XCTAssertEqual(TrimReportDTO(pending).vacuumPending, true)
+    }
+
     func testNoEventStoreSkipsEventsDbAndSaysSo() throws {
         try snapshot("\(Self.day(50))T01:00:00Z", account: "a@x")
         try snapshot("\(Self.day(49))T01:00:00Z", account: "a@x")
@@ -341,6 +384,62 @@ final class TrimServiceTests: XCTestCase {
         XCTAssertNotNil(report.error)
         XCTAssertFalse(report.finished, "a failed stage asks for a rerun")
         XCTAssertEqual(report.events, 1)
+    }
+
+    private func turnIds() throws -> [Int64] {
+        try store.read { conn in try Int64.fetchAll(conn, sql: "SELECT id FROM turns ORDER BY id") }
+    }
+
+    /// The turn read-through bounds the turns a pass deletes: a turn the
+    /// caller has not read yet stays, however old it is.
+    func testTurnsAboveTheReadThroughAreKept() throws {
+        try storeRows("a", daysAgo: 60)
+        try storeRows("b", daysAgo: 60)
+        let ids = try turnIds()
+        XCTAssertEqual(ids.count, 2)
+        let readThrough = ids[0]
+
+        let report = try service(covered: Self.day(1), turnsReadThrough: { readThrough }).run(deadline: future)
+
+        XCTAssertNil(report.error)
+        XCTAssertEqual(report.turns, 1)
+        XCTAssertEqual(try turnIds(), [ids[1]])
+        XCTAssertEqual(report.events, 2, "the bound is on turns only")
+    }
+
+    /// A read-through that has read nothing yet keeps every timed turn.
+    func testANilTurnReadThroughKeepsEveryTimedTurn() throws {
+        try storeRows("a", daysAgo: 60)
+
+        let report = try service(covered: Self.day(1), turnsReadThrough: { nil }).run(deadline: future)
+
+        XCTAssertNil(report.error)
+        XCTAssertEqual(report.turns, 0)
+        XCTAssertEqual(try count("turns"), 1)
+        XCTAssertEqual(report.events, 1)
+    }
+
+    /// The pre-trim hook gets the cutoff before anything goes; when it throws,
+    /// no events.db row is deleted and the pass asks for a rerun.
+    func testWillTrimEventsRunsFirstAndAThrowDeletesNothing() throws {
+        try storeRows("a", daysAgo: 60)
+        struct Boom: Error {}
+        let seen = OSAllocatedUnfairLock<Double?>(initialState: nil)
+        let passed = try service(covered: Self.day(1), willTrimEvents: { cutoff in
+            seen.withLock { $0 = cutoff }
+        }).run(deadline: future)
+        XCTAssertNil(passed.error)
+        XCTAssertEqual(seen.withLock { $0 }, passed.cutoff)
+        XCTAssertEqual(passed.events, 1)
+
+        try storeRows("b", daysAgo: 60)
+        let failed = try service(covered: Self.day(1), willTrimEvents: { _ in throw Boom() }).run(deadline: future)
+        XCTAssertTrue(failed.error?.hasPrefix("events.db:") == true, failed.error ?? "no error")
+        XCTAssertFalse(failed.finished)
+        XCTAssertEqual([failed.events, failed.messages, failed.turns], [0, 0, 0])
+        XCTAssertEqual(try count("events"), 1)
+        XCTAssertEqual(try count("turns"), 1)
+        XCTAssertEqual(try count("messages"), 1)
     }
 
     /// A batch that fails after earlier ones committed: the report carries what
