@@ -382,11 +382,15 @@ public final class DaemonDatabase: @unchecked Sendable {
             return DaemonDatabaseError.stepFailed(
                 message: grdb.message ?? "\(grdb.resultCode)", code: grdb.resultCode.rawValue
             )
-        case BoundedDatabaseError.deadlineExceeded:
+        case let bounded as BoundedDatabaseError:
             // A timing failure, not a data problem — surface as SQLITE_BUSY so the
             // ingest path treats it as transient and leaves the event for retry.
+            // The message keeps the lane and the elapsed time: without them a
+            // deadline in a log names neither the kind of operation nor how far
+            // past its limit it ran.
             return DaemonDatabaseError.stepFailed(
-                message: "operation exceeded its deadline", code: ResultCode.SQLITE_BUSY.rawValue
+                message: "operation exceeded its deadline (\(bounded.localizedDescription))",
+                code: ResultCode.SQLITE_BUSY.rawValue
             )
         default:
             return error

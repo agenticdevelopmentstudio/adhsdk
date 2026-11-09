@@ -16,6 +16,18 @@ public enum BoundedDatabaseError: Error, Sendable, Equatable {
     case deadlineExceeded(lane: String, elapsedMs: Double)
 }
 
+extension BoundedDatabaseError: LocalizedError {
+    /// Which lane ran out and after how long. Without it Foundation reports
+    /// the bare "BoundedDatabaseError error 0", which says nothing about what
+    /// went wrong in a log or a stored trim report.
+    public var errorDescription: String? {
+        switch self {
+        case let .deadlineExceeded(lane, elapsedMs):
+            "\(lane) exceeded its deadline after \(Int(elapsedMs.rounded())) ms"
+        }
+    }
+}
+
 /// A point-in-time snapshot of the pool's per-lane counters, for observability.
 public struct BoundedDatabaseStats: Sendable, Equatable {
     public struct Lane: Sendable, Equatable {

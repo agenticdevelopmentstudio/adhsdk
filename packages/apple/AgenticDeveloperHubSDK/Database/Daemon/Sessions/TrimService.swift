@@ -34,12 +34,17 @@ public struct TrimReport: Sendable, Codable, Equatable {
     public var finished: Bool
     /// A stage that failed, with the counts above still what was deleted.
     public var error: String?
+    /// True when the delete stages finished but `events.db` still holds more
+    /// free pages than ``TrimService/eventsVacuumPendingShare`` of its file:
+    /// the vacuum ran out of time, so the caller comes back soon rather than
+    /// a day later. Reports stored before this field existed read as false.
+    public var vacuumPending: Bool
 
     public init(
         startedAt: Double, finishedAt: Double, cutoff: Double? = nil, waitingFor: String? = nil,
         events: Int = 0, messages: Int = 0, turns: Int = 0, sessions: Int = 0, rateLimitSnapshots: Int = 0,
         reclaimedBytes: Int64 = 0, vacuum: String = TrimService.vacuumSkipped, finished: Bool = true,
-        error: String? = nil
+        error: String? = nil, vacuumPending: Bool = false
     ) {
         self.startedAt = startedAt
         self.finishedAt = finishedAt
@@ -54,6 +59,30 @@ public struct TrimReport: Sendable, Codable, Equatable {
         self.vacuum = vacuum
         self.finished = finished
         self.error = error
+        self.vacuumPending = vacuumPending
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case startedAt, finishedAt, cutoff, waitingFor, events, messages, turns, sessions
+        case rateLimitSnapshots, reclaimedBytes, vacuum, finished, error, vacuumPending
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        startedAt = try container.decode(Double.self, forKey: .startedAt)
+        finishedAt = try container.decode(Double.self, forKey: .finishedAt)
+        cutoff = try container.decodeIfPresent(Double.self, forKey: .cutoff)
+        waitingFor = try container.decodeIfPresent(String.self, forKey: .waitingFor)
+        events = try container.decode(Int.self, forKey: .events)
+        messages = try container.decode(Int.self, forKey: .messages)
+        turns = try container.decode(Int.self, forKey: .turns)
+        sessions = try container.decode(Int.self, forKey: .sessions)
+        rateLimitSnapshots = try container.decode(Int.self, forKey: .rateLimitSnapshots)
+        reclaimedBytes = try container.decode(Int64.self, forKey: .reclaimedBytes)
+        vacuum = try container.decode(String.self, forKey: .vacuum)
+        finished = try container.decode(Bool.self, forKey: .finished)
+        error = try container.decodeIfPresent(String.self, forKey: .error)
+        vacuumPending = try container.decodeIfPresent(Bool.self, forKey: .vacuumPending) ?? false
     }
 }
 
@@ -88,7 +117,8 @@ public struct TrimHold: Sendable, Equatable {
 ///
 /// **Bounded.** Deletes are batches of 500, one transaction each. The pass stops
 /// at `deadline` with `finished = false`; a rerun continues from the same cutoff.
-/// `events.db` is then vacuumed incrementally for up to 60 s, and the main
+/// Once its rows are all deleted, `events.db` is vacuumed incrementally for the
+/// rest of the pass's time (``vacuumPending`` when free pages remain), and the main
 /// database gets a full `VACUUM` only when ``shouldVacuumMain`` allows it.
 public final class TrimService: Sendable {
     /// The setting the last report is kept in, as JSON.
@@ -98,8 +128,9 @@ public final class TrimService: Sendable {
 
     public static let minimumHistoryDays = 7
     public static let batchSize = 500
-    /// How long the incremental vacuum of `events.db` may run.
-    public static let incrementalVacuumSeconds: Double = 60
+    /// The share of `events.db` pages that may stay free after a pass before
+    /// the report says ``TrimReport/vacuumPending``.
+    public static let eventsVacuumPendingShare = 0.10
     /// The main-db full-vacuum gate: below this size only.
     public static let mainVacuumMaxBytes: Int64 = 1 << 30
     /// ... with more than this share of its pages free ...
@@ -126,6 +157,8 @@ public final class TrimService: Sendable {
     private let historyDays: Int
     private let coveredThroughDay: @Sendable () -> String?
     private let snapshotsReadThrough: (@Sendable () -> Int?)?
+    private let turnsReadThrough: (@Sendable () -> Int64?)?
+    private let willTrimEvents: (@Sendable (_ cutoff: Double) throws -> Void)?
     private let hold: (@Sendable () throws -> TrimHold?)?
     private let extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int]
     private let now: @Sendable () -> Date
@@ -140,11 +173,20 @@ public final class TrimService: Sendable {
     ///   - snapshotsReadThrough: when given, the highest `rate_limit_snapshots.id`
     ///     the daemon's own readers have consumed; rows above it are never
     ///     deleted, and nil from it deletes no snapshot.
+    ///   - turnsReadThrough: when given, the highest `turns.id` the daemon's
+    ///     summaries have counted; a timed turn above it is never deleted, and nil
+    ///     from it deletes no timed turn.
+    ///   - willTrimEvents: called with the cutoff before any `events.db` row is
+    ///     deleted, so the daemon can record which days are about to lose rows;
+    ///     when it throws, the pass deletes nothing from `events.db` and reports
+    ///     the error.
     ///   - extraMainTrims: the daemon's own main-db trims, each returning rows deleted.
     public init(
         database: DaemonDatabase, eventStore: EventStore?, historyDays: Int,
         coveredThroughDay: @escaping @Sendable () -> String?,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
+        turnsReadThrough: (@Sendable () -> Int64?)? = nil,
+        willTrimEvents: (@Sendable (_ cutoff: Double) throws -> Void)? = nil,
         hold: (@Sendable () throws -> TrimHold?)? = nil,
         extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int] = [],
         now: @escaping @Sendable () -> Date = Date.init
@@ -154,6 +196,8 @@ public final class TrimService: Sendable {
         self.historyDays = max(Self.minimumHistoryDays, historyDays)
         self.coveredThroughDay = coveredThroughDay
         self.snapshotsReadThrough = snapshotsReadThrough
+        self.turnsReadThrough = turnsReadThrough
+        self.willTrimEvents = willTrimEvents
         self.hold = hold
         self.extraMainTrims = extraMainTrims
         self.now = now
@@ -292,7 +336,11 @@ public final class TrimService: Sendable {
         // 3. events.db rows, then its incremental vacuum.
         if let eventStore {
             do {
-                let result = try eventStore.trim(olderThan: cutoff, batch: Self.batchSize, deadline: deadline)
+                try willTrimEvents?(cutoff)
+                // A read-through that answers nil keeps every timed turn (ids start at 1).
+                let maxTurnId: Int64? = turnsReadThrough.map { $0() ?? 0 }
+                let result = try eventStore.trim(olderThan: cutoff, maxTurnId: maxTurnId,
+                                                 batch: Self.batchSize, deadline: deadline)
                 report.events = result.events
                 report.messages = result.messages
                 report.turns = result.turns
@@ -300,7 +348,14 @@ public final class TrimService: Sendable {
                 if !result.finished {
                     report.finished = false
                 } else {
-                    vacuum = try vacuumEvents(eventStore, deadline: deadline)
+                    do {
+                        vacuum = try vacuumEvents(eventStore, deadline: deadline)
+                    } catch {
+                        errors.append("events.db vacuum: \(error.localizedDescription)")
+                    }
+                    // Read after a failed vacuum too: its committed steps count.
+                    // Unreadable stats read as nothing pending: the next daily pass looks again.
+                    report.vacuumPending = (try? eventStore.fileStats()).map(Self.vacuumPending) ?? false
                 }
             } catch let failure as EventStoreTrimFailure {
                 report.events = failure.partial.events
@@ -374,8 +429,10 @@ public final class TrimService: Sendable {
         // The keep set, read once rather than inside every batch's DELETE (a scan
         // of the account index each time). Safe to hold: a row inserted meanwhile
         // has a higher id, so a "newest" deleted later still has a newer sibling.
+        // A maintenance read: on a slow disk a replay is writing to, the scan
+        // stalled past the 10 s serving ceiling and failed the stage.
         var keep: [Int64] = []
-        try database.query(newest) { row in
+        try database.query(newest, deadline: DaemonDatabase.maintenanceReadDeadline) { row in
             if let id: Int64 = row[0] { keep.append(id) }
         }
         let keepJSON = "[" + keep.map(String.init).joined(separator: ",") + "]"
@@ -400,11 +457,20 @@ public final class TrimService: Sendable {
         }
     }
 
+    /// Whether `stats` still has more free pages than ``eventsVacuumPendingShare``
+    /// of the file. Never for a file without incremental auto-vacuum: no pass
+    /// could reclaim its pages, so coming back would only spin.
+    public static func vacuumPending(_ stats: StoreFileStats) -> Bool {
+        guard stats.autoVacuum == 2, stats.pageCount > 0 else { return false }
+        return Double(stats.freelistCount) > Double(stats.pageCount) * eventsVacuumPendingShare
+    }
+
+    /// The incremental vacuum of `events.db`, for whatever is left of the pass.
+    /// Each step commits on its own, so ingestion writes between steps.
     private func vacuumEvents(_ store: EventStore, deadline: Date) throws -> String {
         guard Date() < deadline else { return Self.vacuumSkipped }
-        let until = min(deadline, Date().addingTimeInterval(Self.incrementalVacuumSeconds))
         do {
-            guard try store.incrementalVacuum(deadline: until) != nil else { return Self.vacuumUnavailable }
+            guard try store.incrementalVacuum(deadline: deadline) != nil else { return Self.vacuumUnavailable }
             return Self.vacuumIncremental
         } catch EventStoreError.bulkLoadInProgress {
             return Self.vacuumSkipped
@@ -443,7 +509,7 @@ extension TrimReportDTO {
             waitingFor: report.waitingFor, events: report.events, messages: report.messages, turns: report.turns,
             sessions: report.sessions, rateLimitSnapshots: report.rateLimitSnapshots,
             reclaimedBytes: report.reclaimedBytes, vacuum: report.vacuum, finished: report.finished,
-            error: report.error)
+            error: report.error, vacuumPending: report.vacuumPending)
     }
 }
 
