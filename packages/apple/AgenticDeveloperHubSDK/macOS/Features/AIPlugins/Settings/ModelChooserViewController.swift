@@ -42,6 +42,10 @@ public final class ModelChooserViewController: NSViewController {
     private var items: [ModelPickerItem]
     private var filtered: [ModelPickerItem]
     private var selectedModel: String
+    /// Every model the stored alias has resolved to while the chooser was open:
+    /// the cached answer at init and the live one after a refresh. OK on any of
+    /// them is "unchanged", and keeps the alias.
+    private var aliasTargets: Set<String>
     private var metadataByModel: [String: OllamaModelMetadata] = [:]
     /// model id -> ollama.com page blurb, for models without a curated one.
     private var descriptionsByModel: [String: String] = [:]
@@ -103,6 +107,7 @@ public final class ModelChooserViewController: NSViewController {
         self.items = listed.map { Self.item(for: $0, template: context.template, manager: manager) }
         self.filtered = items
         self.selectedModel = current
+        self.aliasTargets = [current]
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -337,7 +342,12 @@ public final class ModelChooserViewController: NSViewController {
             let fresh = await modelManager.refresh()
             if fresh != modelList {
                 modelList = fresh
-                selectedModel = modelManager.resolve(selectedModel)
+                let aliasTarget = modelManager.resolve(context.currentModel)
+                // Still on what the alias ran before the refresh: follow it to
+                // what it runs now.
+                selectedModel = aliasTargets.contains(selectedModel)
+                    ? aliasTarget : modelManager.resolve(selectedModel)
+                aliasTargets.insert(aliasTarget)
                 rebuildItems()
             }
         }
@@ -533,7 +543,8 @@ public final class ModelChooserViewController: NSViewController {
         // A stored alias (`sonnet`) opens on the model it runs today. Choosing
         // that same row keeps the alias, so the connection goes on following the
         // newest of the family instead of being pinned to today's release.
-        let unchanged = selectedModel == modelManager.resolve(context.currentModel)
+        let unchanged = aliasTargets.contains(selectedModel)
+            || selectedModel == modelManager.resolve(context.currentModel)
         finish(with: unchanged ? context.currentModel : selectedModel)
     }
 
