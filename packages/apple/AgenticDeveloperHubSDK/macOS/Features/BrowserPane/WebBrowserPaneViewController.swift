@@ -932,18 +932,20 @@ open class WebBrowserPaneViewController: NSViewController {
             persistTabs()
             return
         }
-        // Out of the list first, so the neighbour the strip brings forward is
+        // A window that came from a page hands the focus back to that page,
+        // the way a closed browser window returns to the one that opened it.
+        // Selected before the removal, so the strip never brings the right
+        // neighbour forward on the way — activating it would load its pending
+        // page and move the pane's address to it for nothing.
+        if tab === activeTab, let opener = tab.opener, opener !== tab, tabs.contains(where: { $0 === opener }) {
+            tabStrip.selectTab(id: opener.id, on: .top)
+        }
+        // Out of the list first, so any neighbour the strip brings forward is
         // activated with this one already gone.
-        let wasFront = tab === activeTab
         tabs.removeAll { $0 === tab }
         tab.engine.delegate = nil
         tab.engine.teardown()
         tabStrip.removeTab(id: tab.id)
-        // A window that came from a page hands the focus back to that page,
-        // the way a closed browser window returns to the one that opened it.
-        if wasFront, let opener = tab.opener, tabs.contains(where: { $0 === opener }) {
-            tabStrip.selectTab(id: opener.id, on: .top)
-        }
         persistTabs()
     }
 
