@@ -23,6 +23,18 @@ final class DesktopSettingsTests: XCTestCase {
         XCTAssertTrue(settings.keepArranged)
         XCTAssertEqual(settings.iconPositions, [:])
         XCTAssertEqual(settings.windowFrames, [:])
+        XCTAssertEqual(settings.menuStyle, .macOS)
+    }
+
+    func test_menuStyle_roundTrips_andPublishesChange() {
+        let settings = DesktopSettings(store: store)
+        var fired = 0
+        let subscription = settings.changes.sink { fired += 1 }
+        settings.menuStyle = .windows
+        XCTAssertEqual(settings.menuStyle, .windows)
+        XCTAssertEqual(DesktopSettings(store: store).menuStyle, .windows)
+        XCTAssertEqual(fired, 1)
+        withExtendedLifetime(subscription) {}
     }
 
     func test_desktopSettings_scalarsRoundTrip() {

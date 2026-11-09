@@ -22,7 +22,7 @@ public enum DesktopAppIconRenderer {
         }
     }
 
-    private static func symbolImage(name: String, tint: String, pointSize: CGFloat) -> NSImage {
+    static func symbolImage(name: String, tint: String, pointSize: CGFloat) -> NSImage {
         let size = NSSize(width: pointSize, height: pointSize)
         let fill = NSColor(desktopHex: tint) ?? .systemBlue
         let symbol = NSImage.symbol(named: name, accessibilityDescription: nil)
@@ -54,7 +54,7 @@ public enum DesktopAppIconRenderer {
 
 extension NSImage {
     /// A copy of a template image filled with `color`.
-    fileprivate func tinted(_ color: NSColor) -> NSImage {
+    func tinted(_ color: NSColor) -> NSImage {
         let source = self
         return NSImage(size: source.size, flipped: false) { rect in
             source.draw(in: rect)

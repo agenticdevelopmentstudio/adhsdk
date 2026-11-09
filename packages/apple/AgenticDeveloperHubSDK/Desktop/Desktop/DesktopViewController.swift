@@ -1,16 +1,29 @@
+import AgenticDeveloperHubSDKCoreUI
 import AppKit
 import Combine
 
 /// The Desktop surface: background, then the icon layer (grid or list), then
-/// the container that holds App windows.
+/// the container that holds App windows. In the macOS menu style a menu bar runs
+/// across the top, showing the front window's menus after an AI-star menu.
 @MainActor
 public final class DesktopViewController: NSViewController {
+    /// The SF Symbol that titles the leading menu of the macOS-style menu bar.
+    static let starSymbolName = "sparkle"
+
     private let registry: DesktopAppRegistry
     private let settings: DesktopSettings
     private let backgroundView = DesktopBackgroundView()
     private let gridView = DesktopIconGridView()
     private let listView = DesktopIconListView()
     let windowLayer = DesktopWindowLayerView()
+    /// The macOS-style menu bar; hidden in the Windows style.
+    let topMenuBar = DesktopMenuBarView()
+    private var appliedMenuStyle: DesktopMenuStyle?
+    private var desktopMenuTargets: [ClosureMenuItemTarget] = []
+    private var desktopSettingsItems: [NSMenuItem] = []
+    /// The AI-star menu; its title is the star's accessibility label.
+    private lazy var starMenu = makeDesktopMenu(title: "AI")
+    private lazy var desktopMenu = makeDesktopMenu(title: "Desktop")
     private var windowControllers: [String: DesktopAppWindowController] = [:]
     private var subscription: AnyCancellable?
     private var lastKeepArranged: Bool
@@ -35,11 +48,17 @@ public final class DesktopViewController: NSViewController {
         root.keyEquivalentHandler = { [weak self] event in
             self?.frontWindowController?.performKeyEquivalent(with: event) ?? false
         }
+        root.onLayout = { [weak self] in self?.layoutSurface() }
         for subview in [backgroundView, gridView, listView, windowLayer] {
             subview.frame = root.bounds
             subview.autoresizingMask = [.width, .height]
             root.addSubview(subview)
         }
+        // Translucent over the backdrop, like the macOS menu bar.
+        topMenuBar.fillColor = NSColor.windowBackgroundColor.withAlphaComponent(0.82)
+        topMenuBar.setAccessibilityLabel("Desktop menu bar")
+        root.addSubview(topMenuBar)
+        windowLayer.onStackChange = { [weak self] in self?.refreshTopMenuBar() }
         gridView.onOpen = { [weak self] in self?.openApp(identifier: $0) }
         listView.onOpen = { [weak self] in self?.openApp(identifier: $0) }
         gridView.onMoveIcon = { [weak self] in self?.iconMoved(identifier: $0, to: $1) }
@@ -101,7 +120,8 @@ public final class DesktopViewController: NSViewController {
             return
         }
         let controller = DesktopAppWindowController(
-            kind: kind, app: app, settings: settings.appSettings(for: app), host: self, makeContent: makeContent
+            kind: kind, app: app, settings: settings.appSettings(for: app), host: self,
+            showsOwnMenuBar: settings.menuStyle == .windows, makeContent: makeContent
         )
         controller.chrome.onFrameCommit = { [weak self] in self?.windowFrameCommitted(id: id, frame: $0) }
         windowControllers[id] = controller
@@ -130,6 +150,86 @@ public final class DesktopViewController: NSViewController {
 
     private static let cascadeStep: CGFloat = 24
 
+    /// Opens the Desktop's Settings App, when the registry holds one.
+    public func showDesktopSettings() {
+        openApp(identifier: DesktopSettingsApp.identifier)
+    }
+
+    // MARK: Menu bar
+
+    private var showsTopMenuBar: Bool { settings.menuStyle == .macOS }
+
+    /// Sizes the layers: in the macOS style the icons and windows sit below the top menu bar,
+    /// while the backdrop runs under it.
+    private func layoutSurface() {
+        let bounds = view.bounds
+        let barHeight = showsTopMenuBar ? DesktopMenuBarView.height : 0
+        backgroundView.frame = bounds
+        let surface = CGRect(x: 0, y: 0, width: bounds.width, height: max(0, bounds.height - barHeight))
+        for layer in [gridView, listView, windowLayer] as [NSView] where layer.frame != surface {
+            layer.frame = surface
+            layer.needsLayout = true
+        }
+        topMenuBar.isHidden = !showsTopMenuBar
+        topMenuBar.frame = CGRect(
+            x: 0, y: bounds.height - DesktopMenuBarView.height,
+            width: bounds.width, height: DesktopMenuBarView.height
+        )
+    }
+
+    /// The menus the top bar shows after the star: the front App window's, the owning App's
+    /// for a front About or Settings window, or the Desktop menu when no window is open.
+    var topMenuBarMenus: [NSMenu] {
+        guard let front = frontWindowController else { return [desktopMenu] }
+        if front.kind != .app, let owner = windowControllers[front.app.descriptor.identifier] {
+            return owner.menus
+        }
+        return front.menus
+    }
+
+    private func refreshTopMenuBar() {
+        guard isViewLoaded, showsTopMenuBar else { return }
+        // Both menus are lazy; build them before hiding their items.
+        let star = starMenu
+        let menus = topMenuBarMenus
+        let hasSettingsApp = registry.app(withIdentifier: DesktopSettingsApp.identifier) != nil
+        desktopSettingsItems.forEach { $0.isHidden = !hasSettingsApp }
+        // Raising a window re-renders the stack; skip the rebuild when nothing changed.
+        guard topMenuBar.menus.count != menus.count + 1
+            || !zip(topMenuBar.menus.dropFirst(), menus).allSatisfy({ $0 === $1 }) else { return }
+        topMenuBar.configure(menus: menus, symbolMenu: (Self.starSymbolName, star))
+    }
+
+    private func makeDesktopMenu(title: String) -> NSMenu {
+        let menu = NSMenu(title: title)
+        let target = ClosureMenuItemTarget(action: { [weak self] in self?.showDesktopSettings() })
+        desktopMenuTargets.append(target)
+        let item = NSMenuItem(
+            title: "Desktop Settings…",
+            action: #selector(ClosureMenuItemTarget.performMenuAction(_:)),
+            keyEquivalent: ""
+        )
+        item.target = target
+        desktopSettingsItems.append(item)
+        menu.addItem(item)
+        return menu
+    }
+
+    private func applyMenuStyle() {
+        let style = settings.menuStyle
+        guard style != appliedMenuStyle else { return }
+        appliedMenuStyle = style
+        for controller in windowControllers.values {
+            controller.showsOwnMenuBar = style == .windows
+        }
+        layoutSurface()
+        if style == .macOS {
+            refreshTopMenuBar()
+        } else {
+            topMenuBar.configure(menus: [])
+        }
+    }
+
     // MARK: Test seams
 
     var selectedAppIdentifier: String? {
@@ -148,7 +248,7 @@ public final class DesktopViewController: NSViewController {
             lastKeepArranged = keep
             let origins = DesktopIconLayout(
                 metrics: Self.metrics(for: settings.iconArrangement),
-                containerSize: view.bounds.size
+                containerSize: gridView.bounds.size
             ).arrangedOrigins(for: registry.apps.sortedByName.map { $0.descriptor.identifier })
             if origins != settings.iconPositions { settings.iconPositions = origins }
         }
@@ -171,6 +271,7 @@ public final class DesktopViewController: NSViewController {
 
     private func apply() {
         guard isViewLoaded else { return }
+        applyMenuStyle()
         let hex = settings.backgroundColorHex
         let path = settings.backgroundImagePath
         if appliedBackground?.hex != hex || appliedBackground?.path != path {
@@ -255,6 +356,12 @@ extension DesktopViewController: DesktopWindowHost {
 /// The Desktop's root view: offers key equivalents to the front App window first.
 final class DesktopRootView: NSView {
     var keyEquivalentHandler: ((NSEvent) -> Bool)?
+    var onLayout: (() -> Void)?
+
+    override func layout() {
+        onLayout?()
+        super.layout()
+    }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if keyEquivalentHandler?(event) == true { return true }

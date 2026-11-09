@@ -9,11 +9,12 @@ import AgenticDeveloperHubSDKIntegrations
 final class EmailAppTests: XCTestCase {
     private func makeApp() -> EmailApp { EmailApp(client: ScriptedMail(.ok).client) }
 
-    func test_registry_registersHelloWorldThenEmail() {
+    func test_registry_registersHelloWorldEmailThenSettings() {
         let registry = DesktopApps.makeRegistry(mailClient: ScriptedMail(.ok).client)
         XCTAssertEqual(
             registry.apps.map(\.descriptor.identifier),
-            ["com.agenticdeveloperhub.desktop.helloworld", "com.agenticdeveloperhub.desktop.email"])
+            ["com.agenticdeveloperhub.desktop.helloworld", "com.agenticdeveloperhub.desktop.email",
+             "com.agenticdeveloperhub.desktop.settings"])
     }
 
     func test_email_descriptor_binding_isMessagesAnyProvider() {

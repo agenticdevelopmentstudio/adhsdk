@@ -1,23 +1,21 @@
 import AppKit
 import Combine
-import UniformTypeIdentifiers
 
-/// The Desktop's own settings: color, photo, icon arrangement. Hosted by the app's Settings window.
+/// The Desktop's own settings: color, photo, icon arrangement, menu style. Hosted by the app's Settings window.
 @MainActor
 public final class DesktopSettingsViewController: NSViewController {
     private let settings: DesktopSettings
     private var subscription: AnyCancellable?
+    private let appearance: DesktopAppearanceControls
+    private let menuStyle: DesktopMenuStyleControl
 
-    let colorWell = NSColorWell()
+    var colorWell: NSColorWell { appearance.colorWell }
+    var removePhotoButton: NSButton { appearance.removePhotoButton }
+    var menuStylePopUp: NSPopUpButton { menuStyle.popUp }
+    /// Photo loads performed, for tests.
+    var photoLoadCount: Int { appearance.photoLoadCount }
     let arrangePopUp = NSPopUpButton()
     let keepArrangedCheckbox = NSButton(checkboxWithTitle: "Keep arranged", target: nil, action: nil)
-    let removePhotoButton = NSButton(title: "Remove", target: nil, action: nil)
-    private let thumbnail = NSImageView()
-    private var loadedPhotoPath: String?
-    private var thumbnailLoaded = false
-    /// Photo loads performed, for tests.
-    private(set) var photoLoadCount = 0
-    private let chooseButton = NSButton(title: "Choose…", target: nil, action: nil)
 
     private static let arrangements: [(title: String, value: DesktopIconArrangement)] = [
         ("Large Icons", .largeIcons), ("Small Icons", .smallIcons), ("List", .list)
@@ -25,6 +23,8 @@ public final class DesktopSettingsViewController: NSViewController {
 
     public init(settings: DesktopSettings = .shared) {
         self.settings = settings
+        appearance = DesktopAppearanceControls(settings: settings)
+        menuStyle = DesktopMenuStyleControl(settings: settings)
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -33,28 +33,7 @@ public final class DesktopSettingsViewController: NSViewController {
     }
 
     override public func loadView() {
-        colorWell.target = self
-        colorWell.action = #selector(colorChanged(_:))
-        colorWell.widthAnchor.constraint(equalToConstant: 44).isActive = true
-        colorWell.heightAnchor.constraint(equalToConstant: 24).isActive = true
-
-        thumbnail.imageScaling = .scaleProportionallyUpOrDown
-        thumbnail.wantsLayer = true
-        thumbnail.layer?.borderWidth = 1
-        thumbnail.layer?.borderColor = NSColor.separatorColor.cgColor
-        thumbnail.widthAnchor.constraint(equalToConstant: 120).isActive = true
-        thumbnail.heightAnchor.constraint(equalToConstant: 75).isActive = true
-        chooseButton.target = self
-        chooseButton.action = #selector(choosePhoto(_:))
-        removePhotoButton.target = self
-        removePhotoButton.action = #selector(removePhoto(_:))
-        let photoButtons = NSStackView(views: [chooseButton, removePhotoButton])
-        photoButtons.spacing = 8
-        let photoColumn = NSStackView(views: [thumbnail, photoButtons])
-        photoColumn.orientation = .vertical
-        photoColumn.alignment = .leading
-        photoColumn.spacing = 8
-
+        appearance.sheetWindow = { [weak self] in self?.view.window }
         for entry in Self.arrangements {
             arrangePopUp.addItem(withTitle: entry.title)
         }
@@ -64,10 +43,11 @@ public final class DesktopSettingsViewController: NSViewController {
         keepArrangedCheckbox.action = #selector(keepArrangedChanged(_:))
 
         let rows = [
-            row("Desktop color:", colorWell),
-            row("Desktop photo:", photoColumn),
+            row("Desktop color:", appearance.colorWell),
+            row("Desktop photo:", appearance.photoColumn),
             row("Arrange by:", arrangePopUp),
-            row("", keepArrangedCheckbox)
+            row("", keepArrangedCheckbox),
+            row("Menu style:", menuStyle.popUp)
         ]
         view = DesktopSettingsRows.formView(rows)
         refreshControls()
@@ -86,30 +66,17 @@ public final class DesktopSettingsViewController: NSViewController {
     // MARK: Reflecting settings into controls (never writes)
 
     private func refreshControls() {
-        let color = NSColor(desktopHex: settings.backgroundColorHex) ?? .windowBackgroundColor
-        if colorWell.color.desktopHex != color.desktopHex { colorWell.color = color }
+        appearance.refresh()
+        menuStyle.refresh()
         let arrangement = settings.iconArrangement
         if let index = Self.arrangements.firstIndex(where: { $0.value == arrangement }) {
             arrangePopUp.selectItem(at: index)
         }
         keepArrangedCheckbox.state = settings.keepArranged ? .on : .off
         keepArrangedCheckbox.isEnabled = arrangement != .list
-        let path = settings.backgroundImagePath
-        removePhotoButton.isEnabled = path != nil
-        // Reload only when the path changes; refreshes are frequent.
-        if !thumbnailLoaded || loadedPhotoPath != path {
-            loadedPhotoPath = path
-            thumbnailLoaded = true
-            photoLoadCount += path == nil ? 0 : 1
-            thumbnail.image = path.flatMap { NSImage(contentsOfFile: $0) }
-        }
     }
 
     // MARK: Actions
-
-    @objc private func colorChanged(_ sender: NSColorWell) {
-        settings.backgroundColorHex = sender.color.desktopHex
-    }
 
     @objc private func arrangementChanged(_ sender: NSPopUpButton) {
         let index = sender.indexOfSelectedItem
@@ -122,29 +89,8 @@ public final class DesktopSettingsViewController: NSViewController {
         settings.keepArranged = sender.state == .on
     }
 
-    @objc private func choosePhoto(_ sender: Any?) {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.image]
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        guard let window = view.window else {
-            if panel.runModal() == .OK, let url = panel.url { applyChosenPhoto(url: url) }
-            return
-        }
-        panel.beginSheetModal(for: window) { [weak self] response in
-            guard response == .OK, let url = panel.url else { return }
-            MainActor.assumeIsolated { self?.applyChosenPhoto(url: url) }
-        }
-    }
-
-    @objc private func removePhoto(_ sender: Any?) {
-        settings.backgroundImagePath = nil
-        refreshControls()
-    }
-
     /// The open-panel completion path.
     func applyChosenPhoto(url: URL) {
-        settings.backgroundImagePath = url.path
-        refreshControls()
+        appearance.applyChosenPhoto(url: url)
     }
 }

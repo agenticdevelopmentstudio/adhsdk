@@ -15,6 +15,8 @@ final class DesktopAppWindowTests: XCTestCase {
             with: InMemorySettingsStorageProvider(),
             secureSettingsProvider: InMemorySecureSettingsStorageProvider()
         ))
+        // These tests drive the per-window menu bar, which only the Windows style shows.
+        settings.menuStyle = .windows
         registry = DesktopAppRegistry()
         app = StubApp(identifier: "a", displayName: "Alpha")
     }

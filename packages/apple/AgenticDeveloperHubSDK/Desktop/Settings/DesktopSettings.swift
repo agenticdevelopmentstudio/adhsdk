@@ -3,6 +3,14 @@ import CoreGraphics
 import Foundation
 import AgenticDeveloperHubSDKCore
 
+/// Where the Desktop shows App menus.
+public enum DesktopMenuStyle: String, Codable, Sendable, CaseIterable {
+    /// One menu bar across the top of the Desktop, showing the front window's menus.
+    case macOS
+    /// A menu bar inside each App window, under its title bar.
+    case windows
+}
+
 /// The Desktop's own persisted settings: background, icon arrangement, and
 /// remembered icon positions and window frames.
 @MainActor
@@ -16,8 +24,10 @@ public final class DesktopSettings {
         static let keepArranged = "desktop.keepArranged"
         static let iconPositions = "desktop.iconPositions"
         static let windowFrames = "desktop.windowFrames"
+        static let menuStyle = "desktop.menuStyle"
         static let all: Set<String> = [
-            backgroundColor, backgroundImagePath, iconArrangement, keepArranged, iconPositions, windowFrames
+            backgroundColor, backgroundImagePath, iconArrangement, keepArranged, iconPositions, windowFrames,
+            menuStyle
         ]
     }
 
@@ -82,6 +92,12 @@ public final class DesktopSettings {
     public var windowFrames: [String: CGRect] {
         get { read(Key.windowFrames, default: [:]) }
         set { write(newValue, Key.windowFrames, default: [:]) }
+    }
+
+    /// Where App menus appear: one bar across the Desktop's top, or a bar in each window.
+    public var menuStyle: DesktopMenuStyle {
+        get { read(Key.menuStyle, default: DesktopMenuStyle.macOS) }
+        set { write(newValue, Key.menuStyle, default: .macOS) }
     }
 
     private func read<Value: Codable & Sendable>(_ name: String, default fallback: Value) -> Value {

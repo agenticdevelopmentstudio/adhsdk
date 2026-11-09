@@ -68,11 +68,21 @@ final class DesktopAppWindowController {
     private var menuTargets: [ClosureMenuItemTarget] = []
     private weak var host: DesktopWindowHost?
 
+    /// Whether an App window shows its menus in a bar under its title (the Windows menu style).
+    /// Off, the Desktop's top menu bar shows them instead. About and Settings windows never do.
+    var showsOwnMenuBar = false {
+        didSet {
+            guard kind == .app, showsOwnMenuBar != oldValue else { return }
+            applyMenuBarVisibility()
+        }
+    }
+
     init(
         kind: Kind,
         app: DesktopApp,
         settings: DesktopAppSettings,
         host: DesktopWindowHost,
+        showsOwnMenuBar: Bool = true,
         makeContent: (DesktopAppContext) -> NSViewController
     ) {
         self.kind = kind
@@ -96,13 +106,18 @@ final class DesktopAppWindowController {
         if kind == .app {
             menus = [standardMenu()] + app.makeMenus(context: context)
             menuBar.configure(menus: menus)
-            chrome.accessoryView = menuBar
-            chrome.accessoryHeight = DesktopMenuBarView.height
+            self.showsOwnMenuBar = showsOwnMenuBar
+            applyMenuBarVisibility()
         } else {
             let closeOnly = NSMenu(title: name)
             closeOnly.addItem(closeItem(title: "Close"))
             menus = [closeOnly]
         }
+    }
+
+    private func applyMenuBarVisibility() {
+        chrome.accessoryView = showsOwnMenuBar ? menuBar : nil
+        chrome.accessoryHeight = showsOwnMenuBar ? DesktopMenuBarView.height : 0
     }
 
     // MARK: Menus

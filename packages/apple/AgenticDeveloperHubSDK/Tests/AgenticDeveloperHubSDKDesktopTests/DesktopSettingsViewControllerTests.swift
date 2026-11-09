@@ -27,6 +27,17 @@ final class DesktopSettingsViewControllerTests: XCTestCase {
         _ = control.sendAction(control.action, to: control.target)
     }
 
+    func test_menuStylePopUp_reflectsAndWritesSetting() {
+        let controller = makeController()
+        XCTAssertEqual(controller.menuStylePopUp.itemTitles, ["macOS", "Windows"])
+        XCTAssertEqual(controller.menuStylePopUp.titleOfSelectedItem, "macOS")
+        controller.menuStylePopUp.selectItem(withTitle: "Windows")
+        fire(controller.menuStylePopUp)
+        XCTAssertEqual(settings.menuStyle, .windows)
+        settings.menuStyle = .macOS
+        XCTAssertEqual(controller.menuStylePopUp.titleOfSelectedItem, "macOS")
+    }
+
     func test_controls_reflectCurrentSettings() {
         settings.backgroundColorHex = "#102030"
         settings.iconArrangement = .smallIcons

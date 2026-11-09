@@ -6,6 +6,8 @@ import AppKit
 final class DesktopWindowLayerView: NSView {
     private(set) var stack = DesktopWindowStack()
     private var chromes: [String: DesktopWindowChromeView] = [:]
+    /// Called after a window opens, closes, or comes to the front.
+    var onStackChange: (() -> Void)?
 
     override var isFlipped: Bool { true }
 
@@ -62,6 +64,7 @@ final class DesktopWindowLayerView: NSView {
         for entry in stack.entries {
             chromes[entry.id]?.isActive = entry.id == stack.frontID
         }
+        onStackChange?()
     }
 
     private final class RankBox {
