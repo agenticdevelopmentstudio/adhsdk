@@ -186,4 +186,44 @@ final class BrowserPaneTabsTests: XCTestCase {
         XCTAssertEqual(revived.loads, [page], "the tab reopens on the page it showed")
         XCTAssertEqual(storedTabs.tabs.map(\.url), [page.absoluteString])
     }
+
+    // MARK: - A load that becomes a download
+
+    private let file = URL(string: "https://example.com/report.zip")!
+
+    /// A fresh tab told to load `file`, stored while the load is in flight
+    /// (another tab opening stores the list), so the request is on record.
+    private func paneWithFileRequestStored(settings: SettingsStore? = nil) -> WebBrowserPaneViewController {
+        let pane = makePane(settings: settings)
+        pane.load(file)
+        pane.newTab(nil)
+        XCTAssertEqual(storedTabs.tabs.first?.url, file.absoluteString, "precondition: the request is stored")
+        return pane
+    }
+
+    func testADownloadStartingDropsTheRequestFromTheStoredTabs() {
+        let pane = paneWithFileRequestStored()
+        pane.browserEngine(engines[0], download: "start", host: "example.com")
+        XCTAssertEqual(storedTabs.tabs.count, 2)
+        XCTAssertNil(storedTabs.tabs[0].url, "a relaunch must not reopen the tab on the download")
+    }
+
+    func testBeingAskedWhereToSaveDropsTheRequestToo() async {
+        // Chromium only asks where to save; asking with no window refuses
+        // without touching the disk.
+        let settings = makeSettings()
+        settings.set(true, for: UserSettings.browserAsksDownloadLocation)
+        let pane = paneWithFileRequestStored(settings: settings)
+        let destination = await pane.browserEngine(engines[0], destinationForDownloadNamed: "report.zip")
+        XCTAssertNil(destination)
+        XCTAssertNil(storedTabs.tabs[0].url)
+    }
+
+    func testACommittedPageIsKeptWhenALaterLoadBecomesADownload() {
+        let pane = makePane()
+        engines[0].commit(page)
+        pane.load(file)
+        pane.browserEngine(engines[0], download: "start", host: "example.com")
+        XCTAssertEqual(storedTabs.tabs.map(\.url), [page.absoluteString])
+    }
 }

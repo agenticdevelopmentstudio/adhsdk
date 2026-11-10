@@ -1197,6 +1197,25 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
 
     public func browserEngine(_ engine: BrowserEngine, download event: String, host: String) {
         eventLog.record(channel: "download", event: event, decision: .info, detail: host)
+        if event == "start" { navigationBecameDownload(in: engine) }
+    }
+
+    /// The load `engine`'s tab asked for turned out to be a file, not a page,
+    /// so it never commits and the engine stays on the page it showed. The
+    /// requested address must not outlive that: left in place, it is what the
+    /// tab list and the pane's address store, and a relaunch would reopen the
+    /// tab on the download — fetching the file again — instead of its page.
+    /// WebKit reports the download's start; Chromium only asks where to save
+    /// it, so both routes come here.
+    private func navigationBecameDownload(in engine: BrowserEngine) {
+        guard let tab = tab(for: engine), let requested = tab.requestedURL else { return }
+        tab.requestedURL = nil
+        persistTabs()
+        guard isFront(engine), engine.url == nil,
+              store.paneStateValue(forKey: Self.addressKey) == requested.absoluteString else { return }
+        // Nothing committed to stand in its place: the address goes rather
+        // than naming the download.
+        store.setPaneStateValue(nil, forKey: Self.addressKey)
     }
 
     /// A dialog raised while a model acts is the model's to hear about, and it
@@ -1217,6 +1236,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     }
 
     public func browserEngine(_ engine: BrowserEngine, destinationForDownloadNamed name: String) async -> URL? {
+        navigationBecameDownload(in: engine)
         if settings.get(UserSettings.browserAsksDownloadLocation) {
             // Asking needs a window to ask on. A pane with none is not a
             // reason to save somewhere the user was never shown
