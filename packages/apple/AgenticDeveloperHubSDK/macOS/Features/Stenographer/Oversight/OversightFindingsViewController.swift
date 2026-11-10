@@ -265,7 +265,7 @@ final class OversightFindingsViewController: NSViewController {
             // is working down the rest of it; a terminal thrown in front of that
             // list takes it away to show them a session they did not ask to go
             // to. Going there is the row's own click action.
-            let result = TerminalTextInjector.inject(
+            let result = await TerminalTextInjector.inject(
                 target.injectText, termProgram: target.termProgram,
                 termSessionId: target.termSessionId, pid: target.pid
             )

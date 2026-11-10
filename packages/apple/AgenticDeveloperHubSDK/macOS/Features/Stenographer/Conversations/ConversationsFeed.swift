@@ -181,7 +181,7 @@ final class ConversationsFeed {
             let term = dto.termProgram.isEmpty ? "an unknown terminal" : dto.termProgram
             return "Typing into a session needs iTerm2 or Terminal.app; this one runs in \(term)."
         }
-        let result = TerminalTextInjector.inject(
+        let result = await TerminalTextInjector.inject(
             text, termProgram: dto.termProgram,
             termSessionId: dto.termSessionId, pid: dto.pid
         )

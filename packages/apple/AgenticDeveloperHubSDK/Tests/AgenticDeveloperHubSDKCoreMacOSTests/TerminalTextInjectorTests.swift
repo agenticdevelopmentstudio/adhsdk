@@ -150,24 +150,38 @@ final class TerminalTextInjectorTests: XCTestCase {
         XCTAssertEqual(TerminalTextInjector.normalizeTTY("/dev/ttys001"), "/dev/ttys001")
     }
 
-    func testITermPressesReturnSeparatelyFromTheText() {
-        let script = TerminalTextInjector.script(for: .iTermSession(uuid: "ABC"), text: "hello", raising: false)
-        XCTAssertTrue(script.contains(#"write text "hello" newline no"#), script)
-        let typed = script.range(of: #"newline no"#)
-        let returnKey = script.range(of: #"tell s to write text """#)
-        XCTAssertNotNil(returnKey, "Return must be pressed on its own")
-        if let typed, let returnKey { XCTAssertLessThan(typed.lowerBound, returnKey.lowerBound) }
+    // MARK: - returnScript (Return pressed on its own, after the text)
+
+    /// The typing script never submits and never waits: the wait is the caller's
+    /// `await`, so the main thread is free during it, and Return is a script of its own.
+    func testITermTypesWithoutReturnAndPressesReturnSeparately() {
+        let typing = TerminalTextInjector.script(for: .iTermSession(uuid: "ABC"), text: "hello", raising: false)
+        XCTAssertTrue(typing.contains(#"write text "hello" newline no"#), typing)
+        XCTAssertFalse(typing.contains(#"write text """#), "Return belongs to returnScript")
+        XCTAssertFalse(typing.contains("delay"), "a delay inside the script blocks the main thread")
+
+        let returnKey = TerminalTextInjector.returnScript(for: .iTermSession(uuid: "ABC"))
+        XCTAssertTrue(returnKey.contains(#"id of s is "ABC""#), returnKey)
+        XCTAssertTrue(returnKey.contains(#"tell s to write text """#), returnKey)
+        XCTAssertFalse(returnKey.contains("activate"), "pressing Return never raises")
     }
 
     /// A long line handed to `do script` arrives as a paste whose newline Claude
     /// Code keeps; Return pressed on its own afterwards is what submits it.
-    func testTerminalPressesReturnSeparatelyFromTheText() {
-        let script = TerminalTextInjector.script(for: .terminalTTY(tty: "ttys004"), text: "hello", raising: false)
-        let typed = script.range(of: #"do script "hello" in t"#)
-        let returnKey = script.range(of: #"do script "" in t"#)
-        XCTAssertNotNil(typed, script)
-        XCTAssertNotNil(returnKey, "Return must be pressed on its own")
-        XCTAssertTrue(script.contains("delay \(TerminalTextInjector.returnDelay)"), script)
-        if let typed, let returnKey { XCTAssertLessThan(typed.lowerBound, returnKey.lowerBound) }
+    func testTerminalTypesThenPressesReturnSeparately() {
+        let typing = TerminalTextInjector.script(for: .terminalTTY(tty: "ttys004"), text: "hello", raising: false)
+        XCTAssertTrue(typing.contains(#"do script "hello" in t"#), typing)
+        XCTAssertFalse(typing.contains(#"do script "" in t"#), "Return belongs to returnScript")
+        XCTAssertFalse(typing.contains("delay"), "a delay inside the script blocks the main thread")
+
+        let returnKey = TerminalTextInjector.returnScript(for: .terminalTTY(tty: "ttys004"))
+        XCTAssertTrue(returnKey.contains(#"tty of t is "/dev/ttys004""#), returnKey)
+        XCTAssertTrue(returnKey.contains(#"do script "" in t"#), returnKey)
+        XCTAssertFalse(returnKey.contains("activate"), "pressing Return never raises")
+    }
+
+    func testITermTTYReturnScriptMatchesByTTY() {
+        let returnKey = TerminalTextInjector.returnScript(for: .iTermTTY(tty: "ttys003"))
+        XCTAssertTrue(returnKey.contains(#"tty of s is "/dev/ttys003""#), returnKey)
     }
 }

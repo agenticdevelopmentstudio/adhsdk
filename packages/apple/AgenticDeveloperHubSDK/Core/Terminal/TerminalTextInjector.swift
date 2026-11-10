@@ -54,7 +54,11 @@ public enum TerminalTextInjector {
         termProgram == "iTerm.app" || termProgram == "Apple_Terminal"
     }
 
-    /// Inject `text` into the session's pane. Runs `NSAppleScript` on the main thread.
+    /// Inject `text` into the session's pane: type it, wait ``returnDelay``, then press
+    /// Return on its own. The two halves are separate scripts with an `await` between
+    /// them, so the wait never holds the main thread (an AppleScript `delay` inside one
+    /// script froze the caller's UI for it). Each half finds the pane afresh; a pane
+    /// closed in between fails the Return as `paneNotFound`.
     ///
     /// - Parameter raising: whether to bring that terminal forward as well.
     ///   **Off by default**: sending a line to a session is not a request to go
@@ -66,14 +70,18 @@ public enum TerminalTextInjector {
     public static func inject(
         _ text: String, termProgram: String, termSessionId: String, pid: Int,
         raising: Bool = false
-    ) -> Result<Void, InjectionError> {
+    ) async -> Result<Void, InjectionError> {
         guard isSupported(termProgram: termProgram) else {
             return .failure(.unsupportedTerminal(termProgram.isEmpty ? "an unknown terminal" : termProgram))
         }
         guard let target = resolveTarget(termProgram: termProgram, termSessionId: termSessionId, pid: pid) else {
             return .failure(.paneUnresolvable)
         }
-        return run(script: script(for: target, text: text, raising: raising), target: target)
+        if case .failure(let error) = run(script: script(for: target, text: text, raising: raising), target: target) {
+            return .failure(error)
+        }
+        try? await Task.sleep(for: returnDelay)
+        return run(script: returnScript(for: target), target: target)
     }
 
     // MARK: - Pure pieces (unit-tested)
@@ -114,8 +122,9 @@ public enum TerminalTextInjector {
     }
 
     /// Build the AppleScript that finds `target`'s pane and — when `text` is non-nil —
-    /// types it there. `text: nil` is the select-and-raise variant the session click
-    /// actions use. Pure → unit-tested.
+    /// types it there, without submitting it (``returnScript(for:)`` presses Return).
+    /// `text: nil` is the select-and-raise variant the session click actions use.
+    /// Pure → unit-tested.
     ///
     /// - Parameter raising: whether the pane is also selected and its application
     ///   brought forward. True for going *to* a session, false for typing into
@@ -127,33 +136,62 @@ public enum TerminalTextInjector {
         switch target {
         case .iTermSession(let uuid):
             return iTermScript(
-                match: "id of s is \"\(escape(uuid))\"", text: escapedText, raising: raising)
+                match: "id of s is \"\(escape(uuid))\"", action: escapedText.map(iTermTyping) ?? "",
+                raising: raising)
         case .iTermTTY(let tty):
             return iTermScript(
-                match: "tty of s is \"\(escape(normalizeTTY(tty)))\"", text: escapedText,
-                raising: raising)
+                match: "tty of s is \"\(escape(normalizeTTY(tty)))\"",
+                action: escapedText.map(iTermTyping) ?? "", raising: raising)
         case .terminalTTY(let tty):
             return terminalScript(
-                tty: escape(normalizeTTY(tty)), text: escapedText, raising: raising)
+                tty: escape(normalizeTTY(tty)), action: escapedText.map(terminalTyping) ?? "", raising: raising)
         }
     }
 
-    /// Seconds between typing the text and pressing Return in iTerm, so the Return
-    /// lands as its own keystroke after the paste rather than inside it.
-    static let returnDelay = "0.3"
+    /// The pause between typing the text and pressing Return, so the Return lands as its
+    /// own keystroke after the paste rather than inside it.
+    static let returnDelay: Duration = .milliseconds(300)
+
+    /// The AppleScript that finds `target`'s pane and presses Return in it, alone: what
+    /// submits a line ``script(for:text:raising:)`` typed. Never raises.
+    public static func returnScript(for target: Target) -> String {
+        switch target {
+        case .iTermSession(let uuid):
+            return iTermScript(match: "id of s is \"\(escape(uuid))\"", action: returnKeyITerm, raising: false)
+        case .iTermTTY(let tty):
+            return iTermScript(
+                match: "tty of s is \"\(escape(normalizeTTY(tty)))\"", action: returnKeyITerm, raising: false)
+        case .terminalTTY(let tty):
+            return terminalScript(tty: escape(normalizeTTY(tty)), action: returnKeyTerminal, raising: false)
+        }
+    }
+
+    private static let returnKeyITerm = "\n                        tell s to write text \"\""
+    private static let returnKeyTerminal = "\n                    do script \"\" in t"
+
+    /// iTerm types the text with `newline no`; Return follows on its own (`write text ""`,
+    /// ``returnScript(for:)``). Handed in one write, the newline arrives inside the same
+    /// paste as the text, and an agent's input box (Claude Code's) keeps it as part of the
+    /// paste: the line is typed but never submitted.
+    private static func iTermTyping(_ escapedText: String) -> String {
+        "\n                        tell s to write text \"\(escapedText)\" newline no"
+    }
+
+    /// Terminal.app's `do script … in <tab>` runs the text in that existing tab rather than
+    /// opening a new window. It has no `newline no`, and its own newline is not enough: a
+    /// long line arrives as a paste and Claude Code keeps the newline inside it, unsubmitted
+    /// (seen live: a short line submits, a ~200-character one sat in the input until a
+    /// separate Return). So Return follows on its own (`do script ""`,
+    /// ``returnScript(for:)``); after a line that did submit, it meets an empty prompt,
+    /// which ignores it.
+    private static func terminalTyping(_ escapedText: String) -> String {
+        "\n                    do script \"\(escapedText)\" in t"
+    }
 
     /// iTerm: find the session (across all windows/tabs/panes) matching `match`, focus it
-    /// when `raising`, then — when injecting — type the text with `newline no` and, a
-    /// moment later, press Return on its own (`write text ""`). Handed in one write, the
-    /// newline arrives inside the same paste as the text, and an agent's input box (Claude
-    /// Code's) keeps it as part of the paste: the line is typed but never submitted.
-    /// Addressed by bundle id, not the name "iTerm"/"iTerm2", which has varied across versions.
-    private static func iTermScript(match: String, text: String?, raising: Bool) -> String {
-        let write = text.map {
-            "\n                        tell s to write text \"\($0)\" newline no"
-                + "\n                        delay \(returnDelay)"
-                + "\n                        tell s to write text \"\""
-        } ?? ""
+    /// when `raising`, then run `write` on it (`s`). Addressed by bundle id, not the name
+    /// "iTerm"/"iTerm2", which has varied across versions.
+    private static func iTermScript(match: String, action write: String, raising: Bool) -> String {
         let raise = raising
             ? "\n                        select s"
                 + "\n                        select t"
@@ -175,20 +213,9 @@ public enum TerminalTextInjector {
         """
     }
 
-    /// Terminal.app: find the tab on `tty`, focus it when `raising`, then — when
-    /// injecting — `do script … in <tab>` (which runs the text in that existing tab
-    /// rather than opening a new window) and, a moment later, `do script ""`: Return on
-    /// its own. `do script` has no `newline no`, and its own newline is not enough —
-    /// a long line arrives as a paste and Claude Code keeps the newline inside it,
-    /// unsubmitted (seen live: a short line submits, a ~200-character one sat in the
-    /// input until a separate Return). After a line that did submit, the extra Return
-    /// meets an empty prompt, which ignores it.
-    private static func terminalScript(tty: String, text: String?, raising: Bool) -> String {
-        let run = text.map {
-            "\n                    do script \"\($0)\" in t"
-                + "\n                    delay \(returnDelay)"
-                + "\n                    do script \"\" in t"
-        } ?? ""
+    /// Terminal.app: find the tab on `tty`, focus it when `raising`, then run `run` on
+    /// it (`t`).
+    private static func terminalScript(tty: String, action run: String, raising: Bool) -> String {
         let raise = raising
             ? "\n                        set selected tab of w to t"
                 + "\n                        set frontmost of w to true"
