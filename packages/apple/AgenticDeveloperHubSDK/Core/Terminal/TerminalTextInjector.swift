@@ -208,14 +208,21 @@ public enum TerminalTextInjector {
     /// of the message and type the rest at whatever answered it. It becomes a **space**
     /// rather than being deleted — a pasted paragraph is words, and dropping the breaks
     /// outright glues the last word of each line to the first of the next ("the fileare
-    /// you sure"), which is not what anybody typed.
+    /// you sure"), which is not what anybody typed. A tab becomes a space too: typed at
+    /// an agent's prompt it is a key (completion), not text.
+    ///
+    /// Every other control character is **dropped**. Each reaches the pane as a raw
+    /// keystroke, not as text: an ESC interrupts the agent's turn, a ^C clears its input,
+    /// a ^D at an empty prompt starts its exit. Text handed in by a script (a log line, a
+    /// command's output) carries them by accident, and none is something a message means.
     public static func escape(_ string: String) -> String {
         var escaped = string
         escaped = escaped.replacingOccurrences(of: "\\", with: "\\\\")
         escaped = escaped.replacingOccurrences(of: "\"", with: "\\\"")
         return String(escaped.compactMap { character -> Character? in
-            if character == "\0" { return nil }
-            return character.isNewline ? " " : character
+            if character.isNewline || character == "\t" { return " " }
+            let isControl = character.unicodeScalars.allSatisfy { $0.properties.generalCategory == .control }
+            return isControl ? nil : character
         })
     }
 

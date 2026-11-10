@@ -137,6 +137,14 @@ final class TerminalTextInjectorTests: XCTestCase {
         XCTAssertEqual(TerminalTextInjector.escape("a\0b"), "ab")
     }
 
+    /// ESC, ^C, ^D and DEL would reach the agent as keystrokes (interrupt, clear,
+    /// exit), so they go; a tab becomes a space; ordinary text is untouched.
+    func testEscapeDropsKeystrokeControlCharacters() {
+        XCTAssertEqual(TerminalTextInjector.escape("a\u{1B}[0mb\u{03}c\u{04}d\u{7F}e"), "a[0mbcde")
+        XCTAssertEqual(TerminalTextInjector.escape("col1\tcol2"), "col1 col2")
+        XCTAssertEqual(TerminalTextInjector.escape("café ✓ 日本"), "café ✓ 日本")
+    }
+
     func testNormalizeTTYAddsDevPrefix() {
         XCTAssertEqual(TerminalTextInjector.normalizeTTY("ttys001"), "/dev/ttys001")
         XCTAssertEqual(TerminalTextInjector.normalizeTTY("/dev/ttys001"), "/dev/ttys001")
