@@ -315,10 +315,12 @@ public struct ConversationStore: Sendable {
     /// resumed session (whose line ids and `line_no`s both interleave), with the
     /// line id breaking ties so the order is total and the same on every read.
     ///
-    /// The session's line ids are read in that order first — two small columns
-    /// off `idx_transcript_lines_session`, a few thousand rows for a long
-    /// session — and only the lines inside the page are then read whole, one
-    /// primary-key read each, because `raw_json` runs to tens of KB a line.
+    /// The cursors are placed by a keyed read of their own lines, and the page's
+    /// line ids are then read `limit + 1` at a time from the first position on
+    /// (``LineWindow``) — two small columns off `idx_transcript_lines_session` —
+    /// so a page never reads the whole session's order. Only the lines inside
+    /// the page are read whole, one primary-key read each, because `raw_json`
+    /// runs to tens of KB a line.
     ///
     /// - Parameters:
     ///   - afterId: return only messages after this one (exclusive); nil starts
@@ -338,42 +340,11 @@ public struct ConversationStore: Sendable {
     ) throws -> ConversationMessagesPageDTO {
         let stride = Self.maxLinesPerConversationEntry
         let limit = max(limit, 1)
-        // The same two sources the feed weaves together: the user/assistant
-        // lines (terms verbatim from migration038, as in the feed's scoped
-        // read) and the prompts queued mid-turn, which are attachment rows the
-        // first never reaches.
-        let orderSQL = """
-            SELECT line_id FROM (
-                SELECT id AS line_id, timestamp AS ts
-                FROM transcript_lines INDEXED BY idx_transcript_lines_session
-                WHERE session_id = ?
-                  AND is_sidechain = 0
-                  AND (entry_type = 'user' OR entry_type = 'assistant')
-                  AND timestamp != ''
-                UNION
-                SELECT q.line_id, q.timestamp
-                FROM conversation_queued_prompts q
-                JOIN transcript_lines t ON t.id = q.line_id
-                WHERE q.session_id = ? AND q.timestamp != '' AND t.is_sidechain = 0
-            )
-            ORDER BY ts, line_id
-            """
         return try database.read { _ in
-            var order: [Int] = []
-            try database.query(orderSQL, params: [sessionId, sessionId]) { row in
-                order.append(self.database.int(row, 0))
-            }
-
-            func position(of messageId: Int) throws -> Int {
-                guard let index = order.firstIndex(of: messageId / stride) else {
-                    throw ConversationRangeError.unknownMessageId(messageId)
-                }
-                return index
-            }
-            let first = try afterId.map(position(of:)) ?? 0
-            let last = try throughId.map(position(of:)) ?? (order.count - 1)
+            let first = try afterId.map { try self.position(of: $0, sessionId: sessionId) }
+            let last = try throughId.map { try self.position(of: $0, sessionId: sessionId) }
             // The cursors cut inside their own entries only: every other line
-            // in `first...last` is wholly inside the range, whatever its ids.
+            // between them is wholly inside the range, whatever its ids.
             func inRange(_ messageId: Int) -> Bool {
                 let line = messageId / stride
                 if let afterId, line == afterId / stride, messageId <= afterId { return false }
@@ -381,42 +352,44 @@ public struct ConversationStore: Sendable {
                 return true
             }
 
+            // The range's lines in order, read a chunk at a time from where the
+            // previous chunk stopped — a seek, never the whole session's order.
+            var lines = LineWindow(chunk: limit + 1, lower: first, upper: last) { after, through, count in
+                try self.lines(of: sessionId, after: after, through: through, count: count)
+            }
             var messages: [ConversationMessageDTO] = []
             var reachedEnd = true
-            if first <= last {
-                for index in first...last {
-                    let lineId = order[index]
-                    var rawJSON = ""
-                    var timestamp = ""
-                    try database.query(
-                        "SELECT raw_json, timestamp FROM transcript_lines WHERE id = ?", params: [lineId]
-                    ) { row in
-                        rawJSON = self.database.string(row, 0)
-                        timestamp = self.database.string(row, 1)
-                    }
-                    // Offsets are taken before any filter, as the feed takes
-                    // them, so a message's id never depends on what was asked.
-                    let shown = self.extractCache.lines(lineId: lineId, rawJSON: rawJSON)
-                        .enumerated()
-                        .prefix(stride)
-                        .filter { includeWorkOutput || !$0.element.kind.isWorkOutput }
-                        .map { (id: lineId * stride + $0.offset, line: $0.element) }
-                        .filter { inRange($0.id) }
-                    guard !shown.isEmpty else { continue }
-                    if !messages.isEmpty, messages.count + shown.count > limit {
-                        reachedEnd = false
-                        break
-                    }
-                    messages += shown.map {
-                        let kind = $0.line.kind.rawValue
-                        return ConversationMessageDTO(
-                            id: $0.id, type: ConversationMessageDTO.type(forKind: kind), kind: kind,
-                            content: $0.line.text, time: timestamp)
-                    }
-                    if messages.count >= limit, index < last {
-                        reachedEnd = false
-                        break
-                    }
+            while let lineId = try lines.next() {
+                var rawJSON = ""
+                var timestamp = ""
+                try database.query(
+                    "SELECT raw_json, timestamp FROM transcript_lines WHERE id = ?", params: [lineId]
+                ) { row in
+                    rawJSON = self.database.string(row, 0)
+                    timestamp = self.database.string(row, 1)
+                }
+                // Offsets are taken before any filter, as the feed takes
+                // them, so a message's id never depends on what was asked.
+                let shown = self.extractCache.lines(lineId: lineId, rawJSON: rawJSON)
+                    .enumerated()
+                    .prefix(stride)
+                    .filter { includeWorkOutput || !$0.element.kind.isWorkOutput }
+                    .map { (id: lineId * stride + $0.offset, line: $0.element) }
+                    .filter { inRange($0.id) }
+                guard !shown.isEmpty else { continue }
+                if !messages.isEmpty, messages.count + shown.count > limit {
+                    reachedEnd = false
+                    break
+                }
+                messages += shown.map {
+                    let kind = $0.line.kind.rawValue
+                    return ConversationMessageDTO(
+                        id: $0.id, type: ConversationMessageDTO.type(forKind: kind), kind: kind,
+                        content: $0.line.text, time: timestamp)
+                }
+                if messages.count >= limit, try lines.hasNext() {
+                    reachedEnd = false
+                    break
                 }
             }
             return ConversationMessagesPageDTO(
@@ -425,6 +398,130 @@ public struct ConversationStore: Sendable {
                 nextAfterId: messages.last?.id ?? afterId,
                 isComplete: reachedEnd
             )
+        }
+    }
+
+    /// A line's place in a conversation's order: `(timestamp, line id)` — time
+    /// order across the files of a resumed session, the id making it total.
+    struct LinePosition: Equatable {
+        let timestamp: String
+        let lineId: Int
+    }
+
+    /// One session's conversation lines as `(line_id, ts)` — the same two
+    /// sources the feed weaves together: the user/assistant lines (terms
+    /// verbatim from migration038, as in the feed's scoped read) and the
+    /// prompts queued mid-turn, which are attachment rows the first never
+    /// reaches. Parameters: the session id, then (`oneLine`) a line id, for
+    /// each source in turn.
+    private static func conversationLinesSQL(oneLine: Bool) -> String {
+        """
+        SELECT id AS line_id, timestamp AS ts
+        FROM transcript_lines INDEXED BY idx_transcript_lines_session
+        WHERE session_id = ?
+          AND is_sidechain = 0
+          AND (entry_type = 'user' OR entry_type = 'assistant')
+          AND timestamp != ''\(oneLine ? " AND id = ?" : "")
+        UNION
+        SELECT q.line_id, q.timestamp
+        FROM conversation_queued_prompts q
+        JOIN transcript_lines t ON t.id = q.line_id
+        WHERE q.session_id = ? AND q.timestamp != '' AND t.is_sidechain = 0\(oneLine ? " AND q.line_id = ?" : "")
+        """
+    }
+
+    /// Where the line holding `messageId` sits in the session's order, by a
+    /// keyed read of that one line rather than a walk of the session.
+    /// - Throws: ``ConversationRangeError/unknownMessageId(_:)`` when no
+    ///   conversation line of the session holds it.
+    private func position(of messageId: Int, sessionId: String) throws -> LinePosition {
+        let line = messageId / Self.maxLinesPerConversationEntry
+        var positions: [LinePosition] = []
+        try database.query(Self.conversationLinesSQL(oneLine: true), params: [sessionId, line, sessionId, line]) {
+            positions.append(LinePosition(timestamp: self.database.string($0, 1), lineId: self.database.int($0, 0)))
+        }
+        // A line both sources list sits at the earlier of its two places.
+        guard let earliest = positions.min(by: { ($0.timestamp, $0.lineId) < ($1.timestamp, $1.lineId) }) else {
+            throw ConversationRangeError.unknownMessageId(messageId)
+        }
+        return earliest
+    }
+
+    /// Up to `count` of the session's lines in order, after `lower` (or from it,
+    /// when it is not exclusive) through `upper` (inclusive).
+    private func lines(
+        of sessionId: String, after lower: LineWindow.Bound?, through upper: LinePosition?, count: Int
+    ) throws -> [LinePosition] {
+        var conditions: [String] = []
+        var params: [any Sendable] = [sessionId, sessionId]
+        if let lower {
+            conditions.append(lower.exclusive ? "(ts, line_id) > (?, ?)" : "(ts, line_id) >= (?, ?)")
+            params += [lower.position.timestamp, lower.position.lineId]
+        }
+        if let upper {
+            conditions.append("(ts, line_id) <= (?, ?)")
+            params += [upper.timestamp, upper.lineId]
+        }
+        params.append(count)
+        let window = conditions.isEmpty ? "" : "WHERE " + conditions.joined(separator: " AND ")
+        var rows: [LinePosition] = []
+        try database.query(
+            "SELECT line_id, ts FROM (\(Self.conversationLinesSQL(oneLine: false))) \(window) "
+                + "ORDER BY ts, line_id LIMIT ?",
+            params: params
+        ) {
+            rows.append(LinePosition(timestamp: self.database.string($0, 1), lineId: self.database.int($0, 0)))
+        }
+        return rows
+    }
+
+    /// A conversation's lines between two positions, read `chunk` at a time,
+    /// each read seeking on from the last line the one before it returned —
+    /// so a page costs its own lines, not the whole session's order.
+    struct LineWindow {
+        struct Bound {
+            let position: LinePosition
+            let exclusive: Bool
+        }
+
+        typealias Read = (_ after: Bound?, _ through: LinePosition?, _ count: Int) throws -> [LinePosition]
+
+        private let chunk: Int
+        private let upper: LinePosition?
+        private let read: Read
+        private var lower: Bound?
+        private var buffered: [LinePosition] = []
+        private var exhausted = false
+
+        /// - Parameters:
+        ///   - lower: the first position wanted (inclusive); nil starts at the first line.
+        ///   - upper: the last position wanted (inclusive); nil runs to the newest.
+        init(chunk: Int, lower: LinePosition?, upper: LinePosition?, read: @escaping Read) {
+            self.chunk = max(chunk, 1)
+            self.upper = upper
+            self.read = read
+            self.lower = lower.map { Bound(position: $0, exclusive: false) }
+        }
+
+        /// The next line id in order, or nil past the window's end.
+        mutating func next() throws -> Int? {
+            guard try fill() else { return nil }
+            let line = buffered.removeFirst()
+            lower = Bound(position: line, exclusive: true)
+            return line.lineId
+        }
+
+        /// Whether ``next()`` has another line to give.
+        mutating func hasNext() throws -> Bool {
+            try fill()
+        }
+
+        private mutating func fill() throws -> Bool {
+            if buffered.isEmpty, !exhausted {
+                buffered = try read(lower, upper, chunk)
+                exhausted = buffered.count < chunk
+            }
+            return !buffered.isEmpty
         }
     }
 

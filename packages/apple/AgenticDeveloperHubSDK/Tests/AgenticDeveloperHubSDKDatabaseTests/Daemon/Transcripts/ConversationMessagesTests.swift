@@ -126,6 +126,37 @@ final class ConversationMessagesTests: XCTestCase {
         }
     }
 
+    /// A page reads its lines a chunk at a time, seeking on from the last — so
+    /// walking page by page, across skipped work output and a shared timestamp,
+    /// must give back exactly the whole conversation and end complete.
+    func testWalkingPageByPageGivesTheWholeConversation() throws {
+        try insertDialogue()
+        try database.insertTranscriptLines([
+            progress(5, at: "2026-09-01T10:00:04Z", "working"),
+            progress(6, at: "2026-09-01T10:00:05Z", "still working"),
+            progress(7, at: "2026-09-01T10:00:06Z", "nearly"),
+            reply(8, at: "2026-09-01T10:00:07Z", "done"),
+            prompt(9, at: "2026-09-01T10:00:07Z", "same second")
+        ], filePath: "/tmp/\(session)-2.jsonl")
+        for work in [false, true] {
+            let whole = try page(limit: 500, work: work)
+            XCTAssertTrue(whole.isComplete)
+            var walked: [ConversationMessageDTO] = []
+            var after: Int?
+            var pages = 0
+            while true {
+                let next = try page(after: after, limit: 1, work: work)
+                walked += next.messages
+                pages += 1
+                if next.isComplete { break }
+                XCTAssertFalse(next.messages.isEmpty, "an incomplete page moves on")
+                after = next.nextAfterId
+                guard pages < 50 else { return XCTFail("the walk never ended") }
+            }
+            XCTAssertEqual(walked, whole.messages, "work: \(work)")
+        }
+    }
+
     func testAnEmptyConversationIsCompleteAndEmpty() throws {
         let result = try page()
         XCTAssertTrue(result.messages.isEmpty)
