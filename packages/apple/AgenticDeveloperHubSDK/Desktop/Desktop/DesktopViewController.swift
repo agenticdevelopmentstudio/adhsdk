@@ -230,6 +230,12 @@ public final class DesktopViewController: NSViewController {
         }
     }
 
+    override public func viewWillAppear() {
+        super.viewWillAppear()
+        // Showing the Desktop again picks up a photo that has become readable since.
+        apply()
+    }
+
     // MARK: Test seams
 
     var selectedAppIdentifier: String? {
@@ -274,7 +280,9 @@ public final class DesktopViewController: NSViewController {
         applyMenuStyle()
         let hex = settings.backgroundColorHex
         let path = settings.backgroundImagePath
-        if appliedBackground?.hex != hex || appliedBackground?.path != path {
+        // A photo that couldn't be read yet (still syncing, say) is tried again on every apply.
+        let photoMissing = path != nil && backgroundView.image == nil
+        if appliedBackground?.hex != hex || appliedBackground?.path != path || photoMissing {
             appliedBackground = (hex, path)
             backgroundView.color = NSColor(desktopHex: hex) ?? .windowBackgroundColor
             backgroundView.image = backgroundImage(for: path)
@@ -304,18 +312,14 @@ public final class DesktopViewController: NSViewController {
         }
     }
 
-    /// Loads the photo once per path. A missing or unreadable file is nil, never an error.
+    /// Loads the photo once per path. A missing or unreadable file is nil, never an error, and
+    /// is not remembered: the next call reads the file again.
     private func backgroundImage(for path: String?) -> NSImage? {
-        guard let path else {
-            cachedImagePath = nil
-            cachedImage = nil
-            return nil
-        }
-        if path != cachedImagePath {
-            cachedImagePath = path
-            cachedImage = FileManager.default.isReadableFile(atPath: path) ? NSImage(contentsOfFile: path) : nil
-        }
-        return cachedImage
+        if let path, path == cachedImagePath, let cachedImage { return cachedImage }
+        let image = path.flatMap { FileManager.default.isReadableFile(atPath: $0) ? NSImage(contentsOfFile: $0) : nil }
+        cachedImagePath = image == nil ? nil : path
+        cachedImage = image
+        return image
     }
 
     private func iconMoved(identifier: String, to origin: CGPoint) {

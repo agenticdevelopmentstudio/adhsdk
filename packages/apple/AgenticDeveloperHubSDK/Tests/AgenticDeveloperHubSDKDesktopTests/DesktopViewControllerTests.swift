@@ -32,6 +32,27 @@ final class DesktopViewControllerTests: XCTestCase {
         XCTAssertNil(controller.currentBackgroundImage)
     }
 
+    func test_background_photoThatAppearsLater_isLoadedOnTheNextApply() throws {
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("desktop-photo-\(UUID().uuidString).png").path
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        settings.backgroundImagePath = path
+        let controller = makeController()
+        XCTAssertNil(controller.currentBackgroundImage)
+
+        let image = NSImage(size: NSSize(width: 4, height: 4))
+        image.lockFocus()
+        NSColor.red.setFill()
+        NSRect(x: 0, y: 0, width: 4, height: 4).fill()
+        image.unlockFocus()
+        let png = try XCTUnwrap(NSBitmapImageRep(data: XCTUnwrap(image.tiffRepresentation))?
+            .representation(using: .png, properties: [:]))
+        try png.write(to: URL(fileURLWithPath: path))
+
+        controller.viewWillAppear()
+        XCTAssertNotNil(controller.currentBackgroundImage)
+    }
+
     func test_arranged_iconOriginsSortedByName() {
         let controller = makeController(names: [("c", "Charlie"), ("a", "alpha"), ("b", "Bravo")])
         let origins = controller.iconOrigins
