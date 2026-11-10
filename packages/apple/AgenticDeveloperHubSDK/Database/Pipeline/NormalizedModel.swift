@@ -3,7 +3,7 @@ import Foundation
 /// A JSON value with a stable Codable form: every number is a Double, so the same
 /// value always encodes to the same text (with `.sortedKeys`).
 ///
-/// Named `NormalizedValue`, not `JSONValue`: `AgenticToolkitSync` already exports a
+/// Named `NormalizedValue`, not `JSONValue`: `AgenticDeveloperHubSDKSync` already exports a
 /// top-level `JSONValue`, and `apple-sync` and `apple-database` are lateral
 /// foundation tiers, so Database must not import Sync. A second top-level
 /// `JSONValue` here made the name ambiguous in every module that imports both

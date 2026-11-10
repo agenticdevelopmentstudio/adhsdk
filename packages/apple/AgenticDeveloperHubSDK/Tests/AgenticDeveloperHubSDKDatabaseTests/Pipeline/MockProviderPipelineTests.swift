@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 final class MockProviderPipelineTests: XCTestCase {
 

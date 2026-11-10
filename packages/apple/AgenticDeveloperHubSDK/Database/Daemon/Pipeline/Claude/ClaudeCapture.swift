@@ -1,5 +1,5 @@
-#if canImport(AgenticToolkitCore)
-import AgenticToolkitCore
+#if canImport(AgenticDeveloperHubSDKCore)
+import AgenticDeveloperHubSDKCore
 import Foundation
 
 /// Turns a hook event delivered over HTTP or the socket — not through the drop

@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 private struct ReplayTestNormalizer: Normalizer {
     let provider = "mock"

@@ -1,6 +1,6 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import Foundation
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The Claude pipeline as the runtime assembles it, on temp files: a session
 /// database with the event store and raw archive attached for its readers, and

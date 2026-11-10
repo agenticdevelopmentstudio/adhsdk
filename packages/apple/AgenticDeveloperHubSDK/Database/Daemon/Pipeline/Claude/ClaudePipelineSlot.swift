@@ -1,5 +1,5 @@
-#if canImport(AgenticToolkitCore)
-import AgenticToolkitCore
+#if canImport(AgenticDeveloperHubSDKCore)
+import AgenticDeveloperHubSDKCore
 import Foundation
 
 /// Where a daemon's Claude pipeline lives once it is open: empty while its files

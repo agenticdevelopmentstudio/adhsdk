@@ -1,4 +1,4 @@
-#if canImport(AgenticToolkitCore)
+#if canImport(AgenticDeveloperHubSDKCore)
 import Foundation
 
 /// The Claude pipeline's three files in one directory, opened (or created) with

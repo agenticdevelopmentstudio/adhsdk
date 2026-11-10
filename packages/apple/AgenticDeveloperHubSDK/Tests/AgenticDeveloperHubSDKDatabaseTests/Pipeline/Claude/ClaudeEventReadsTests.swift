@@ -1,8 +1,8 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import CryptoKit
 import XCTest
 import Foundation
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The session database's event readers over the event store and raw archive:
 /// events go in through the Claude pipeline (`ClaudePipelineTestHarness`) and come

@@ -1,8 +1,8 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// `ClaudeMainDBSink` against the legacy writers it replaces: a hook batch must
 /// leave the session database as `ingestEvent` does, a transcript batch as the
