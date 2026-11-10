@@ -86160,6 +86160,18 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/query/user_id`.
                 public var userId: Swift.String?
+                /// Page size, 1–100 (default 10).
+                ///
+                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Cursor: an object id; returns the page after it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/query/starting_after`.
+                public var startingAfter: Swift.String?
+                /// Cursor: an object id; returns the page before it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/query/ending_before`.
+                public var endingBefore: Swift.String?
                 /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/query/expand[]`.
@@ -86168,12 +86180,21 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - userId: Answer only this user’s capabilities, as a list of names
+                ///   - limit: Page size, 1–100 (default 10).
+                ///   - startingAfter: Cursor: an object id; returns the page after it.
+                ///   - endingBefore: Cursor: an object id; returns the page before it.
                 ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
                 public init(
                     userId: Swift.String? = nil,
+                    limit: Swift.Int? = nil,
+                    startingAfter: Swift.String? = nil,
+                    endingBefore: Swift.String? = nil,
                     expand_lbrack__rbrack_: [Swift.String]? = nil
                 ) {
                     self.userId = userId
+                    self.limit = limit
+                    self.startingAfter = startingAfter
+                    self.endingBefore = endingBefore
                     self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
                 }
             }
@@ -86209,107 +86230,123 @@ public enum Operations {
                 @frozen public enum Body: Sendable, Hashable {
                     /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json`.
                     public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value1`.
-                        public struct Value1Payload: Codable, Hashable, Sendable {
-                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value1/object`.
-                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                                case auth_capability = "auth.capability"
-                            }
-                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value1/object`.
-                            public var object: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
-                            /// Creates a new `Value1Payload`.
-                            ///
-                            /// - Parameters:
-                            ///   - object:
-                            public init(object: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
-                                self.object = object
-                            }
-                            public enum CodingKeys: String, CodingKey {
-                                case object
-                            }
+                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case list = "list"
                         }
-                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value1`.
-                        public var value1: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value1Payload
-                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2`.
-                        @frozen public enum Value2Payload: Codable, Hashable, Sendable {
-                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2/Case1Payload`.
-                            public struct Case1PayloadPayload: Codable, Hashable, Sendable {
-                                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2/Case1Payload/user_id`.
+                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/object`.
+                        public var object: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.ObjectPayload
+                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload`.
+                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload/value1`.
+                            public struct Value1Payload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload/value1/object`.
+                                @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case auth_capability = "auth.capability"
+                                }
+                                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload/value1/object`.
+                                public var object: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload?
+                                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload/value1/user_id`.
                                 public var userId: Swift.String
-                                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2/Case1Payload/capability`.
+                                /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload/value1/capability`.
                                 public var capability: Swift.String
-                                /// Creates a new `Case1PayloadPayload`.
+                                /// Creates a new `Value1Payload`.
                                 ///
                                 /// - Parameters:
+                                ///   - object:
                                 ///   - userId:
                                 ///   - capability:
                                 public init(
+                                    object: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload? = nil,
                                     userId: Swift.String,
                                     capability: Swift.String
                                 ) {
+                                    self.object = object
                                     self.userId = userId
                                     self.capability = capability
                                 }
                                 public enum CodingKeys: String, CodingKey {
+                                    case object
                                     case userId = "user_id"
                                     case capability
                                 }
                             }
-                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2/case1`.
-                            public typealias Case1Payload = [Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value2Payload.Case1PayloadPayload]
-                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2/case1`.
-                            case case1(Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value2Payload.Case1Payload)
-                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2/case2`.
-                            case case2([Swift.String])
+                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload/value1`.
+                            public var value1: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload?
+                            /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/DataPayload/value2`.
+                            public var value2: Swift.String?
+                            /// Creates a new `DataPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - value1:
+                            ///   - value2:
+                            public init(
+                                value1: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload? = nil,
+                                value2: Swift.String? = nil
+                            ) {
+                                self.value1 = value1
+                                self.value2 = value2
+                            }
                             public init(from decoder: any Swift.Decoder) throws {
                                 var errors: [any Swift.Error] = []
                                 do {
-                                    self = .case1(try decoder.decodeFromSingleValueContainer())
-                                    return
+                                    self.value1 = try .init(from: decoder)
                                 } catch {
                                     errors.append(error)
                                 }
                                 do {
-                                    self = .case2(try decoder.decodeFromSingleValueContainer())
-                                    return
+                                    self.value2 = try decoder.decodeFromSingleValueContainer()
                                 } catch {
                                     errors.append(error)
                                 }
-                                throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                                try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                                    [
+                                        self.value1,
+                                        self.value2
+                                    ],
                                     type: Self.self,
                                     codingPath: decoder.codingPath,
                                     errors: errors
                                 )
                             }
                             public func encode(to encoder: any Swift.Encoder) throws {
-                                switch self {
-                                case let .case1(value):
-                                    try encoder.encodeToSingleValueContainer(value)
-                                case let .case2(value):
-                                    try encoder.encodeToSingleValueContainer(value)
-                                }
+                                try encoder.encodeFirstNonNilValueToSingleValueContainer([
+                                    self.value2
+                                ])
+                                try self.value1?.encode(to: encoder)
                             }
                         }
-                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/value2`.
-                        public var value2: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value2Payload
+                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/data`.
+                        public typealias DataPayload = [Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.DataPayloadPayload]
+                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/data`.
+                        public var data: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.DataPayload
+                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/has_more`.
+                        public var hasMore: Swift.Bool
+                        /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/json/url`.
+                        public var url: Swift.String
                         /// Creates a new `JsonPayload`.
                         ///
                         /// - Parameters:
-                        ///   - value1:
-                        ///   - value2:
+                        ///   - object:
+                        ///   - data:
+                        ///   - hasMore:
+                        ///   - url:
                         public init(
-                            value1: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value1Payload,
-                            value2: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.Value2Payload
+                            object: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.ObjectPayload,
+                            data: Operations.GetV1AuthCapabilities.Output.Ok.Body.JsonPayload.DataPayload,
+                            hasMore: Swift.Bool,
+                            url: Swift.String
                         ) {
-                            self.value1 = value1
-                            self.value2 = value2
+                            self.object = object
+                            self.data = data
+                            self.hasMore = hasMore
+                            self.url = url
                         }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            self.value1 = try .init(from: decoder)
-                            self.value2 = try decoder.decodeFromSingleValueContainer()
-                        }
-                        public func encode(to encoder: any Swift.Encoder) throws {
-                            try encoder.encodeToSingleValueContainer(self.value2)
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case data
+                            case hasMore = "has_more"
+                            case url
                         }
                     }
                     /// - Remark: Generated from `#/paths/v1/auth/capabilities/GET/responses/200/content/application\/json`.

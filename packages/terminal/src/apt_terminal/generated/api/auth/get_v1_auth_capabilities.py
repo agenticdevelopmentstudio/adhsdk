@@ -13,11 +13,20 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     user_id: str | Unset = UNSET,
+    limit: int | Unset = 10,
+    starting_after: str | Unset = UNSET,
+    ending_before: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["user_id"] = user_id
+
+    params["limit"] = limit
+
+    params["starting_after"] = starting_after
+
+    params["ending_before"] = ending_before
 
     json_expand: list[str] | Unset = UNSET
     if not isinstance(expand, Unset):
@@ -75,6 +84,9 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     user_id: str | Unset = UNSET,
+    limit: int | Unset = 10,
+    starting_after: str | Unset = UNSET,
+    ending_before: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
 ) -> Response[GetV1AuthCapabilitiesResponse200 | StripeError]:
     """List all capability grants, or one user via ?userId (admin)
@@ -83,6 +95,9 @@ def sync_detailed(
 
     Args:
         user_id (str | Unset):
+        limit (int | Unset):  Default: 10.
+        starting_after (str | Unset):
+        ending_before (str | Unset):
         expand (list[str] | Unset):
 
     Raises:
@@ -95,6 +110,9 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         user_id=user_id,
+        limit=limit,
+        starting_after=starting_after,
+        ending_before=ending_before,
         expand=expand,
     )
 
@@ -109,6 +127,9 @@ def sync(
     *,
     client: AuthenticatedClient,
     user_id: str | Unset = UNSET,
+    limit: int | Unset = 10,
+    starting_after: str | Unset = UNSET,
+    ending_before: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
 ) -> GetV1AuthCapabilitiesResponse200 | StripeError | None:
     """List all capability grants, or one user via ?userId (admin)
@@ -117,6 +138,9 @@ def sync(
 
     Args:
         user_id (str | Unset):
+        limit (int | Unset):  Default: 10.
+        starting_after (str | Unset):
+        ending_before (str | Unset):
         expand (list[str] | Unset):
 
     Raises:
@@ -130,6 +154,9 @@ def sync(
     return sync_detailed(
         client=client,
         user_id=user_id,
+        limit=limit,
+        starting_after=starting_after,
+        ending_before=ending_before,
         expand=expand,
     ).parsed
 
@@ -138,6 +165,9 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     user_id: str | Unset = UNSET,
+    limit: int | Unset = 10,
+    starting_after: str | Unset = UNSET,
+    ending_before: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
 ) -> Response[GetV1AuthCapabilitiesResponse200 | StripeError]:
     """List all capability grants, or one user via ?userId (admin)
@@ -146,6 +176,9 @@ async def asyncio_detailed(
 
     Args:
         user_id (str | Unset):
+        limit (int | Unset):  Default: 10.
+        starting_after (str | Unset):
+        ending_before (str | Unset):
         expand (list[str] | Unset):
 
     Raises:
@@ -158,6 +191,9 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         user_id=user_id,
+        limit=limit,
+        starting_after=starting_after,
+        ending_before=ending_before,
         expand=expand,
     )
 
@@ -170,6 +206,9 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     user_id: str | Unset = UNSET,
+    limit: int | Unset = 10,
+    starting_after: str | Unset = UNSET,
+    ending_before: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
 ) -> GetV1AuthCapabilitiesResponse200 | StripeError | None:
     """List all capability grants, or one user via ?userId (admin)
@@ -178,6 +217,9 @@ async def asyncio(
 
     Args:
         user_id (str | Unset):
+        limit (int | Unset):  Default: 10.
+        starting_after (str | Unset):
+        ending_before (str | Unset):
         expand (list[str] | Unset):
 
     Raises:
@@ -192,6 +234,9 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             user_id=user_id,
+            limit=limit,
+            starting_after=starting_after,
+            ending_before=ending_before,
             expand=expand,
         )
     ).parsed

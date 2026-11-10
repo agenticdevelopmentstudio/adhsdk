@@ -29945,6 +29945,36 @@
             }
           },
           {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "expand[]",
             "in": "query",
             "required": false,
@@ -29965,27 +29995,33 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "object": {
-                          "type": "string",
-                          "const": "auth.capability"
-                        }
-                      }
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
                     },
-                    {
-                      "oneOf": [
-                        {
-                          "type": "array",
-                          "items": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
                             "type": "object",
                             "required": [
                               "user_id",
                               "capability"
                             ],
                             "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "auth.capability"
+                              },
                               "user_id": {
                                 "type": "string"
                               },
@@ -29993,17 +30029,20 @@
                                 "type": "string"
                               }
                             }
-                          }
-                        },
-                        {
-                          "type": "array",
-                          "items": {
+                          },
+                          {
                             "type": "string"
                           }
-                        }
-                      ]
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
                     }
-                  ]
+                  }
                 }
               }
             }

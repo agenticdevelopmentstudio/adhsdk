@@ -420,6 +420,9 @@ from .get_v1_audit_events_by_id_response_200 import GetV1AuditEventsByIdResponse
 from .get_v1_audit_events_response_200 import GetV1AuditEventsResponse200
 from .get_v1_audit_events_response_200_data_item import GetV1AuditEventsResponse200DataItem
 from .get_v1_auth_capabilities_response_200 import GetV1AuthCapabilitiesResponse200
+from .get_v1_auth_capabilities_response_200_data_item_type_0 import (
+    GetV1AuthCapabilitiesResponse200DataItemType0,
+)
 from .get_v1_auth_methods_by_method_response_200 import GetV1AuthMethodsByMethodResponse200
 from .get_v1_auth_methods_response_200 import GetV1AuthMethodsResponse200
 from .get_v1_auth_methods_response_200_data_item import GetV1AuthMethodsResponse200DataItem
@@ -3944,6 +3947,7 @@ __all__ = (
     "GetV1AuditEventsResponse200",
     "GetV1AuditEventsResponse200DataItem",
     "GetV1AuthCapabilitiesResponse200",
+    "GetV1AuthCapabilitiesResponse200DataItemType0",
     "GetV1AuthMethodsByMethodResponse200",
     "GetV1AuthMethodsResponse200",
     "GetV1AuthMethodsResponse200DataItem",
