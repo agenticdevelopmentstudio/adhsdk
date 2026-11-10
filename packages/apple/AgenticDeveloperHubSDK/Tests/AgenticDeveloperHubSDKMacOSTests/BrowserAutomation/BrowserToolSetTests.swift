@@ -498,5 +498,94 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertTrue(timeout.isError)
         XCTAssertEqual(timeout.content, "timed out waiting for text \"never\"")
     }
+
+    // MARK: Agent Privacy
+
+    /// Page B ("Beta", a "Two" link) is shown to models as "Gamma" and "Zwei".
+    private let privateWords = TextSubstitutionFilter(pairs: [
+        .init(alias: "Gamma", real: "Beta"), .init(alias: "Zwei", real: "Two")
+    ])
+
+    private func privateHandle(_ id: String, _ privacy: BrowserAgentPrivacy) -> BrowserPaneHandle {
+        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, agentPrivacy: privacy)
+    }
+
+    func testAgentPrivacyConcealsWhatAModelReads() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        let snap = await call("browser_snapshot", ["pane_id": "B"])
+        XCTAssertFalse(snap.isError, snap.content)
+        XCTAssertTrue(snap.content.contains("Zwei") && snap.content.contains("Gamma"), snap.content)
+        XCTAssertFalse(snap.content.contains("Two") || snap.content.contains("Beta"), snap.content)
+        let text = await call("browser_text", ["pane_id": "B"])
+        XCTAssertEqual(text.content.trimmingCharacters(in: .whitespacesAndNewlines), "Zwei")
+        let other = await call("browser_text", ["pane_id": "A"])
+        XCTAssertEqual(other.content.trimmingCharacters(in: .whitespacesAndNewlines), "One")
+    }
+
+    func testAgentPrivacyRevealsWhatAModelSends() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        let find = await call("browser_find", ["pane_id": "B", "text": "zwei"])
+        XCTAssertFalse(find.isError, find.content)
+        XCTAssertTrue(find.content.contains("e1") && find.content.contains("Zwei"), find.content)
+        XCTAssertFalse(find.content.contains("Two"), find.content)
+        let wait = await call("browser_wait_for", ["pane_id": "B", "text": "Zwei", "timeout": 1])
+        XCTAssertFalse(wait.isError, wait.content)
+    }
+
+    func testAgentPrivacyConcealsErrors() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        let reply = await call("browser_wait_for", ["pane_id": "B", "text": "never Zwei", "timeout": 0.2])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "timed out waiting for text \"never Zwei\"")
+    }
+
+    func testAgentPrivacyRefusesWhatCannotBeConcealed() async {
+        store.set(true, for: UserSettings.browserAutomationEvaluate)
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        for (name, args) in [
+            ("browser_screenshot", [:]), ("browser_click_at", ["x": 1, "y": 1]),
+            ("browser_evaluate", ["expression": "document.title"])
+        ] as [(String, [String: Any])] {
+            var withPane = args
+            withPane["pane_id"] = "B"
+            let reply = await call(name, withPane)
+            XCTAssertTrue(reply.isError, name)
+            XCTAssertEqual(reply.content, BrowserAgentPrivacy.refusal(for: name))
+        }
+        XCTAssertEqual(directory.revealed, [])
+        let open = await call("browser_evaluate", ["pane_id": "A", "expression": "document.title"])
+        XCTAssertFalse(open.isError, open.content)
+    }
+
+    func testUnreadableWordsCloseThePane() async {
+        directory.panes = [handle("A"), privateHandle("B", .unavailable)]
+        let reply = await call("browser_snapshot", ["pane_id": "B"])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, BrowserAgentPrivacy.unavailableRefusal)
+        XCTAssertEqual(directory.revealed, [])
+    }
+
+    func testListConcealsAPrivatePane() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        var reply = await call("browser_list")
+        var rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["title"] as? String }, ["Alpha", "Gamma"])
+        XCTAssertEqual(rows.map { $0["agent_privacy"] as? Bool }, [false, true])
+        directory.panes = [handle("A"), privateHandle("B", .unavailable)]
+        reply = await call("browser_list")
+        rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["title"] as? String }, ["Alpha", "(concealed)"])
+        XCTAssertEqual(rows.map { $0["url"] as? String }.last, "(concealed)")
+    }
+
+    func testAgentPrivacyIsReadFromThePaneAlone() {
+        let layered = LayeredSettingsStore(overrides: InMemorySettingsStorageProvider(), fallback: store)
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered))
+        store.set(true, for: UserSettings.browserAgentPrivacy)
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered), "a global value must not turn it on")
+        layered.set(true, for: UserSettings.browserAgentPrivacy)
+        XCTAssertTrue(BrowserSettings.isAgentPrivacyOn(in: layered))
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: nil))
+    }
 }
 // swiftlint:enable line_length force_try force_cast

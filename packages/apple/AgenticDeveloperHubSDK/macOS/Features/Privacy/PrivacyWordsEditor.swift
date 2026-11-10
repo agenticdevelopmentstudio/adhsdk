@@ -83,8 +83,9 @@ public final class PrivacyWordsEditor: NSObject {
 
         let explanation = NSTextField(wrappingLabelWithString:
             "A private terminal shows each real word as the word it is shown as, "
-            + "and types the real word whenever you type the other. The words are "
-            + "kept in the keychain and nowhere else.")
+            + "and types the real word whenever you type the other. A browser pane "
+            + "with Agent Privacy on shows models the same words in its place. The "
+            + "words are kept in the keychain and nowhere else.")
         explanation.textColor = .secondaryLabelColor
         explanation.translatesAutoresizingMaskIntoConstraints = false
 

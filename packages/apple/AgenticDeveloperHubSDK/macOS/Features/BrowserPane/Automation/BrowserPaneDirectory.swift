@@ -19,15 +19,20 @@ public struct BrowserPaneHandle {
     /// agent too (`agent_while_paused == .paused`). A paused pane whose
     /// settings let the agent keep driving reads `false` here.
     public let isPausedForAgent: Bool
+    /// The pane's Agent Privacy, with the words as they stood when the handle
+    /// was made — fresh for each call once it is dequeued, like `access`.
+    public let agentPrivacy: BrowserAgentPrivacy
 
     public init(
         id: String, project: String, tab: String, automation: BrowserAutomation,
         engine: BrowserEngineKind = .safari,
-        access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false
+        access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false,
+        agentPrivacy: BrowserAgentPrivacy = .off
     ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
         self.engine = engine
         self.access = access; self.isPausedForAgent = isPausedForAgent
+        self.agentPrivacy = agentPrivacy
     }
 
     public var title: String { automation.currentTitle }

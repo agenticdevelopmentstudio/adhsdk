@@ -73,7 +73,8 @@ extension ComposableTabsViewRegistry {
         preferredAxis: ComposableTabsAxis,
         homeURL: URL = WebBrowserPaneViewController.blankPage,
         settings: SettingsStore = UserSettings.shared,
-        history: BrowserHistoryStore? = nil
+        history: BrowserHistoryStore? = nil,
+        privacyVault: PrivacyWordsVault? = nil
     ) {
         ChromiumLauncher.registerJarStores()
         register(
@@ -93,6 +94,8 @@ extension ComposableTabsViewRegistry {
                 homeURL: homeURL,
                 context: BrowserPaneContext(paneContext: context)
             )
+            // The private terminals' words, for the pane's Agent Privacy.
+            pane.privacyVault = privacyVault
             #if DEBUG
             pane.onShowBrowserLog = { BrowserLogPaneViewController.show(for: $0) }
             #endif

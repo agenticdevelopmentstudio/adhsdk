@@ -158,6 +158,29 @@ open class WebBrowserPaneViewController: NSViewController {
     public var isPausedForAgent: Bool {
         isEventsPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
     }
+    /// The privacy words, shared with the private terminals. The host sets
+    /// it; a pane without one that turns Agent Privacy on is closed to models
+    /// (`BrowserAgentPrivacy.unavailable`) rather than left unconcealed.
+    public var privacyVault: PrivacyWordsVault?
+    /// Whether this pane's Agent Privacy switch is on. Per pane only: read
+    /// from the pane's own override, never from the global settings.
+    public var isAgentPrivacyOn: Bool { BrowserSettings.isAgentPrivacyOn(in: paneSettings) }
+
+    /// What Agent Privacy means for a model tool call on this pane right now.
+    /// Reads the words without prompting; words that cannot be read that way
+    /// make the pane `unavailable`, which the tools refuse.
+    public func agentPrivacy() -> BrowserAgentPrivacy {
+        guard isAgentPrivacyOn else { return .off }
+        guard let privacyVault else { return .unavailable }
+        do {
+            guard try privacyVault.load(), let filter = privacyVault.filter else { return .unavailable }
+            return .enabled(filter)
+        } catch {
+            logger.error(
+                "Agent Privacy could not read the privacy words: \(error.localizedDescription, privacy: .public)")
+            return .unavailable
+        }
+    }
 
     /// What the page in front wrote to `console.*` since its last
     /// navigation. Each tab's engine keeps its own, so one tab's messages are
@@ -495,6 +518,9 @@ open class WebBrowserPaneViewController: NSViewController {
                 self.refreshActivationShield()
                 if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
+                if key == UserSettings.browserAgentPrivacy.name {
+                    (self.parent as? PaneViewController)?.refreshAccessories()
+                }
             }
             .store(in: &cancellables)
         // A pane overriding the cookie setting hides the shared value's
@@ -1544,6 +1570,25 @@ extension WebBrowserPaneViewController: PaneIconProviding {
 
     /// The browser the pane is: Safari's icon or Chrome's.
     public var paneIcon: NSImage? { engineKind.icon }
+}
+
+extension WebBrowserPaneViewController: PaneAccessoryProviding {
+
+    /// The Agent Privacy indicator beside the gear, while the switch is on:
+    /// the one sign on the pane itself that models see it through the
+    /// privacy words. Nothing at all while it is off.
+    public func makePaneAccessoryViews() -> [NSView] {
+        guard isAgentPrivacyOn else { return [] }
+        let title = "Agent Privacy is on: models see this pane through the privacy words"
+        let image = NSImage(systemSymbolName: "eye.slash", accessibilityDescription: title) ?? NSImage()
+        let indicator = NSImageView(
+            image: image.withSymbolConfiguration(.init(pointSize: 12, weight: .regular)) ?? image)
+        indicator.contentTintColor = .secondaryLabelColor
+        indicator.toolTip = title
+        indicator.setAccessibilityLabel(title)
+        indicator.accessibilityID("browser.agentPrivacy.indicator")
+        return [indicator]
+    }
 }
 
 // MARK: - Pause Events

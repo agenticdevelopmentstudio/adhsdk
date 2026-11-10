@@ -141,6 +141,21 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             return url
         }
 
+        /// These arguments as the page should receive them: what a model
+        /// types, fills, selects, finds, waits for or navigates to may carry
+        /// the stand-ins it was shown, so a pane with Agent Privacy on swaps
+        /// them back to the real words first.
+        func revealing(_ privacy: BrowserAgentPrivacy) -> Arguments {
+            guard privacy.isOn else { return self }
+            var revealed = values
+            for key in Self.revealedKeys {
+                if let text = values[key] as? String { revealed[key] = privacy.revealing(text) }
+            }
+            return Arguments(tool: tool, values: revealed)
+        }
+
+        static let revealedKeys = ["text", "value", "url", "scope"]
+
         /// The optional `ref` with its `generation`: a ref without a generation is refused,
         /// because Task 2 would otherwise ignore the ref and act on the whole page.
         func optionalRefAndGeneration() throws -> (ref: String?, generation: Int?) {
@@ -191,13 +206,18 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// from before the queue: the user may make the pane read only, pause it,
     /// hide it or close it while the call waits. `browserPanes()` is the
     /// lookup because it is the plain list of what the agent may see.
+    ///
+    /// Returns the pane's Agent Privacy as it stands now, so the call is
+    /// concealed with the words of the moment it runs.
     @MainActor
-    private func requireSwitches(for name: String, paneID: String) throws {
+    @discardableResult
+    private func requireSwitches(for name: String, paneID: String) throws -> BrowserAgentPrivacy {
         try requireSwitches(for: name)
         guard let pane = directory.browserPanes().first(where: { $0.id == paneID }) else {
             throw ToolError(sentence: "pane \(paneID) was closed; call browser_list")
         }
         try requireAccess(for: name, on: pane)
+        return pane.agentPrivacy
     }
 
     /// The pane's Agent access and pause state against the tool: a pane
@@ -212,6 +232,34 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         if pane.isPausedForAgent { throw ToolError(sentence: Self.pausedRefusal) }
         if pane.access == .readOnly, !Self.readToolNames.contains(name) {
             throw ToolError(sentence: Self.readOnlyRefusal)
+        }
+        if pane.agentPrivacy == .unavailable { throw ToolError(sentence: BrowserAgentPrivacy.unavailableRefusal) }
+        if pane.agentPrivacy.isOn, BrowserAgentPrivacy.refusedToolNames.contains(name) {
+            throw ToolError(sentence: BrowserAgentPrivacy.refusal(for: name))
+        }
+    }
+
+    /// Runs `body` with `args` revealed, and conceals what it returns or
+    /// throws, when the pane's Agent Privacy is on. An error's sentence can
+    /// quote the page (a ref's name, a text not found), so it is concealed as
+    /// carefully as a reply. A cancellation passes through as it is: it says
+    /// nothing about the page, and the caller must see it as one.
+    @MainActor
+    private func concealed(
+        _ name: String, _ args: Arguments, _ privacy: BrowserAgentPrivacy,
+        _ body: (Arguments) async throws -> String
+    ) async throws -> String {
+        guard privacy.isOn else { return try await body(args) }
+        do {
+            return privacy.concealing(try await body(args.revealing(privacy)))
+        } catch let error as CancellationError {
+            throw error
+        } catch let error as BrowserAutomationError {
+            throw ToolError(sentence: privacy.concealing(error.description))
+        } catch let error as ToolError {
+            throw ToolError(sentence: privacy.concealing(error.sentence))
+        } catch {
+            throw ToolError(sentence: privacy.concealing("\(name) failed: \(error.localizedDescription)"))
         }
     }
 
@@ -251,9 +299,13 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             }
             directory.revealBrowserPane(id: pane.id)
             return try await pane.automation.drive {
-                try self.requireSwitches(for: name, paneID: pane.id)
-                let delta = try await pane.automation.navigate(to: url)
-                return "opened pane \(pane.id)\n" + delta.rendered()
+                // A new pane starts with Agent Privacy off, but the check is
+                // the same as every other call's, so it can never be skipped.
+                let privacy = try self.requireSwitches(for: name, paneID: pane.id)
+                return try await self.concealed(name, args, privacy) { _ in
+                    let delta = try await pane.automation.navigate(to: url)
+                    return "opened pane \(pane.id)\n" + delta.rendered()
+                }
             }
         }
         let pane = try resolvePane(args, caller: caller)
@@ -265,12 +317,14 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         directory.revealBrowserPane(id: pane.id)
         let automation = pane.automation
         return try await automation.drive {
-            try self.requireSwitches(for: name, paneID: pane.id)
-            if let reply = try await self.dispatchNavigation(name, args, automation) { return reply }
-            if let reply = try await self.dispatchReading(name, args, automation,
-                                                          mayScroll: pane.access != .readOnly) { return reply }
-            if let reply = try await self.dispatchActions(name, args, automation) { return reply }
-            throw ToolError(sentence: "unknown tool \(name)")
+            let privacy = try self.requireSwitches(for: name, paneID: pane.id)
+            return try await self.concealed(name, args, privacy) { args in
+                if let reply = try await self.dispatchNavigation(name, args, automation) { return reply }
+                if let reply = try await self.dispatchReading(name, args, automation,
+                                                              mayScroll: pane.access != .readOnly) { return reply }
+                if let reply = try await self.dispatchActions(name, args, automation) { return reply }
+                throw ToolError(sentence: "unknown tool \(name)")
+            }
         }
     }
 
@@ -401,11 +455,15 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let panes = directory.browserPanes()
         if panes.isEmpty { return "no browser pane is open; call browser_open" }
         let defaultID = (try? resolvePane(Arguments(tool: "browser_list", values: [:]), caller: caller))?.id
+        // A private pane's title and address are the page's words, so they
+        // are concealed here as everywhere else; one whose words cannot be
+        // read shows neither.
         let rows: [[String: Any]] = panes.map { pane in
             [
-                "id": pane.id, "title": pane.title, "url": pane.url, "project": pane.project,
+                "id": pane.id, "title": pane.agentPrivacy.concealing(pane.title),
+                "url": pane.agentPrivacy.concealing(pane.url), "project": pane.project,
                 "tab": pane.tab, "engine": pane.engine.rawValue, "is_default": pane.id == defaultID,
-                "access": Self.accessName(pane.access)
+                "access": Self.accessName(pane.access), "agent_privacy": pane.agentPrivacy.isOn
             ]
         }
         let data = (try? JSONSerialization.data(withJSONObject: rows, options: [.sortedKeys])) ?? Data()

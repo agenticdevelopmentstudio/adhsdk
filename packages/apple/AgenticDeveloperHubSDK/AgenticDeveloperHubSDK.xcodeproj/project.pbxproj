@@ -1021,6 +1021,7 @@
 		3AA374B8C8D0B991FBC69C84 /* ModelFitPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500D90C79A87B01B394A25A /* ModelFitPolicy.swift */; };
 		3ACDC9DC82E86EE041E60BA4 /* StubSignInSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6801E7CF77903C335EEB8591 /* StubSignInSession.swift */; };
 		3AD14306A9B22422723C64ED /* HubScriptCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0620753AB7337024F73174DC /* HubScriptCommands.swift */; };
+		3AD1F51CF1DE3E337E335D33 /* BrowserAgentPrivacy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E8ECA46B7596C4F76BE55E /* BrowserAgentPrivacy.swift */; };
 		3AFC2FA4A1E46ABF8BDD6EE1 /* GitProcessBottleneckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCD69671F525F3E65FE5F4 /* GitProcessBottleneckTests.swift */; };
 		3B11DEF2425E20741FA19666 /* TestDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F79E971CC44B2BFCAE973D /* TestDefaults.swift */; };
 		3B1C67008EBDB0E7D11AFF7F /* GmailSettingsAccountErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88291AE9DCD4CBFF726D455F /* GmailSettingsAccountErrorTests.swift */; };
@@ -2527,6 +2528,7 @@
 		A255EBB963BDA0DA09312038 /* MenuSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 625192731950C30281B8AED1 /* MenuSection.swift */; };
 		A2877B6CE0028AFBF7F222FE /* ConversationsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7822EBF134255BDC8FC4694C /* ConversationsCoordinator.swift */; };
 		A299F38D452AB0AA71BEB49F /* ObservingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F13AC8C075C88C50AF098A /* ObservingHook.swift */; };
+		A2E7ABE7DB3A8FCEB75DFE36 /* AgentPrivacySettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B1A03A0FDC44EF340D322A /* AgentPrivacySettingsPanel.swift */; };
 		A2F1F8219B875E2F81EDBA58 /* BoundedBodyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9A8DF6DC27AEC0C81C7175 /* BoundedBodyLoader.swift */; };
 		A30A76F20CCE0D18E8D7C63F /* AgenticDeveloperHubSDKHTDV-macOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 93616F9A2929BE2539F9870B /* AgenticDeveloperHubSDKHTDV-macOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A30B81E02656F2887E93BD65 /* ExtensionQuickPickModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34891B84D2DAEFEE43E7531 /* ExtensionQuickPickModelTests.swift */; };
@@ -8165,8 +8167,10 @@
 		696B3DDE74F15453FC30B9BA /* AgenticDeveloperHubSDKChromium.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AgenticDeveloperHubSDKChromium.h; sourceTree = "<group>"; };
 		6978BC8B79775F07669FD0BF /* CustomersDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomersDataSource.swift; sourceTree = "<group>"; };
 		69963BCD60057576824A5501 /* LogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewController.swift; sourceTree = "<group>"; };
+		69B1A03A0FDC44EF340D322A /* AgentPrivacySettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPrivacySettingsPanel.swift; sourceTree = "<group>"; };
 		69CFFFD470E5ACEFE143A5ED /* MultiTabbedHostedItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiTabbedHostedItemTests.swift; sourceTree = "<group>"; };
 		69D8C462E9F37D7613F4C89E /* ProjectDrawerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDrawerTests.swift; sourceTree = "<group>"; };
+		69E8ECA46B7596C4F76BE55E /* BrowserAgentPrivacy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserAgentPrivacy.swift; sourceTree = "<group>"; };
 		69EC207BF3D4A5F77AC969C6 /* PartnerJobDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerJobDefaults.swift; sourceTree = "<group>"; };
 		6A0EBA61976C2532AB4EA706 /* MonitorReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorReading.swift; sourceTree = "<group>"; };
 		6A260DF772F48E5B72874C99 /* HelpDrawerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpDrawerController.swift; sourceTree = "<group>"; };
@@ -12490,6 +12494,7 @@
 		567B4E056CE6B2B896758F1E /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				69B1A03A0FDC44EF340D322A /* AgentPrivacySettingsPanel.swift */,
 				EA85DDAEA29E116C277E2EED /* AutomationSettingsPanelViewController.swift */,
 				9C00D9F941C203E1C6C16857 /* BrowserEngineTopicPanels.swift */,
 				CA1E774098CA0141B550F33B /* BrowserPaneSettingsSheetController.swift */,
@@ -12972,6 +12977,7 @@
 		6B4EB7406D1157679E3DD4F8 /* Automation */ = {
 			isa = PBXGroup;
 			children = (
+				69E8ECA46B7596C4F76BE55E /* BrowserAgentPrivacy.swift */,
 				5A1AF779BB11C19F20B46140 /* BrowserAutomation.swift */,
 				E49ACF9BB50E808A6D822AC1 /* BrowserConsoleLog.swift */,
 				877EFFE2E9A9FAFFEECB360A /* BrowserDrivenBadge.swift */,
@@ -22291,6 +22297,7 @@
 				8A916CF00A5C56496084684F /* ActiveProjectsViewController.swift in Sources */,
 				A3C888DEC42CBFB5C56E5EDC /* AddRemoveFooterView.swift in Sources */,
 				F252DE46700270221CF322E5 /* AdkdStopEventDetector.swift in Sources */,
+				A2E7ABE7DB3A8FCEB75DFE36 /* AgentPrivacySettingsPanel.swift in Sources */,
 				154368A49519FC1501FF4C4A /* AnimatedResizeParticipant.swift in Sources */,
 				C7BCD3A38728CF78DE45768D /* AppCommand.swift in Sources */,
 				4DDBB29C8E4132527B0DAB58 /* AppFeature.swift in Sources */,
@@ -22315,6 +22322,7 @@
 				C2701BDF3B9AB51E06441766 /* BreadcrumbPopoverViewController.swift in Sources */,
 				B482399618CE4B5E6F5D882D /* BreadcrumbView.swift in Sources */,
 				0423CAFD25DDC9AAEDEBA1E7 /* BrowserActivationShield.swift in Sources */,
+				3AD1F51CF1DE3E337E335D33 /* BrowserAgentPrivacy.swift in Sources */,
 				181F453A3760D347D031374A /* BrowserAutomation.swift in Sources */,
 				07897816E6D8A275BC3FA4E2 /* BrowserConsoleLog.swift in Sources */,
 				95B5A9FC1E982095D9B1A6F6 /* BrowserContentRules.swift in Sources */,

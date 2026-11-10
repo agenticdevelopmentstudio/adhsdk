@@ -257,6 +257,9 @@ extension UserSettings {
     )
     public static let browserPrivacyConsoleCapture = UserSetting<Bool>("browser.privacy.console_capture", default: true)
 
+    // Agent Privacy. Per pane only: see `BrowserSettings.paneOnlyKeyNames`.
+    public static let browserAgentPrivacy = UserSetting<Bool>("browser.agent_privacy.enabled", default: false)
+
     // Developer
     public static let browserWebInspectorEnabled = UserSetting<Bool>("browser.web_inspector_enabled", default: false)
 
@@ -351,6 +354,22 @@ public enum BrowserSettings {
         UserSettings.browserChromeHardwareAcceleration.name,
         UserSettings.browserChromeExtensionUpdateInterval.name
     ]
+
+    /// Set only on one pane, never globally: the pane reads it from its own
+    /// override and nowhere else, so a pane without one is off whatever the
+    /// global settings hold. Not in `allKeys` — the global reset has nothing
+    /// of it to forget — and kept by the pane's "Use Global Settings", since
+    /// there is no global value to fall back to.
+    public static let paneOnlyKeyNames: Set<String> = [
+        UserSettings.browserAgentPrivacy.name
+    ]
+
+    /// Whether Agent Privacy is on for the pane whose settings are `paneSettings`.
+    /// `nil` (a pane with no settings layer of its own) is off.
+    public static func isAgentPrivacyOn(in paneSettings: LayeredSettingsStore?) -> Bool {
+        guard let paneSettings, paneSettings.hasOverride(UserSettings.browserAgentPrivacy) else { return false }
+        return paneSettings.get(UserSettings.browserAgentPrivacy)
+    }
 
     /// What `store` holds for every construction-time key, each described as
     /// text so keys of different types compare in one dictionary. A pane
