@@ -257,8 +257,9 @@ extension DaemonDatabase {
     /// The turns stored after `afterId` (`turns.id`), in id order, at most
     /// `limit`: each one's id, and its time when it is a Claude turn (nil for
     /// another provider's, so a cursor still moves past it). A new turn gets a
-    /// larger id than every turn held, so walking ids from a saved cursor finds
-    /// the turns that arrived since, whatever day they belong to.
+    /// larger id than every turn ever stored (`turns` is AUTOINCREMENT), so
+    /// walking ids from a saved cursor finds the turns that arrived since,
+    /// whatever day they belong to.
     ///
     /// Each arrival carries the turn's own columns, so a caller can add it to a
     /// summary whose day no longer holds the turns to recount.
@@ -299,6 +300,19 @@ extension DaemonDatabase {
     public func turnsMaxId(deadline: Duration? = nil) throws -> Int64 {
         try withEventReads(0, deadline: deadline) { conn in
             try Int64.fetchOne(conn, sql: "SELECT COALESCE(MAX(id), 0) FROM turns") ?? 0
+        }
+    }
+
+    /// The largest `turns.id` ever handed out, every provider; 0 when none
+    /// was. `turns` is AUTOINCREMENT, so this stays put when the trim deletes
+    /// the newest-id rows, and every turn stored later gets a larger id: a
+    /// cursor at or below it never skips a turn written after it was taken.
+    public func turnsHighWaterId(deadline: Duration? = nil) throws -> Int64 {
+        try withEventReads(0, deadline: deadline) { conn in
+            try Int64.fetchOne(conn, sql: """
+                SELECT MAX(COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'turns'), 0),
+                           COALESCE((SELECT MAX(id) FROM turns), 0))
+                """) ?? 0
         }
     }
 
