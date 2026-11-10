@@ -1,7 +1,7 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import Foundation
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The Claude ingest sources against temp directories and a real spool: drop-directory
 /// hook files, the HTTP/socket capture record, and transcript byte cursors.

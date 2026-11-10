@@ -1,9 +1,9 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import CryptoKit
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The Claude transcript adapter against one real-shaped line per kind
 /// (`Fixtures/transcripts/*.jsonl`, one line per file; the test assigns each its

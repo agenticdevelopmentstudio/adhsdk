@@ -2,8 +2,8 @@ import XCTest
 import Foundation
 import GRDB
 import os
-import AgenticToolkitCore
-@testable import AgenticToolkitDatabase
+import AgenticDeveloperHubSDKCore
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// `TrimService`: the rollup guard on the cutoff, the snapshot trim, the main
 /// vacuum gate, and what a pass never touches.

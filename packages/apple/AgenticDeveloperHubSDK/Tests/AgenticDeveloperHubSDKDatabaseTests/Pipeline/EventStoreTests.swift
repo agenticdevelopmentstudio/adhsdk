@@ -1,7 +1,7 @@
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 final class EventStoreTests: XCTestCase {
 

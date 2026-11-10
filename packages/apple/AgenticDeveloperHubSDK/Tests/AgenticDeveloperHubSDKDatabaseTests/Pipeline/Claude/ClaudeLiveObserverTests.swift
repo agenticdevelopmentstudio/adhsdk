@@ -1,8 +1,8 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// `ClaudeLiveObserver` publishes each stored hook event once, as `EventIngestor`
 /// does, with the event store's row id, and runs the shared enrichment for it.

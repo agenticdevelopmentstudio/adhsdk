@@ -1,8 +1,8 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import GRDB
 import XCTest
 import Foundation
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The insights and daily-rollup reads over the event store: events go in
 /// through the Claude pipeline and come back counted per UTC day, hook type,
