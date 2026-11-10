@@ -1,5 +1,6 @@
 import AIPluginKit
 import Foundation
+import os
 
 /// The host-agnostic Gmail service a daemon hosts: answers `MailRequest`s, runs the poll
 /// scheduler, signs accounts in and writes label changes back to Gmail.
@@ -35,6 +36,11 @@ public actor MailIntegrationService {
     /// Counts provider removals, so a sign-in that was under way when Gmail was removed can
     /// tell, after each of its awaits, that the client it signed in with is gone.
     private var providerGeneration = 0
+    /// Provider removals in progress. A sign-in that starts while one awaits would capture the
+    /// generation it already bumped, and pass every check, so none starts.
+    private var providerRemovals = 0
+    private let tokenEndpoint: any GoogleTokenEndpoint
+    private static let logger = Logger(subsystem: "com.agenticdeveloperhub.integrations", category: "Mail")
 
     public init(
         store: IntegrationsStore, secrets: any SecretStoring, signIn: any GoogleSignInFlow = AppAuthGoogleSignIn(),
@@ -46,6 +52,7 @@ public actor MailIntegrationService {
         self.store = store
         self.secrets = secrets
         self.signInFlow = signIn
+        self.tokenEndpoint = tokenEndpoint
         self.tokens = GoogleTokenProvider(secrets: secrets, endpoint: tokenEndpoint, now: now)
         self.makeAPI = makeAPI
         self.now = now
@@ -139,6 +146,9 @@ public actor MailIntegrationService {
         // A sign-in under way belongs to the client being removed: stop its browser flow, and
         // let one already past it see the change before it saves a credential.
         providerGeneration += 1
+        // Until the client is deleted, a new sign-in would still find it and sign in with it.
+        providerRemovals += 1
+        defer { providerRemovals -= 1 }
         pendingSignIn?.cancel()
         pendingSignIn = nil
         for connection in try store.connections(provider: Self.provider) {
@@ -171,11 +181,16 @@ public actor MailIntegrationService {
     // MARK: - Accounts
 
     private func signIn() async throws -> MailAccount {
+        // Gmail is being removed: its client is about to go, along with every account.
+        guard providerRemovals == 0 else { throw IntegrationError.notConfigured }
         let config = try oauthConfig()
         let generation = providerGeneration
-        // Gmail was removed while this sign-in waited: the account must not come back.
-        func ensureProviderKept() throws {
-            if providerGeneration != generation { throw IntegrationError.signInCancelled }
+        // Gmail was removed while this sign-in waited: the account must not come back, and the
+        // grant Google has just issued must not outlive it either.
+        func ensureProviderKept(_ credential: GoogleCredential) async throws {
+            guard providerGeneration != generation else { return }
+            await revoke(credential)
+            throw IntegrationError.signInCancelled
         }
         // A sign-in still pending belongs to a client that gave up on it: a panel that was
         // closed, or an app that quit or crashed while the browser was open. Nothing cancels
@@ -202,10 +217,10 @@ public actor MailIntegrationService {
             if error is CancellationError || task.isCancelled { throw IntegrationError.signInCancelled }
             throw error
         }
-        try ensureProviderKept()
+        try await ensureProviderKept(credential)
         let accessToken = credential.accessToken
         let email = try await makeAPI({ accessToken }).profile().emailAddress.lowercased()
-        try ensureProviderKept()
+        try await ensureProviderKept(credential)
 
         let id = try existingConnection(email: email)?.id ?? Self.newId()
         // The credential is saved first, so a failed Keychain write leaves no active connection
@@ -228,6 +243,16 @@ public actor MailIntegrationService {
         let saved = try connection(id)
         startSync(connectionId: saved.id)
         return Self.account(saved)
+    }
+
+    /// Best effort, like `GoogleTokenProvider.revoke(connectionId:)`, for a credential that was
+    /// never stored: asks Google to revoke its refresh token, logging a failure.
+    private func revoke(_ credential: GoogleCredential) async {
+        do {
+            try await tokenEndpoint.revoke(token: credential.refreshToken)
+        } catch {
+            Self.logger.error("Revoking a discarded sign-in at Google failed: \(error.localizedDescription)")
+        }
     }
 
     private func existingConnection(email: String) throws -> IntegrationConnection? {
