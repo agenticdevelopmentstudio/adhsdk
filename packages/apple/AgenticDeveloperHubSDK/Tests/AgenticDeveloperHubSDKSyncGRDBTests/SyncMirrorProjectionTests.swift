@@ -78,7 +78,7 @@ struct SyncMirrorProjectionTests {
         let database = try BoundedDatabase(path: ":memory:")
         return GRDBSyncStore(
             database: database,
-            projection: projected ? TestProjection() : nil)
+            projections: projected ? [TestProjection()] : [])
     }
 
     private let resources = [

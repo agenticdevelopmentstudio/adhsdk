@@ -22,7 +22,7 @@ public struct GRDBSyncStoreStatus: Codable, Sendable {
 /// `@unchecked Sendable` because `SyncStore` is a `Sendable` protocol and this
 /// type is shared across tasks. The property it asserts is established, not
 /// assumed: every stored property is a `let`, and each is either itself
-/// `Sendable` (`DispatchQueue`, `Set<String>`, the projection) or serialises
+/// `Sendable` (`DispatchQueue`, `Set<String>`, the projections) or serialises
 /// its own concurrent use (`BoundedDatabase`'s WAL pool). It used to hold two
 /// more — a shared `JSONEncoder` and `JSONDecoder`. Neither publishes any
 /// thread-safety guarantee, and both were reachable from `read`, which runs on
@@ -37,26 +37,44 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// up front with `SyncStoreFailure.pullOnlyResource` (twin of
     /// `InMemorySyncStore.pullOnlyResources`).
     private let pullOnlyResources: Set<String>
-    /// Optional typed storage for a subset of resources. `nil` — the default —
-    /// is the historical all-JSON behaviour.
-    private let mirrorProjection: (any SyncMirrorProjection)?
+    /// Typed storage for a subset of resources, each claimed by exactly one
+    /// projection. Empty — the default — is the historical all-JSON behaviour.
+    /// The store routes to them itself rather than through a forwarding
+    /// projection: a forwarder compiles any requirement later added to
+    /// `SyncMirrorProjection` with an extension default as that default, so the
+    /// new call would silently never reach the projections behind it.
+    private let mirrorProjections: [any SyncMirrorProjection]
 
     public init(
         database: BoundedDatabase,
         pullOnlyResources: Set<String> = [],
-        projection: (any SyncMirrorProjection)? = nil
+        projections: [any SyncMirrorProjection] = []
     ) {
+        var claimed: Set<String> = []
+        for projection in projections {
+            precondition(claimed.isDisjoint(with: projection.resources),
+                         "two mirror projections claim \(claimed.intersection(projection.resources).sorted())")
+            claimed.formUnion(projection.resources)
+        }
         self.boundedDatabase = database
         self.pullOnlyResources = pullOnlyResources
-        self.mirrorProjection = projection
+        self.mirrorProjections = projections
+    }
+
+    /// A store with one projection.
+    public convenience init(
+        database: BoundedDatabase,
+        pullOnlyResources: Set<String> = [],
+        projection: any SyncMirrorProjection
+    ) {
+        self.init(database: database, pullOnlyResources: pullOnlyResources, projections: [projection])
     }
 
     public var database: BoundedDatabase { boundedDatabase }
 
-    /// The projection, but only when it claims this resource.
+    /// The projection that claims this resource, if any.
     private func projection(for resource: String) -> (any SyncMirrorProjection)? {
-        guard let mirrorProjection, mirrorProjection.resources.contains(resource) else { return nil }
-        return mirrorProjection
+        mirrorProjections.first { $0.resources.contains(resource) }
     }
 
     /// Resource strings are interpolated directly into SQL as identifiers
@@ -90,17 +108,17 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             if isRegistered { registered.append(resource) }
         }
 
-        // The projection is handed every one of its resources in this purge in
-        // ONE call, not one call per resource. A projection whose tables have
-        // foreign keys between *each other* can only distinguish a whole-family
-        // purge (legal — the children go too) from a partial one that would
-        // orphan rows (not legal) by seeing the whole batch; called a singleton
-        // at a time it would see what looks like a partial purge every time,
-        // including during `resetForResync`, where the rest of the family is
-        // emptied by the very next call.
-        let projected = registered.filter { projection(for: $0) != nil }
-        if let mirrorProjection, !projected.isEmpty {
-            try mirrorProjection.truncate(resources: projected, in: conn)
+        // Each projection is handed every one of its resources in this purge in
+        // ONE call, not one call per resource, and only its own. A projection
+        // whose tables have foreign keys between *each other* can only
+        // distinguish a whole-family purge (legal — the children go too) from a
+        // partial one that would orphan rows (not legal) by seeing the whole
+        // batch; called a singleton at a time it would see what looks like a
+        // partial purge every time, including during `resetForResync`, where
+        // the rest of the family is emptied by the very next call.
+        for mirrorProjection in mirrorProjections {
+            let own = registered.filter { mirrorProjection.resources.contains($0) }
+            if !own.isEmpty { try mirrorProjection.truncate(resources: own, in: conn) }
         }
         for resource in registered where projection(for: resource) == nil {
             try conn.execute(sql: "DELETE FROM \"\(try Self.mirrorTableName(for: resource))\"")
@@ -152,7 +170,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// its own tables in a single transaction.
     public func prepare(resources: [SyncResource], in conn: Database) throws {
         try conn.execute(sql: Self.bookkeepingSchema)
-        try mirrorProjection?.createTables(in: conn)
+        for mirrorProjection in mirrorProjections { try mirrorProjection.createTables(in: conn) }
         for resource in resources {
             if projection(for: resource.resource) == nil {
                 let table = try Self.mirrorTableName(for: resource.resource)
@@ -631,7 +649,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 try store.deleteMirrorRows(for: tables, in: conn)
                 try conn.execute(sql: "DELETE FROM _sync_state")
                 try conn.execute(sql: "DELETE FROM _sync_outbox")
-                try store.mirrorProjection?.purgeIdentityState(in: conn)
+                for projection in store.mirrorProjections { try projection.purgeIdentityState(in: conn) }
             }
         }
     }
