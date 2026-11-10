@@ -1144,6 +1144,7 @@
 		46BA217519C4D09CDBAA90E5 /* MarkdownSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = A51BEE98C2CC76AB2501ABD7 /* MarkdownSchema.swift */; };
 		46C20B42C7FA3C12A585198F /* PaneStateSettingsStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916400A3DAF7F22F6E5526D4 /* PaneStateSettingsStorageProvider.swift */; };
 		46D65A15A2EC6605DCA71287 /* AgenticDeveloperHubSDKHTDV-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93783CB43D754915C131FAF8 /* AgenticDeveloperHubSDKHTDV-iOS.framework */; };
+		46F5C7E1D9FC406DEDEAAB11 /* CompositeMirrorProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70E7C4C97540701BD5213BFC /* CompositeMirrorProjectionTests.swift */; };
 		46F62C9B81AB1F4833D60FF8 /* AISummariesPluginControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 993F4E5A109E3F770A4F8DE8 /* AISummariesPluginControls.swift */; };
 		470983F5D4E6C3198D992EAA /* NoteStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53270E3C76E4AACD4DBE0085 /* NoteStorage.swift */; };
 		472A4C1B43982EC1EA35B850 /* StoredSettingsStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85D5B72769C8298286A5038 /* StoredSettingsStorageProvider.swift */; };
@@ -1227,6 +1228,7 @@
 		4C8E81076424EFA2EF86956E /* ContextEventKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A450751EC21F1E46EFF0172 /* ContextEventKind.swift */; };
 		4C9AC2F5686726A8860EE18C /* AgenticDeveloperHubSDKDatabase.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 978D961A54851BA0015BC41C /* AgenticDeveloperHubSDKDatabase.framework */; };
 		4C9B67202344C53D5A765216 /* TTYResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70FF60B9D4A5C2FD2CBEB5FB /* TTYResolver.swift */; };
+		4C9CEA417F28503812B3FF4C /* CompositeMirrorProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15E0E5A3C5BDDB2A1D19D1F /* CompositeMirrorProjection.swift */; };
 		4CCE454BFE570E9F96C8852D /* LaunchManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC341EA8A11A419FEC6CC9B /* LaunchManagerTests.swift */; };
 		4CD63EEEB3C809924AF323B3 /* VSCodeThemeImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76CE8836B63201CD0A29794D /* VSCodeThemeImporter.swift */; };
 		4CD917D976D6F31EE273C4EE /* SingleWindowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4042D6A4D451FC24B36798 /* SingleWindowControllerTests.swift */; };
@@ -7743,6 +7745,7 @@
 		70C1A12F87D8236F5EB2522F /* MainThreadCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThreadCommands.swift; sourceTree = "<group>"; };
 		70D303EFB1389D81F7407FE9 /* SigninAppsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigninAppsAdapter.swift; sourceTree = "<group>"; };
 		70E50421FA92E0D1EA672FCB /* ExtensionTreeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionTreeViewController.swift; sourceTree = "<group>"; };
+		70E7C4C97540701BD5213BFC /* CompositeMirrorProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeMirrorProjectionTests.swift; sourceTree = "<group>"; };
 		70FF60B9D4A5C2FD2CBEB5FB /* TTYResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTYResolver.swift; sourceTree = "<group>"; };
 		711A7DCA8A5E220E0578C01C /* Notice+Coding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Notice+Coding.swift"; sourceTree = "<group>"; };
 		7121BCCCB72069C8C22FDEA2 /* MarkdownTextPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextPane.swift; sourceTree = "<group>"; };
@@ -9028,6 +9031,7 @@
 		F0FEF0D252EE0499CD10ADE0 /* WebviewPanelOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebviewPanelOptionsTests.swift; sourceTree = "<group>"; };
 		F11D1958AD7250CE9166720F /* GitRepoScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRepoScanner.swift; sourceTree = "<group>"; };
 		F1447E8C2759057CAC89208B /* DaemonGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonGuardTests.swift; sourceTree = "<group>"; };
+		F15E0E5A3C5BDDB2A1D19D1F /* CompositeMirrorProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeMirrorProjection.swift; sourceTree = "<group>"; };
 		F18177D0D7190D483679A37C /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
 		F1901D0886F6FCB89F1E6F94 /* WorkingPathResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkingPathResolver.swift; sourceTree = "<group>"; };
 		F1A3AEC94BA9D9A9E6648674 /* GeneralSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsPanelViewController.swift; sourceTree = "<group>"; };
@@ -11343,6 +11347,7 @@
 		44700924DE5AA10B50D5B836 /* SyncGRDB */ = {
 			isa = PBXGroup;
 			children = (
+				F15E0E5A3C5BDDB2A1D19D1F /* CompositeMirrorProjection.swift */,
 				F417A22231FCEB85BB8E5D66 /* GRDBSyncStore.swift */,
 				9CF8BB9E7F5E60CBAD0B5F9A /* SyncMirrorProjection.swift */,
 			);
@@ -15198,6 +15203,7 @@
 		DBF8E8CD0CE060A82F692A95 /* AgenticDeveloperHubSDKSyncGRDBTests */ = {
 			isa = PBXGroup;
 			children = (
+				70E7C4C97540701BD5213BFC /* CompositeMirrorProjectionTests.swift */,
 				A2FD0F72BB0E6AB91FC30400 /* GRDBSyncStoreTests.swift */,
 				E6912F12152418CE4F029448 /* SyncEngineGRDBIntegrationTests.swift */,
 				4EB3E4D07DFBFF07669A6C95 /* SyncGRDBSmokeTests.swift */,
@@ -20336,6 +20342,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4C9CEA417F28503812B3FF4C /* CompositeMirrorProjection.swift in Sources */,
 				A7A29EC2BD711F353626FB96 /* GRDBSyncStore.swift in Sources */,
 				1A1471EF5F4281F0FE05DFD1 /* SyncMirrorProjection.swift in Sources */,
 			);
@@ -20422,6 +20429,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				46F5C7E1D9FC406DEDEAAB11 /* CompositeMirrorProjectionTests.swift in Sources */,
 				8D08CBC34898D9DA1FC2A03A /* GRDBSyncStoreTests.swift in Sources */,
 				2931884C31031F054AF96E2E /* SyncEngineGRDBIntegrationTests.swift in Sources */,
 				711AC03B97341B0F4AD5876A /* SyncGRDBSmokeTests.swift in Sources */,

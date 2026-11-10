@@ -256,22 +256,33 @@ public final class SemanticSearchStore: Sendable {
         documentID: String, title: String?, sourceHash: String, passages: [ServerPassage]
     ) throws -> ServerApplyResult {
         try database.write { conn in
-            let current = try String.fetchOne(
-                conn, sql: "SELECT source_hash FROM semantic_documents WHERE document_id = ?", arguments: [documentID])
-            if let current, current != sourceHash { return .ignoredStale(currentSourceHash: current) }
-            let title = title ?? ""
-            try Self.upsertDocument(conn, documentID: documentID, sourceHash: sourceHash, title: title)
-            try conn.execute(sql: "DELETE FROM semantic_passages WHERE document_id = ?", arguments: [documentID])
-            for passage in passages {
-                let id = try Self.insertPassage(
-                    conn, documentID: documentID, chunkIndex: passage.chunkIndex, title: title,
-                    content: passage.content, sourceHash: sourceHash, origin: .server)
-                if let vector = passage.embedding, let stamp = passage.semanticStamp {
-                    try VectorIndex.store(conn, passageID: id, stamp: stamp, vector: vector)
-                }
-            }
-            return .applied
+            try applyServerPassages(
+                in: conn, documentID: documentID, title: title, sourceHash: sourceHash, passages: passages)
         }
+    }
+
+    /// ``applyServerPassages(documentID:title:sourceHash:passages:)`` on
+    /// `conn`, so a caller already inside a transaction (a sync pull writing
+    /// the passages' own rows) stores them in that same transaction.
+    @discardableResult
+    public func applyServerPassages(
+        in conn: Database, documentID: String, title: String?, sourceHash: String, passages: [ServerPassage]
+    ) throws -> ServerApplyResult {
+        let current = try String.fetchOne(
+            conn, sql: "SELECT source_hash FROM semantic_documents WHERE document_id = ?", arguments: [documentID])
+        if let current, current != sourceHash { return .ignoredStale(currentSourceHash: current) }
+        let title = title ?? ""
+        try Self.upsertDocument(conn, documentID: documentID, sourceHash: sourceHash, title: title)
+        try conn.execute(sql: "DELETE FROM semantic_passages WHERE document_id = ?", arguments: [documentID])
+        for passage in passages {
+            let id = try Self.insertPassage(
+                conn, documentID: documentID, chunkIndex: passage.chunkIndex, title: title,
+                content: passage.content, sourceHash: sourceHash, origin: .server)
+            if let vector = passage.embedding, let stamp = passage.semanticStamp {
+                try VectorIndex.store(conn, passageID: id, stamp: stamp, vector: vector)
+            }
+        }
+        return .applied
     }
 
     /// Forgets a document and all its passages and vectors.
