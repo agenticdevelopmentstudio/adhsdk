@@ -6,6 +6,9 @@ import AppKit
 final class DesktopWindowLayerView: NSView {
     private(set) var stack = DesktopWindowStack()
     private var chromes: [String: DesktopWindowChromeView] = [:]
+    /// Where each window's keyboard focus was when it last lost the front.
+    private var savedFocus: [String: WeakView] = [:]
+    private var focusedFrontID: String?
     /// Called after a window opens, closes, or comes to the front.
     var onStackChange: (() -> Void)?
 
@@ -32,16 +35,63 @@ final class DesktopWindowLayerView: NSView {
         render()
     }
 
+    /// Raises a window and moves keyboard focus into it, even when it is already in front:
+    /// a click on its chrome after a click on the Desktop takes focus back from the icons.
     func bringToFront(_ id: String) {
-        guard stack.frontID != id else { return }
+        guard stack.frontID != id else {
+            focusFront()
+            return
+        }
         stack.bringToFront(id)
         render()
     }
 
     func close(_ id: String) {
         stack.close(id)
+        savedFocus.removeValue(forKey: id)
         chromes.removeValue(forKey: id)?.removeFromSuperview()
         render()
+    }
+
+    /// Makes the front window's content the first responder, as raising a macOS window makes
+    /// it key: its last focused view, else its first key view. Focus already inside it stays.
+    private func focusFront() {
+        guard let window else { return }
+        let current = Self.focusedView(window.firstResponder)
+        guard let frontID = stack.frontID, let chrome = chromes[frontID] else {
+            focusedFrontID = nil
+            if let current, current.isDescendant(of: self) { window.makeFirstResponder(nil) }
+            return
+        }
+        focusedFrontID = frontID
+        if let current, current.isDescendant(of: chrome) { return }
+        if let current, let owner = identifier(owning: current) {
+            savedFocus[owner] = WeakView(current)
+        }
+        let saved = savedFocus[frontID]?.view.flatMap { $0.isDescendant(of: chrome) ? $0 : nil }
+        let target = saved ?? Self.firstKeyView(in: chrome.contentContainer)
+        window.makeFirstResponder(target)
+    }
+
+    /// The view that holds focus: a text field rather than its shared field editor.
+    private static func focusedView(_ responder: NSResponder?) -> NSView? {
+        if let editor = responder as? NSTextView, editor.isFieldEditor, let field = editor.delegate as? NSView {
+            return field
+        }
+        return responder as? NSView
+    }
+
+    private static func firstKeyView(in view: NSView) -> NSView? {
+        for subview in view.subviews {
+            if subview.canBecomeKeyView { return subview }
+            if let found = firstKeyView(in: subview) { return found }
+        }
+        return nil
+    }
+
+    private final class WeakView {
+        weak var view: NSView?
+        init(_ view: NSView) { self.view = view }
     }
 
     /// Orders the chrome views to match the stack and marks the front one active.
@@ -64,6 +114,7 @@ final class DesktopWindowLayerView: NSView {
         for entry in stack.entries {
             chromes[entry.id]?.isActive = entry.id == stack.frontID
         }
+        if stack.frontID != focusedFrontID { focusFront() }
         onStackChange?()
     }
 

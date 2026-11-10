@@ -82,6 +82,63 @@ final class DesktopAppWindowTests: XCTestCase {
         return window
     }
 
+    /// An App whose window holds one text field, recorded in `fields` as each window opens.
+    private func fieldApp(_ identifier: String, into fields: FieldBox) -> StubApp {
+        let stub = StubApp(identifier: identifier, displayName: identifier.uppercased())
+        stub.makeContentView = {
+            let view = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+            let field = NSTextField(frame: NSRect(x: 20, y: 20, width: 200, height: 24))
+            view.addSubview(field)
+            fields.byApp[identifier] = field
+            return view
+        }
+        return stub
+    }
+
+    private final class FieldBox { var byApp: [String: NSTextField] = [:] }
+
+    private func focused(_ window: NSWindow) -> NSResponder? {
+        if let editor = window.firstResponder as? NSTextView, editor.isFieldEditor {
+            return editor.delegate as? NSResponder
+        }
+        return window.firstResponder
+    }
+
+    func test_raisingAWindow_movesKeyboardFocusIntoIt() throws {
+        let fields = FieldBox()
+        let controller = makeController(extra: [fieldApp("b", into: fields), fieldApp("c", into: fields)])
+        let window = hostWindow(for: controller)
+        controller.openApp(identifier: "b")
+        XCTAssertTrue(focused(window) === fields.byApp["b"])
+        controller.openApp(identifier: "c")
+        XCTAssertTrue(focused(window) === fields.byApp["c"])
+        controller.openApp(identifier: "b")
+        XCTAssertTrue(focused(window) === fields.byApp["b"])
+        controller.closeApp(identifier: "b")
+        XCTAssertTrue(focused(window) === fields.byApp["c"])
+        controller.closeApp(identifier: "c")
+        XCTAssertFalse((focused(window) as? NSView)?.isDescendant(of: controller.windowLayer) ?? false)
+    }
+
+    func test_clickingTheFrontWindowsChrome_takesFocusBackFromTheDesktop() throws {
+        let fields = FieldBox()
+        let controller = makeController(extra: [fieldApp("b", into: fields)])
+        let window = hostWindow(for: controller)
+        controller.openApp(identifier: "b")
+        window.makeFirstResponder(nil)
+        let chromeView = try chrome(controller, "b")
+        func event(_ type: NSEvent.EventType) -> NSEvent {
+            NSEvent.mouseEvent(
+                with: type, location: chromeView.convert(CGPoint(x: 100, y: 10), to: nil), modifierFlags: [],
+                timestamp: 0, windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                clickCount: 1, pressure: 1
+            )!
+        }
+        chromeView.mouseDown(with: event(.leftMouseDown))
+        chromeView.mouseUp(with: event(.leftMouseUp))
+        XCTAssertTrue(focused(window) === fields.byApp["b"])
+    }
+
     func test_openApp_twice_keepsOneWindow_andFrontsIt() {
         let other = StubApp(identifier: "b", displayName: "Bravo")
         let controller = makeController(extra: [other])

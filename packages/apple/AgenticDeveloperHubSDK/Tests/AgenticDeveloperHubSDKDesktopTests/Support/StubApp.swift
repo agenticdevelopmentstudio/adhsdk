@@ -12,6 +12,8 @@ final class StubApp: DesktopApp {
     var settingsViewController: NSViewController?
     /// True by default so tests can open Settings for a schema-less stub.
     var hasSettings = true
+    /// When set, builds each App window's content view; an empty view otherwise.
+    var makeContentView: (() -> NSView)?
     /// Weak, so a test can tell whether closing a window released its content.
     var contentViewControllers: [NSViewController] { weakContents.compactMap(\.value) }
     private var weakContents: [WeakBox] = []
@@ -44,7 +46,7 @@ final class StubApp: DesktopApp {
 
     func makeContentViewController(context: DesktopAppContext) -> NSViewController {
         let controller = NSViewController()
-        controller.view = NSView()
+        controller.view = makeContentView?() ?? NSView()
         weakContents.append(WeakBox(controller))
         contexts.append(context)
         return controller
