@@ -226,4 +226,53 @@ final class BrowserPaneTabsTests: XCTestCase {
         pane.browserEngine(engines[0], download: "start", host: "example.com")
         XCTAssertEqual(storedTabs.tabs.map(\.url), [page.absoluteString])
     }
+
+    // MARK: - Private browsing is one session per pane
+
+    private func privateSettings() -> SettingsStore {
+        let settings = makeSettings()
+        settings.set(true, for: UserSettings.browserPrivateBrowsing)
+        return settings
+    }
+
+    func testEveryTabOfAPrivatePaneSharesOneStore() throws {
+        let pane = makePane(settings: privateSettings())
+        pane.newTab(nil)
+        pane.newTab(nil)
+        XCTAssertEqual(engines.count, 3)
+        let first = engines[0].configuration.jar
+        XCTAssertTrue(first.isEphemeral)
+        for engine in engines.dropFirst() {
+            XCTAssertTrue(engine.configuration.jar.webKitDataStore === first.webKitDataStore)
+            XCTAssertTrue(engine.configuration.jar.ephemeralSession === first.ephemeralSession)
+        }
+        XCTAssertTrue(first.webKitDataStore === first.webKitDataStore, "one store, however often asked for")
+        let chromium = try XCTUnwrap(first.ephemeralSession).engineStore("chromium") { NSObject() }
+        XCTAssertTrue(
+            try XCTUnwrap(engines[2].configuration.jar.ephemeralSession).engineStore("chromium") { NSObject() }
+                === chromium)
+    }
+
+    func testARebuildKeepsThePrivateSession() {
+        let pane = makePane(settings: privateSettings())
+        pane.newTab(nil)
+        let before = engines[0].configuration.jar.webKitDataStore
+        pane.rebuildEngine()
+        XCTAssertEqual(engines.count, 4)
+        for engine in engines.suffix(2) {
+            XCTAssertTrue(engine.configuration.jar.webKitDataStore === before, "signed in before, signed in after")
+        }
+    }
+
+    func testLeavingPrivateBrowsingLetsTheSessionGo() {
+        let settings = privateSettings()
+        let pane = makePane(settings: settings)
+        let before = engines[0].configuration.jar.webKitDataStore
+        settings.set(false, for: UserSettings.browserPrivateBrowsing)
+        pane.rebuildEngine()
+        XCTAssertFalse(engines.last?.configuration.jar.isEphemeral ?? true)
+        settings.set(true, for: UserSettings.browserPrivateBrowsing)
+        pane.rebuildEngine()
+        XCTAssertFalse(engines.last?.configuration.jar.webKitDataStore === before, "a new private stint starts clean")
+    }
 }

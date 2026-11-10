@@ -86,6 +86,14 @@ NS_SWIFT_NAME(ChromiumBrowserViewDelegate) NS_SWIFT_UI_ACTOR
                   sessionId:(nullable NSString *)sessionId;
 @end
 
+/// One in-memory store that several browsers share: every tab of a private
+/// (or failed-closed) pane, so the pane is one session rather than one per
+/// tab. Its store is made when the first browser on it is, and let go when
+/// the runtime shuts down or the last holder lets go of the session.
+NS_SWIFT_NAME(ChromiumEphemeralSession) NS_SWIFT_UI_ACTOR
+@interface ADHChromiumEphemeralSession : NSObject
+@end
+
 /// What a pane fixes when its browser is created.
 NS_SWIFT_NAME(ChromiumBrowserOptions)
 @interface ADHChromiumBrowserOptions : NSObject
@@ -94,6 +102,9 @@ NS_SWIFT_NAME(ChromiumBrowserOptions)
 /// away with the browser; a path is a profile of its own on disk, which must
 /// sit inside the runtime's root cache directory.
 @property (nonatomic, copy, nullable) NSString *cachePath;
+/// With an empty `cachePath`, the in-memory store the browser shares with
+/// every other browser on the same session; nil gives it one of its own.
+@property (nonatomic, strong, nullable) ADHChromiumEphemeralSession *ephemeralSession;
 /// Whether cookies are sent and saved when the browser is created.
 @property (nonatomic) BOOL acceptsCookies;
 /// Points; 0 keeps Chromium's own.

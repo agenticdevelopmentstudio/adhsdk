@@ -167,16 +167,22 @@ public struct BrowserResolvedJar {
     /// Why the worktree or pane jar asked for could not be made; the store is
     /// then a non-persistent one of the pane's own.
     public let fallbackReason: String?
+    /// The in-memory session every tab of an ephemeral pane shares, for an
+    /// engine that keeps its session somewhere other than `webKitDataStore`
+    /// (Chromium). `nil` when the jar is not ephemeral.
+    public let ephemeralSession: BrowserEphemeralSession?
     private let makeWebKitDataStore: @MainActor () -> WKWebsiteDataStore
 
     public init(
         webKitDataStore: @autoclosure @escaping @MainActor () -> WKWebsiteDataStore,
-        jar: BrowserStorageJar?, jarID: UUID?, fallbackReason: String? = nil
+        jar: BrowserStorageJar?, jarID: UUID?, fallbackReason: String? = nil,
+        ephemeralSession: BrowserEphemeralSession? = nil
     ) {
         self.makeWebKitDataStore = webKitDataStore
         self.jar = jar
         self.jarID = jarID
         self.fallbackReason = fallbackReason
+        self.ephemeralSession = ephemeralSession
     }
 
     /// The WebKit store for this jar, made when asked for: a Chrome pane
@@ -197,6 +203,39 @@ public struct BrowserResolvedJar {
     /// The shared store, for a pane with no jar registry and for tests.
     @MainActor public static var global: BrowserResolvedJar {
         BrowserResolvedJar(webKitDataStore: .default(), jar: .global, jarID: nil)
+    }
+}
+
+/// The session a pane keeps in memory while it is ephemeral — private
+/// browsing, or a jar that failed closed — made once and handed to every
+/// engine the pane makes, so its tabs, and the engines a rebuild puts in
+/// them, are one session: signed in on one tab is signed in on all, as in
+/// any browser's private window. It lives as long as the pane holds it.
+///
+/// Each store is made when an engine first asks for it, so a Chrome pane
+/// never makes a WebKit store and a Safari pane never starts Chromium's.
+@MainActor
+public final class BrowserEphemeralSession {
+    private var madeWebKitDataStore: WKWebsiteDataStore?
+    private var engineStores: [String: AnyObject] = [:]
+
+    public init() {}
+
+    /// The WebKit store, the same one every time.
+    public var webKitDataStore: WKWebsiteDataStore {
+        if let madeWebKitDataStore { return madeWebKitDataStore }
+        let made = WKWebsiteDataStore.nonPersistent()
+        madeWebKitDataStore = made
+        return made
+    }
+
+    /// Another engine's in-memory store under `key`, made by `make` the
+    /// first time and the same object every time after.
+    public func engineStore<Store: AnyObject>(_ key: String, make: () -> Store) -> Store {
+        if let existing = engineStores[key] as? Store { return existing }
+        let made = make()
+        engineStores[key] = made
+        return made
     }
 }
 

@@ -667,6 +667,45 @@ class ADHBrowserClient : public CefClient,
 @implementation ADHChromiumBrowserOptions
 @end
 
+// MARK: - A shared in-memory session
+
+@implementation ADHChromiumEphemeralSession {
+  CefRefPtr<CefRequestContext> _base;
+}
+
+- (instancetype)init {
+  if ((self = [super init])) {
+    // A context must not outlive CefShutdown.
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(runtimeWillShutdown:)
+                                               name:ADHChromiumRuntimeWillShutdownNotification
+                                             object:nil];
+  }
+  return self;
+}
+
+- (void)dealloc {
+  [NSNotificationCenter.defaultCenter removeObserver:self];
+}
+
+/// The context holding the session's storage: no cache path, so in memory.
+/// Each browser gets a context of its own over it (for its own request
+/// handler), and CEF shares storage between a context and the one it was
+/// made from.
+- (CefRefPtr<CefRequestContext>)baseContext {
+  if (!_base) {
+    CefRequestContextSettings settings;
+    _base = CefRequestContext::CreateContext(settings, nullptr);
+  }
+  return _base;
+}
+
+- (void)runtimeWillShutdown:(NSNotification*)notification {
+  _base = nullptr;
+}
+
+@end
+
 // MARK: - The view
 
 typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NSError* _Nullable);
@@ -798,12 +837,15 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   }
 
   // nil shares the global context's storage; an empty cache path keeps
-  // everything in memory, gone with the context; a path is a profile of the
-  // pane's own. Every pane gets a context of its own all the same, carrying
-  // the handler that filters its worker requests.
+  // everything in memory — the ephemeral session's, shared with the pane's
+  // other tabs, else the context's own and gone with it; a path is a profile
+  // of the pane's own. Every browser gets a context of its own all the same,
+  // carrying the handler that filters its worker requests.
   CefRefPtr<CefRequestContextHandler> contextHandler = new ADHRequestContextHandler(_client->ThirdPartyFilter());
   CefRefPtr<CefRequestContext> context;
-  if (_options.cachePath) {
+  if (_options.cachePath && _options.cachePath.length == 0 && _options.ephemeralSession) {
+    context = CefRequestContext::CreateContext([_options.ephemeralSession baseContext], contextHandler);
+  } else if (_options.cachePath) {
     CefRequestContextSettings contextSettings;
     if (_options.cachePath.length > 0) {
       [NSFileManager.defaultManager createDirectoryAtPath:_options.cachePath

@@ -164,6 +164,9 @@ open class WebBrowserPaneViewController: NSViewController {
     public private(set) var isDiscarded = false
     /// The jar the current engine was built on.
     public private(set) var resolvedJar: ResolvedJar
+    /// The in-memory session every tab shares while the jar is ephemeral,
+    /// kept across rebuilds (`BrowserEphemeralSession`).
+    private var ephemeralSession: BrowserEphemeralSession
     /// Whether the current engine captures the page console: read once, where
     /// the engine is built, and used for the engine and the automation alike.
     /// A construction-time setting; a change waits for a rebuild.
@@ -262,7 +265,9 @@ open class WebBrowserPaneViewController: NSViewController {
         self.history = history
         self.fallbackHomeURL = homeURL
         self.paneContext = context
-        let jar = Self.resolveJar(settings: settings, context: context, label: Self.untitledLabel)
+        let session = BrowserEphemeralSession()
+        self.ephemeralSession = session
+        let jar = Self.resolveJar(settings: settings, context: context, label: Self.untitledLabel, session: session)
         let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
         self.resolvedJar = jar
         self.capturesConsole = capturesConsole
@@ -379,11 +384,19 @@ open class WebBrowserPaneViewController: NSViewController {
     ///
     /// The WebKit store stays unmade until an engine asks for it, so a
     /// Chrome pane never makes one.
+    ///
+    /// An ephemeral jar's store is `session`'s, so every engine resolved
+    /// against the same session — every tab of a pane, before and after a
+    /// rebuild — shares one in-memory session rather than each making its
+    /// own. Without one, the jar gets a session of its own.
     public static func resolveJar(
-        settings: SettingsStore, context: BrowserPaneContext, label: String
+        settings: SettingsStore, context: BrowserPaneContext, label: String,
+        session: BrowserEphemeralSession? = nil
     ) -> ResolvedJar {
+        let session = session ?? BrowserEphemeralSession()
         if settings.get(UserSettings.browserPrivateBrowsing) {
-            return ResolvedJar(webKitDataStore: .nonPersistent(), jar: nil, jarID: nil)
+            return ResolvedJar(
+                webKitDataStore: session.webKitDataStore, jar: nil, jarID: nil, ephemeralSession: session)
         }
         let wanted = settings.get(UserSettings.browserPrivacyStorageJar)
         guard let jars = context.jars else {
@@ -393,6 +406,13 @@ open class WebBrowserPaneViewController: NSViewController {
             return .global
         }
         let resolution = jars.resolve(wanted, context: context, label: label)
+        guard resolution.fallbackReason == nil else {
+            // Failed closed: in memory, and shared by the pane's tabs.
+            return ResolvedJar(
+                webKitDataStore: session.webKitDataStore, jar: resolution.jar, jarID: resolution.jarID,
+                fallbackReason: resolution.fallbackReason, ephemeralSession: session
+            )
+        }
         return ResolvedJar(
             webKitDataStore: resolution.dataStore, jar: resolution.jar, jarID: resolution.jarID,
             fallbackReason: resolution.fallbackReason
@@ -542,7 +562,10 @@ open class WebBrowserPaneViewController: NSViewController {
             tab.engine.view.removeFromSuperview()
         }
 
-        let jar = Self.resolveJar(settings: settings, context: paneContext, label: label)
+        let jar = Self.resolveJar(settings: settings, context: paneContext, label: label, session: ephemeralSession)
+        // Off an ephemeral jar, the session is let go, so private browsing
+        // turned on again later starts clean rather than where it left off.
+        if !jar.isEphemeral { ephemeralSession = BrowserEphemeralSession() }
         let capturesConsole = settings.get(UserSettings.browserPrivacyConsoleCapture)
         resolvedJar = jar
         self.capturesConsole = capturesConsole

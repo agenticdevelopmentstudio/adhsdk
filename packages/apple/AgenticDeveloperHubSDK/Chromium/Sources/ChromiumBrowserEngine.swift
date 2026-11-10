@@ -97,6 +97,11 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         let settings = configuration.settings
         let options = ChromiumBrowserOptions()
         options.cachePath = Self.cachePath(for: configuration.jar)
+        // An ephemeral jar is one in-memory session for the pane's every tab,
+        // not one per browser.
+        if configuration.jar.isEphemeral, let session = configuration.jar.ephemeralSession {
+            options.ephemeralSession = session.engineStore("chromium") { ChromiumEphemeralSession() }
+        }
         options.acceptsCookies = WebBrowserPaneViewController.acceptsCookies(
             settings: settings, ownsDataStore: configuration.jar.isOwnedByPane)
         self.init(
@@ -112,6 +117,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     convenience init(popupOf opener: ChromiumBrowserEngine) {
         let options = ChromiumBrowserOptions()
         options.cachePath = opener.options.cachePath
+        options.ephemeralSession = opener.options.ephemeralSession
         options.acceptsCookies = opener.browserView.acceptsCookies
         self.init(
             // The popup is a tab of its own, with a console of its own.
