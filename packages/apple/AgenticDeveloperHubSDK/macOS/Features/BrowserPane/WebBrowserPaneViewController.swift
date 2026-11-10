@@ -100,6 +100,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// The pane's tabs, in bar order. Never empty: closing the last tab
     /// empties it instead.
     private var tabs: [BrowserTab] = []
+    /// True while a tab a page opened is being brought forward, so `activate`
+    /// leaves the address bar's editing and the keyboard focus alone.
+    private var isActivatingPopup = false
     /// The tab in front, whose engine is `engine`.
     private var activeTab: BrowserTab
     /// The tab bar and the page area under the address bar.
@@ -885,6 +888,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// pane's idea of the page all follow it, and a tab brought forward for
     /// the first time loads its page.
     private func activate(_ tab: BrowserTab) {
+        // A popup arrives on its own, not by the user's hand: whatever they
+        // are typing in the address bar is theirs to finish.
+        let userIsEditingAddress = isActivatingPopup && addressField.currentEditor() != nil
         // Sampled before the swap for the case where the old page is still on
         // screen (a popup brought forward from code). A click on the strip has
         // already taken the old page out of the window by the time this runs,
@@ -894,17 +900,20 @@ open class WebBrowserPaneViewController: NSViewController {
         activeTab = tab
         engine = tab.engine
         builtAutomation?.retarget(to: engine, console: engine.consoleLog)
-        // A half-typed address was meant for the tab being left.
-        if addressField.currentEditor() != nil { addressField.abortEditing() }
-        let shown = engine.url ?? tab.requestedURL ?? tab.pendingURL
-        addressField.stringValue = shown.map { $0 == Self.blankPage ? "" : $0.absoluteString } ?? ""
+        // A half-typed address was meant for the tab being left — unless the
+        // tab came forward by itself (a popup), when the typing stays.
+        if !userIsEditingAddress {
+            if addressField.currentEditor() != nil { addressField.abortEditing() }
+            let shown = engine.url ?? tab.requestedURL ?? tab.pendingURL
+            addressField.stringValue = shown.map { $0 == Self.blankPage ? "" : $0.absoluteString } ?? ""
+        }
         browserEngineHistoryDidChange(engine)
         announceTitleChange()
         loadPendingPage(of: tab)
         if let window = viewIfLoaded?.window {
             let responder = window.firstResponder
             let focusIsFree = responder == nil || responder === window
-            if responderWasInPage || focusIsFree { window.makeFirstResponder(engine.view) }
+            if !userIsEditingAddress, responderWasInPage || focusIsFree { window.makeFirstResponder(engine.view) }
         }
         rememberAddress()
         persistTabs()
@@ -928,7 +937,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Adds a tab for `engine`, wired, after `opener`'s tab (else at the end),
     /// and brings it forward. Returns the tab.
     @discardableResult
-    private func addTab(engine tabEngine: BrowserEngine, after opener: BrowserTab?, pendingURL: URL?) -> BrowserTab {
+    private func addTab(
+        engine tabEngine: BrowserEngine, after opener: BrowserTab?, pendingURL: URL?, openedByPage: Bool = false
+    ) -> BrowserTab {
         let tab = BrowserTab(engine: tabEngine, pendingURL: pendingURL, storedTitle: nil)
         wireEngine(tabEngine)
         tabEngine.applyCookiePolicy(
@@ -939,6 +950,10 @@ open class WebBrowserPaneViewController: NSViewController {
         // The strip's tab order is the pane's: insert at the same place.
         tabStrip.insertTab(
             .init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content), at: index, on: .top)
+        // The strip may call `activate` itself from `selectTab`; the flag
+        // covers both routes in.
+        isActivatingPopup = openedByPage
+        defer { isActivatingPopup = false }
         tabStrip.selectTab(id: tab.id, on: .top)
         if activeTab !== tab { activate(tab) }
         return tab
@@ -1130,7 +1145,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// 2FA window post its answer back through `window.opener`.
     public func browserEngine(_ engine: BrowserEngine, didOpenPopup popup: BrowserEngine) -> Bool {
         guard !isDiscarded, let opener = tab(for: engine) else { return false }
-        let tab = addTab(engine: popup, after: opener, pendingURL: nil)
+        let tab = addTab(engine: popup, after: opener, pendingURL: nil, openedByPage: true)
         tab.opener = opener
         eventLog.record(channel: "navigation", event: "popup", decision: .info, detail: engine.url?.host ?? "")
         return true
