@@ -229,9 +229,9 @@ public final class SemanticSearchStore: Sendable {
         for chunk in chunks {
             let id = try Self.insertPassage(conn, documentID: documentID, chunkIndex: chunk.index, title: title,
                                             content: chunk.content, sourceHash: hash, origin: .device)
-            if chunks.count == 1, let vector {
-                try VectorIndex.store(conn, passageID: id, stamp: vector.stamp, vector: vector.embedding)
-                if let embedder, vector.stamp == embedder.stamp { continue }
+            if chunks.count == 1, let vector,
+               try storeReceived(conn, passageID: id, stamp: vector.stamp, vector: vector.embedding) {
+                continue
             }
             waiting.append((id, chunk.content))
         }
@@ -281,7 +281,7 @@ public final class SemanticSearchStore: Sendable {
                 conn, documentID: documentID, chunkIndex: passage.chunkIndex, title: title,
                 content: passage.content, sourceHash: sourceHash, origin: .server)
             if let vector = passage.embedding, let stamp = passage.semanticStamp {
-                try VectorIndex.store(conn, passageID: id, stamp: stamp, vector: vector)
+                try storeReceived(conn, passageID: id, stamp: stamp, vector: vector)
             }
         }
         return .applied
@@ -391,6 +391,19 @@ public final class SemanticSearchStore: Sendable {
     }
 
     // MARK: - Rows
+
+    /// Stores a vector that arrived with its passage's text and returns whether
+    /// it is this store's embedder's own, so the passage needs no embedding. A
+    /// vector under the embedder's stamp but of another length is dropped and
+    /// the passage stays pending: search decodes every vector of that stamp at
+    /// the query's length, and one malformed row would fail every query.
+    @discardableResult
+    private func storeReceived(_ conn: Database, passageID: Int64, stamp: String, vector: [Float]) throws -> Bool {
+        let own = embedder.map { $0.stamp == stamp } ?? false
+        if own, let embedder, vector.count != embedder.dimensions { return false }
+        try VectorIndex.store(conn, passageID: passageID, stamp: stamp, vector: vector)
+        return own
+    }
 
     private static func upsertDocument(_ conn: Database, documentID: String, sourceHash: String, title: String) throws {
         try conn.execute(sql: """
