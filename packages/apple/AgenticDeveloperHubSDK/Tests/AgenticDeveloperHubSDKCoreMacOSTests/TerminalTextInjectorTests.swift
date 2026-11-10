@@ -158,4 +158,16 @@ final class TerminalTextInjectorTests: XCTestCase {
         XCTAssertNotNil(returnKey, "Return must be pressed on its own")
         if let typed, let returnKey { XCTAssertLessThan(typed.lowerBound, returnKey.lowerBound) }
     }
+
+    /// A long line handed to `do script` arrives as a paste whose newline Claude
+    /// Code keeps; Return pressed on its own afterwards is what submits it.
+    func testTerminalPressesReturnSeparatelyFromTheText() {
+        let script = TerminalTextInjector.script(for: .terminalTTY(tty: "ttys004"), text: "hello", raising: false)
+        let typed = script.range(of: #"do script "hello" in t"#)
+        let returnKey = script.range(of: #"do script "" in t"#)
+        XCTAssertNotNil(typed, script)
+        XCTAssertNotNil(returnKey, "Return must be pressed on its own")
+        XCTAssertTrue(script.contains("delay \(TerminalTextInjector.returnDelay)"), script)
+        if let typed, let returnKey { XCTAssertLessThan(typed.lowerBound, returnKey.lowerBound) }
+    }
 }

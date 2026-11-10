@@ -177,9 +177,18 @@ public enum TerminalTextInjector {
 
     /// Terminal.app: find the tab on `tty`, focus it when `raising`, then — when
     /// injecting — `do script … in <tab>` (which runs the text in that existing tab
-    /// rather than opening a new window).
+    /// rather than opening a new window) and, a moment later, `do script ""`: Return on
+    /// its own. `do script` has no `newline no`, and its own newline is not enough —
+    /// a long line arrives as a paste and Claude Code keeps the newline inside it,
+    /// unsubmitted (seen live: a short line submits, a ~200-character one sat in the
+    /// input until a separate Return). After a line that did submit, the extra Return
+    /// meets an empty prompt, which ignores it.
     private static func terminalScript(tty: String, text: String?, raising: Bool) -> String {
-        let run = text.map { "\n                    do script \"\($0)\" in t" } ?? ""
+        let run = text.map {
+            "\n                    do script \"\($0)\" in t"
+                + "\n                    delay \(returnDelay)"
+                + "\n                    do script \"\" in t"
+        } ?? ""
         let raise = raising
             ? "\n                        set selected tab of w to t"
                 + "\n                        set frontmost of w to true"
