@@ -141,4 +141,13 @@ final class TerminalTextInjectorTests: XCTestCase {
         XCTAssertEqual(TerminalTextInjector.normalizeTTY("ttys001"), "/dev/ttys001")
         XCTAssertEqual(TerminalTextInjector.normalizeTTY("/dev/ttys001"), "/dev/ttys001")
     }
+
+    func testITermPressesReturnSeparatelyFromTheText() {
+        let script = TerminalTextInjector.script(for: .iTermSession(uuid: "ABC"), text: "hello", raising: false)
+        XCTAssertTrue(script.contains(#"write text "hello" newline no"#), script)
+        let typed = script.range(of: #"newline no"#)
+        let returnKey = script.range(of: #"tell s to write text """#)
+        XCTAssertNotNil(returnKey, "Return must be pressed on its own")
+        if let typed, let returnKey { XCTAssertLessThan(typed.lowerBound, returnKey.lowerBound) }
+    }
 }

@@ -139,11 +139,21 @@ public enum TerminalTextInjector {
     }
 
     /// iTerm: find the session (across all windows/tabs/panes) matching `match`, focus it
-    /// when `raising`, then — when injecting — `write text` (which appends a newline —
-    /// i.e. runs the line, as if typed). Addressed by bundle id, not the name
-    /// "iTerm"/"iTerm2", which has varied across versions.
+    /// when `raising`, then — when injecting — type the text with `newline no` and, a
+    /// moment later, press Return on its own (`write text ""`). Handed in one write, the
+    /// newline arrives inside the same paste as the text, and an agent's input box (Claude
+    /// Code's) keeps it as part of the paste: the line is typed but never submitted.
+    /// Addressed by bundle id, not the name "iTerm"/"iTerm2", which has varied across versions.
+    /// Seconds between typing the text and pressing Return in iTerm, so the Return
+    /// lands as its own keystroke after the paste rather than inside it.
+    static let returnDelay = "0.3"
+
     private static func iTermScript(match: String, text: String?, raising: Bool) -> String {
-        let write = text.map { "\n                        tell s to write text \"\($0)\"" } ?? ""
+        let write = text.map {
+            "\n                        tell s to write text \"\($0)\" newline no"
+                + "\n                        delay \(returnDelay)"
+                + "\n                        tell s to write text \"\""
+        } ?? ""
         let raise = raising
             ? "\n                        select s"
                 + "\n                        select t"
