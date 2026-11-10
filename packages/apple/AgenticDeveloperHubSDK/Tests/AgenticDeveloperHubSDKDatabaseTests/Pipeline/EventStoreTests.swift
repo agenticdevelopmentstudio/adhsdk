@@ -342,6 +342,108 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(try store.read { conn in try Int.fetchOne(conn, sql: "SELECT 1") }, 1)
     }
 
+    private func turnBatch(_ keys: [String]) -> NormalizedBatch {
+        var batch = NormalizedBatch()
+        batch.turns = keys.map {
+            TurnRow(dedupKey: $0, sessionID: "s1", time: date(2), model: "m", inputTokens: 1,
+                    outputTokens: 1, costUSD: nil, rawRef: 1)
+        }
+        return batch
+    }
+
+    private func turnIds(_ path: String) throws -> [String: Int64] {
+        let queue = try DatabaseQueue(path: path)
+        return try queue.read { conn in
+            var ids: [String: Int64] = [:]
+            for row in try Row.fetchAll(conn, sql: "SELECT dedup_key, id FROM turns") { ids[row[0]] = row[1] }
+            return ids
+        }
+    }
+
+    /// The usage recount walks "turns after id N" and the trim deletes only
+    /// turns at or below N, so an id freed by deleting the newest-id turns
+    /// must never be handed out again.
+    func testTurnIdsAreNeverReusedAfterTheNewestRowsGo() throws {
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        let store = try makeStore()
+        try store.write(turnBatch(["a", "b", "c"]), provider: "mock")
+        let queue = try DatabaseQueue(path: path)
+        try queue.write { try $0.execute(sql: "DELETE FROM turns WHERE dedup_key IN ('b', 'c')") }
+        try store.write(turnBatch(["d"]), provider: "mock")
+        let ids = try turnIds(path)
+        XCTAssertEqual(ids["d"], 4)
+    }
+
+    /// A store made when `turns` had no AUTOINCREMENT is rebuilt on open:
+    /// every row keeps its id, and the sequence starts above every id the old
+    /// table could have handed out (rows held plus rows trimmed).
+    func testOpeningAStoreWithoutTurnAutoincrementRebuildsItKeepingIds() throws {
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        do {
+            let store = try makeStore()
+            try store.write(turnBatch(["a", "b", "c"]), provider: "mock")
+        }
+        let queue = try DatabaseQueue(path: path)
+        try queue.write { conn in
+            try conn.execute(sql: """
+                CREATE TABLE turns_old (
+                    id INTEGER PRIMARY KEY,
+                    provider TEXT NOT NULL, dedup_key TEXT NOT NULL, session_id TEXT NOT NULL, time REAL NOT NULL,
+                    model TEXT, account TEXT, agent TEXT, tool_name TEXT,
+                    input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL,
+                    cache_read_tokens INTEGER NOT NULL, cache_write_tokens INTEGER NOT NULL,
+                    cost_usd REAL, raw_ref INTEGER NOT NULL,
+                    as_of REAL NOT NULL, attrs TEXT NOT NULL DEFAULT '{}',
+                    field_as_of TEXT NOT NULL DEFAULT '{}',
+                    UNIQUE (provider, dedup_key))
+                """)
+            try conn.execute(sql: "INSERT INTO turns_old SELECT * FROM turns")
+            try conn.execute(sql: "DROP TABLE turns")
+            try conn.execute(sql: "ALTER TABLE turns_old RENAME TO turns")
+            try conn.execute(sql: "DELETE FROM sqlite_sequence WHERE name = 'turns'")
+            // The newest turn was trimmed, and an older store's trim had
+            // already freed two more ids that a cursor may have passed.
+            try conn.execute(sql: "DELETE FROM turns WHERE dedup_key = 'c'")
+            try conn.execute(sql: """
+                INSERT INTO trimmed_turn_keys(provider, dedup_key) VALUES ('mock', 'c'), ('mock', 'x'), ('mock', 'y')
+                """)
+        }
+        let before = try turnIds(path)
+        let reopened = try makeStore()
+        let sql = try queue.read { conn in
+            try String.fetchOne(conn, sql: "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'turns'")
+        }
+        XCTAssertTrue(sql?.contains("AUTOINCREMENT") ?? false)
+        XCTAssertEqual(try turnIds(path), before)
+        XCTAssertTrue(try presentIndexes(path).isSuperset(of: ["turns_time", "turns_session"]))
+        try reopened.write(turnBatch(["d"]), provider: "mock")
+        // Two held plus three trimmed: no id at or below 5 is handed out again.
+        XCTAssertEqual(try turnIds(path)["d"], 6)
+    }
+
+    /// A store older than the trim has no `trimmed_turn_keys` either; the
+    /// upgrade still opens it, seeding the sequence from the rows held.
+    func testOpeningAPreTrimStoreWithoutTurnAutoincrementOpens() throws {
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        do {
+            let store = try makeStore()
+            try store.write(turnBatch(["a", "b"]), provider: "mock")
+        }
+        let queue = try DatabaseQueue(path: path)
+        try queue.write { conn in
+            try conn.execute(sql: "CREATE TABLE turns_old AS SELECT * FROM turns")
+            try conn.execute(sql: "DROP TABLE turns")
+            try conn.execute(sql: "ALTER TABLE turns_old RENAME TO turns")
+            try conn.execute(sql: "DELETE FROM sqlite_sequence WHERE name = 'turns'")
+            try conn.execute(sql: "DROP TABLE trimmed_turn_keys")
+        }
+        let before = try turnIds(path)
+        let reopened = try makeStore()
+        XCTAssertEqual(try turnIds(path), before)
+        try reopened.write(turnBatch(["c"]), provider: "mock")
+        XCTAssertEqual(try turnIds(path)["c"], 3)
+    }
+
     func testAutoVacuumIsIncremental() throws {
         _ = try makeStore()
         let queue = try DatabaseQueue(path: tmpDir.appendingPathComponent(EventStore.fileName).path)
