@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgenticDeveloperHubSDKMacOS
+@testable import AgenticDeveloperHubSDKCore
 
 /// The pure pane-resolution + AppleScript-building used to inject text into (or select)
 /// a live terminal pane. Covers the risky string assembly and escaping without driving a

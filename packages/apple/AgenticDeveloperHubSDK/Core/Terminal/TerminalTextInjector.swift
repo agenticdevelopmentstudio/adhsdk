@@ -1,10 +1,11 @@
-import AgenticDeveloperHubSDKPermissions
-import AppKit
 import Darwin
+import Foundation
 
 /// Types a line of text (e.g. `/compact`) into the live terminal pane a session is running
-/// in, by scripting iTerm2 / Terminal.app. Host-app-side because only an app holds the TCC
-/// Automation grant and a window-server session — a daemon can drive neither.
+/// in, by scripting iTerm2 / Terminal.app. Runs in a process with a user's GUI session —
+/// the app, or `steno` from a terminal — because those hold the TCC Automation grant; a
+/// daemon can drive neither. Foundation-only (`NSAppleScript` and libproc) so the CLI
+/// shares it with the app instead of keeping a second copy of the escaping.
 ///
 /// It targets the **exact** pane so it never types into the wrong session: iTerm2 by its
 /// session id (from `TERM_SESSION_ID`) or, failing that, the pane's TTY; Terminal.app by
@@ -24,9 +25,9 @@ public enum TerminalTextInjector {
         case paneUnresolvable
         /// The matching pane wasn't found among the terminal's open windows/tabs.
         case paneNotFound
-        /// Automation permission is needed to control the terminal; carries the
-        /// `Permission` the host should route its grant UI to.
-        case permissionDenied(String, requiredPermission: AgenticDeveloperHubSDKPermissions.Permission)
+        /// Automation permission is needed to control the terminal; carries the bundle id
+        /// of the terminal the grant is for, which an app maps onto its permission UI.
+        case permissionDenied(String, targetBundleID: String)
         /// AppleScript failed for another reason.
         case scriptFailed(String)
 
@@ -235,7 +236,7 @@ public enum TerminalTextInjector {
     /// (including the `not_found` sentinel and Automation denials) onto `InjectionError`.
     /// Shared by `inject` and the session click actions' select-and-raise paths.
     @MainActor
-    static func run(script source: String, target: Target) -> Result<Void, InjectionError> {
+    public static func run(script source: String, target: Target) -> Result<Void, InjectionError> {
         guard let apple = NSAppleScript(source: source) else {
             return .failure(.scriptFailed("could not compile the AppleScript"))
         }
@@ -266,7 +267,7 @@ public enum TerminalTextInjector {
             return .permissionDenied(
                 "Automation permission is required to control \(target.app.name)."
                 + " Grant it in System Settings ▸ Privacy & Security ▸ Automation.",
-                requiredPermission: .automation(targetBundleID: target.app.bundleID)
+                targetBundleID: target.app.bundleID
             )
         }
         return nil

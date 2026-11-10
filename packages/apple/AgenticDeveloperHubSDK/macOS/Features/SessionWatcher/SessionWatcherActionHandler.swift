@@ -795,10 +795,11 @@ extension SessionWatcher {
             switch result {
             case .success:
                 return .activated
-            case .failure(.permissionDenied(let message, let permission)):
+            case .failure(.permissionDenied(let message, let bundleID)):
                 // swiftlint:disable:next line_length
                 logger.error("AppleScript permission denied for \(target.app.name, privacy: .public): \(message, privacy: .public)")
-                return .permissionDenied(.permissionDenied(message, requiredPermission: permission))
+                return .permissionDenied(
+                    .permissionDenied(message, requiredPermission: .automation(targetBundleID: bundleID)))
             case .failure:
                 return .notFound
             }

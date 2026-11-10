@@ -1,3 +1,4 @@
+import AgenticDeveloperHubSDKCore
 import AppKit
 import ApplicationServices
 

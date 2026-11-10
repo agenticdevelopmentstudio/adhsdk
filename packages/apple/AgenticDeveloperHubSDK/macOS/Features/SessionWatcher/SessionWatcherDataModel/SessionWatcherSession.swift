@@ -1,3 +1,4 @@
+import AgenticDeveloperHubSDKCore
 import Foundation
 
 extension SessionWatcher {
@@ -89,41 +90,11 @@ extension SessionWatcher {
             self.subagentWorking = subagentWorking
         }
 
-        /// What the session is doing right now, as the row's activity icon shows it.
-        ///
-        /// Derived from ``status`` and ``lastEventType`` rather than stored: the
-        /// daemon records what happened, not what it means, so the meaning can be
-        /// re-read (or re-mapped for a new event type) without a schema change.
-        ///
-        /// A live subagent (``subagentWorking``) reads as working, because it is —
-        /// but it never overrides ``waiting``: a session blocked on a permission
-        /// prompt still needs the user, whatever its subagents are doing.
+        /// What the session is doing right now, as the row's activity icon shows it —
+        /// ``SessionActivity/derive(isActive:lastEventType:subagentWorking:)``'s reading.
         public var activity: SessionWatcherActivity {
-            guard status == .active else { return .idle }
-            let turn = turnActivity
-            guard turn == .idle, subagentWorking else { return turn }
-            return .working
-        }
-
-        /// ``activity`` as the *main agent's turn* alone tells it.
-        private var turnActivity: SessionWatcherActivity {
-            switch lastEventType {
-            // The agent has handed control back to the user and is waiting on them.
-            // (The daemon only records a Notification that asks for an answer — not
-            // the idle reminder sent after every finished turn.)
-            case "Notification", "PermissionRequest", "Elicitation":
-                return .waiting
-            // The turn is over; nothing is running until the user says something.
-            // `StopFailure` ends a turn on an API error. `Interrupted` is the daemon's
-            // own record of the user cutting a turn short, which fires no hook.
-            // `SessionStart` opens a session at its prompt.
-            case "Stop", "StopFailure", "Interrupted", "SessionStart", "SessionEnd", "":
-                return .idle
-            // UserPromptSubmit, Pre/PostToolUse, everything else:
-            // the agent is mid-turn.
-            default:
-                return .working
-            }
+            SessionActivity.derive(
+                isActive: status == .active, lastEventType: lastEventType, subagentWorking: subagentWorking)
         }
 
         /// Returns the best available description for this session.
@@ -175,16 +146,7 @@ extension SessionWatcher {
 
     // MARK: - SessionWatcherSession Activity
 
-    /// What a session is doing, as the row's activity icon shows it. Distinct from
-    /// ``SessionWatcherStatus`` (which is "does a process exist"): a session can be
-    /// alive and idle, alive and working, or alive and blocked on the user.
-    public enum SessionWatcherActivity: String, CaseIterable, Sendable {
-        /// Mid-turn: thinking, or running a tool. Animated.
-        case working
-        /// Alive, but nothing in flight.
-        case idle
-        /// Blocked on the user — a permission prompt, an elicitation, a
-        /// notification. Animated, and coloured to draw the eye.
-        case waiting
-    }
+    /// What a session is doing, as the row's activity icon shows it — Core's
+    /// ``SessionActivity``, named here for the callers that already say this.
+    public typealias SessionWatcherActivity = SessionActivity
 }
