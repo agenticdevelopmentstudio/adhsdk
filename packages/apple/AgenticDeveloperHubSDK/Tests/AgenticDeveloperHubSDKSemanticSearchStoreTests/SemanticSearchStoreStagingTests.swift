@@ -153,4 +153,23 @@ struct SemanticSearchStoreStagingTests {
         }
         #expect(stale == .ignoredStale(currentSourceHash: "h1"))
     }
+
+    @Test func aWrongLengthVectorUnderTheEmbeddersStampIsDroppedAndReembedded() async throws {
+        let embedder = FakeEmbedder()
+        let store = try makeStore(embedder: embedder)
+        try store.applyServerPassages(
+            documentID: "doc", title: "T", sourceHash: "h1",
+            passages: [ServerPassage(chunkIndex: 0, content: "the automobile needs oil", embedding: [1, 0, 0],
+                                     semanticStamp: embedder.stamp)])
+        try store.database.write { conn in
+            try store.stageDocument(
+                in: conn, documentID: "d2", title: nil, content: "spare tyres",
+                vector: StagedVector(embedding: [], stamp: embedder.stamp))
+        }
+        #expect(try store.pendingCount() == 2)
+        // Nothing malformed was stored, so a semantic query still runs.
+        #expect(try await store.search("vehicle", mode: .semantic).isEmpty)
+        #expect(try await store.embedPending() == 2)
+        #expect(try await store.search("vehicle", mode: .semantic).first?.documentID == "doc")
+    }
 }
