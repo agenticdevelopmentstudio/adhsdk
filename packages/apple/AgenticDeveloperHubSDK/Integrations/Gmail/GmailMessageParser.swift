@@ -12,6 +12,10 @@ public enum GmailMessageParser {
         let labelIds = dto.labelIds ?? []
         var content = Content()
         if let payload = dto.payload { walk(payload, into: &content) }
+        if !content.hasOwnBody {
+            content.text = content.embeddedText
+            content.html = content.embeddedHtml
+        }
         return EmailMessage(
             id: existingId ?? UUID().uuidString.lowercased(),
             connectionId: connectionId,
@@ -38,32 +42,55 @@ public enum GmailMessageParser {
     private struct Content {
         var text: String?
         var html: String?
+        var embeddedText: String?
+        var embeddedHtml: String?
         var attachments: [EmailAttachmentRef] = []
+
+        /// The message's own body wins; an embedded message's is shown only when the message has
+        /// none, so a wrapper that carries nothing but a `message/rfc822` is not empty.
+        var hasOwnBody: Bool { text != nil || html != nil }
     }
 
-    /// - Parameter inBody: whether `part` is still the message's own content. A named part
+    /// Where a part sits relative to the message's own content.
+    private enum Place {
+        /// The message's own content.
+        case body
+        /// Inside an unnamed `message/rfc822`: not the body, unless the message has no other.
+        case embedded
+        /// Inside a named part: a file, never body text.
+        case file
+    }
+
+    /// - Parameter place: whether `part` is still the message's own content. A named part
     ///   or an embedded `message/rfc822` is something the message carries — a bounce's
     ///   original, a forwarded `.eml` — and nothing inside it is this message's body, though
     ///   the files inside it are still listed.
-    private static func walk(_ part: GmailPart, into content: inout Content, inBody: Bool = true) {
+    private static func walk(_ part: GmailPart, into content: inout Content, place: Place = .body) {
         let mime = (part.mimeType ?? "").lowercased()
         let filename = part.filename ?? ""
-        let childrenInBody = inBody && filename.isEmpty && mime != "message/rfc822"
+        let childPlace: Place
+        if !filename.isEmpty {
+            childPlace = .file
+        } else if place == .body && mime == "message/rfc822" {
+            childPlace = .embedded
+        } else {
+            childPlace = place
+        }
         if !filename.isEmpty, let attachmentId = part.body?.attachmentId {
             content.attachments.append(EmailAttachmentRef(
                 attachmentId: attachmentId, filename: filename,
                 mimeType: part.mimeType ?? "application/octet-stream", size: part.body?.size ?? 0
             ))
-        } else if !filename.isEmpty {
+        } else if !filename.isEmpty || place == .file {
             // A named part is a file even when Gmail inlined it; it is never the message body.
-        } else if !inBody {
-            // Inside an attachment or an embedded message: not this message's text.
-        } else if mime == "text/plain", content.text == nil, let decoded = decodeBody(part) {
-            content.text = decoded
-        } else if mime == "text/html", content.html == nil, let decoded = decodeBody(part) {
-            content.html = decoded
+        } else if mime == "text/plain" {
+            if place == .body, content.text == nil { content.text = decodeBody(part) }
+            if place == .embedded, content.embeddedText == nil { content.embeddedText = decodeBody(part) }
+        } else if mime == "text/html" {
+            if place == .body, content.html == nil { content.html = decodeBody(part) }
+            if place == .embedded, content.embeddedHtml == nil { content.embeddedHtml = decodeBody(part) }
         }
-        for child in part.parts ?? [] { walk(child, into: &content, inBody: childrenInBody) }
+        for child in part.parts ?? [] { walk(child, into: &content, place: childPlace) }
     }
 
     private static func decodeBody(_ part: GmailPart) -> String? {

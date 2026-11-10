@@ -83,6 +83,39 @@ enum GmailFixture {
         #expect(msg.attachments.isEmpty)
     }
 
+    @Test func aMessageWhoseOnlyContentIsAnUnnamedEmbeddedMessageShowsItsBody() {
+        let inner = GmailPart(mimeType: "multipart/alternative", parts: [
+            GmailPart(mimeType: "text/plain", body: GmailBody(data: "aW5uZXI")),
+            GmailPart(mimeType: "text/html", body: GmailBody(data: "PGI-aW5uZXI8L2I-"))
+        ])
+        let dto = GmailMessageDTO(id: "m", threadId: "t", internalDate: "0", payload: GmailPart(
+            mimeType: "multipart/mixed", parts: [GmailPart(mimeType: "message/rfc822", parts: [inner])]))
+        let msg = GmailMessageParser.parse(dto, connectionId: "c", existingId: nil)
+        #expect(msg.bodyText == "inner")
+        #expect(msg.bodyHtml == "<b>inner</b>")
+    }
+
+    @Test func anEmbeddedMessageIsNotMergedIntoAnOuterBody() {
+        let embedded = GmailPart(mimeType: "message/rfc822", parts: [
+            GmailPart(mimeType: "text/plain", body: GmailBody(data: "aW5uZXI")),
+            GmailPart(mimeType: "text/html", body: GmailBody(data: "PGI-aW5uZXI8L2I-"))
+        ])
+        let outer = GmailPart(mimeType: "text/plain", body: GmailBody(data: "Ym9keQ"))
+        let dto = GmailMessageDTO(id: "m", threadId: "t", internalDate: "0",
+                                  payload: GmailPart(mimeType: "multipart/mixed", parts: [outer, embedded]))
+        let msg = GmailMessageParser.parse(dto, connectionId: "c", existingId: nil)
+        #expect(msg.bodyText == "body")
+        #expect(msg.bodyHtml == nil)
+    }
+
+    @Test func aNamedPartInsideAnEmbeddedMessageNeverBecomesTheBody() {
+        let named = GmailPart(mimeType: "text/plain", filename: "n.txt", body: GmailBody(data: "bm90ZXM"))
+        let dto = GmailMessageDTO(id: "m", threadId: "t", internalDate: "0", payload: GmailPart(
+            mimeType: "multipart/mixed", parts: [GmailPart(mimeType: "message/rfc822", parts: [named])]))
+        let msg = GmailMessageParser.parse(dto, connectionId: "c", existingId: nil)
+        #expect(msg.bodyText == nil)
+    }
+
     @Test func missingInternalDateFallsBackToTheDateHeader() {
         let dto = GmailMessageDTO(id: "m", threadId: "t", payload: GmailPart(headers: [
             GmailHeader(name: "Date", value: "Tue, 05 Nov 2024 09:46:40 +0000")
