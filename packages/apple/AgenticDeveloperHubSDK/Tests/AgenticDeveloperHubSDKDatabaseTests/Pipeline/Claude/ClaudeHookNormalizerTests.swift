@@ -1,8 +1,8 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The Claude hook adapter against one real-shaped envelope per hook type
 /// (`Fixtures/hooks/*.json`, one file per hook; the file stem is the dedup key).

@@ -1,6 +1,6 @@
 // swiftlint:disable identifier_name
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// A throwaway session database for tests that need the real schema (the
 /// `ingestion_errors` table, for one). Every test that opens one removes it

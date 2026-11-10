@@ -1,4 +1,4 @@
-#if canImport(AgenticToolkitCore)
+#if canImport(AgenticDeveloperHubSDKCore)
 import Foundation
 
 /// The Claude Code provider's name and the source kinds its records are archived under.

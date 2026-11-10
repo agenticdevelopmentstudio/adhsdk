@@ -1,4 +1,4 @@
-#if canImport(AgenticToolkitCore)
+#if canImport(AgenticDeveloperHubSDKCore)
 import Foundation
 
 public enum ClaudeNormalizerError: Error, Equatable {

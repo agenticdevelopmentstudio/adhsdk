@@ -1,5 +1,5 @@
-#if canImport(AgenticToolkitCore)
-import AgenticToolkitCore
+#if canImport(AgenticDeveloperHubSDKCore)
+import AgenticDeveloperHubSDKCore
 import Foundation
 
 /// Spools the hook envelopes the hook binary leaves in the drop directory

@@ -1,9 +1,9 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import CryptoKit
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The records the legacy-split migration writes into `claude-raw.db` from the
 /// old `stenographer.db` (`scripts/legacy_split.py convert`), and the resumable

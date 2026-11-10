@@ -1,8 +1,8 @@
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import Foundation
 import GRDB
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// The Claude pipeline as the runtime assembles it: drop files and transcript lines
 /// in, through the spool, the archive and the event store, out to the session

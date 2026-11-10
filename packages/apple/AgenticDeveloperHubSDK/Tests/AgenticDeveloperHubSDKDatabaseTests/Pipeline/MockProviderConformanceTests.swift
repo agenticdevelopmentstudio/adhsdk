@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import AgenticToolkitDatabase
+@testable import AgenticDeveloperHubSDKDatabase
 
 /// Wraps the mock normalizer and perturbs its output.
 private struct PerturbedNormalizer: Normalizer {
