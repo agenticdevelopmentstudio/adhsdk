@@ -160,18 +160,11 @@ public final class EventStore: @unchecked Sendable {
                     raw_ref INTEGER NOT NULL,
                     UNIQUE (provider, dedup_key))
                 """)
-            try conn.execute(sql: """
-                CREATE TABLE IF NOT EXISTS turns (
-                    id INTEGER PRIMARY KEY,
-                    provider TEXT NOT NULL, dedup_key TEXT NOT NULL, session_id TEXT NOT NULL, time REAL NOT NULL,
-                    model TEXT, account TEXT, agent TEXT, tool_name TEXT,
-                    input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL,
-                    cache_read_tokens INTEGER NOT NULL, cache_write_tokens INTEGER NOT NULL,
-                    cost_usd REAL, raw_ref INTEGER NOT NULL,
-                    as_of REAL NOT NULL, attrs TEXT NOT NULL DEFAULT '{}',
-                    field_as_of TEXT NOT NULL DEFAULT '{}',
-                    UNIQUE (provider, dedup_key))
-                """)
+            // AUTOINCREMENT for the same reason as `events`: the usage recount
+            // walks "turns after id N" and the trim deletes only turns at or
+            // below that cursor, so an id freed by trimming the newest-id rows
+            // must never be handed to a later turn.
+            try conn.execute(sql: Self.turnsTableSQL("turns"))
             try conn.execute(sql: """
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY,
@@ -198,6 +191,9 @@ public final class EventStore: @unchecked Sendable {
                     provider TEXT NOT NULL, dedup_key TEXT NOT NULL,
                     PRIMARY KEY (provider, dedup_key)) WITHOUT ROWID
                 """)
+            // After `trimmed_turn_keys` exists: the upgrade seeds its sequence
+            // from the keys the trim recorded.
+            try Self.upgradeTurnsToAutoincrement(conn)
             // Archive records a checkpointed replay could not normalize, kept with
             // its cursor so a resumed replay still reports them. See `ReplayCheckpoint`.
             try conn.execute(sql: """
@@ -218,6 +214,57 @@ public final class EventStore: @unchecked Sendable {
     /// True when this open found the file still in bulk load, left by a replay
     /// that was killed or crashed, and rebuilt its indexes before returning.
     public let recoveredBulkLoad: Bool
+
+    /// `turns`' definition under `name`.
+    private static func turnsTableSQL(_ name: String) -> String {
+        """
+        CREATE TABLE IF NOT EXISTS \(name) (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            provider TEXT NOT NULL, dedup_key TEXT NOT NULL, session_id TEXT NOT NULL, time REAL NOT NULL,
+            model TEXT, account TEXT, agent TEXT, tool_name TEXT,
+            input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL,
+            cache_read_tokens INTEGER NOT NULL, cache_write_tokens INTEGER NOT NULL,
+            cost_usd REAL, raw_ref INTEGER NOT NULL,
+            as_of REAL NOT NULL, attrs TEXT NOT NULL DEFAULT '{}',
+            field_as_of TEXT NOT NULL DEFAULT '{}',
+            UNIQUE (provider, dedup_key))
+        """
+    }
+
+    /// Rebuilds a `turns` table made before it was declared AUTOINCREMENT
+    /// (SQLite cannot add it in place), inside the opening transaction: every
+    /// row is copied with its id, the copy is counted, and only then does the
+    /// old table go. The indexes are recreated by the caller's index loop.
+    ///
+    /// The old table handed out `MAX(id) + 1`, so ids freed by a trim may
+    /// already have been seen by a cursor. The sequence is seeded at the most
+    /// any id can have reached: one id per row ever inserted, which is the
+    /// rows held plus the rows the trim deleted (each recorded once in
+    /// `trimmed_turn_keys`, and a trimmed key is never stored again). Every
+    /// later turn gets an id above anything a cursor taken on this file holds.
+    static func upgradeTurnsToAutoincrement(_ conn: Database) throws {
+        let sql = try String.fetchOne(
+            conn, sql: "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'turns'") ?? ""
+        guard !sql.uppercased().contains("AUTOINCREMENT") else { return }
+        let columns = "id, provider, dedup_key, session_id, time, model, account, agent, tool_name, "
+            + "input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, raw_ref, "
+            + "as_of, attrs, field_as_of"
+        try conn.execute(sql: "DROP TABLE IF EXISTS turns_autoincrement")
+        try conn.execute(sql: turnsTableSQL("turns_autoincrement"))
+        try conn.execute(sql: "INSERT INTO turns_autoincrement(\(columns)) SELECT \(columns) FROM turns")
+        let held = try Int64.fetchOne(conn, sql: "SELECT COUNT(*) FROM turns") ?? 0
+        let copied = try Int64.fetchOne(conn, sql: "SELECT COUNT(*) FROM turns_autoincrement") ?? 0
+        guard held == copied else {
+            throw DatabaseError(message: "turns upgrade copied \(copied) of \(held) rows")
+        }
+        let maxId = try Int64.fetchOne(conn, sql: "SELECT COALESCE(MAX(id), 0) FROM turns") ?? 0
+        let trimmed = try Int64.fetchOne(conn, sql: "SELECT COUNT(*) FROM trimmed_turn_keys") ?? 0
+        let seed = max(maxId, held + trimmed)
+        try conn.execute(sql: "DROP TABLE turns")
+        try conn.execute(sql: "ALTER TABLE turns_autoincrement RENAME TO turns")
+        try conn.execute(sql: "DELETE FROM sqlite_sequence WHERE name IN ('turns', 'turns_autoincrement')")
+        try conn.execute(sql: "INSERT INTO sqlite_sequence(name, seq) VALUES ('turns', ?)", arguments: [seed])
+    }
 
     // MARK: - Live writers
 
