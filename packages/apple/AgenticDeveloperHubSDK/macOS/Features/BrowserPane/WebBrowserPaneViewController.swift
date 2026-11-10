@@ -1243,11 +1243,17 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// Camera and microphone, decided by the Media setting: granted or refused
     /// outright, or asked about — on the pane's window, naming the site, so
     /// the answer is given to the page that asked and nothing else.
+    ///
+    /// Only the tab in front is asked about. The sheet covers whatever page is
+    /// showing, so a background tab's question would appear over another
+    /// site and an Allow would grant a page the user cannot see; it is refused
+    /// instead, as a background tab's dialog is dismissed. The page can ask
+    /// again once its tab is in front.
     public func browserEngine(
         _ engine: BrowserEngine, allowsMediaCaptureFor host: String, device: String
     ) async -> Bool? {
         eventLog.record(channel: "permission", event: "request", decision: .info, detail: "\(host) \(device)")
-        let decision = await decideMediaCapture(host: host, device: device)
+        let decision = await decideMediaCapture(host: host, device: device, askingFrom: engine)
         let answer = switch decision {
         case true?: "granted"
         case false?: "denied"
@@ -1259,12 +1265,13 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         return decision
     }
 
-    private func decideMediaCapture(host: String, device: String) async -> Bool? {
+    private func decideMediaCapture(host: String, device: String, askingFrom engine: BrowserEngine) async -> Bool? {
         switch settings.get(UserSettings.browserMediaCapture) {
         case .allow: return true
         case .deny: return false
         case .ask: break
         }
+        guard isFront(engine) else { return false }
         guard let window = view.window else { return nil }
         let alert = NSAlert()
         alert.messageText = "\(host) wants to use your \(device)."
