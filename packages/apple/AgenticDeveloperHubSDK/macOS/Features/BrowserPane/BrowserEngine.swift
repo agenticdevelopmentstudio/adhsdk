@@ -157,10 +157,10 @@ public struct BrowserResolvedJar {
     /// Why the worktree or pane jar asked for could not be made; the store is
     /// then a non-persistent one of the pane's own.
     public let fallbackReason: String?
-    private let makeWebKitDataStore: () -> WKWebsiteDataStore
+    private let makeWebKitDataStore: @MainActor () -> WKWebsiteDataStore
 
     public init(
-        webKitDataStore: @autoclosure @escaping () -> WKWebsiteDataStore,
+        webKitDataStore: @autoclosure @escaping @MainActor () -> WKWebsiteDataStore,
         jar: BrowserStorageJar?, jarID: UUID?, fallbackReason: String? = nil
     ) {
         self.makeWebKitDataStore = webKitDataStore
@@ -171,7 +171,7 @@ public struct BrowserResolvedJar {
 
     /// The WebKit store for this jar, made when asked for: a Chrome pane
     /// never asks, so never makes a WebKit store it does not use.
-    public var webKitDataStore: WKWebsiteDataStore { makeWebKitDataStore() }
+    @MainActor public var webKitDataStore: WKWebsiteDataStore { makeWebKitDataStore() }
 
     /// Whether the jar asked for was replaced by a non-persistent store.
     public var isFallback: Bool { fallbackReason != nil }
@@ -185,7 +185,7 @@ public struct BrowserResolvedJar {
     public var isEphemeral: Bool { jar == nil || isFallback }
 
     /// The shared store, for a pane with no jar registry and for tests.
-    public static var global: BrowserResolvedJar {
+    @MainActor public static var global: BrowserResolvedJar {
         BrowserResolvedJar(webKitDataStore: .default(), jar: .global, jarID: nil)
     }
 }
