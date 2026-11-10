@@ -272,6 +272,8 @@ class ADHRequestContextHandler : public CefRequestContextHandler, public CefReso
 - (void)dialog:(ADHChromiumDialogKind)kind message:(NSString*)message;
 - (nullable ADHChromiumBrowserView*)popupViewForAddress:(NSString*)address userGesture:(BOOL)userGesture;
 - (CefRefPtr<CefClient>)adoptPopupWithWindowInfo:(CefWindowInfo&)windowInfo settings:(CefBrowserSettings&)settings;
+- (BOOL)isCreatingBrowser;
+- (void)popupCreationDidAbort;
 - (BOOL)destinationForDownloadNamed:(NSString*)name completion:(void (^)(NSString* _Nullable path))completion;
 - (BOOL)mediaCaptureForHost:(NSString*)host
                      camera:(BOOL)camera
@@ -302,7 +304,10 @@ class ADHBrowserClient : public CefClient,
                          public CefDevToolsMessageObserver {
  public:
   ADHBrowserClient(ADHChromiumBrowserView* view, bool acceptsCookies, ADHChromiumThirdPartyBlocking thirdParty)
-      : view_(view), acceptsCookies_(acceptsCookies), thirdParty_(std::make_shared<ADHThirdPartyFilter>(thirdParty)) {}
+      : view_(view),
+        acceptsCookies_(acceptsCookies),
+        thirdParty_(std::make_shared<ADHThirdPartyFilter>(thirdParty)),
+        pendingPopups_([NSMapTable strongToWeakObjectsMapTable]) {}
 
   void SetAcceptsCookies(bool accepts) { acceptsCookies_.store(accepts); }
   void SetThirdPartyBlocking(ADHChromiumThirdPartyBlocking blocking) { thirdParty_->SetBlocking(blocking); }
@@ -361,9 +366,22 @@ class ADHBrowserClient : public CefClient,
     [ADHChromiumRuntime.shared browserDidClose];
   }
 
+  /// Chromium allowed a popup in `OnBeforePopup` and then failed to create it
+  /// (the opener closed or navigated mid-creation, or creation failed), so
+  /// the popup's own client never hears of it. This is called on the opener's
+  /// client: the pending popup view is found by `popup_id` and told to undo
+  /// what adopting it did. It can arrive after the opener's `OnBeforeClose`,
+  /// so it reads only this client's own table, never the opener's view.
+  void OnBeforePopupAborted(CefRefPtr<CefBrowser> /*browser*/, int popup_id) override {
+    NSNumber* key = @(popup_id);
+    ADHChromiumBrowserView* popup = [pendingPopups_ objectForKey:key];
+    [pendingPopups_ removeObjectForKey:key];
+    [popup popupCreationDidAbort];
+  }
+
   bool OnBeforePopup(CefRefPtr<CefBrowser> /*browser*/,
                      CefRefPtr<CefFrame> /*frame*/,
-                     int /*popup_id*/,
+                     int popup_id,
                      const CefString& target_url,
                      const CefString& /*target_frame_name*/,
                      WindowOpenDisposition /*target_disposition*/,
@@ -386,6 +404,14 @@ class ADHBrowserClient : public CefClient,
     if (!adopted) {
       return true;
     }
+    // Dead entries (popups that were created, or whose view went away) are
+    // dropped here, so the table stays the size of the popups in flight.
+    for (NSNumber* key in pendingPopups_.keyEnumerator.allObjects) {
+      if (![[pendingPopups_ objectForKey:key] isCreatingBrowser]) {
+        [pendingPopups_ removeObjectForKey:key];
+      }
+    }
+    [pendingPopups_ setObject:popup forKey:@(popup_id)];
     client = adopted;
     return false;
   }
@@ -628,6 +654,9 @@ class ADHBrowserClient : public CefClient,
   __weak ADHChromiumBrowserView* view_;
   std::atomic<bool> acceptsCookies_;
   std::shared_ptr<ADHThirdPartyFilter> thirdParty_;
+  /// Popup views adopted in `OnBeforePopup` and not yet created, by popup id,
+  /// held weakly: the view's own self-retain keeps it alive while it waits.
+  NSMapTable<NSNumber*, ADHChromiumBrowserView*>* pendingPopups_;
   IMPLEMENT_REFCOUNTING(ADHBrowserClient);
 };
 
@@ -828,6 +857,36 @@ typedef void (^ADHDevToolsCompletion)(NSDictionary<NSString*, id>* _Nullable, NS
   }
   [ADHChromiumRuntime.shared browserDidOpen];
   return _client;
+}
+
+- (BOOL)isCreatingBrowser {
+  return _creating;
+}
+
+/// Chromium aborted the popup it was creating for this view, so
+/// `browserDidOpen:` and `browserDidClose` will never run: undo what adoption
+/// did (the creating flag, the self-retain, the runtime's open count) and, as
+/// with a page that closes itself, tell the host so the tab goes away.
+- (void)popupCreationDidAbort {
+  if (!_creating || _browser) {
+    return;
+  }
+  // Released at the end of this method, not here: it may be the last owner.
+  ADHChromiumBrowserView* retained = _retainedWhileCreating;
+  _creating = NO;
+  _retainedWhileCreating = nil;
+  [ADHChromiumRuntime.shared browserDidClose];
+  if (_client) {
+    _client->Detach();
+  }
+  [self failPendingWithDescription:@"Chromium could not create the popup"];
+  if (!_closed) {
+    _closed = YES;
+    id<ADHChromiumBrowserViewDelegate> delegate = _delegate;
+    _delegate = nil;
+    [delegate chromiumBrowserViewDidClose:self];
+  }
+  (void)retained;
 }
 
 - (void)browserDidOpen:(CefRefPtr<CefBrowser>)browser {
