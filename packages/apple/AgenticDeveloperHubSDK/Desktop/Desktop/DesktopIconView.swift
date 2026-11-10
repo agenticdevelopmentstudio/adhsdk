@@ -1,8 +1,10 @@
 import AppKit
 
-/// One icon tile and its label. Passive: the grid view handles all mouse input.
+/// One icon tile and its label. Passive: the grid view handles all mouse and key input.
 final class DesktopIconView: NSView {
     let appIdentifier: String
+    /// What an accessibility press does: the grid sets it to open the App.
+    var onPress: (() -> Void)?
     private let imageView = NSImageView()
     private let label = NSTextField(labelWithString: "")
     private let metrics: DesktopIconLayout.Metrics
@@ -47,6 +49,14 @@ final class DesktopIconView: NSView {
     }
 
     override var isFlipped: Bool { true }
+
+    override func accessibilityPerformPress() -> Bool {
+        guard let onPress else { return false }
+        onPress()
+        return true
+    }
+
+    override func isAccessibilitySelected() -> Bool { isSelected }
 
     override func layout() {
         super.layout()

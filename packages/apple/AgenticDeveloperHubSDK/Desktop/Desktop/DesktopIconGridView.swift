@@ -51,7 +51,12 @@ final class DesktopIconGridView: NSView {
         iconViews = [:]
         for app in apps {
             let view = DesktopIconView(app: app, metrics: metrics)
-            iconViews[app.descriptor.identifier] = view
+            let id = app.descriptor.identifier
+            view.onPress = { [weak self] in
+                self?.select(id)
+                self?.onOpen?(id)
+            }
+            iconViews[id] = view
             addSubview(view)
         }
         if let selectedIdentifier, iconViews[selectedIdentifier] == nil {
@@ -135,12 +140,47 @@ final class DesktopIconGridView: NSView {
         onMoveIcon?(finished.id, view.frame.origin)
     }
 
+    enum Direction { case left, right, above, below }
+
     override func keyDown(with event: NSEvent) {
         let isReturn = event.keyCode == 36 || event.keyCode == 76
-        if isReturn, let selectedIdentifier {
+        let isOpen = event.modifierFlags.contains(.command)
+            && (event.keyCode == 125 || event.charactersIgnoringModifiers == "o")
+        if isReturn || isOpen, let selectedIdentifier {
             onOpen?(selectedIdentifier)
+            return
+        }
+        let directions: [UInt16: Direction] = [123: .left, 124: .right, 125: .below, 126: .above]
+        if let direction = directions[event.keyCode], !event.modifierFlags.contains(.command) {
+            moveSelection(direction)
         } else {
             super.keyDown(with: event)
         }
+    }
+
+    /// Selects the nearest icon in `direction` from the selected one, as Finder does. With
+    /// nothing selected, selects the first icon.
+    func moveSelection(_ direction: Direction) {
+        guard let current = selectedIdentifier.flatMap({ iconViews[$0] }) else {
+            select(sortedIdentifiers.first)
+            return
+        }
+        let from = CGPoint(x: current.frame.midX, y: current.frame.midY)
+        var best: (id: String, score: CGFloat)?
+        for (id, view) in iconViews where id != current.appIdentifier {
+            let deltaX = view.frame.midX - from.x
+            let deltaY = view.frame.midY - from.y
+            // Along: distance in the arrow's direction (y grows downward). Across: drift off it.
+            let (along, across): (CGFloat, CGFloat) = switch direction {
+            case .left: (-deltaX, deltaY)
+            case .right: (deltaX, deltaY)
+            case .above: (-deltaY, deltaX)
+            case .below: (deltaY, deltaX)
+            }
+            guard along > 1 else { continue }
+            let score = along + 2 * abs(across)
+            if score < (best?.score ?? .infinity) { best = (id, score) }
+        }
+        if let best { select(best.id) }
     }
 }

@@ -118,6 +118,45 @@ final class DesktopViewControllerTests: XCTestCase {
         XCTAssertEqual(settings.iconPositions["b"], CGPoint(x: 8, y: 104))
     }
 
+    func test_accessibilityPress_onAnIcon_opensItsApp() throws {
+        let controller = makeController(names: [("a", "Alpha"), ("b", "Bravo")])
+        let icon = try XCTUnwrap(allSubviews(of: controller.view)
+            .compactMap { $0 as? DesktopIconView }.first { $0.appIdentifier == "b" })
+        XCTAssertTrue(icon.accessibilityPerformPress())
+        XCTAssertEqual(controller.openWindowIdentifiers, ["b"])
+        XCTAssertEqual(controller.selectedAppIdentifier, "b")
+    }
+
+    func test_arrowKeys_moveTheSelectionThroughTheGrid_andReturnOpens() throws {
+        // A 300pt-tall Desktop, less its menu bar, holds two rows: a b down the first column, c d the next.
+        let controller = makeController(names: [("a", "A"), ("b", "B"), ("c", "C"), ("d", "D")])
+        controller.view.frame = NSRect(x: 0, y: 0, width: 800, height: 300)
+        controller.view.layoutSubtreeIfNeeded()
+        let grid = try XCTUnwrap(gridView(of: controller))
+        XCTAssertEqual(controller.iconOrigins["c"], CGPoint(x: 104, y: 8))
+        func press(_ keyCode: UInt16, _ characters: String = "") {
+            grid.keyDown(with: NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: 0,
+                context: nil, characters: characters, charactersIgnoringModifiers: characters,
+                isARepeat: false, keyCode: keyCode
+            )!)
+        }
+        press(125)
+        XCTAssertEqual(controller.selectedAppIdentifier, "a")
+        press(125)
+        XCTAssertEqual(controller.selectedAppIdentifier, "b")
+        press(126)
+        XCTAssertEqual(controller.selectedAppIdentifier, "a")
+        press(124)
+        XCTAssertEqual(controller.selectedAppIdentifier, "c")
+        press(124)
+        XCTAssertEqual(controller.selectedAppIdentifier, "c")
+        press(125)
+        XCTAssertEqual(controller.selectedAppIdentifier, "d")
+        press(36, "\r")
+        XCTAssertEqual(controller.openWindowIdentifiers, ["d"])
+    }
+
     private func gridView(of controller: DesktopViewController) -> DesktopIconGridView? {
         allSubviews(of: controller.view).compactMap { $0 as? DesktopIconGridView }.first
     }
