@@ -134,7 +134,7 @@ struct SemanticSearchStoreStagingTests {
     @Test func serverPassagesApplyInsideTheCallersTransaction() async throws {
         let embedder = FakeEmbedder()
         let store = try makeStore(embedder: embedder)
-        let vector = try await embedder.embed("alpha one", task: .document(title: "T"))
+        let vector = embedder.vector("alpha one")
         let result = try store.database.write { conn in
             try conn.execute(sql: "CREATE TABLE sibling (id TEXT)")
             try conn.execute(sql: "INSERT INTO sibling VALUES ('x')")
@@ -145,6 +145,7 @@ struct SemanticSearchStoreStagingTests {
                            ServerPassage(chunkIndex: 1, content: "beta two")])
         }
         #expect(result == .applied)
+        #expect(embedder.embedCount == 0, "a server vector with the running stamp is not embedded again")
         #expect(try await store.search("beta", mode: .keyword).map(\.documentID) == ["doc"])
         // Only the passage that came without a vector is left to embed.
         #expect(try store.pendingCount() == 1)
