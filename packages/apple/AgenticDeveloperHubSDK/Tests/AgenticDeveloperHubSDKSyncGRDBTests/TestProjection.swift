@@ -17,6 +17,7 @@ final class TestProjection: SyncMirrorProjection, @unchecked Sendable {
     private var truncations: [[String]] = []
     private var purges = 0
     private var fullRowFlags: [Bool] = []
+    private var finishes: [Int] = []
 
     init(resources: Set<String> = ["test.people"], table: String = "people") {
         self.resources = resources
@@ -29,6 +30,9 @@ final class TestProjection: SyncMirrorProjection, @unchecked Sendable {
     /// ever reaches only the requirement without the flag, which is what the
     /// protocol's forwarding default would make it do.
     var upsertFullRowFlags: [Bool] { lock.withLock { fullRowFlags } }
+    /// One entry per `finishBatch` call: how many rows the table held then,
+    /// which shows the call came after the batch's writes, in its transaction.
+    var finishedBatches: [Int] { lock.withLock { finishes } }
 
     func createTables(in conn: Database) throws {
         try conn.execute(sql: """
@@ -83,6 +87,11 @@ final class TestProjection: SyncMirrorProjection, @unchecked Sendable {
 
     func purgeIdentityState(in conn: Database) throws {
         lock.withLock { purges += 1 }
+    }
+
+    func finishBatch(in conn: Database) throws {
+        let rows = try Int.fetchOne(conn, sql: "SELECT count(*) FROM \(table)") ?? 0
+        lock.withLock { finishes.append(rows) }
     }
 
     func rows(resource: String, limit: Int, offset: Int, in conn: Database) throws -> [[String: JSONValue]] {

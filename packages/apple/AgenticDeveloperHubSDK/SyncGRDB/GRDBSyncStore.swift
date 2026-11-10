@@ -273,6 +273,10 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                         )
                     }
                 }
+                // Every projection, not only those the batch reached: one may
+                // derive from a resource it does not own (a title kept in the
+                // generic mirror).
+                for projection in store.mirrorProjections { try projection.finishBatch(in: conn) }
                 if let cursor {
                     try conn.execute(
                         sql: """
@@ -353,6 +357,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                     resource: mutation.resource, id: mutation.rowId, syncVersion: base ?? 0,
                     data: mutation.data ?? [:], isFullRow: false, in: conn)
             }
+            try projection.finishBatch(in: conn)
         } else {
             let table = try Self.mirrorTableName(for: mutation.resource)
             base = try Int.fetchOne(

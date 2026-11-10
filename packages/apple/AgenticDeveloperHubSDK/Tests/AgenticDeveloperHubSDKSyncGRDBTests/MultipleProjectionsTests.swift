@@ -81,6 +81,26 @@ struct MultipleProjectionsTests {
         #expect(people.upsertFullRowFlags.isEmpty)
     }
 
+    @Test("a pulled batch is finished once by every projection, after its writes; a staged one by its own")
+    func finishBatchOncePerWrite() async throws {
+        let people = TestProjection(resources: ["test.people"], table: "people")
+        let places = TestProjection(resources: ["test.places"], table: "places")
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: ":memory:"), projections: [people, places])
+        try await store.prepare(resources: resources)
+        try await store.apply([
+            SyncChange(resource: "test.places", id: "l1", op: .upsert, syncVersion: "1",
+                       data: ["name": .string("Kew")]),
+            SyncChange(resource: "test.places", id: "l2", op: .upsert, syncVersion: "2",
+                       data: ["name": .string("Wisley")]),
+            SyncChange(resource: "test.other", id: "o1", op: .upsert, syncVersion: "3", data: [:])
+        ], advancingTo: nil)
+        #expect(places.finishedBatches == [2], "one call for the batch, after both rows")
+        #expect(people.finishedBatches == [0], "a projection the batch did not reach is finished too")
+        try await store.stage(LocalMutation(resource: "test.places", rowId: "l1", type: .delete, data: nil))
+        #expect(places.finishedBatches == [2, 2])
+        #expect(people.finishedBatches == [0], "a staged mutation finishes only the claiming projection")
+    }
+
     @Test("a projection that claims a family of resources gets the whole family in one truncate call")
     func aFamilyIsTruncatedInOneCall() async throws {
         let family = TestProjection(resources: ["test.people", "test.places"], table: "family")
