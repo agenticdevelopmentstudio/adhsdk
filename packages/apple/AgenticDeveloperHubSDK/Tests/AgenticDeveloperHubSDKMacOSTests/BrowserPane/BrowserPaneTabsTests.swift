@@ -25,6 +25,7 @@ final class FakeBrowserEngine: BrowserEngine {
     var heldLoadURL: URL? { nil }
     private(set) var loads: [URL] = []
     private(set) var isTornDown = false
+    private(set) var isClosedByPage = false
 
     init(configuration: BrowserEngineConfiguration) {
         self.configuration = configuration
@@ -57,6 +58,13 @@ final class FakeBrowserEngine: BrowserEngine {
         delegate?.browserEngineDidCommitNavigation(self)
         delegate?.browserEngineAddressDidChange(self)
         delegate?.browserEngineDidFinishNavigation(self)
+    }
+
+    /// The page calls `window.close()`. `destroysPage` is Chromium's way,
+    /// whose browser is gone after it; WebKit's page only stops.
+    func pageClosesItself(destroysPage: Bool = false) {
+        isClosedByPage = destroysPage
+        delegate?.browserEngineDidRequestClose(self)
     }
 }
 
@@ -123,5 +131,59 @@ final class BrowserPaneTabsTests: XCTestCase {
         pane.newTab(nil)
         let answer = await pane.browserEngine(background, allowsMediaCaptureFor: "example.com", device: "camera")
         XCTAssertEqual(answer, true, "no question is shown, so nothing is shown over the wrong tab")
+    }
+
+    // MARK: - window.close()
+
+    private let page = URL(string: "https://example.com/inbox")!
+
+    func testAPageCannotCloseThePanesOnlyTab() throws {
+        let pane = makePane()
+        let only = engines[0]
+        only.commit(page)
+        only.pageClosesItself()
+        XCTAssertFalse(only.isTornDown)
+        XCTAssertTrue(pane.engine === only, "the page was only stopped; it stays")
+        XCTAssertEqual(engines.count, 1)
+        XCTAssertEqual(storedTabs.tabs.map(\.url), [page.absoluteString], "the tab keeps its page")
+    }
+
+    func testAPageCannotCloseATabTheUserOpened() throws {
+        let pane = makePane()
+        pane.newTab(nil)
+        let opened = engines[1]
+        opened.commit(page)
+        opened.pageClosesItself()
+        XCTAssertFalse(opened.isTornDown)
+        XCTAssertEqual(storedTabs.tabs.count, 2)
+        XCTAssertTrue(pane.engine === opened)
+    }
+
+    func testAPopupsPageClosesItsTabAndTheOpenerComesBack() throws {
+        let pane = makePane()
+        let opener = engines[0]
+        opener.commit(page)
+        let popup = FakeBrowserEngine(configuration: opener.configuration)
+        XCTAssertTrue(pane.browserEngine(opener, didOpenPopup: popup))
+        XCTAssertTrue(pane.engine === popup)
+        XCTAssertEqual(storedTabs.tabs.count, 2)
+
+        popup.pageClosesItself()
+        XCTAssertTrue(popup.isTornDown)
+        XCTAssertEqual(storedTabs.tabs.count, 1)
+        XCTAssertTrue(pane.engine === opener)
+    }
+
+    func testAnIgnoredCloseThatDestroyedThePageGetsANewEngineOnTheSamePage() throws {
+        let pane = makePane()
+        let only = engines[0]
+        only.commit(page)
+        only.pageClosesItself(destroysPage: true)
+        XCTAssertTrue(only.isTornDown, "Chromium's browser is gone; the engine is replaced")
+        let revived = try XCTUnwrap(engines.last)
+        XCTAssertTrue(revived !== only)
+        XCTAssertTrue(pane.engine === revived)
+        XCTAssertEqual(revived.loads, [page], "the tab reopens on the page it showed")
+        XCTAssertEqual(storedTabs.tabs.map(\.url), [page.absoluteString])
     }
 }

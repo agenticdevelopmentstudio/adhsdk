@@ -558,6 +558,8 @@ open class WebBrowserPaneViewController: NSViewController {
             tab.engine = made
             tab.storedTitle = titles[index]
             tab.resetVisit()
+            // The new engine loads the page itself; no page opened it.
+            tab.openedByPage = false
             wireEngine(made)
             onEngineMade?(made)
             tab.content.show(made.view)
@@ -986,6 +988,8 @@ open class WebBrowserPaneViewController: NSViewController {
         guard tabs.contains(where: { $0 === tab }) else { return }
         guard tabs.count > 1 else {
             if pageClosedItself { replaceEngine(of: tab) }
+            // A blank tab of the pane's own now, which no page may close.
+            tab.openedByPage = false
             tab.storedTitle = nil
             tab.pendingURL = nil
             startLoad(Self.blankPage, in: tab)
@@ -1167,16 +1171,28 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// when it is the neighbour. Only a window a page opened may close
     /// itself: a tab the person opened, or one restored at launch, is theirs
     /// to close, and its page asking is refused, as a browser refuses
-    /// `window.close()` from a window a script did not open.
+    /// `window.close()` from a window a script did not open. WebKit only
+    /// stops a refused page, which stays usable; Chromium has already
+    /// destroyed it, so the tab gets a new engine on the page it showed.
     public func browserEngineDidRequestClose(_ engine: BrowserEngine) {
         guard let tab = tab(for: engine) else { return }
         let host = engine.url?.host ?? ""
         guard tab.openedByPage else {
             eventLog.record(channel: "navigation", event: "close-refused", decision: .withheld, detail: host)
+            if engine.isClosedByPage { revive(tab) }
             return
         }
         eventLog.record(channel: "navigation", event: "close", decision: .info, detail: host)
         closeTab(tab, pageClosedItself: true)
+    }
+
+    /// Puts a working engine back in `tab` after its page closed itself out
+    /// from under a close the pane refused, on the page it was showing.
+    private func revive(_ tab: BrowserTab) {
+        let address = [tab.engine.url, tab.requestedURL].lazy.compactMap { $0 }.first { $0 != Self.blankPage }
+        replaceEngine(of: tab)
+        startLoad(address ?? Self.blankPage, in: tab)
+        persistTabs()
     }
 
     public func browserEngine(_ engine: BrowserEngine, download event: String, host: String) {

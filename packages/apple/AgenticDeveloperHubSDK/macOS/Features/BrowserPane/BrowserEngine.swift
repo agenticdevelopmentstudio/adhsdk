@@ -90,7 +90,9 @@ public protocol BrowserEngineDelegate: AnyObject {
     /// answers `true`; `false` refuses it, and the engine tears it down.
     func browserEngine(_ engine: BrowserEngine, didOpenPopup popup: BrowserEngine) -> Bool
     /// The page closed its own window (`window.close()`); the engine has
-    /// stopped and the host lets it go.
+    /// stopped. The host lets a popup's engine go; any other page's close is
+    /// the host's to ignore (`BrowserEngine.isClosedByPage` says whether the
+    /// engine is still usable then).
     func browserEngineDidRequestClose(_ engine: BrowserEngine)
 }
 
@@ -140,6 +142,14 @@ public protocol BrowserEngine: BrowserPageDriver {
     /// A load waiting for the Third-Party Content rules to land, so a rebuild
     /// carries where the pane was going; `nil` when none is held.
     var heldLoadURL: URL? { get }
+    /// Whether a page's `window.close()` has already destroyed the page, so
+    /// a host that ignores the close must put a new engine in its place.
+    /// WebKit only stops the page, which stays usable; Chromium closes it.
+    var isClosedByPage: Bool { get }
+}
+
+extension BrowserEngine {
+    public var isClosedByPage: Bool { false }
 }
 
 /// The storage jar a pane's engine is built on, resolved once by the pane.

@@ -91,6 +91,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     private var mouseSequenceOnPage = false
 
     public var heldLoadURL: URL? { nil }
+    public private(set) var isClosedByPage = false
 
     public convenience init(configuration: BrowserEngineConfiguration) {
         let settings = configuration.settings
@@ -569,8 +570,10 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         return popup.browserView
     }
 
-    /// The page closed its own window; the host lets the tab go.
+    /// The page closed its own window. Chromium's browser is gone with it, so
+    /// the host either lets the tab go (a popup) or replaces this engine.
     public func chromiumBrowserViewDidClose(_ view: ChromiumBrowserView) {
+        isClosedByPage = true
         delegate?.browserEngineDidRequestClose(self)
     }
 }
