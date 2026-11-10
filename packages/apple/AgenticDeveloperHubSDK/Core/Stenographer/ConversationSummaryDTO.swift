@@ -124,7 +124,9 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
     /// Why it may not ("" when ``canSend``).
     public let sendRefusal: String
 
-    public init(session: SessionDTO, homeDirectory: String = NSHomeDirectory()) {
+    /// - Parameter liveSessions: the active sessions, which ``canSend`` checks for
+    ///   one sharing this session's pane.
+    public init(session: SessionDTO, liveSessions: [SessionDTO], homeDirectory: String = NSHomeDirectory()) {
         let summary = ConversationSummaryDTO(session: session, homeDirectory: homeDirectory)
         id = summary.id
         agent = summary.agent
@@ -142,7 +144,7 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
         lastTool = session.lastTool
         self.summary = session.summary
         pid = session.pid
-        let refusal = ConversationSendability.refusal(for: session)
+        let refusal = ConversationSendability.refusal(for: session, liveSessions: liveSessions)
         canSend = refusal == nil
         sendRefusal = refusal ?? ""
     }
@@ -157,7 +159,14 @@ public enum ConversationSendability {
     /// ended one: its pane holds a permission or question prompt, which ignores the
     /// typed letters and takes the Return that follows as picking its highlighted
     /// choice — approving a tool nobody approved.
-    public static func refusal(for session: SessionDTO) -> String? {
+    ///
+    /// So is a session whose pane another of `liveSessions` resolves to as well. A
+    /// headless or nested `claude` (`claude -p` from another session's Bash tool, an
+    /// agent runner) inherits its parent's `TERM_SESSION_ID` and TTY, so the pane its
+    /// record names is the parent's: text meant for the child would be typed into the
+    /// parent, which would act on it. Nothing recorded tells the two apart, so neither
+    /// is sent to while both are live.
+    public static func refusal(for session: SessionDTO, liveSessions: [SessionDTO]) -> String? {
         let id = session.sessionId
         switch ConversationStatus(session: session) {
         case .ended:
@@ -173,6 +182,23 @@ public enum ConversationSendability {
             let term = session.termProgram.isEmpty ? "an unknown terminal" : session.termProgram
             return "typing into a conversation needs iTerm2 or Terminal.app; \(id) runs in \(term)."
         }
+        if let sharer = paneSharer(of: session, among: liveSessions) {
+            return "conversation \(sharer.sessionId) runs in the same terminal pane as \(id) (a nested or "
+                + "headless claude shares its parent's), so a message can't be aimed at \(id) alone."
+        }
         return nil
+    }
+
+    /// Another active session whose pane resolves to the same target as `session`'s.
+    private static func paneSharer(of session: SessionDTO, among liveSessions: [SessionDTO]) -> SessionDTO? {
+        guard let pane = pane(of: session) else { return nil }
+        return liveSessions.first {
+            $0.sessionId != session.sessionId && $0.status == SessionStatus.active.rawValue && self.pane(of: $0) == pane
+        }
+    }
+
+    private static func pane(of session: SessionDTO) -> TerminalTextInjector.Target? {
+        TerminalTextInjector.resolveTarget(
+            termProgram: session.termProgram, termSessionId: session.termSessionId, pid: session.pid)
     }
 }

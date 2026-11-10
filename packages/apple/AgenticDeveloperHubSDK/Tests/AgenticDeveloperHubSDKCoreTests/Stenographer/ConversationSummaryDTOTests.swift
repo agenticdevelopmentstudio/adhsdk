@@ -45,21 +45,46 @@ final class ConversationSummaryDTOTests: XCTestCase {
         XCTAssertFalse(ConversationSummaryDTO.matches(app: "ghostty", session: iterm))
     }
 
+    private func info(_ session: SessionDTO, live: [SessionDTO] = []) -> ConversationInfoDTO {
+        ConversationInfoDTO(session: session, liveSessions: live, homeDirectory: "/Users/me")
+    }
+
     func testInfoCanSendOnlyToALiveSupportedTerminal() {
-        XCTAssertTrue(ConversationInfoDTO(session: session(), homeDirectory: "/Users/me").canSend)
-        XCTAssertFalse(ConversationInfoDTO(session: session(status: "ended"), homeDirectory: "/Users/me").canSend)
-        XCTAssertFalse(ConversationInfoDTO(session: session(termProgram: "vscode"), homeDirectory: "/Users/me").canSend)
+        XCTAssertTrue(info(session()).canSend)
+        XCTAssertFalse(info(session(status: "ended")).canSend)
+        XCTAssertFalse(info(session(termProgram: "vscode")).canSend)
     }
 
     /// A pane showing a permission prompt would take the typed message's Return as
     /// "Yes" — so a waiting conversation is refused, with the reason.
     func testWaitingConversationRefusesASend() {
         let waiting = session(lastEventType: "PermissionRequest")
-        let info = ConversationInfoDTO(session: waiting, homeDirectory: "/Users/me")
-        XCTAssertFalse(info.canSend)
-        XCTAssertTrue(info.sendRefusal.contains("waiting on a prompt"), info.sendRefusal)
-        XCTAssertNotNil(ConversationSendability.refusal(for: waiting))
-        XCTAssertNil(ConversationSendability.refusal(for: session(lastEventType: "PreToolUse")), "busy queues")
-        XCTAssertEqual(ConversationInfoDTO(session: session(), homeDirectory: "/Users/me").sendRefusal, "")
+        XCTAssertFalse(info(waiting).canSend)
+        XCTAssertTrue(info(waiting).sendRefusal.contains("waiting on a prompt"), info(waiting).sendRefusal)
+        XCTAssertNil(ConversationSendability.refusal(for: session(lastEventType: "PreToolUse"), liveSessions: []),
+                     "busy queues")
+        XCTAssertEqual(info(session()).sendRefusal, "")
+    }
+
+    private func iTerm(_ id: String, pane: String, status: String = "active") -> SessionDTO {
+        SessionDTO(
+            sessionId: id, cwd: "/Users/me/src", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: status, gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app",
+            termSessionId: "w0t0p0:\(pane)", transcriptTitle: "", lastEventType: "Stop", eventCount: 0)
+    }
+
+    /// A `claude -p` run from another session's Bash tool inherits that session's
+    /// TERM_SESSION_ID: its pane is the parent's, so neither may be sent to.
+    func testSessionsSharingAPaneRefuseASend() {
+        let parent = iTerm("parent", pane: "P")
+        let child = iTerm("child", pane: "P")
+        let elsewhere = iTerm("other", pane: "Q")
+        let live = [parent, child, elsewhere]
+        XCTAssertFalse(info(child, live: live).canSend)
+        XCTAssertTrue(info(child, live: live).sendRefusal.contains("parent"), info(child, live: live).sendRefusal)
+        XCTAssertFalse(info(parent, live: live).canSend)
+        XCTAssertTrue(info(elsewhere, live: live).canSend)
+        XCTAssertTrue(info(parent, live: [parent, iTerm("child", pane: "P", status: "ended")]).canSend,
+                      "an ended session shares nothing")
     }
 }
