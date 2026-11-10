@@ -77,6 +77,40 @@ private final class PendingSignIn: GoogleSignInFlow, @unchecked Sendable {
     }
 }
 
+/// A browser flow that ignores cancellation: it holds at `gate`, then returns a credential anyway,
+/// as a flow whose redirect arrived just as it was cancelled does.
+private final class GatedSignIn: GoogleSignInFlow, @unchecked Sendable {
+    let gate = Gate()
+
+    func signIn(config: GoogleOAuthClientConfig) async throws -> GoogleCredential {
+        await gate.pass()
+        return GoogleCredential(
+            accessToken: "tok", refreshToken: "fresh", expiresAt: start.addingTimeInterval(86_400 * 30))
+    }
+}
+
+/// Holds every `profile()` call at `gate`; everything else goes straight to `inner`.
+private struct ProfileGatedAPI: GmailAPI {
+    let inner: any GmailAPI
+    let gate: Gate
+
+    func profile() async throws -> GmailProfile {
+        await gate.pass()
+        return try await inner.profile()
+    }
+    func listMessageIds(query: String, includeSpamTrash: Bool, pageToken: String?) async throws -> GmailIdPage {
+        try await inner.listMessageIds(query: query, includeSpamTrash: includeSpamTrash, pageToken: pageToken)
+    }
+    func message(id: String) async throws -> GmailMessageDTO { try await inner.message(id: id) }
+    func history(startHistoryId: String, pageToken: String?) async throws -> GmailHistoryPage {
+        try await inner.history(startHistoryId: startHistoryId, pageToken: pageToken)
+    }
+    func labels() async throws -> [GmailLabelDTO] { try await inner.labels() }
+    func batchModify(ids: [String], add: [String], remove: [String]) async throws {
+        try await inner.batchModify(ids: ids, add: add, remove: remove)
+    }
+}
+
 /// An in-memory secret store whose credential reads can be made to fail like a locked Keychain.
 private final class LockableSecretStore: SecretStoring, @unchecked Sendable {
     struct Locked: Error, LocalizedError {
@@ -227,12 +261,13 @@ private struct Harness {
     let signIn: FakeSignIn
     let database: BoundedDatabase
 
-    /// `checkTokens` makes every API call ask the service's token provider for a token first.
+    /// `checkTokens` makes every API call ask the service's token provider for a token first;
+    /// `profileGate` holds every `profile()` call at the gate.
     init(
         secrets: any SecretStoring = InMemorySecretStore(),
         tokenEndpoint: any GoogleTokenEndpoint = UnusedTokenEndpoint(),
         credentialExpiresAt: Date = start.addingTimeInterval(86_400 * 30), checkTokens: Bool = false,
-        signInFlow: (any GoogleSignInFlow)? = nil
+        signInFlow: (any GoogleSignInFlow)? = nil, profileGate: Gate? = nil
     ) throws {
         let database = try BoundedDatabase(path: ":memory:")
         let store = try IntegrationsStore(database: database)
@@ -248,7 +283,10 @@ private struct Harness {
         self.signIn = signIn
         self.service = MailIntegrationService(
             store: store, secrets: secrets, signIn: signInFlow ?? signIn, tokenEndpoint: tokenEndpoint,
-            makeAPI: { token in checkTokens ? TokenCheckingAPI(inner: api, accessToken: token) as any GmailAPI : api },
+            makeAPI: { token in
+                let base = checkTokens ? TokenCheckingAPI(inner: api, accessToken: token) as any GmailAPI : api
+                return profileGate.map { ProfileGatedAPI(inner: base, gate: $0) } ?? base
+            },
             now: { clock.now })
     }
 
@@ -1221,6 +1259,71 @@ struct MailIntegrationServiceTests {
             return
         }
         #expect(accounts.first?.status == .active)
+    }
+
+    // MARK: - Sign-in racing provider removal
+
+    @Test(.timeLimit(.minutes(1)))
+    func aSignInStartedWhileGmailIsBeingRemovedIsRefused() async throws {
+        let gate = Gate()
+        let endpoint = RevokeRecordingEndpoint(gate: gate)
+        let harness = try Harness(tokenEndpoint: endpoint)
+        try await harness.connect()
+        let calls = harness.signIn.calls
+        let service = harness.service
+
+        // The removal holds in its last account's revoke, before it deletes the client.
+        let removal = Task { await service.handle(.removeProvider) }
+        await gate.waitForArrival()
+        // A second account, which the removal's snapshot of accounts would not reach.
+        harness.api.emailAddress = "other@example.com"
+        let signIn = await service.handle(.signIn)
+        #expect(signIn == .failure("Gmail is not configured — import an OAuth client JSON first"))
+        #expect(harness.signIn.calls == calls, "no browser flow starts for a client being removed")
+
+        await gate.open()
+        #expect(await removal.value == .ok)
+        #expect(await service.handle(.listAccounts) == .accounts([]))
+        #expect(await endpoint.revoked == ["refresh"])
+        #expect(try harness.store.providerConfig(providerId: "gmail") == nil)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func gmailRemovedDuringTheProfileFetchRevokesTheFreshGrant() async throws {
+        let gate = Gate()
+        let endpoint = RevokeRecordingEndpoint()
+        let harness = try Harness(tokenEndpoint: endpoint, profileGate: gate)
+        let service = harness.service
+        _ = await service.handle(.importOAuthClient(json: clientJSON))
+
+        let signIn = Task { await service.handle(.signIn) }
+        await gate.waitForArrival()
+        #expect(await service.handle(.removeProvider) == .ok)
+        await gate.open()
+
+        #expect(await signIn.value == .failure("Sign-in was cancelled"))
+        #expect(await endpoint.revoked == ["refresh"], "the grant issued to the removed client is revoked")
+        #expect(await service.handle(.listAccounts) == .accounts([]))
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func gmailRemovedDuringTheBrowserFlowRevokesTheGrantItStillIssued() async throws {
+        let flow = GatedSignIn()
+        let endpoint = RevokeRecordingEndpoint()
+        let harness = try Harness(tokenEndpoint: endpoint, signInFlow: flow)
+        let service = harness.service
+        _ = await service.handle(.importOAuthClient(json: clientJSON))
+
+        let signIn = Task { await service.handle(.signIn) }
+        await flow.gate.waitForArrival()
+        #expect(await service.handle(.removeProvider) == .ok)
+        // The redirect arrives anyway: Google has already issued the grant.
+        await flow.gate.open()
+
+        #expect(await signIn.value == .failure("Sign-in was cancelled"))
+        #expect(await endpoint.revoked == ["fresh"])
+        #expect(harness.api.profileCalls == 0, "the removed client's credential is not used")
+        #expect(await service.handle(.listAccounts) == .accounts([]))
     }
 
     @Test func invalidGrantOnRefreshMarksAccountRevoked() async throws {
