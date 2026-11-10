@@ -80,6 +80,10 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     /// Whether out-of-process frames are attached to as they appear, so the
     /// shield reaches a cross-site frame: on from the first raise.
     private var attachesFrames = false
+    /// Whether the page's session has the Page domain enabled. Chromium keeps
+    /// a new-document script it was given without it, answers with an
+    /// identifier, and never runs it, so every script here waits for this.
+    private var pageDomainEnabled = false
     /// The attached cross-site frames' DevTools sessions.
     private var frameSessions: Set<String> = []
     /// The frames the raised shield was sent to, and the identifier of each
@@ -344,6 +348,15 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
                 MainActor.assumeIsolated { handle(reply.value) }
             }
         }
+    }
+
+    /// Enables the Page domain in the page's session, once: without it a
+    /// new-document script is accepted and never run (`pageDomainEnabled`).
+    /// The setting holds across navigations.
+    private func enablePageDomain() async throws {
+        guard !pageDomainEnabled else { return }
+        _ = try await send("Page.enable", timeout: nil)
+        pageDomainEnabled = true
     }
 
     /// The automation world's execution context in the current document,
@@ -692,6 +705,7 @@ extension ChromiumBrowserEngine {
         for session in frameSessions { shieldFrame(session, active: active, runNow: true) }
         do {
             if active, shieldScriptIdentifier == nil {
+                try await enablePageDomain()
                 let added = try await send("Page.addScriptToEvaluateOnNewDocument", [
                     "source": source, "runImmediately": true
                 ], timeout: nil)
@@ -752,14 +766,17 @@ extension ChromiumBrowserEngine {
                 pageWordScriptIdentifier = nil
             }
             if let source {
+                try await enablePageDomain()
                 let added = try await send("Page.addScriptToEvaluateOnNewDocument", [
                     "source": source, "worldName": BrowserPageWordFilter.worldName
                 ], timeout: nil)
                 pageWordScriptIdentifier = added["identifier"] as? String
             }
+            logger.info("page word filter \(source == nil ? "removed" : "installed", privacy: .public)")
             return true
         } catch {
-            logger.debug("page word filter did not change: \(error.localizedDescription, privacy: .public)")
+            // The page goes on drawing the real words, so this is an error.
+            logger.error("page word filter did not change: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -811,6 +828,9 @@ extension ChromiumBrowserEngine {
         let info = params["targetInfo"] as? [String: Any]
         if info?["type"] as? String == "iframe" {
             frameSessions.insert(session)
+            // A frame's session needs the Page domain for its new-document
+            // scripts to run, as the page's does (`pageDomainEnabled`).
+            sendIgnoringResult("Page.enable", [:], sessionId: session)
             // A frame inside this one is out of its process too.
             sendIgnoringResult("Target.setAutoAttach", Self.frameAttach, sessionId: session)
             if isActivationShieldActive { shieldFrame(session, active: true, runNow: !waiting) }
