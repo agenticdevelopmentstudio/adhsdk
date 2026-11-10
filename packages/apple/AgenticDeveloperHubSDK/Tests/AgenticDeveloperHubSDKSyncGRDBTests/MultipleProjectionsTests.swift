@@ -72,8 +72,8 @@ private final class TableProjection: SyncMirrorProjection, @unchecked Sendable {
     }
 }
 
-@Suite("CompositeMirrorProjection")
-struct CompositeMirrorProjectionTests {
+@Suite("Several mirror projections")
+struct MultipleProjectionsTests {
 
     private let resources = [
         SyncResource(resource: "test.people", schemaVersion: 1),
@@ -81,13 +81,11 @@ struct CompositeMirrorProjectionTests {
         SyncResource(resource: "test.other", schemaVersion: 1)
     ]
 
-    @Test("each resource lands in the child that claims it, and the rest stay generic")
+    @Test("each resource lands in the projection that claims it, and the rest stay generic")
     func routesByResource() async throws {
         let people = TableProjection(resource: "test.people", table: "people")
         let places = TableProjection(resource: "test.places", table: "places")
-        let composite = CompositeMirrorProjection([people, places])
-        #expect(composite.resources == ["test.people", "test.places"])
-        let store = GRDBSyncStore(database: try BoundedDatabase(path: ":memory:"), projection: composite)
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: ":memory:"), projections: [people, places])
         try await store.prepare(resources: resources)
         try await store.apply([
             SyncChange(resource: "test.people", id: "p1", op: .upsert, syncVersion: "2",
@@ -110,12 +108,11 @@ struct CompositeMirrorProjectionTests {
         #expect(try store.liveRows(resource: "test.people").count == 1)
     }
 
-    @Test("a resync hands each child only its own resources, and an identity change reaches every child")
-    func truncateAndPurgeReachEachChild() async throws {
+    @Test("a resync hands each projection only its own resources, and an identity change reaches every one")
+    func truncateAndPurgeReachEachProjection() async throws {
         let people = TableProjection(resource: "test.people", table: "people")
         let places = TableProjection(resource: "test.places", table: "places")
-        let store = GRDBSyncStore(
-            database: try BoundedDatabase(path: ":memory:"), projection: CompositeMirrorProjection([people, places]))
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: ":memory:"), projections: [people, places])
         try await store.prepare(resources: resources)
         try await store.resetForResync()
         #expect(people.truncated == [["test.people"]])
