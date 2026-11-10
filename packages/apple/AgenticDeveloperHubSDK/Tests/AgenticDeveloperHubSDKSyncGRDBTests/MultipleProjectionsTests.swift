@@ -65,6 +65,22 @@ struct MultipleProjectionsTests {
         #expect(places.purged == 1)
     }
 
+    @Test("a pull reaches the projection as a full row and a staged patch as a partial one")
+    func fullRowFlagReachesTheClaimingProjection() async throws {
+        let people = TestProjection(resources: ["test.people"], table: "people")
+        let places = TestProjection(resources: ["test.places"], table: "places")
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: ":memory:"), projections: [people, places])
+        try await store.prepare(resources: resources)
+        try await store.apply([
+            SyncChange(resource: "test.places", id: "l1", op: .upsert, syncVersion: "1",
+                       data: ["name": .string("Kew")])
+        ], advancingTo: nil)
+        try await store.stage(LocalMutation(
+            resource: "test.places", rowId: "l1", type: .upsert, data: ["name": .string("Kew Gardens")]))
+        #expect(places.upsertFullRowFlags == [true, false])
+        #expect(people.upsertFullRowFlags.isEmpty)
+    }
+
     @Test("a projection that claims a family of resources gets the whole family in one truncate call")
     func aFamilyIsTruncatedInOneCall() async throws {
         let family = TestProjection(resources: ["test.people", "test.places"], table: "family")
