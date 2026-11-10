@@ -136,6 +136,10 @@ public final class BrowserAutomation: NSObject {
         self.console = console
         guard driver !== self.driver else { return }
         self.driver = driver
+        // A delta is "what changed on this page since I last looked"; the
+        // previous page's lines are another page's, so the next snapshot of
+        // the new target is a full one.
+        lastSnapshotLines = nil
         observeLoading()
     }
 
