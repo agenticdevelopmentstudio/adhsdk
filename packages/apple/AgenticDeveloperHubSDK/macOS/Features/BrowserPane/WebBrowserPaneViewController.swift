@@ -551,6 +551,10 @@ open class WebBrowserPaneViewController: NSViewController {
             // The tab in front loads now (below); the others when brought
             // forward. A tab that was on nothing comes back on nothing.
             tab.pendingURL = destination ?? (tab === activeTab ? nil : Self.blankPage)
+            // The destination above already weighed the request; left behind,
+            // a failed or stopped load's URL would outrank it when the tab
+            // list is stored while the new engine has not reported a page.
+            tab.requestedURL = nil
         }
         engine = activeTab.engine
         builtAutomation?.retarget(to: engine, console: engine.consoleLog)
