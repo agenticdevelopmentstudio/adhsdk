@@ -38,6 +38,7 @@ public struct StenographerInstance: Sendable, Equatable {
         case relativeDataRoot(String)
         case invalidPort(Int)
         case overlapsInstalledState(dataRoot: String, protected: String)
+        case overlapsAnotherInstance(dataRoot: String, instance: String, otherRoot: String)
         case socketPathTooLong(path: String, limit: Int)
 
         public var description: String {
@@ -60,6 +61,8 @@ public struct StenographerInstance: Sendable, Equatable {
                 return "instance httpPort \(port) must be 1024-65535 and not one of \(reserved)"
             case .overlapsInstalledState(let root, let protected):
                 return "instance dataRoot '\(root)' overlaps \(protected), which the installed Stenographer owns"
+            case .overlapsAnotherInstance(let root, let instance, let otherRoot):
+                return "instance dataRoot '\(root)' overlaps instance '\(instance)''s dataRoot '\(otherRoot)'"
             case .socketPathTooLong(let path, let limit):
                 return "instance socket path \(path) is \(path.utf8.count) bytes; the limit is under \(limit)"
             }
@@ -151,11 +154,37 @@ public struct StenographerInstance: Sendable, Equatable {
                 throw ResolutionError.overlapsInstalledState(dataRoot: definition.dataRoot, protected: protected.path)
             }
         }
+        // Each instance's lock is keyed on its own label, so nothing else stops
+        // two definitions that share a data root from running on one set of databases.
+        for other in otherDefinitions(excluding: definition.name, home: home) {
+            let otherRoot = canonicalComponents(other.dataRoot)
+            if root.starts(with: otherRoot) || otherRoot.starts(with: root) {
+                throw ResolutionError.overlapsAnotherInstance(
+                    dataRoot: definition.dataRoot, instance: other.name, otherRoot: other.dataRoot)
+            }
+        }
         let socket = URL(fileURLWithPath: definition.dataRoot, isDirectory: true)
             .appendingPathComponent(socketFileName).path
         guard socket.utf8.count < socketPathLimit else {
             throw ResolutionError.socketPathTooLong(path: socket, limit: socketPathLimit)
         }
+    }
+
+    /// Every readable definition in the definitions directory but `name`'s.
+    /// One that cannot be read is resolved (and refused) on its own.
+    static func otherDefinitions(excluding name: String, home: URL) -> [Definition] {
+        let directory = definitionsDirectory(home: home)
+        let files = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
+        return files
+            .filter { $0.pathExtension == "json" && $0.deletingPathExtension().lastPathComponent != name }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+            .compactMap { file in
+                guard let data = try? Data(contentsOf: file),
+                      let other = try? JSONDecoder().decode(Definition.self, from: data),
+                      other.name == file.deletingPathExtension().lastPathComponent,
+                      other.dataRoot.hasPrefix("/") else { return nil }
+                return other
+            }
     }
 
     /// What the installed copy owns on disk, whatever instance asks: the
