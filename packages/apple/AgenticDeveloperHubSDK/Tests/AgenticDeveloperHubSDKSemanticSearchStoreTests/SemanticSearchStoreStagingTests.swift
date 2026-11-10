@@ -31,6 +31,23 @@ struct SemanticSearchStoreStagingTests {
         #expect(try await store.search("vehicle", mode: .semantic).map(\.documentID) == ["d1"])
     }
 
+    @Test func aDevicePassageIsEmbeddedBeforeAServerBacklog() async throws {
+        let store = try makeStore()
+        try store.applyServerPassages(
+            documentID: "doc", title: "Doc", sourceHash: "h",
+            passages: (0..<3).map { ServerPassage(chunkIndex: $0, content: "server passage \($0)") })
+        try store.database.write { conn in
+            _ = try store.stageDocument(in: conn, documentID: "memory", title: nil, content: "written offline")
+        }
+        #expect(try await store.embedPending(limit: 1) == 1)
+        let embedded = try store.database.read { conn in
+            try String.fetchAll(conn, sql: """
+                SELECT p.document_id FROM semantic_vectors v JOIN semantic_passages p ON p.id = v.passage_id
+                """)
+        }
+        #expect(embedded == ["memory"], "the newest device passage does not wait behind the server's")
+    }
+
     @Test func aVectorComputedForReplacedTextIsNotStoredOnTheReusedRowid() throws {
         let embedder = FakeEmbedder()
         let store = try makeStore(embedder: embedder)

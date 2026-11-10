@@ -361,7 +361,7 @@ public final class SemanticSearchStore: Sendable {
                 SELECT p.id, p.title, p.content FROM semantic_passages p
                 LEFT JOIN semantic_vectors v ON v.passage_id = p.id AND v.semantic_stamp = ?
                 WHERE v.passage_id IS NULL
-                ORDER BY p.id
+                ORDER BY p.origin = 'server', p.id
                 LIMIT ?
                 """, arguments: [embedder.stamp, limit])
         }
