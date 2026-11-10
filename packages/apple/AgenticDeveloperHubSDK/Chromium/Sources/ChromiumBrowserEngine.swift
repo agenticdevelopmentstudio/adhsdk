@@ -86,6 +86,18 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     /// one's new-document script once Chromium has answered.
     private var shieldedFrames: Set<String> = []
     private var frameScriptIdentifiers: [String: String] = [:]
+    /// The page word filter asked for, and its script (`nil` while off).
+    private var requestedPageWordFilter: TextSubstitutionFilter?
+    private var wantedPageWordSource: String?
+    /// The script the page last took in full, and its new-document script's
+    /// identifier; the two sources differ while a change is on its way, or
+    /// after one failed, which the next page load tries again.
+    private var appliedPageWordSource: String?
+    private var pageWordScriptIdentifier: String?
+    /// Applies changes in the order asked, each after the last has landed.
+    private var pageWordTask: Task<Void, Never>?
+    /// Each attached cross-site frame's filter script identifier.
+    private var pageWordFrameScripts: [String: String] = [:]
     private var eventMonitor: Any?
     /// Whether the mouse button now down went down on the page, so its drags
     /// and its release follow it wherever the pointer goes.
@@ -240,6 +252,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         if let eventMonitor { NSEvent.removeMonitor(eventMonitor) }
         eventMonitor = nil
         shieldTask?.cancel()
+        pageWordTask?.cancel()
         onInputDecision = nil
         delegate = nil
         browserView.delegate = nil
@@ -490,6 +503,7 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         commitIfPending()
         setMainFrameLoading(false)
         reconcileShield()
+        reconcilePageWordFilter()
         delegate?.browserEngineDidFinishNavigation(self)
     }
 
@@ -697,6 +711,83 @@ extension ChromiumBrowserEngine {
         }
     }
 
+    // MARK: Page word filter
+
+    public var pageWordFilter: TextSubstitutionFilter? { requestedPageWordFilter }
+
+    /// The filter asked for. Its script is a new-document script in the
+    /// filter's own isolated world, in the page's session and in every
+    /// attached cross-site frame's, and the page showing is reloaded so it is
+    /// drawn through the new words from its first paint.
+    public func setPageWordFilter(_ filter: TextSubstitutionFilter?) {
+        guard filter != requestedPageWordFilter else { return }
+        requestedPageWordFilter = filter
+        wantedPageWordSource = filter.flatMap(BrowserPageWordFilter.script(for:))
+        reconcilePageWordFilter()
+    }
+
+    /// Brings the page to the filter asked for, after any change still
+    /// landing. A change that failed is tried again at the next load.
+    private func reconcilePageWordFilter() {
+        let previous = pageWordTask
+        pageWordTask = Task { @MainActor [weak self] in
+            await previous?.value
+            guard let self, !Task.isCancelled else { return }
+            let wanted = self.wantedPageWordSource
+            guard wanted != self.appliedPageWordSource else { return }
+            if await self.applyPageWordFilter(wanted) {
+                self.appliedPageWordSource = wanted
+                if self.url != nil { self.reload() }
+            }
+        }
+    }
+
+    /// Whether the page's session took `source` (`nil` removes the script).
+    private func applyPageWordFilter(_ source: String?) async -> Bool {
+        if source != nil { attachFrames() }
+        for session in frameSessions { filterFrame(session, source: source, runNow: false) }
+        do {
+            if let identifier = pageWordScriptIdentifier {
+                _ = try await send("Page.removeScriptToEvaluateOnNewDocument", ["identifier": identifier], timeout: nil)
+                pageWordScriptIdentifier = nil
+            }
+            if let source {
+                let added = try await send("Page.addScriptToEvaluateOnNewDocument", [
+                    "source": source, "worldName": BrowserPageWordFilter.worldName
+                ], timeout: nil)
+                pageWordScriptIdentifier = added["identifier"] as? String
+            }
+            return true
+        } catch {
+            logger.debug("page word filter did not change: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+    }
+
+    /// Replaces one cross-site frame's filter script with `source`'s.
+    /// `runNow` also runs it on the document showing, which a frame still
+    /// paused before its first document does not have.
+    private func filterFrame(_ session: String, source: String?, runNow: Bool) {
+        if let identifier = pageWordFrameScripts.removeValue(forKey: session) {
+            sendIgnoringResult("Page.removeScriptToEvaluateOnNewDocument",
+                               ["identifier": identifier], sessionId: session)
+        }
+        guard let source else { return }
+        sendIgnoringResult("Page.addScriptToEvaluateOnNewDocument", [
+            "source": source, "worldName": BrowserPageWordFilter.worldName, "runImmediately": runNow
+        ], sessionId: session) { [weak self] added in
+            guard let self, let identifier = added["identifier"] as? String,
+                  self.frameSessions.contains(session) else { return }
+            if self.wantedPageWordSource == source {
+                self.pageWordFrameScripts[session] = identifier
+            } else {
+                // The filter changed while this one was on its way.
+                self.sendIgnoringResult("Page.removeScriptToEvaluateOnNewDocument",
+                                        ["identifier": identifier], sessionId: session)
+            }
+        }
+    }
+
     // MARK: Cross-site frames
 
     /// Auto-attach to out-of-process frames, each paused until it is told to
@@ -723,6 +814,7 @@ extension ChromiumBrowserEngine {
             // A frame inside this one is out of its process too.
             sendIgnoringResult("Target.setAutoAttach", Self.frameAttach, sessionId: session)
             if isActivationShieldActive { shieldFrame(session, active: true, runNow: !waiting) }
+            if let source = wantedPageWordSource { filterFrame(session, source: source, runNow: !waiting) }
         }
         // Messages in one session run in order, so whatever was sent above is
         // in place before the frame goes on.
@@ -733,6 +825,7 @@ extension ChromiumBrowserEngine {
         frameSessions.remove(session)
         shieldedFrames.remove(session)
         frameScriptIdentifiers.removeValue(forKey: session)
+        pageWordFrameScripts.removeValue(forKey: session)
     }
 
     /// Raises or lowers the shield in one frame's session. `runNow` also runs

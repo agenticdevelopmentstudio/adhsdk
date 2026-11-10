@@ -236,9 +236,12 @@ targets:
           - "Scripting"
           - "Features/BrowserPane/Automation/BrowserSnapshot.js"
           - "Features/BrowserPane/BrowserActivationShield.js"
+          - "Features/BrowserPane/BrowserPageWordFilter.js"
       - path: macOS/Features/BrowserPane/Automation/BrowserSnapshot.js
         buildPhase: resources
       - path: macOS/Features/BrowserPane/BrowserActivationShield.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/BrowserPageWordFilter.js
         buildPhase: resources
     dependencies:
       - package: SharedRuntime

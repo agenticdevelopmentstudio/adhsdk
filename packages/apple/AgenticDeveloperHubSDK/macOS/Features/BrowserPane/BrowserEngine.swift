@@ -137,6 +137,15 @@ public protocol BrowserEngine: BrowserPageDriver {
     /// the engine is not used again.
     func teardown()
 
+    /// The privacy words the page is drawn through (Agent Privacy): each real
+    /// word in the page's text shown as its stand-in. `nil` draws the page as
+    /// it is.
+    var pageWordFilter: TextSubstitutionFilter? { get }
+    /// Draws every document from now on through `filter` and reloads the
+    /// page showing, so a change — on, off or new words — applies to it at
+    /// once. Setting the filter already in place does nothing.
+    func setPageWordFilter(_ filter: TextSubstitutionFilter?)
+
     // MARK: Session privacy
 
     /// What the page's user input passes through (Session Privacy, spec

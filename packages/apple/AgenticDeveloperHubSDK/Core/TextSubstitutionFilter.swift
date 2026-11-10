@@ -59,16 +59,36 @@ public struct TextSubstitutionFilter: Sendable, Equatable {
     }
 
     /// Aliases replaced by the real text — for what goes *to* the program.
-    public func revealing(_ text: String) -> String {
-        Self.substitute(in: text, pairs.map { ($0.alias, $0.real) })
+    /// `matchingCase` writes each replacement in the case of the text it
+    /// replaces (`casing(_:like:)`) rather than as given.
+    public func revealing(_ text: String, matchingCase: Bool = false) -> String {
+        Self.substitute(in: text, pairs.map { ($0.alias, $0.real) }, matchingCase: matchingCase)
     }
 
     /// Real text replaced by aliases — for what comes *back* to the user.
-    public func concealing(_ text: String) -> String {
-        Self.substitute(in: text, pairs.map { ($0.real, $0.alias) })
+    public func concealing(_ text: String, matchingCase: Bool = false) -> String {
+        Self.substitute(in: text, pairs.map { ($0.real, $0.alias) }, matchingCase: matchingCase)
     }
 
-    private static func substitute(in text: String, _ mapping: [(String, String)]) -> String {
+    /// `replacement` in the case of `match`: all capitals, all lower case, or
+    /// a capital and then lower case; anything else (mixed, or no letters)
+    /// keeps `replacement` as given. "BLUEBIRD", "bluebird" and "Bluebird"
+    /// become "REDBIRD", "redbird" and "Redbird" whatever case the pair was
+    /// written in. `BrowserPageWordFilter.js` applies the same rule.
+    public static func casing(_ replacement: String, like match: String) -> String {
+        let upper = match.uppercased(), lower = match.lowercased()
+        if match == upper && match != lower { return replacement.uppercased() }
+        if match == lower && match != upper { return replacement.lowercased() }
+        let first = String(match.prefix(1)), rest = String(match.dropFirst())
+        if first == first.uppercased() && first != first.lowercased() && rest == rest.lowercased() {
+            return replacement.prefix(1).uppercased() + replacement.dropFirst().lowercased()
+        }
+        return replacement
+    }
+
+    private static func substitute(
+        in text: String, _ mapping: [(String, String)], matchingCase: Bool
+    ) -> String {
         guard !mapping.isEmpty else { return text }
         let longestFirst = mapping.sorted { $0.0.count > $1.0.count }
 
@@ -81,7 +101,7 @@ public struct TextSubstitutionFilter: Sendable, Equatable {
                     options: [.caseInsensitive, .anchored],
                     range: index..<text.endIndex
                 ) {
-                    result += replacement
+                    result += matchingCase ? casing(replacement, like: String(text[match])) : replacement
                     index = match.upperBound
                     continue scanning
                 }

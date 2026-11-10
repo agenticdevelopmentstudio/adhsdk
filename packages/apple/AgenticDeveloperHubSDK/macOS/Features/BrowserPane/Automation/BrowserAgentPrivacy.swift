@@ -7,7 +7,9 @@ import AgenticDeveloperHubSDKCore
 /// - `off`: the tools see the page as it is.
 /// - `enabled`: every reply and error is concealed with the privacy words before a
 ///   model reads it, and what a model types or navigates to is revealed back
-///   to the real words — the private terminal's rule, applied to a page.
+///   to the real words — the private terminal's rule, applied to a page. Both
+///   directions write a replacement in the case of the word it replaces, as
+///   the page itself is drawn (`BrowserPageWordFilter`).
 /// - `unavailable`: the setting is on but the words cannot be read (no vault,
 ///   or the keychain refused them without a prompt). The pane is closed to
 ///   models until they can be, rather than handed over unconcealed
@@ -39,14 +41,14 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
     public func concealing(_ text: String) -> String {
         switch self {
         case .off: text
-        case .enabled(let filter): filter.concealing(text)
+        case .enabled(let filter): filter.concealing(text, matchingCase: true)
         case .unavailable: "(concealed)"
         }
     }
 
     /// `text` as the page should receive it.
     public func revealing(_ text: String) -> String {
-        if case .enabled(let filter) = self { return filter.revealing(text) }
+        if case .enabled(let filter) = self { return filter.revealing(text, matchingCase: true) }
         return text
     }
 }

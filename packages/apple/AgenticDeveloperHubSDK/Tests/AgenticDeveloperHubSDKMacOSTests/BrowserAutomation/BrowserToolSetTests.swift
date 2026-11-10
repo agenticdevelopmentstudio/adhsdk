@@ -578,6 +578,31 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(rows.map { $0["url"] as? String }.last, "(concealed)")
     }
 
+    func testAgentPrivacyRevealsOnlyWhatGoesIntoThePage() {
+        let privacy = BrowserAgentPrivacy.enabled(privateWords)
+        let typed = BrowserToolSet.Arguments(tool: "browser_type", values: ["text": "zwei", "url": "https://gamma.test"])
+            .revealing(privacy)
+        XCTAssertEqual(typed.values["text"] as? String, "two")
+        XCTAssertEqual(typed.values["url"] as? String, "https://beta.test")
+        let found = BrowserToolSet.Arguments(tool: "browser_find", values: ["text": "Zwei", "scope": "Gamma"])
+            .revealing(privacy)
+        XCTAssertEqual(found.values["text"] as? String, "Zwei", "a lookup is tried as shown first")
+        XCTAssertEqual(found.values["scope"] as? String, "Gamma")
+        XCTAssertEqual(try found.candidates("text"), ["Zwei", "Two"])
+        let plain = BrowserToolSet.Arguments(tool: "browser_find", values: ["text": "One"]).revealing(privacy)
+        XCTAssertEqual(try plain.candidates("text"), ["One"])
+    }
+
+    func testPageWordFilterScriptCarriesThePairsLongestFirst() throws {
+        XCTAssertNil(BrowserPageWordFilter.script(for: .identity))
+        let script = try XCTUnwrap(BrowserPageWordFilter.script(for: TextSubstitutionFilter(pairs: [
+            .init(alias: "Zwei", real: "Two"), .init(alias: "Gamma", real: "Beta Max")
+        ])))
+        XCTAssertTrue(script.hasPrefix(BrowserPageWordFilter.marker))
+        XCTAssertFalse(script.contains("__ADK_PAGE_WORD_PAIRS__"))
+        XCTAssertTrue(script.contains(#"[["Beta Max","Gamma"],["Two","Zwei"]]"#), script)
+    }
+
     func testAgentPrivacyIsReadFromThePaneAlone() {
         let layered = LayeredSettingsStore(overrides: InMemorySettingsStorageProvider(), fallback: store)
         XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered))

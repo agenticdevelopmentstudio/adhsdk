@@ -42,6 +42,21 @@ struct TextSubstitutionFilterTests {
         #expect(TextSubstitutionFilter(parsing: both.serialized) == both)
     }
 
+    @Test("matchingCase writes each replacement in the case of what it replaces")
+    func matchesCase() {
+        let birds = TextSubstitutionFilter(parsing: "Redbird = Bluebird")
+        #expect(birds.concealing("BLUEBIRD bluebird Bluebird", matchingCase: true) == "REDBIRD redbird Redbird")
+        #expect(birds.revealing("REDBIRD redbird Redbird", matchingCase: true) == "BLUEBIRD bluebird Bluebird")
+        #expect(birds.concealing("BlueBird", matchingCase: true) == "Redbird", "mixed case keeps the pair as written")
+        #expect(birds.concealing("bluebird") == "Redbird", "without matchingCase, as written")
+    }
+
+    @Test("casing leaves text with no letters as given")
+    func casingWithoutLetters() {
+        #expect(TextSubstitutionFilter.casing("Ab", like: "42") == "Ab")
+        #expect(TextSubstitutionFilter.casing("ab", like: "X") == "AB")
+    }
+
     @Test("with no pairs, text passes through unchanged")
     func identity() {
         #expect(TextSubstitutionFilter.identity.concealing("mike") == "mike")

@@ -350,6 +350,18 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         if activationShield.isActive != wasActive { installUserScripts() }
     }
 
+    public private(set) var pageWordFilter: TextSubstitutionFilter?
+
+    /// The filter's script goes in with the other user scripts, at document
+    /// start in every frame, so a frame from another site is drawn through it
+    /// too; the reload brings the page showing to the new answer.
+    public func setPageWordFilter(_ filter: TextSubstitutionFilter?) {
+        guard filter != pageWordFilter else { return }
+        pageWordFilter = filter
+        installUserScripts()
+        if webView.url != nil { webView.reload() }
+    }
+
     /// The cookie policy belongs to the data store, which may be shared; the
     /// pane decides what goes on it and says so only when the answer moves.
     public func applyCookiePolicy(acceptsCookies: Bool) {
@@ -359,7 +371,8 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
 
     /// Puts every user script the engine wants on the web view's controller:
     /// the console hook when this web view captures the console, the
-    /// activation shield's script while the shield is up.
+    /// activation shield's script while the shield is up, and the page word
+    /// filter while Agent Privacy draws the page through the privacy words.
     ///
     /// The only place user scripts are added or removed.
     /// `WKUserContentController` cannot remove one script, only all of them,
@@ -373,6 +386,11 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         if capturesConsole { controller.addUserScript(consoleLog.userScript) }
         if let shieldScript = activationShield.userScript {
             controller.addUserScript(shieldScript)
+        }
+        if let filter = pageWordFilter, let source = BrowserPageWordFilter.script(for: filter) {
+            controller.addUserScript(WKUserScript(
+                source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false,
+                in: .world(name: BrowserPageWordFilter.worldName)))
         }
     }
 

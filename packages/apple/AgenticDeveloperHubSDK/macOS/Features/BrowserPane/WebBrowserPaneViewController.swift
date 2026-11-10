@@ -161,7 +161,14 @@ open class WebBrowserPaneViewController: NSViewController {
     /// The privacy words, shared with the private terminals. The host sets
     /// it; a pane without one that turns Agent Privacy on is closed to models
     /// (`BrowserAgentPrivacy.unavailable`) rather than left unconcealed.
-    public var privacyVault: PrivacyWordsVault?
+    public var privacyVault: PrivacyWordsVault? {
+        didSet {
+            observePrivacyWords()
+            refreshPageWordFilter()
+        }
+    }
+    /// Follows the vault's words, so an edit redraws a private pane's page.
+    private var privacyWordsObservation: AnyCancellable?
     /// Whether this pane's Agent Privacy switch is on. Per pane only: read
     /// from the pane's own override, never from the global settings.
     public var isAgentPrivacyOn: Bool { BrowserSettings.isAgentPrivacyOn(in: paneSettings) }
@@ -399,6 +406,52 @@ open class WebBrowserPaneViewController: NSViewController {
         }
         engine.inputGate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
         engine.setActivationShieldActive(isActivationShieldWanted)
+        engine.setPageWordFilter(pageWordFilter)
+    }
+
+    /// The words the page is drawn through: the privacy words while Agent
+    /// Privacy is on and they can be read, otherwise none. The one place
+    /// that answer is computed, so the switch, an edit of the words and a
+    /// rebuilt engine (through `wireEngine`) all land on the same one.
+    private var pageWordFilter: TextSubstitutionFilter? {
+        if case .enabled(let filter) = agentPrivacy() { return filter }
+        return nil
+    }
+
+    private func refreshPageWordFilter() {
+        let filter = pageWordFilter
+        for tab in tabs {
+            tab.engine.setPageWordFilter(filter)
+            retitle(tab)
+        }
+        if addressField.currentEditor() == nil { showAddress(engine.url ?? activeTab.requestedURL) }
+        announceTitleChange()
+    }
+
+    /// `text` as the pane's own chrome shows it — the address, the tab names
+    /// and the pane's title: through the privacy words, in the case of the
+    /// word each replaces, while Agent Privacy is on, as the page is drawn.
+    /// Only what is shown; what is stored (history, the reopen address)
+    /// keeps the real text.
+    private func shown(_ text: String) -> String {
+        pageWordFilter?.concealing(text, matchingCase: true) ?? text
+    }
+
+    /// Puts `url` in the address field as the pane shows it; the blank page
+    /// and no page at all leave it empty.
+    private func showAddress(_ url: URL?) {
+        addressField.stringValue = url.map { $0 == Self.blankPage ? "" : shown($0.absoluteString) } ?? ""
+    }
+
+    private func observePrivacyWords() {
+        privacyWordsObservation = privacyVault?.$filter
+            .dropFirst()
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, self.isAgentPrivacyOn else { return }
+                self.refreshPageWordFilter()
+            }
     }
 
     /// Recomputes the engine's input gate from the pane's settings and its
@@ -520,6 +573,7 @@ open class WebBrowserPaneViewController: NSViewController {
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
                 if key == UserSettings.browserAgentPrivacy.name {
                     (self.parent as? PaneViewController)?.refreshAccessories()
+                    self.refreshPageWordFilter()
                 }
             }
             .store(in: &cancellables)
@@ -1003,7 +1057,9 @@ open class WebBrowserPaneViewController: NSViewController {
     // MARK: - Actions
 
     @objc private func navigateToTypedAddress() {
-        guard let url = Self.resolveAddress(addressField.stringValue) else {
+        // The field shows the stand-ins, so what is sent is revealed first.
+        let typed = pageWordFilter?.revealing(addressField.stringValue, matchingCase: true) ?? addressField.stringValue
+        guard let url = Self.resolveAddress(typed) else {
             // What was typed is the user's, and may be anything; it stays out
             // of the public log.
             logger.info("browser pane refused address: \(self.addressField.stringValue, privacy: .private)")
@@ -1034,9 +1090,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// else what it was called when the pane was last stored, else New Tab.
     private func tabTitle(for tab: BrowserTab) -> String {
         // Chromium titles a blank page with its address; that is no name.
-        if let title = tab.engine.title, !title.isEmpty, title != Self.blankPage.absoluteString { return title }
-        if let url = tab.engine.url, url != Self.blankPage, let host = url.host, !host.isEmpty { return host }
-        if tab.engine.url == nil, let stored = tab.storedTitle, !stored.isEmpty { return stored }
+        if let title = tab.engine.title, !title.isEmpty, title != Self.blankPage.absoluteString { return shown(title) }
+        if let url = tab.engine.url, url != Self.blankPage, let host = url.host, !host.isEmpty { return shown(host) }
+        if tab.engine.url == nil, let stored = tab.storedTitle, !stored.isEmpty { return shown(stored) }
         return Self.newTabTitle
     }
 
@@ -1069,8 +1125,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // tab came forward by itself (a popup), when the typing stays.
         if !userIsEditingAddress {
             if addressField.currentEditor() != nil { addressField.abortEditing() }
-            let shown = engine.url ?? tab.requestedURL ?? tab.pendingURL
-            addressField.stringValue = shown.map { $0 == Self.blankPage ? "" : $0.absoluteString } ?? ""
+            showAddress(engine.url ?? tab.requestedURL ?? tab.pendingURL)
         }
         browserEngineHistoryDidChange(engine)
         announceTitleChange()
@@ -1318,9 +1373,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         // -- not a comparison against the window's first responder, which is
         // nil on both sides before the pane is in a window, as it is when the
         // restoration load lands.
-        if addressField.currentEditor() == nil {
-            addressField.stringValue = url == Self.blankPage ? "" : url.absoluteString
-        }
+        if addressField.currentEditor() == nil { showAddress(url) }
         announceTitleChange()
     }
 
@@ -1560,8 +1613,8 @@ extension WebBrowserPaneViewController: PaneTitleProviding {
     /// The page's title; its host while the title is still blank; the
     /// engine's name for a pane that is on nothing yet.
     public var paneTitle: String {
-        if let title = engine.title, !title.isEmpty, title != Self.blankPage.absoluteString { return title }
-        if let host = engine.url?.host, !host.isEmpty { return host }
+        if let title = engine.title, !title.isEmpty, title != Self.blankPage.absoluteString { return shown(title) }
+        if let host = engine.url?.host, !host.isEmpty { return shown(host) }
         return engineKind.displayName
     }
 }

@@ -141,20 +141,42 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             return url
         }
 
-        /// These arguments as the page should receive them: what a model
-        /// types, fills, selects, finds, waits for or navigates to may carry
-        /// the stand-ins it was shown, so a pane with Agent Privacy on swaps
-        /// them back to the real words first.
+        /// The privacy in force when these arguments were revealed, so a
+        /// word a model looks something up by can be tried both ways.
+        var privacy: BrowserAgentPrivacy = .off
+
+        /// These arguments as the page should receive them. A pane with
+        /// Agent Privacy on draws its page with the stand-ins, so what a
+        /// model looks a thing up by — a text to find or wait for, an option,
+        /// a scope — is left as the model was shown it (`candidates` adds
+        /// the real word for text the page script missed). What a model types
+        /// or fills goes into the page, and an address goes to the network,
+        /// so those are swapped back to the real words first.
         func revealing(_ privacy: BrowserAgentPrivacy) -> Arguments {
             guard privacy.isOn else { return self }
             var revealed = values
-            for key in Self.revealedKeys {
+            for key in Self.revealedKeys(for: tool) {
                 if let text = values[key] as? String { revealed[key] = privacy.revealing(text) }
             }
-            return Arguments(tool: tool, values: revealed)
+            return Arguments(tool: tool, values: revealed, privacy: privacy)
         }
 
-        static let revealedKeys = ["text", "value", "url", "scope"]
+        static func revealedKeys(for tool: String) -> [String] {
+            switch tool {
+            case "browser_type": ["text", "url"]
+            case "browser_fill": ["value", "url"]
+            default: ["url"]
+            }
+        }
+
+        /// A lookup word as shown, then as the real word when that differs:
+        /// the page shows the stand-in wherever its script reached, and the
+        /// real word wherever it did not.
+        func candidates(_ key: String) throws -> [String] {
+            let shown = try string(key)
+            let real = privacy.revealing(shown)
+            return real == shown ? [shown] : [shown, real]
+        }
 
         /// The optional `ref` with its `generation`: a ref without a generation is refused,
         /// because Task 2 would otherwise ignore the ref and act on the whole page.
@@ -372,7 +394,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         case "browser_text":
             return try await automation.text(scope: args.optionalString("scope"))
         case "browser_find":
-            let matches = try await automation.find(try args.string("text"))
+            var matches: [BrowserFindMatch] = []
+            for text in try args.candidates("text") where matches.isEmpty {
+                matches = try await automation.find(text)
+            }
             if matches.isEmpty { return "no element matches" }
             return matches.map { "\($0.ref) \($0.role) \"\($0.name)\"" }.joined(separator: "\n")
         case "browser_wait_for":
@@ -416,9 +441,14 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
                 value: try args.text("value")
             ).rendered()
         case "browser_select":
-            return try await automation.select(
-                ref: try args.string("ref"), generation: try args.int("generation"), value: try args.string("value")
-            ).rendered()
+            let ref = try args.string("ref"), generation = try args.int("generation")
+            let values = try args.candidates("value")
+            for value in values.dropLast() {
+                if let delta = try? await automation.select(ref: ref, generation: generation, value: value) {
+                    return delta.rendered()
+                }
+            }
+            return try await automation.select(ref: ref, generation: generation, value: values.last ?? "").rendered()
         case "browser_press_key":
             return try await automation.pressKey(try args.string("key")).rendered()
         case "browser_hover":
@@ -442,7 +472,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     }
 
     private func waitCondition(_ args: Arguments) throws -> BrowserWaitCondition {
-        if let text = args.optionalString("text") { return .text(text) }
+        if args.optionalString("text") != nil {
+            let texts = try args.candidates("text")
+            return texts.count == 1 ? .text(texts[0]) : .anyText(texts)
+        }
         if let ref = args.optionalString("ref") { return .ref(ref, generation: try args.int("generation")) }
         if let url = args.optionalString("url") { return .url(url) }
         if args.bool("load") { return .load }

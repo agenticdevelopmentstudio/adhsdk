@@ -45,6 +45,9 @@ public struct BrowserActionDelta: Sendable {
 
 public enum BrowserWaitCondition: Sendable, Equatable {
     case text(String)
+    /// Any one of these texts: a word as a private pane shows it, or as the
+    /// page wrote it where the page script did not reach.
+    case anyText([String])
     case ref(String, generation: Int)
     case url(String)
     case load
@@ -53,6 +56,7 @@ public enum BrowserWaitCondition: Sendable, Equatable {
     var description: String {
         switch self {
         case .text(let needle): return "text \"\(needle)\""
+        case .anyText(let needles): return "text \"\(needles.first ?? "")\""
         case .ref(let ref, _): return "ref \(ref)"
         case .url(let fragment): return "url containing \"\(fragment)\""
         case .load: return "load"
@@ -630,6 +634,12 @@ public final class BrowserAutomation: NSObject {
             let satisfied: Bool
             switch condition {
             case .text(let t): satisfied = (try? await call("hasText", ["needle": t]) as? Bool) ?? false
+            case .anyText(let texts):
+                var found = false
+                for t in texts where !found {
+                    found = (try? await call("hasText", ["needle": t]) as? Bool) ?? false
+                }
+                satisfied = found
             case .ref(let r, let g): satisfied = (try? await call("isVisible", ["ref": r, "gen": g]) as? Bool) ?? false
             case .url(let u): satisfied = currentURL.contains(u)
             case .load: satisfied = !driver.isLoading && driver.url != nil
