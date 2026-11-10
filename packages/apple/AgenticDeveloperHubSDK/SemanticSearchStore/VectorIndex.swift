@@ -21,6 +21,21 @@ enum VectorIndex {
             """, arguments: [passageID, stamp, HalfVectorCodec.encode(vector), passageID])
     }
 
+    /// Stores a vector this device computed from `title` and `content`, but
+    /// only while passage `passageID` still holds exactly that text. Embedding
+    /// awaits the model outside any transaction, and a passage replaced in the
+    /// meantime frees its rowid for the next insert, so an id that still
+    /// exists is not proof that it is still the passage that was embedded.
+    static func storeComputed(
+        _ conn: Database, passageID: Int64, title: String, content: String, stamp: String, vector: [Float]
+    ) throws {
+        try conn.execute(sql: """
+            INSERT OR REPLACE INTO semantic_vectors (passage_id, semantic_stamp, embedding)
+            SELECT ?, ?, ? WHERE EXISTS (
+                SELECT 1 FROM semantic_passages WHERE id = ? AND title = ? AND content = ?)
+            """, arguments: [passageID, stamp, HalfVectorCodec.encode(vector), passageID, title, content])
+    }
+
     /// The best-scoring passage of each document, best document first, at
     /// most `limit`, scored by dot product with `query` (cosine, since both
     /// sides are unit length). Equal scores keep document id then chunk

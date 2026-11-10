@@ -31,6 +31,25 @@ struct SemanticSearchStoreStagingTests {
         #expect(try await store.search("vehicle", mode: .semantic).map(\.documentID) == ["d1"])
     }
 
+    @Test func aVectorComputedForReplacedTextIsNotStoredOnTheReusedRowid() throws {
+        let embedder = FakeEmbedder()
+        let store = try makeStore(embedder: embedder)
+        let first = try store.database.write { conn in
+            try store.stageDocument(in: conn, documentID: "d1", title: "T", content: "the automobile needs oil")
+        }
+        let old = try #require(first.awaitingVector.first)
+        // The document changes while `old` is being embedded; its replacement takes the freed rowid.
+        let second = try store.database.write { conn in
+            try store.stageDocument(in: conn, documentID: "d1", title: "T", content: "a recipe for sourdough")
+        }
+        #expect(second.awaitingVector.first?.id == old.id)
+        try store.database.write { conn in
+            try VectorIndex.storeComputed(conn, passageID: old.id, title: "T", content: old.content,
+                                          stamp: embedder.stamp, vector: embedder.vector(old.content))
+        }
+        #expect(try store.pendingCount() == 1, "the new text still needs its own vector")
+    }
+
     @Test func aVectorWithTheEmbeddersStampIsKeptAndNeedsNoEmbedding() async throws {
         let embedder = FakeEmbedder()
         let store = try makeStore(embedder: embedder)

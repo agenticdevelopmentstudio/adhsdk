@@ -185,7 +185,9 @@ public final class SemanticSearchStore: Sendable {
             for passage in staged.awaitingVector {
                 let vector = try await embedder.embed(passage.content, task: .document(title: title))
                 try database.write { conn in
-                    try VectorIndex.store(conn, passageID: passage.id, stamp: embedder.stamp, vector: vector)
+                    try VectorIndex.storeComputed(
+                        conn, passageID: passage.id, title: title, content: passage.content,
+                        stamp: embedder.stamp, vector: vector)
                 }
             }
         }
@@ -318,9 +320,11 @@ public final class SemanticSearchStore: Sendable {
         }
         for row in pending {
             let title: String = row["title"]
-            let vector = try await embedder.embed(row["content"], task: .document(title: title))
+            let content: String = row["content"]
+            let vector = try await embedder.embed(content, task: .document(title: title))
             try database.write { conn in
-                try VectorIndex.store(conn, passageID: row["id"], stamp: embedder.stamp, vector: vector)
+                try VectorIndex.storeComputed(
+                    conn, passageID: row["id"], title: title, content: content, stamp: embedder.stamp, vector: vector)
             }
         }
         return pending.count
