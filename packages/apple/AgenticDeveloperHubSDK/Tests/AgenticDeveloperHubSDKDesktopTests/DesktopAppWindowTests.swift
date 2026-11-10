@@ -490,9 +490,23 @@ final class DesktopAppWindowTests: XCTestCase {
         let original = window.frame
         try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 200, y: 14), clickCount: 2)
         XCTAssertEqual(window.frame, controller.windowLayer.bounds)
-        XCTAssertEqual(settings.windowFrames["a"], controller.windowLayer.bounds)
+        // The zoomed frame is never saved.
+        XCTAssertNil(settings.windowFrames["a"])
         try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 200, y: 14), clickCount: 2)
         XCTAssertEqual(window.frame, original)
+        XCTAssertEqual(settings.windowFrames["a"], original)
+    }
+
+    func test_closingAZoomedWindow_reopensAtItsUnzoomedFrame() throws {
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try chrome(controller, "a")
+        try drag(window, from: CGPoint(x: 200, y: 14), to: CGPoint(x: 150, y: 44))
+        let moved = window.frame
+        window.toggleZoom()
+        controller.closeApp(identifier: "a")
+        controller.openApp(identifier: "a")
+        XCTAssertEqual(try chrome(controller, "a").frame, moved)
     }
 
     func test_noOpTitleBarClick_keepsRestoreFrame() throws {

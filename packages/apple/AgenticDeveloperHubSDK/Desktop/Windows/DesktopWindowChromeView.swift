@@ -301,16 +301,18 @@ final class DesktopWindowChromeView: NSView {
         onFrameChange?(result)
     }
 
-    /// Fills the Desktop, or restores the frame from before filling.
+    /// Fills the Desktop, or restores the frame from before filling. Only the restored frame is
+    /// committed: the zoomed one is not saved, since the restore frame lives only in this view and
+    /// a window reopened at a saved zoomed frame could never get back to its own size.
     func toggleZoom() {
         let before = frame
         if let restoreFrame {
             self.restoreFrame = nil
             setFrameClamped(restoreFrame)
+            if frame != before { onFrameCommit?(frame) }
         } else if let container = superview?.bounds {
             restoreFrame = frame
             setFrameClamped(container)
         }
-        if frame != before { onFrameCommit?(frame) }
     }
 }
