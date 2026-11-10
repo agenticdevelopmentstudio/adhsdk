@@ -50,4 +50,16 @@ final class ConversationSummaryDTOTests: XCTestCase {
         XCTAssertFalse(ConversationInfoDTO(session: session(status: "ended"), homeDirectory: "/Users/me").canSend)
         XCTAssertFalse(ConversationInfoDTO(session: session(termProgram: "vscode"), homeDirectory: "/Users/me").canSend)
     }
+
+    /// A pane showing a permission prompt would take the typed message's Return as
+    /// "Yes" — so a waiting conversation is refused, with the reason.
+    func testWaitingConversationRefusesASend() {
+        let waiting = session(lastEventType: "PermissionRequest")
+        let info = ConversationInfoDTO(session: waiting, homeDirectory: "/Users/me")
+        XCTAssertFalse(info.canSend)
+        XCTAssertTrue(info.sendRefusal.contains("waiting on a prompt"), info.sendRefusal)
+        XCTAssertNotNil(ConversationSendability.refusal(for: waiting))
+        XCTAssertNil(ConversationSendability.refusal(for: session(lastEventType: "PreToolUse")), "busy queues")
+        XCTAssertEqual(ConversationInfoDTO(session: session(), homeDirectory: "/Users/me").sendRefusal, "")
+    }
 }

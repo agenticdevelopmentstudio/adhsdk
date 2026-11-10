@@ -118,9 +118,11 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
     /// The summarizer's line about what the session is doing ("" when none).
     public let summary: String
     public let pid: Int
-    /// Whether `steno conversation send` can type into this session's pane:
-    /// alive, and in a terminal the sender can target exactly.
+    /// Whether `steno conversation send` may type into this session's pane
+    /// (``ConversationSendability``).
     public let canSend: Bool
+    /// Why it may not ("" when ``canSend``).
+    public let sendRefusal: String
 
     public init(session: SessionDTO, homeDirectory: String = NSHomeDirectory()) {
         let summary = ConversationSummaryDTO(session: session, homeDirectory: homeDirectory)
@@ -140,6 +142,37 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
         lastTool = session.lastTool
         self.summary = session.summary
         pid = session.pid
-        canSend = summary.status != .ended && TerminalTextInjector.isSupported(termProgram: session.termProgram)
+        let refusal = ConversationSendability.refusal(for: session)
+        canSend = refusal == nil
+        sendRefusal = refusal ?? ""
+    }
+}
+
+/// Whether a message may be typed into a conversation's terminal pane — the one
+/// answer `steno conversation send` acts on and `info`'s `canSend` reports.
+public enum ConversationSendability {
+    /// Why a message must not be typed into `session`'s pane, or nil when it may.
+    ///
+    /// A session ``ConversationStatus/waiting`` on the person is refused, not just an
+    /// ended one: its pane holds a permission or question prompt, which ignores the
+    /// typed letters and takes the Return that follows as picking its highlighted
+    /// choice — approving a tool nobody approved.
+    public static func refusal(for session: SessionDTO) -> String? {
+        let id = session.sessionId
+        switch ConversationStatus(session: session) {
+        case .ended:
+            return "conversation \(id) has ended."
+        case .waiting:
+            return "conversation \(id) is waiting on a prompt (a permission or a question); answer it in "
+                + "its terminal. A message typed now would land in the prompt, and its Return would pick "
+                + "the highlighted choice."
+        case .busy, .idle:
+            break
+        }
+        guard TerminalTextInjector.isSupported(termProgram: session.termProgram) else {
+            let term = session.termProgram.isEmpty ? "an unknown terminal" : session.termProgram
+            return "typing into a conversation needs iTerm2 or Terminal.app; \(id) runs in \(term)."
+        }
+        return nil
     }
 }
