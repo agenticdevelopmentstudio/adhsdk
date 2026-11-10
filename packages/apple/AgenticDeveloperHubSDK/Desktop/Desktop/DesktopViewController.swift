@@ -26,7 +26,6 @@ public final class DesktopViewController: NSViewController {
     private lazy var desktopMenu = makeDesktopMenu(title: "Desktop")
     private var windowControllers: [String: DesktopAppWindowController] = [:]
     private var subscription: AnyCancellable?
-    private var lastKeepArranged: Bool
     private var cachedImagePath: String?
     private var cachedImage: NSImage?
     private var appliedBackground: (hex: String, path: String?)?
@@ -35,7 +34,6 @@ public final class DesktopViewController: NSViewController {
     public init(registry: DesktopAppRegistry, settings: DesktopSettings = .shared) {
         self.registry = registry
         self.settings = settings
-        self.lastKeepArranged = settings.keepArranged
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -248,17 +246,6 @@ public final class DesktopViewController: NSViewController {
     // MARK: Settings
 
     private func settingsChanged() {
-        let keep = settings.keepArranged
-        if lastKeepArranged, !keep {
-            // Freeze the arranged positions before the layout switches to free mode.
-            lastKeepArranged = keep
-            let origins = DesktopIconLayout(
-                metrics: Self.metrics(for: settings.iconArrangement),
-                containerSize: gridView.bounds.size
-            ).arrangedOrigins(for: registry.apps.sortedByName.map { $0.descriptor.identifier })
-            if origins != settings.iconPositions { settings.iconPositions = origins }
-        }
-        lastKeepArranged = keep
         apply()
     }
 
@@ -322,10 +309,12 @@ public final class DesktopViewController: NSViewController {
         return image
     }
 
+    /// Saves every icon where it now stands, not just the moved one: icons with no saved
+    /// position fill the next free cell, so they would shift when the moved one vacates its cell.
     private func iconMoved(identifier: String, to origin: CGPoint) {
-        var positions = settings.iconPositions
-        guard positions[identifier] != origin else { return }
+        var positions = settings.iconPositions.merging(gridView.iconOrigins) { _, shown in shown }
         positions[identifier] = origin
+        guard positions != settings.iconPositions else { return }
         settings.iconPositions = positions
     }
 }

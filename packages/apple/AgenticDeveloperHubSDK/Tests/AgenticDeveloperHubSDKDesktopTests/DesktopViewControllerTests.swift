@@ -63,13 +63,27 @@ final class DesktopViewControllerTests: XCTestCase {
         XCTAssertEqual(ordered[2], CGPoint(x: 8, y: 200))
     }
 
-    func test_turningKeepArrangedOff_savesCurrentOrigins() {
+    func test_turningKeepArrangedOff_keepsTheArrangement_andDropsStalePositions() {
+        settings.keepArranged = false
+        settings.iconPositions = ["a": CGPoint(x: 400, y: 300)]
+        settings.keepArranged = true
         let controller = makeController(names: [("b", "Bravo"), ("a", "Alpha")])
         let before = controller.iconOrigins
         settings.keepArranged = false
         controller.view.layoutSubtreeIfNeeded()
-        XCTAssertEqual(settings.iconPositions, before)
+        XCTAssertEqual(settings.iconPositions, [:])
         XCTAssertEqual(controller.iconOrigins, before)
+    }
+
+    func test_dragInFreeMode_savesEveryIconWhereItStands() throws {
+        let controller = makeController(names: [("a", "Alpha"), ("b", "Bravo")])
+        settings.keepArranged = false
+        let grid = try XCTUnwrap(gridView(of: controller))
+        drag(grid, from: CGPoint(x: 20, y: 20), to: CGPoint(x: 320, y: 220))
+        controller.view.layoutSubtreeIfNeeded()
+        XCTAssertEqual(settings.iconPositions["a"], CGPoint(x: 308, y: 208))
+        XCTAssertEqual(settings.iconPositions["b"], CGPoint(x: 8, y: 104))
+        XCTAssertEqual(controller.iconOrigins["b"], CGPoint(x: 8, y: 104))
     }
 
     func test_listMode_showsTable_withAllApps() {
@@ -108,14 +122,15 @@ final class DesktopViewControllerTests: XCTestCase {
         XCTAssertEqual(controller.selectedAppIdentifier, "a")
     }
 
-    func test_turningKeepArrangedOff_inListMode_savesOnePositionPerApp() {
+    func test_turningKeepArrangedOff_inListMode_thenSwitchingToIcons_showsTheArrangement() {
         settings.iconArrangement = .list
         let controller = makeController(names: [("b", "Bravo"), ("a", "Alpha")])
         settings.keepArranged = false
-        withExtendedLifetime(controller) {}
-        XCTAssertEqual(Set(settings.iconPositions.keys), ["a", "b"])
-        XCTAssertEqual(settings.iconPositions["a"], CGPoint(x: 8, y: 8))
-        XCTAssertEqual(settings.iconPositions["b"], CGPoint(x: 8, y: 104))
+        XCTAssertEqual(settings.iconPositions, [:])
+        settings.iconArrangement = .largeIcons
+        controller.view.layoutSubtreeIfNeeded()
+        XCTAssertEqual(controller.iconOrigins["a"], CGPoint(x: 8, y: 8))
+        XCTAssertEqual(controller.iconOrigins["b"], CGPoint(x: 8, y: 104))
     }
 
     func test_accessibilityPress_onAnIcon_opensItsApp() throws {

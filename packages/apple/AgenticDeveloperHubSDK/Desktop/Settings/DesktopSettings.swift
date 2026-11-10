@@ -77,9 +77,15 @@ public final class DesktopSettings {
         set { write(newValue, Key.iconArrangement, default: .largeIcons) }
     }
 
+    /// Turning this off starts free placement from the current arrangement: positions saved by an
+    /// earlier free spell are dropped, so every icon stays where the arranged grid put it until it
+    /// is dragged. That holds whether or not a Desktop is on screen.
     public var keepArranged: Bool {
         get { read(Key.keepArranged, default: true) }
-        set { write(newValue, Key.keepArranged, default: true) }
+        set {
+            if keepArranged, !newValue, !iconPositions.isEmpty { iconPositions = [:] }
+            write(newValue, Key.keepArranged, default: true)
+        }
     }
 
     /// Free-placed icon positions, by App identifier.

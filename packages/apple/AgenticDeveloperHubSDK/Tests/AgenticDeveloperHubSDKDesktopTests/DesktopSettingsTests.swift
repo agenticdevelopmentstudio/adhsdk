@@ -59,6 +59,20 @@ final class DesktopSettingsTests: XCTestCase {
         XCTAssertEqual(settings.windowFrames["a"], CGRect(x: 1, y: 2, width: 300, height: 400))
     }
 
+    func test_turningKeepArrangedOff_withNoDesktopOnScreen_dropsStalePositions() {
+        let settings = DesktopSettings(store: store)
+        settings.keepArranged = false
+        settings.iconPositions = ["a": CGPoint(x: 300, y: 200)]
+        settings.keepArranged = true
+        XCTAssertEqual(settings.iconPositions["a"], CGPoint(x: 300, y: 200))
+        settings.keepArranged = false
+        XCTAssertEqual(settings.iconPositions, [:])
+        // Writing false again keeps positions placed while free.
+        settings.iconPositions = ["a": CGPoint(x: 40, y: 50)]
+        settings.keepArranged = false
+        XCTAssertEqual(settings.iconPositions["a"], CGPoint(x: 40, y: 50))
+    }
+
     func test_desktopSettings_changes_emitsOnWrite() {
         let settings = DesktopSettings(store: store)
         var count = 0
