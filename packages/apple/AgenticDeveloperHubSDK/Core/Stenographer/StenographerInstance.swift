@@ -74,8 +74,10 @@ public struct StenographerInstance: Sendable, Equatable {
         defaultHTTPPort, StenographerIdentifiers.routerPort, ADKDIdentifiers.httpPort
     ]
     /// Names whose label `<baseLabel>.<name>` is already taken: the usage
-    /// widget's bundle id, and the directory that holds the definitions.
-    public static let reservedNames: Set<String> = ["usagewidget", "instances"]
+    /// widget's bundle id, the directory that holds the definitions, and the
+    /// installed daemon's launch-throttle identifier (`<baseLabel>.daemon`),
+    /// whose `/tmp/<identifier>.launches` an instance's app guard would share.
+    public static let reservedNames: Set<String> = ["usagewidget", "instances", "daemon"]
     public static let environmentKey = "STENOGRAPHER_INSTANCE"
     public static let argumentFlag = "-instance"
     /// `sockaddr_un.sun_path` is 104 bytes on Darwin, including the NUL.
