@@ -313,6 +313,24 @@ final class BrowserAutomationTests: XCTestCase {
         XCTAssertTrue(delta.focused?.contains("typed") ?? false)
     }
 
+    /// A delta snapshot after the target moved to another tab is a full
+    /// snapshot of that tab, not a diff against the tab left behind.
+    func testRetargetingToAnotherPageResetsTheDeltaBaseline() async throws {
+        let html = "<button>Same</button>"
+        let (_, a) = await make(html: html)
+        let (other, _) = await make(html: html)
+        var options = BrowserSnapshotOptions()
+        let first = try await a.snapshot(options)
+        options.delta = true
+        let sameTab = try await a.snapshot(options)
+        XCTAssertTrue(sameTab.text.contains("no change"), "the baseline holds on one page")
+
+        a.retarget(to: WebKitPageDriver(webView: other.webView), console: BrowserConsoleLog())
+        let moved = try await a.snapshot(options)
+        XCTAssertFalse(moved.text.contains("no change"), moved.text)
+        XCTAssertEqual(moved.text, first.text)
+    }
+
     func testScreenshotIsPNGAndCapped() async throws {
         let (page, a) = await make(html: "<div style=\"width:3000px;height:10px;background:red\"></div>")
         page.orderInOffscreen()
