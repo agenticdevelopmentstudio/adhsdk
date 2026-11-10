@@ -64,4 +64,17 @@ struct MultipleProjectionsTests {
         #expect(people.purged == 1)
         #expect(places.purged == 1)
     }
+
+    @Test("a projection that claims a family of resources gets the whole family in one truncate call")
+    func aFamilyIsTruncatedInOneCall() async throws {
+        let family = TestProjection(resources: ["test.people", "test.places"], table: "family")
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: ":memory:"), projections: [family])
+        try await store.prepare(resources: resources)
+        try await store.resetForResync()
+        #expect(family.truncated.count == 1, "one call per projection, not one per resource")
+        #expect(Set(family.truncated.first ?? []) == ["test.people", "test.places"])
+        try await store.purgeResources(["test.people", "test.places", "test.other"])
+        #expect(family.truncated.count == 2)
+        #expect(Set(family.truncated.last ?? []) == ["test.people", "test.places"])
+    }
 }
