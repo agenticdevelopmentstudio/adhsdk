@@ -34,6 +34,14 @@ final class DesktopIconLayoutTests: XCTestCase {
         XCTAssertEqual(result["c"], CGPoint(x: 8, y: 200))
     }
 
+    func test_free_savedOriginInThePaddingBand_reservesTheFirstCell() {
+        let layout = DesktopIconLayout(metrics: metrics, containerSize: CGSize(width: 400, height: 300))
+        // (0,0) is inside the padding band; it still covers cell (0,0), so "b" must not land there.
+        let result = layout.freeOrigins(for: ["a", "b"], saved: ["a": CGPoint(x: 0, y: 0)])
+        XCTAssertEqual(result["a"], CGPoint(x: 0, y: 0))
+        XCTAssertEqual(result["b"], CGPoint(x: 8, y: 104))
+    }
+
     func test_free_ignoresSavedForUnknownIDs() {
         let layout = DesktopIconLayout(metrics: metrics, containerSize: CGSize(width: 400, height: 300))
         let result = layout.freeOrigins(for: ["a"], saved: ["ghost": CGPoint(x: 8, y: 8)])

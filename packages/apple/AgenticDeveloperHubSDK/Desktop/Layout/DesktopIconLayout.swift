@@ -42,11 +42,12 @@ public struct DesktopIconLayout: Sendable {
         ))
     }
 
+    /// The grid cell an icon at `origin` mostly covers. An origin in the padding band, or past
+    /// the last row, belongs to the nearest real cell, so it reserves a cell the grid hands out.
     private func cellIndex(containing origin: CGPoint) -> (column: Int, row: Int) {
-        (
-            Int(((origin.x - metrics.padding) / metrics.cellSize.width).rounded(.down)),
-            Int(((origin.y - metrics.padding) / metrics.cellSize.height).rounded(.down))
-        )
+        let column = Int(((origin.x - metrics.padding) / metrics.cellSize.width).rounded())
+        let row = Int(((origin.y - metrics.padding) / metrics.cellSize.height).rounded())
+        return (max(0, column), min(max(0, row), rowsPerColumn - 1))
     }
 
     /// Grid from the top-left, filling down then across, in the given order.
