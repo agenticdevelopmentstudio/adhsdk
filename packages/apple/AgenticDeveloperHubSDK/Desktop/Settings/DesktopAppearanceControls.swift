@@ -67,7 +67,9 @@ final class DesktopAppearanceControls: NSObject {
     }
 
     @objc private func colorChanged(_ sender: NSColorWell) {
-        settings.backgroundColorHex = sender.color.desktopHex
+        // A color with no RGB form (a dropped pattern) can't be stored; keep the saved one.
+        guard let hex = sender.color.desktopHex else { return refresh() }
+        settings.backgroundColorHex = hex
     }
 
     @objc private func choosePhoto(_ sender: Any?) {

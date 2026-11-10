@@ -95,6 +95,15 @@ final class DesktopSettingsViewControllerTests: XCTestCase {
         XCTAssertEqual(settings.backgroundColorHex, "#FF0000")
     }
 
+    func test_colorWell_ignoresAPatternColor_andKeepsTheSavedHex() {
+        settings.backgroundColorHex = "#102030"
+        let controller = makeController()
+        controller.colorWell.color = NSColor(patternImage: NSImage(size: NSSize(width: 2, height: 2)))
+        fire(controller.colorWell)
+        XCTAssertEqual(settings.backgroundColorHex, "#102030")
+        XCTAssertEqual(controller.colorWell.color.desktopHex, "#102030")
+    }
+
     func test_externalChange_updatesControls_withoutWriteBack() {
         let controller = makeController()
         var writes = 0

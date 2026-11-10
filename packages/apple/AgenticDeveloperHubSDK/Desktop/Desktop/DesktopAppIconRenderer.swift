@@ -79,9 +79,10 @@ extension NSColor {
         )
     }
 
-    /// `#RRGGBB` in sRGB; the inverse of `init?(desktopHex:)`.
-    var desktopHex: String {
-        let color = usingColorSpace(.sRGB) ?? self
+    /// `#RRGGBB` in sRGB; the inverse of `init?(desktopHex:)`. Nil for a color with no RGB
+    /// form, such as a pattern color, whose components would raise.
+    var desktopHex: String? {
+        guard let color = usingColorSpace(.sRGB) else { return nil }
         func byte(_ value: CGFloat) -> Int { Int((min(max(value, 0), 1) * 255).rounded()) }
         return String(
             format: "#%02X%02X%02X",
