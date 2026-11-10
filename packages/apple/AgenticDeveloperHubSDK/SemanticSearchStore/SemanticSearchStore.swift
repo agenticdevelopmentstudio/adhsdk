@@ -275,16 +275,63 @@ public final class SemanticSearchStore: Sendable {
         if let current, current != sourceHash { return .ignoredStale(currentSourceHash: current) }
         let title = title ?? ""
         try Self.upsertDocument(conn, documentID: documentID, sourceHash: sourceHash, title: title)
-        try conn.execute(sql: "DELETE FROM semantic_passages WHERE document_id = ?", arguments: [documentID])
-        for passage in passages {
-            let id = try Self.insertPassage(
-                conn, documentID: documentID, chunkIndex: passage.chunkIndex, title: title,
-                content: passage.content, sourceHash: sourceHash, origin: .server)
-            if let vector = passage.embedding, let stamp = passage.semanticStamp {
-                try storeReceived(conn, passageID: id, stamp: stamp, vector: vector)
+        // One passage per chunk index, the first one sent: the table allows no more.
+        var indexes = Set<Int>()
+        let incoming = passages.filter { indexes.insert($0.chunkIndex).inserted }
+        let kept = try keptServerPassages(
+            conn, documentID: documentID, title: title, sourceHash: sourceHash, incoming: incoming)
+        let keptIDs = Array(kept.values)
+        let placeholders = Array(repeating: "?", count: keptIDs.count).joined(separator: ",")
+        try conn.execute(
+            sql: "DELETE FROM semantic_passages WHERE document_id = ?"
+                + (keptIDs.isEmpty ? "" : " AND id NOT IN (\(placeholders))"),
+            arguments: StatementArguments([documentID]) + StatementArguments(keptIDs))
+        for passage in incoming {
+            let id: Int64
+            if let existing = kept[passage.chunkIndex] {
+                id = existing
+            } else {
+                id = try Self.insertPassage(
+                    conn, documentID: documentID, chunkIndex: passage.chunkIndex, title: title,
+                    content: passage.content, sourceHash: sourceHash, origin: .server)
             }
+            guard let vector = passage.embedding, let stamp = passage.semanticStamp else { continue }
+            // A kept passage may already hold this device's own vector; another model's never replaces it.
+            if kept[passage.chunkIndex] != nil, let embedder, stamp != embedder.stamp,
+               try hasVector(conn, passageID: id, stamp: embedder.stamp) {
+                continue
+            }
+            try storeReceived(conn, passageID: id, stamp: stamp, vector: vector)
         }
         return .applied
+    }
+
+    /// The document's server passages that `incoming` delivers again unchanged
+    /// (same chunk, text, title and source), by chunk index. Re-applying them
+    /// keeps them, and the vectors this device computed for them, rather than
+    /// deleting both and embedding the same text again.
+    private func keptServerPassages(
+        _ conn: Database, documentID: String, title: String, sourceHash: String, incoming: [ServerPassage]
+    ) throws -> [Int: Int64] {
+        var contentByIndex: [Int: String] = [:]
+        for passage in incoming { contentByIndex[passage.chunkIndex] = passage.content }
+        let rows = try Row.fetchAll(conn, sql: """
+            SELECT id, chunk_index, content FROM semantic_passages
+            WHERE document_id = ? AND origin = 'server' AND title = ? AND source_hash = ?
+            """, arguments: [documentID, title, sourceHash])
+        var kept: [Int: Int64] = [:]
+        for row in rows {
+            let index: Int = row["chunk_index"]
+            let content: String = row["content"]
+            if contentByIndex[index] == content { kept[index] = row["id"] }
+        }
+        return kept
+    }
+
+    private func hasVector(_ conn: Database, passageID: Int64, stamp: String) throws -> Bool {
+        try Bool.fetchOne(conn, sql: """
+            SELECT EXISTS (SELECT 1 FROM semantic_vectors WHERE passage_id = ? AND semantic_stamp = ?)
+            """, arguments: [passageID, stamp]) ?? false
     }
 
     /// Forgets a document and all its passages and vectors.

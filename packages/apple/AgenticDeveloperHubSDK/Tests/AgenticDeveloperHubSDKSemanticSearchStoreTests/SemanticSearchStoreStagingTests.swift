@@ -154,6 +154,42 @@ struct SemanticSearchStoreStagingTests {
         #expect(stale == .ignoredStale(currentSourceHash: "h1"))
     }
 
+    @Test func reapplyingTheSameServerPassagesKeepsTheVectorsTheDeviceComputed() async throws {
+        let embedder = FakeEmbedder()
+        let store = try makeStore(embedder: embedder)
+        let passages = ["alpha one", "beta two", "gamma three"].enumerated().map {
+            ServerPassage(chunkIndex: $0.offset, content: $0.element)
+        }
+        try store.applyServerPassages(documentID: "doc", title: "T", sourceHash: "h1", passages: passages)
+        #expect(try await store.embedPending() == 3)
+        let embedded = embedder.embedCount
+        let idsBefore = try store.database.read { try Int64.fetchAll($0, sql: "SELECT id FROM semantic_passages") }
+
+        // The same row again (a metadata-only change), one chunk edited, and
+        // another model's vector for an unchanged chunk.
+        var again = passages
+        again[1] = ServerPassage(chunkIndex: 1, content: "beta two, revised")
+        again[2] = ServerPassage(chunkIndex: 2, content: "gamma three", embedding: embedder.vector("zzz"),
+                                 semanticStamp: "other:aaaaaaaaaaaa:bbbbbbbbbbbb:64")
+        try store.applyServerPassages(documentID: "doc", title: "T", sourceHash: "h1", passages: again)
+
+        #expect(try store.pendingCount() == 1, "only the edited chunk needs a vector")
+        let idsAfter = try store.database.read { try Int64.fetchAll($0, sql: "SELECT id FROM semantic_passages") }
+        #expect(Set(idsAfter).isSuperset(of: [idsBefore[0], idsBefore[2]]))
+        #expect(try await store.embedPending() == 1)
+        #expect(embedder.embedCount == embedded + 1)
+    }
+
+    @Test func aRepeatedChunkIndexKeepsTheFirstPassage() async throws {
+        let store = try makeStore()
+        try store.applyServerPassages(
+            documentID: "doc", title: "T", sourceHash: "h1",
+            passages: [ServerPassage(chunkIndex: 0, content: "first copy"),
+                       ServerPassage(chunkIndex: 0, content: "second copy")])
+        #expect(try await store.search("first", mode: .keyword).map(\.documentID) == ["doc"])
+        #expect(try await store.search("second", mode: .keyword).isEmpty)
+    }
+
     @Test func aWrongLengthVectorUnderTheEmbeddersStampIsDroppedAndReembedded() async throws {
         let embedder = FakeEmbedder()
         let store = try makeStore(embedder: embedder)
