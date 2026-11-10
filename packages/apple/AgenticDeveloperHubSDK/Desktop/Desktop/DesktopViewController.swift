@@ -44,7 +44,7 @@ public final class DesktopViewController: NSViewController {
     public override func loadView() {
         let root = DesktopRootView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         root.keyEquivalentHandler = { [weak self] event in
-            self?.frontWindowController?.performKeyEquivalent(with: event) ?? false
+            self?.performWindowKeyEquivalent(with: event) ?? false
         }
         root.onLayout = { [weak self] in self?.layoutSurface() }
         for subview in [backgroundView, gridView, listView, windowLayer] {
@@ -76,6 +76,17 @@ public final class DesktopViewController: NSViewController {
 
     private var frontWindowController: DesktopAppWindowController? {
         windowLayer.stack.frontID.flatMap { windowControllers[$0] }
+    }
+
+    /// Offers a key event to the front window's menus, then, for a front About or Settings
+    /// window, to its App's menus: the menus the top bar shows, so their keys work too.
+    private func performWindowKeyEquivalent(with event: NSEvent) -> Bool {
+        guard let front = frontWindowController else { return false }
+        if front.performKeyEquivalent(with: event) { return true }
+        guard front.kind != .app, let owner = windowControllers[front.app.descriptor.identifier] else {
+            return false
+        }
+        return owner.performKeyEquivalent(with: event)
     }
 
     /// Opens the App's window, or brings it to the front when already open.

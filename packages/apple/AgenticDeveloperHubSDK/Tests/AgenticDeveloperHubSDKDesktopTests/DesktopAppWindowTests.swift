@@ -1,6 +1,7 @@
 import AppKit
 import XCTest
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 @testable import AgenticDeveloperHubSDKDesktop
 
 @MainActor
@@ -223,6 +224,34 @@ final class DesktopAppWindowTests: XCTestCase {
         controller.openApp(identifier: "a")
         XCTAssertTrue(controller.view.performKeyEquivalent(with: keyEvent(",")))
         XCTAssertTrue(controller.isShowingSettings(forApp: "a"))
+    }
+
+    func test_appKeys_reachTheOwningApp_whileItsAboutWindowIsInFront() {
+        let menu = NSMenu(title: "File")
+        var fired = 0
+        let target = ClosureMenuItemTarget(action: { fired += 1 })
+        let item = NSMenuItem(
+            title: "New", action: #selector(ClosureMenuItemTarget.performMenuAction(_:)), keyEquivalent: "n"
+        )
+        item.target = target
+        menu.addItem(item)
+        app.menus = [menu]
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        controller.showAbout(forApp: "a")
+        XCTAssertTrue(controller.view.performKeyEquivalent(with: keyEvent("n")))
+        XCTAssertEqual(fired, 1)
+        XCTAssertTrue(controller.view.performKeyEquivalent(with: keyEvent(",")))
+        XCTAssertTrue(controller.isShowingSettings(forApp: "a"))
+        withExtendedLifetime(target) {}
+    }
+
+    func test_aboutWindow_withItsAppClosed_handlesOnlyClose() {
+        let controller = makeController()
+        controller.showAbout(forApp: "a")
+        XCTAssertFalse(controller.view.performKeyEquivalent(with: keyEvent(",")))
+        XCTAssertTrue(controller.view.performKeyEquivalent(with: keyEvent("w")))
+        XCTAssertEqual(controller.openWindowIdentifiers, [])
     }
 
     func test_cmdW_withNoAppWindow_isNotHandled() {
