@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "3e548aa3-1103-4b3f-96ff-d2e7ff564810",
     "title": "Font Chooser Button",
-    "domain": "adhsdk://cookbook/ui/settings/rows/font-chooser-button",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/rows/color-picker-view",
-      "adhsdk://cookbook/ui/settings/rows/button-view"
+      "c0e95399-ddab-4445-a22a-566d07339f9b",
+      "f8e734aa-f401-4218-9f1e-56ed98c28d3d"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e3800f6e6e549281",
+  "synced": "24f5d795f8dd669f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

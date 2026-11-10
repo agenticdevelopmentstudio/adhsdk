@@ -1,7 +1,6 @@
 ---
 id: e6326b0e-cba1-44ee-bf1d-7b033e25e39a
 title: "Integration Self-Check"
-domain: adhsdk://cookbook/status/dashboard/state/integrations
 type: ingredient
 version: 1.1.1
 status: review
@@ -17,10 +16,10 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/api
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 related:
-  - adhsdk://cookbook/status/dashboard/state/history
-  - adhsdk://cookbook/status/dashboard/state/config-status
+  - 3bb63ddd-6c9a-41c1-a906-6c8542cb4e5c
+  - 4bd200d7-f9d2-4348-af53-95ea02272c79
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,7 +29,7 @@ approved-date: ""
 
 ## Overview
 
-Integrations is state in the status dashboard that loads the monitor's integration self-check snapshot: one entry per provider integration, saying whether it is configured, reachable and healthy. It wraps one cached read under the fixed key `["integrations"]`. It requests `/integrations` through the dashboard's status API client (see [status-web-api](adhsdk://cookbook/status/dashboard/api)) and returns the query result typed as `IntegrationsResponse`. Integrations turns on refresh-on-returning-focus. It takes no arguments and is always enabled.
+Integrations is state in the status dashboard that loads the monitor's integration self-check snapshot: one entry per provider integration, saying whether it is configured, reachable and healthy. It wraps one cached read under the fixed key `["integrations"]`. It requests `/integrations` through the dashboard's status API client (see status-web-api ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad))) and returns the query result typed as `IntegrationsResponse`. Integrations turns on refresh-on-returning-focus. It takes no arguments and is always enabled.
 
 It has two callers. The Overview passes `data` to the self-check banner, so a failed or degraded self-check shows on the default wallboard. The dashboard passes `data` to the self-check computation for the header self-check pill. Both callers read only `data`.
 
@@ -155,9 +154,9 @@ Not applicable: Integrations makes no log calls. Failures reach the caller only 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-integrations.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-integrations.ts` | unverified |
 
 ## Design Decisions
 
@@ -187,10 +186,10 @@ Not applicable: Integrations makes no log calls. Failures reach the caller only 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 
 **Separation of Concerns**: The hook has no presentation code. The base path and transport live in `StatusApiClient`, caching and the state machine in React Query, periodic refresh in `useRefreshAll`, and rendering in `SelfCheckBanner` and `computeSelfCheck`.
 

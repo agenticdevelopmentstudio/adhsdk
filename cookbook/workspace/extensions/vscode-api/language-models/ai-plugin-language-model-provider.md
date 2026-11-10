@@ -1,7 +1,6 @@
 ---
 id: a602608c-c061-44b6-a7ab-829e798d6b0c
 title: "AI Plugin Language Model Provider"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,14 +21,14 @@ tags:
   - language-model
   - streaming
 depends-on:
-  - adhsdk://cookbook/ai/providers/provider-configuration
-  - adhsdk://cookbook/ai/plugins/plugin-manager
-  - adhsdk://cookbook/ai/plugins/plugin-descriptor
-  - adhsdk://cookbook/ai/chat/chat-context
-  - adhsdk://cookbook/ai/models/model-catalog
-  - adhsdk://cookbook/ai/plugins/plugin-transport
-  - adhsdk://cookbook/ai/plugins/stream-event
-  - adhsdk://cookbook/ai/plugins/ai-plugin
+  - a8054368-9885-4b83-90cf-5029728ab397
+  - 0a729d47-fc2d-427c-b474-26072dc8b336
+  - 39de0dff-2b26-4d3d-97a3-ebdbdb38846a
+  - 613d7a36-d0cd-4415-97be-d983b3d6c644
+  - c8438764-89c9-4286-9b58-10c9cd175a97
+  - 7d5c5a1f-30df-460e-b6c4-7cfe9ab42784
+  - 2067e249-4f97-4575-b8ed-8f55f6dc96df
+  - 47eb19ef-2c42-4a52-a60b-54b6f01c8791
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift (adhsdk)
@@ -342,9 +341,9 @@ No other event in this file is logged: neither the unknown-model error nor the p
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` | unverified |
 
 ## Design Decisions
 
@@ -368,11 +367,11 @@ No other event in this file is logged: neither the unknown-model error nor the p
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because the file's only responsibilities are listing descriptors and adapting one request/response shape to another; it performs no transport, no credential handling, and no plugin-loading logic of its own, reusing `AIProviderResolver`, `AIPluginManager`, and `PluginTransport` for all of that instead (see Overview). `unit-test-coverage` is partial: the given test suite covers `availableChatModels`' listing/ordering/skipping behavior and all three of `streamResponse`'s pre-plugin error paths, but no test in the given sources exercises the success path (`buildRequest` succeeding, `PluginTransport.run` streaming real events, or cancellation actually propagating). `explicit-error-handling` is partial: the two guard failures are explicit, typed, and `Equatable` (`ProviderError`), but `plugin-load-failure-collapsed` deliberately discards which of four distinct load failures occurred, trading diagnostic specificity for a simpler caller-facing contract. `secure-log-output` passes because the one potentially sensitive value logged, `justification`, is tagged `.private`, while `extensionIdentifier` is tagged `.public` (see Logging). `no-hardcoded-strings` fails because `ProviderError.description`'s two case bodies are English literals with no localization mechanism (see Localization).
 

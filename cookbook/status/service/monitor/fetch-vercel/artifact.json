@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "c7b38706-a6bc-4ad6-852c-425a4ed11a27",
     "title": "Status Server Monitor Fetch Vercel",
-    "domain": "adhsdk://cookbook/status/service/monitor/fetch-vercel",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -26,13 +25,13 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/networking/timeouts",
-      "agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience",
-      "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/alerts",
-      "adhsdk://cookbook/status/service/monitor/deploy-status"
+      "1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9",
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/fetch-vercel.ts (adhsdk)",
@@ -47,7 +46,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "02fe4789055a33f9",
+  "synced": "84532aebed49d529",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -66,7 +65,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

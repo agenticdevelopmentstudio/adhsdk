@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "bd0d7595-f186-4aaf-bb45-5c733cfdb03d",
     "title": "RDID Picker",
-    "domain": "adhsdk://cookbook/adh/hub/identifiers/rdid-picker",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -30,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a477775ccb8c043f",
+  "synced": "4ddfa584195375d0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

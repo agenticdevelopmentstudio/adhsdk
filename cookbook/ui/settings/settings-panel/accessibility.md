@@ -4,7 +4,7 @@
   a transparent container whose view is its own content view, with no
   label, icon, or control of its own to expose. Each group view a
   subclass adds manages its own accessibility per its own recipe
-  (`adhsdk://cookbook/ui/settings/layout/group-view`).
+  ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)).
 - **Label requirements**: Not applicable — this component sets no
   accessibility label on its own view. The descriptor's title becomes the
   sidebar row's accessible name only through the sidebar list component,

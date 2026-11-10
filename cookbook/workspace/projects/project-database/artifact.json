@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "c212ea39-10e7-4146-89dd-36edb3b3455a",
     "title": "Project Database",
-    "domain": "adhsdk://cookbook/workspace/projects/project-database",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -28,7 +27,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/projects/git-repo"
+      "1463e7a2-e290-4b8c-8643-df9462a758e6"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)",
@@ -39,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3b8890bdb6bf706d",
+  "synced": "f9f3c31aef713888",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

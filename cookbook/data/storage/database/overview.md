@@ -18,9 +18,9 @@ sit on. It has two parts:
   reduced to characters a path can hold.
 
 Consumers include the sync store (see
-[Offline Sync Client](adhsdk://cookbook/data/sync/offline-sync-client)),
-the markdown store (see [Markdown Core](adhsdk://cookbook/adh/hub/content/markdown-store)),
+Offline Sync Client ([adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044))),
+the markdown store (see Markdown Core ([adhsdk.ingredient.adh.hub.content.markdown-store](cookbook:11f7a665-60e9-42df-853c-fe4de3af0fd8))),
 and the project database (see
-[Project Database](adhsdk://cookbook/workspace/projects/project-database)),
+Project Database ([adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a))),
 which names its file inside the storage-location helper's directory.
 

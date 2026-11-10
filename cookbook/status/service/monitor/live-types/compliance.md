@@ -1,10 +1,10 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
 
 `separation-of-concerns` passes because this file declares only the `/api/live` wire shapes, with no DB import and no bridge to the route or SSE fan-out logic that builds or delivers a value of this shape — building belongs to `routes/reads.ts`'s `buildLiveSnapshot`, delivery belongs to `live/live-events.ts` (`status-server-live` recipe), and this file imports neither. `unit-test-coverage` is partial: no test file targets `live-types.ts` directly (it has no function to unit-test), but every field this recipe documents is exercised indirectly through `reads.int.test.ts`'s integration tests against `GET /live`, which is the traceability basis for every Conformance Test Vector above; there is no direct test of the type declarations' shape in isolation from that route. `data-integrity` passes because every field in every interface this file declares is non-optional (**all-fields-required**), so a value that omits a field fails structural typing at compile time rather than silently propagating a partial `LiveSnapshot` to a consumer. `health-observability` passes because `LiveSnapshot` itself is a health-observability surface: `lastCycleAt`, `probeIntervalMs`, and `monitorVersion` exist specifically so a long-running monitor process's staleness and running version are observable from the snapshot it produces, per **last-cycle-at-is-data-freshness-clock**, **last-cycle-at-distinct-from-health-clock**, and **probe-interval-ms-scales-staleness**.
 

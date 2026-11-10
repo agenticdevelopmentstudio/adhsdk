@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5cb60b95-0a8b-43c8-a747-cb5ca7353f09",
     "title": "Status Server Monitor Worker",
-    "domain": "adhsdk://cookbook/status/service/monitor/worker",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -26,16 +25,16 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency",
-      "agenticdevelopercookbook://guidelines/implementing/data/database",
-      "agenticdevelopercookbook://guidelines/implementing/data/transactions-and-concurrency",
-      "agenticdevelopercookbook://guidelines/implementing/security/sensitive-data",
-      "agenticdevelopercookbook://guidelines/implementing/observability/logging",
-      "agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f68778f2-65e3-4e89-bbf8-115151efa9dc",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab416d40-2688-4531-95fb-613f0d2fa8cf",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e80d67b3-813f-47fb-8894-aa4e6f6479f3"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/cycle-runner",
-      "adhsdk://cookbook/status/service/storage/libsql"
+      "99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db",
+      "6bf27f64-59d0-4b2a-8715-92dba2856814"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)",
@@ -52,7 +51,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bd4964e50d8724a3",
+  "synced": "e7f32ef5b4b878ff",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -71,7 +70,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

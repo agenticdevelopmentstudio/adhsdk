@@ -1,7 +1,6 @@
 ---
 id: 67a314b9-d324-4d0c-b9c1-86e27c01537d
 title: "Font Picker View"
-domain: adhsdk://cookbook/ui/settings/rows/font-picker-view
 type: ingredient
 version: 1.3.2
 status: review
@@ -20,12 +19,12 @@ tags:
   - form-control
   - font
 depends-on:
-  - adhsdk://cookbook/ui/settings/rows/font-chooser-button
+  - 3e548aa3-1103-4b3f-96ff-d2e7ff564810
 related:
-  - adhsdk://cookbook/ui/settings/rows/color-picker-view
-  - adhsdk://cookbook/ui/settings/rows/checkbox-view
-  - adhsdk://cookbook/ui/settings/rows/number-field-view
-  - adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view
+  - c0e95399-ddab-4445-a22a-566d07339f9b
+  - e9c10ff7-4e13-4007-a963-d2a9e4006745
+  - acd561ca-90a4-4303-a411-cfe23410b42a
+  - 3a3e4da0-e900-4281-a19c-e29cbd34cbab
 references: []
 approved-by: ""
 approved-date: ""
@@ -118,7 +117,7 @@ of that button cannot drift apart.
 - **Corner radius**: Not applicable - the component adds no custom layer or
   drawing code of its own; it only composes a label and a font chooser
   button into a row (see
-  `adhsdk://cookbook/ui/settings/rows/font-chooser-button` for the button's own
+  [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810) for the button's own
   corner treatment).
 - **Padding**: The row inserts a flexible spacer between the label and the
   button and sets the row's spacing to the button role's default row
@@ -133,7 +132,7 @@ of that button cannot drift apart.
   active theme's size scale and repainting on a theme change. The button's
   own font is dynamic and drawn at a fixed 12pt sample size regardless of
   the stored font's real size - see the sample-size requirement in
-  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`.
+  [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810).
 - **Background**: None (transparent) for the label, and neither the
   component nor its row sets a background color of its own. The button's
   chrome is the font chooser button's own concern, not set here.
@@ -150,7 +149,7 @@ of that button cannot drift apart.
   constraint is set in source; sizing is governed entirely by the label
   and button's own intrinsic sizes inside the row (the button's own
   compression/hugging behavior when built without a fixed width is
-  documented in `adhsdk://cookbook/ui/settings/rows/font-chooser-button`).
+  documented in [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810)).
 
 ## States
 
@@ -167,7 +166,7 @@ of that button cannot drift apart.
 - **Role/trait**: Not observable beyond the platform's defaults - no
   custom accessibility role or element grouping call appears in source.
   The button carries its platform's native button role (see
-  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`); the label is a plain
+  [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810)); the label is a plain
   static-text control.
 - **Label requirements**: The label and the button are laid out as sibling
   views in the same row, but source sets no accessibility linkage between
@@ -337,7 +336,7 @@ Not applicable: the source contains no logging call.
 
 - **SwiftUI**: Compose an `HStack` with `Text(viewModel.title)` and a
   trailing font-sample button (an `NSViewRepresentable` wrapping
-  `FontChooserButton`, per `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s
+  `FontChooserButton`, per [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810)'s
   own SwiftUI note, or an equivalent custom `Button` that opens a font
   picker) bound to a `Binding` that reads and writes through the same
   view-model font, mirroring **commits-picked-font-through-view-model** and
@@ -349,7 +348,7 @@ Not applicable: the source contains no logging call.
   `FontFamily` at a fixed sample size, opening a custom
   `AlertDialog`/`ModalBottomSheet` listing available font families and
   sizes on click (there is no Android system font panel to defer to, per
-  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s Compose note); commit the
+  [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810)'s Compose note); commit the
   picked family/size back to the view model unconditionally on selection,
   and gate both children's `enabled`/alpha from one boolean, mirroring
   **dims-and-disables-the-row**.
@@ -377,14 +376,14 @@ Not applicable: the source contains no logging call.
   behind **requires-view-model-at-construction**), leaving the designated
   `init(viewModel:)` as the only surviving construction path. There is no
   UIKit code path in source; a UIKit port has no `NSFontPanel` equivalent to defer to
-  (see `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s own AppKit/UIKit
+  (see [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810)'s own AppKit/UIKit
   note for the button's side of that gap) and would need its own
   `isEnabled`-driven dimming, since UIKit has no direct `alphaValue`
   analogue on `UILabel` beyond its inherited `UIView.alpha`.
 - **WinUI 3** (the reason this recipe exists): Build the row as a `Grid`
   with column definitions `Auto,*`: a `TextBlock` bound to `viewModel.title`
   in column 0, and in column 1 the font-sample `Button` described in
-  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s own WinUI 3 note (its
+  [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810)'s own WinUI 3 note (its
   `Content` `TextBlock` bound to the selected font's family/size at a fixed
   sample `FontSize`, opening a `ContentDialog`/`Flyout` for selection since
   WinUI ships no system font panel). Wire that dialog's confirm/selection
@@ -407,16 +406,16 @@ Not applicable: the source contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontPickerView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontPickerView.swift` | unverified |
 
 ## Design Decisions
 
 **Decision**: `viewModel.onChange` is overwritten unconditionally in `init`,
 replacing any handler already registered on that `FontViewModel` instance.
 **Rationale**: Mirrors the same closure-property-assignment pattern
-documented at `adhsdk://cookbook/ui/settings/rows/color-picker-view#requirements/owns-on-change`;
+documented at owns-on-change ([adhsdk.ingredient.ui.settings.rows.color-picker-view](cookbook:c0e95399-ddab-4445-a22a-566d07339f9b));
 the view provides no way to compose with an existing observer.
 **Approved**: pending
 
@@ -449,15 +448,15 @@ the open question on minimum-contrast-ratio under Accessibility).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | platform-compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | internationalization |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | platform-compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | internationalization |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 `native-controls-preference` and `platform-design-language` pass because the
 component defers to `FontChooserButton`'s own use of the system font panel

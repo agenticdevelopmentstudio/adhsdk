@@ -1,7 +1,6 @@
 ---
 id: d79f556c-163b-48aa-82f0-baff52fa9dab
 title: "Status Sublabel"
-domain: adhsdk://cookbook/status/dashboard/logic/status-sublabel
 type: ingredient
 version: 1.1.0
 status: review
@@ -17,8 +16,8 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/logic/row-model
-  - adhsdk://cookbook/status/dashboard/logic/overview
+  - a0ae2ae1-7d51-4639-8f3b-062dcf750b66
+  - ba5855cd-bd4c-49be-b7d3-4c3f7f35434e
 related: []
 references: []
 approved-by: ""
@@ -31,7 +30,7 @@ approved-date: ""
 
 This logic provides one pure, synchronous function, the sublabel-building function, that returns the one-line caption shown under the status headline. When the board is clear it reads like "12/12 endpoints healthy · no failed builds". Otherwise it is a grouped breakdown of the problem rows, such as "2 down · 1 failed build", and the doc comment requires it to account "for EVERY problem so the parts sum to the indicator count".
 
-The doc comment says the function is "Shared by the mobile hero and the desktop top-bar pill". In the current tree its only caller is the overview tab view, which passes the result to the big indicator view as its sublabel. The inputs are typed by the indicator state (specified in [Overview Projections](adhsdk://cookbook/status/dashboard/logic/overview)) and a row (specified in [Row Model](adhsdk://cookbook/status/dashboard/logic/row-model)). The function reads only a row's `statusWord`.
+The doc comment says the function is "Shared by the mobile hero and the desktop top-bar pill". In the current tree its only caller is the overview tab view, which passes the result to the big indicator view as its sublabel. The inputs are typed by the indicator state (specified in Overview Projections ([adhsdk.ingredient.status.dashboard.logic.overview](cookbook:ba5855cd-bd4c-49be-b7d3-4c3f7f35434e))) and a row (specified in Row Model ([adhsdk.ingredient.status.dashboard.logic.row-model](cookbook:a0ae2ae1-7d51-4639-8f3b-062dcf750b66))). The function reads only a row's `statusWord`.
 
 This logic also holds a private table, the sublabel-phrase table, which maps a problem row's status word to a function that formats a count into a phrase.
 
@@ -190,9 +189,9 @@ Not applicable: this logic makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/status-sublabel.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/status-sublabel.ts` | unverified |
 
 ## Design Decisions
 
@@ -216,11 +215,11 @@ Not applicable: this logic makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | internationalization |
-| [plural-forms](agenticdevelopercookbook://compliance/internationalization#plural-forms) | partial | internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.internationalization.plural-forms](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d24616b8-d1af-593d-ba01-f51ee4a91ea4) | partial | internationalization |
 
 **Separation of concerns.** The module only formats text. Problem derivation and indicator state come from the server's board through `OverviewTab`, and the endpoint counts are computed by the caller.
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d79f556c-163b-48aa-82f0-baff52fa9dab",
     "title": "Status Sublabel",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/status-sublabel",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -20,15 +19,15 @@
     ],
     "tags": [],
     "depends-on": [
-      "adhsdk://cookbook/status/dashboard/logic/row-model",
-      "adhsdk://cookbook/status/dashboard/logic/overview"
+      "a0ae2ae1-7d51-4639-8f3b-062dcf750b66",
+      "ba5855cd-bd4c-49be-b7d3-4c3f7f35434e"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7a0b5206c9e79196",
+  "synced": "eae0b3aa4aafea3b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

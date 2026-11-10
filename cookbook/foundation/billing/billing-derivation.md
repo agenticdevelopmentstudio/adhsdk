@@ -1,7 +1,6 @@
 ---
-id: BC417768-9933-49B1-B0BA-4BF537167805
+id: bc417768-9933-49b1-b0ba-4bf537167805
 title: "Billing Derivation"
-domain: adhsdk://cookbook/foundation/billing/billing-derivation
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,9 +20,9 @@ tags:
   - derivation
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-activity-cache
-  - adhsdk://cookbook/foundation/billing/billing-rollup
-  - adhsdk://cookbook/foundation/billing/billing-store
+  - 37dfdd98-266a-4253-8f0a-42987017844a
+  - a252605d-12ce-4235-9eb4-2582678f6f49
+  - 4df278a3-4897-4a87-a506-bd3f58db3121
 references: []
 approved-by: ""
 approved-date: ""
@@ -135,9 +134,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDerivation.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDerivation.swift` | unverified |
 
 ## Design Decisions
 
@@ -149,8 +148,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 separation-of-concerns passes: derivation is pure; clocks, parsing and splitting are shared utilities and the caller supplies `now`. unit-test-coverage passes: `BillingDerivationTests` covers splitting, the cutoff boundary, sleep, open and closed final runs, lead-in, out-of-order, unparseable and malformed inputs, and fractional stamps.
 

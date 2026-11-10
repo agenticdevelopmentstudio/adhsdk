@@ -1,7 +1,6 @@
 ---
-id: 7B3E5D12-9A64-4C0F-8E21-5F1D6A7C3B90
+id: 7b3e5d12-9a64-4c0f-8e21-5f1d6a7c3b90
 title: "UseTablesWithRows"
-domain: adhsdk://cookbook/ui/crud/use-tables-with-rows
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - cache
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/crud/crud-table
+  - ec64b22b-8a25-431d-8866-b7a01acd91fe
 references: []
 approved-by: ""
 approved-date: ""
@@ -220,9 +219,9 @@ Not applicable: the operation calls no logging API; failures are reported only t
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/crud/src/useTablesWithRows.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/crud/src/useTablesWithRows.ts` | unverified |
 
 ## Design Decisions
 
@@ -250,8 +249,8 @@ Not applicable: the operation calls no logging API; failures are reported only t
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because `useTablesWithRows.ts` only decides which tables hold rows: URL construction is delegated to `listUrl`, the network call to `authedJson`, session identity to `readTokenSubject` and `onSessionChange`, and presentation to the `CrudDataBrowser` rail that consumes the result. `unit-test-coverage` is `partial`: the exported `resetTablesWithRows` and `TABLES_WITH_ROWS_TTL_MS` exist for tests, and `packages/web/packages/crud/src/__tests__/CrudDataBrowser.workspace.test.tsx` pins the sweep end to end (Empty grouping, 403 and 404 handling, failed probes, remount caching, principal isolation, abort on unmount), but no test file targets the hook directly, so the concurrency bound and the nonexistent-array response are not asserted.
 

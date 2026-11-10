@@ -4,7 +4,7 @@
   platform's secure field masks on screen as it is typed. The component
   does not otherwise classify or redact this value; it holds it in the
   view model's value and passes it through unchanged (see
-  `adhsdk://cookbook/ui/settings/rows/text-edit-view#privacy` for
+  privacy ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)) for
   the storage, transmission, and retention behavior this shares with the
   text edit row, which applies to whatever string value either component
   holds).
@@ -21,7 +21,7 @@
 - **Retention**: Inherited unmodified from the text edit row — the value
   lives only in the field and the view model's value for as long as the
   row is on screen and its view model is retained; see
-  `adhsdk://cookbook/ui/settings/rows/text-edit-view#privacy`.
+  privacy ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 - **Security-violation handling**: Not applicable — this component has no
   detection surface of its own (no validation, rate-limiting, or
   authentication logic); it only masks on-screen glyphs. Any

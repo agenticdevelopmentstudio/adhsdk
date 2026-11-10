@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "87ca0139-6cd0-46dd-a9fb-40ad3406f175",
     "title": "Ecosystem Config",
-    "domain": "adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -32,8 +31,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/adh/hub/security/authentication-client",
-      "adhsdk://cookbook/adh/hub/ecosystems/ecosystems"
+      "65fbb2b1-ca41-499f-ac03-7ecc0e206dcc",
+      "201572ee-2e0f-4839-94f5-252f8044c4bf"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift (adhsdk)",
@@ -67,7 +66,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9be8e4b27f32e26f",
+  "synced": "de2952e6d9400d88",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -86,7 +85,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

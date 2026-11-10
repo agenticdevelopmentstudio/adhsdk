@@ -1,0 +1,3 @@
+
+The base style applies `text-transform: uppercase` to the children text (see **Appearance**). Casing transforms are locale-sensitive — uppercasing is not a no-op in every language (for example, Turkish's dotted/dotless I, or scripts with no case distinction at all) — so text rendered through StatusPill is always forced to uppercase by CSS regardless of the caller's locale; the component performs no locale-aware casing conversion of its own. Callers translating the children text should also expect longer translations to overflow rather than adapt, since the component neither wraps nor truncates (`white-space: nowrap`; see `text-expansion-tolerance` in **Compliance**).
+

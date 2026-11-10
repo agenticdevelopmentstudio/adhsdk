@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6",
     "title": "Theme Engine",
-    "domain": "adhsdk://cookbook/ui/theme/theme-engine",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -26,14 +25,13 @@
       "logic"
     ],
     "depends-on": [
-      "adhsdk://recipes/theme-engine",
-      "adhsdk://cookbook/foundation/settings-storage",
-      "adhsdk://cookbook/foundation/formats/jsonc-preprocessor",
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path"
+      "6363b5ff-f511-4e21-9ba7-6850787dba62",
+      "2e71f72e-88d7-417e-9969-a414e1ab1a10",
+      "f6acc431-0443-4b14-8ae4-e1f2dc227c0c"
     ],
     "related": [
-      "adhsdk://cookbook/ui/settings/rows/theme-picker-view",
-      "adhsdk://cookbook/ui/settings/rows/theme-preview-view"
+      "c68fd42e-52e5-4129-9a13-2574d13a7a0e",
+      "15e66a2e-9ee1-4f5f-aeb0-c804078b4f78"
     ],
     "references": [
       "https://code.visualstudio.com/api/extension-guides/color-theme"
@@ -41,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0ea4d07aefeabd31",
+  "synced": "22ff534340aba44b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

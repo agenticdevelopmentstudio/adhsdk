@@ -1,7 +1,6 @@
 ---
 id: da0c6c07-d0f4-4c6c-a1ef-51b696910c72
 title: "Status Server Monitor Integrations"
-domain: adhsdk://cookbook/status/service/monitor/integrations
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,14 +21,14 @@ tags:
   - retry
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
-  - agenticdevelopercookbook://guidelines/implementing/observability/logging
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65
 related:
-  - adhsdk://cookbook/status/service/monitor/fetch-cloudflare
-  - adhsdk://cookbook/status/service/config
-  - adhsdk://cookbook/status/service/auth
+  - b3e2495c-5478-411c-80d7-9eefc2f2e297
+  - 31fe479f-e95e-4f03-b957-faa2314a03be
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
 references:
   - packages/web/packages/status-server/src/monitor/integrations.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/self-check-stability.ts (adhsdk)
@@ -241,9 +240,9 @@ Neither `integrations.ts` nor `self-check-stability.ts` calls `console.*` or any
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/integrations.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/integrations.ts` | unverified |
 
 ## Design Decisions
 
@@ -273,14 +272,14 @@ Neither `integrations.ts` nor `self-check-stability.ts` calls `console.*` or any
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | failed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | failed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
 
 `unit-test-coverage` passes: `integrations-retry.test.ts` exercises the transient-recovery retry, the first-run debounce suppression, the correlated multi-provider downgrade, the single-provider persistent red, and the never-retry-a-real-401 contract; `integrations-missing-env.test.ts` exercises every provider's exact missing-credential naming, the Cloudflare account-unresolvable error, the Cloudflare account-auto-discovered warn, and the stats check's clean `missingEnv`; `integrations-telemetry.test.ts` exercises both telemetry providers' happy path, their exact probed URLs, and an independent-failure case — twelve `it` blocks across three files covering every state branch except the two boundary vectors this recipe traces directly to source (status-server-monitor-integrations-013, -014). `separation-of-concerns` passes: this file owns exactly one concern (running and aggregating the seven self-checks); it delegates cross-run debounce/correlation entirely to `self-check-stability.ts`, account/script discovery to the vendored `deploy-platform` package, and persistence/serving to its caller, none of which it reimplements. `explicit-error-handling` passes: every provider function's own try/catch maps a thrown error to a well-formed `state: "error"` check with a populated `detail`, and the outer `Promise.allSettled` maps even an unanticipated rejection to a placeholder check — nothing fails silently with no trace in the returned response. `timeout-configuration` passes: every network call — five provider probes plus Cloudflare's separate account-resolution call — carries an explicit `AbortController`-backed deadline via `probe` or `withTimeout`; none can hang indefinitely. `retry-with-backoff` fails as written: `probe` retries at most once, after a FIXED 300ms pause, not the exponential-backoff-with-jitter this check's guideline requires — a deliberate tradeoff recorded as fact in Design Decisions above ("tolerates a single momentary stall," not a general-purpose retry strategy), not a defended pass. `rate-limit-handling` fails as written for this file's own four direct-`fetch` checks (Vercel, Railway, GlitchTip, PostHog): each treats a 429 as an ordinary non-ok status via `res.ok`/`reachability`, with no `Retry-After` inspection or cooldown of its own; only Cloudflare's underlying `listWorkerScripts` call (external to this file, in the vendored `deploy-platform` package) special-cases a 429 through the shared cooldown registry, which this file benefits from incidentally but does not implement. `graceful-degradation` passes: a missing credential is a soft warn rather than a thrown error for every one of the seven checks, a single check's failure never aborts the other six (`Promise.allSettled`), and a monitor-side connectivity blip is actively distinguished from a real provider outage rather than paging on both alike. `health-observability` passes: this component's entire purpose is emitting a structured, per-provider health signal — the seven-check `IntegrationsResponse` this file assembles is precisely what the guideline calls for from a long-lived monitoring process, consumed directly by the `/integrations` route with no additional transformation.
 

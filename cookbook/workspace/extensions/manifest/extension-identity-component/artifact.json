@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5b0fea72-dbb8-4299-a54f-dc16486df1ae",
     "title": "Extension Identity Component",
-    "domain": "adhsdk://cookbook/workspace/extensions/manifest/extension-identity-component",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -29,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c3620018906c80bb",
+  "synced": "cf1569c6f9e1c45b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

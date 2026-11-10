@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "98d7c94e-4db9-42c9-b36e-1a2a59409fda",
     "title": "Organizations",
-    "domain": "adhsdk://cookbook/adh/hub/organizations",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -27,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/data/services/auth/auth-client"
+      "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
     "references": [
       "packages/web/packages/data/src/organizations/organizations.ts (adhsdk)",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "33875c1edc61f1a5",
+  "synced": "bf6f3e51e581f659",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

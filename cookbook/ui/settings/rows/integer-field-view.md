@@ -1,7 +1,6 @@
 ---
 id: a7653559-cb70-43db-a75c-d032e4f599b3
 title: "Integer Field View"
-domain: adhsdk://cookbook/ui/settings/rows/integer-field-view
 type: ingredient
 version: 1.2.4
 status: review
@@ -21,10 +20,10 @@ tags:
   - range
   - numeric
 depends-on:
-  - adhsdk://cookbook/ui/settings/rows/number-field-view
+  - acd561ca-90a4-4303-a411-cfe23410b42a
 related:
-  - adhsdk://cookbook/ui/settings/rows/checkbox-view
-  - adhsdk://cookbook/ui/settings/rows/captioned-slider-view
+  - e9c10ff7-4e13-4007-a963-d2a9e4006745
+  - 64825f85-8b4d-4406-befc-aa08ce55cc8b
 references: []
 approved-by: ""
 approved-date: ""
@@ -50,7 +49,7 @@ The wrapped number field view's own behavior — theming, activation and
 delegate wiring, layout when a fixed label width is set, locale-aware
 parsing, clamping, revert-on-invalid, and external-change sync — is
 documented in full at
-`adhsdk://cookbook/ui/settings/rows/number-field-view`, which this
+[adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a), which this
 recipe depends on. This recipe documents only what this component itself
 contributes: constructing and forwarding to that wrapped view, exposing
 its constituent views, and the construction/thread-confinement
@@ -62,7 +61,7 @@ The wrapped number field view's own requirements — label/field
 construction, theming, activation and delegate wiring, fixed-label-width
 layout, locale-aware parsing, clamping, revert-on-invalid, and
 external-change sync — are documented at
-`adhsdk://cookbook/ui/settings/rows/number-field-view#behavioral-requirements`. The requirements
+behavioral-requirements ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)). The requirements
 below are this component's own: what it does to construct, forward to, and
 expose that wrapped view.
 
@@ -171,7 +170,7 @@ expose that wrapped view.
   the fixed field width (52pt default here, per **default-field-width**),
   constrained onto the wrapped field's own width by the wrapped view's own
   fixed-width requirement (see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/fixes-field-width`).
+  fixes-field-width ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a))).
 
 ## Conformance Test Vectors
 
@@ -195,22 +194,22 @@ Vector integer-field-view-009 is a static, code-inspection check (a compile-/run
   parameter; the type system rules out a missing value. The wrapped field's
   own revert-on-empty-text behavior — an empty text-field value fails the
   parse the same as any other unparseable text — is documented at
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#edge-cases`.
+  edge-cases ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)).
 - **Boundary values**: Clamping at the minimum/maximum, and skipping the
   clamp when the minimum exceeds the maximum, is entirely the wrapped
   view's behavior; see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#edge-cases`.
+  edge-cases ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)).
   This component only supplies those bounds, via the view model's own
   minimum/maximum values (**wraps-number-field-view**).
 - **Out-of-range magnitude and fractional/locale-formatted text**: Parsing
   — POSIX-first with a locale-aware fallback, magnitude-exactness rejection,
   and fractional rejection — is entirely the wrapped view's behavior; see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#edge-cases`.
+  edge-cases ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)).
 - **Concurrent access**: Not applicable — this component MUST be usable
   only on the UI thread (**confines-to-ui-thread**), so all construction
   and mutation is serialized to that thread. The wrapped view carries the
   same confinement independently; see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#edge-cases`.
+  edge-cases ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)).
 - **Error states**: Not applicable — every operation in source
   (construction, forwarding, and end-of-editing handling) is synchronous
   and non-throwing; no error-producing path appears in this file.
@@ -220,7 +219,7 @@ Vector integer-field-view-009 is a static, code-inspection check (a compile-/run
 - **Overwritten external observer**: This is entirely the wrapped view's
   behavior — its initializer, not this component's, unconditionally
   assigns the view model's external-change handler; see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#edge-cases`.
+  edge-cases ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)).
 - **Delegate reassignment**: Because the text field's editing delegate is
   set to the wrapped view, not this component, a caller that reassigns the
   editing delegate to something else silently disables commit-on-editing-
@@ -357,21 +356,21 @@ source.
   its own locale-aware `NumberFormatter`-equivalent parsing has no fallback
   ordering to reproduce this source's
   parses-locale-aware-integer-text/POSIX-first behavior (see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/parses-posix-integer-first`),
+  parses-posix-integer-first ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a))),
   so a value written by this source's POSIX `settingsFieldString` can read
   differently under a non-en-US Windows locale; and `NumberBox.Minimum`/
   `Maximum`, when both set with `Minimum > Maximum`, has no documented
   skip-the-clamp behavior matching
   skips-clamp-on-contradictory-bounds (see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/skips-clamp-on-contradictory-bounds`)
+  skips-clamp-on-contradictory-bounds ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)))
   — a WinUI port needs an explicit `Minimum > Maximum` check before relying
   on `NumberBox`'s own clamping.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/IntegerFieldView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/IntegerFieldView.swift` | unverified |
 
 ## Design Decisions
 
@@ -382,7 +381,7 @@ source.
   field is still exactly this call" — the generic view generalizes to
   optional, one-sided bounds that the range view model (which requires
   both) cannot express, so the behavior moved there (see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view`) while
+  [adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)) while
   this component stayed as the compatible entry point.
   **Approved**: pending
 - **Decision**: Default the field width to 52pt in this component's
@@ -409,13 +408,13 @@ source.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | platform-compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | platform-compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `unit-test-coverage` is `partial` because `ConfigurationContributionPointTests.swift` (`integerFieldViewForwardsItsDelegateCallback`) constructs an `IntegerFieldView`, ends editing with "7" and with "99", and asserts the setting commits 7 and clamps to the maximum of 10; there is no dedicated test file, and the initial display, external-change resync and non-numeric revert paths are covered only through the number field it forwards to.
 

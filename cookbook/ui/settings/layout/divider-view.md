@@ -1,7 +1,6 @@
 ---
 id: 18ad68ea-187b-463d-9f5c-b855b9bc36a9
 title: "Divider View"
-domain: adhsdk://cookbook/ui/settings/layout/divider-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,7 +20,7 @@ tags:
   - settings
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/rows/button-view
+  - f8e734aa-f401-4218-9f1e-56ed98c28d3d
 references: []
 approved-by: ""
 approved-date: ""
@@ -251,9 +250,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DividerView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DividerView.swift` | unverified |
 
 ## Design Decisions
 
@@ -273,9 +272,9 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 
 `contrast-ratio` is partial: `DividerView` applies `dividerColor` exactly as the palette defines it and never computes a color itself, but this file contains no measured contrast ratio of `dividerColor` against the settings background it is drawn over — that verification is the palette/theme's responsibility, not something confirmable from `DividerView.swift` alone.
 

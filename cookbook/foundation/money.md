@@ -1,7 +1,6 @@
 ---
-id: 7233995D-9B7E-4760-AC44-AB4B668B5CC1
+id: 7233995d-9b7e-4760-ac44-ab4b668b5cc1
 title: "Money"
-domain: adhsdk://cookbook/foundation/money
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,10 +21,10 @@ tags:
   - arithmetic
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/money/money-formatter
-  - adhsdk://cookbook/foundation/money/money-totals
-  - adhsdk://cookbook/foundation/money/currency-code
-  - adhsdk://cookbook/foundation/money/increment-rounding
+  - f1868607-3458-427a-b784-b05be97c7e8f
+  - 9d3a57d7-c9bb-4afc-bdab-4c42278fd8c8
+  - b8c3dbf6-f3ee-4346-ac87-542a4fbf7917
+  - e846a572-e09a-4123-a6bf-4766a8460154
 references: []
 approved-by: ""
 approved-date: ""
@@ -132,9 +131,9 @@ Not applicable: The money type calls no logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/Money.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/Money.swift` | unverified |
 
 ## Design Decisions
 
@@ -154,9 +153,9 @@ Not applicable: The money type calls no logging API.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
 `separation-of-concerns` passes because the type only represents and combines amounts; formatting, parsing, rounding to increments and per-currency bucketing live in the sibling money specs. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/MoneyTests.swift` covers the seconds-to-amount arithmetic including rounding, sign and zero guards, summing, subtraction, ordering and the same-currency test.
 

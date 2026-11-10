@@ -1,7 +1,6 @@
 ---
 id: ccb08e0d-f505-4195-adf8-d8ac9208b24c
 title: "Project Scripting"
-domain: adhsdk://cookbook/workspace/projects/project-scripting
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,12 +22,12 @@ tags:
   - applescript
   - composable-tabs
 depends-on:
-  - adhsdk://cookbook/system/scripting
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
-  - adhsdk://cookbook/workspace/projects/project-controller
-  - adhsdk://cookbook/workspace/projects/branch-controller
+  - d5812249-f235-43df-9cd7-504220da1a7d
+  - 55a394e6-9934-404b-941d-25bebbf71378
+  - 5bfadad5-c93b-432a-807e-04be57ff16b4
+  - 92f11498-2cb2-4b04-92b9-560d9f2de6ee
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - 4d75a371-181e-4d80-a16b-022d37dc0d48
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/Scripting/ScriptableProjectWindow.swift (adhsdk)
@@ -150,7 +149,7 @@ interface and are used throughout as such.
   longer exists.
 - **window-object-specifier-key**: the scriptable window's object
   specifier MUST be built under the `projectWindows` collection key,
-  addressed by its `uniqueID` (see `adhsdk://cookbook/system/scripting`
+  addressed by its `uniqueID` (see [adhsdk.ingredient.system.scripting](cookbook:d5812249-f235-43df-9cd7-504220da1a7d)
   for that mechanism's own contract).
 - **tab-value-rebuilt-per-read**: the scriptable tab MUST be constructed
   fresh on every enumeration or lookup call, with all six fields (`id`,
@@ -170,7 +169,7 @@ interface and are used throughout as such.
   builds, so a directory that resolves to no project controller, no branch
   controller for that directory, or a branch controller whose checkout is
   on a detached HEAD (no current branch, see
-  `adhsdk://cookbook/workspace/projects/branch-controller`) all
+  [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)) all
   collapse to the same observable value: an empty string, never a null
   stringified and never a thrown error.
 - **tab-object-specifier-key**: the scriptable tab's object specifier MUST
@@ -278,7 +277,7 @@ neither of which this surface draws.
   wrapper types, is confined to the UI's main execution context (MUST, see
   **main-thread-confinement**); the AppleScript scripting layer itself dispatches command
   handlers on the main thread (see
-  `adhsdk://cookbook/system/scripting`), so no two enumerations or
+  [adhsdk.ingredient.system.scripting](cookbook:d5812249-f235-43df-9cd7-504220da1a7d)), so no two enumerations or
   lookups from this surface can interleave with each other or with a
   window opening or closing. There is no lock, queue, or independent
   concurrency state defined here — main-thread confinement is the entire
@@ -291,7 +290,7 @@ neither of which this surface draws.
   (MUST, see **tab-branch-empty-when-unresolved**). Any error a git
   subprocess could raise is fully absorbed inside the branch controller's
   own refresh operation before its current branch is ever read by this
-  surface (see `adhsdk://cookbook/workspace/projects/branch-controller`);
+  surface (see [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee));
   none of it is observable through the scriptable tab's `branch`.
 - **Offline or disconnected state**: Not applicable in the network sense —
   nothing here makes a network call. Git itself is local-only, and even
@@ -370,7 +369,7 @@ already been shown; it makes no network transmission at all.
 This surface and the three wrapper types make no logging call. A branch
 that fails to resolve is not logged here at all; any underlying git
 failure is recorded once, upstream, by the git command log (see
-`adhsdk://cookbook/workspace/projects/branch-controller`), not a
+[adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)), not a
 second time by this surface.
 
 | Event | Level | Message |
@@ -430,16 +429,16 @@ second time by this surface.
   the pane view model a `ScriptablePane`-equivalent holds. Resolve the git
   branch through the same `GitClient`/`BranchController` port this family's
   siblings already define (see
-  `adhsdk://cookbook/workspace/projects/branch-controller`), folding
+  [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)), folding
   a `null` result to `string.Empty` at the same point `ComposableTabsWindowController.scriptingTabs(branch:)`
   does, and enforce main-thread confinement with `DispatcherQueue` in place
   of `@MainActor`.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift` | unverified |
 
 ## Design Decisions
 
@@ -475,7 +474,7 @@ comment states this is deliberate: a caller with no branch controller "passes
 `{ _ in nil }`, which `ScriptableProjectTab` reports as an empty string"
 (`ComposableTabsWindowController.swift`) — matching
 `BranchController`'s own policy that a detached HEAD is "an answer,"
-documented in `adhsdk://cookbook/workspace/projects/branch-controller`.
+documented in [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee).
 **Approved**: pending
 
 **Decision**: `ScriptableProjectTab.uniqueID` is the tab *group's* id, not
@@ -509,9 +508,9 @@ project to reach the same one" (`ScriptablePane.swift`).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 Notes: separation-of-concerns passes because
 `ProjectWindowManager+Scripting.swift` and its three wrapper types own only

@@ -1,7 +1,6 @@
 ---
 id: f305da79-fa03-493e-9c08-7186530943c6
 title: "Chat Stream Types"
-domain: adhsdk://cookbook/ai/chat/chat-stream-types
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +22,8 @@ tags:
   - value-type
 depends-on: []
 related:
-  - adhsdk://cookbook/ai/plugins/stream-event
-  - adhsdk://cookbook/ai/chat/chat-context
+  - 2067e249-4f97-4575-b8ed-8f55f6dc96df
+  - 613d7a36-d0cd-4415-97be-d983b3d6c644
 references: []
 approved-by: ""
 approved-date: ""
@@ -388,9 +387,9 @@ kind; each is a pure data declaration with no side effects of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` | unverified |
 
 ## Design Decisions
 
@@ -439,9 +438,9 @@ parameter-schema bytes.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
 `separation-of-concerns` passes because all three files perform no I/O,
 storage, or transport of their own — per `no-persistence-no-side-effects`

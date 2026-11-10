@@ -1,0 +1,3 @@
+
+FilteredList is a searchable list component that renders a text input field above a list of items. It filters items based on the input query, supports keyboard navigation with arrow keys and Enter for selection, and maintains a highlight state for the currently focused item. The component is accessible via combobox and listbox ARIA roles and supports custom rendering through callback functions. `total` (the full, unfiltered item count) and the filtered `visible` items are both derived from the `useFilteredList` hook; the empty state differs depending on whether `total` is zero or filtering has simply produced no matches (see **empty-state-when-no-items**, **default-no-matches-message**).
+

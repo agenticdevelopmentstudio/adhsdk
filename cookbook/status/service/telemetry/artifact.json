@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f",
     "title": "Status Server Telemetry",
-    "domain": "adhsdk://cookbook/status/service/telemetry",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -25,7 +24,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "52c8ee60993e80f8",
+  "synced": "cf3621ac18f24a05",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -44,7 +43,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

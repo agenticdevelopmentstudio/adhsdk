@@ -1,7 +1,6 @@
 ---
 id: 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
 title: "Monitor Alerts"
-domain: adhsdk://cookbook/status/service/monitor/alerts
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,8 +20,8 @@ tags:
   - webhook
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
 related: []
 references:
   - packages/web/packages/status-server/src/monitor/alerts.ts (adhsdk)
@@ -180,9 +179,9 @@ This is the only log line this module emits — a successful flush produces no l
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/alerts.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/alerts.ts` | unverified |
 
 ## Design Decisions
 
@@ -210,12 +209,12 @@ This is the only log line this module emits — a successful flush produces no l
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` passes: `test/alerts.int.test.ts` exercises queue batching into one POST, the null-url no-op, fail-soft delivery on a thrown fetch error, and the real `openIssue`/`resolveIssue` recorder path across an opened-then-silent-then-resolved cycle, including the case where a config-driven close must stay silent. `separation-of-concerns` passes: this file owns exactly one concern (queueing and delivering alerts) behind two functions and a type; it reads no config itself, taking the webhook URL as a plain parameter, and the ledger/business-logic decision of WHEN to alert lives entirely in its callers (`issues.ts`, `sync.ts`), external to this file. `explicit-error-handling` is `partial`: a thrown/rejected `fetch` is caught and logged explicitly via `console.error`, never silently swallowed — but a non-2xx `Response` is not inspected at all (see the `webhook-non-2xx-response` marker above), so that specific failure mode produces no signal whatsoever, which is the one respect in which this check is not fully met. `timeout-configuration` passes: every POST carries a 5,000ms deadline via `AbortSignal.timeout`. `retry-with-backoff` fails as written: a failed delivery is logged once and the batch is permanently dropped (`flush-drains-before-sending` removes it from the queue before the attempt); there is no retry, no backoff, and no re-queue of any kind — a deliberate tradeoff recorded as fact in Design Decisions above, not a defended pass. `graceful-degradation` passes: an unset webhook URL is a full no-op (`flush-noop-null-url`) rather than an error, and a delivery failure is caught and logged rather than propagated — the monitor cycle and the underlying issue ledger are both fully independent of whether alert delivery is configured or currently working.
 

@@ -1,7 +1,6 @@
 ---
 id: 62c755ed-eeba-4ada-a907-4a0f802e0466
 title: "Window Matching Shortcuts"
-domain: adhsdk://cookbook/system/system-windows/window-shortcuts
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - global-hotkeys
 depends-on: []
 related:
-  - adhsdk://cookbook/system/system-windows/window-contexts
+  - aaf56f9b-896b-4f74-9e18-1ef4116270a9
 references:
   - https://github.com/sindresorhus/KeyboardShortcuts
 approved-by: ""
@@ -38,7 +37,7 @@ The window-context global shortcut scheme. It has two parts:
 - **The shortcut scheme** — fourteen named global shortcuts, each defaulting to the scheme's own modifier pair plus a distinct key, plus two ordered lists: the nine switch-by-index names, and all fourteen names together.
 - **The shortcut manager** — a component that, on construction, registers a key-down handler for every one of those names, dispatches each to a window-contexts model action, and reserves the chords with the app's key-command registry so the app's own key-command settings refuse them.
 
-Use it once per app that hosts window contexts: the host constructs one manager at feature start and retains it for the app's lifetime. The model's behavior behind each action belongs to [Window Matching System Windows Contexts](adhsdk://cookbook/system/system-windows/window-contexts); this recipe covers only the scheme and the dispatch.
+Use it once per app that hosts window contexts: the host constructs one manager at feature start and retains it for the app's lifetime. The model's behavior behind each action belongs to Window Matching System Windows Contexts ([adhsdk.ingredient.system.system-windows.window-contexts](cookbook:aaf56f9b-896b-4f74-9e18-1ef4116270a9)); this recipe covers only the scheme and the dispatch.
 
 ## Behavioral Requirements
 
@@ -204,9 +203,9 @@ No other event is logged: individual key-downs, out-of-range index no-ops and ig
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/Shortcuts/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/Shortcuts/` | unverified |
 
 ## Design Decisions
 
@@ -238,11 +237,11 @@ No other event is logged: individual key-downs, out-of-range index no-ops and ig
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 
 Separation of concerns passes: the names file holds only the scheme data, the manager only maps key-downs to model calls, and all context logic stays in `SystemWindowContextsModel`. Unit-test coverage is partial: `SystemWindowShortcutNamesTests` covers the name list, ordering, uniqueness and defaults, but nothing tests the manager's dispatch, the out-of-range no-op or the registry reservation. Explicit error handling is partial: the manager discards the `Bool` results of add/remove and relies on the model's `lastError`, which is a reported path rather than a swallowed one. The reservation owner `"window contexts"` is a hardcoded English literal that reaches the user in the Settings conflict message. Keyboard navigation passes in the sense that every window-context action has a keyboard path, which is this component's whole purpose.
 

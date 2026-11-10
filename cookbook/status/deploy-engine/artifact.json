@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "da6524ff-4def-461c-a885-d385a118e596",
     "title": "Deploy Engine",
-    "domain": "adhsdk://cookbook/status/deploy-engine",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -48,7 +47,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "37203ce9840de294",
+  "synced": "55cbea3375f437d5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -67,7 +66,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

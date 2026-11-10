@@ -1,15 +1,15 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [test-pyramid](agenticdevelopercookbook://compliance/best-practices#test-pyramid) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | failed | Reliability |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.test-pyramid](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/203de556-83a8-5211-acaf-155c49da0eb3) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | failed | Reliability |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 
 `separation-of-concerns` passes because the four sources each own one job — framing rules, incremental decoding, process/descriptor lifecycle, and wall-clock racing — with no file reaching into another's internal state. `explicit-error-handling` passes because every defined failure path maps to a named, typed error case (`MessageFramingError`, `ChannelError`, `WallClockBudgetExceeded`) rather than a silent catch, with the one open question (a silent descriptor close) tracked as the pending design decision above and the descriptor-close-failure-silent requirement. `unit-test-coverage` and `test-pyramid` both pass because `MessageFramingTests.swift`, `SubprocessChannelTests.swift`, `SubprocessChannelRunTests.swift`, and `WallClockBudgetTests.swift` exercise every framing case, every cap-recovery path, and every termination ordering with hermetic, fast unit tests against real (but tiny, deterministic) child processes — no integration or end-to-end layer is needed for this component's contract. `fault-tolerance` passes because every defined failure mode degrades to a typed thrown error or a bounded wait rather than a hang, deadlock, or crash — the continuous stderr drain in particular exists specifically to avoid the 64 KB pipe-buffer deadlock its own doc comment names. `timeout-handling` passes because `withWallClockBudget(_:_:)` gives every wrapped operation a genuine wall-clock bound, including the explicit non-bound cases (`NaN`, the one-year ceiling) that are decisions rather than fallout of the arithmetic. `idempotent-operations` passes because `terminate()` is documented and tested as safe to call any number of times, concurrently or sequentially, with every caller observing the one completed teardown. `error-recovery` fails because none of these four sources retries, backs off, or otherwise recovers from a failure at its own layer — a `frameSizeExceeded`, a `launchFailed`, or a `WallClockBudgetExceeded` is reported once and left for the caller to act on. `string-externalization` fails because every string listed under Localization above is a hardcoded English literal with no catalog key.
 

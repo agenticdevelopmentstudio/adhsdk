@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a8054368-9885-4b83-90cf-5029728ab397",
     "title": "Provider Configuration",
-    "domain": "adhsdk://cookbook/ai/providers/provider-configuration",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,8 +24,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ai/providers/provider-config-keys",
-      "adhsdk://cookbook/ai/plugins/plugin-descriptor"
+      "0f65ea61-3b0f-4a9b-842e-912555b7af62",
+      "39de0dff-2b26-4d3d-97a3-ebdbdb38846a"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift (adhsdk)",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "27ba2b5fe6673f25",
+  "synced": "e4135952be395ca1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

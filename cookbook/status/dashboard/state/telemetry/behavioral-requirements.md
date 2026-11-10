@@ -25,7 +25,7 @@ This is the source variant currently wired in the composition root; an alternati
 
 - **live-request**: The live source's read MUST issue one request to `/telemetry` with no request options (a `GET` to `<basePath>/telemetry`).
 - **live-http-error**: A non-2xx response MUST make the live source's read reject with an error whose message is `telemetry <status>` (for example `telemetry 502`).
-- **live-body-cast**: A 2xx response body MUST be parsed as JSON and returned as a snapshot object by cast, with no shape validation; a body that is not JSON rejects the read with the JSON parse error. The response shape is owned by the backend `/telemetry` route (see [Status Server Telemetry](adhsdk://cookbook/status/service/telemetry)).
+- **live-body-cast**: A 2xx response body MUST be parsed as JSON and returned as a snapshot object by cast, with no shape validation; a body that is not JSON rejects the read with the JSON parse error. The response shape is owned by the backend `/telemetry` route (see Status Server Telemetry ([adhsdk.ingredient.status.service.telemetry](cookbook:a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f))).
 
 ### Cache hydration
 

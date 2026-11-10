@@ -1,7 +1,6 @@
 ---
 id: 4b068644-9e3a-42bf-bce8-4f3068dea7e3
 title: "Status Web Deploy Status"
-domain: adhsdk://cookbook/status/dashboard/logic/deploy-status
 type: ingredient
 version: 1.0.2
 status: review
@@ -21,8 +20,8 @@ tags:
   - pure-function
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/deploy-status
-  - adhsdk://cookbook/status/dashboard/logic/board-types
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
+  - 15c61cfc-543c-493d-b686-c605b773be83
 references: []
 approved-by: ""
 approved-date: ""
@@ -34,7 +33,7 @@ approved-date: ""
 
 `deploy-status.ts` (`packages/web/packages/status-web/src/lib/deploy-status.ts`) is the status dashboard's copy of the platform-independent deploy vocabulary. It defines three string unions (`DeployStatus`, `BuildPhase`, `DeployPhase`), the `Phases` pair, the in-flight vocabulary (`IN_FLIGHT_BUILD_PHASES`, `IN_FLIGHT_DEPLOY_PHASE`, `isInFlight`), the in-flight `DeployStatus` values (`IN_FLIGHT_STATUSES`, `deployStatusInFlight`), two provider mappers (`vercelPhases`, `railwayPhases`) and the collapse function `combinedStatus`.
 
-The module's own comment calls it "A HAND MIRROR of the server's deploy-status.ts (there is no shared build between the two packages)". The server original is specified in [Status Server Monitor Deploy Status](adhsdk://cookbook/status/service/monitor/deploy-status). `deploy-status-parity.test.ts` imports both modules and asserts they agree across the full phase space.
+The module's own comment calls it "A HAND MIRROR of the server's deploy-status.ts (there is no shared build between the two packages)". The server original is specified in Status Server Monitor Deploy Status ([adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec)). `deploy-status-parity.test.ts` imports both modules and asserts they agree across the full phase space.
 
 Inside the web app, `types.ts` imports the three unions to type `DeploymentDTO.status`, `buildPhase` and `deployPhase`. `deploy-display.ts` imports `DeployStatus`. `row-model.ts` calls `deployStatusInFlight` in `deployDtoUnconfirmed` to decide whether a `DeploymentDTO` asserts live progress that may need demoting. The module has no state, no I/O and no side effects.
 
@@ -220,9 +219,9 @@ Not applicable: the module makes no log calls. Unrecognized provider values fall
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/deploy-status.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/deploy-status.ts` | unverified |
 
 ## Design Decisions
 
@@ -254,11 +253,11 @@ Not applicable: the module makes no log calls. Unrecognized provider values fall
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of concerns.** The module holds only vocabulary and mapping rules. Fetching, storage, demotion timing and display wording live in other modules.
 

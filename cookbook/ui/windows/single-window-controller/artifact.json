@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "3f6268b8-410d-4d3c-979c-2a9f9f1534f3",
     "title": "Single-Instance Window",
-    "domain": "adhsdk://cookbook/ui/windows/single-window-controller",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -26,15 +25,15 @@
     ],
     "depends-on": [],
     "related": [
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages",
-      "adhsdk://cookbook/ui/windows/window-controller",
-      "adhsdk://cookbook/ui/layout/composable-tabs/tabs-window"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2",
+      "8ed694b4-e238-48c5-9589-81ce6aaebb32",
+      "55a394e6-9934-404b-941d-25bebbf71378"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3d5defb0970e66ad",
+  "synced": "2484b02579bff5bf",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

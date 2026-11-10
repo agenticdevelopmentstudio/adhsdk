@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "49A8F652-C8FA-4DC6-AFFB-FE834B1E7837",
+    "id": "49a8f652-c8fa-4dc6-affb-fe834b1e7837",
     "title": "Unique Name",
-    "domain": "adhsdk://cookbook/foundation/unique-name",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -30,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "380e1555db9511d5",
+  "synced": "87d9e4e66cd78a71",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

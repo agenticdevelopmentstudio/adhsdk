@@ -1,7 +1,6 @@
 ---
 id: cef42b4b-e10e-4816-b1f8-0156699bec21
 title: "Gamification"
-domain: adhsdk://cookbook/adh/hub/gamification
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,7 +23,7 @@ tags:
   - event-types
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config
+  - 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 references:
   - packages/web/packages/data/src/gamification/gamification.ts (adhsdk)
   - packages/web/packages/data/src/gamification/wire.ts (adhsdk)
@@ -463,9 +462,9 @@ Not applicable: this component calls no logger or other logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/gamification/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/gamification/` | unverified |
 
 ## Design Decisions
 
@@ -486,7 +485,7 @@ documented 400/404/409 response into a friendlier, entity-named message
 (`error-propagation-unmodified`).
 **Rationale**: the source does not explain why. This is a notable
 divergence from the sibling component
-[Ecosystems](adhsdk://cookbook/adh/hub/ecosystems/ecosystems),
+[adhsdk.ingredient.adh.hub.ecosystems.ecosystems](cookbook:201572ee-2e0f-4839-94f5-252f8044c4bf),
 whose `ecosystems.ts` and `identifiers.ts` call `rethrowConflict` to
 turn a backend 409 into a friendly, entity-named message before it
 reaches a caller. This recipe records the observed divergence rather
@@ -497,11 +496,11 @@ than inventing a motive the source does not state.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
 
 `separation-of-concerns` passes: `gamification.ts`/`wire.ts` contain no
 UI-rendering import and no business logic beyond building a path,

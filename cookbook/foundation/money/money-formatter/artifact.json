@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "F1868607-3458-427A-B784-B05BE97C7E8F",
+    "id": "f1868607-3458-427a-b784-b05be97c7e8f",
     "title": "Money Formatter",
-    "domain": "adhsdk://cookbook/foundation/money/money-formatter",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,14 +25,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/money",
-      "adhsdk://cookbook/foundation/money/money-totals"
+      "7233995d-9b7e-4760-ac44-ab4b668b5cc1",
+      "9d3a57d7-c9bb-4afc-bdab-4c42278fd8c8"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ca5e90cfab23b5f3",
+  "synced": "95a15c4b2c2ad350",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

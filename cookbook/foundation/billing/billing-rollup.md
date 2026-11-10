@@ -1,7 +1,6 @@
 ---
-id: A252605D-12CE-4235-9EB4-2582678F6F49
+id: a252605d-12ce-4235-9eb4-2582678f6f49
 title: "Billing Rollup"
-domain: adhsdk://cookbook/foundation/billing/billing-rollup
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,11 +21,11 @@ tags:
   - entries
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-rate
-  - adhsdk://cookbook/foundation/billing/billing-rounding
-  - adhsdk://cookbook/foundation/billing/billing-clock
-  - adhsdk://cookbook/foundation/billing/billing-persistence
-  - adhsdk://cookbook/foundation/billing/billing-store
+  - bbe7358f-2001-4e67-83cb-0627de522c42
+  - a1563ad8-d4e4-44f0-9823-3d9229c9321d
+  - 51bf262a-9c94-4533-a34d-1aeadf63037b
+  - 5296d0b7-8416-4e76-8f45-47a726f230cf
+  - 4df278a3-4897-4a87-a506-bd3f58db3121
 references: []
 approved-by: ""
 approved-date: ""
@@ -150,9 +149,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingRollup.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingRollup.swift` | unverified |
 
 ## Design Decisions
 
@@ -164,8 +163,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 separation-of-concerns passes: rolling and entry rules live here while storage is the persistence contract, and rate, rounding, money and the local-day rule are shared types. unit-test-coverage fails: no test in `AgenticDeveloperHubSDKCoreTests/Billing` calls `BillingRollup`; `BillingRoundingTests` and `BillingRateResolutionTests` cover only its collaborators.
 

@@ -1,0 +1,12 @@
+
+- **Handler prop omitted** (no `onPointerDown`/`onPointerUp`/`onPointerLeave`/`onPointerEnter`/`onPointerCancel` prop supplied): the component MUST NOT throw when the corresponding pointer event fires — `button-pressable.tsx`'s `compose()` helper short-circuits safely via `theirs?.(event)`'s optional chaining.
+- **Repeated `pointerdown` without an intervening release** (a second `pointerdown` fires while an active press is already in progress): the component MUST leave `data-pressed` set at `""`  — the state assignment is idempotent and produces no observable change.
+- **Release delivered only to `window`, never to the element** (`pointerdown` on the element, the pointer leaves before any element-level `pointerup`, and `pointerup` fires only on `window`): the component MUST still end the active press (`data-pressed` cleared) via the window listener, because `pointerleave` alone does not end it.
+- **`pointercancel` delivered while no active press is in progress** (`pointercancel` fires on the element after a prior `pointerup` already ended the active press): the component MUST leave `data-pressed` absent, which is a no-op with no observable change.
+- **Multi-pointer overlap**: `button-pressable.tsx` tracks a single `held`/`pressed` pair with no `pointerId` check anywhere in the file, and the `window` release listener ignores the event's target entirely. If a second pointer goes down while the first is still down, a `pointerup`/`pointercancel` from *either* pointer ends the entire active press — the component has no per-pointer identity tracking, so this is documented behavior, not a bug.
+- **`pointerenter` after a fully completed press**: once an active press has ended by any release, a later `pointerenter` with no new `pointerdown` MUST NOT set `data-pressed`.
+- **Boundary values**: Not applicable — the component has no numeric, length-, or count-bounded input; its only inputs are pointer/keyboard events and arbitrary forwarded props, none of which are constrained to a min/max range in this source.
+- **Concurrent access**: Not applicable — pointer events are dispatched serially on the browser's single UI thread, and `held`/`pressed` are local, in-memory React state with no cross-thread or cross-session access path.
+- **Error states**: Not applicable — the component has no dependency on a network, database, or file system; it performs no I/O.
+- **Offline or disconnected state**: Not applicable — the component performs no network operation, so connectivity has no effect on its behavior.
+

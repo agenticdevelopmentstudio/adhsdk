@@ -1,6 +1,5 @@
 ---
 id: 7fc91996-6f04-415c-9119-fc6f9fccccd4
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/main-thread-window
 title: "MainThreadWindow"
 summary: "The vscode.window adaptor for show*Message, showQuickPick, showInputBox and createStatusBarItem, dispatching each to an injected presenter and recording unimplemented member shapes to NotImplementedLedger."
 version: 1.0.4
@@ -19,12 +18,12 @@ tags:
   - javascriptcore
   - mainactor
 related:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting
-  - adhsdk://cookbook/workspace/extensions/host/js-value-bridge
+  - 5141968f-3922-47f2-a31f-ba953b92a048
+  - 0aa82a1f-42ed-4585-9f65-bb20aa110712
+  - 720cc52e-9567-4643-9639-014403ef0ea7
+  - 5161980d-20b6-4779-867f-16ed45278a33
+  - 84292002-9039-4f8b-9bfb-69f9b4832e4f
+  - cb25bd84-9a11-4070-8b3c-f178cff76068
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (adhsdk)
@@ -239,9 +238,9 @@ This adaptor does not persist or transmit anything itself, but it is a conduit f
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift` | unverified |
 
 ## Design Decisions
 
@@ -277,11 +276,11 @@ This adaptor does not persist or transmit anything itself, but it is a conduit f
 
 | Check | Status | Rationale |
 |---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | Pass | Argument parsing/coercion/validation lives entirely in this adaptor; presenting (rendering a message, a picker, an input box, a status bar item) is fully delegated to four separate injected protocols, and unsupported-shape bookkeeping is delegated to `NotImplementedLedger` rather than folded into this type. |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | Partial | The four message/quick-pick/input-box/status-bar test files exercise argument-shape rejection, coercion, ledger recording, and teardown extensively, but the documented `Infinity`/`-Infinity` priority pass-through has no dedicated test in `MainThreadWindowStatusBarTests.swift` (confirmed by search — no test references `Infinity`), so that specific divergence is source-documented but not test-verified. |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | Pass | Every argument-shape and coercion failure produces a specific, informative rejection message naming the member and the offending argument; no failure path silently swallows an error or falls through to a default without signaling the extension. |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | Pass | This type performs no logging at all (see Logging above), so no user- or extension-authored content — including a password-flagged input box value — can reach a log line through this adaptor. |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | Fail | Every rejection message is a hardcoded English literal built by string interpolation, with no localization mechanism; see Localization above for the representative set. |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | Pass | Argument parsing/coercion/validation lives entirely in this adaptor; presenting (rendering a message, a picker, an input box, a status bar item) is fully delegated to four separate injected protocols, and unsupported-shape bookkeeping is delegated to `NotImplementedLedger` rather than folded into this type. |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | Partial | The four message/quick-pick/input-box/status-bar test files exercise argument-shape rejection, coercion, ledger recording, and teardown extensively, but the documented `Infinity`/`-Infinity` priority pass-through has no dedicated test in `MainThreadWindowStatusBarTests.swift` (confirmed by search — no test references `Infinity`), so that specific divergence is source-documented but not test-verified. |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | Pass | Every argument-shape and coercion failure produces a specific, informative rejection message naming the member and the offending argument; no failure path silently swallows an error or falls through to a default without signaling the extension. |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | Pass | This type performs no logging at all (see Logging above), so no user- or extension-authored content — including a password-flagged input box value — can reach a log line through this adaptor. |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | Fail | Every rejection message is a hardcoded English literal built by string interpolation, with no localization mechanism; see Localization above for the representative set. |
 
 ## Change History
 

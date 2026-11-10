@@ -1,7 +1,6 @@
 ---
 id: 2cd6ffc0-e9db-425b-99ba-eb826ffff118
 title: "Themed Terminal View (Hollow Caret)"
-domain: adhsdk://cookbook/workspace/terminal/terminal-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,7 +19,7 @@ tags:
   - caret
   - composable-tabs
 depends-on:
-  - adhsdk://cookbook/ui/layout/composable-tabs/active-pane
+  - 08bfb299-851b-4b01-a84a-6a2a13e07c12
 related: []
 references:
   - https://github.com/migueldeicaza/SwiftTerm/blob/8e7a1e154f470e19c709a00a8768df348ba5fc43/Sources/SwiftTerm/TerminalOptions.swift
@@ -241,7 +240,7 @@ runtime conformance vector (see Design Decisions).
   marks-active-pane flag is `true`**: the caret stays filled regardless
   of the marks-active-pane flag — only the always-hollow flag can force
   it hollow outside composable-tabs context — because
-  `adhsdk://cookbook/ui/layout/composable-tabs/active-pane#requirements/view-outside-any-pane-counts-as-active`
+  view-outside-any-pane-counts-as-active ([adhsdk.ingredient.ui.layout.composable-tabs.active-pane](cookbook:08bfb299-851b-4b01-a84a-6a2a13e07c12))
   treats such a view as always "in the active pane."
 - **Multiple instances across different windows**: each instance ignores
   a change notification whose named window does not match its own
@@ -361,9 +360,9 @@ Not applicable: the source contains no logging calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/ThemedTerminalView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/ThemedTerminalView.swift` | unverified |
 
 ## Design Decisions
 
@@ -383,7 +382,7 @@ Not applicable: the source contains no logging calls.
 **Rationale**: A MUST requirement enforced entirely by the type system needs no runtime test to demonstrate — violating it is a compile error, not an outcome a test vector could observe.
 **Approved**: pending
 
-**Decision**: `ThemedTerminalView` relies on `ComposableTabsActivePane.isInActivePane` treating a view with no `ComposableTabsPaneBackgroundView` ancestor as "in the active pane" (see `adhsdk://cookbook/ui/layout/composable-tabs/active-pane#requirements/view-outside-any-pane-counts-as-active`), so `marksActivePane` never hollows such a caret.
+**Decision**: `ThemedTerminalView` relies on `ComposableTabsActivePane.isInActivePane` treating a view with no `ComposableTabsPaneBackgroundView` ancestor as "in the active pane" (see view-outside-any-pane-counts-as-active ([adhsdk.ingredient.ui.layout.composable-tabs.active-pane](cookbook:08bfb299-851b-4b01-a84a-6a2a13e07c12))), so `marksActivePane` never hollows such a caret.
 **Rationale**: The consequence for this file: a `ThemedTerminalView` used outside any composable-tabs pane with `marksActivePane == true` stays filled rather than hollow, because it is never "not in" an active pane by that dependency's own rule. The rule itself, and why it treats an unclaimed view as active, belongs to `composable-tabs-active-pane` and is not restated here.
 **Approved**: pending
 
@@ -399,12 +398,12 @@ Not applicable: the source contains no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | failed | Platform Compliance |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | failed | Platform Compliance |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 
 `separation-of-concerns` passes because the view only reconciles the caret's appearance with the active-pane state and delegates terminal emulation, input and focus to the underlying terminal engine; `unit-test-coverage` fails because no test under the repository's test targets references `ThemedTerminalView` or `CaretAppearance`. `platform-theming` fails because `CaretAppearance.color` and `CaretAppearance.textColor` default to the literal `NSColor.white` rather than a semantic, theme-aware color token, so the caret's own defaults do not adapt to the app's theme (see the corresponding Design Decision). `contrast-ratio` is `partial`: the caret's colors are applied verbatim from caller input with no contrast computation in this file, so conformance depends entirely on what the caller supplies — see the open question on contrast-ratio under Accessibility. `keyboard-navigable` and `screen-reader-support` are `partial`: `ThemedTerminalView` adds no keyboard handling, role, or label of its own and overrides none of `LocalProcessTerminalView`'s, but this file gives no evidence of what `LocalProcessTerminalView` itself provides for either, so full conformance cannot be confirmed from this source alone.
 

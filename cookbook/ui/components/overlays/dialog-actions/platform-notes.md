@@ -1,0 +1,12 @@
+
+- **React/Web**: 
+  - File: `packages/web/packages/ui/src/components/dialog-actions.tsx`
+  - `"use client"` — it uses `useEffect` and refs for the initial-focus placement. It holds no layout state and starts no observers.
+  - Depends on the shared `Button` (`./button`) and `Loader2` from `lucide-react`.
+  - Demo: `ui-showcase` Topic `dialog-actions` (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
+  - The layout rule is the shared implementation of **alert-and-dialog §Layout**; hosts (e.g. the invitation modal) may force `layout="equal"` per their own spec.
+- **SwiftUI**: Use `@FocusState` to set initial focus — assign it from `.onAppear` (or via `.defaultFocus(_:_:)` where the host is inside a `NavigationStack`/`Group` that supports it); `focusedValue` only *reads* the ambient focus, it does not move it. `HStack` + `Spacer` cannot express "grow to your share but stop at natural width," so implement the capped-growth layout with a custom `Layout` that measures each button's ideal size and caps its allotted width, or switch between an equal-width and a natural-width `HStack` with `ViewThatFits`. For busy state, replace buttons with a spinner showing a status label.
+- **Compose**: Put both buttons in a `Row(horizontalArrangement = Arrangement.End)` and give each `Modifier.weight(1f, fill = false)` — `fill = false` is what caps a button's growth at its own measured width once there is room, matching `max-w-max`; plain `weight(1f)` stretches the button to fill its whole share instead. Manage focus via `FocusRequester`. Replace with a `CircularProgressIndicator` for busy state.
+- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `distribution = .fillEqually` for the forced-equal layout, and `.fill` with each button's content-hugging priority raised (so the stack does not stretch it past its intrinsic width) for natural-width — `.fillProportionally` caps nothing and is the wrong mode for either shape. Manage focus via first responder. Replace buttons with a loading spinner for busy state.
+- **WinUI 3**: A horizontal `StackPanel` does not stretch its children, so `HorizontalAlignment="Stretch"` will not produce equal widths. Use a `Grid` with star-sized columns (or a custom panel) for equal-width, and set each button's `MaxWidth` to its desired natural width to cap growth for natural-width. Set focus via `Focus()` on `UIElement`. Replace buttons with `ProgressRing` for busy state; set `AutomationProperties.Name` for the busy label.
+

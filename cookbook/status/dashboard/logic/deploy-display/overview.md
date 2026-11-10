@@ -20,6 +20,6 @@ The module has no state, no I/O and no side effects. It draws its deploy
 status vocabulary and its color-role map from two sibling modules. The
 callers are dashboard components and views that render deploy or platform
 badges; they render the returned strings and never branch on them. The
-server-side status vocabulary is specified in [Monitor Deploy
-Status](adhsdk://cookbook/status/service/monitor/deploy-status).
+server-side status vocabulary is specified in Monitor Deploy
+Status ([adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec)).
 

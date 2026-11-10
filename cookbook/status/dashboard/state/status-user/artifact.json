@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5c202bb7-c4b6-4da9-a9b0-9d58f664461f",
     "title": "Status User State",
-    "domain": "adhsdk://cookbook/status/dashboard/state/status-user",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/api"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a70e1609c555d9dc",
+  "synced": "782deb6c334fd94a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

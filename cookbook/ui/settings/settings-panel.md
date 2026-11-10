@@ -1,7 +1,6 @@
 ---
 id: 432e8d4b-43c3-49fd-b481-036a759e7c55
 title: "Settings Panel"
-domain: adhsdk://cookbook/ui/settings/settings-panel
 type: ingredient
 version: 1.2.3
 status: review
@@ -20,10 +19,10 @@ tags:
   - panel-controller
   - view-controller
 depends-on:
-  - adhsdk://cookbook/ui/settings/layout/panel-view
+  - 4b1a3eb0-0a8a-4059-b2ac-824013072bd5
 related:
-  - adhsdk://cookbook/ui/settings/layout/group-view
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 775f1761-f757-41d0-b51b-354a410a11f4
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -94,11 +93,11 @@ in.
 - **Corner radius**: Not set by this component; it draws nothing of its
   own. Any corner radius on screen belongs to whatever group view cards a
   subclass adds (10pt corner radius by default; see
-  `adhsdk://cookbook/ui/settings/layout/group-view`).
+  [adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)).
 - **Padding**: Not set by this component. The panel inset and inter-group
   spacing (20pt each, by default) belong to its own content view, hosted
   unchanged; see
-  `adhsdk://cookbook/ui/settings/layout/panel-view`.
+  [adhsdk.ingredient.ui.settings.layout.panel-view](cookbook:4b1a3eb0-0a8a-4059-b2ac-824013072bd5).
 - **Font**: Not applicable — this component sets no font of its own; any
   text rendered comes from the group views a subclass composes, or from
   content hosted through the hosting helper, whose fonts are the
@@ -106,7 +105,7 @@ in.
 - **Background**: Not set by this component. Its content view paints the
   theme's window-background role behind the group stack, reactively,
   through its own theme-change subscription; see
-  `adhsdk://cookbook/ui/settings/layout/panel-view`.
+  [adhsdk.ingredient.ui.settings.layout.panel-view](cookbook:4b1a3eb0-0a8a-4059-b2ac-824013072bd5).
 - **Foreground/Text**: Not applicable — this component renders no text of
   its own.
 - **Border**: Not applicable — no border is set anywhere in this
@@ -135,7 +134,7 @@ in.
   a transparent container whose view is its own content view, with no
   label, icon, or control of its own to expose. Each group view a
   subclass adds manages its own accessibility per its own recipe
-  (`adhsdk://cookbook/ui/settings/layout/group-view`).
+  ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)).
 - **Label requirements**: Not applicable — this component sets no
   accessibility label on its own view. The descriptor's title becomes the
   sidebar row's accessible name only through the sidebar list component,
@@ -346,9 +345,9 @@ Not applicable: this component contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -385,10 +384,10 @@ entries, which point back here rather than repeating this rationale.)
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Statuses rest on `SettingsPanelViewController.swift` itself: it composes
 only native `NSViewController`/`NSHostingView` APIs, never reimplementing

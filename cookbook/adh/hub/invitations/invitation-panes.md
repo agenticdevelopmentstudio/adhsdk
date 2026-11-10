@@ -1,7 +1,6 @@
 ---
 id: a9222936-8474-4073-8581-d314a258bf0a
 title: "Invitation Panes"
-domain: adhsdk://cookbook/adh/hub/invitations/invitation-panes
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,9 +20,9 @@ tags:
   - invitations
   - users
 depends-on:
-  - adhsdk://recipes/list-with-details-pane
-  - adhsdk://cookbook/adh/hub/invitations/send-invitation-modal
-  - adhsdk://recipes/add-users-modal
+  - 6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73
+  - 633ab7e7-828e-4e7d-b2dc-9ba189536b6e
+  - e1859aa2-d0c4-4d9a-b926-203dd5fbbca3
 related: []
 references: []
 approved-by: ""
@@ -38,12 +37,12 @@ This is the group of three sibling panes covering one stage each of the Invitati
 workflow: incoming requests, pending users awaiting an invite, and sent invites (the
 Requests pane, the Pending Users pane, and the Invites pane, respectively). Each is
 built on a shared master-detail list-with-details layout
-(adhsdk://recipes/list-with-details-pane) configured with pane-specific
+([adhsdk.recipe.ui.blocks.list-with-details-pane](cookbook:6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73)) configured with pane-specific
 columns, an empty label, a storage key, and a shared "Admin notes" toolbar action. The
 Pending Users pane additionally offers "Send invitation" and "Add users" actions that
 open the send-invitation modal
-(adhsdk://cookbook/adh/hub/invitations/send-invitation-modal) and the add-users
-modal (adhsdk://recipes/add-users-modal).
+([adhsdk.recipe.adh.hub.invitations.send-invitation-modal](cookbook:633ab7e7-828e-4e7d-b2dc-9ba189536b6e)) and the add-users
+modal ([adhsdk.recipe.ui.blocks.add-users-modal](cookbook:e1859aa2-d0c4-4d9a-b926-203dd5fbbca3)).
 
 None of the three panes fetch data, persist anything, or own the notes/history UI:
 rows, the delete/send/add callbacks, and the notes render-prop slots (a
@@ -477,7 +476,7 @@ logged (see Design Decisions).
   (or the Community Toolkit's `DataGrid`) bound to an
   `ObservableCollection<Row>`, with the master/detail split via `TwoPaneView`
   (mirroring the peer layout of `ResizableSplit`,
-  adhsdk://recipes/resizable-split) or the `ListDetailsView`
+  [adhsdk.ingredient.ui.components.layout.resizable-split](cookbook:c21473ee-a075-4800-96db-ff3de0888515)) or the `ListDetailsView`
   control's built-in adaptive behavior. Reproduce the toolbar with a
   `CommandBar`'s
   `AppBarButton`s for "Admin notes" / "Send invitation" / "Add users", each
@@ -494,9 +493,9 @@ logged (see Design Decisions).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` | unverified |
 
 ## Design Decisions
 
@@ -544,13 +543,13 @@ rather than idealized away.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy & Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy & Data |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | failed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy & Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy & Data |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Statuses rest on this file's own sections: Accessibility documents that
 `passes-required-aria-label` is this file's one direct, forced contribution

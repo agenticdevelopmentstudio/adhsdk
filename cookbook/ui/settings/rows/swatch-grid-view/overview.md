@@ -5,7 +5,7 @@ colors as a grid of fixed-size color swatches, wrapped into rows of a
 fixed column count. Per its doc comment, it generalizes the ad-hoc
 swatch/ANSI grid the terminal profiles view used to build inline. Unlike
 sibling rows such as the color picker row
-(adhsdk://cookbook/ui/settings/rows/color-picker-view), it is
+([adhsdk.ingredient.ui.settings.rows.color-picker-view](cookbook:c0e95399-ddab-4445-a22a-566d07339f9b)), it is
 purely a display component: it exposes one mutator, a color-replacement
 operation, and contains no interactive-control code of any kind.
 

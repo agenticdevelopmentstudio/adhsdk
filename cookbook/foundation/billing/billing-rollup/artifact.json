@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "A252605D-12CE-4235-9EB4-2582678F6F49",
+    "id": "a252605d-12ce-4235-9eb4-2582678f6f49",
     "title": "Billing Rollup",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-rollup",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,17 +25,17 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-rate",
-      "adhsdk://cookbook/foundation/billing/billing-rounding",
-      "adhsdk://cookbook/foundation/billing/billing-clock",
-      "adhsdk://cookbook/foundation/billing/billing-persistence",
-      "adhsdk://cookbook/foundation/billing/billing-store"
+      "bbe7358f-2001-4e67-83cb-0627de522c42",
+      "a1563ad8-d4e4-44f0-9823-3d9229c9321d",
+      "51bf262a-9c94-4533-a34d-1aeadf63037b",
+      "5296d0b7-8416-4e76-8f45-47a726f230cf",
+      "4df278a3-4897-4a87-a506-bd3f58db3121"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b5d36ad03cc31215",
+  "synced": "15e30b0ec3e4a0cc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

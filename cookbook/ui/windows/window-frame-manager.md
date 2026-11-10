@@ -1,7 +1,6 @@
 ---
 id: 3b602118-9299-483b-bf4d-62c9d525833d
 title: "Window Frame Manager"
-domain: adhsdk://cookbook/ui/windows/window-frame-manager
 type: ingredient
 version: 1.2.0
 status: review
@@ -20,9 +19,9 @@ tags:
   - screens
   - persistence
 depends-on:
-  - adhsdk://cookbook/ui/windows/screen-manager
+  - 1e58add7-d85d-4e62-b857-c5e3203795be
 related:
-  - adhsdk://cookbook/ui/windows/single-window-controller
+  - 3f6268b8-410d-4d3c-979c-2a9f9f1534f3
 references: []
 approved-by: ""
 approved-date: ""
@@ -641,9 +640,9 @@ calls and storage failures are not logged.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowFrameManager/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowFrameManager/` | unverified |
 
 ## Design Decisions
 
@@ -699,17 +698,17 @@ calls and storage failures are not logged.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | failed | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | Performance |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
-| [data-retention-policy](agenticdevelopercookbook://compliance/privacy-and-data#data-retention-policy) | passed | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
+| [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
 separation-of-concerns passes because frame math (`FrameCalculator`), screen matching (`ScreenMatcher`), screen enumeration (`ScreenProvider`), persistence (`WindowStateStorage`) and screen-set bookkeeping (`ScreenManager`) each sit behind their own type, and the math is pure. unit-test-coverage is partial: `FrameCalculatorTests.swift`, `ScreenMatcherTests.swift` and `WindowManagerSimulatedRelaunchTests.swift` cover the math, matching tiers, same-set, resolution-change, new-set, re-dock, oversize, migration and decode paths, but not placement pruning, `resetAllFrames`, visibility gating or the reclamp path. explicit-error-handling fails because storage load and encode failures vanish without a log or return value (the open question on storage-failure-signal). data-integrity is partial for the same reason: an undecodable blob is silently replaced by the next save. graceful-degradation passes because missing specs, missing screens and malformed state all fall back to a centered or default frame instead of failing. state-recovery passes because placements are reloaded per launch and legacy state is migrated. idempotent-operations passes because restoring or saving an unchanged window on unchanged screens rewrites identical placements, and the screen-change handler skips frames that did not change. caching-strategy passes because the write-through cache has a single documented writer and is cleared on every reset. main-thread-freedom passes because all main-actor work is bounded by the window, screen and placement counts and the hot save path avoids a storage read and decode after the first. data-retention-policy passes because placements age out with their screen sets and can be cleared on demand. no-pii-in-logs passes because log lines carry only window ids and set ids.
 

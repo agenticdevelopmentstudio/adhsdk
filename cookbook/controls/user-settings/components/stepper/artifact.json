@@ -1,0 +1,55 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "0eaf03a3-c00b-4f3a-81d7-5bd0560a5274",
+    "title": "Stepper",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Number input control with increment and decrement buttons for adjusting numeric values within min/max bounds.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "form-input",
+      "numeric-control"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/web/packages/controls/src/user-settings/components/Stepper.tsx"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "06a2588e6f208ba7",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

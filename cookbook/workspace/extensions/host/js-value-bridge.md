@@ -1,7 +1,6 @@
 ---
 id: cb25bd84-9a11-4070-8b3c-f178cff76068
 title: "JavaScript Value Bridge"
-domain: adhsdk://cookbook/workspace/extensions/host/js-value-bridge
 type: ingredient
 version: 1.1.0
 status: review
@@ -21,14 +20,14 @@ tags:
   - bridge
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/host/extension-event
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting
-  - adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting
-  - adhsdk://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-data-source
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting
-  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting
+  - 8e0d1a9d-27a1-4b5b-9a7d-5b9f9a5f7f2e
+  - 5161980d-20b6-4779-867f-16ed45278a33
+  - 84292002-9039-4f8b-9bfb-69f9b4832e4f
+  - a602608c-c061-44b6-a7ab-829e798d6b0c
+  - 720cc52e-9567-4643-9639-014403ef0ea7
+  - 95e26bae-21cb-4f99-8d28-724beca8ae1d
+  - 0aa82a1f-42ed-4585-9f65-bb20aa110712
+  - c4f76978-5aef-430c-a7e1-a20326da6709
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/JSValueBridgeTests.swift (adhsdk)
@@ -163,9 +162,9 @@ Not applicable: this component makes no logging call of its own; the one branch 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift` | unverified |
 
 ## Design Decisions
 
@@ -193,11 +192,11 @@ Not applicable: this component makes no logging call of its own; the one branch 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because this file's only responsibility is building and reading the handful of `JSValue` shapes every `MainThread*` adaptor needs; it does not install JS classes, decode domain types, or manage a `JSContext`'s lifecycle — those responsibilities stay in `VSCodeAPI.swift`, `DiagnosticTypes.swift`, and the individual `MainThread*` files (see Overview). `unit-test-coverage` is partial: `JSValueBridgeTests.swift` has a dedicated test method for every member except `arrayOrNull(of:in:)` (see **js-value-bridge-005** and the fourth Design Decision) — seven of the file's eight members are directly exercised, including both "undefined is not null" spellings, array freshness, empty-array/empty-string-as-value, the rejection's `Error` shape and missing `stack`, the shared teardown wording, and every `stringOptionalField` coercion refusal. `explicit-error-handling` is partial: the primary path is genuinely explicit — `rejectWithError`/`rejectTornDown` deliver real, typed JavaScript `Error` objects with specific messages (**reject-with-error**, **reject-torn-down-wording**) rather than a bare string or a swallowed exception — but the guard-failure branches in `rejectWithError` (`reject.context == nil`, or `JSValue(newErrorFromMessage:in:)` returning `nil`) produce no signal to any caller or log (**reject-with-error-silent-when-context-gone**). `input-sanitization` passes because `stringOptionalField(_:)` refuses to coerce a non-string JavaScript value before reading it — an extension-authored number, object, array, function, `null`, or `undefined` is read as `nil` rather than trusted as a string (**string-field-read-without-coercion**). `no-hardcoded-strings` fails because the teardown message `rejectTornDown(_:path:)` builds is an English literal with no localization mechanism (see Localization).
 

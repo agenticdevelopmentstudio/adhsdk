@@ -1136,16 +1136,7 @@
       ],
       "depends_on": [],
       "shared": false,
-      "holds": "The library cookbook — cookbook/cookbook.json plus one dated, versioned markdown spec per shared component (button, dialog, data-table, crud-table…), grouped by concept from general to specific and described without a platform in mind, each listing its code in a Reference Implementations table and its platform specifics in Platform Notes. Prose, and the human-readable index of what web-ui and its siblings already export: read it before proposing a new component."
-    },
-    {
-      "name": "component-specs",
-      "paths": [
-        "recipes/"
-      ],
-      "depends_on": [],
-      "shared": false,
-      "holds": "One markdown spec per shared component and avatar-engine subsystem (accordion, avatar-engine-path, button…), describing behaviour the web and Apple implementations must agree on. Prose; read it before changing a component it covers."
+      "holds": "The library cookbook — cookbook/cookbook.json, cookbook/index.json and one versioned source-folder spec per shared component (button, dialog, data-table, crud-table…) in cookr format 2, with the code roots mapped in .cookr.json, grouped by concept from general to specific and described without a platform in mind, each listing its code in a Reference Implementations table and its platform specifics in Platform Notes. Prose, and the human-readable index of what web-ui and its siblings already export: read it before proposing a new component."
     },
     {
       "name": "repo-tools",

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "6a7598bd-afe0-4ae9-af93-237908b767f8",
     "title": "Host Diagnostic Sink",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/languages/host-diagnostic-sink",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,7 +24,7 @@
       "event-emitter"
     ],
     "depends-on": [
-      "adhsdk://cookbook/workspace/extensions/host/extension-event"
+      "8e0d1a9d-27a1-4b5b-9a7d-5b9f9a5f7f2e"
     ],
     "related": [],
     "references": [
@@ -39,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "04bdec020a87bfe3",
+  "synced": "666d01a6fd6983ed",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

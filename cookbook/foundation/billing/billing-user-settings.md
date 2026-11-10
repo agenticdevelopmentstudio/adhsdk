@@ -1,7 +1,6 @@
 ---
-id: C1CAA827-F7F1-4E69-B4C6-ADBFEF22E636
+id: c1caa827-f7f1-4e69-b4c6-adbfef22e636
 title: "Billing User Settings"
-domain: adhsdk://cookbook/foundation/billing/billing-user-settings
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,8 +20,8 @@ tags:
   - settings
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-prefs
-  - adhsdk://cookbook/foundation/billing/billing-dt-os
+  - 0175f0bb-f4bd-4f72-94c2-57b087ad9df9
+  - ed610aa4-2717-4242-a8b9-c4616377dbd9
 references: []
 approved-by: ""
 approved-date: ""
@@ -121,9 +120,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingUserSettings.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingUserSettings.swift` | unverified |
 
 ## Design Decisions
 
@@ -135,8 +134,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 separation-of-concerns passes: the holder only binds keys to defaults; the key set, defaults and storage are injected or shared. unit-test-coverage is partial: `BillingSettingsPanelTests`, `ClientsWindowControllerTests` and `ProjectsWindowControllerTests` in `AgenticDeveloperHubSDKMacOSTests` build and use the holder, but no test asserts the defaults or key mapping directly.
 

@@ -1,7 +1,6 @@
 ---
 id: 06a425eb-e854-440b-97bc-0df5070ed72f
 title: "Language Services Snippets"
-domain: adhsdk://cookbook/workspace/language/snippets
 type: ingredient
 version: 1.0.3
 status: review
@@ -23,9 +22,9 @@ tags:
   - mainactor
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/contribution-point
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
+  - 088ed758-8c79-443d-999f-425c69df4d4d
+  - f6acc431-0443-4b14-8ae4-e1f2dc227c0c
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
 references: []
 approved-by: ""
 approved-date: ""
@@ -35,7 +34,7 @@ approved-date: ""
 
 ## Overview
 
-Three files under `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` implement the `contributes.snippets` contribution point: `ExtensionSnippet.swift` models one snippet an extension contributes and converts it to an LSP `CompletionItem`; `SnippetFile.swift` reads one VS Code `.json`/`.code-snippets` file's bytes into `[ExtensionSnippet]`; `SnippetStore.swift` is the UI-thread-confined `ContributionPoint` (adhsdk://cookbook/workspace/extensions/manifest/contribution-point) that reads every snippet file a loaded extension declares, buckets the results by language, and answers `snippets(forLanguage:)` for the editor's completion path. `ExtensionSnippet.body` is deliberately left as raw LSP snippet syntax, per `ExtensionSnippet.swift`'s own doc comment, because a snippet contributed by an extension *is* already an LSP concept — `LanguageServerProtocol`'s `Snippet` parser and `LSPCompletionDelegate` already know how to insert one, so no separate insertion code is written for extension snippets. `SnippetStore` is consumed by `ExtensionsCoordinator` (which constructs it) and by `LSPCompletionDelegate.completionSuggestionsRequested`, which calls `snippets?.snippets(forLanguage: languageId).map { $0.completionItem() }` to fold extension snippets into the same completion list a language server's own snippet completions travel through.
+Three files under `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` implement the `contributes.snippets` contribution point: `ExtensionSnippet.swift` models one snippet an extension contributes and converts it to an LSP `CompletionItem`; `SnippetFile.swift` reads one VS Code `.json`/`.code-snippets` file's bytes into `[ExtensionSnippet]`; `SnippetStore.swift` is the UI-thread-confined `ContributionPoint` ([adhsdk.ingredient.workspace.extensions.manifest.contribution-point](cookbook:088ed758-8c79-443d-999f-425c69df4d4d)) that reads every snippet file a loaded extension declares, buckets the results by language, and answers `snippets(forLanguage:)` for the editor's completion path. `ExtensionSnippet.body` is deliberately left as raw LSP snippet syntax, per `ExtensionSnippet.swift`'s own doc comment, because a snippet contributed by an extension *is* already an LSP concept — `LanguageServerProtocol`'s `Snippet` parser and `LSPCompletionDelegate` already know how to insert one, so no separate insertion code is written for extension snippets. `SnippetStore` is consumed by `ExtensionsCoordinator` (which constructs it) and by `LSPCompletionDelegate.completionSuggestionsRequested`, which calls `snippets?.snippets(forLanguage: languageId).map { $0.completionItem() }` to fold extension snippets into the same completion list a language server's own snippet completions travel through.
 
 ## Behavioral Requirements
 
@@ -72,8 +71,8 @@ Three files under `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` imp
 - **snippet-file-empty-object-is-empty-result**: `SnippetFile.parse(_:extensionIdentifier:)` MUST return `[]`, without throwing, for an input whose root is `{}`.
 - **snippet-file-failure-fields**: `SnippetFileFailure` MUST expose `extensionIdentifier: String`, `path: String`, and `reason: String`, and MUST be an equatable value safe to share across threads and concurrency domains.
 - **snippet-store-contribution-key**: `SnippetStore.contributionKey` MUST be `"snippets"`.
-- **snippet-store-main-actor-class**: `SnippetStore` MUST be a reference type (not a value type) confined to the UI thread, satisfying `ContributionPoint`'s constraint to reference-type conformers confined to the UI thread (adhsdk://cookbook/workspace/extensions/manifest/contribution-point).
-- **apply-resolves-path-inside-directory**: `SnippetStore.apply(_:from:at:)` MUST resolve each declared `contributions.snippets` entry's `path` against `directory` through `ExtensionResourcePath.resolve(_:inside:)` (adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path) before reading it.
+- **snippet-store-main-actor-class**: `SnippetStore` MUST be a reference type (not a value type) confined to the UI thread, satisfying `ContributionPoint`'s constraint to reference-type conformers confined to the UI thread ([adhsdk.ingredient.workspace.extensions.manifest.contribution-point](cookbook:088ed758-8c79-443d-999f-425c69df4d4d)).
+- **apply-resolves-path-inside-directory**: `SnippetStore.apply(_:from:at:)` MUST resolve each declared `contributions.snippets` entry's `path` against `directory` through `ExtensionResourcePath.resolve(_:inside:)` ([adhsdk.ingredient.workspace.extensions.manifest.extension-resource-path](cookbook:f6acc431-0443-4b14-8ae4-e1f2dc227c0c)) before reading it.
 - **apply-refuses-escaping-path**: `SnippetStore.apply(_:from:at:)` MUST NOT read a file whose resolved path lies outside `directory`; it MUST instead catch the thrown `ExtensionResourcePathError.escapesExtensionDirectory` and record it as a `SnippetFileFailure`.
 - **apply-per-entry-error-isolation**: An entry whose path resolution or file parse throws, inside `SnippetStore.apply(_:from:at:)`, MUST NOT prevent any other declared entry for the same extension from being read.
 - **apply-failure-path-is-declared-string**: A recorded `SnippetFileFailure.path` MUST be the entry's `path` exactly as the manifest declared it, not the resolved URL.
@@ -193,7 +192,7 @@ Not applicable: none of these three files contains an analytics or event-emissio
 ## Privacy
 
 - **Data collected**: None of `ExtensionSnippet`, `SnippetFileFailure`, or `SnippetStore`'s own state defines a field for a credential or token. `ExtensionSnippet.body`/`.prefix` are values taken verbatim from a snippets file an extension bundles or a user edits by hand; `SnippetFileFailure.path`/`.reason` carry only a manifest-declared file path string and a parse-failure sentence.
-- **Storage**: `SnippetStore` holds every applied extension's snippets and failures only in memory, in `snippetsByExtension` and `failures`; none of these three files writes to disk. The snippet files themselves are read from wherever the extension is installed, resolved through `ExtensionResourcePath` (adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path).
+- **Storage**: `SnippetStore` holds every applied extension's snippets and failures only in memory, in `snippetsByExtension` and `failures`; none of these three files writes to disk. The snippet files themselves are read from wherever the extension is installed, resolved through `ExtensionResourcePath` ([adhsdk.ingredient.workspace.extensions.manifest.extension-resource-path](cookbook:f6acc431-0443-4b14-8ae4-e1f2dc227c0c)).
 - **Transmission**: Not applicable — none of `ExtensionSnippet.swift`, `SnippetFile.swift`, or `SnippetStore.swift` performs network I/O.
 - **Retention**: `SnippetStore.withdraw(extensionIdentifier:)` is what removes an extension's snippets and failures from memory (withdraw-removes-snippets-and-failures); nothing here is retained beyond the store's own in-memory lifetime and that call.
 - The containment check `apply-refuses-escaping-path` enforces exists precisely to stop a maliciously declared `path` — the escaping-path tests' own comments cite `../../../.ssh/config` as the motivating example — from being read as though it were a snippet and typed into a user's document; `SnippetStore.apply` records that refusal as a failure rather than reading the file.
@@ -215,9 +214,9 @@ Not applicable: none of `ExtensionSnippet.swift`, `SnippetFile.swift`, or `Snipp
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` | unverified |
 
 ## Design Decisions
 
@@ -241,10 +240,10 @@ Not applicable: none of `ExtensionSnippet.swift`, `SnippetFile.swift`, or `Snipp
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
 `separation-of-concerns` passes because each file owns one concern — `ExtensionSnippet` is a pure model and LSP conversion, `SnippetFile` is pure parsing, and `SnippetStore` is the only one that touches the file system or the contribution-point lifecycle — while path safety and JSONC decoding are factored into the shared `ExtensionResourcePath` and `JSONCPreprocessor` types rather than duplicated here. `unit-test-coverage` passes: `SnippetFileTests`, `ExtensionSnippetTests`, and `SnippetStoreTests` together exercise every documented parsing leniency, every failure path (missing file, escaping path, malformed JSONC, comment-only file), scope bucketing in both directions, idempotent re-application, and per-extension withdrawal. `explicit-error-handling` passes because `SnippetFileParseError` and the dependency `ExtensionResourcePathError` are explicit, typed, `LocalizedError`-conforming errors, and `SnippetStore.apply` turns every one it catches into a `SnippetFileFailure` with a human-readable `reason` rather than dropping it silently. `idempotent-operations` passes because `apply` is explicitly tested to leave one copy on repeated application (apply-is-idempotent) and `withdraw` is explicitly tested safe on an identifier that was never applied (withdraw-is-safe-on-unknown-identifier).
 

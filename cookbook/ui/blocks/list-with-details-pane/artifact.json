@@ -1,0 +1,54 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73",
+    "title": "ListWithDetailsPane",
+    "type": "recipe",
+    "version": "2.2.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-06-26",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A master/detail block: ListHeader over a multi-select DataTable and details pane, divided by an always-visible header-bar splitter; list and details are peers.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "master-detail",
+      "table",
+      "layout",
+      "selection"
+    ],
+    "ingredients": [
+      "a8f66760-7db0-4a10-927e-856c2170dd4f",
+      "d04eef56-2dbf-4148-964b-c095f242227f",
+      "c21473ee-a075-4800-96db-ff3de0888515",
+      "550f00f7-bfb2-415e-9b15-bd5dce015500"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "51f2a65c4b24f70e",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

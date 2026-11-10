@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "88dabdf6-14a3-44eb-ab0d-ae18007c683e",
     "title": "Monitor Uptime",
-    "domain": "adhsdk://cookbook/status/service/monitor/uptime",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -27,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/health",
-      "adhsdk://cookbook/status/service/monitor/overall"
+      "2871e97f-f971-46fe-a4d2-de57ad5c94c5",
+      "da69d02d-a3a9-4018-a90a-becee268624a"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/uptime.ts (adhsdk)",
@@ -44,7 +43,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "aa7bfe6f90e95232",
+  "synced": "7d3ac78c05ad2531",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -63,7 +62,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

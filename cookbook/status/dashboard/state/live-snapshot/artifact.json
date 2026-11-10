@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ca7205d2-31c0-424a-95a2-a356bed30187",
     "title": "Live Snapshot",
-    "domain": "adhsdk://cookbook/status/dashboard/state/live-snapshot",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -21,14 +20,14 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/api",
-      "adhsdk://cookbook/status/dashboard/state/board"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad",
+      "7610ef55-32c9-43b6-8a70-aaa247cc4899"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4b8564ad5b13f65b",
+  "synced": "3ad7fbaa630aa51e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

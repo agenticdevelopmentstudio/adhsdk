@@ -24,6 +24,6 @@
   composition with no interactive element anywhere in source (see
   States/Pressed), so there is no touch target to size. The embedded
   swatch grid's own accessibility posture is documented in its own recipe
-  (`adhsdk://cookbook/ui/settings/rows/swatch-grid-view`), not
+  ([adhsdk.ingredient.ui.settings.rows.swatch-grid-view](cookbook:f4740433-221c-4c89-b888-ee8da7aa4b3c)), not
   repeated here.
 

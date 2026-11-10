@@ -1,7 +1,6 @@
 ---
 id: 773a1876-24d8-4134-8815-41fbc8c53096
 title: "Activity Query Filter"
-domain: adhsdk://cookbook/status/dashboard/logic/filter
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,7 +17,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/state/source-filter
+  - 3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,7 +29,7 @@ approved-date: ""
 
 This module exports one pure operation, the query-match operation, taking a haystack and a query. Its doc comment states the contract: "Case-insensitive, token-AND substring match. Every whitespace-separated token in the query must appear somewhere in the haystack. An empty query matches all."
 
-Its one call site is the activity panel. The panel keeps a row when it passes the source filter ([Source Filter](adhsdk://cookbook/status/dashboard/state/source-filter)) AND the query-match operation on the row's search text and the current query is true. The current query is the raw text of the panel's search box. The row's search text joins the row's name, environment, status word, detail and commit body with single spaces. The module holds no state and does no I/O.
+Its one call site is the activity panel. The panel keeps a row when it passes the source filter (Source Filter ([adhsdk.ingredient.status.dashboard.state.source-filter](cookbook:3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b))) AND the query-match operation on the row's search text and the current query is true. The current query is the raw text of the panel's search box. The row's search text joins the row's name, environment, status word, detail and commit body with single spaces. The module holds no state and does no I/O.
 
 ## Behavioral Requirements
 
@@ -151,9 +150,9 @@ Not applicable: the module makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/filter.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/filter.ts` | unverified |
 
 ## Design Decisions
 
@@ -177,10 +176,10 @@ Not applicable: the module makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
 
 **Separation of concerns.** The module holds only the match rule. It knows nothing about rows or the search box. The activity panel builds the haystack and applies the result.
 

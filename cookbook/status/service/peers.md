@@ -1,7 +1,6 @@
 ---
 id: b1622d2b-587f-4207-89ed-2130f8309f8c
 title: "Status Server Peers"
-domain: adhsdk://cookbook/status/service/peers
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,14 +21,14 @@ tags:
   - polling
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/security/token-handling
-  - agenticdevelopercookbook://guidelines/implementing/security/input-validation
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2598f495-1820-47e7-b7e7-ce548d390148
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/4ca8a3d5-cdcc-4f74-a2ec-3a198608b419
 related:
-  - adhsdk://cookbook/status/service/config
-  - adhsdk://cookbook/status/service/mcp
-  - adhsdk://cookbook/status/service/monitor/cycle-runner
+  - 31fe479f-e95e-4f03-b957-faa2314a03be
+  - ce157d5a-c145-4348-b58f-6a76c9fda1d6
+  - 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
 references:
   - packages/web/packages/status-server/src/peers/base-url.ts (adhsdk)
   - packages/web/packages/status-server/src/peers/fetch.ts (adhsdk)
@@ -181,9 +180,9 @@ None of the three files calls `console.*` or any logger; `fetchPeers` and `fleet
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/peers/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/peers/` | unverified |
 
 ## Design Decisions
 
@@ -223,16 +222,16 @@ None of the three files calls `console.*` or any logger; `fetchPeers` and `fleet
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | partial | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 
 `separation-of-concerns` passes: all three files depend only on the `Storage`/`PeerStore` port and `StatusConfig`, never on the libSQL/drizzle implementation directly. `unit-test-coverage` is `partial`: `base-url.ts`'s and `fetch.ts`'s success and failure paths are directly tested (`peer-base-url.test.ts`, `peers-fetch.int.test.ts`), but `fleet.ts`/`assembleFleet` and `isSelfPeerUrl` have no dedicated test among the given sources. `explicit-error-handling` passes: every peer's failure (non-`ok`, thrown, unparseable JSON) is caught per-peer and turned into a stored `error` string; no failure is swallowed silently. `timeout-configuration` passes: every peer request is bounded by `AbortSignal.timeout(10_000)`. `retry-with-backoff` fails as written: `fetchPeers` makes exactly one attempt per peer per call, with no retry or backoff; a failed poll is only retried by the next full-sync cycle, external to these files (see the retry Design Decision). `error-response-handling` passes: an HTTP error response, a thrown request, and a JSON-parse failure are all normalized to the same `reachable: false` shape. `graceful-degradation` passes: one peer's failure never prevents any other peer's snapshot from being attempted or stored, and never causes `fetchPeers` itself to reject. `data-integrity` is `partial`: snapshot storage is keyed and idempotent (`upsertSnapshot`'s `peerId` conflict target, external), but the open question on `peer-snapshot-payload-unvalidated` means a malformed `overall`/`payload` from a peer is stored and read back unchecked. `no-pii-in-logs` passes: none of the three files logs anything at all; no `token`, `baseUrl`, or snapshot `payload` is ever written to a log line. `secure-transport` is `partial`: a peer's `token` is sent only via the `Authorization: Bearer` header, never in a URL or body, but neither `isValidPeerBaseUrl` nor `fetchPeers` requires `https://` — an `http://` peer base URL is accepted and polled the same as an `https://` one.
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344",
     "title": "Git Client",
-    "domain": "adhsdk://cookbook/foundation/git/git-client",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -51,7 +50,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "320bad34598f30ef",
+  "synced": "33ae5c3c93df3345",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -70,7 +69,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

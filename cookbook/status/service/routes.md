@@ -1,7 +1,6 @@
 ---
 id: 77587f0b-5a27-44d9-a507-46bb90c9046a
 title: "Status Server Routes"
-domain: adhsdk://cookbook/status/service/routes
 type: ingredient
 version: 1.0.3
 status: review
@@ -27,14 +26,14 @@ tags:
   - device-flow
   - pagination
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/pagination
-  - agenticdevelopercookbook://guidelines/implementing/networking/real-time-communication
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
-  - agenticdevelopercookbook://guidelines/implementing/security/authentication
-  - agenticdevelopercookbook://guidelines/implementing/security/token-handling
-  - agenticdevelopercookbook://guidelines/implementing/testing/testing
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/49acdf9f-e4cb-4492-a620-809438eefb37
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2e317c68-384d-46b8-b3b3-0bcc6602e545
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aec38334-67fa-4c7e-bca2-607932af3f22
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2598f495-1820-47e7-b7e7-ce548d390148
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/42220186-4305-45cd-8e7d-a8d1172b6fbd
 related:
-  - adhsdk://cookbook/status/service/board
+  - 7984f592-a12d-49da-806c-ff39d9557998
 approved-by: ""
 approved-date: ""
 references: []
@@ -804,9 +803,9 @@ Several routes log on failure via `console.error`, and one notably does not:
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/routes/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/routes/` | unverified |
 
 ## Design Decisions
 
@@ -877,15 +876,15 @@ Several routes log on failure via `console.error`, and one notably does not:
 
 | Check | Applies via |
 |---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | route handlers stay thin, delegating matching/creation to the deploy-platform engine, roster folding to `reconcileBoardLedger`/`deriveBoard`, and persistence guards to `Storage` port methods (`setUserRoleGuarded`, `consumeApproved`, `retireEndpoint`) rather than reimplementing that logic inline. |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | each route file has a corresponding integration test file (e.g. `auth-routes.int.test.ts`, `device-flow.int.test.ts`, `hooks.int.test.ts`, `hooks-gate.test.ts`, `config.int.test.ts`, `stream.int.test.ts`, `activity-route.test.ts`), covering happy paths, error-status mappings, and race scenarios such as the auto-configure rollback test and the concurrent-approve race. |
-| [secure-authentication](agenticdevelopercookbook://compliance/security#secure-authentication) | `auth.ts` hashes passwords, runs a dummy-hash comparison for unknown emails to avoid timing disclosure, and normalizes email case before lookup/insert. |
-| [token-lifecycle](agenticdevelopercookbook://compliance/security#token-lifecycle) | `device.ts` and `tokens.ts` mint tokens with explicit expiry, hash device/user codes at rest, enforce single-use consumption of an approved device grant, and support revocation (self-or-admin for API tokens). |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | every mutating route is gated by `requireAdmin`, `requireSessionUser`, or a hand-rolled tier/self check evaluated server-side; none of the 17 files trusts a client-supplied role or tier claim. |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | `auth.ts`'s login/signup routes and `device.ts`'s device-start/token-poll routes apply the `rateLimit` middleware with distinct per-route ceilings. |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | every route throws `HTTPException`, yielding a uniform `{ error: { message } }` envelope with a deliberately chosen status per failure mode (400 validation, 401 credential, 403 authorization, 404 not-found, 409 conflict, 503 unavailable). |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | `activity.ts`'s `GET /activity` implements cursor-based pagination over `(atMs, id)`, including the stall-escape empty-`beforeId` case a page boundary can produce. |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | `board.ts`'s `POST /board/reconcile` is documented and tested as safe to call repeatedly with no state change between calls; `config.ts`'s `runSeed` re-run creates no duplicate rows; `device.ts`'s approve/deny guards make a retried approval a no-op rather than a double-mint. |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | route handlers stay thin, delegating matching/creation to the deploy-platform engine, roster folding to `reconcileBoardLedger`/`deriveBoard`, and persistence guards to `Storage` port methods (`setUserRoleGuarded`, `consumeApproved`, `retireEndpoint`) rather than reimplementing that logic inline. |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | each route file has a corresponding integration test file (e.g. `auth-routes.int.test.ts`, `device-flow.int.test.ts`, `hooks.int.test.ts`, `hooks-gate.test.ts`, `config.int.test.ts`, `stream.int.test.ts`, `activity-route.test.ts`), covering happy paths, error-status mappings, and race scenarios such as the auto-configure rollback test and the concurrent-approve race. |
+| [adc.check.security.secure-authentication](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1d5c23d5-9a26-57fb-a23d-358271e4204a) | `auth.ts` hashes passwords, runs a dummy-hash comparison for unknown emails to avoid timing disclosure, and normalizes email case before lookup/insert. |
+| [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | `device.ts` and `tokens.ts` mint tokens with explicit expiry, hash device/user codes at rest, enforce single-use consumption of an approved device grant, and support revocation (self-or-admin for API tokens). |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | every mutating route is gated by `requireAdmin`, `requireSessionUser`, or a hand-rolled tier/self check evaluated server-side; none of the 17 files trusts a client-supplied role or tier claim. |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | `auth.ts`'s login/signup routes and `device.ts`'s device-start/token-poll routes apply the `rateLimit` middleware with distinct per-route ceilings. |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | every route throws `HTTPException`, yielding a uniform `{ error: { message } }` envelope with a deliberately chosen status per failure mode (400 validation, 401 credential, 403 authorization, 404 not-found, 409 conflict, 503 unavailable). |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | `activity.ts`'s `GET /activity` implements cursor-based pagination over `(atMs, id)`, including the stall-escape empty-`beforeId` case a page boundary can produce. |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | `board.ts`'s `POST /board/reconcile` is documented and tested as safe to call repeatedly with no state change between calls; `config.ts`'s `runSeed` re-run creates no duplicate rows; `device.ts`'s approve/deny guards make a retried approval a no-op rather than a double-mint. |
 
 ## Change History
 

@@ -1,0 +1,10 @@
+
+- **Empty or null content**: When the editor content is empty, `null`, or contains only whitespace (spaces, tabs, newlines), the preview pane shows the empty state placeholder and does NOT attempt to render markdown.
+- **Rapid keystroke stream**: User types 10 characters in quick succession. Debounce is reset for each keystroke. Preview renders once, 300ms after the user stops typing (not after each character).
+- **Debounce cancellation**: User types, debounce timer starts. Before 300ms elapses, the component is unmounted or the preview is disabled. The pending render is cancelled and does not run.
+- **Programmatic content updates**: If the host programmatically sets the `value` prop to a new string (not user typing), the debounce timer starts, and preview renders 300ms later (same as keystroke). Per **skip-redundant-content-update**, setting the `value` prop to the same string it already holds does NOT trigger a re-render.
+- **Mode change during debounce**: User edits, debounce starts. Before debounce fires, user switches from edit mode to preview mode. Debounce still fires on schedule; preview updates on completion.
+- **Viewport resize during layout transition**: Preview re-rendering is driven solely by content changes, not by layout changes. Resizing the viewport (e.g., from split-capable width down to tabbed width) does not itself trigger a preview re-render or reset the debounce timer; only edits to the content do.
+- **Preview disabled toggle**: The preview-availability flag changes from `true` to `false`. Only edit mode is available. If the user was viewing preview, the layout switches to edit. Setting the flag back to `true` restores the previous mode preference.
+- **Overlay focus while tabbed**: User is in edit mode on a narrow viewport with an overlay (e.g., typeahead) open. User clicks the preview tab. The overlay unmounts along with the editor pane (it belongs to editing and is only rendered while the editor pane is visible). Per **focus-management**, the component does not redirect focus itself; the previously focused control's focus falls to whatever the platform does by default for a focused control that disappears.
+

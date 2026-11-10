@@ -3,7 +3,7 @@ The wrapped number field view's own requirements — label/field
 construction, theming, activation and delegate wiring, fixed-label-width
 layout, locale-aware parsing, clamping, revert-on-invalid, and
 external-change sync — are documented at
-`adhsdk://cookbook/ui/settings/rows/number-field-view#behavioral-requirements`. The requirements
+behavioral-requirements ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)). The requirements
 below are this component's own: what it does to construct, forward to, and
 expose that wrapped view.
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "48ddd102-b78c-4198-b71d-25801082a5b2",
     "title": "Docs Client",
-    "domain": "adhsdk://cookbook/adh/hub/content/docs-client",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e0dd0ce858aed8ac",
+  "synced": "b4460a08dfb7701f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

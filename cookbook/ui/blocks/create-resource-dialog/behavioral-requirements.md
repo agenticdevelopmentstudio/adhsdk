@@ -1,0 +1,25 @@
+
+- **render-modal-dialog**: Component MUST render a modal dialog with `role="dialog"` and `aria-modal="true"` that portals to `document.body`.
+- **render-heading**: Component MUST render the provided `heading` prop as an h2 element.
+- **render-form-content**: Component MUST render the form via the `renderForm` callback, passing current draft state, onChange handler, and current error message.
+- **render-close-button**: Component MUST render a close button (×) labeled "Close" in the top-right corner of the dialog header.
+- **render-cancel-button**: Component MUST render a "Cancel" button in the footer.
+- **render-save-button**: Component MUST render a "Save" button in the footer that displays "Saving…" text while an async create operation is in progress.
+- **disable-save-when-pristine**: Component MUST disable the Save button when the draft state is identical to the blank (pristine) initial state.
+- **validate-on-save**: Component MUST call the `validate` callback when Save is clicked, and MUST pass the returned error string (or `null` when valid) to `renderForm` as its third argument on the next render; displaying the message is `renderForm`'s responsibility, not this component's.
+- **prevent-save-when-invalid**: Component MUST NOT invoke the `create` callback if `validate` returns a non-null error.
+- **invoke-create-on-save**: Component MUST invoke the `create` callback with the validated draft when Save is clicked and validation passes.
+- **disable-buttons-while-saving**: Component MUST disable both Cancel and Save buttons while the `create` operation is in progress.
+- **invoke-oncreated-on-success**: Component MUST invoke the `onCreated` callback with the result of `create` when the operation succeeds.
+- **display-create-error**: When `create` throws, Component MUST derive an error message — the thrown value's `message` property if it is an `Error`, otherwise the string "Failed to create." — and pass it to `renderForm` the same way `validate-on-save` does, for the callback to display.
+- **invoke-onsaveerror-on-create-failure**: Component MUST invoke the `onSaveError` callback with the exception when `create` fails, if the callback is provided.
+- **guard-close-on-dirty**: Component MUST show the `UnsavedChangesAlert` component when the user attempts to close (via Cancel, ×, or Escape) and the draft has unsaved changes.
+- **discard-invokes-onclose**: Component MUST invoke `onClose` when the user chooses Discard in the `UnsavedChangesAlert`. The component does not reset `confirming` on this path, so `UnsavedChangesAlert` itself stays open; it disappears only if the host responds to `onClose` by unmounting the dialog.
+- **stay-dismisses-alert**: Component MUST dismiss the `UnsavedChangesAlert` and leave the dialog open with the draft intact when the user chooses Stay; `onClose` MUST NOT be invoked.
+- **ignore-backdrop-click**: Component MUST NOT close when the backdrop (overlay background) is clicked.
+- **route-escape-through-guard**: Component MUST route Escape key presses through the same close guard as Cancel and ×, respecting the unsaved-changes alert state.
+- **escape-active-during-save**: Component MUST evaluate the Escape key handler the same way regardless of the `saving` state; Escape is not disabled while a create operation is in progress, even though Cancel and Save are.
+- **support-optional-save-gate**: Component MUST respect the optional `saveEnabled` callback and disable Save if it returns false, in addition to the pristine-state check.
+- **render-only-on-client**: Component MUST NOT render on the server; it MUST return `null` when `document` is undefined.
+- **use-aria-label**: Component MUST apply the `ariaLabel` prop to the dialog container as `aria-label`.
+

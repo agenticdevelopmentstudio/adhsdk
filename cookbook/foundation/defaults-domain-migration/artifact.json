@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "21CBC5BD-350A-4AB6-8C37-3290ACB70460",
+    "id": "21cbc5bd-350a-4ab6-8c37-3290acb70460",
     "title": "Defaults Domain Migration",
-    "domain": "adhsdk://cookbook/foundation/defaults-domain-migration",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/settings-storage"
+      "6363b5ff-f511-4e21-9ba7-6850787dba62"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d44c694a029cd7a6",
+  "synced": "365817e33d2d7ff3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

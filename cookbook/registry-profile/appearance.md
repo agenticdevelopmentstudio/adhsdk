@@ -1,0 +1,21 @@
+
+- **Root container**: `<article>` with className `rp`
+- **Header section**: `<header>` with className `rp__header`
+- **Photo**: `<img>` with className `rp__photo`, rendered only if URL is available
+- **Identity container**: `<div>` with className `rp__identity`
+- **Display name**: `<h1>` with className `rp__name`
+- **Summary**: `<p>` with className `rp__summary`
+- **Metadata list**: `<dl>` with className `rp__meta`
+- **Metadata row**: `<div>` with className `rp__meta-row`
+- **Metadata label**: `<dt>` element
+- **Metadata value**: `<dd>` element
+- **Keywords list**: `<ul>` with className `rp__keywords`
+- **Keyword item**: `<li>` with className `rp__keyword`
+- **Contact container**: `<div>` with className `rp__contact`
+- **Fields section**: `<dl>` with className `rp__fields`
+- **Field container**: `<div>` with className `rp__field` and data attribute `data-field-key={field.key}`
+- **Field label**: `<dt>` with className `rp__field-label`
+- **Field visibility marker**: `<span>` with className `rp__field-audience` and data attribute `data-audience={field.visibility}`
+- **Field value**: `<dd>` with className `rp__field-value`
+- **Links section**: `<nav>` with className `rp__links` and `aria-label="Elsewhere"`
+

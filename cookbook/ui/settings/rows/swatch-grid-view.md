@@ -1,7 +1,6 @@
 ---
 id: f4740433-221c-4c89-b888-ee8da7aa4b3c
 title: "Swatch Grid View"
-domain: adhsdk://cookbook/ui/settings/rows/swatch-grid-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - grid
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/rows/color-picker-view
+  - c0e95399-ddab-4445-a22a-566d07339f9b
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +36,7 @@ colors as a grid of fixed-size color swatches, wrapped into rows of a
 fixed column count. Per its doc comment, it generalizes the ad-hoc
 swatch/ANSI grid the terminal profiles view used to build inline. Unlike
 sibling rows such as the color picker row
-(adhsdk://cookbook/ui/settings/rows/color-picker-view), it is
+([adhsdk.ingredient.ui.settings.rows.color-picker-view](cookbook:c0e95399-ddab-4445-a22a-566d07339f9b)), it is
 purely a display component: it exposes one mutator, a color-replacement
 operation, and contains no interactive-control code of any kind.
 
@@ -353,9 +352,9 @@ logger reference anywhere in source).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift` | unverified |
 
 ## Design Decisions
 
@@ -400,11 +399,11 @@ logger reference anywhere in source).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | platform-compliance |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | failed | accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | platform-compliance |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | failed | accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Statuses rest on: `SwatchGridView.swift` uses only native
 `NSStackView`/`NSView` composition with no business logic mixed into its

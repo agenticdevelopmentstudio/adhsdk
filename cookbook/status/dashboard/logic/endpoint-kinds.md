@@ -1,7 +1,6 @@
 ---
 id: f1167221-f233-4b5d-822c-ae26de4634db
 title: "Endpoint Kinds"
-domain: adhsdk://cookbook/status/dashboard/logic/endpoint-kinds
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/api
-  - adhsdk://cookbook/status/dashboard/state/config-status
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
+  - 4bd200d7-f9d2-4348-af53-95ea02272c79
 references: []
 approved-by: ""
 approved-date: ""
@@ -38,7 +37,7 @@ It exports four things:
 - `isEndpointKind(k)`, a type guard that narrows an arbitrary string to `EndpointKind`.
 - `NON_DEPLOY_KINDS`, re-exported unchanged from `@adh-sdk/deploy-platform/engine` (`classify.ts`). The module does not restate its members.
 
-The module has no state, no I/O and no side effects. Inside status-web, `src/api/monitored-sites.ts` re-exports `ENDPOINT_KINDS` so existing imports from `./monitored-sites` keep working ([Status Web API](adhsdk://cookbook/status/dashboard/api)). The status server keeps its own copy of the same vocabulary in `status-server/src/monitor/endpoint-kinds.ts`, which it says is "kept in step" with this file.
+The module has no state, no I/O and no side effects. Inside status-web, `src/api/monitored-sites.ts` re-exports `ENDPOINT_KINDS` so existing imports from `./monitored-sites` keep working (Status Web API ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad))). The status server keeps its own copy of the same vocabulary in `status-server/src/monitor/endpoint-kinds.ts`, which it says is "kept in step" with this file.
 
 ## Behavioral Requirements
 
@@ -166,9 +165,9 @@ Not applicable: the module makes no log calls, and `isEndpointKind` reports its 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/endpoint-kinds.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/endpoint-kinds.ts` | unverified |
 
 ## Design Decisions
 
@@ -192,10 +191,10 @@ Not applicable: the module makes no log calls, and `isEndpointKind` reports its 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
 **Separation of concerns.** The module owns only the vocabulary. Classification of deploy-backed kinds stays with the engine, and it re-exports rather than restating the engine's set.
 

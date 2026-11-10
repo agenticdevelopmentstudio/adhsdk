@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d1257c76-fb28-47a5-bc2b-d4fb1ef87b53",
     "title": "Multi-Edge Tabbed View",
-    "domain": "adhsdk://cookbook/ui/layout/tabbed-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -30,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2ecaec7c78f8fd5b",
+  "synced": "30d6f0c50da54b0e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

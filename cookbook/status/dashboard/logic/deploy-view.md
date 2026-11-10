@@ -1,7 +1,6 @@
 ---
 id: 66cf24b9-04bf-4767-8af9-f82d7e2b5268
 title: "Deploy View"
-domain: adhsdk://cookbook/status/dashboard/logic/deploy-view
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/logic/board-staleness
-  - adhsdk://cookbook/status/dashboard/session-client
+  - 01f6f7b6-4bc5-4f35-a46a-1e80fe470097
+  - 5935b39d-9451-48c1-8b99-bd510d66d1a0
 references: []
 approved-by: ""
 approved-date: ""
@@ -38,7 +37,7 @@ This module is the status dashboard's view-side logic over raw deploy records. I
 - the endpoint-deploys, latest-terminal-for-endpoint and failures-for-endpoint operations: correlate an endpoint to its deploys by the EXPLICIT (platform, project) wired on the endpoint in config, with "No host guessing." The detail panel and the status matrix call them.
 - the deploy-target-key and platform-canonicalization operations: re-exported unchanged from a shared canon module. The source comment says they are "Re-exported (never restated) so the two sides can't key the same deploy differently" — the backend keys deploys with the same function.
 
-The stale-in-flight test is a helper shared with the row model. The [Board Staleness](adhsdk://cookbook/status/dashboard/logic/board-staleness) recipe shares its fail-closed clock rule.
+The stale-in-flight test is a helper shared with the row model. The Board Staleness ([adhsdk.ingredient.status.dashboard.logic.board-staleness](cookbook:01f6f7b6-4bc5-4f35-a46a-1e80fe470097)) recipe shares its fail-closed clock rule.
 
 ## Behavioral Requirements
 
@@ -210,9 +209,9 @@ Not applicable: the module makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/deploy-view.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/deploy-view.ts` | unverified |
 
 ## Design Decisions
 
@@ -248,11 +247,11 @@ Not applicable: the module makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of concerns.** The module holds only aggregation and correlation rules, with no I/O or rendering. The key derivation is owned by the shared canon package, and the staleness rule by the row model.
 

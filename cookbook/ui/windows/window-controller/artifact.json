@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "8ed694b4-e238-48c5-9589-81ce6aaebb32",
     "title": "Typed Window Content",
-    "domain": "adhsdk://cookbook/ui/windows/window-controller",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -23,14 +22,14 @@
       "view-controller"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/windows/single-window-controller"
+      "3f6268b8-410d-4d3c-979c-2a9f9f1534f3"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6dedaf2074ec2fe7",
+  "synced": "c6b9723c2bb8de46",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,7 +1,6 @@
 ---
-id: 2B552BDE-D0BD-425A-9E79-FC624B52F516
+id: 2b552bde-d0bd-425a-9e79-fc624b52f516
 title: "Claude OAuth Credential"
-domain: adhsdk://cookbook/foundation/claude-accounts/claude-o-auth-credential
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - credentials
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/claude-accounts/claude-credential-kind
+  - d457c4d4-005c-4fcb-a3a6-3e1680bcb561
 references: []
 approved-by: ""
 approved-date: ""
@@ -122,9 +121,9 @@ Not applicable: The credential type calls no logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeOAuthCredential.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeOAuthCredential.swift` | unverified |
 
 ## Design Decisions
 
@@ -140,9 +139,9 @@ Not applicable: The credential type calls no logging API.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
 `separation-of-concerns` passes because the type only describes the credential shape and the milliseconds-to-seconds view; custody (keychain) and evaluation (expiry policy) live in other layers. `unit-test-coverage` is partial: no test file targets `ClaudeOAuthCredential` directly. `AgenticDeveloperHubSDKMacOSTests/ClaudeAccounts/ClaudeLiveLoginRecordTests.swift` builds credentials and compares live to saved ones, so equality is exercised indirectly, but the seconds conversion and the optional-field defaults have no assertion.
 

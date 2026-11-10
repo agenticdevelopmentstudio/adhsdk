@@ -1,0 +1,51 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "550f00f7-bfb2-415e-9b15-bd5dce015500",
+    "title": "Alert & Dialog System",
+    "type": "recipe",
+    "version": "1.2.3",
+    "status": "review",
+    "language": "en",
+    "created": "2026-06-26",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The canonical alert/confirm/modal-dialog treatment: shared header + footer-button layout + keyboard policy on the AlertModal/Dialog base.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "dialog",
+      "alert",
+      "confirm",
+      "overlay"
+    ],
+    "ingredients": [
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "4d1df789cb467631",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

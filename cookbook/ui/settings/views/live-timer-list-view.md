@@ -1,7 +1,6 @@
 ---
-id: F012373C-0094-46E8-9D40-B2A65A96C8B5
+id: f012373c-0094-46e8-9d40-b2a65a96c8b5
 title: "Live Timer List View"
-domain: adhsdk://cookbook/ui/settings/views/live-timer-list-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +21,7 @@ tags:
   - list
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/views/live-timer-row-view
+  - 4bb40927-776a-41d6-86c9-962ccc1e43bc
 references: []
 approved-by: ""
 approved-date: ""
@@ -145,9 +144,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerListView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerListView.swift` | unverified |
 
 ## Design Decisions
 
@@ -163,8 +162,8 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Separation-of-concerns is passed: the list only arranges rows and decides when the ticker runs; row rendering and scheduling are in the row view and ticker. Unit-test-coverage is partial: `LiveTimerListViewTests.swift` covers the empty message, stop visibility, row reuse, stop reporting, ticking only while seen and the no-window case; the real occlusion notification is not exercised.
 

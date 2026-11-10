@@ -1,7 +1,6 @@
 ---
-id: 0FC99299-F3BA-4883-AB08-9BD614DA7900
+id: 0fc99299-f3ba-4883-ab08-9bd614da7900
 title: "Settings Alerts"
-domain: adhsdk://cookbook/ui/settings/settings-alerts
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - alerts
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/settings-window
+  - 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
 references: []
 approved-by: ""
 approved-date: ""
@@ -126,9 +125,9 @@ Declined confirmations, window-less folder requests and window-less error report
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsAlerts.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsAlerts.swift` | unverified |
 
 ## Design Decisions
 
@@ -148,8 +147,8 @@ Declined confirmations, window-less folder requests and window-less error report
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Separation-of-concerns is passed: the enum only builds and shows sheets and logs, taking every string and window from the caller, and holds no settings or layout state. Unit-test-coverage is partial: `SettingsAlertsTests.swift` has two tests, one for declining with no window and one for Escape still cancelling with Return on Cancel; the folder panel, error report and async paths have no test.
 

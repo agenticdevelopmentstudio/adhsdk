@@ -1,0 +1,3 @@
+
+The grid mirrors automatically in right-to-left layouts: `packages/web/packages/landing/src/css/blocks.css` declares `grid-template-columns` with no explicit `direction` or column-order override, so the columns follow the document's writing direction under `dir="rtl"`. Stats accepts `term` and `detail` as `ReactNode`, giving the caller full control over localized content; the component renders whatever is passed and applies no formatting of its own. Callers MUST format numbers (and any other locale-sensitive values) for the user's locale before passing them as `term`/`detail` — an invariant/culture-insensitive formatter would render the wrong digit grouping, decimal separator, or numeral system for the viewer's locale.
+

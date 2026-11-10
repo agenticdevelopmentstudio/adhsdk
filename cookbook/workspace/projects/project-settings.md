@@ -1,7 +1,6 @@
 ---
 id: 03a30e6b-8c8c-40d3-8135-078d4fd351ce
 title: "Project Settings"
-domain: adhsdk://cookbook/workspace/projects/project-settings
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - storage-keys
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/git-repo-scanner
+  - 3bec9b27-a9e3-4716-b516-688cc7f5a1c5
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift (adhsdk)
@@ -57,7 +56,7 @@ own; a shared settings-storage layer supplies that behavior, and a shared
 storage provider supplies the persistence mechanics. This recipe covers
 those collaborators only for the contract they give these three settings —
 their own general contract belongs to a collaborator's own recipe (the
-[Git Repo Scanner](adhsdk://cookbook/workspace/projects/git-repo-scanner)
+Git Repo Scanner ([adhsdk.ingredient.workspace.projects.git-repo-scanner](cookbook:3bec9b27-a9e3-4716-b516-688cc7f5a1c5))
 recipe already covers the scanner that consumes the skip-patterns
 setting). The code that reads the skip-patterns setting and constructs a
 scanner from it, the settings panel that edits all three, and the
@@ -341,9 +340,9 @@ Not applicable: this file makes no logging call of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift` | unverified |
 
 ## Design Decisions
 
@@ -367,10 +366,10 @@ Not applicable: this file makes no logging call of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | failed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | failed | Reliability |
 
 `separation-of-concerns` passes because `UserSettings+Projects.swift` declares only each setting's identity, type, and default; the read/write/remove/observe mechanics live in `UserSetting`/`SettingsStore`, the persistence mechanics live in `UserDefaultsSettingsStorageProvider`, the scan logic that consumes `projectScanSkipPatterns` lives in `GitRepoScanner`, and the panel that edits all three lives in `ProjectsSettingsPanelViewController` — none of that logic is duplicated here. `unit-test-coverage` is partial because no test file asserts any of this file's own three facts — the pinned key strings, the two defaults, or the documented `highlightActivePane`/`ThemeProjectOptions` override relationship — even though the generic mechanism these properties rely on is well covered elsewhere, by `UserDefaultsSettingsStoreTests.swift`'s Bool round-trip, string-array round-trip, empty-array round-trip, and corrupted-data-fallback tests. `explicit-error-handling` is partial because a decode failure on `projectScanSkipPatterns`'s stored `Data`, and an encode failure on a write to it, both fall back silently to a default value or a no-op with no signal surfaced to the caller — safe, but not surfaced, and that behavior is inherited from `UserDefaultsSettingsStorageProvider` rather than handled explicitly by this file. `data-integrity` fails because neither a corrupted `Data` payload under `"projectScanSkipPatterns"` nor an unexpectedly-typed object under either Bool key is ever detected or reported as corrupt; both cases resolve silently to `defaultValue`, indistinguishable from the key never having been set at all.
 

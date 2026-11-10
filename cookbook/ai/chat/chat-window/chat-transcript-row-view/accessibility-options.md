@@ -1,7 +1,7 @@
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Not applicable: this file animates nothing of its own — the hover fill and selection border are set as instantaneous property writes on the row's own background, not as animated transitions. The embedded typing indicator's own animation is that component's concern; see `adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view`. |
+| Reduce Motion | Not applicable: this file animates nothing of its own — the hover fill and selection border are set as instantaneous property writes on the row's own background, not as animated transitions. The embedded typing indicator's own animation is that component's concern; see [adhsdk.ingredient.ai.chat.chat-window.typing-indicator-view](cookbook:653874b6-86c4-41cb-9350-5f61bb5fca85). |
 | Increase Contrast | Not implemented in source: this view sets no independent high-contrast styling. All colors (`.selection`, `.timestampText`, `.danger`) are read from the active `SemanticPalette`; whatever contrast increase that palette provides on request is inherited automatically, and this file does nothing further. |
 | Differentiate Without Color | Selection is differentiated by shape (a border), not color alone (see Accessibility, "Color dependence"); hover is differentiated by color alone, with no accompanying shape or icon change — the source provides no alternative cue for hover. |
 

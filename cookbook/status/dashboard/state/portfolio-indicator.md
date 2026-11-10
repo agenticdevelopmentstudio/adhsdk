@@ -1,7 +1,6 @@
 ---
 id: 43d93a67-c469-40d1-8465-076cd782e1b2
 title: "Portfolio Indicator"
-domain: adhsdk://cookbook/status/dashboard/state/portfolio-indicator
 type: ingredient
 version: 1.1.0
 status: review
@@ -17,9 +16,9 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/state/board
+  - 7610ef55-32c9-43b6-8a70-aaa247cc4899
 related:
-  - adhsdk://cookbook/status/dashboard/state/board
+  - 7610ef55-32c9-43b6-8a70-aaa247cc4899
 references: []
 approved-by: ""
 approved-date: ""
@@ -177,9 +176,9 @@ Not applicable: the source contains no logging calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-portfolio-indicator.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-portfolio-indicator.ts` | unverified |
 
 ## Design Decisions
 
@@ -211,10 +210,10 @@ Not applicable: the source contains no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 
 **Separation of Concerns**: Fetching and board staleness sit in `useBoard`, the live transport in `useLiveSnapshot`, the snapshot staleness rule in `lib/snapshot-staleness.ts`, and the server-to-glyph mapping in `lib/overview.ts`; the hook only composes them, and text formatting stays with callers.
 

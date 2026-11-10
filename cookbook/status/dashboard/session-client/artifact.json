@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5935b39d-9451-48c1-8b99-bd510d66d1a0",
     "title": "Session Client",
-    "domain": "adhsdk://cookbook/status/dashboard/session-client",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -25,13 +24,13 @@
       "monitoring"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience",
-      "agenticdevelopercookbook://guidelines/implementing/security/token-handling"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2598f495-1820-47e7-b7e7-ce548d390148"
     ],
     "related": [
-      "adhsdk://cookbook/status/dashboard/api",
-      "adhsdk://cookbook/status/service/auth",
-      "adhsdk://cookbook/status/service/monitor/types"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad",
+      "735b4e58-bce9-4754-ad3f-bf0344fd4b32",
+      "5edf4567-65dd-40d7-814e-8604ee70f131"
     ],
     "references": [
       "packages/web/packages/status-web/src/header-auth.ts (adhsdk)",
@@ -42,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7d1cd5c0a46fee42",
+  "synced": "a722f59deaf950d9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -61,7 +60,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

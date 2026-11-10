@@ -1,7 +1,6 @@
 ---
 id: dddf0162-9d32-45a4-86a8-7e2d1b313d41
 title: "Status Server Monitor Heartbeat"
-domain: adhsdk://cookbook/status/service/monitor/heartbeat
 type: ingredient
 version: 1.0.2
 status: review
@@ -20,12 +19,12 @@ tags:
   - heartbeat
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/observability/logging
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65
 related:
-  - adhsdk://cookbook/status/service/monitor/cycle-runner
-  - adhsdk://cookbook/status/service/monitor/alerts
+  - 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
 references:
   - packages/web/packages/status-server/src/monitor/heartbeat.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)
@@ -152,9 +151,9 @@ These are the only two log lines this file emits — a successful `2xx` ping, an
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/heartbeat.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/heartbeat.ts` | unverified |
 
 ## Design Decisions
 
@@ -175,12 +174,12 @@ These are the only two log lines this file emits — a successful `2xx` ping, an
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` is `partial`: `heartbeat.int.test.ts` exercises the `null`-url no-op, the GET call with a bounded signal, fail-soft resolution on a thrown `fetch` error, and the non-2xx logging path — but the exact `User-Agent` header value, the no-environment-read fact, and the independence of concurrent calls (vectors 003, 008, 009 above) are traceable to reading the source rather than to an existing assertion. `separation-of-concerns` passes: this file owns exactly one concern (the outbound check-in call); it reads no config itself, taking the URL as a plain parameter, and every decision about when to call it and what URL to pass lives entirely in its caller (`cycle-runner.ts`), external to this file. `explicit-error-handling` passes: both a rejected `fetch` and a resolved-but-non-2xx `Response` are checked and logged explicitly via `console.error`, never silently swallowed — a stricter result than its sibling `alerts.ts`, whose `flushAlerts` inspects only the rejection path and never checks `Response.ok` at all. `timeout-configuration` passes: the one GET call carries a 5,000ms deadline via `AbortSignal.timeout`. `retry-with-backoff` fails as written: a failed or non-2xx check-in is logged once with no retry, no backoff, and no re-attempt of any kind within the call — a deliberate tradeoff recorded as fact in Design Decisions above (the external monitor's missed-ping alert is the intended recovery signal, not an in-process retry), not a defended pass. `graceful-degradation` passes: a `null`/empty `url` is a full no-op (noop-null-or-empty-url) rather than an error, and every failure mode (non-2xx, network error, timeout) is caught and logged rather than propagated, so the monitor cycle that calls `pingHeartbeat` last is never itself put at risk by this file.
 

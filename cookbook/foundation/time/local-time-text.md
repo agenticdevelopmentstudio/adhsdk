@@ -1,7 +1,6 @@
 ---
-id: A98DFCA4-B6B0-4565-91B3-0657981D1AC8
+id: a98dfca4-b6b0-4565-91b3-0657981d1ac8
 title: "Local Time Text"
-domain: adhsdk://cookbook/foundation/time/local-time-text
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +21,8 @@ tags:
   - locale
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/time/utc-timestamp
-  - adhsdk://cookbook/foundation/time/timestamp-parsing
+  - 59f7893e-58fe-4f11-abd9-f80c1e05c002
+  - 29a3044c-f785-4fa3-a1b9-746d069ae198
 references: []
 approved-by: ""
 approved-date: ""
@@ -127,9 +126,9 @@ Not applicable: The text helper calls no logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/LocalTimeText.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/LocalTimeText.swift` | unverified |
 
 ## Design Decisions
 
@@ -145,8 +144,8 @@ Not applicable: The text helper calls no logging API.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `separation-of-concerns` passes because the type only formats and parses times of day for people and keeps the wire form in the UTC timestamp spec. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Time/LocalTimeTextTests.swift` covers locale-following clocks, either clock accepted when typed, the ambiguous bare time, a next-day nearest instant and start-of-day with seconds arithmetic.
 

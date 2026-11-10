@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ff1089d7-170c-4658-91c6-e3946710b29f",
     "title": "Local Model Server",
-    "domain": "adhsdk://cookbook/ai/models/local/local-model-server",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -34,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "75a2135cb6369b1d",
+  "synced": "9ecb45559e10e7d5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

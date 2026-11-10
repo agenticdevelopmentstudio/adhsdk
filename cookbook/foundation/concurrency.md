@@ -1,7 +1,6 @@
 ---
 id: 4e06a00e-653a-4d29-81d8-ac6dccfedb6a
 title: "Concurrency"
-domain: adhsdk://cookbook/foundation/concurrency
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,8 +22,8 @@ tags:
   - teardown
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/registry/extension-registry
-  - adhsdk://cookbook/workspace/extensions/registry/vsix-installer
+  - 4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70
+  - 35dd47a6-23f3-4306-9c81-e3823b79a7a3
 references: []
 approved-by: ""
 approved-date: ""
@@ -183,9 +182,9 @@ Not applicable: none of the three utilities calls any logging API. The debouncer
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/` | unverified |
 
 ## Design Decisions
 
@@ -213,12 +212,12 @@ Not applicable: none of the three utilities calls any logging API. The debouncer
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
 
 Notes: `separation-of-concerns` passes because each of the three types addresses exactly one concern with no overlap — `BlockingWork` only decides *where* a closure runs, `KeyedDebouncer` only decides *when* per-key work runs and how a failed attempt is retried, and `PendingTeardowns` only tracks unawaited work so a shutdown path can wait for it — none reaches into the others' responsibility. `unit-test-coverage` is partial because `KeyedDebouncerTests.swift` and `PendingTeardownsTests.swift` each exercise their type directly with meaningful assertions, but `BlockingWork.swift` has no dedicated test file of its own anywhere in the repository; it is exercised only indirectly, through `OpenDocumentReloaderTests.swift`'s comments about which GCD thread a caller's closure lands on. `explicit-error-handling` passes because every failure path is explicit and traced above: `BlockingWork`'s throwing overload rethrows faithfully, and `KeyedDebouncer` never drops a thrown error — it keeps the entry pending, reports it through `onFailure`, and retries with backoff, which is the specific silent-swallowing bug (per its own doc comment) the type replaces three prior hand-copies to fix. `fault-tolerance` passes because all three types handle any input their contracts admit — any `Hashable & Sendable` key, any closure, an empty collection of pending entries or teardowns — without crashing; a throwing `work` closure is caught, not left to propagate as a crash. `idempotent-operations` is partial because `KeyedDebouncer` guarantees the *retry mechanism* is safe (never two overlapping attempts for the same key, and a superseded attempt's outcome is discarded rather than double-applied), but it imposes no idempotency on the wrapped `work` closure itself — whether a given write is safe to repeat is entirely the caller's responsibility, not something either type can verify. `main-thread-freedom` passes because keeping blocking, thread-occupying work off the actor-isolated cooperative pool is the entire purpose of `BlockingWork`, and both `KeyedDebouncer` and `PendingTeardowns` are `@MainActor`-isolated for their own bookkeeping only, with their `async` work closures explicitly free to (and, per their doc comments, expected to) leave the main actor for anything that touches a disk.
 

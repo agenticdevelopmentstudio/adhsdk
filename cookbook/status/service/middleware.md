@@ -1,7 +1,6 @@
 ---
 id: d1098650-e0d0-4d4b-9bbc-3ceeac8635fe
 title: "Status Server Middleware"
-domain: adhsdk://cookbook/status/service/middleware
 type: ingredient
 version: 1.0.3
 status: review
@@ -21,12 +20,12 @@ tags:
   - rate-limit
   - middleware
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/security/authentication
-  - agenticdevelopercookbook://guidelines/implementing/security/authorization
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
-  - agenticdevelopercookbook://guidelines/implementing/networking/error-responses
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aec38334-67fa-4c7e-bca2-607932af3f22
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2609037a-fb89-4b49-88b0-7e4295e5d6f6
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/631b7b61-985a-4f5d-9c44-2cfbfdb9091b
 related:
-  - adhsdk://cookbook/status/service/auth
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
 references:
   - packages/web/packages/status-server/src/middleware/auth.ts (adhsdk)
   - packages/web/packages/status-server/src/middleware/rate-limit.ts (adhsdk)
@@ -392,9 +391,9 @@ fixed `50_000` threshold — never a key, an IP address, or a credential.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/middleware/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/middleware/` | unverified |
 
 ## Design Decisions
 
@@ -447,14 +446,14 @@ fixed `50_000` threshold — never a key, an IP address, or a credential.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | Security |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 `server-side-authorization` passes: `tier` is set exclusively from the
 injected `AuthGate`'s resolution, and `requireAdmin` compares only that

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "143b0352-49d4-46a9-a922-bb45c4cc0e7e",
     "title": "Conversations Key Commands",
-    "domain": "adhsdk://cookbook/ai/chat/conversations/conversations-key-commands",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/controls/key-command-capture-field",
-      "adhsdk://cookbook/ui/settings/rows/key-command-row-view"
+      "969b7f76-3fff-4a13-9b85-a61df25c70ee",
+      "1d2f69b6-1156-4dfa-a390-a240925ba1bd"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8a289c0f97d292d7",
+  "synced": "aa14d341897c9a48",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

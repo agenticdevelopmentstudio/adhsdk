@@ -27,8 +27,7 @@ adhsdk/
 ├── websites/
 │   ├── demo/         # local demo / QA app
 │   └── site/         # reference consumer site
-├── cookbook/         # spec corpus (from adhsdk)
-├── recipes/          # recipes
+├── cookbook/         # spec corpus: one source folder per spec (cookr format 2)
 ├── docs/
 └── tools/            # repo guards (Python)
 ```

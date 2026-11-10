@@ -1,7 +1,6 @@
 ---
 id: 2e0bf51e-905d-476d-9c0c-48465174ba59
 title: "Secure Text Edit View"
-domain: adhsdk://cookbook/ui/settings/rows/secure-text-edit-view
 type: ingredient
 version: 1.3.2
 status: review
@@ -21,9 +20,9 @@ tags:
   - text-input
   - secure-input
 depends-on:
-  - adhsdk://cookbook/ui/settings/rows/text-edit-view
+  - c1787e74-2485-4d7b-a219-feb4c07cf97c
 related:
-  - adhsdk://cookbook/ui/settings/rows/checkbox-view
+  - e9c10ff7-4e13-4007-a963-d2a9e4006745
 references: []
 approved-by: ""
 approved-date: ""
@@ -40,14 +39,14 @@ secure storage enabled and is therefore stored through a keychain-backed
 storage provider.
 
 It specializes the text edit row
-(adhsdk://cookbook/ui/settings/rows/text-edit-view), overriding
+([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)), overriding
 exactly one thing — it constructs a masking (dot-obscured) secure field in
 place of the plain field its base row would otherwise construct — so the
 entry is dot-masked. The text edit row's own row layout, theme-driven
 font/color styling, commit path, and view-model sync are out of this
 recipe's scope; only the delta this specialization adds — the masked field
 type and the ban on further specialization — is documented here. See
-adhsdk://cookbook/ui/settings/rows/text-edit-view for everything a
+[adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c) for everything a
 caller instantiating this component also gets.
 
 ## Behavioral Requirements
@@ -63,7 +62,7 @@ model, theme styling, restyling an existing placeholder, exposing the
 label and the field, the designated-initializer-only construction rule,
 and UI-thread confinement — is inherited unmodified from the text edit
 row; see
-adhsdk://cookbook/ui/settings/rows/text-edit-view#behavioral-requirements
+behavioral-requirements ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))
 (arranges-row-layout, expands-text-field-to-fill-row,
 wires-text-field-action, initializes-from-view-model,
 commits-value-on-change, skips-redundant-commits, syncs-on-external-change,
@@ -81,7 +80,7 @@ normative requirement here (see Platform Notes).
 Inherited unmodified from the text edit row — corner radius, padding,
 font, background, foreground/text, border, shadow, and min/max size are
 all as documented at
-adhsdk://cookbook/ui/settings/rows/text-edit-view#appearance; this
+appearance ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)); this
 component sets no font, color, or layout property of its own. The one
 appearance difference this specialization introduces is that the field's
 typed characters render as the platform's built-in dot-mask glyphs rather
@@ -93,7 +92,7 @@ row under States below.
 | State | Appearance change |
 |-------|------------------|
 | Default | Label shows the view model's title; the field's underlying value equals the view model's value, rendered as one dot-mask glyph per character — the platform's own built-in masked rendering, per the source's doc comment ("so the entry is dot-masked") — see **masks-entry-with-secure-field**. |
-| All other states | Editing, Committed, Placeholder shown, Disabled, Pressed, and Loading are inherited unmodified from the text edit row; see `adhsdk://cookbook/ui/settings/rows/text-edit-view#states`. |
+| All other states | Editing, Committed, Placeholder shown, Disabled, Pressed, and Loading are inherited unmodified from the text edit row; see states ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)). |
 
 ## Accessibility
 
@@ -104,7 +103,7 @@ row under States below.
 - **Label requirements**: Neither the text edit row's construction (which
   this component inherits unmodified) nor this component's own source
   links the field's accessible name to the label — unlike the sibling
-  checkbox row (adhsdk://cookbook/ui/settings/rows/checkbox-view),
+  checkbox row ([adhsdk.ingredient.ui.settings.rows.checkbox-view](cookbook:e9c10ff7-4e13-4007-a963-d2a9e4006745)),
   which links its switch to its label for exactly this reason (the
   platform gives a bare switch no name). Without that link, a screen
   reader announces the field as an unnamed secure text field rather than
@@ -121,7 +120,7 @@ row under States below.
   and the field's typed-text color both resolve to the theme's
   `primaryText` role, and placeholder text resolves to `placeholderText`,
   which is guaranteed only a 1.6:1 contrast floor against the background
-  (see `adhsdk://cookbook/ui/settings/rows/text-edit-view#design-decisions`
+  (see design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))
   and **contrast-ratio** in Compliance below). Whether an active theme's
   actual resolved colors clear WCAG 2.1 SC 1.4.3's 4.5:1 threshold for
   body text is a property of the chosen theme, not of this component.
@@ -142,7 +141,7 @@ All other conformance test vectors — row layout, content-hugging, action
 wiring, view-model sync, theme styling, placeholder restyling,
 constituent-view exposure, the initializer traps, and UI-thread
 confinement — are inherited unmodified from the text edit row; see
-`adhsdk://cookbook/ui/settings/rows/text-edit-view#conformance-test-vectors`.
+conformance-test-vectors ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 
 ## Edge Cases
 
@@ -153,7 +152,7 @@ networking, and the change-notification-callback overwrite when a second
 observer is constructed against the same view model — is inherited
 unmodified from the text edit row, whose initializer this component
 reuses without change; see
-`adhsdk://cookbook/ui/settings/rows/text-edit-view#edge-cases`.
+edge-cases ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 This component's own source contributes no code beyond constructing its
 field as a secure field, so it introduces no edge case of its own.
 
@@ -162,7 +161,7 @@ field as a secure field, so it introduces no edge case of its own.
 Inherited unmodified from the text edit row — this component accepts no
 configuration option of its own beyond the view-model parameter
 documented at
-`adhsdk://cookbook/ui/settings/rows/text-edit-view#configuration`.
+configuration ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 The only thing this specialization changes about that shared
 configuration is what the value is typically used for: per the source's
 own doc comment, a secret such as an API key or password.
@@ -206,7 +205,7 @@ behavior it inherits contains an analytics or telemetry call.
   platform's secure field masks on screen as it is typed. The component
   does not otherwise classify or redact this value; it holds it in the
   view model's value and passes it through unchanged (see
-  `adhsdk://cookbook/ui/settings/rows/text-edit-view#privacy` for
+  privacy ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)) for
   the storage, transmission, and retention behavior this shares with the
   text edit row, which applies to whatever string value either component
   holds).
@@ -223,7 +222,7 @@ behavior it inherits contains an analytics or telemetry call.
 - **Retention**: Inherited unmodified from the text edit row — the value
   lives only in the field and the view model's value for as long as the
   row is on screen and its view model is retained; see
-  `adhsdk://cookbook/ui/settings/rows/text-edit-view#privacy`.
+  privacy ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 - **Security-violation handling**: Not applicable — this component has no
   detection surface of its own (no validation, rate-limiting, or
   authentication logic); it only masks on-screen glyphs. Any
@@ -284,7 +283,7 @@ reference anywhere in source).
   `static`) because it overrides `TextEditView`'s `open class func
   makeTextField`, which trips SwiftLint's `static_over_final_class` rule
   (see Design Decisions). `TextEditView.swift`
-  (`adhsdk://cookbook/ui/settings/rows/text-edit-view`) supplies everything else — row
+  ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)) supplies everything else — row
   layout, content-hugging, the `textFieldChanged(_:)` target/action commit
   path, `observeTheme` styling, and `viewModel.onChange` sync — and is out of
   this recipe's scope. There is no UIKit code path in source; a UIKit port
@@ -318,9 +317,9 @@ reference anywhere in source).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift` | unverified |
 
 ## Design Decisions
 
@@ -328,7 +327,7 @@ Decisions governing the text edit row's inherited behavior — the
 content-hugging priority, the factory-method pattern, theme-observation
 placement, placeholder-restyle timing, and the placeholder contrast floor
 — are recorded at
-`adhsdk://cookbook/ui/settings/rows/text-edit-view#design-decisions`
+design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))
 and are not repeated here.
 
 - **Decision**: Implement this component as a specialization of the text
@@ -369,14 +368,14 @@ and are not repeated here.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | platform-compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | platform-compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 `native-controls-preference` and `platform-design-language` rest on
 `textField` being an unmodified `NSSecureTextField` with AppKit's default
@@ -390,7 +389,7 @@ linking it to `label`'s title text — see Label requirements in
 Accessibility above; `contrast-ratio` is
 `partial` because the inherited placeholder-text color clears only a 1.6:1
 floor against WCAG's 4.5:1 threshold (see
-`adhsdk://cookbook/ui/settings/rows/text-edit-view#design-decisions`).
+design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))).
 
 No test in the repository's test targets constructs `SecureTextEditView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing. Its only behavior, masking, is not asserted; the inherited text-row paths are covered by `RecordFieldRefreshTests.swift` for `TextEditView` only.
 

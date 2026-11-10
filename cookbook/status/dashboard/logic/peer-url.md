@@ -1,7 +1,6 @@
 ---
 id: ad8ad3fe-e3ba-4c1c-a601-62b1a2c1a3b2
 title: "Peer URL"
-domain: adhsdk://cookbook/status/dashboard/logic/peer-url
 type: ingredient
 version: 1.1.0
 status: review
@@ -20,9 +19,9 @@ tags:
   - fleet
   - validation
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/security/input-validation
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/4ca8a3d5-cdcc-4f74-a2ec-3a198608b419
 related:
-  - adhsdk://cookbook/status/service/peers
+  - b1622d2b-587f-4207-89ed-2130f8309f8c
 references:
   - https://url.spec.whatwg.org/
 approved-by: ""
@@ -39,7 +38,7 @@ This module gives the status board the same peer base-URL rules the backend enfo
 - the validity-check operation reports whether the backend will accept the string: an absolute `http:` or `https:` URL.
 
 Its doc comment calls it "a deliberate mirror" of the backend's own rules: the board cannot import the backend's code because it has its own build, and the backend stays the authority, normalizing and validating every write whatever the UI sends. The mirror only moves feedback earlier. The peer editor runs its dirty check against the value the server will keep, and shows a typo as a sentence under the field instead of a 400 response. See
-[Status Server Peers](adhsdk://cookbook/status/service/peers) for the
+Status Server Peers ([adhsdk.ingredient.status.service.peers](cookbook:b1622d2b-587f-4207-89ed-2130f8309f8c)) for the
 authoritative backend contract.
 
 ## Behavioral Requirements
@@ -171,9 +170,9 @@ Not applicable: neither operation logs. A parse failure is an expected path, tur
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/peer-url.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/peer-url.ts` | unverified |
 
 ## Design Decisions
 
@@ -197,11 +196,11 @@ Not applicable: neither operation logs. A parse failure is an expected path, tur
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 The module is two pure operations kept separate from the editor UI, and its own test suite
 covers every normalize and validate rule. The only parse failure, a thrown `URL`

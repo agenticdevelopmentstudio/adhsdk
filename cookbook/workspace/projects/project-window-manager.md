@@ -1,7 +1,6 @@
 ---
 id: 7f1b8bef-e78e-4cac-be55-c948fe9062e5
 title: "Project Window Manager"
-domain: adhsdk://cookbook/workspace/projects/project-window-manager
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,10 +20,10 @@ tags:
   - window-controller
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/project-controller
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
-  - adhsdk://cookbook/workspace/projects/git-repo
-  - adhsdk://cookbook/workspace/projects/project-database
+  - 5bfadad5-c93b-432a-807e-04be57ff16b4
+  - 55a394e6-9934-404b-941d-25bebbf71378
+  - 1463e7a2-e290-4b8c-8643-df9462a758e6
+  - c212ea39-10e7-4146-89dd-36edb3b3455a
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
@@ -332,14 +331,14 @@ of which this file renders itself.
   — every operation this file performs is local: the database, the
   filesystem check the restore plan's exists-on-disk predicate performs,
   and git through the project controller (documented in
-  `adhsdk://cookbook/workspace/projects/project-controller`).
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)).
   None of it reaches a remote host.
 - **Cancellation and timeouts**: Opening a project's own opening work is
   not cancelled by a subsequent close of that project; the in-flight work
   keeps running to completion, and it is the project controller's own
   closed-state guard — not anything in this file — that stops it from
   persisting stale data or reloading a dead window (see
-  `adhsdk://cookbook/workspace/projects/project-controller`'s
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)'s
   reconcile-aborts-after-a-late-close requirement, and vector -007
   above). Shutting down all language services waits for its group of
   concurrent operations and then for the pending-teardowns registry to
@@ -480,7 +479,7 @@ bundle identifier; category is this component's name.
   thread-affinity of its own — mirror `@MainActor` confinement by only ever
   touching this object from the UI thread (`DispatcherQueue`), the same
   discipline `ProjectController`'s WinUI port already assumes (see
-  `adhsdk://cookbook/workspace/projects/project-controller`). Reproduce
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)). Reproduce
   `NSWindow.willCloseNotification`'s `queue: nil` synchronous delivery
   (**close-observer-uses-nil-queue**) with `Window.Closed`, handled inline on
   the UI thread rather than through a dispatcher post, so a scan that closes a
@@ -491,7 +490,7 @@ bundle identifier; category is this component's name.
   own async shutdown drains in a loop — rather than firing a bare
   `Task.Run(async () => ...)` that a process exit can orphan. Read and write
   the persisted "window open" flag through the same `System.Data.Sqlite`-backed
-  settings store `adhsdk://cookbook/workspace/projects/project-database`
+  settings store [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)
   describes, using `HttpClient`/`System.Text.Json`/`Task`/`async` and
   `Windows.Storage` only where a networked or file-based collaborator this
   manager delegates to (git, language servers) needs them — this type itself
@@ -500,9 +499,9 @@ bundle identifier; category is this component's name.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | unverified |
 
 ## Design Decisions
 
@@ -576,13 +575,13 @@ the process then exited inside `SubprocessChannel.terminate()`'s roughly
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | partial | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
 
 Notes: separation-of-concerns passes because `ProjectWindowManager` owns
 exactly window/controller lifecycle bookkeeping — the `controllers`/

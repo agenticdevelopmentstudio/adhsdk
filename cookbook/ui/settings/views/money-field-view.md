@@ -1,7 +1,6 @@
 ---
-id: 00136AA1-B327-4765-932A-F11AF12F09C9
+id: 00136aa1-b327-4765-932a-f11af12f09c9
 title: "Money Field View"
-domain: adhsdk://cookbook/ui/settings/views/money-field-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +21,7 @@ tags:
   - form
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/views/contact-fields-view
+  - 6f98f569-b8c7-4fd9-bcdd-ea9768666a16
 references: []
 approved-by: ""
 approved-date: ""
@@ -143,9 +142,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/MoneyFieldView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/MoneyFieldView.swift` | unverified |
 
 ## Design Decisions
 
@@ -157,8 +156,8 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Separation-of-concerns is passed: parsing, formatting and storage are injected, so the row only lays out a text field and applies the parse result. Unit-test-coverage is partial: `MoneyFieldViewTests.swift` covers parsing, blanks and the stored amount with its placeholder; the revert after a refusal and a currency change are not tested.
 

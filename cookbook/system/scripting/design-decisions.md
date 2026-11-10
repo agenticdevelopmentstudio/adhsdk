@@ -19,7 +19,7 @@
 
 **Decision**: both `MainActorScriptCommand.performDefaultImplementation()` and `applicationElementSpecifier(key:uniqueID:)` bridge onto the main actor with `MainActor.assumeIsolated`, which traps if invoked off the main thread, rather than a runtime check that returns an error or `nil`.
 
-**Rationale**: Cocoa Scripting's own contract guarantees `performDefaultImplementation()` is always invoked on the main thread when the script suite is registered in the app's `Info.plist`; trapping converts a violation of that guarantee into an immediate, loud failure at the call site instead of letting undefined AppKit/main-actor state propagate silently, consistent with agenticdevelopercookbook://principles/fail-fast.
+**Rationale**: Cocoa Scripting's own contract guarantees `performDefaultImplementation()` is always invoked on the main thread when the script suite is registered in the app's `Info.plist`; trapping converts a violation of that guarantee into an immediate, loud failure at the call site instead of letting undefined AppKit/main-actor state propagate silently, consistent with [adc.principle.fail-fast](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377).
 
 **Approved**: pending
 

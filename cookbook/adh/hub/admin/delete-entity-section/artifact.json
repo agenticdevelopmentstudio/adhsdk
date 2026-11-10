@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "96bc198e-c726-476a-bc4a-ddc1d5c0c2f8",
     "title": "Delete Entity Section",
-    "domain": "adhsdk://cookbook/adh/hub/admin/delete-entity-section",
     "type": "recipe",
     "version": "1.4.2",
     "status": "review",
@@ -26,20 +25,20 @@
       "settings"
     ],
     "ingredients": [
-      "adhsdk://recipes/disclosure",
-      "adhsdk://recipes/button",
-      "adhsdk://recipes/dialog"
+      "c99e2822-f5a9-4e84-8740-9341880bb82a",
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1"
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://recipes/field-group",
-      "adhsdk://cookbook/ui/navigation/focused-topic-detail"
+      "781740e8-c83f-40a1-8215-43abfb8d8f56",
+      "7f122a27-5b49-4f03-9439-1152249bc08f"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a948ea25499eec1f",
+  "synced": "d34a6ed061b0c078",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
     {"part": "edge-cases", "heading": "Edge Cases"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

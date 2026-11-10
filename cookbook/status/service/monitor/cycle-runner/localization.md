@@ -1,5 +1,5 @@
 
-This file's only literal string is the hardcoded English `console.log` message it builds for a retention prune (maintenance-prune-logged-on-deletion). It routes through no localization mechanism, and unlike the Slack/Discord-rendered lines in `alerts.ts` (see the [Status Server Monitor Alerts](adhsdk://cookbook/status/service/monitor/alerts) recipe), this string's only audience is an operator reading container stdout, never an end user or a webhook receiver.
+This file's only literal string is the hardcoded English `console.log` message it builds for a retention prune (maintenance-prune-logged-on-deletion). It routes through no localization mechanism, and unlike the Slack/Discord-rendered lines in `alerts.ts` (see the Status Server Monitor Alerts ([adhsdk.ingredient.status.service.monitor.alerts](cookbook:1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9)) recipe), this string's only audience is an operator reading container stdout, never an end user or a webhook receiver.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|

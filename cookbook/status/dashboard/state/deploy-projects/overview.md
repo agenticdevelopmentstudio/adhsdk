@@ -6,5 +6,5 @@ Deploy Projects is the status dashboard's client for the backend's deploy-projec
 - a shared fresh-fetch latch and its arming operation;
 - the cached state itself, which caches the snapshot under the cache key `["deploy-projects"]`.
 
-All requests go through the injected status API client (see [status-web-api](adhsdk://cookbook/status/dashboard/api)), so paths are relative to the host's API base.
+All requests go through the injected status API client (see status-web-api ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad))), so paths are relative to the host's API base.
 

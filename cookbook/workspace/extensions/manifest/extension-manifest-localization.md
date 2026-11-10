@@ -1,7 +1,6 @@
 ---
 id: 24e1710c-a805-4f6e-b720-fbd869472ca9
 title: "Extension Manifest Localization"
-domain: adhsdk://cookbook/workspace/extensions/manifest/extension-manifest-localization
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,7 +22,7 @@ tags:
   - jsonc
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
 references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionManifestLocalizationTests.swift (adhsdk)
@@ -347,9 +346,9 @@ but could not be used (see Design Decisions and the
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift` | unverified |
 
 ## Design Decisions
 
@@ -412,12 +411,12 @@ core, at most" … "Uses 50`, and this is the same rule VS Code itself applies.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | failed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `explicit-error-handling` is **failed**: every failure this file can
 encounter — an unreadable directory, an unreadable table file, malformed

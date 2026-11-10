@@ -1,7 +1,6 @@
 ---
 id: E8EC809E-9B37-471B-A31A-F71BE67499C5
 title: "Persona Chat"
-domain: adhsdk://recipes/persona-chat
 type: recipe
 version: 1.0.0
 status: draft
@@ -30,6 +29,7 @@ ingredients:
 depends-on: []
 related:
   - adhsdk://docs/planning/llm-backend-direction
+  - cookbook/chat/modes/persona-chat (adhsdk.ingredient.chat.modes.persona-chat)
 references:
   - "docs/planning/planning.md — M1"
 ---

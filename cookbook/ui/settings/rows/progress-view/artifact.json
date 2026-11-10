@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ea2dae31-1020-4930-aa12-15f7d04967a5",
     "title": "Progress View",
-    "domain": "adhsdk://cookbook/ui/settings/rows/progress-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,9 +24,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/rows/checkbox-view",
-      "adhsdk://cookbook/ui/settings/rows/button-view",
-      "adhsdk://cookbook/ui/settings/layout/explanation-view"
+      "e9c10ff7-4e13-4007-a963-d2a9e4006745",
+      "f8e734aa-f401-4218-9f1e-56ed98c28d3d",
+      "25046f90-559d-4e32-8516-b5dae5f09c43"
     ],
     "references": [
       "https://developer.apple.com/documentation/appkit/nsprogressindicator",
@@ -38,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7aa2c2302d0723aa",
+  "synced": "2d6ad02e546def04",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -57,7 +56,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

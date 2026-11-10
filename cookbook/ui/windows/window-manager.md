@@ -1,7 +1,6 @@
 ---
 id: 61c7b509-78d1-4407-9a4e-25b155f06fbb
 title: "Window Manager"
-domain: adhsdk://cookbook/ui/windows/window-manager
 type: ingredient
 version: 1.2.1
 status: review
@@ -20,11 +19,11 @@ tags:
   - persistence
   - recents
 depends-on:
-  - adhsdk://cookbook/foundation/settings-storage
-  - adhsdk://cookbook/ui/windows/screen-manager
-  - adhsdk://cookbook/ui/windows/single-window-controller
+  - 6363b5ff-f511-4e21-9ba7-6850787dba62
+  - 1e58add7-d85d-4e62-b857-c5e3203795be
+  - 3f6268b8-410d-4d3c-979c-2a9f9f1534f3
 related:
-  - adhsdk://cookbook/ui/windows/window-recents
+  - e71918a5-9874-48eb-927a-cea5e9b51cdc
 references: []
 approved-by: ""
 approved-date: ""
@@ -39,10 +38,10 @@ infrastructure. It owns:
 
 - a frame manager that persists window frames and visibility and reacts to
   screen changes (specified by the frame-manager and
-  [the screen manager](adhsdk://cookbook/ui/windows/screen-manager)
+  the screen manager ([adhsdk.ingredient.ui.windows.screen-manager](cookbook:1e58add7-d85d-4e62-b857-c5e3203795be))
   recipes);
 - a window registry that looks up live instances of
-  [the single-instance window base](adhsdk://cookbook/ui/windows/single-window-controller)
+  the single-instance window base ([adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3))
   by window id through weak references;
 - the launch-restore pass (registering a restorable id and factory, running
   the launch-restore pass, reopening recents on launch);
@@ -601,15 +600,15 @@ decisions, document-open failures and screenshot failures are not logged.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/SettingsStoreWindowStateStorage.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/UserDefaultsWindowStateStorage.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowRegistry.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/WindowScreenshot.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateNamespace.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateStorage.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/SettingsStoreWindowStateStorage.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/UserDefaultsWindowStateStorage.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowRegistry.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/WindowScreenshot.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateNamespace.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateStorage.swift` | unverified |
 
 ## Design Decisions
 
@@ -673,16 +672,16 @@ decisions, document-open failures and screenshot failures are not logged.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | failed | Best Practices |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | partial | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | partial | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 separation-of-concerns passes because frame persistence (`WindowFrameManager`), live lookup (`WindowRegistry`), storage (`WindowStateStorage` and its two implementations), key namespacing (`WindowStateNamespace`) and capture (`WindowScreenshot`) are separate types behind a thin coordinator. unit-test-coverage is partial: the termination latch, recent-limit mirror, factory execution, registry visibility, namespace isolation, the reopen policy, the missing-factory clear and screenshot failure paths have tests, but `reopenRecentsOnLaunch()` and `windowDidInteract(_:kind:)` do not. explicit-error-handling fails because storage encode/decode failures and document-open failures are discarded without a signal (the open questions on storage-codec-failure and reopen-open-failure). data-integrity is partial because corrupt stored state reads as never-saved and is overwritten, and the two storage implementations disagree on a non-boolean visibility value. state-recovery passes because frames and visibility persist across launches and `restoreOnLaunch()` replays them. graceful-degradation passes because a headless run skips reopen, a missing capture symbol yields `nil`, and an empty window ID is ignored. health-observability passes because the missing-factory wiring gap is logged under every storage backend. main-thread-freedom passes because every main-actor operation is bounded by the number of window IDs or recent documents, and document opening is asynchronous. no-pii-in-logs passes because the single log line carries only a host-chosen window ID. data-minimization passes because the namespace stores a hash instead of the bundle path.
 

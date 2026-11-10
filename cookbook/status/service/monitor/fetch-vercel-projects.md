@@ -1,7 +1,6 @@
 ---
 id: 4b16f67f-3877-47d3-97eb-af99581a5b11
 title: "Status Server Monitor Fetch Vercel Projects"
-domain: adhsdk://cookbook/status/service/monitor/fetch-vercel-projects
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,16 +21,16 @@ tags:
   - fetcher
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
-  - agenticdevelopercookbook://guidelines/implementing/networking/pagination
-  - agenticdevelopercookbook://guidelines/implementing/networking/caching
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/49acdf9f-e4cb-4492-a620-809438eefb37
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3416a359-e01c-40b2-8876-4a8634d4395e
 related:
-  - adhsdk://cookbook/status/service/monitor/alerts
-  - adhsdk://cookbook/status/service/monitor/fetch-cloudflare
-  - adhsdk://cookbook/status/service/monitor/fetch-crunchy
-  - adhsdk://cookbook/status/service/monitor/deploy-status
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
+  - b3e2495c-5478-411c-80d7-9eefc2f2e297
+  - f236e0ab-2623-4543-a3d9-9ffb4ba3f147
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
 references:
   - packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
@@ -280,9 +279,9 @@ A fully successful poll (every page fetched cleanly, no unparseable `createdAt`,
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts` | unverified |
 
 ## Design Decisions
 
@@ -315,17 +314,17 @@ A fully successful poll (every page fetched cleanly, no unparseable `createdAt`,
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | partial | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | passed | Security |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | partial | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | passed | Security |
 
 `unit-test-coverage` passes: `vercel-projects-budget.test.ts` exercises the overall-budget contract (clean enumeration, budget-zero, later-page stall/error, first-page failure, per-call timeout presence, one-retry-then-clean, one-retry-then-partial) AND the team-slug-never-starves-enumeration contract (slow team lookup, metaOnly skip, resolved-when-budget-allows, blind-backfill-not-starved, min-call-window, memoization); `vercel-conclusive-backfill.test.ts` exercises the 10-deep-window request, the buried-verdict recovery, the no-op when a verdict already exists, and the best-effort failure path; `prod-staleness.test.ts` exercises `evaluateProdStaleness` across errored-under-skip, behind-under-skip, healthy-under-skip, the untouched pre-skip cases, the no-conclusive-deploy case, and the preview-exclusion case; `latest-deploys-of.test.ts` exercises `latestDeploysOf`'s skip-plus-verdict, buried-failure, no-duplicate, skip-only, and nothing-real cases. `separation-of-concerns` passes: this file owns exactly one concern (enumerating Vercel projects and judging production staleness); it delegates phase derivation to `vercelPhases`, boundary date validation to `toValidDate`, commit formatting to `shortSha`/`commitFullMessage`, elapsed-time formatting to `timeAgo`, bounded fan-out to `mapLimit`, cooldown state to the shared registry, and persistence entirely to its caller, none of which it reimplements. `explicit-error-handling` passes: every failure path (non-ok page response, thrown page fetch, unparseable `createdAt`, failed slug/domain/backfill sub-call, and the outer catch-all) is caught and either logged via `console.error`/`console.log` with a distinguishing message or reflected in the returned `ok`/`states`/`meta`/`deploys` shape — nothing fails with literally no trace anywhere in the call graph. `timeout-configuration` passes: every network call in this file carries an `AbortSignal.timeout`, either derived from the shared overall deadline (page fetch, slug lookup) or a fixed value (domain lookup, blind backfill). `rate-limit-handling` passes: a 429 on the main page fetch is recorded via `noteRateLimited` honoring `Retry-After`, and `rateLimitedUntil` is checked before this function does any work at all (cooldown-gate-on-entry); as noted under Error States, a 429 on the slug/domain/backfill sub-calls is NOT separately recorded, a fact documented there rather than concealed. `retry-with-backoff` is marked partial, not passed: the main page fetch DOES retry (`PROJECTS_CALL_ATTEMPTS`, 2 attempts), but with no backoff delay between attempts and no growing wait — an immediate second attempt on a fresh connection, per the per-page-retry Design Decision above — and the team-slug, domain, and blind-backfill call sites make exactly one attempt each with no retry of any kind, relying entirely on their own 1-hour caches or the next poll cycle to recover. `error-response-handling` passes: a non-ok HTTP response, a 429, and a thrown/aborted request are each handled by name at their respective call sites, even where several converge on the same eventual return shape. `graceful-degradation` passes: a missing token is a full no-op rather than an error, every truncation cause keeps and returns whatever rows were already fetched rather than discarding them, and every EXPECTED failure mode resolves to a well-formed value rather than throwing past its own call site (the one exception — an unexpected exception reaching the outer catch-all — is documented plainly under Edge Cases and Design Decisions rather than presented as graceful). `data-integrity` passes: every deployment's `createdAt` is gated through `toValidDate` before being used, with the one bad row logged and dropped rather than poisoning the batch (row-created-at-validated). `no-pii-in-logs` passes: none of this file's `console.error`/`console.log` lines include the API token or a response body; each names only a URL path, an HTTP status, a project/deploy id, or a caught error's message. `secure-transport` passes: every request in this file targets a hardcoded `https://api.vercel.com` origin — there is no caller-configurable host that could be misconfigured to a non-TLS scheme.
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "41f840c1-ea34-489d-9b9f-a61dec2a9402",
     "title": "Live Snapshot Wire Types",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/live-types",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,15 +20,15 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/live-snapshot",
-      "adhsdk://cookbook/status/dashboard/logic/board-types",
-      "adhsdk://cookbook/status/dashboard/api"
+      "ca7205d2-31c0-424a-95a2-a356bed30187",
+      "15c61cfc-543c-493d-b686-c605b773be83",
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "26872af4604e86a5",
+  "synced": "ac8d90ef54bc90dc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

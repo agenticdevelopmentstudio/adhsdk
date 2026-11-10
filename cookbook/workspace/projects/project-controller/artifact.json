@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5bfadad5-c93b-432a-807e-04be57ff16b4",
     "title": "Project Management",
-    "domain": "adhsdk://cookbook/workspace/projects/project-controller",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -28,10 +27,10 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/projects/branch-controller",
-      "adhsdk://cookbook/ui/layout/composable-tabs/tabs-window",
-      "adhsdk://cookbook/ui/layout/tabbed-view/tab-pane",
-      "adhsdk://cookbook/workspace/files/git-status-provider"
+      "92f11498-2cb2-4b04-92b9-560d9f2de6ee",
+      "55a394e6-9934-404b-941d-25bebbf71378",
+      "a30725ca-fa2f-4a04-8cb0-8beddf264a0a",
+      "9a4aa2a8-c01b-4cec-b789-6c89c100d8d3"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)",
@@ -51,7 +50,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ac4ca3af46f9d15f",
+  "synced": "ed55185f55ca1661",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -70,7 +69,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

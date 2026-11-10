@@ -1,7 +1,6 @@
 ---
 id: 639bf7b5-011e-4dc0-9c4e-bc704957cf97
 title: "Extension Runtime Diagnostics"
-domain: adhsdk://cookbook/workspace/extensions/host/runtime-diagnostics
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,10 +21,10 @@ tags:
   - singleton
   - logging
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/observability/logging
-  - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c
 related:
-  - adhsdk://cookbook/workspace/extensions/host/extension-host
+  - b2cf12e3-71de-4d87-9216-d5e8d604169c
 references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/JITAvailability.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/UpstreamDivergence.swift (adhsdk)
@@ -460,9 +459,9 @@ respectively.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/` | unverified |
 
 ## Design Decisions
 
@@ -524,11 +523,11 @@ diagnostic file. The source does not, however, document a bound on how large
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | partial | Reliability |
-| [resource-efficiency](agenticdevelopercookbook://compliance/performance#resource-efficiency) | partial | Performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | partial | Reliability |
+| [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | partial | Performance |
 
 Notes: separation-of-concerns passes because `JITAvailability` and
 `UpstreamDivergence` are self-contained value types with no dependency on

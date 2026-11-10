@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "29AB3757-55FC-488F-85F1-4F804E17040B",
+    "id": "29ab3757-55fc-488f-85f1-4f804e17040b",
     "title": "Whole Point Label",
-    "domain": "adhsdk://cookbook/ui/whole-point-label",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/views/value-row-view"
+      "d0aa6237-e5d7-4cf8-a1cb-621033575421"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "76d7c564ed026ec3",
+  "synced": "d45b468c9de45f63",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

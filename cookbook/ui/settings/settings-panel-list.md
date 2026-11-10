@@ -1,7 +1,6 @@
 ---
 id: a41760b2-4ffd-413b-970f-c0373c9bd3b6
 title: "Settings Panel List"
-domain: adhsdk://cookbook/ui/settings/settings-panel-list
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,10 +20,10 @@ tags:
   - search
   - split-view
 depends-on:
-  - adhsdk://cookbook/ui/navigation/topic-list
-  - adhsdk://cookbook/ui/settings/settings-panel
+  - ce223be3-818a-4310-b136-9e1e84e9af54
+  - 432e8d4b-43c3-49fd-b481-036a759e7c55
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/settings-view
+  - 92d66361-a16d-4c35-a0d3-4c1c8bbd5f52
 references:
   - https://developer.apple.com/design/human-interface-guidelines/lists-and-tables
 approved-by: ""
@@ -114,18 +113,18 @@ panels by index no matter what the search field currently hides.
   cell factories, and this component overrides none of that layout.
 - **Padding**: Not set by this component; inherited unmodified from the
   ancestor's own layout metrics — see
-  `adhsdk://cookbook/ui/navigation/topic-list#appearance`
+  appearance ([adhsdk.ingredient.ui.navigation.topic-list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54))
   for the insets this component renders with.
 - **Font**: Not set by this component; inherited unmodified from the same
   layout metrics — see
-  `adhsdk://cookbook/ui/navigation/topic-list#appearance`.
+  appearance ([adhsdk.ingredient.ui.navigation.topic-list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54)).
 - **Background**: Not set by this component; inherited unmodified — the
   ancestor's theme-application step paints the view, content stack,
   header, footer, and list/scroll background. See
-  `adhsdk://cookbook/ui/navigation/topic-list#appearance`.
+  appearance ([adhsdk.ingredient.ui.navigation.topic-list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54)).
 - **Foreground/Text**: Not set by this component; inherited unmodified
   from the ancestor's row-rendering step. See
-  `adhsdk://cookbook/ui/navigation/topic-list#appearance`
+  appearance ([adhsdk.ingredient.ui.navigation.topic-list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54))
   for the exact color/state mapping this component's rows use.
 - **Border**: Not set by this component. The ancestor draws a 1pt hairline
   divider above every row in a card except the first, but a plain sidebar
@@ -378,9 +377,9 @@ Not applicable: this component contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -438,13 +437,13 @@ Not applicable: this component contains no logging call.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | platform-compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | platform-compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
 
 `unit-test-coverage` is failed because no test constructs `PanelListViewController`: `SettingsSearchIndexTests.swift` and `SettingsNavigationHistoryTests.swift` test the separate `SettingsSearchIndex` and `SettingsNavigationHistory` types it consumes, but nothing exercises the list's row building, selection callback or search-query filtering.
 

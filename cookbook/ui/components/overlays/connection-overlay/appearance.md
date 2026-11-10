@@ -1,0 +1,24 @@
+
+- **Container positioning**: Absolute, full inset (top, right, bottom, left: 0), z-index 50
+- **Container background**: color-mix(in srgb, bg 90%, transparent) with 3px blur (backdrop-filter: blur(3px) + -webkit-backdrop-filter: blur(3px))
+- **Card container**: Flex column, center-aligned, centered horizontally and vertically in viewport
+- **Card padding**: 28px vertical × 34px horizontal
+- **Card border radius**: 12px
+- **Card background**: Surface theme token (var(--color-apt-surface))
+- **Card border**: 1px solid, border theme token (var(--color-apt-border))
+- **Card shadow**: 0 8px 40px rgba(0,0,0,0.35)
+- **Card gap between elements**: 13px
+- **Card max-width**: 46ch
+- **Font family**: ui-monospace with monospace fallback
+- **Heading font**: 17px, weight 700, letter-spacing 0.02em, text color (var(--color-apt-text))
+- **Subheading font**: 12.5px, color muted (var(--color-apt-text-muted)), line-height 1.5
+- **Countdown font**: 11.5px, color dim (var(--color-apt-text-dim))
+- **Button padding**: 7px vertical × 18px horizontal
+- **Button border radius**: 8px
+- **Button background**: Blue theme token (var(--color-apt-blue))
+- **Button text color**: white
+- **Button text font**: 12.5px, weight 600, family monospace
+- **Button cursor**: pointer
+- **Button appearance**: none (reset default browser styling)
+- **Detail text font**: 10.5px, color dim (var(--color-apt-text-dim)), opacity 0.75, word-break break-word
+

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "55a394e6-9934-404b-941d-25bebbf71378",
     "title": "Composable Tabs Window",
-    "domain": "adhsdk://cookbook/ui/layout/composable-tabs/tabs-window",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -24,15 +23,15 @@
       "multi-tab"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/layout/tabbed-view",
-      "adhsdk://cookbook/ui/layout/composable-tabs"
+      "d1257c76-fb28-47a5-bc2b-d4fb1ef87b53",
+      "0640ca96-95c5-4234-925e-386425cc4435"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "72bec41e6c875999",
+  "synced": "06f110161f01812c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

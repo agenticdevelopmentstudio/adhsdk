@@ -1,0 +1,3 @@
+
+A flexible tab bar component that renders a horizontal strip combining two independent navigation modes: client-state buttons (triggering state callbacks without navigation) and route links (navigating to external views). The component shares visual styling with the Tabs underline idiom (gold bottom border on the active tab via `tabItemClass`), making mixed compositions read as a unified system. Tabs and links are rendered in separate semantic sections — tabs in a `role="tablist"` and links in a `<nav>` — to maintain correct screen reader hierarchy while preserving visual uniformity through consistent gap spacing and alignment.
+

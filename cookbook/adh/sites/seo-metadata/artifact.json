@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "0a627830-a764-4f44-8300-faf4279089a1",
     "title": "SEO Metadata",
-    "domain": "adhsdk://cookbook/adh/sites/seo-metadata",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -25,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "site-wordmark"
+      "21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1cc6e5245bd4fc29",
+  "synced": "d1217f70fe61c2e6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

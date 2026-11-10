@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "c68fdd3a-092a-4718-b16e-4cc7a0037edd",
     "title": "Notes Client",
-    "domain": "adhsdk://cookbook/adh/hub/content/notes-client",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -27,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/adh/hub/content/markdown-client",
-      "adhsdk://cookbook/adh/hub/content/docs-client"
+      "b1fa768d-a088-4507-92f6-6296f93bee2c",
+      "48ddd102-b78c-4198-b71d-25801082a5b2"
     ],
     "references": [
       "packages/web/packages/data/src/notes/notes.ts (adhsdk)",
@@ -43,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a44ebd54c4ac6363",
+  "synced": "3dc7923608f1e2c8",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -62,7 +61,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe",
     "title": "Pane View",
-    "domain": "adhsdk://cookbook/ui/layout/pane-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -24,22 +23,22 @@
       "accessibility"
     ],
     "depends-on": [
-      "adhsdk://recipes/pane-title-bar-view",
-      "adhsdk://recipes/pane-minimize-picker",
-      "adhsdk://recipes/pane-minimized-strip-view",
-      "adhsdk://recipes/options-dialog-view-controller"
+      "9c5e7d75-e253-4dce-b12c-7eaede9ee405",
+      "0c8a7db3-9948-466c-8c97-20de2ae53a17",
+      "5ec45ac4-a02f-4ee7-becb-7894c2893f23",
+      "56388aa3-bc75-4d0a-830b-222f39750a9d"
     ],
     "related": [
-      "adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view",
-      "adhsdk://recipes/window-options-dialog",
-      "adhsdk://recipes/pane-control-cluster",
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "4d75a371-181e-4d80-a16b-022d37dc0d48",
+      "9c1e6915-44ec-435e-a159-57b80b455698",
+      "f7fbabba-4b48-4b6b-a99c-b888cedec056",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "01cc6dcede6c80a7",
+  "synced": "e7cfda3ceb5ccc26",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

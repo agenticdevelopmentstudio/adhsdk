@@ -1,7 +1,6 @@
 ---
 id: 2d763e2e-ef33-4d49-957e-6b8ced23218e
 title: "Issue Sources"
-domain: adhsdk://cookbook/status/dashboard/logic/issue-sources
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,9 +17,9 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/state/source-filter
-  - adhsdk://cookbook/status/dashboard/logic/board-types
-  - adhsdk://cookbook/status/dashboard/logic/endpoint-kinds
+  - 3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b
+  - 15c61cfc-543c-493d-b686-c605b773be83
+  - f1167221-f233-4b5d-822c-ae26de4634db
 references: []
 approved-by: ""
 approved-date: ""
@@ -42,7 +41,7 @@ It exports five things:
 
 The module is a client-side MIRROR of the server's own issue-sources module: "same union, same labels, same order". The server file also holds the judgment functions that decide whether an HTTP check, a deploy, or a platform stream counts as bad or stuck. The client copies only the vocabulary and the threshold constant. It has no state, no I/O and no side effects.
 
-Consumers in the client: the source-filter state ([Source Filter](adhsdk://cookbook/status/dashboard/state/source-filter)) seeds its selection from the source order list; the board types ([Board Types](adhsdk://cookbook/status/dashboard/logic/board-types)) type board rows with the issue-source vocabulary; the row-building logic, the activity panel, the overview tab and the global panel read the labels, order and guard.
+Consumers in the client: the source-filter state (Source Filter ([adhsdk.ingredient.status.dashboard.state.source-filter](cookbook:3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b))) seeds its selection from the source order list; the board types (Board Types ([adhsdk.ingredient.status.dashboard.logic.board-types](cookbook:15c61cfc-543c-493d-b686-c605b773be83))) type board rows with the issue-source vocabulary; the row-building logic, the activity panel, the overview tab and the global panel read the labels, order and guard.
 
 ## Behavioral Requirements
 
@@ -199,9 +198,9 @@ Not applicable: the module makes no log calls, and the guard reports its answer 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/issue-sources.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/issue-sources.ts` | unverified |
 
 ## Design Decisions
 
@@ -229,10 +228,10 @@ Not applicable: the module makes no log calls, and the guard reports its answer 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
 **Separation of concerns.** The module holds only the vocabulary, labels, guard and one mirrored constant. Judging problems (bad HTTP states, failed and stuck deploys, platform streaks) stays in the server file, and the client renders the server's verdicts.
 

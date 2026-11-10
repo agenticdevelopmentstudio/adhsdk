@@ -1,7 +1,7 @@
 
 - **Corner radius**: The shared settings layout's card-corner-radius token,
   inherited by composing the group component's themed card — see
-  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
+  appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)) for the
   current value. This file sets no corner radius of its own.
 - **Padding**: The sheet itself contributes 0pt of padding around the topic
   list (pinned flush to the root view's top/leading/trailing) and fixed
@@ -17,7 +17,7 @@
   card-horizontal-inset and card-vertical-inset tokens pad each row's
   content, and its caption-spacing token separates each group's caption
   from its card — see
-  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
+  appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)) for the
   current values, since the group component is what consumes them.
 - **Font**: Each group's caption ("Tab Bars", "Frame Spacing", "Pane Divider
   Spacing") renders with a caption text role (the group component's own
@@ -27,7 +27,7 @@
   implementation, not to this component.
 - **Background**: The sheet's root view paints the `.windowBackground`
   theme role. Each group's card paints the theme's `.elevatedSurface` role
-  — see adhsdk://cookbook/ui/settings/layout/group-view#appearance
+  — see appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4))
   for its exact construction. The topic list's own panel body additionally
   paints the window-background color behind the cards (composed by the
   panel component, not set directly by this component).
@@ -39,7 +39,7 @@
 - **Border**: Each card has no border stroke of its own, and a hairline
   divider separates a card row from the row above it — both are the group
   component's construction, not this component's; see
-  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
+  appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)) for the
   current values (the shared layout's divider-thickness token, drawn as a
   themed divider).
 - **Shadow**: Not applicable — no shadow property is set anywhere in this

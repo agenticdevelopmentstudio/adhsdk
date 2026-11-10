@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "8aee173a-25e4-443e-a9ab-d629b58817e1",
     "title": "Window Explorer View",
-    "domain": "adhsdk://cookbook/system/system-windows/window-explorer-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -25,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/controls/badge"
+      "2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d4089f61de83b9a3",
+  "synced": "dd7d0ec1a0d76e54",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

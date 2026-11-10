@@ -1,7 +1,6 @@
 ---
 id: 5edf4567-65dd-40d7-814e-8604ee70f131
 title: "Monitor Types"
-domain: adhsdk://cookbook/status/service/monitor/types
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,12 +21,12 @@ tags:
   - server
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/health
-  - adhsdk://cookbook/status/service/monitor/overall
-  - adhsdk://cookbook/status/service/monitor/deploy-status
-  - adhsdk://cookbook/status/service/monitor/provider-deploy
-  - adhsdk://cookbook/status/service/monitor/integrations
-  - adhsdk://cookbook/status/service/monitor/live-types
+  - 2871e97f-f971-46fe-a4d2-de57ad5c94c5
+  - da69d02d-a3a9-4018-a90a-becee268624a
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
+  - 7ba98112-0f6d-4236-ab6b-aa18b72d76bd
+  - da0c6c07-d0f4-4c6c-a1ef-51b696910c72
+  - 2c8b4572-3851-4111-97d6-a42792fb7150
 references:
   - packages/web/packages/status-server/src/monitor/types.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/health.ts (adhsdk)
@@ -177,9 +176,9 @@ Not applicable: the module contains no log call of any kind — it declares data
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/types.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/types.ts` | unverified |
 
 ## Design Decisions
 
@@ -203,10 +202,10 @@ Not applicable: the module contains no log call of any kind — it declares data
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
 
 `separation-of-concerns` passes because this file declares wire shapes only, importing nothing from a route, a DB store, or a provider fetcher, and exporting no function or value of its own — construction (`serviceDtos`, `deploymentDtos`, `buildUptime`, `queryHistory` in `routes/reads.ts`; `providerDeployToDTO` in `provider-deploy.ts`; `runIntegrationsCheck` in `integrations.ts`) is entirely the concern of other files. `unit-test-coverage` is partial: no test file targets `types.ts` directly, since it declares no function to unit-test, and while `self-check-stability.test.ts` constructs `IntegrationCheck` literals directly and `timestamp-validation.test.ts` asserts against a real `DeploymentDTO` value returned by `providerDeployToDTO`, no test anywhere constructs or asserts against a `HistoryResponse`/`HistoryCheck` value by name — consistent with the open question in Design Decisions about the history producer not returning `HistoryResponse` by name, since the one producer that would exercise it returns a different, unnamed inline type instead. `data-integrity` passes because every field on every interface this file declares is non-optional (per **service-status-dto-all-fields-required**, **deployment-dto-all-fields-required**, and the rest of the all-fields-required requirements), so a value omitting a field fails structural typing at compile time; the one caveat is `status-web`'s independent mirror, which is a different file's declaration, not this one's, and is documented as an external drift risk rather than a defect here. `health-observability` passes because several fields exist expressly so a consumer can judge data freshness rather than trust a value blindly: `lastCheckedAt`/`checkedAt` timestamp each check, and `phaseConfirmedAt` — per its own comment — turns an in-flight deploy phase into "a claim with a freshness deadline, not a fact."
 

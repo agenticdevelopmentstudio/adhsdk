@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "F2A31FE2-1302-46D9-8CB4-CC6E9A5E8A12",
+    "id": "f2a31fe2-1302-46d9-8cb4-cc6e9a5e8a12",
     "title": "Billing Timer",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-timer",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,15 +24,15 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-store",
-      "adhsdk://cookbook/foundation/billing/billing-persistence",
-      "adhsdk://cookbook/foundation/billing/billing-dt-os"
+      "4df278a3-4897-4a87-a506-bd3f58db3121",
+      "5296d0b7-8416-4e76-8f45-47a726f230cf",
+      "ed610aa4-2717-4242-a8b9-c4616377dbd9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5ff65d75e9c055fb",
+  "synced": "f794c5a5e6f60384",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

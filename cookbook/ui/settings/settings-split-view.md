@@ -1,7 +1,6 @@
 ---
 id: a11f34ff-116c-47d6-bffa-edd0799cbcb2
 title: "Settings Split View"
-domain: adhsdk://cookbook/ui/settings/settings-split-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -22,13 +21,13 @@ tags:
   - navigation
   - search
 depends-on:
-  - adhsdk://cookbook/ui/settings/settings-panel-list
-  - adhsdk://cookbook/ui/settings/layout/panel-host-view
-  - adhsdk://cookbook/ui/settings/layout/panel-scroll-view
+  - a41760b2-4ffd-413b-970f-c0373c9bd3b6
+  - faf4ec69-7b5c-44c2-a8c2-d7e81dc94ea8
+  - 45b6d470-4e58-4035-b1c7-e65dbe7716b9
 related:
-  - adhsdk://cookbook/ui/settings/settings-panel-split
-  - adhsdk://cookbook/ui/settings/settings-window
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - ba8d9517-2528-4ae9-bc52-16046d68b126
+  - 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references:
   - https://developer.apple.com/design/human-interface-guidelines/split-views
 approved-by: ""
@@ -606,9 +605,9 @@ Not applicable: no logging call appears anywhere in this component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -680,11 +679,11 @@ tradeoff.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 Statuses rest on: this file delegating row
 rendering to `PanelListViewController`, help chrome to `PanelHostView`, and

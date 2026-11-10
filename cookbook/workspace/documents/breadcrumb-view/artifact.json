@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "c2417a5c-953b-458e-856b-2c4f7e3a6fde",
     "title": "Breadcrumb View",
-    "domain": "adhsdk://cookbook/workspace/documents/breadcrumb-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/documents/breadcrumb-popover-view"
+      "c79094d2-1f4b-4c3f-8005-8fb095fb1b40"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a4cda7194a5d0910",
+  "synced": "4ce4228ea7c70e73",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

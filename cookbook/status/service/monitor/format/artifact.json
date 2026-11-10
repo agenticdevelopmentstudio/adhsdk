@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ae9a73de-80c8-4deb-82ab-89c7c5854c54",
     "title": "Status Server Monitor Format",
-    "domain": "adhsdk://cookbook/status/service/monitor/format",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a68d7c0d930320f8",
+  "synced": "8b2955970d2ad653",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

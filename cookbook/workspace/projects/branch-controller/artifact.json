@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "92f11498-2cb2-4b04-92b9-560d9f2de6ee",
     "title": "Branch Management",
-    "domain": "adhsdk://cookbook/workspace/projects/branch-controller",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -27,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/files/git-status-provider",
-      "adhsdk://cookbook/ui/layout/tabbed-view/tab-pane"
+      "9a4aa2a8-c01b-4cec-b789-6c89c100d8d3",
+      "a30725ca-fa2f-4a04-8cb0-8beddf264a0a"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)",
@@ -47,7 +46,7 @@
     "approved-date": ""
   },
   "names_hosts": "The pane's agent name is the literal string `Claude` the source returns; the spec states that value.",
-  "synced": "e3af4d876769f126",
+  "synced": "c2c816a1458b737f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -66,7 +65,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

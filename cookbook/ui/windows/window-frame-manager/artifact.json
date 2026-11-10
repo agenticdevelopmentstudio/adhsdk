@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "3b602118-9299-483b-bf4d-62c9d525833d",
     "title": "Window Frame Manager",
-    "domain": "adhsdk://cookbook/ui/windows/window-frame-manager",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -24,16 +23,16 @@
       "persistence"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/windows/screen-manager"
+      "1e58add7-d85d-4e62-b857-c5e3203795be"
     ],
     "related": [
-      "adhsdk://cookbook/ui/windows/single-window-controller"
+      "3f6268b8-410d-4d3c-979c-2a9f9f1534f3"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ad44800f453ac0b0",
+  "synced": "29cee835dce7b77b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

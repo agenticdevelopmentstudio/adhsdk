@@ -1,7 +1,6 @@
 ---
-id: 1996A181-6B83-4000-9671-7E872C625B4C
+id: 1996a181-6b83-4000-9671-7e872c625b4c
 title: "Legacy Directory Migration"
-domain: adhsdk://cookbook/foundation/legacy-directory-migration
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +20,8 @@ tags:
   - migration
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/defaults-domain-migration
-  - adhsdk://cookbook/foundation/file-system
+  - 21cbc5bd-350a-4ab6-8c37-3290acb70460
+  - 016f5ba0-f4ee-4b39-b1a2-83629768acdd
 references: []
 approved-by: ""
 approved-date: ""
@@ -143,9 +142,9 @@ Not applicable: The migration calls no logging API; the caller reports the outco
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/LegacyDirectoryMigration.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/LegacyDirectoryMigration.swift` | unverified |
 
 ## Design Decisions
 
@@ -165,9 +164,9 @@ Not applicable: The migration calls no logging API; the caller reports the outco
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
 `separation-of-concerns` passes because the type only moves a directory; when to call it and what the data means stay with the host. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/LegacyDirectoryMigrationTests.swift` covers every outcome, placeholder handling, aside-name collisions and rollback. `idempotent-operations` passes because a second run after a move finds only the new directory and reports already migrated.
 

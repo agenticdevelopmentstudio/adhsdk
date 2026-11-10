@@ -1,7 +1,6 @@
 ---
-id: 359A896F-ECC0-45D7-991A-B4FBC24C9511
+id: 359a896f-ecc0-45d7-991a-b4fbc24c9511
 title: "Billing Editing"
-domain: adhsdk://cookbook/foundation/billing/billing-editing
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +20,8 @@ tags:
   - editing
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-dt-os
-  - adhsdk://cookbook/foundation/billing/billing-rate
+  - ed610aa4-2717-4242-a8b9-c4616377dbd9
+  - bbe7358f-2001-4e67-83cb-0627de522c42
 references: []
 approved-by: ""
 approved-date: ""
@@ -121,9 +120,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingEditing.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingEditing.swift` | unverified |
 
 ## Design Decisions
 
@@ -135,8 +134,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 separation-of-concerns passes: edits, repricing and titles are pure helpers; money arithmetic and rate parsing are the shared money utilities and the daemon owns the stamps. unit-test-coverage is partial: `BillingDTOEditingTests` covers `replacing`, clearing, `repriced` and the record titles and labels, but no test asserts the rate-text parsing range.
 

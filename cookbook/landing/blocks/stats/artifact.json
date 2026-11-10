@@ -1,0 +1,58 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "a63de97e-d75c-4733-a875-bad20e001fcb",
+    "title": "Stats",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A three-column grid of statistics that wraps at narrow widths: number-and-caption pairs scanned in one visual sweep.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "statistics",
+      "data-display",
+      "semantic-html"
+    ],
+    "depends-on": [],
+    "related": [
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/73b254b4-c611-434a-a9f4-67c8a7155576",
+      "4cd07922-a00d-4029-8cb5-2307463129cc",
+      "7e4a2c5b-8f3d-4a7e-b9f2-1c5e8d3b6a2f"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "d1378103459e8354",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

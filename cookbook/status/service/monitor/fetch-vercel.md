@@ -1,7 +1,6 @@
 ---
 id: c7b38706-a6bc-4ad6-852c-425a4ed11a27
 title: "Status Server Monitor Fetch Vercel"
-domain: adhsdk://cookbook/status/service/monitor/fetch-vercel
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,12 +21,12 @@ tags:
   - fetcher
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
 related:
-  - adhsdk://cookbook/status/service/monitor/alerts
-  - adhsdk://cookbook/status/service/monitor/deploy-status
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
 references:
   - packages/web/packages/status-server/src/monitor/fetch-vercel.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
@@ -231,9 +230,9 @@ A fully successful poll or a fully successful on-demand fetch produces no log ou
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-vercel.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/fetch-vercel.ts` | unverified |
 
 ## Design Decisions
 
@@ -266,14 +265,14 @@ A fully successful poll or a fully successful on-demand fetch produces no log ou
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` is partial: `vercel-deploys-pagination.test.ts` exercises `fetchVercelDeployments`'s pagination, lookback-stop, budget-exhaustion, and first/later-page failure contracts directly; `provider-cooldown.test.ts` exercises its cross-call cooldown gate; `deploy-error-shaping.test.ts` exercises both pure compose halves (`composeVercelDeployError`, `composeVercelBuildLog`) directly and exhaustively. However, neither `fetchVercelDeployError` nor `fetchVercelBuildLog` — the two async network-calling wrappers around those compose halves — has a test anywhere in `packages/web/packages/status-server/test/` that invokes them directly; their request construction, 429/non-ok/thrown-error branches, and default-timeout behavior are exercised only indirectly, if at all, through whatever integration coverage exists for their callers (`enrich-deploy-errors.ts`, `routes/deploy-logs.ts`). `separation-of-concerns` passes: this file owns exactly one concern per exported symbol (paginated listing-and-mapping, single-deployment error composition, single-deployment build-log composition); it delegates phase computation to `vercelPhases`, commit formatting to `./format`, timestamp validation to `toValidDate`, and cooldown state to the shared registry, none of which it reimplements. `explicit-error-handling` passes: every failure path (non-ok response, thrown fetch, unparseable `created`, 429) is caught and logged via `console.error` with a distinguishing message, and is reflected in the returned value's shape — nothing fails silently with no trace. `timeout-configuration` passes: every one of the poll's page fetches and both on-demand fetches carries an `AbortSignal` deadline. `rate-limit-handling` passes: a 429 from any of the three network-calling functions is recorded via `noteRateLimited` honoring `Retry-After`, and `rateLimitedUntil` is checked before each one does any work. `pagination-support` passes: `fetchVercelDeployments` follows Vercel's `pagination.next` cursor across up to 5 pages, bounded independently by a lookback window, an overall time budget, and a hard page cap. `retry-with-backoff` fails as written: no failed call of any kind is retried within this file, a deliberate tradeoff recorded as fact in Design Decisions above, not a defended pass. `graceful-degradation` passes: a missing token is a full no-op (or a `null` return) rather than an error, a partial poll keeps and returns whatever rows were successfully fetched, and every failure mode of all three async functions resolves to a well-formed value rather than throwing out of the function.
 

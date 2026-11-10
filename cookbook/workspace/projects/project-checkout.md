@@ -1,7 +1,6 @@
 ---
 id: 7ae3de90-35f2-415c-93c7-cf579689e438
 title: "Project Checkout"
-domain: adhsdk://cookbook/workspace/projects/project-checkout
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,7 +22,7 @@ tags:
   - value-type
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/branch-controller
+  - 92f11498-2cb2-4b04-92b9-560d9f2de6ee
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectCheckoutTests.swift (adhsdk)
@@ -266,9 +265,9 @@ Not applicable: a checkout makes no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift` | unverified |
 
 ## Design Decisions
 
@@ -304,9 +303,9 @@ the full worktree record (`ProjectCheckout.swift`).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
 Notes: separation-of-concerns passes because `ProjectCheckout.swift` defines
 only an identity/value type and a pure projection function — it has no

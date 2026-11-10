@@ -1,7 +1,6 @@
 ---
 id: 86e7936a-c295-4e1f-8f7a-7278b4849008
 title: "Status Server Monitor Issue Sources"
-domain: adhsdk://cookbook/status/service/monitor/issue-sources
 type: ingredient
 version: 1.0.2
 status: review
@@ -23,7 +22,7 @@ tags:
   - server
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/deploy-status
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
 references:
   - packages/web/packages/status-server/src/monitor/issue-sources.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
@@ -191,9 +190,9 @@ Not applicable: this file contains no logging call of any kind — every exporte
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/issue-sources.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/issue-sources.ts` | unverified |
 
 ## Design Decisions
 
@@ -220,10 +219,10 @@ Not applicable: this file contains no logging call of any kind — every exporte
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
 `unit-test-coverage` is `partial`: this file has no dedicated test file of its own. `platformHealthSource`'s Cloudflare-spelling reconciliation and `deployIsStuck`/`STUCK_DEPLOY_MS`/`PLATFORM_UNREACHABLE_POLLS` are each exercised, but only indirectly, through the board-fold test suites that import these constants and drive them through `deployProblems`/`platformProblems` (`test/board-deploy.test.ts`, `test/board-monitoring.test.ts`) and through `dropVanishedVercelProjects` via `rosterTargets` (`test/board-ownership.test.ts`); `httpIsBad`, `deployIsBad`, `deployIsResolving`, `nextPlatformStreak`, `SOURCE_LABEL`, and `ISSUE_SOURCES` have no test — direct or indirect — asserting their literal values or full branch behavior, only the client's own mirror asserts a weaker property on the label/order pair. `separation-of-concerns` passes: this file's only responsibility is the issue-source vocabulary, its integration-platform reconciliation, and the pure predicates/derivations built on that vocabulary; it performs no I/O, no persistence, and no presentation of its own, leaving those to the board-fold and storage-layer files that call it. `fault-tolerance` passes: `platformHealthSource` and `dropVanishedVercelProjects` both accept external, potentially malformed or unexpected input (an unrecognized platform string, a `null` platform, an empty or all-or-nothing live-project read) and resolve every case to a documented fallback (`null`, or "narrow nothing") rather than throwing or producing an undefined result. `data-integrity` passes: the Cloudflare spelling reconciliation and the two emptiness guards in `dropVanishedVercelProjects` exist specifically to stop a vocabulary mismatch or an unreliable upstream read from corrupting the board's Problem set — either by silently failing to match a platform's health row, or by narrowing (and thereby hiding or reopening) deploy Problems on the strength of a read that cannot be told apart from a bad one; the actual persistence of the streak this file computes is owned by `libsql/stores/observation-store.ts`, external to this file.
 

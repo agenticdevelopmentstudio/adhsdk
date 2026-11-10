@@ -1,0 +1,8 @@
+
+- **No children**: Component renders an empty container; padding is still applied.
+- **Multiple className strings**: If `className` contains spaces or multiple class names, all are preserved in the output.
+- **Base stylesheet not loaded**: `--kb-inset` and `--safe-bottom` are defined only by `:root` rules in the package's `base.css` (imported once at the app root per the package's setup instructions). If a consumer renders `ViewportComposer` without importing that stylesheet, both properties are genuinely undefined, the whole `calc()` becomes invalid, and the browser drops the `padding-bottom` declaration entirely — the composer then gets no bottom padding at all, not a padding of `0`. When `base.css` is loaded, `--kb-inset` defaults to `0px` and `--safe-bottom` resolves `env(safe-area-inset-bottom, 0px)`, so both terms are always valid and the `calc()` never breaks.
+- **Safe area not present (unsupported browser)**: On browsers without `env()` support for `safe-area-inset-bottom`, `--safe-bottom` falls back through its own `env(safe-area-inset-bottom, 0px)` declaration to `0px`; the component continues to function with keyboard-only padding.
+- **Missing `viewport-fit=cover`**: `env(safe-area-inset-bottom)` only reports a non-zero value when the page's viewport meta tag includes `viewport-fit=cover` (documented in the package's required HTML/Next.js setup). None of `ViewportShell`, `ViewportSpacer`, or `ViewportComposer` set this meta tag; providing it is the consuming app's responsibility.
+- **Children unmount/remount**: Component preserves its positioning and padding through child updates.
+

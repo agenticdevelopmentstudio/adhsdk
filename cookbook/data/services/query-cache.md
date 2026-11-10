@@ -1,7 +1,6 @@
 ---
 id: 0fcd16c1-a8da-4184-b63f-97b68ed6378d
 title: "Query Cache"
-domain: adhsdk://cookbook/data/services/query-cache
 type: ingredient
 version: 1.2.1
 status: review
@@ -19,9 +18,9 @@ tags:
   - cache
   - session
 depends-on:
-  - adhsdk://cookbook/data/services/auth/auth-client
+  - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 related:
-  - adhsdk://cookbook/data/services/resource-data
+  - ec6e6ca5-8780-4ce2-8b3a-087adc50ed35
 references:
   - packages/web/packages/data/src/query/index.tsx (adhsdk)
   - packages/web/packages/data/src/query/__tests__/toolkit-query-provider.test.tsx (adhsdk)
@@ -313,9 +312,9 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/query/index.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/query/index.tsx` | unverified |
 
 ## Design Decisions
 
@@ -404,12 +403,12 @@ expect server-fetched data to "already be there" on first paint.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | Performance |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 `separation-of-concerns` **passed**: this file is pure data-layer
 infrastructure — a cache client, a provider, and a subscription guard — with

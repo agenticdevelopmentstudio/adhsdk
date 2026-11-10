@@ -1,7 +1,6 @@
 ---
 id: 9a4aa2a8-c01b-4cec-b789-6c89c100d8d3
 title: "Git Status Provider"
-domain: adhsdk://cookbook/workspace/files/git-status-provider
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,8 +21,8 @@ tags:
   - color
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/files/file-browser-view
-  - adhsdk://cookbook/workspace/files/file-tree-view
+  - ab6d7655-9476-4318-8c36-f431686e2d23
+  - b307116d-3ab8-422a-b031-885710e11e70
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitFileStatus+Color.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift (adhsdk)
@@ -360,9 +359,9 @@ The companion color mapping performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/` | unverified |
 
 ## Design Decisions
 
@@ -422,12 +421,12 @@ that keeps the provider itself alive.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | Reliability |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | Reliability |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
 
 Notes: separation-of-concerns passes because `GitStatusProvider` delegates
 status computation entirely to `client.status(in:)`/`GitStatus.parse` and

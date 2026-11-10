@@ -1,7 +1,6 @@
 ---
 id: cfe08d5c-029c-4e19-82ab-daf8329c5972
 title: "Status Slug"
-domain: adhsdk://cookbook/status/dashboard/logic/slug
 type: ingredient
 version: 1.1.0
 status: review
@@ -20,7 +19,7 @@ tags:
   - validation
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/logic/peer-url
+  - ad8ad3fe-e3ba-4c1c-a601-62b1a2c1a3b2
 references: []
 approved-by: ""
 approved-date: ""
@@ -152,9 +151,9 @@ Not applicable: the slug function never logs, and no input makes it fail.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/slug.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/slug.ts` | unverified |
 
 ## Design Decisions
 
@@ -174,9 +173,9 @@ Not applicable: the slug function never logs, and no input makes it fail.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | partial | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | partial | Internationalization |
 
 The function is a pure utility kept apart from the two editor components that call
 it, so separation of concerns passes. Unit-test coverage fails because no `slug.test.ts`

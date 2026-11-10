@@ -1,7 +1,6 @@
 ---
 id: 2df97a02-a680-45c4-8763-f07c7f470f84
 title: "Status Server Monitor Webhook Verify"
-domain: adhsdk://cookbook/status/service/monitor/webhook-verify
 type: ingredient
 version: 1.0.3
 status: review
@@ -21,10 +20,10 @@ tags:
   - security
   - server
 depends-on:
-  - agenticdevelopercookbook://principles/separation-of-concerns
-  - agenticdevelopercookbook://principles/fail-fast
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1357be12-5a58-4143-a570-849c114770c5
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377
 related:
-  - adhsdk://cookbook/status/service/monitor/webhook-events
+  - 937650ae-ac85-43f4-8aa4-708207e0d745
 references:
   - packages/web/packages/status-server/src/monitor/webhook-verify.ts (adhsdk)
   - packages/web/packages/status-server/src/routes/hooks.ts (adhsdk)
@@ -153,9 +152,9 @@ Not applicable: this file contains no log call of any kind, `console.error` or o
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/webhook-verify.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/webhook-verify.ts` | unverified |
 
 ## Design Decisions
 
@@ -176,9 +175,9 @@ Not applicable: this file contains no log call of any kind, `console.error` or o
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
 `separation-of-concerns` passes: this file's only concern is comparing caller-supplied strings; it never fetches the raw body itself, never reads configuration or environment variables, and never decides which route or header carries the signature or secret — those decisions live entirely in `hooks.ts`, external to this file. `unit-test-coverage` passes: `webhook-verify.test.ts` exercises every branch of both exported functions — the accepting case, a rejected wrong signature/secret (which also exercises `safeEqual`'s length-mismatch guard, since the wrong values used are shorter than their correct counterparts), a `null` `signature`/`provided`, and an empty configured `secret` for both functions. `explicit-error-handling` passes: every failure path — a missing signature, a missing or empty secret, a length mismatch, or a digest/secret that does not match — returns `false` explicitly rather than throwing, resolving ambiguously, or being silently swallowed; the caller (`hooks.ts`) then throws its own `HTTPException(401, ...)` on that `false`, so the fail-closed boolean this file returns is what the caller's status code is actually built on.
 

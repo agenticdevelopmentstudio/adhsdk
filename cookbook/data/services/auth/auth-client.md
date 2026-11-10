@@ -1,7 +1,6 @@
 ---
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
-domain: adhsdk://cookbook/data/services/auth/auth-client
 type: ingredient
 version: 1.1.1
 status: review
@@ -895,19 +894,19 @@ keeps an expected 4xx (wrong password, stale code) off this log.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/auth/src/account-security.ts` |
-| web | `packages/web/packages/auth/src/asBase.ts` |
-| web | `packages/web/packages/auth/src/client.ts` |
-| web | `packages/web/packages/auth/src/config.ts` |
-| web | `packages/web/packages/auth/src/labels.ts` |
-| web | `packages/web/packages/auth/src/mfa.ts` |
-| web | `packages/web/packages/auth/src/refresh.ts` |
-| web | `packages/web/packages/auth/src/report.ts` |
-| web | `packages/web/packages/auth/src/sso.ts` |
-| web | `packages/web/packages/auth/src/tokens.ts` |
-| web | `packages/web/packages/auth/src/types.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/auth/src/account-security.ts` | unverified |
+| web | `packages/web/packages/auth/src/asBase.ts` | unverified |
+| web | `packages/web/packages/auth/src/client.ts` | unverified |
+| web | `packages/web/packages/auth/src/config.ts` | unverified |
+| web | `packages/web/packages/auth/src/labels.ts` | unverified |
+| web | `packages/web/packages/auth/src/mfa.ts` | unverified |
+| web | `packages/web/packages/auth/src/refresh.ts` | unverified |
+| web | `packages/web/packages/auth/src/report.ts` | unverified |
+| web | `packages/web/packages/auth/src/sso.ts` | unverified |
+| web | `packages/web/packages/auth/src/tokens.ts` | unverified |
+| web | `packages/web/packages/auth/src/types.ts` | unverified |
 
 ## Design Decisions
 
@@ -1035,15 +1034,15 @@ consistency.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | partial | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | partial | Security |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `secure-storage` is **partial**: the refresh token is deliberately never
 persisted client-side and the CSRF nonce/return-to path live in

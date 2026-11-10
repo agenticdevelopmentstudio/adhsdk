@@ -1,7 +1,6 @@
 ---
 id: c85f8913-1112-4ba2-b78f-2b97ea2f8fba
 title: "Status Web Telemetry"
-domain: adhsdk://cookbook/status/dashboard/telemetry
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,9 +17,9 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/state/telemetry
-  - adhsdk://cookbook/status/service/telemetry
-  - adhsdk://cookbook/status/dashboard/api
+  - 9ff57831-bdf9-47ad-b009-bcc1de59d5f4
+  - a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +35,7 @@ The telemetry subsystem of the status dashboard's web client (`packages/web/pack
 - `ports.ts`: the ports. `FetchResult<T>`, `Fetcher<T>` and `Store<T>` describe the server-side poll-and-persist pipeline. `SnapshotCache` and `TelemetrySource` are the two client-side ports.
 - `client.ts`: "THE client composition root". It exports one `cache: SnapshotCache` (wired to the localStorage adapter `localCache`) and one `source: TelemetrySource` (wired to `liveSource`). `tursoSource` is also wired, but inactive.
 
-The [useTelemetry](adhsdk://cookbook/status/dashboard/state/telemetry) hook uses only `cache` and `source`. Swapping the backend means changing one line in `client.ts`, and the hook, cache and panels stay the same. The server side that answers `/telemetry`, `/errors` and `/analytics` is covered by [Status Server Telemetry](adhsdk://cookbook/status/service/telemetry). The `StatusApiClient` that every source reads through is covered by [Status Web API](adhsdk://cookbook/status/dashboard/api).
+The useTelemetry ([adhsdk.ingredient.status.dashboard.state.telemetry](cookbook:9ff57831-bdf9-47ad-b009-bcc1de59d5f4)) hook uses only `cache` and `source`. Swapping the backend means changing one line in `client.ts`, and the hook, cache and panels stay the same. The server side that answers `/telemetry`, `/errors` and `/analytics` is covered by Status Server Telemetry ([adhsdk.ingredient.status.service.telemetry](cookbook:a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f)). The `StatusApiClient` that every source reads through is covered by Status Web API ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad)).
 
 ## Behavioral Requirements
 
@@ -203,11 +202,11 @@ Not applicable: no module in the subsystem logs. Source failures surface as reje
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/telemetry/client.ts` |
-| web | `packages/web/packages/status-web/src/telemetry/ports.ts` |
-| web | `packages/web/packages/status-web/src/telemetry/types.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/telemetry/client.ts` | unverified |
+| web | `packages/web/packages/status-web/src/telemetry/ports.ts` | unverified |
+| web | `packages/web/packages/status-web/src/telemetry/types.ts` | unverified |
 
 ## Design Decisions
 
@@ -239,12 +238,12 @@ Not applicable: no module in the subsystem logs. Source failures surface as reje
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | reliability |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
 
 **Separation of concerns.** The DTOs have no runtime dependencies, the ports are pure interfaces, the adapters each own one backend, and the composition root is the only place that picks adapters.
 

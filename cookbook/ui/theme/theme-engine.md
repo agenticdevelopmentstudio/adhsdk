@@ -1,7 +1,6 @@
 ---
 id: 0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6
 title: "Theme Engine"
-domain: adhsdk://cookbook/ui/theme/theme-engine
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,13 +21,12 @@ tags:
   - import
   - logic
 depends-on:
-  - adhsdk://recipes/theme-engine
-  - adhsdk://cookbook/foundation/settings-storage
-  - adhsdk://cookbook/foundation/formats/jsonc-preprocessor
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
+  - 6363b5ff-f511-4e21-9ba7-6850787dba62
+  - 2e71f72e-88d7-417e-9969-a414e1ab1a10
+  - f6acc431-0443-4b14-8ae4-e1f2dc227c0c
 related:
-  - adhsdk://cookbook/ui/settings/rows/theme-picker-view
-  - adhsdk://cookbook/ui/settings/rows/theme-preview-view
+  - c68fd42e-52e5-4129-9a13-2574d13a7a0e
+  - 15e66a2e-9ee1-4f5f-aeb0-c804078b4f78
 references:
   - https://code.visualstudio.com/api/extension-guides/color-theme
 approved-by: ""
@@ -42,7 +40,7 @@ approved-date: ""
 This recipe covers this toolkit's own half of the theme engine, layered on
 top of a shared model — a theme, its color roles, and the semantic palette
 that derives colors from it — specified separately by
-[Theme Engine (shared model)](adhsdk://recipes/theme-engine).
+Theme Engine (shared model) ([adhsdk.ingredient.ui.theme.theme-engine](cookbook:0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6)).
 This layer adds four things on top of that model, each in its own concern:
 
 - a syntax-role vocabulary (the ten syntax attributes a source editor
@@ -104,11 +102,11 @@ has no visual surface of its own.
 
 - **import-bytes-entry**: Parsing from raw bytes MUST produce a theme or fail with an error.
 - **import-jsonc**: Both parsing entry points MUST accept JSONC — `//` and block comments and trailing commas — and MUST produce the same theme a strict-JSON spelling of the same document produces.
-- **import-encodings**: Both parsing entry points MUST accept UTF-8, UTF-8 with a byte-order mark, and UTF-16 payloads (including UTF-16 JSONC), producing the same theme as the UTF-8 spelling, decoded through the shared JSONC preprocessor (see [JSONC Preprocessor](adhsdk://cookbook/foundation/formats/jsonc-preprocessor)).
+- **import-encodings**: Both parsing entry points MUST accept UTF-8, UTF-8 with a byte-order mark, and UTF-16 payloads (including UTF-16 JSONC), producing the same theme as the UTF-8 spelling, decoded through the shared JSONC preprocessor (see JSONC Preprocessor ([adhsdk.ingredient.foundation.formats.jsonc-preprocessor](cookbook:2e71f72e-88d7-417e-9969-a414e1ab1a10))).
 - **import-bytes-ignores-include**: Parsing from raw bytes MUST NOT resolve an `include` key and MUST NOT reject a document for carrying one; the result MUST equal the result for the same document without the key.
 - **import-file-entry**: Parsing from a file location MUST read the file, resolve its `include` chain, and parse the merged document.
 - **import-file-default-root**: When no containment root is given, the containment root MUST be the theme file's own directory.
-- **import-file-url-precondition**: The top-level file location is a caller precondition: the importer MUST NOT containment-check it — only `include` targets are checked. The shipping caller resolves the manifest's declared path against the extension's resource-path rules before calling (see [Extension Resource Path](adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path)).
+- **import-file-url-precondition**: The top-level file location is a caller precondition: the importer MUST NOT containment-check it — only `include` targets are checked. The shipping caller resolves the manifest's declared path against the extension's resource-path rules before calling (see Extension Resource Path ([adhsdk.ingredient.workspace.extensions.manifest.extension-resource-path](cookbook:f6acc431-0443-4b14-8ae4-e1f2dc227c0c))).
 - **import-name-from-label**: The imported theme's name MUST be the given label; the theme file's own `name` and `type` keys MUST be ignored.
 - **import-lock-flags**: Parsing MUST return a theme that is neither built-in nor already marked imported, carrying a freshly generated identifier.
 
@@ -163,7 +161,7 @@ has no visual surface of its own.
 ### VS Code import: include chains
 
 - **include-detect**: A document MUST be treated as including another only when its `include` value is a non-empty string; any other value MUST be treated as no include.
-- **include-resolve**: An include path MUST be resolved relative to the including file's directory and MUST stay inside the containment root (see [Extension Resource Path](adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path)).
+- **include-resolve**: An include path MUST be resolved relative to the including file's directory and MUST stay inside the containment root (see Extension Resource Path ([adhsdk.ingredient.workspace.extensions.manifest.extension-resource-path](cookbook:f6acc431-0443-4b14-8ae4-e1f2dc227c0c))).
 - **include-containment**: An include that resolves outside the containment root MUST fail with an escapes-containment-root error.
 - **include-depth-bound**: The importer MUST follow at most 8 include hops; a document at depth 8 that still names an include MUST fail with an include-chain-too-deep error (limit 8).
 - **include-cycle**: A cycle (`a.json` including `b.json` including `a.json`) MUST be stopped by the depth bound and fail with the same include-chain-too-deep error (limit 8); there is no visited-set.
@@ -188,7 +186,7 @@ has no visual surface of its own.
 
 ### UserSettings-backed storage
 
-- **storage-custom-themes-key**: The custom-themes storage property MUST read and write the settings store's custom-themes setting — key `theme.custom_themes`, a JSON-encoded list of themes, default an empty list — in whichever provider the settings store holds (see [Settings Storage](adhsdk://cookbook/foundation/settings-storage)).
+- **storage-custom-themes-key**: The custom-themes storage property MUST read and write the settings store's custom-themes setting — key `theme.custom_themes`, a JSON-encoded list of themes, default an empty list — in whichever provider the settings store holds (see Settings Storage ([adhsdk.ingredient.foundation.settings-storage](cookbook:6363b5ff-f511-4e21-9ba7-6850787dba62))).
 - **storage-active-key**: The active-theme-id storage property MUST read and write the settings store's active-theme-id setting — key `theme.active_theme_id`, a plain string, default the built-in catalog's default theme id.
 - **storage-legacy-compatible**: The keys and encodings MUST NOT change; a value written by an earlier build under either key MUST read back unchanged, and a write MUST land under the historical key as a plain string for the active id.
 - **storage-nil-write**: Clearing the active-theme-id property MUST store the built-in catalog's default theme id, never leave it empty.
@@ -313,7 +311,7 @@ means a document with `editor.foreground` `#D8DEE9`, `editor.background`
 - **Concurrent access**: the importer has no shared state, so concurrent parses on different threads MUST NOT interfere (MUST). The theme store and its settings-backed storage are confined to a single designated thread, so their calls are serialised and cannot interleave (MUST).
 - **Write followed by callback**: a write through the settings-backed storage MUST produce an external-change callback on a later main-queue turn; a consumer that also reacts synchronously sees two notifications unless it de-duplicates, as the theme manager's reload does (MUST).
 - **Storage never hooked**: a theme store used without a theme manager MUST allocate no observers (MUST).
-- **Corrupt stored themes**: what the custom-themes setting returns when the stored JSON does not decode is owned by the active settings-storage provider (see [Settings Storage](adhsdk://cookbook/foundation/settings-storage)); this storage returns whatever the setting holds without further validation (MUST).
+- **Corrupt stored themes**: what the custom-themes setting returns when the stored JSON does not decode is owned by the active settings-storage provider (see Settings Storage ([adhsdk.ingredient.foundation.settings-storage](cookbook:6363b5ff-f511-4e21-9ba7-6850787dba62))); this storage returns whatever the setting holds without further validation (MUST).
 - **Large theme file**: the importer MUST read the whole file into memory with no size cap and no timeout (MUST); when importing into the theme store, this blocks that store's designated thread for the read.
 - **Cancellation**: no parse can be cancelled once started (MUST).
 - **Error states**: every failure MUST surface to the caller as an error — an import error, a resource-path error, a file-read error, or the underlying JSON-parsing error — and nothing is stored (MUST).
@@ -373,12 +371,12 @@ Not applicable: this engine logs nothing; every failure is reported to the calle
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/SyntaxRoleOverrides.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/UserSettingsThemeStorage.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/VSCodeThemeImporter.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Theme/ThemeManager+UserSettings.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/SyntaxRoleOverrides.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/UserSettingsThemeStorage.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/VSCodeThemeImporter.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Theme/ThemeManager+UserSettings.swift` | unverified |
 
 ## Design Decisions
 
@@ -438,12 +436,12 @@ Not applicable: this engine logs nothing; every failure is reported to the calle
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 Parsing (`VSCodeThemeImporter`), the key grammar (`SyntaxRoleOverrides.swift`) and persistence (`UserSettingsThemeStorage`) are separate files with no UI code, and the only AppKit dependency is confined to the macOS `ThemeManager()` initialiser (separation-of-concerns: passed). `SyntaxRoleOverridesTests`, `VSCodeThemeImporterTests`, `LegacyThemePersistenceTests` and `ExternalThemeChangeObservationTests` assert every error case, the key grammar, the tie-breaks, include resolution, containment and legacy-key compatibility (unit-test-coverage: passed). Every document-level failure is thrown with a typed case, but unreadable optional colours and unusable `tokenColors` entries are dropped with no signal to the caller by design, invalid JSON surfaces as an untyped `JSONSerialization` error, and `VSCodeThemeParseError` carries no localized description (explicit-error-handling: partial). Extension-controlled include paths are containment-checked on the symlink-resolved path and bounded to 8 hops, and every value is type-checked before use (input-sanitization: passed). A theme missing optional colours, role keys or syntax rules still imports and derives the rest (graceful-degradation: passed). The importer validates the palette before anything is stored, but `UserSettingsThemeStorage` reads and writes `[ColorTheme]` without its own validation and leaves detection of corrupt stored JSON to the settings provider (data-integrity: partial).
 

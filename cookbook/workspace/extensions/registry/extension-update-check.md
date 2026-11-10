@@ -1,7 +1,6 @@
 ---
 id: d4be0c36-834c-41aa-af89-478eaf660e0f
 title: "Extension Update Check"
-domain: adhsdk://cookbook/workspace/extensions/registry/extension-update-check
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - semantic-versioning
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
 references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift (apple)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionUpdateCheckTests.swift (apple)
@@ -294,9 +293,9 @@ Subsystem: the host's logging subsystem | Category: the update check's own categ
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift` | unverified |
 
 ## Design Decisions
 
@@ -366,10 +365,10 @@ apart for that reason (doc comments; tests
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `separation-of-concerns` passes: `ExtensionUpdateCheck` owns only the
 update-versus-not decision (version comparison, installability gating, and

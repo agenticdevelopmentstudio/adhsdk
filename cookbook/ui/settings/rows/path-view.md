@@ -1,7 +1,6 @@
 ---
 id: c7201487-b696-43b9-a4f9-d1a9e6141f7c
 title: "Path View"
-domain: adhsdk://cookbook/ui/settings/rows/path-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,7 +19,7 @@ tags:
   - static-text
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/layout/explanation-view
+  - 25046f90-559d-4e32-8516-b5dae5f09c43
 references:
   - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
 approved-by: ""
@@ -35,7 +34,7 @@ The Path View is a settings row: a single label showing one filesystem
 path "as a path rather than as prose." It conforms to the settings row
 interface every settings row implements, with no requirements of its own.
 The design rationale: the sibling row
-[Explanation View](adhsdk://cookbook/ui/settings/layout/explanation-view)
+Explanation View ([adhsdk.ingredient.ui.settings.layout.explanation-view](cookbook:25046f90-559d-4e32-8516-b5dae5f09c43))
 word-wraps, which is right for a sentence and wrong for a path — a real
 path wrapped inside a settings panel's ~134pt content column broke across
 nine hyphenated lines, long enough to push the group heading off the bottom
@@ -370,9 +369,9 @@ logger reference anywhere in source).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift` | unverified |
 
 ## Design Decisions
 
@@ -436,12 +435,12 @@ logger reference anywhere in source).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Statuses rest on: the label's font tracking the theme's `.caption` role and
 `sizeScale` (`dynamic-type-support`, per Appearance above); the enforced

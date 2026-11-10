@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "1ea53189-24d5-4ba3-9d83-507ed2d44cfb",
     "title": "Project Key",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/project-key",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,14 +20,14 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/logic/auto-configure",
-      "adhsdk://cookbook/status/dashboard/state/deploy-projects"
+      "cd71721b-e80e-4525-a7a1-fc1ac2158267",
+      "b14c03d8-1b93-41e0-9f92-76a81171cee9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fcb1d3f3f80ee0d6",
+  "synced": "d42dad9e38b0fab2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

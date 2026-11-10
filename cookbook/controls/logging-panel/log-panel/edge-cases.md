@@ -1,0 +1,22 @@
+
+- **Empty columns array**: If `columns` is an empty array, the header (when `showHeader` is true) renders with no header cells, and each row renders with no cells. An empty `columns` array does not by itself trigger the empty state — the empty message is shown only when `lines` is empty (or `maxLines` reduces the visible count to zero).
+- **Empty lines array**: Component displays the empty message instead of rows; no error occurs.
+- **maxLines less than visible rows**: Component retains only the last `maxLines` entries; older entries are completely removed from the visible set.
+- **maxLines equals 0**: Component displays no rows (visible count becomes 0); empty message is shown.
+- **maxLines is undefined**: Component displays all lines without truncation.
+- **maxLines is NaN**: Comparisons against a `NaN` limit are always false, so the truncation never triggers; behavior matches `maxLines` being unset.
+- **maxLines is negative**: The truncation check still triggers (any non-negative line count exceeds a negative limit), but the resulting slice start index exceeds the array length, so zero rows are kept and the empty message is shown.
+- **maxLines is fractional**: The slice used to trim rows truncates a fractional start index toward zero rather than rounding it, so the row count kept can differ from the rounded value; pass an integer to get a predictable result.
+- **Undefined cell values**: A column value that is `undefined` is treated as empty text (`""`); the column's `defaultLevel`/`defaultMono` still apply per **apply-cell-level-color**/**apply-cell-mono-font** (though with no text to render, this has no visible effect), and no `strong` or `link` styling is applied since those come only from `cell.strong`/`cell.link`, never a column default. No error occurs.
+- **String cell values**: A column value that is a plain string is treated as text content (`{text: value}`); the column's `defaultLevel`/`defaultMono` apply to it exactly as they would to an object-form cell (per **apply-cell-level-color**/**apply-cell-mono-font**), but no `strong` or `link` styling is applied, since those come only from `cell.strong`/`cell.link`, which a plain string cannot carry.
+- **Column width as string**: A column width given as a string (e.g. `'1fr'`, `'50%'`) is used directly as the grid track size.
+- **Column width as number**: A column width given as a number (e.g. `200`) becomes the pixel value (`'200px'`) for the grid track size.
+- **Column width undefined**: A column with no width specified uses the default track size `minmax(120px, 1fr)`.
+- **followTail flips from false to true**: Resuming follow-tail causes the next appended line to scroll the container to the bottom, even if the user had scrolled away while it was disabled.
+- **Scroll container not yet mounted**: All scroll-related logic is skipped when the scrollable element is not available; no errors occur.
+- **New lines added while scrolled away from the tail**: The component does not auto-scroll on subsequent appends until the user scrolls back within 4px of the bottom.
+- **Very long cell text**: Cell displays full text with a `title` attribute for a hover tooltip; no truncation or overflow behavior is enforced by the component (stylesheet responsibility).
+- **Special characters or HTML in cell text**: Cell text is rendered as plain text; no HTML parsing or injection occurs even if the string contains HTML-like characters.
+- **Double-click also fires preceding click handling**: The component does not suppress or debounce `onCellClick` when `onCellDoubleClick` is also defined; a double-click gesture invokes `onCellClick` for the click events that precede the `dblclick` event, per native browser event order, in addition to invoking `onCellDoubleClick`.
+- **Large maxLines value**: The component renders one DOM node per visible row with no virtualization or windowing; a very large `maxLines` (or unbounded `lines` with `maxLines` unset) renders a proportionally large number of DOM nodes. Consumers SHOULD bound `maxLines` to a count appropriate for the container's `maxHeight`.
+

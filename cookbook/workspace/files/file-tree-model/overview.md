@@ -22,9 +22,9 @@ reference to) alive across a re-sync rather than being silently replaced by
 structurally-equal-but-distinct objects. The direct consumer of this model
 is a file tree manager (out of scope for this recipe), which in turn feeds
 the file tree view — see
-[File Tree View](adhsdk://cookbook/workspace/files/file-tree-view)
+File Tree View ([adhsdk.ingredient.workspace.files.file-tree-view](cookbook:b307116d-3ab8-422a-b031-885710e11e70))
 and
-[File Browser](adhsdk://cookbook/workspace/files/file-browser-view)
+File Browser ([adhsdk.ingredient.workspace.files.file-browser-view](cookbook:ab6d7655-9476-4318-8c36-f431686e2d23))
 for how this model's `nil`-vs-empty-array `children` distinction and its
 swallowed directory-read failures are consumed one layer up.
 

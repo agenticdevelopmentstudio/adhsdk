@@ -1,0 +1,11 @@
+
+- **Role**: The root element MUST have `role="status"` to announce it as a live region.
+- **Live announcements**: The root element MUST have `aria-live="polite"` to announce connection state changes to screen readers.
+- **Spinner icon**: MUST have `aria-hidden="true"` to hide it from screen readers (decorative only).
+- **Countdown timer**: MUST have `aria-hidden="true"` to prevent per-second countdown announcements, as the heading and subheading already convey state.
+- **Detail text announcement**: No explicit aria-label or description provided; the detail text is visible text and will be read by screen readers.
+- **Button labeling**: The "Try again now" button MUST have visible text label; no additional aria-label is provided in source.
+- **Keyboard interaction**: The retry control is a native `<button type="button">`, so it sits in the document tab order and is activated by Enter and Space through built-in button semantics; keyboard activation reaches the same click handler as a pointer. The source adds no `keydown` or `keyup` handlers, and the overlay exposes no dismiss action to any input device — it is removed only when the consumer sets `active` to `false` — so there is no Escape path to specify.
+- **touch-target-size**: NEEDS REVIEW: Not implemented in source. The button sets no `min-height` or `min-width`; its hit area is the 7px × 18px padding around one line of 12.5px monospace text, resolving to roughly 29–31 CSS px tall — clearing the 24×24 CSS px floor of WCAG 2.2 AA (SC 2.5.8) but not the 44×44 figure of WCAG 2.1 AAA (SC 2.5.5) or the Apple Human Interface Guidelines. Settle it with a measured hit box on the shipping dashboards plus a decision on whether the overlay is reachable from touch or pen input; if it is, the button needs an explicit minimum height.
+- **Focus management**: The layer is modal in intent (`prevent-interaction-with-underlying-content`, scoped to pointer/visual access only — see Behavioral Requirements), but the source installs no focus trap, moves no focus into the card when it appears, and restores no focus when it is removed; keyboard and screen-reader focus can still reach the controls the overlay covers, so a keyboard user can operate a panel they cannot see.
+

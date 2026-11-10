@@ -1,7 +1,6 @@
 ---
 id: 0ab38622-b4a9-424c-89e2-5d27073680c7
 title: "Window Discovery"
-domain: adhsdk://cookbook/system/system-windows/window-discovery
 type: ingredient
 version: 1.2.0
 status: review
@@ -20,7 +19,7 @@ tags:
   - window-matching
 depends-on: []
 related:
-  - adhsdk://cookbook/system/system-windows/window-explorer-view
+  - 8aee173a-25e4-443e-a9ab-d629b58817e1
 references: []
 approved-by: ""
 approved-date: ""
@@ -241,9 +240,9 @@ Discovery itself logs nothing, including the permission-denied path, which is si
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` | unverified |
 
 ## Design Decisions
 
@@ -275,16 +274,16 @@ Discovery itself logs nothing, including the permission-denied path, which is si
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
-| [progress-indication](agenticdevelopercookbook://compliance/performance#progress-indication) | passed | Performance |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | failed | Reliability |
-| [platform-permissions](agenticdevelopercookbook://compliance/platform-compliance#platform-permissions) | passed | Platform Compliance |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | partial | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
+| [adc.check.performance.progress-indication](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6ba6685b-9d35-5eb2-96e7-afbccd1e5848) | passed | Performance |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | failed | Reliability |
+| [adc.check.platform-compliance.platform-permissions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90cb6a83-7544-53ea-8d2c-30851b253122) | passed | Platform Compliance |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | partial | Privacy and Data |
 
 separation-of-concerns passes because enumeration and focus live in the window-management engine, title parsing in the heuristic registry, permission checks in the Accessibility permission component, and the model only filters, groups, matches and sorts, with matching isolated in a pure static function. unit-test-coverage is partial: the matching tests cover matching (heuristic match, raw-title fallback, non-match, empty and `"Unknown"` projects) but nothing tests grouping, filtering, sorting, the permission gate or activation, and the engine is not injectable. explicit-error-handling is partial: focus failures are caught and logged but not surfaced to the caller, and the ordering of overlapping discoveries is undefined (the open question on overlapping-discovery-order). main-thread-freedom passes because the window list and backfill run on a background queue. progress-indication passes because `isLoading` is published from the start of discovery to the publish. graceful-degradation passes because a missing permission yields `accessibilityDenied` instead of a failure, and withheld titles are backfilled. timeout-handling fails because discovery has no timeout. platform-permissions passes because the model checks trust without prompting and prompts only from the user-initiated settings action. data-minimization passes because only title, pid, window number, name and icon are kept, in memory. no-pii-in-logs is partial because the activation log records the window title, which can contain document or project names, as public.
 

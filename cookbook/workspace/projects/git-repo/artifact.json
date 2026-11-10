@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "1463e7a2-e290-4b8c-8643-df9462a758e6",
     "title": "Git Repository Record",
-    "domain": "adhsdk://cookbook/workspace/projects/git-repo",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -33,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "35240d3a7e3c4788",
+  "synced": "5bf8895843d6c31e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

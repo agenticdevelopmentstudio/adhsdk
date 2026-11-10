@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b0e815fd-22cc-4d58-a0c6-001c21bad468",
     "title": "VS Code URI",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/uri",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -25,11 +24,11 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/host/js-value-bridge",
-      "adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands",
-      "adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics",
-      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting",
-      "adhsdk://cookbook/workspace/extensions/vscode-api/language-models/language-model-message-vocabulary"
+      "cb25bd84-9a11-4070-8b3c-f178cff76068",
+      "5141968f-3922-47f2-a31f-ba953b92a048",
+      "f5432726-5b0f-47c5-b0f6-c0b19a9db5bb",
+      "c4f76978-5aef-430c-a7e1-a20326da6709",
+      "4d04037c-098f-4ea5-8313-7e0374700a96"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/Uri.swift (adhsdk)",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b30d9e9a3019440a",
+  "synced": "68dd746cca5a49e4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

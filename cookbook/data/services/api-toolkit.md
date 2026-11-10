@@ -1,7 +1,6 @@
 ---
 id: 7add8e4b-922e-4518-aa45-79bf56cdf8bc
 title: "API Toolkit"
-domain: adhsdk://cookbook/data/services/api-toolkit
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,8 +21,8 @@ tags:
   - headless
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/crud/crud-table
-  - adhsdk://cookbook/ui/crud/crud-record-form
+  - ec64b22b-8a25-431d-8866-b7a01acd91fe
+  - 3dc693ab-28e4-4624-9b2d-8dc81f81e037
 references: []
 approved-by: ""
 approved-date: ""
@@ -531,25 +530,25 @@ diagnostic output.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/api-explorer/src/lib/buildRequest.ts` |
-| web | `packages/web/packages/api-explorer/src/lib/getEndpoint.ts` |
-| web | `packages/web/packages/api-explorer/src/lib/highlight.ts` |
-| web | `packages/web/packages/api-explorer/src/lib/schema.ts` |
-| web | `packages/web/packages/api-explorer/src/lib/slug.ts` |
-| web | `packages/web/packages/api-explorer/src/lib/snippets.ts` |
-| web | `packages/web/packages/api-explorer/src/lib/tone.ts` |
-| web | `packages/web/packages/api-explorer/src/server.ts` |
-| web | `packages/web/packages/api-explorer/src/types.ts` |
-| web | `packages/web/packages/crud/src/editability.ts` |
-| web | `packages/web/packages/crud/src/edits.ts` |
-| web | `packages/web/packages/crud/src/exposure.ts` |
-| web | `packages/web/packages/crud/src/schemas.ts` |
-| web | `packages/web/packages/crud/src/types.ts` |
-| web | `packages/web/packages/crud/src/useCrudResource.ts` |
-| web | `packages/web/packages/crud/src/useExitGuardChannel.ts` |
-| web | `packages/web/packages/crud/src/viewer.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/api-explorer/src/lib/buildRequest.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/lib/getEndpoint.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/lib/highlight.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/lib/schema.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/lib/slug.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/lib/snippets.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/lib/tone.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/server.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/types.ts` | unverified |
+| web | `packages/web/packages/crud/src/editability.ts` | unverified |
+| web | `packages/web/packages/crud/src/edits.ts` | unverified |
+| web | `packages/web/packages/crud/src/exposure.ts` | unverified |
+| web | `packages/web/packages/crud/src/schemas.ts` | unverified |
+| web | `packages/web/packages/crud/src/types.ts` | unverified |
+| web | `packages/web/packages/crud/src/useCrudResource.ts` | unverified |
+| web | `packages/web/packages/crud/src/useExitGuardChannel.ts` | unverified |
+| web | `packages/web/packages/crud/src/viewer.ts` | unverified |
 
 ## Design Decisions
 
@@ -622,19 +621,19 @@ credential leak vector, so the source trades away snippet convenience
 
 | Check | Status | Notes |
 |---|---|---|
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | `exposure.ts`'s gate is documented and implemented as presentation-only; the source's own doc comment states the server independently re-checks every request. |
-| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | partial | `buildRequest` issues only same-origin `/api` requests and never constructs an absolute URL, so transport (TLS) is inherited from the hosting page rather than configured or enforced by this source. |
-| [token-lifecycle](agenticdevelopercookbook://compliance/security#token-lifecycle) | Not applicable: not implemented here | Token issuance, refresh, and rotation are owned by `@adh-sdk/auth`'s `authedFetch`; the given sources only consume an already-valid token (`buildRequest`'s optional `token` parameter, or `authedRequest`/`authedJson` inside `useCrudResource`). |
-| [secure-data-storage](agenticdevelopercookbook://compliance/privacy-and-data#secure-data-storage) | Not applicable: not implemented here | None of the given sources persist a token, credential, or PII to any local or remote store. |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | failed | `executeRequest` has no recovery path for a network-level (as opposed to HTTP-status) failure; it rejects and the caller only reports the message — see `network-failure-propagation`. |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | failed | Neither `buildRequest` nor `executeRequest` configures a timeout or `AbortController` — see `request-timeout`. |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | No retry logic exists anywhere in `buildRequest.ts`/`executeRequest`; the one retry-on-401 that exists in this codebase lives in the auth package's `authedFetch`, outside this recipe's given sources. |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | `executeRequest` normalizes every HTTP status into a uniform `ApiResult`; `tone.ts` gives a documented, tested status/method-to-tone mapping; `useCrudResource` propagates a mutation failure to its caller rather than swallowing it. |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | `useCrudResource`'s `listSeq` guard rejects a stale, out-of-order list response; `slug.ts` throws loudly on a genuine slug collision rather than silently aliasing two endpoints. |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | `tone.ts`, `exposure.ts`, `editability.ts`, `edits.ts`, `useCrudResource.ts`, and `useExitGuardChannel.ts` each have a sibling `__tests__` file with meaningful assertions; `buildRequest.ts`, `getEndpoint.ts`, `highlight.ts`, `schema.ts`, `slug.ts`, `snippets.ts`, and `types.ts` have no test file found in the repository. |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Most paths handle errors explicitly (`executeRequest`'s status normalization, `useCrudResource`'s `error` state, `exposure.ts`'s fail-closed default); `executeRequest`'s unguarded `fetch()` call is the one path where a network failure is not handled at all. |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | All seventeen given files are pure logic or headless hooks with no JSX and no DOM access; the `server.ts`/`index.ts` split further separates server-only from client-only concerns. |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | `snippets.ts`'s `TOKEN_PLACEHOLDER` and `slug.ts`'s collision message are hardcoded, English-only strings never externalized to a localization resource — see Localization. |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | `exposure.ts`'s gate is documented and implemented as presentation-only; the source's own doc comment states the server independently re-checks every request. |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | `buildRequest` issues only same-origin `/api` requests and never constructs an absolute URL, so transport (TLS) is inherited from the hosting page rather than configured or enforced by this source. |
+| [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | Not applicable: not implemented here | Token issuance, refresh, and rotation are owned by `@adh-sdk/auth`'s `authedFetch`; the given sources only consume an already-valid token (`buildRequest`'s optional `token` parameter, or `authedRequest`/`authedJson` inside `useCrudResource`). |
+| [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | Not applicable: not implemented here | None of the given sources persist a token, credential, or PII to any local or remote store. |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | failed | `executeRequest` has no recovery path for a network-level (as opposed to HTTP-status) failure; it rejects and the caller only reports the message — see `network-failure-propagation`. |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | failed | Neither `buildRequest` nor `executeRequest` configures a timeout or `AbortController` — see `request-timeout`. |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | No retry logic exists anywhere in `buildRequest.ts`/`executeRequest`; the one retry-on-401 that exists in this codebase lives in the auth package's `authedFetch`, outside this recipe's given sources. |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | `executeRequest` normalizes every HTTP status into a uniform `ApiResult`; `tone.ts` gives a documented, tested status/method-to-tone mapping; `useCrudResource` propagates a mutation failure to its caller rather than swallowing it. |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | `useCrudResource`'s `listSeq` guard rejects a stale, out-of-order list response; `slug.ts` throws loudly on a genuine slug collision rather than silently aliasing two endpoints. |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | `tone.ts`, `exposure.ts`, `editability.ts`, `edits.ts`, `useCrudResource.ts`, and `useExitGuardChannel.ts` each have a sibling `__tests__` file with meaningful assertions; `buildRequest.ts`, `getEndpoint.ts`, `highlight.ts`, `schema.ts`, `slug.ts`, `snippets.ts`, and `types.ts` have no test file found in the repository. |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Most paths handle errors explicitly (`executeRequest`'s status normalization, `useCrudResource`'s `error` state, `exposure.ts`'s fail-closed default); `executeRequest`'s unguarded `fetch()` call is the one path where a network failure is not handled at all. |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | All seventeen given files are pure logic or headless hooks with no JSX and no DOM access; the `server.ts`/`index.ts` split further separates server-only from client-only concerns. |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | `snippets.ts`'s `TOKEN_PLACEHOLDER` and `slug.ts`'s collision message are hardcoded, English-only strings never externalized to a localization resource — see Localization. |
 
 ## Change History
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "dcfe8ed6-2129-44ea-a084-eb30b640c0e3",
     "title": "Environment Filter",
-    "domain": "adhsdk://cookbook/status/dashboard/state/env-filter",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/activity-ttl"
+      "f97631a6-531f-45c9-98a9-c5a292a2e6ea"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b12f71cc0194b191",
+  "synced": "c845890a350dc401",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

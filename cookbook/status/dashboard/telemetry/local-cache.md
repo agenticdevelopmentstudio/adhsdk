@@ -1,7 +1,6 @@
 ---
 id: df9b416b-ba3d-430a-a82d-e39b11a55f2d
 title: "Status Web Stores"
-domain: adhsdk://cookbook/status/dashboard/telemetry/local-cache
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/state/telemetry
-  - adhsdk://cookbook/status/service/telemetry
+  - 9ff57831-bdf9-47ad-b009-bcc1de59d5f4
+  - a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +35,7 @@ The module exports two things:
 - `parseSnapshot(raw: string | null): TelemetrySnapshot | null` — a pure, browser-free parse that turns a stored string back into a snapshot, or `null` when anything about it is off.
 - `localCache: SnapshotCache` — an object with `load()` and `save(snapshot)` that adds only the `window.localStorage` I/O around `parseSnapshot` and `JSON.stringify`.
 
-The composition root `telemetry/client.ts` wires it as `export const cache: SnapshotCache = localCache;`, and the `useTelemetry` hook calls `cache.load()` once after mount and `cache.save(query.data)` whenever fresh data arrives (see [Status Web Hooks Use Telemetry](adhsdk://cookbook/status/dashboard/state/telemetry)). Swapping the adapter is a one-line change at that root; nothing above the port moves.
+The composition root `telemetry/client.ts` wires it as `export const cache: SnapshotCache = localCache;`, and the `useTelemetry` hook calls `cache.load()` once after mount and `cache.save(query.data)` whenever fresh data arrives (see Status Web Hooks Use Telemetry ([adhsdk.ingredient.status.dashboard.state.telemetry](cookbook:9ff57831-bdf9-47ad-b009-bcc1de59d5f4))). Swapping the adapter is a one-line change at that root; nothing above the port moves.
 
 Use it when a browser client needs a last-known copy of a small JSON snapshot that survives reload, where losing the copy is harmless because the live query is the source of truth.
 
@@ -196,9 +195,9 @@ Not applicable: `stores/local-cache.ts` makes no log calls; both `catch` blocks 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/telemetry/stores/local-cache.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/telemetry/stores/local-cache.ts` | unverified |
 
 ## Design Decisions
 
@@ -226,13 +225,13 @@ Not applicable: `stores/local-cache.ts` makes no log calls; both `catch` blocks 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | performance |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | reliability |
-| [secure-data-storage](agenticdevelopercookbook://compliance/privacy-and-data#secure-data-storage) | partial | privacy-and-data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
+| [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | partial | privacy-and-data |
 
 The adapter sits behind the `SnapshotCache` port and knows nothing about providers, sources or the UI, and the pure parse is separated from the storage I/O, so separation of concerns passes. `local-cache.test.ts` covers `parseSnapshot` (round trip, null/empty, malformed JSON, wrong shapes) but not `localCache.load`/`save` or the `window` and exception guards, so unit-test coverage is partial. Every storage exception is caught deliberately and documented as best-effort, but nothing records that a write was dropped, so explicit error handling is partial. Unavailable storage degrades to the no-cache path, so graceful degradation passes, and the single-slot last-known snapshot with consumer-side staleness from `generatedAt` is a coherent caching strategy. The read gate rejects corrupt top-level shapes but passes array elements unvalidated, so data integrity is partial. The snapshot (error titles, culprits, permalinks) is stored as unencrypted JSON in origin-scoped `localStorage`, which holds no credentials or user PII but is readable by any script on the origin, so secure data storage is partial.
 

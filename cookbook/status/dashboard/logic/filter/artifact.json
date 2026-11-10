@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "773a1876-24d8-4134-8815-41fbc8c53096",
     "title": "Activity Query Filter",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/filter",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/source-filter"
+      "3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3994e1a1cec42d98",
+  "synced": "8d7a0d6ec44c2a60",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

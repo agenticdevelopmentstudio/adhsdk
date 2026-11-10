@@ -1,0 +1,11 @@
+
+- **React/Web**: Implemented as `<pre className="lp-code"><code>{text}</code></pre>`. The `lp-code` class applies the deck's `--lp-font-mono`, `--lp-card`, `--lp-hairline`, `--lp-radius`, and `--lp-ink` custom properties (each with a literal fallback) for font, background, border, corner radius, and text color. The component is a pure presentational component with no state or lifecycle.
+
+- **SwiftUI**: Use `Text(text).font(.system(.body, design: .monospaced)).fixedSize(horizontal: true, vertical: false).textSelection(.enabled)` inside `ScrollView(.horizontal)`, within a container styled with the equivalent of the web `lp-code` tokens (padding, background, corner radius). `.fixedSize(horizontal: true, vertical: false)` is what actually stops wrapping; `.lineLimit(nil)` alone does not.
+
+- **Compose**: Wrap the content in `SelectionContainer` and use `Text(text = text, fontFamily = FontFamily.Monospace, softWrap = false, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(codeBlockBackground).horizontalScroll(rememberScrollState()).padding(12.dp))`. `softWrap = false` disables wrapping (`Arrangement.Start` does not affect wrapping at all); applying `clip` before `background` keeps the background's corners rounded.
+
+- **AppKit / UIKit**: On AppKit, host an `NSTextView` inside an `NSScrollView` with `hasHorizontalScroller = true`; set `isEditable = false`, `font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)`, and `textContainer.containerSize.width = .greatestFiniteMagnitude` to stop wrapping (`isRichText = false` alone does not). On UIKit, `UITextView` wraps by default, so place a non-wrapping `UILabel`, or a `UITextView` with `isScrollEnabled = false` and `isEditable = false`, inside a horizontal `UIScrollView`. Apply corner radius via the view's `layer.cornerRadius` (a layer property, not a `cornerRadius` view property) and background via `backgroundColor`.
+
+- **WinUI 3**: Use `TextBlock` with `FontFamily="{ThemeResource CodeFontFamily}"` (a theme mono-font resource, not a hard-coded `"Consolas"` or `"Courier New"`), `TextWrapping="NoWrap"`, and `IsTextSelectionEnabled="True"`. Place it in a `ScrollViewer` with `HorizontalScrollBarVisibility="Auto"` for horizontal scrolling. Apply background color via the containing control (e.g., a `Grid` or `Border` with `Background`) and set `Foreground` from the theme.
+

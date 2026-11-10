@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names and reconsidered should-/may- keywords on merits; corrected Compliance statuses/links and expanded categories beyond Accessibility; reformatted Design Decisions into Decision/Rationale/Approved blocks; fixed Appearance measurements and made them platform-neutral; corrected Platform Notes APIs (SwiftUI heading, Compose button, AppKit/UIKit form, WinUI 3 phase switching) and added sourceUrl/honeypot native guidance; resolved Closed-state, Privacy, and timing-buffer internal contradictions; rewrote garbled edge cases and added missing ones (double submit, retry during refresh, honeypot-tripped success); filled frontmatter references and Accessibility Options; added missing test vectors. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Documented native constraint validation gating real user submits (empty/invalid email never reaches the component check); fixed Closed-state ?? fallback to note it misses empty-string names. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

@@ -1,7 +1,6 @@
 ---
 id: 5cb60b95-0a8b-43c8-a747-cb5ca7353f09
 title: "Status Server Monitor Worker"
-domain: adhsdk://cookbook/status/service/monitor/worker
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,15 +21,15 @@ tags:
   - database
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
-  - agenticdevelopercookbook://guidelines/implementing/data/database
-  - agenticdevelopercookbook://guidelines/implementing/data/transactions-and-concurrency
-  - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
-  - agenticdevelopercookbook://guidelines/implementing/observability/logging
-  - agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f68778f2-65e3-4e89-bbf8-115151efa9dc
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab416d40-2688-4531-95fb-613f0d2fa8cf
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e80d67b3-813f-47fb-8894-aa4e6f6479f3
 related:
-  - adhsdk://cookbook/status/service/monitor/cycle-runner
-  - adhsdk://cookbook/status/service/storage/libsql
+  - 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
+  - 6bf27f64-59d0-4b2a-8715-92dba2856814
 references:
   - packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/worker-client.ts (adhsdk)
@@ -190,9 +189,9 @@ This file itself contains no `console.*` call and defines no logger of its own �
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/worker.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/worker.ts` | unverified |
 
 ## Design Decisions
 
@@ -213,16 +212,16 @@ This file itself contains no `console.*` call and defines no logger of its own �
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | partial | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | partial | Reliability |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | partial | Security |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | partial | Reliability |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | partial | Security |
 
-`unit-test-coverage` is `partial`: `worker-boot.int.test.ts` exercises exactly one path end to end — a successful boot plus one `fullSync: false` cycle round-trip under bare `node`, guarding the package-`exports` resolution regression it was written for. No test in the given sources exercises the boot-precondition throws, a failed cycle's `error` shape, `cooldowns-optional`, or the storage-built-once-reused/no-explicit-close facts; those are traceable to reading the source (vectors 001-003, 005-013) rather than to an existing assertion. `separation-of-concerns` passes: the file's own header comment states its role is "glue only," and every decision it makes beyond boot validation and message relay — what a cycle does, how it fails soft, what it alerts on — lives in `cycle-runner.ts`, `openLibsql`/`tuneDbForConcurrency`, or `createLibsqlStorage`, all external to this file. `explicit-error-handling` passes: every failure this file can encounter either throws explicitly (the three boot checks) or is caught and reported explicitly (`failure-reply-shape`); nothing is swallowed. `error-recovery` passes for the file's primary contract — a per-cycle failure is reported and the worker keeps serving further requests without intervention — though a boot-time failure instead crashes the whole worker, recovered by `MonitorWorkerClient`'s respawn-on-next-call (external), which is why `graceful-degradation` is only `partial`: this file's per-cycle path degrades gracefully (`ok: false`, worker survives), but a bad connection discovered at boot is handled by failing fast and crashing, not by degrading — a deliberate, complementary strategy per the Design Decisions entry above, not a defect, but not "graceful" by this check's own wording either. `fault-tolerance` passes: the check's own linked guideline is `agenticdevelopercookbook://principles/fail-fast`, and this file's boot-time throws are exactly that pattern applied to a caller bug (a missing required field), which the guideline endorses rather than forbids; the file's per-message path never crashes on a malformed `CycleRequest` either, since a bad value is simply threaded through unchecked (documented under Configuration and Edge Cases) rather than causing a throw. `health-observability` is `partial`: this file itself emits no health signal of its own — the heartbeat ping and the `[maintenance]` log line both live in `runMonitorCycle`'s collaborators (external, see the Status Server Monitor Cycle Runner recipe); this file's only contribution is the `CycleReply.ok`/`error` fields, which a caller would still need to surface as a metric. `secure-log-output` is `partial`: this file's own three hardcoded strings and its `console.*`-free body contain no credential (passes on its own code), but the `CycleReply.error` string it relays is unredacted output from whatever a lower layer's `Error.message` contains, and this file makes no attempt to strip a credential that might appear there — a residual gap owned by the external modules named above, not fixed at this layer.
+`unit-test-coverage` is `partial`: `worker-boot.int.test.ts` exercises exactly one path end to end — a successful boot plus one `fullSync: false` cycle round-trip under bare `node`, guarding the package-`exports` resolution regression it was written for. No test in the given sources exercises the boot-precondition throws, a failed cycle's `error` shape, `cooldowns-optional`, or the storage-built-once-reused/no-explicit-close facts; those are traceable to reading the source (vectors 001-003, 005-013) rather than to an existing assertion. `separation-of-concerns` passes: the file's own header comment states its role is "glue only," and every decision it makes beyond boot validation and message relay — what a cycle does, how it fails soft, what it alerts on — lives in `cycle-runner.ts`, `openLibsql`/`tuneDbForConcurrency`, or `createLibsqlStorage`, all external to this file. `explicit-error-handling` passes: every failure this file can encounter either throws explicitly (the three boot checks) or is caught and reported explicitly (`failure-reply-shape`); nothing is swallowed. `error-recovery` passes for the file's primary contract — a per-cycle failure is reported and the worker keeps serving further requests without intervention — though a boot-time failure instead crashes the whole worker, recovered by `MonitorWorkerClient`'s respawn-on-next-call (external), which is why `graceful-degradation` is only `partial`: this file's per-cycle path degrades gracefully (`ok: false`, worker survives), but a bad connection discovered at boot is handled by failing fast and crashing, not by degrading — a deliberate, complementary strategy per the Design Decisions entry above, not a defect, but not "graceful" by this check's own wording either. `fault-tolerance` passes: the check's own linked guideline is [adc.principle.fail-fast](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377), and this file's boot-time throws are exactly that pattern applied to a caller bug (a missing required field), which the guideline endorses rather than forbids; the file's per-message path never crashes on a malformed `CycleRequest` either, since a bad value is simply threaded through unchecked (documented under Configuration and Edge Cases) rather than causing a throw. `health-observability` is `partial`: this file itself emits no health signal of its own — the heartbeat ping and the `[maintenance]` log line both live in `runMonitorCycle`'s collaborators (external, see the Status Server Monitor Cycle Runner recipe); this file's only contribution is the `CycleReply.ok`/`error` fields, which a caller would still need to surface as a metric. `secure-log-output` is `partial`: this file's own three hardcoded strings and its `console.*`-free body contain no credential (passes on its own code), but the `CycleReply.error` string it relays is unredacted output from whatever a lower layer's `Error.message` contains, and this file makes no attempt to strip a credential that might appear there — a residual gap owned by the external modules named above, not fixed at this layer.
 
 ## Change History
 

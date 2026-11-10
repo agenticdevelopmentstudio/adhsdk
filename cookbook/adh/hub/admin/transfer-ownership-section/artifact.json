@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "da441eaa-795d-4447-99b1-356186855921",
     "title": "Transfer Ownership Section",
-    "domain": "adhsdk://cookbook/adh/hub/admin/transfer-ownership-section",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -25,18 +24,18 @@
       "transfer"
     ],
     "depends-on": [
-      "adhsdk://recipes/disclosure",
-      "adhsdk://recipes/button",
-      "adhsdk://recipes/dialog"
+      "c99e2822-f5a9-4e84-8740-9341880bb82a",
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1"
     ],
     "related": [
-      "adhsdk://cookbook/adh/hub/admin/delete-entity-section"
+      "96bc198e-c726-476a-bc4a-ddc1d5c0c2f8"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e53a6c42c16d3bae",
+  "synced": "139b4277d63791cc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

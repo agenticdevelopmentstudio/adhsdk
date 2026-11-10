@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "15c61cfc-543c-493d-b686-c605b773be83",
     "title": "Board Wire Types",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/board-types",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,15 +20,15 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/board",
-      "adhsdk://cookbook/status/dashboard/state/activity-history",
-      "adhsdk://cookbook/status/dashboard/api"
+      "7610ef55-32c9-43b6-8a70-aaa247cc4899",
+      "b7397142-dfab-4ea4-983e-3f0fdcc17fac",
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4fd1ff5a16548729",
+  "synced": "1aa5423fe4713f78",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

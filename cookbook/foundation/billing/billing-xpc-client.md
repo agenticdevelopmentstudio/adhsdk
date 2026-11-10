@@ -1,7 +1,6 @@
 ---
-id: 8055F7C9-D336-4B71-9F95-1BF4BDEF7B92
+id: 8055f7c9-d336-4b71-9f95-1bf4bdef7b92
 title: "Billing XPC Client"
-domain: adhsdk://cookbook/foundation/billing/billing-xpc-client
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,9 +21,9 @@ tags:
   - xpc
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-xpc-protocol
-  - adhsdk://cookbook/foundation/billing/billing-model
-  - adhsdk://cookbook/foundation/billing/billing-dt-os
+  - 36c76e0f-b41c-4fd6-a349-a0e9241fb489
+  - 01942f60-6711-43e7-a7b2-a8e7cb4c2cda
+  - ed610aa4-2717-4242-a8b9-c4616377dbd9
 references: []
 approved-by: ""
 approved-date: ""
@@ -133,9 +132,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCClient.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCClient.swift` | unverified |
 
 ## Design Decisions
 
@@ -147,8 +146,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 separation-of-concerns passes: the client only translates the service interface to transport calls and wire coding; rules are the daemon's and the transport is injected. unit-test-coverage is partial: `BillingXPCClientTests` covers the write bound and no-retry, stored values, refusal sentences, unreachable and unreadable, read-failed rows, negative counts, the preferences push and the reply decoder. No test covers a failing list read (vector 002), a zero count (vector 010), a successful delete, `billingOverview`, the entry filters, the 5-second preferences timeout or the default preferences push.
 

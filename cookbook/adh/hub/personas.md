@@ -1,7 +1,6 @@
 ---
 id: 4af83bb1-0178-462a-b0fc-ae009b63133f
 title: "Personas"
-domain: adhsdk://cookbook/adh/hub/personas
 type: ingredient
 version: 1.1.1
 status: review
@@ -27,7 +26,13 @@ tags:
   - access-control
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/navigation/htdv
+  - faa2c3f3-1ff7-45fb-b6da-efed3cc1d451
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/04fe1298-3880-4584-8a4a-c7a538eb5193
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d65ed7a3-6125-4c9f-b3af-f3b26ad61dfb
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0d3aaa29-0ce3-4803-8f8a-a7023713b574
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/19648d85-adba-4f38-b513-a38ca58e9fb0
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/47563e88-307b-4eef-a63c-ddc18e85a945
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e48a04d7-c479-427d-9d8e-fe9e9b990c77
 references:
   - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/PersonasDataSource.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/PersonasModels.swift (adhsdk)
@@ -55,12 +60,6 @@ references:
   - packages/web/packages/data/src/personas/__tests__/fields.test.ts (adhsdk)
   - packages/web/packages/data/src/personas/__tests__/personas.test.ts (adhsdk)
   - packages/web/packages/data/src/personas/__tests__/special-interests.test.ts (adhsdk)
-  - agenticdevelopercookbook://guidelines/behavioral-requirements
-  - agenticdevelopercookbook://guidelines/completeness
-  - agenticdevelopercookbook://guidelines/cookbook-compliance
-  - agenticdevelopercookbook://guidelines/cross-recipe-consistency
-  - agenticdevelopercookbook://guidelines/source-fidelity
-  - agenticdevelopercookbook://guidelines/template-conformance
 approved-by: ""
 approved-date: ""
 ---
@@ -411,7 +410,7 @@ confirmed by inspection of every given source file in this domain.
   final class` conforming to `HTDVDataSource` — the navigation data source contract described
   neutrally above resolves here to `rootLevel()`/`child(for:)` returning `.level`/`.detail`/
   `.empty` cases, driving `FormSpec`/`FormSheet`/`FormViewController` from `AgenticDeveloperHubSDKHTDV`
-  (see `adhsdk://cookbook/ui/navigation/htdv`); shared Hub support types (`HubError`,
+  (see [adhsdk.ingredient.ui.navigation.htdv](cookbook:faa2c3f3-1ff7-45fb-b6da-efed3cc1d451)); shared Hub support types (`HubError`,
   `HubText`, `RailPath`, `Slug`, `JSONValue`, `FormDetails`) are reused rather than reimplemented
   per feature. `PersonasDataSource` is `Sendable` and exposes `list()`, `get(id:)`, `create(_:)`,
   `update(id:_:)`, `delete(id:)`, and `listServices()`, all `async throws`; the app repo
@@ -449,10 +448,10 @@ confirmed by inspection of every given source file in this domain.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/personas/` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/personas/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/` | unverified |
 
 ## Design Decisions
 
@@ -525,12 +524,12 @@ implementations disagree about whether a persona demos at all.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | partial | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | partial | Access Patterns |
 
 `separation-of-concerns` passes: `PersonasDataSource`/`PersonasModels` hold no UI code and
 `PersonasModule` holds no transport code (it depends on the injected data source); the web's

@@ -1,7 +1,6 @@
 ---
 id: d906afe1-a621-42f1-87c5-c71ec9d43c1e
 title: "Tab Pane View"
-domain: adhsdk://cookbook/ui/layout/tabbed-view/tab-card-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -22,8 +21,8 @@ tags:
   - layout
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/layout/tabbed-view
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - d1257c76-fb28-47a5-bc2b-d4fb1ef87b53
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references:
   - https://developer.apple.com/design/human-interface-guidelines/
 approved-by: ""
@@ -35,7 +34,7 @@ approved-date: ""
 ## Overview
 
 The component is a card drawn as one tab in an edge bar of
-[the tabbed view](adhsdk://cookbook/ui/layout/tabbed-view): a stacked
+the tabbed view ([adhsdk.ingredient.ui.layout.tabbed-view](cookbook:d1257c76-fb28-47a5-bc2b-d4fb1ef87b53)): a stacked
 block, the same arrangement on all four edges, showing a session's
 agent/model name, status symbols, session name, working directory, branch,
 and an optional summary. It is hosted by a controller that drives its stack
@@ -536,9 +535,9 @@ Not applicable: this component contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift` | unverified |
 
 ## Design Decisions
 
@@ -596,12 +595,12 @@ Not applicable: this component contains no logging call.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | accessibility |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | failed | accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | internationalization |
 
 Keyboard-navigable is partial
 because `closeButton` is a real `NSButton` and gets standard key-view-loop

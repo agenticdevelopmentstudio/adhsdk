@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web (MarkdownDocumentEditor.tsx) and Apple (MarkdownEditorController.swift) sources. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case, fixed the debounce-timing and aria-live contradictions, resolved the focus-management and mode-clamp contradictions with deterministic rules, added missing requirements for isPreviewAvailable/defaultLayout/defaultTab and a promoted touch-target requirement, reformatted Design Decisions into Decision/Rationale/Approved triples, replaced the Compliance and Localization "Not applicable" placeholders with real tables, corrected inaccurate Compose/WinUI 3/SwiftUI platform guidance, added conformance vectors for debounce cancellation/preview-toggle/rapid-keystroke/no-op-update coverage, and cleaned up stray test-implementation detail and dead edge cases. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed split/tabbed-layout thresholds: web uses SPLIT_MIN_WIDTH media query (1024px), not 700px, and defaults tabbed; vectors 003/004/006/007 and Design Decision 2 corrected; accept-subject-label vector uses ${subject} layout format (subject="Note Editor" not "Note"). |

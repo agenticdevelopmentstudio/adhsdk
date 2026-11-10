@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "b5b27bc2-99b2-469e-9dd4-e446b0157444",
+    "title": "Reveal",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Fades and lifts content into place as it enters the viewport.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "animation",
+      "viewport",
+      "scroll"
+    ],
+    "depends-on": [],
+    "related": [
+      "e0b59d60-0a56-4bf4-85cb-fb0e58170f8e",
+      "feee183a-6488-489e-8e20-c7150bb3e914",
+      "6f5f455d-b744-425d-a21e-494fc18caaf2",
+      "f8cbc576-a5ef-4e8c-90a0-7d0712b24b72",
+      "d80699f9-1020-4f8a-85ce-f6406e765631",
+      "93e8b186-b7a6-41c5-90a8-21b67a47ef72"
+    ],
+    "references": [
+      "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "943c0017caa45fab",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

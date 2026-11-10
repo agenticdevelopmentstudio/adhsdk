@@ -1,7 +1,6 @@
 ---
 id: 82524881-6da8-42fe-85a9-388651ee085d
 title: "Status Server Stores"
-domain: adhsdk://cookbook/status/service/storage/stores
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,14 +21,14 @@ tags:
   - persistence
   - storage-ports
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/data/database
-  - agenticdevelopercookbook://guidelines/implementing/data/transactions-and-concurrency
-  - agenticdevelopercookbook://guidelines/implementing/data/foreign-keys
-  - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f68778f2-65e3-4e89-bbf8-115151efa9dc
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab416d40-2688-4531-95fb-613f0d2fa8cf
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b16e64a4-462d-4f46-afeb-1a06952e5e65
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c
 related:
-  - adhsdk://cookbook/status/service/storage/libsql
-  - adhsdk://cookbook/status/service/storage/ports
-  - adhsdk://cookbook/status/service/auth
+  - 6bf27f64-59d0-4b2a-8715-92dba2856814
+  - 1c240b7a-21b3-4a89-b24f-a5bf5cf5f37b
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
 references:
   - packages/web/packages/status-server/src/libsql/stores/auth-store.ts (adhsdk)
   - packages/web/packages/status-server/src/libsql/stores/token-store.ts (adhsdk)
@@ -750,9 +749,9 @@ hash comparison's success or failure never appears in a log line.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/libsql/stores/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/libsql/stores/` | unverified |
 
 ## Design Decisions
 
@@ -846,14 +845,14 @@ hash comparison's success or failure never appears in a log line.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | passed | Reliability |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: each of the 13 store files owns exactly one
 port's implementation against the driver, `owned-deploys.ts` owns exactly

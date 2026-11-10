@@ -1,7 +1,6 @@
 ---
-id: A1D787E2-2E3F-4742-A30B-120A8607C518
+id: a1d787e2-2e3f-4742-a30b-120a8607c518
 title: "Add Remove Footer View"
-domain: adhsdk://cookbook/ui/settings/views/add-remove-footer-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - footer
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/views/editable-table-card
+  - 9016cb03-9682-404f-b787-c271039f25b3
 references: []
 approved-by: ""
 approved-date: ""
@@ -139,9 +138,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/AddRemoveFooterView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/AddRemoveFooterView.swift` | unverified |
 
 ## Design Decisions
 
@@ -157,8 +156,8 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Separation-of-concerns is passed: the footer owns two buttons and their callbacks and knows nothing about the list it serves. Unit-test-coverage is partial: no suite is dedicated to `AddRemoveFooterView`; `EditableTableCardFooterTests.swift` and the card tests exercise placement, accessory order, the remove veto and hiding, but not identifiers or descriptions.
 

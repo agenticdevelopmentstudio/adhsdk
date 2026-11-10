@@ -1,0 +1,25 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| alert-001 | alert-role | `<Alert>Text</Alert>` | Rendered root node has attribute `role="alert"`. |
+| alert-002 | alert-data-slot | `<Alert>Text</Alert>` | Rendered root node has attribute `data-slot="alert"`. |
+| alert-003 | default-variant | `<Alert>Text</Alert>` (no `variant` prop) | Root node's border color resolves to the `apt-border` token and its background resolves to the `apt-surface` token — the `default` variant's tone (see Appearance for the token mapping). |
+| alert-004 | five-variants | Render with `variant` set to each of `default`, `info`, `success`, `error`, `accent` in turn | Each render succeeds; the root node's border and background color tokens match the rendered variant's documented tone (see Appearance for the full `variant` → token mapping). |
+| alert-005 | merge-classname-alert | `<Alert className="custom">Text</Alert>` | Root node's rendered styling includes both the caller-supplied custom class and the variant's base visual styling (corner radius, border, background) — the custom addition is combined with, not a replacement for, the base styling. |
+| alert-006 | forward-div-props-alert | `<Alert id="my-alert" data-testid="my-alert">Text</Alert>` | Root node has attributes `id="my-alert"` and `data-testid="my-alert"`. |
+| alert-007 | widen-grid-when-icon-present | `<Alert><svg data-testid="icon" />Text</Alert>` | Root node's computed `grid-template-columns` is `1.25rem 1fr` (widened from the no-icon baseline), with a column gap applied between the two columns. Requires a real browser or Playwright — computed `grid-template-columns` cannot be resolved from utility classes in jsdom. |
+| alert-008 | size-icon-child | `<Alert><svg data-testid="icon" /></Alert>` | The rendered direct `<svg>` child has a computed width and height of `1rem` (16px) each, and is offset `0.125rem` downward from its row's top edge via a vertical translate. Requires a real browser or Playwright — these are resolved computed styles, not class-list membership. |
+| alert-009 | place-title-column-two | `<AlertTitle>Title</AlertTitle>` | Rendered node's computed `grid-column-start` is `2`. |
+| alert-010 | style-title-medium-weight | `<AlertTitle>Title</AlertTitle>` | Rendered node's computed `font-weight` is medium (500). |
+| alert-011 | merge-classname-title | `<AlertTitle className="custom">Title</AlertTitle>` | Rendered node's styling includes both the caller-supplied custom class and its base grid placement (`grid-column-start: 2`) — combined, not replaced. |
+| alert-012 | forward-div-props-title | `<AlertTitle id="t1">Title</AlertTitle>` | Rendered node has attribute `id="t1"`. |
+| alert-013 | place-description-column-two | `<AlertDescription>Desc</AlertDescription>` | Rendered node's computed `grid-column-start` is `2`. |
+| alert-014 | style-description-small-muted | `<AlertDescription>Desc</AlertDescription>` | Rendered node's text renders at the `text-sm` size token (0.875rem) in the muted text color token (`apt-text-muted`). |
+| alert-015 | merge-classname-description | `<AlertDescription className="custom">Desc</AlertDescription>` | Rendered node's styling includes both the caller-supplied custom class and its base grid placement (`grid-column-start: 2`) — combined, not replaced. |
+| alert-016 | forward-div-props-description | `<AlertDescription id="d1">Desc</AlertDescription>` | Rendered node has attribute `id="d1"`. |
+| alert-017 | export-alert-variants | Import `alertVariants` and call `alertVariants({ variant: "success" })` without rendering `<Alert>` | Returns a class string whose resolved styling includes the `success` variant's border and background color tokens (`apt-green`), independent of any rendered `<Alert>` element. |
+| alert-018 | compose-title-and-description-as-children | `<Alert><AlertTitle>T</AlertTitle><AlertDescription>D</AlertDescription></Alert>` | Both children render inside the same root grid container, each with computed `grid-column-start: 2`; the root's computed `row-gap` is `0.125rem` (`gap-y-0.5`), producing visible stacking between them. |
+| alert-019 | Edge case: attribute-override quirk | `<Alert role="status" data-slot="banner">Text</Alert>` | Root node's `role` attribute resolves to `"status"` and `data-slot` resolves to `"banner"` — the caller's explicit props silently override the component's own `role="alert"` / `data-slot="alert"` defaults (see Edge Cases). |
+| alert-020 | widen-grid-when-icon-present | `<Alert>Text</Alert>` (no `<svg>` child) | Root node's computed `grid-template-columns` is `0px 1fr` — the no-icon baseline — and no column gap is applied. Requires a real browser or Playwright. |
+| alert-021 | Edge case: boundary values | `alertVariants({ variant: "bogus" as any })` (bypassing the `VariantProps` type) | Returns only the shared base classes (layout, padding, corner radius, text size); no variant-specific border, background, foreground, or icon-color classes are included, and it does not fall back to the `default` variant's tone (see Edge Cases). |
+

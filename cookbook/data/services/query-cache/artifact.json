@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "0fcd16c1-a8da-4184-b63f-97b68ed6378d",
     "title": "Query Cache",
-    "domain": "adhsdk://cookbook/data/services/query-cache",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -23,10 +22,10 @@
       "session"
     ],
     "depends-on": [
-      "adhsdk://cookbook/data/services/auth/auth-client"
+      "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
     "related": [
-      "adhsdk://cookbook/data/services/resource-data"
+      "ec6e6ca5-8780-4ce2-8b3a-087adc50ed35"
     ],
     "references": [
       "packages/web/packages/data/src/query/index.tsx (adhsdk)",
@@ -37,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1335d685be3e7d1c",
+  "synced": "e5089fb2c64a6cf7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -56,7 +55,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

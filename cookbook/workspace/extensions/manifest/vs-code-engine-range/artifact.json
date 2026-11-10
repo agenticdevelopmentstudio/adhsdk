@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "fea35fb1-9eeb-4647-b185-902c1d1cb988",
     "title": "VSCodeEngineRange",
-    "domain": "adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher"
+      "a29c23d4-a086-4413-9843-6b319e340646"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "817b492d4220961d",
+  "synced": "a698ae1b2f429b52",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

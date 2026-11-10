@@ -39,7 +39,7 @@
   `delete-entity-section` (regenerate `sources.generated.ts` via
   `gen-sources.py` after source changes); verify responsively via Playwright at
   375 / 768 / 1440. Shared across every focused-topic-detail settings route
-  (`adhsdk://cookbook/ui/navigation/focused-topic-detail`), usually as the final
+  ([adhsdk.recipe.ui.navigation.focused-topic-detail](cookbook:7f122a27-5b49-4f03-9439-1152249bc08f)), usually as the final
   group in a settings pane below the `FieldGroup`s.
 - **AppKit/UIKit**: On macOS, build the disclosure from an `NSButton` with
   `bezelStyle = .disclosure` (there is no `NSDisclosureButton` class) toggling a

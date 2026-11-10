@@ -31,6 +31,6 @@
 - Color/contrast: header-bar and label colors are read from the shared
   theme palette; contrast is a design-system-level concern this file does
   not decide, per
-  `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
 - **minimum-contrast-ratio**: The window MUST draw the panel-title item's text in the theme's primary-text role and tint the help control from the theme's secondary-text/accent roles, each against whichever theme surface renders behind the transparent, unified header bar. The window performs no contrast-ratio check of its own between those roles and their background; contrast is whatever the active theme's palette provides.
 

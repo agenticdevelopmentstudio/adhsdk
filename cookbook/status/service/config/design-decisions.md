@@ -55,7 +55,7 @@
   rather than bundling twenty getters into one compound statement.
   **Approved**: pending
 - **Decision**: this recipe's `related` field links to
-  `adhsdk://cookbook/status/service/auth` one-directionally; the
+  [adhsdk.ingredient.status.service.auth](cookbook:735b4e58-bce9-4754-ad3f-bf0344fd4b32) one-directionally; the
   reverse link on `status-server-auth.md` was not added.
   **Rationale**: this recipe was authored under an explicit constraint to
   write only `cookbook/status/service/config.md` and touch no other file;

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "267CDB61-52E4-440C-BFA2-799D8E9E12DC",
+    "id": "267cdb61-52e4-440c-bfa2-799d8e9e12dc",
     "title": "Edit Deferred Value",
-    "domain": "adhsdk://cookbook/foundation/editing/edit-deferred-value",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -30,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3458eccd7285ee00",
+  "synced": "406555e1198ea18e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

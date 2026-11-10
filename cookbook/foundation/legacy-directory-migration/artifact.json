@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "1996A181-6B83-4000-9671-7E872C625B4C",
+    "id": "1996a181-6b83-4000-9671-7e872c625b4c",
     "title": "Legacy Directory Migration",
-    "domain": "adhsdk://cookbook/foundation/legacy-directory-migration",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/defaults-domain-migration",
-      "adhsdk://cookbook/foundation/file-system"
+      "21cbc5bd-350a-4ab6-8c37-3290acb70460",
+      "016f5ba0-f4ee-4b39-b1a2-83629768acdd"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bf03fb5d514da024",
+  "synced": "b14c18bb7a6a53c6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "86e7936a-c295-4e1f-8f7a-7278b4849008",
     "title": "Status Server Monitor Issue Sources",
-    "domain": "adhsdk://cookbook/status/service/monitor/issue-sources",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -27,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/deploy-status"
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/issue-sources.ts (adhsdk)",
@@ -45,7 +44,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "379b37897e7b1efa",
+  "synced": "ec983ddfdd996eaa",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -64,7 +63,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

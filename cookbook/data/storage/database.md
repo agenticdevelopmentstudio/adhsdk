@@ -1,7 +1,6 @@
 ---
 id: ea580796-8b16-4832-b11d-ad3cae991ecd
 title: "Database"
-domain: adhsdk://cookbook/data/storage/database
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,10 +21,10 @@ tags:
   - persistence
 depends-on: []
 related:
-  - adhsdk://cookbook/data/sync/sync-engine
-  - adhsdk://cookbook/data/sync/offline-sync-client
-  - adhsdk://cookbook/adh/hub/content/markdown-store
-  - adhsdk://cookbook/workspace/projects/project-database
+  - 355a8f54-aee5-45cd-a28d-12c3b7a3085c
+  - d3a0b65f-92c0-43c1-b04c-77638eb72044
+  - 11f7a665-60e9-42df-853c-fe4de3af0fd8
+  - c212ea39-10e7-4146-89dd-36edb3b3455a
 references:
   - packages/apple/AgenticDeveloperHubSDK/Database/BoundedDatabase.swift
   - packages/apple/AgenticDeveloperHubSDK/Database/AppStorageLocation.swift
@@ -58,10 +57,10 @@ sit on. It has two parts:
   reduced to characters a path can hold.
 
 Consumers include the sync store (see
-[Offline Sync Client](adhsdk://cookbook/data/sync/offline-sync-client)),
-the markdown store (see [Markdown Core](adhsdk://cookbook/adh/hub/content/markdown-store)),
+Offline Sync Client ([adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044))),
+the markdown store (see Markdown Core ([adhsdk.ingredient.adh.hub.content.markdown-store](cookbook:11f7a665-60e9-42df-853c-fe4de3af0fd8))),
 and the project database (see
-[Project Database](adhsdk://cookbook/workspace/projects/project-database)),
+Project Database ([adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a))),
 which names its file inside the storage-location helper's directory.
 
 ## Behavioral Requirements
@@ -276,9 +275,9 @@ Not applicable: neither component performs its own logging; ejections surface as
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | unverified |
 
 ## Design Decisions
 
@@ -358,14 +357,14 @@ Not applicable: neither component performs its own logging; ejections surface as
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
 
 The module keeps storage mechanics (pool, deadlines, metrics) and storage naming apart from every schema that uses it, and `BoundedDatabaseTests` and `AppStorageLocationTests` cover the cross-lane read, read-your-writes, ejection, in-memory, stats and poisoned-pool paths plus every token and directory rule. Every read and write carries a monotonic deadline and locked writes a busy timeout, and the reader pool keeps reads from queuing behind the writer. `stats` exposes in-flight, completed, evicted and p50/p99 per lane, so a wedge is visible. Explicit error handling is partial because the safety-net `ROLLBACK` discards its own failure, and errors other than an eviction go uncounted in `stats`. Data integrity is partial because the per-thread connection slot is shared across instances, so a call on one database nested inside an op on another runs against the wrong connection.
 

@@ -1,7 +1,6 @@
 ---
 id: 1c240b7a-21b3-4a89-b24f-a5bf5cf5f37b
 title: "Status Server Storage Boundary"
-domain: adhsdk://cookbook/status/service/storage/ports
 type: ingredient
 version: 1.0.2
 status: review
@@ -283,9 +282,9 @@ Not applicable — this interface does not emit analytics events.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/storage/ports.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/storage/ports.ts` | unverified |
 
 ## Design Decisions
 
@@ -331,8 +330,8 @@ Not applicable — this interface does not emit analytics events.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 
 **Separation of Concerns**: The interface defines only the data contract and operation signatures; implementation is isolated in the libSQL adapter. Consumers depend only on these types and method contracts, never on driver details or schema.
 

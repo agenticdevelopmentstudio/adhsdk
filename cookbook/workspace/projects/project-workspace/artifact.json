@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "33086772-2d36-49f5-8e1d-725163d7ce8f",
     "title": "Project Workspace",
-    "domain": "adhsdk://cookbook/workspace/projects/project-workspace",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -28,14 +27,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/projects/project-database",
-      "adhsdk://cookbook/workspace/projects/project-database-layout",
-      "adhsdk://cookbook/workspace/projects/git-repo",
-      "adhsdk://cookbook/workspace/projects/project-checkout",
-      "adhsdk://cookbook/workspace/projects/branch-controller",
-      "adhsdk://cookbook/workspace/projects/project-controller",
-      "adhsdk://cookbook/ui/layout/composable-tabs/tabs-window",
-      "adhsdk://cookbook/foundation/git/git-client"
+      "c212ea39-10e7-4146-89dd-36edb3b3455a",
+      "ded9b397-958d-437d-8235-48ef85ae7386",
+      "1463e7a2-e290-4b8c-8643-df9462a758e6",
+      "7ae3de90-35f2-415c-93c7-cf579689e438",
+      "92f11498-2cb2-4b04-92b9-560d9f2de6ee",
+      "5bfadad5-c93b-432a-807e-04be57ff16b4",
+      "55a394e6-9934-404b-941d-25bebbf71378",
+      "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)",
@@ -58,7 +57,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b10943f0a9d619be",
+  "synced": "0c5298405477ef77",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -77,7 +76,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "1c3d8661-12f2-4a84-bef4-7ccd4e3841e7",
     "title": "Status Server Monitor Refresh Project Meta",
-    "domain": "adhsdk://cookbook/status/service/monitor/refresh-project-meta",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,14 +25,14 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/data/constraints-and-validation",
-      "agenticdevelopercookbook://guidelines/implementing/data/transactions-and-concurrency"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f28a4638-c2ae-4a9b-817f-0f19b5712168",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab416d40-2688-4531-95fb-613f0d2fa8cf"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/fetch-vercel-projects",
-      "adhsdk://cookbook/status/service/monitor/provider-conn",
-      "adhsdk://cookbook/status/service/config",
-      "adhsdk://cookbook/status/service/storage/libsql"
+      "4b16f67f-3877-47d3-97eb-af99581a5b11",
+      "4aad9d0a-4984-4021-ad1f-d8aa6a15b066",
+      "31fe479f-e95e-4f03-b957-faa2314a03be",
+      "6bf27f64-59d0-4b2a-8715-92dba2856814"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (adhsdk)",
@@ -49,7 +48,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fae1ea0b21a00401",
+  "synced": "d9c69bb958529dd3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -68,7 +67,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

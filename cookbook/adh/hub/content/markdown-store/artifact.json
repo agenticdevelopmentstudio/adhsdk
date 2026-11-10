@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "11f7a665-60e9-42df-853c-fe4de3af0fd8",
     "title": "Markdown Store",
-    "domain": "adhsdk://cookbook/adh/hub/content/markdown-store",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -28,7 +27,7 @@
       "persistence"
     ],
     "depends-on": [
-      "adhsdk://cookbook/data/sync/offline-sync-client"
+      "d3a0b65f-92c0-43c1-b04c-77638eb72044"
     ],
     "related": [],
     "references": [
@@ -42,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "02a6b940f8b9415c",
+  "synced": "952ed02f55607863",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -61,7 +60,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

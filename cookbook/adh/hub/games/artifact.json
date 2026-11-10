@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5d44b127-7701-4d3f-8d34-fe50084e52b7",
     "title": "Hub Domain: Games",
-    "domain": "adhsdk://cookbook/adh/hub/games",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,10 +25,10 @@
       "web"
     ],
     "depends-on": [
-      "adhsdk://cookbook/data/services/auth/auth-client"
+      "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
     "related": [
-      "adhsdk://cookbook/adh/hub/ecosystems/ecosystems"
+      "201572ee-2e0f-4839-94f5-252f8044c4bf"
     ],
     "references": [
       "packages/web/packages/data/src/games/games.ts (adhsdk)",
@@ -42,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ecc96c3b1e1a442a",
+  "synced": "8fc9fd31d4438d51",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -61,7 +60,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

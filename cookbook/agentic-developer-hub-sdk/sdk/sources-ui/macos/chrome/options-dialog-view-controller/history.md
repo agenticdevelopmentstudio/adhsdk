@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and dropped the contradictory may-hide-heading-when-nil requirement; reworded no-change-buffering as a MUST NOT; corrected the tap-target-size and Done-button-localization claims; added Apple HIG references; documented Escape/⌘. behavior; separated the accessibility role from the identifier; resolved the bottom-padding ambiguity and renamed the Loaded-off-screen state to Closed; named viewDidDisappear as the onDidClose hook and clarified the window-resize edge case; reformatted Design Decisions to Decision/Rationale/Approved; added a Compliance table; fixed test-vector tagging and validity and added four missing vectors; merged the duplicate AppKit/UIKit platform note and fixed the Compose and WinUI 3 native dialog APIs; corrected the summary to attribute change-application to rows, not the dialog |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed resizing edge case to match the per-row exact-width equality constraint (floor is container-only); heading Configuration default corrected to (required). Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

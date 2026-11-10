@@ -1,7 +1,6 @@
 ---
 id: 1cacbe17-bca6-458c-bf1f-df9efa3652be
 title: "VS Code Workspace Bridge"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/workspace/main-thread-workspace
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +21,8 @@ tags:
   - filesystem
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/host/extension-host
-  - adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
+  - b2cf12e3-71de-4d87-9216-d5e8d604169c
+  - 5141968f-3922-47f2-a31f-ba953b92a048
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
@@ -230,9 +229,9 @@ This component supports the shared logging contract (see **logging-conformance**
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift` | unverified |
 
 ## Design Decisions
 
@@ -268,11 +267,11 @@ This component supports the shared logging contract (see **logging-conformance**
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because the file's only responsibilities are the four `vscode.workspace` members' own argument validation, the `fs` sub-namespace's dispatch to `FileSystemServicing`, and the folder-entry cache; actual filesystem work is delegated to `FileSystemService`, JavaScript call/promise/disposable/sub-namespace ceremony is delegated to `VSCodeAPI`, and the workspace's own identity is delegated to `ExtensionWorkspaceRoots` rather than reached through the app's full `ProjectWorkspace`. `unit-test-coverage` is partial: the given `MainThreadWorkspaceTests.swift` suite thoroughly covers all seven `fs` operations reaching the real `FileSystemService` and landing on disk, five of the six mapped `FileSystemServiceError` codes plus the `Unavailable` collapse, `workspaceFolders`/`name`/`getWorkspaceFolder` across no-workspace, single-root, nested-root, `/private`-prefixed-root, and longest-prefix-match cases, the unimplemented-member ledger path, and both halves of in-flight teardown — but no test in the given sources exercises `rename`'s `overwrite: true` branch, a `writeFile` call using the plain-array (`numbersData`) fallback rather than a genuine `Uint8Array`, or a non-`FileSystemServiceError` thrown from `fileSystemService` reaching `rejectionValue(for:in:)`'s untyped-error branch. `input-sanitization` passes because `requiredURL(from:at:in:)` validates every `fs` argument's URI scheme before it ever reaches `FileSystemServicing`, refusing any non-`file`-scheme value — the security boundary the source's own comment documents explicitly, closing the path a scheme-confused URI (an `https:` URL whose `.path` happens to name a local file) would otherwise open into the local filesystem. `no-hardcoded-strings` fails because every rejected message this file constructs directly (see Localization) is an English literal with no localization mechanism.
 

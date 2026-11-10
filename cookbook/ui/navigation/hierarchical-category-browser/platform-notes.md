@@ -17,7 +17,7 @@
 - Consumers: `packages/web/packages/features/notebook/src/NotebookPane.tsx` (rail + note list, `itemNoun="notes"`) and `packages/web/packages/features/research/src/ResearchPane.tsx` (rail + document list, `itemNoun="documents"`), each supplying its own `rows` fetch, `idPrefix`, and `workspaceSlug`.
 - Demo: `local/ui-showcase/app/page.tsx` (Topic id `hierarchical-category-browser`) + the showcase source registry. The demo assembles the same `packages/web/packages/ui/src/blocks` primitives this hook composes — `buildCategoryTree`, `chainAfterRename`, `chainAfterMove`, `CategoryGearMenu`, `CategoryPickerDialog`, `CategoryRenameDialog`, `CategoryDeleteDialog` — against an in-memory `CategoryTreeNode[]` fixture, since `useCategoryLevels` itself reaches a real `taxonomyApi`/`markdownApi` the showcase has no backend for.
 - Responsive: verify via the ui-showcase demo at 375 / 768 / 1440 — the rail levels inherit
-  [Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)'s
+  Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))'s
   own disclosure/narrow-mode behavior; this recipe adds no layout of its own to verify beyond
   the gear menu and its dialogs at each width.
 - **SwiftUI**: Not applicable — web-only (platforms: typescript, web).

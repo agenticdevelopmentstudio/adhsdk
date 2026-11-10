@@ -1,7 +1,6 @@
 ---
 id: 4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70
 title: "Extension Registry"
-domain: adhsdk://cookbook/workspace/extensions/registry/extension-registry
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,15 +21,15 @@ tags:
   - mainactor
   - contribution-point
 depends-on:
-  - adhsdk://cookbook/workspace/extensions/manifest/contribution-point
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
+  - 088ed758-8c79-443d-999f-425c69df4d4d
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/contribution-point
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
-  - adhsdk://cookbook/workspace/extensions/manifest/contributed-views
-  - adhsdk://cookbook/workspace/extensions/manifest/contributed-settings
-  - adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher
-  - adhsdk://cookbook/ai/plugins/plugin-manager
+  - 088ed758-8c79-443d-999f-425c69df4d4d
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
+  - 236659d0-ee7d-45c9-8986-181f027a4058
+  - c4375e0e-091f-4627-b3c9-e7d36221802f
+  - a29c23d4-a086-4413-9843-6b319e340646
+  - 0a729d47-fc2d-427c-b474-26072dc8b336
 references: []
 approved-by: ""
 approved-date: ""
@@ -207,9 +206,9 @@ Subsystem: `Bundle.main.bundleIdentifier` (falls back to `"nil"` if unset, via t
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift` | unverified |
 
 ## Design Decisions
 
@@ -241,10 +240,10 @@ Subsystem: `Bundle.main.bundleIdentifier` (falls back to `"nil"` if unset, via t
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
 `separation-of-concerns` passes because `ExtensionRegistry.swift` delegates manifest decoding to `ExtensionManifest`, engine-range parsing to `VSCodeEngineRange`, JSONC tolerance to `JSONCPreprocessor`, and NLS resolution to `ExtensionManifestLocalization`, keeping this file's own responsibility limited to directory enumeration, gating, ordering, and driving registered contribution points. `unit-test-coverage` passes: `ExtensionRegistryTests.swift` exercises discovery, every `ExtensionLoadError` case, duplicate resolution, enablement (including case-migration), uninstall (including the failed-delete path), the `establishedIdentifiers` tri-state contract across every branch that sets it `nil`, JSONC tolerance, ordering, and the observer-notification contract, including the reload-generation race via the `reload(performing:)` test seam. `fault-tolerance` passes because `loadAll()` never throws, isolates each directory's and each contribution point's failure independently (contribution-point-error-isolated, manifest-malformed-failure-with-recovered-identifier), and a bad extension or a refusing contribution point never prevents another extension from loading. `explicit-error-handling` is `partial`: every load-time failure is a typed `ExtensionLoadError` recorded in `failures`, but the two skip branches inside `Scan.scan` that set `readEverything = false` (an unreadable search path, an unresolvable directory-entry type) emit no log line at all, unlike every other skip branch in the file — see the open question under Edge Cases.
 

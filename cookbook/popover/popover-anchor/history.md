@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | panel-in-anchor-flow now keys on DOM-descendant hit-testing (bridging elements allowed) instead of banning any visual gap; added anchor-011 bridge test vector. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename `must-*` requirements to subject-only kebab-case everywhere they're cited; add `panel-in-anchor-flow` requirement plus offset/portal edge cases and test vectors documenting the close-delay technique's limits; add a missing-callback and a repeated-cycle test vector; populate Configuration as a props table; cite `PopoverAnchor.tsx` in the React/Web note and in frontmatter `references`; fix wrong SwiftUI/Compose/UIKit platform APIs; reformat Design Decisions to Decision/Rationale/Approved and ground the `onMouseLeave`-over-`onPointerLeave` choice in `useHoverPopoverGroup`'s contract; populate Compliance as a table (`keyboard-navigable`); add the Popover recipe to `related`; align `created`/`modified` date format; reword `summary` and Overview |
+| 1.0.0 | 2026-09-22 | Claude | Initial creation |

@@ -1,0 +1,12 @@
+
+The Markdown Renderer converts raw markdown strings to formatted output suitable for display. On Apple platforms, it produces `NSAttributedString` with semantic palette styling; on web platforms, it produces sanitized HTML with theme-aware CSS variables. Both implementations support CommonMark plus the GFM extensions this component relies on (tables, strikethrough) — see **render-markdown** — including headers, lists, blockquotes, code blocks with optional syntax highlighting, and inline formatting.
+
+Constructs outside that core surface are handled per platform rather than uniformly:
+
+- **Images**: (Apple) `AttributedString(markdown:)` has no image presentation intent, so image syntax is not rendered as an embedded image. (Web) standard CommonMark images render as sanitized `<img>` elements (`src`/`srcSet`/`alt`/`width`/`height` are in the sanitize allowlist).
+- **Raw HTML**: (Apple) not part of the grammar `AttributedString(markdown:)` consumes, so it surfaces as literal text. (Web) dropped before the sanitizer — `remark-rehype` runs with `allowDangerousHtml: false`, so embedded raw HTML/script never reaches `rehype-sanitize` or the output.
+- **Hard line breaks**: (Apple) not modeled as a distinct block or run intent, so a hard break's whitespace stays literal text within its paragraph. (Web) rendered as `<br>`, which the sanitize schema allows.
+- **Autolinks**: both platforms render them as ordinary links — Apple via `run.link`, Web via `<a>` — but only Web restricts the destination to a protocol allowlist (`http`, `https`, `mailto`, `tel`), enforced by `rehype-sanitize`'s `protocols.href` schema; Apple has no equivalent scheme check anywhere in `MarkdownRenderer`, so `AttributedString(markdown:)` copies whatever scheme the source contains — including `javascript:`, `file:`, or an arbitrary custom scheme — verbatim into the `.link` attribute for both autolinks and bracketed links.
+
+Parsing is resilient on Apple: partial markdown renders as far as parsing succeeds rather than failing entirely (see **parse-resilient**). On web, a *pipeline* failure instead surfaces as an explicit error pane rather than degraded output (see **emit-error-pane**). Code block syntax highlighting is optional: Apple accepts a `CodeHighlighter` injected by the host application, while web hard-wires Shiki internally with no injection point exposed — see the highlighter Design Decision below.
+

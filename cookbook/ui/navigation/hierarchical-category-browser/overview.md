@@ -2,11 +2,11 @@
 The **Hierarchical Category Browser** is the shared rail every markdown surface
 that classifies its documents into a category hierarchy — the notebook today, and
 research — mounts as the leading levels of a
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))
 stack. It is a thin, category-specific layer over that substrate: HTDV owns the stack's
 chrome, deep linking, breadcrumb, disclosure and narrow-mode behavior (see
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
-and [Topic Detail](adhsdk://recipes/topic-detail) for that contract,
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))
+and Topic Detail ([adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f)) for that contract,
 which this recipe does not restate). What this recipe adds is everything that is TRUE OF
 **CATEGORIES** on top of it:
 

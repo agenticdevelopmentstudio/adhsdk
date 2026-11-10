@@ -1,7 +1,6 @@
 ---
 id: 7610ef55-32c9-43b6-8a70-aaa247cc4899
 title: "Board State"
-domain: adhsdk://cookbook/status/dashboard/state/board
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,7 +17,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/api
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 references: []
 approved-by: ""
 approved-date: ""
@@ -209,9 +208,9 @@ Not applicable: this logic contains no log calls; failures surface only through 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-board.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-board.ts` | unverified |
 
 ## Design Decisions
 
@@ -247,12 +246,12 @@ Not applicable: this logic contains no log calls; failures surface only through 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
 **Unit Test Coverage**: `use-board.dom.test.tsx` covers verbatim pass-through, the absence of `localStorage` writes, server-side removal propagating, live-frame refetch, the `stale`, `frozen` and `no-data` verdicts, the fresh-board pass-through, and agreement between `usePortfolioIndicator` and `GlobalPanel` on a stale or wedged board. `board-staleness.test.ts` covers the threshold functions. The initial-load, HTTP-error and retry paths are not asserted by the hook's own tests.
 

@@ -1,0 +1,12 @@
+
+- **Empty or null input**: If the messages array is empty or null, the topics array MUST be initialized as empty and the topics pane MUST be hidden or show an empty state. No crash occurs.
+- **Messages without popover data**: Messages without popover metadata MUST be ignored when deriving topics. They appear in transcript but do not generate topic entries.
+- **Active topic out of bounds**: If the active topic refers to a topic that no longer exists, it MUST be treated as no topic being active, and the detail pane MUST be cleared.
+- **Visible topics stack out of bounds**: The visible-topics stack is written only by an append-only effect; recalculating topics never removes a stale entry from it. An index whose topic no longer exists is merely skipped wherever it is consumed — `PanelStack` renders nothing for it, and message-click/arrow-key navigation treat a missing topic as a no-op — but the index itself stays in the stack, and if a later topic recalculation produces a new topic at that same index, the stale entry silently rebinds to it.
+- **Keyboard navigation with no visible topics**: Arrow-key handling is gated on the visible-topics stack being non-empty, not on whether any topic currently exists. If the stack still holds stale (now-nonexistent) entries, arrow key presses are still intercepted (`preventDefault`) even though there is nothing to navigate to; arrow keys are ignored outright only once the stack itself is empty.
+- **Layout recalculation during scroll**: If the layout recalculates while the user is scrolling, it MUST update without interrupting scroll position or changing the active topic.
+- **Image loading errors**: If an image in a detail panel fails to load, the layout MUST still recalculate to maintain layout correctness.
+- **Multiple connector updates**: If topics or the visible-topics stack change rapidly, connectors MUST be recalculated for each change without rendering stale connectors; SVG rendering MUST remain consistent with the current state.
+- **Topic-selection-during-typing**: Arrow up/down navigation is global — it is not scoped to the topics pane having focus. If a user presses arrow up/down while typing in the chat input, the keys navigate the visible topics, and the input's default cursor-movement behavior for those keys is suppressed for that keypress.
+- **Rapid topic switching**: If the active topic changes multiple times in rapid succession, each change MUST be processed; the visible-topics stack MUST accumulate selections; no topics are skipped.
+

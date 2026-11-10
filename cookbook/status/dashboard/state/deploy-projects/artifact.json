@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b14c03d8-1b93-41e0-9f92-76a81171cee9",
     "title": "Deploy Projects State",
-    "domain": "adhsdk://cookbook/status/dashboard/state/deploy-projects",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -20,16 +19,16 @@
     ],
     "tags": [],
     "depends-on": [
-      "adhsdk://cookbook/status/dashboard/api"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
     ],
     "related": [
-      "adhsdk://cookbook/status/dashboard/api"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "77a9705a121042c4",
+  "synced": "93c9e80e5399f6a0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

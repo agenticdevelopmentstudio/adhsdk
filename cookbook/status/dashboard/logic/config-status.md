@@ -1,7 +1,6 @@
 ---
 id: 728521cd-aaaa-48bb-92b3-273c8467cee8
 title: "Configuration Status"
-domain: adhsdk://cookbook/status/dashboard/logic/config-status
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/logic/auto-configure
-  - adhsdk://cookbook/status/dashboard/state/config-status
+  - cd71721b-e80e-4525-a7a1-fc1ac2158267
+  - 4bd200d7-f9d2-4348-af53-95ea02272c79
 references: []
 approved-by: ""
 approved-date: ""
@@ -238,9 +237,9 @@ Not applicable: the module makes no log calls and has no failure path to report.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/config-status.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/config-status.ts` | unverified |
 
 ## Design Decisions
 
@@ -268,10 +267,10 @@ Not applicable: the module makes no log calls and has no failure path to report.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 
 The module passes separation-of-concerns: classification rules stay in the shared engine, and this file holds only the host-specific fold at the boundary. `config-status.test.ts` exercises every case that turns on `isActive` (paused, absent, true, paused and wired, and agreement of the two predicates), while the rules themselves are tested in the engine's `classify.test.ts`, so unit-test-coverage passes. The tests are small, deterministic and independent, each built from one fixture factory, so good-test-properties passes. explicit-error-handling passes because the functions are total over their typed input and have no error path to swallow; the one untyped risk (non-boolean values from untyped JSON) is a documented caller precondition.
 

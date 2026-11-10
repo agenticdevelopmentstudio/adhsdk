@@ -1,7 +1,6 @@
 ---
-id: F2A31FE2-1302-46D9-8CB4-CC6E9A5E8A12
+id: f2a31fe2-1302-46d9-8cb4-cc6e9a5e8a12
 title: "Billing Timer"
-domain: adhsdk://cookbook/foundation/billing/billing-timer
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,9 +20,9 @@ tags:
   - timer
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-store
-  - adhsdk://cookbook/foundation/billing/billing-persistence
-  - adhsdk://cookbook/foundation/billing/billing-dt-os
+  - 4df278a3-4897-4a87-a506-bd3f58db3121
+  - 5296d0b7-8416-4e76-8f45-47a726f230cf
+  - ed610aa4-2717-4242-a8b9-c4616377dbd9
 references: []
 approved-by: ""
 approved-date: ""
@@ -129,9 +128,9 @@ Not applicable: the timer makes no log calls; failures are thrown to the caller.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingTimer.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingTimer.swift` | unverified |
 
 ## Design Decisions
 
@@ -143,8 +142,8 @@ Not applicable: the timer makes no log calls; failures are thrown to the caller.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 separation-of-concerns passes: the timer owns only the manual-timer rules and delegates claim resolution to the store, storage to the persistence contract and arithmetic to the shared timestamp utility. unit-test-coverage fails: a search of the Tests directories finds no test of `BillingTimer`; the app-level `FakeBillingClient` implements the billing service rather than calling this type, so nothing in this repository exercises it; it runs only inside a host's daemon.
 

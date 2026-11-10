@@ -1,7 +1,6 @@
 ---
 id: e322fd0c-1552-4bd9-b129-3c809af3a972
 title: "Uptime State"
-domain: adhsdk://cookbook/status/dashboard/state/uptime
 type: ingredient
 version: 1.1.1
 status: review
@@ -17,10 +16,10 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/api
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 related:
-  - adhsdk://cookbook/status/dashboard/state/response-history
-  - adhsdk://cookbook/status/service/monitor/uptime
+  - f5f0f19f-065e-4484-8c81-e591eee6db3c
+  - 88dabdf6-14a3-44eb-ab0d-ae18007c683e
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,7 +29,7 @@ approved-date: ""
 
 ## Overview
 
-The uptime state loads per-service daily uptime over the last `days` days. It wraps one shared read keyed by the window length, requests `/uptime?days=<days>` through the dashboard's injected API client (see [status-web-api](adhsdk://cookbook/status/dashboard/api)), and returns the read result typed as the uptime response. Unlike its sibling [status-web-hooks-use-response-history](adhsdk://cookbook/status/dashboard/state/response-history), it sets no polling interval, so it does not poll. It has two consumers in the dashboard, both passing `90`: the dashboard view, which builds a per-service map from `data.services` and picks the selected service's entry, and the overview tab, which reduces `data.services` to one portfolio percentage. The numbers themselves are computed by the backend `/uptime` route in the status service (see [status-server-monitor-uptime](adhsdk://cookbook/status/service/monitor/uptime)).
+The uptime state loads per-service daily uptime over the last `days` days. It wraps one shared read keyed by the window length, requests `/uptime?days=<days>` through the dashboard's injected API client (see status-web-api ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad))), and returns the read result typed as the uptime response. Unlike its sibling status-web-hooks-use-response-history ([adhsdk.ingredient.status.dashboard.state.response-history](cookbook:f5f0f19f-065e-4484-8c81-e591eee6db3c)), it sets no polling interval, so it does not poll. It has two consumers in the dashboard, both passing `90`: the dashboard view, which builds a per-service map from `data.services` and picks the selected service's entry, and the overview tab, which reduces `data.services` to one portfolio percentage. The numbers themselves are computed by the backend `/uptime` route in the status service (see status-server-monitor-uptime ([adhsdk.ingredient.status.service.monitor.uptime](cookbook:88dabdf6-14a3-44eb-ab0d-ae18007c683e))).
 
 ## Behavioral Requirements
 
@@ -162,9 +161,9 @@ Not applicable: the state makes no log calls; failures reach the caller only thr
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-uptime.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-uptime.ts` | unverified |
 
 ## Design Decisions
 
@@ -194,11 +193,11 @@ Not applicable: the state makes no log calls; failures reach the caller only thr
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of Concerns**: The hook contains no presentation or computation. The base path and transport live in `StatusApiClient`, caching and the state machine in React Query, the uptime arithmetic in the backend and `lib/uptime.ts`, and the rendering in `Dashboard` and `OverviewTab`.
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "e36ff99d-0ebd-42ca-87f0-2881a8bfedea",
     "title": "Hierarchical Category Browser",
-    "domain": "adhsdk://cookbook/ui/navigation/hierarchical-category-browser",
     "type": "recipe",
     "version": "1.3.5",
     "status": "review",
@@ -26,26 +25,26 @@
       "master-detail"
     ],
     "ingredients": [
-      "adhsdk://recipes/category-picker-dialog"
+      "88d69611-4a12-4777-9509-8af6c0626dc7"
     ],
     "depends-on": [
-      "adhsdk://recipes/hierarchical-topic-detail"
+      "0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8"
     ],
     "related": [
-      "adhsdk://recipes/hierarchical-topic-detail",
-      "adhsdk://recipes/topic-detail",
-      "adhsdk://recipes/category-picker-dialog",
-      "adhsdk://recipes/list-chooser",
-      "adhsdk://recipes/entity-chooser",
-      "adhsdk://recipes/dialog",
-      "adhsdk://recipes/dialog-actions",
-      "adhsdk://recipes/alert-and-dialog"
+      "0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8",
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f",
+      "88d69611-4a12-4777-9509-8af6c0626dc7",
+      "40827b84-406e-4091-951b-9498b2f78253",
+      "79f7ed30-3193-49bc-856b-d7dd01303baa",
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "f679a77e-04f7-4e43-b898-6d78a637a760",
+      "550f00f7-bfb2-415e-9b15-bd5dce015500"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2f54dbe2b2e7d290",
+  "synced": "1988a32a1af52732",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -56,7 +55,6 @@
     {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
     {"part": "edge-cases", "heading": "Edge Cases"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

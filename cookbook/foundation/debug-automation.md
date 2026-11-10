@@ -1,7 +1,6 @@
 ---
 id: a14c4ed2-f380-486b-90da-84a68cbfafc2
 title: "Debug Automation"
-domain: adhsdk://cookbook/foundation/debug-automation
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,9 +21,9 @@ tags:
   - test-host-detection
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/windows/single-window-controller
-  - adhsdk://cookbook/ui/containers/floating-chooser-panel
-  - adhsdk://cookbook/ui/settings/settings-window
+  - 3f6268b8-410d-4d3c-979c-2a9f9f1534f3
+  - ba1406b3-bcf8-4580-9d65-daed2311cccf
+  - 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
 references:
   - packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/DebugLaunchSwitch.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/NSApplication+QuietActivation.swift (adhsdk)
@@ -372,9 +371,9 @@ Not applicable: none of the four units contains a logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/` | unverified |
 
 ## Design Decisions
 
@@ -439,8 +438,8 @@ that per-call-site inconsistency (`NSApplication+QuietActivation.swift`).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Notes: separation-of-concerns passes because each of the four files owns
 exactly one concern — the launch-argument/defaults primitive

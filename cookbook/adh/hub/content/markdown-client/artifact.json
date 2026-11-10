@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b1fa768d-a088-4507-92f6-6296f93bee2c",
     "title": "Hub Domain Markdown Client",
-    "domain": "adhsdk://cookbook/adh/hub/content/markdown-client",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -28,8 +27,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/adh/hub/content/docs-client",
-      "adhsdk://cookbook/adh/hub/buckets"
+      "48ddd102-b78c-4198-b71d-25801082a5b2",
+      "18ea2506-0cbc-4c6a-880b-e94abcdc55b2"
     ],
     "references": [
       "packages/web/packages/data/src/markdown/markdown.ts (adhsdk)",
@@ -44,7 +43,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8653140fd994982f",
+  "synced": "82bf86d433d7e195",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -63,7 +62,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

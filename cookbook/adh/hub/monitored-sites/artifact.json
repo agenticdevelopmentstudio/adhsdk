@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a3e87176-5845-43ff-9041-af53437d605d",
     "title": "Monitored Sites",
-    "domain": "adhsdk://cookbook/adh/hub/monitored-sites",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -42,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9c59880383330fab",
+  "synced": "63212559b8e47963",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -61,7 +60,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

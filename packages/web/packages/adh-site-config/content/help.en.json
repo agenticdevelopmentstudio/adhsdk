@@ -1,5 +1,5 @@
 {
-  "_comment": "Unified help store for the hierarchical topic/detail views. Key = the route to the details page + ui element: `<feature>` for a feature's breadcrumb/landing help, `<feature>/<topic>` for a topic's detail pane. See recipe agenticdeveloperhub://recipes/hierarchical-topic-detail (must-source-help-from-config).",
+  "_comment": "Unified help store for the hierarchical topic/detail views. Key = the route to the details page + ui element: `<feature>` for a feature's breadcrumb/landing help, `<feature>/<topic>` for a topic's detail pane. See recipe adhsdk.recipe.ui.blocks.hierarchical-topic-detail (cookbook/ui/blocks/hierarchical-topic-detail/, must-source-help-from-config).",
   "ecosystems": "Ecosystems group your applications, buckets, users, and access. Pick an ecosystem to configure it.",
   "ecosystems/settings": "The selected ecosystem's identifier, name, region, and domain.",
   "ecosystems/applications": "Applications access your ADH data via schema permissions and access tokens. Each one has a login registration of its own, and signs its customers in under the ecosystem's sign-in settings (Users ▸ Authentication).",

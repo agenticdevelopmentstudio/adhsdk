@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec",
     "title": "Monitor Deploy Status",
-    "domain": "adhsdk://cookbook/status/service/monitor/deploy-status",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,11 +25,11 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://principles/idempotency"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/39c2d053-006f-42c9-9db4-d991c1688024"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/board",
-      "adhsdk://cookbook/status/service/storage/libsql"
+      "7984f592-a12d-49da-806c-ff39d9557998",
+      "6bf27f64-59d0-4b2a-8715-92dba2856814"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bf11d23de1675b51",
+  "synced": "5398c4bb1096c258",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,7 +1,6 @@
 ---
 id: 88dabdf6-14a3-44eb-ab0d-ae18007c683e
 title: "Monitor Uptime"
-domain: adhsdk://cookbook/status/service/monitor/uptime
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,8 +22,8 @@ tags:
   - server
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/health
-  - adhsdk://cookbook/status/service/monitor/overall
+  - 2871e97f-f971-46fe-a4d2-de57ad5c94c5
+  - da69d02d-a3a9-4018-a90a-becee268624a
 references:
   - packages/web/packages/status-server/src/monitor/uptime.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/health.ts (adhsdk)
@@ -177,9 +176,9 @@ Not applicable: the component contains no logging statement of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/uptime.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/uptime.ts` | unverified |
 
 ## Design Decisions
 
@@ -206,10 +205,10 @@ Not applicable: the component contains no logging statement of any kind.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
 `unit-test-coverage` is marked partial: `uptime.ts` has no dedicated `*.test.ts` file of its own inside `status-server` — its only coverage in this package is the indirect assertion in `test/reads.int.test.ts` ("/uptime aggregates daily counts for the configured endpoint," asserting `body.services[0].uptimePercent === 50` through the caller `buildUptime`). The identical formula IS directly and thoroughly unit-tested, but only in the separate `status-web` package's byte-for-byte duplicate (`src/lib/uptime.test.ts`), which this file neither imports nor shares; `dayStatus`'s zero-total fallthrough and `overallUptimePercent`'s null-filtering behavior have no test coverage of any kind written against THIS file. `separation-of-concerns` passes: this file does exactly one thing — turn already-aggregated check counts into a percentage and a verdict, and average per-service percentages into one number — delegating nothing to, and duplicating nothing from, its sibling `health.ts` beyond importing the `HealthStatus` type it returns. `explicit-error-handling` passes: the one arithmetic hazard the module could hit, dividing by a zero or negative `total`, is explicitly guarded by the `c.total <= 0` check in `uptimePercent` before any division runs; no other branch in the file can divide, throw, or reject. `data-integrity` passes: every returned percentage is deterministically derived from its input with no mutation of the caller's `Counts` or `services` objects, and the same input always produces the same rounded output.
 

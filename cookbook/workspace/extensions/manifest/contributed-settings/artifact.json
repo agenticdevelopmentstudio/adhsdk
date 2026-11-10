@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "c4375e0e-091f-4627-b3c9-e7d36221802f",
     "title": "Contributed Settings",
-    "domain": "adhsdk://cookbook/workspace/extensions/manifest/contributed-settings",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -37,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "00ac25592daef3ee",
+  "synced": "4bdf7c2e2560264e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -56,7 +55,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

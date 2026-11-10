@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "62c755ed-eeba-4ada-a907-4a0f802e0466",
     "title": "Window Matching Shortcuts",
-    "domain": "adhsdk://cookbook/system/system-windows/window-shortcuts",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/system/system-windows/window-contexts"
+      "aaf56f9b-896b-4f74-9e18-1ef4116270a9"
     ],
     "references": [
       "https://github.com/sindresorhus/KeyboardShortcuts"
@@ -34,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b2d400018c0290b3",
+  "synced": "67377439ae952294",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

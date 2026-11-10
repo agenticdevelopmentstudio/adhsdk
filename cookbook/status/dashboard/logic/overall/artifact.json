@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ef8570df-111e-484f-aad7-20ad49bd34dc",
     "title": "Overall Status Rollup",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/overall",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,14 +20,14 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/overall",
-      "adhsdk://cookbook/status/dashboard/session-client"
+      "da69d02d-a3a9-4018-a90a-becee268624a",
+      "5935b39d-9451-48c1-8b99-bd510d66d1a0"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5061438396008613",
+  "synced": "5256a47b7db21d9a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "7add8e4b-922e-4518-aa45-79bf56cdf8bc",
     "title": "API Toolkit",
-    "domain": "adhsdk://cookbook/data/services/api-toolkit",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -26,14 +25,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/crud/crud-table",
-      "adhsdk://cookbook/ui/crud/crud-record-form"
+      "ec64b22b-8a25-431d-8866-b7a01acd91fe",
+      "3dc693ab-28e4-4624-9b2d-8dc81f81e037"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "412b722b108099d5",
+  "synced": "63b504b0e1101f1c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

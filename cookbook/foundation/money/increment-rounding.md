@@ -1,7 +1,6 @@
 ---
-id: E846A572-E09A-4123-A6BF-4766A8460154
+id: e846a572-e09a-4123-a6bf-4766a8460154
 title: "Increment Rounding"
-domain: adhsdk://cookbook/foundation/money/increment-rounding
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - rounding
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/money
+  - 7233995d-9b7e-4760-ac44-ab4b668b5cc1
 references: []
 approved-by: ""
 approved-date: ""
@@ -127,9 +126,9 @@ Not applicable: The rounding rule calls no logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/IncrementRounding.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/IncrementRounding.swift` | unverified |
 
 ## Design Decisions
 
@@ -141,8 +140,8 @@ Not applicable: The rounding rule calls no logging API.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `separation-of-concerns` passes because the type rounds quantities only; converting to money and formatting are in other specs. `unit-test-coverage` passes because `IncrementRoundingTests` in `AgenticDeveloperHubSDKCoreTests/MoneyTotalsTests.swift` covers upward rounding, nearest half-up, and the zero-increment and zero-value rules.
 

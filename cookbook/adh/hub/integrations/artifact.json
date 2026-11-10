@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "45c318d7-dd3e-491c-8811-eb2a3d79bca9",
     "title": "Integrations",
-    "domain": "adhsdk://cookbook/adh/hub/integrations",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -28,8 +27,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/adh/hub/access",
-      "adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config"
+      "39a7192e-7e1e-4e93-b615-312a5ddf69b0",
+      "87ca0139-6cd0-46dd-a9fb-40ad3406f175"
     ],
     "references": [
       "packages/web/packages/data/src/integrations/integrations.ts (adhsdk)",
@@ -43,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3533421a55a929a2",
+  "synced": "b0ba56fc7ee80ab9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -62,7 +61,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

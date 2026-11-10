@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "84292002-9039-4f8b-9bfb-69f9b4832e4f",
     "title": "Extension Status Bar Presenting",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "840e236dc533dfad",
+  "synced": "4a17659be00d4ceb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

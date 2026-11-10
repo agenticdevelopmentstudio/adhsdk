@@ -1,7 +1,6 @@
 ---
 id: 85301350-d3d3-4b0d-a2f7-b13936d9ddf6
 title: "Self-Check View Model"
-domain: adhsdk://cookbook/status/dashboard/logic/self-check
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/state/integrations
-  - adhsdk://cookbook/status/service/monitor/integrations
+  - e6326b0e-cba1-44ee-bf1d-7b033e25e39a
+  - da0c6c07-d0f4-4c6c-a1ef-51b696910c72
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +35,7 @@ This logic turns the status server's `/integrations` report into the self-check 
 
 The doc comment says the function is "kept separate from the component so the (slightly fiddly) filtering rules are unit-tested without a DOM". Two consumers call it: the self-check banner view, which renders the bar, and the dashboard view, which counts issues the same way the banner does, so the pill and the bar never disagree.
 
-The report carries `generatedAt` (string), `overall` (a check state) and `checks` (a list of checks); each check carries `id`, `label`, `configured`, `ok`, `state` (one of `"ok"`, `"warn"`, `"error"`), `detail`, and the optional `missingEnv` (a list of strings), `unreachable` (boolean) and `correlated` (boolean). The report itself is produced by the status server (see [Status Server Monitor Integrations](adhsdk://cookbook/status/service/monitor/integrations)) and fetched by [the integrations state](adhsdk://cookbook/status/dashboard/state/integrations).
+The report carries `generatedAt` (string), `overall` (a check state) and `checks` (a list of checks); each check carries `id`, `label`, `configured`, `ok`, `state` (one of `"ok"`, `"warn"`, `"error"`), `detail`, and the optional `missingEnv` (a list of strings), `unreachable` (boolean) and `correlated` (boolean). The report itself is produced by the status server (see Status Server Monitor Integrations ([adhsdk.ingredient.status.service.monitor.integrations](cookbook:da0c6c07-d0f4-4c6c-a1ef-51b696910c72))) and fetched by the integrations state ([adhsdk.ingredient.status.dashboard.state.integrations](cookbook:e6326b0e-cba1-44ee-bf1d-7b033e25e39a)).
 
 ## Behavioral Requirements
 
@@ -129,7 +128,7 @@ Vectors 001 to 007 are the assertions of the implementation's test suite (see Pl
 - **Errored cron or correlated check alone**: MUST produce `null` and MUST NOT turn the bar red (vector 010).
 - **`missingEnvError` implies non-null**: `missingEnvError` can only be `true` when `missingEnv` is non-empty, so a returned view with `missingEnvError: true` MUST have at least one name.
 - **Malformed report**: a defined report without a `checks` list, or a `missingEnv` that is not a list, violates the typed precondition; the function performs no runtime check and a missing `checks` would raise a runtime error to the caller (see Platform Notes). This is a documented precondition (no-validation), not a handled path.
-- **Network failure, timeout, offline**: not applicable to this function; it does no I/O. Fetch failures belong to [the integrations state](adhsdk://cookbook/status/dashboard/state/integrations), which passes an absent report or the last good report.
+- **Network failure, timeout, offline**: not applicable to this function; it does no I/O. Fetch failures belong to the integrations state ([adhsdk.ingredient.status.dashboard.state.integrations](cookbook:e6326b0e-cba1-44ee-bf1d-7b033e25e39a)), which passes an absent report or the last good report.
 - **Concurrent calls**: not applicable; the function is pure and synchronous, so concurrent callers (the banner and the dashboard pill) always get the same result for the same report.
 
 ## Configuration
@@ -177,12 +176,6 @@ Not applicable: the derivation function makes no log calls; it has no error path
 - **AppKit / UIKit**: Same pure Swift function as the SwiftUI note; call it when the integrations report updates and reload the banner view from the result, or hide the banner on `nil`.
 - **WinUI 3**: Implement `SelfCheckView` as a C# `record` (`IReadOnlyList<string> MissingEnv`, `bool MissingEnvError`, `IReadOnlyList<IntegrationCheck> Issues`, `bool HasError`) and `ComputeSelfCheck(IntegrationsResponse? data)` as a static method returning `SelfCheckView?`. Deserialize the report with `System.Text.Json` (`JsonSerializer.Deserialize<IntegrationsResponse>` with camelCase naming and `JsonStringEnumConverter` for `CheckState`); `MissingEnv` and `Correlated` map to `List<string>?` and `bool?`. Use LINQ `SelectMany(...).Distinct()`, which preserves first-occurrence order in practice, and `Where(...)` for issues. A view model implementing `INotifyPropertyChanged` recomputes the result when the report arrives (from an `HttpClient` fetch awaited with `Task`/`async`) and exposes a `bool IsBannerVisible` bound to the banner's `Visibility` (through a converter) or `InfoBar.IsOpen`. `hasError` maps to `InfoBarSeverity.Error` versus `InfoBarSeverity.Warning`. Unlike the source, C# nullable reference types make the null checks explicit.
 
-## Reference Implementations
-
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/self-check.ts` |
-
 ## Design Decisions
 
 **Decision**: Return `null` rather than an empty view when there is nothing to show.
@@ -205,10 +198,10 @@ Not applicable: the derivation function makes no log calls; it has no error path
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 
 The module passes separation-of-concerns: it holds only the derivation from report to view, with rendering in `SelfCheckBanner.tsx` and fetching in the integrations hook. `self-check.test.ts` covers the loading null, the all-ok null, warn and error missing env with dedupe, the cron exclusion, the correlated collapse and a lone warning, so unit-test-coverage passes; the empty-array and ok-state-with-missing-env paths are untested but follow directly from the filter. The tests are small, deterministic and independent, each built from the `check` and `report` fixture factories, so good-test-properties passes. explicit-error-handling passes because the function is total over its typed input and has no error path to swallow; a malformed report is a typed caller precondition.
 

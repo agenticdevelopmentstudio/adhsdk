@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; added a Data Model section; corrected the prompt-injection and lazy-load overview claims; resolved the image-error layout-shift contradiction and standardized on `display: none`; fixed the relative-URL and alt-text-trust edge cases and the unlabeled-unsafe-link accessibility claim; rescoped the touch-target and focus-indicator accessibility bullets; corrected the SwiftUI, AppKit/UIKit, Compose, and WinUI 3 platform notes; reformatted Design Decisions into the Decision/Rationale/Approved form; replaced the Compliance table with real catalog checks; added test vectors for relative, vbscript, mixed-case, and whitespace-prefixed URLs, an empty array, and concurrent load/error events; added external references and a related cross-reference to message-bubble |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed TV-006/malformed-url-handling to match safeHref(); moved Data Model after Compliance. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

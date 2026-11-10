@@ -1,10 +1,10 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
 `separation-of-concerns` passes because each file owns one concern — `ExtensionSnippet` is a pure model and LSP conversion, `SnippetFile` is pure parsing, and `SnippetStore` is the only one that touches the file system or the contribution-point lifecycle — while path safety and JSONC decoding are factored into the shared `ExtensionResourcePath` and `JSONCPreprocessor` types rather than duplicated here. `unit-test-coverage` passes: `SnippetFileTests`, `ExtensionSnippetTests`, and `SnippetStoreTests` together exercise every documented parsing leniency, every failure path (missing file, escaping path, malformed JSONC, comment-only file), scope bucketing in both directions, idempotent re-application, and per-extension withdrawal. `explicit-error-handling` passes because `SnippetFileParseError` and the dependency `ExtensionResourcePathError` are explicit, typed, `LocalizedError`-conforming errors, and `SnippetStore.apply` turns every one it catches into a `SnippetFileFailure` with a human-readable `reason` rather than dropping it silently. `idempotent-operations` passes because `apply` is explicitly tested to leave one copy on repeated application (apply-is-idempotent) and `withdraw` is explicitly tested safe on an identifier that was never applied (withdraw-is-safe-on-unknown-identifier).
 

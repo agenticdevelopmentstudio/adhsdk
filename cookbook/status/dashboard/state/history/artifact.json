@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "3bb63ddd-6c9a-41c1-a906-6c8542cb4e5c",
     "title": "Health Check History",
-    "domain": "adhsdk://cookbook/status/dashboard/state/history",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -20,16 +19,16 @@
     ],
     "tags": [],
     "depends-on": [
-      "adhsdk://cookbook/status/dashboard/api"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
     ],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/activity-history"
+      "b7397142-dfab-4ea4-983e-3f0fdcc17fac"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c7e9a5a43e3d07ee",
+  "synced": "9d1d61fec84e0346",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

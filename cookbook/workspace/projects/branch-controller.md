@@ -1,7 +1,6 @@
 ---
 id: 92f11498-2cb2-4b04-92b9-560d9f2de6ee
 title: "Branch Management"
-domain: adhsdk://cookbook/workspace/projects/branch-controller
 type: ingredient
 version: 1.2.2
 status: review
@@ -23,8 +22,8 @@ tags:
   - command-palette
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/files/git-status-provider
-  - adhsdk://cookbook/ui/layout/tabbed-view/tab-pane
+  - 9a4aa2a8-c01b-4cec-b789-6c89c100d8d3
+  - a30725ca-fa2f-4a04-8cb0-8beddf264a0a
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
@@ -234,7 +233,7 @@ system, neither of which this component renders itself.
   Notes), so no interleaving can observe a torn write. Refresh itself has
   no coalescing, generation counter, or in-flight guard of any kind —
   unlike its sibling git status provider (see
-  `adhsdk://cookbook/workspace/files/git-status-provider`), which
+  [adhsdk.ingredient.workspace.files.git-status-provider](cookbook:9a4aa2a8-c01b-4cec-b789-6c89c100d8d3)), which
   explicitly coalesces overlapping calls into at most one queued follow-up
   and discards a stale response with a generation check. Two overlapping
   refresh calls (for example, two rapid Refresh Status invocations) each
@@ -252,7 +251,7 @@ system, neither of which this component renders itself.
   branch read specifically failed, as distinct from succeeding with an
   unchanged value; the failure's only record is the git command log kept
   by the injected git client (a collaborator, not this component — see
-  `adhsdk://cookbook/workspace/files/git-status-provider`'s sibling
+  [adhsdk.ingredient.workspace.files.git-status-provider](cookbook:9a4aa2a8-c01b-4cec-b789-6c89c100d8d3)'s sibling
   git client entry).
 - **Offline or disconnected state**: Not applicable in the network sense —
   reading the current branch runs a local git command against the local
@@ -340,7 +339,7 @@ reads, stores, or transmits no credential, token, or personal data.
 This component makes no logging call of its own. The one error it
 swallows (refresh's failure path) is recorded by a different component,
 the git command log kept by the injected git client's unconditional
-recording (see `adhsdk://cookbook/workspace/files/git-status-provider`'s
+recording (see [adhsdk.ingredient.workspace.files.git-status-provider](cookbook:9a4aa2a8-c01b-4cec-b789-6c89c100d8d3)'s
 sibling git client entry), not logged a second time here.
 
 | Event | Level | Message |
@@ -394,7 +393,7 @@ sibling git client entry), not logged a second time here.
   thread-affinity of its own — mirror the main-thread confinement by only
   ever touching this object from the UI thread (`DispatcherQueue`), the
   same discipline the git status provider's WinUI port already assumes
-  (see `adhsdk://cookbook/workspace/files/git-status-provider`).
+  (see [adhsdk.ingredient.workspace.files.git-status-provider](cookbook:9a4aa2a8-c01b-4cec-b789-6c89c100d8d3)).
   Replace `NSHashTable<TabPaneViewController>.weakObjects()` with a
   `List<WeakReference<TabPaneViewController>>` (or a
   `ConditionalWeakTable`), pruning dead entries on each scan since .NET has
@@ -416,9 +415,9 @@ sibling git client entry), not logged a second time here.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift` | unverified |
 
 ## Design Decisions
 
@@ -492,12 +491,12 @@ shown, and "every item silently inert once its target is deallocated" —
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
 
 Notes: separation-of-concerns passes because `BranchController` owns exactly
 one checkout's status provider, branch, panes, and commands, delegates all

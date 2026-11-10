@@ -1,7 +1,6 @@
 ---
 id: 0679e232-f536-4d02-b3f0-592d52d44582
 title: "Status Server OpenAPI"
-domain: adhsdk://cookbook/status/service/openapi
 type: ingredient
 version: 1.0.2
 status: review
@@ -21,10 +20,10 @@ tags:
   - pure-function
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/api-design
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/49399746-a81f-4163-8b07-0cfa11d87c2e
 related:
-  - adhsdk://cookbook/status/service/auth
-  - adhsdk://cookbook/status/service/telemetry/fetchers
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
+  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
 references:
   - packages/web/packages/status-server/src/openapi/build.ts (adhsdk)
   - packages/web/packages/status-server/src/openapi/route-key.ts (adhsdk)
@@ -186,11 +185,11 @@ Not applicable: none of `build.ts`, `route-key.ts`, or `shared.ts` contains a lo
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/openapi/build.ts` |
-| web | `packages/web/packages/status-server/src/openapi/route-key.ts` |
-| web | `packages/web/packages/status-server/src/openapi/shared.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/openapi/build.ts` | unverified |
+| web | `packages/web/packages/status-server/src/openapi/route-key.ts` | unverified |
+| web | `packages/web/packages/status-server/src/openapi/shared.ts` | unverified |
 
 ## Design Decisions
 
@@ -211,10 +210,10 @@ Not applicable: none of `build.ts`, `route-key.ts`, or `shared.ts` contains a lo
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [api-design-conventions](agenticdevelopercookbook://compliance/access-patterns#api-design-conventions) | passed | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | passed | Access Patterns |
 
 `separation-of-concerns` passes: `build.ts` assembles the document, `route-key.ts` normalizes a route key, and `shared.ts` provides fragment builders — three single-purpose files with no duplicated logic between them, and the fourteen `paths/*.ts` modules each own their own route family's documentation, external to all three. `unit-test-coverage` is `partial`: `buildOpenApiSpec`'s overall document shape and its parity against `app.routes` is exercised thoroughly by `test/openapi.test.ts` (the 3.1/bearer-shape assertion, the phantom-route and undocumented-route drift-guard assertions, and the committed-`openapi.json` snapshot assertion), but none of `route-key.ts`'s `normHonoPath` edge cases (duplicate-slash collapse, the root-path fallback) or any of `shared.ts`'s nine individual helper functions (`jsonBody`, `ref`, `errorResponse`, `errors`, `okJson`, `okFlag`, `pathParam`, `queryParam`, `zodJson` including its catch branch) has a dedicated unit test — each is exercised only indirectly, as a value baked into the fourteen `paths/*.ts` modules that the drift-guard and snapshot tests check as a whole; this also leaves the collision case in `schema-name-collision-unguarded` without any regression test that would catch it. `explicit-error-handling` is `partial`: the one error path across these three files, `zodJson`'s `try`/`catch`, is a deliberate, documented fallback rather than an oversight, but it is nonetheless silently swallowed — a successful conversion and a caught exception that happens to produce the same permissive `{ type: 'object', additionalProperties: true }` shape are indistinguishable from outside the function, with no log or return value marking which branch ran. `api-design-conventions` passes: the OpenAPI paths these files assemble consistently use plural resource nouns, brace-style path parameters (via `pathParam` and, for the drift guard's own recomputation, `normHonoPath`'s `:name`-to-`{name}` rewrite), and one shared bearer/error/success-envelope vocabulary (`BEARER`, `errorResponse`, `okFlag`) reused by construction across all fourteen hand-written modules, rather than left to per-module hand-checking.
 

@@ -15,7 +15,7 @@ The wrapped number field view's own behavior — theming, activation and
 delegate wiring, layout when a fixed label width is set, locale-aware
 parsing, clamping, revert-on-invalid, and external-change sync — is
 documented in full at
-`adhsdk://cookbook/ui/settings/rows/number-field-view`, which this
+[adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a), which this
 recipe depends on. This recipe documents only what this component itself
 contributes: constructing and forwarding to that wrapped view, exposing
 its constituent views, and the construction/thread-confinement

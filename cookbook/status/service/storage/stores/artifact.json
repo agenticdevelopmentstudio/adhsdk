@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "82524881-6da8-42fe-85a9-388651ee085d",
     "title": "Status Server Stores",
-    "domain": "adhsdk://cookbook/status/service/storage/stores",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -26,15 +25,15 @@
       "storage-ports"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/data/database",
-      "agenticdevelopercookbook://guidelines/implementing/data/transactions-and-concurrency",
-      "agenticdevelopercookbook://guidelines/implementing/data/foreign-keys",
-      "agenticdevelopercookbook://guidelines/implementing/security/sensitive-data"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f68778f2-65e3-4e89-bbf8-115151efa9dc",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab416d40-2688-4531-95fb-613f0d2fa8cf",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b16e64a4-462d-4f46-afeb-1a06952e5e65",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/storage/libsql",
-      "adhsdk://cookbook/status/service/storage/ports",
-      "adhsdk://cookbook/status/service/auth"
+      "6bf27f64-59d0-4b2a-8715-92dba2856814",
+      "1c240b7a-21b3-4a89-b24f-a5bf5cf5f37b",
+      "735b4e58-bce9-4754-ad3f-bf0344fd4b32"
     ],
     "references": [
       "packages/web/packages/status-server/src/libsql/stores/auth-store.ts (adhsdk)",
@@ -65,7 +64,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1c4e2883b9aebdc3",
+  "synced": "c1734794002ad5dc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -84,7 +83,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

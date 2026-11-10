@@ -1,7 +1,6 @@
 ---
 id: 21455a0c-b7b3-4121-8726-c6918d7af5a8
 title: "Status Server Monitor Sync"
-domain: adhsdk://cookbook/status/service/monitor/sync
 type: ingredient
 version: 1.0.2
 status: review
@@ -21,18 +20,18 @@ tags:
   - sync
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/observability/logging
-  - agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e80d67b3-813f-47fb-8894-aa4e6f6479f3
 related:
-  - adhsdk://cookbook/status/service/monitor/cycle-runner
-  - adhsdk://cookbook/status/service/monitor/alerts
-  - adhsdk://cookbook/status/service/monitor/provider-conn
-  - adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
-  - adhsdk://cookbook/status/service/monitor/reconcile-stuck-deploys
-  - adhsdk://cookbook/status/service/board
-  - adhsdk://cookbook/status/service/monitor/issues
+  - 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
+  - 4aad9d0a-4984-4021-ad1f-d8aa6a15b066
+  - e029def6-7d5d-4e52-b565-e2a6612179bb
+  - da18e58b-c2d9-4798-8143-2dd30b5976fc
+  - 7984f592-a12d-49da-806c-ff39d9557998
+  - 130fb0f2-e3a0-452a-bf7d-e49dbb56843e
 references:
   - packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/probe.ts (adhsdk)
@@ -144,7 +143,7 @@ Not applicable — this is a server-side background sync function, not a visual 
 
 - **Null and empty input**: `opts` omitted entirely is equivalent to `opts?.skipDeploys` being falsy — the full cycle runs (MUST). An empty active-endpoint list (`listActiveEndpoints()` resolves `[]`) skips the whole probe/record/rollup block (probe-skipped-on-empty) and resolves `undefined` with zero `health_checks` rows written — MUST (`sync.int.test.ts` › "completes with no configured endpoints"). When no provider has a configured token, `has.*Token` is `false` for all four providers, so `runCycle` never calls `guard` at all for them — the fallback shapes (`EMPTY_DEPLOYS`/`EMPTY_PROJECTS`) are produced directly via `Promise.resolve`/ternary, bypassing even the rate-limit check inside `guard` — MUST (provider-poll-token-gated).
 - **Boundary values**: `PROVIDER_POLL_TIMEOUT_MS` is a fixed `20_000`, not read from `config` or an environment variable — every poll gets exactly the same cap regardless of provider or cycle — MUST. `pruneOlderThanDays(90)` is likewise a literal in this file, not a `StatusConfig` field — MUST. The healthy-probe veto (`healthy-probe-vetoes-removal`) is applied strictly AFTER `endpointsClaimedByNothing` has already decided the `doomed` set — it is a second, narrower filter this caller alone applies, never a change to the underlying rule's own preconditions — MUST NOT be read as the rule itself having a "still serving" clause.
-- **Concurrent access**: `runCycle` installs no lock or reentrancy guard of its own against a second concurrent call against the same `storage` — nothing in this file prevents two cycles from interleaving their reads and writes; serialization is delegated entirely to the caller (the cycle-runner/scheduler composition, external to this file — see the [Status Server Monitor Cycle Runner](adhsdk://cookbook/status/service/monitor/cycle-runner) recipe) — MUST NOT be read as a promise of its own concurrency safety. Within one call, the four deploy-provider polls run concurrently via `Promise.all` (provider-polls-run-concurrently), and each `guard` call's own `setTimeout` is independent and cleared in its own `finally`, so concurrent polls never share or leak each other's timers — MUST.
+- **Concurrent access**: `runCycle` installs no lock or reentrancy guard of its own against a second concurrent call against the same `storage` — nothing in this file prevents two cycles from interleaving their reads and writes; serialization is delegated entirely to the caller (the cycle-runner/scheduler composition, external to this file — see the Status Server Monitor Cycle Runner ([adhsdk.ingredient.status.service.monitor.cycle-runner](cookbook:99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db)) recipe) — MUST NOT be read as a promise of its own concurrency safety. Within one call, the four deploy-provider polls run concurrently via `Promise.all` (provider-polls-run-concurrently), and each `guard` call's own `setTimeout` is independent and cleared in its own `finally`, so concurrent polls never share or leak each other's timers — MUST.
 - **Error states**: Steps that carry no `try`/`catch` of their own — `reconcileOrphanedEndpoints`, `resolveUnmonitoredTargets`, `listActiveEndpoints`, `probeEndpoints`, `recordChecks`, `rollupMetrics`, `upsertDeployments`, `learnProjectIds`, `readRoster`, `stampLiveHosts`, `recordVercelProdStates`, `recordObservations`, `reconcileBoardLedger` — reject the whole `runCycle` promise on failure, with no fallback of their own; this bare propagation is what lets the cycle-runner composition's own failure handling (documented in its recipe) apply — MUST. The specifically fail-soft pieces are limited to: each provider poll (via `guard`), `enrichDeployErrors`, `reconcileVanishedDeploys`, `expireUnconfirmedDeploys` (each documented never-throws by its own module), and the `enumerateDeployProjects` call in step 8 (caught locally via `.catch`, `enumerate-failure-yields-empty-inventory`) — MUST.
 - **Offline / disconnected state**: A provider whose network is entirely unreachable is absorbed by `guard`'s throw-catch (poll-throw-degrades) into the same `{ ok: false }` shape a documented API failure produces — the cycle records `reachable: false` for that source (platform-observations-always-recorded) rather than aborting — MUST. Two consecutive unreachable polls of the same provider are what the platform-health issue in the ledger (written downstream by `reconcileBoardLedger`, via `PLATFORM_UNREACHABLE_POLLS` in `issue-sources.ts`, external to this file) eventually pages on — this file only supplies the per-cycle `reachable` fact, never the debounce threshold itself — MUST NOT be read as this file owning that threshold.
 
@@ -166,7 +165,7 @@ Not applicable: this file defines no application URL scheme or HTTP route of its
 
 ## Localization
 
-This file's only literal strings are hardcoded English `console.log`/`console.error` messages (operator-facing, container stdout) and the two alert `detail` strings assembled in `retire-unclaimed-monitors`' `why` callback (`its <platform> project "<name>" no longer exists`, `no deploy project serves <host> any more`) — all routed through no localization mechanism, all consumed by an operator or by `notifyIssueAlert`'s own Slack/Discord-rendering (external, documented in the [Status Server Monitor Alerts](adhsdk://cookbook/status/service/monitor/alerts) recipe), never by an end user.
+This file's only literal strings are hardcoded English `console.log`/`console.error` messages (operator-facing, container stdout) and the two alert `detail` strings assembled in `retire-unclaimed-monitors`' `why` callback (`its <platform> project "<name>" no longer exists`, `no deploy project serves <host> any more`) — all routed through no localization mechanism, all consumed by an operator or by `notifyIssueAlert`'s own Slack/Discord-rendering (external, documented in the Status Server Monitor Alerts ([adhsdk.ingredient.status.service.monitor.alerts](cookbook:1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9)) recipe), never by an end user.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
@@ -225,9 +224,9 @@ This file uses plain `console.log`/`console.error` calls with a literal `[sync]`
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/sync.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/sync.ts` | unverified |
 
 ## Design Decisions
 
@@ -251,15 +250,15 @@ This file uses plain `console.log`/`console.error` calls with a literal `[sync]`
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
 
 `unit-test-coverage` passes: `sync-guard.test.ts` pins `guard`'s three branches directly (timeout, throw, pass-through), `sync.int.test.ts` exercises `runCycle` end-to-end across the probe/rollup/skip-deploys/prune/fail-soft-poll/structural-prune paths, and `retire-unclaimed-monitors.int.test.ts` exhaustively pins the deletion rule's positive and every withheld case through `runCycle` itself. `separation-of-concerns` passes: this file composes and sequences, but the deletion rule's own preconditions live in `endpointsClaimedByNothing` (`deploy-platform/engine/run.ts`), the ownership correlation lives in `board/ownership.ts`, each provider's own fetch/parse lives in its own `fetch-*.ts` module, and the board-derivation/ledger logic lives in `board/reconcile.ts` and `board/derive.ts` — this file owns only the cycle's own sequencing, fail-soft wrapping, and the one caller-side veto (`stillServing`) that no lower layer can see. `explicit-error-handling` passes: every fail-soft path is an explicit `try`/`catch` or `.catch` with a logged fallback (`guard`, the `enumerateDeployProjects` catch), and every other step is left to propagate deliberately, documented under Edge Cases, rather than silently swallowed. `error-recovery` passes: a rejected `runCycle` call does not corrupt state for the next attempt — every write in this file is either idempotent or narrowly scoped, so a retried cycle (by the caller, on the next tick) picks up cleanly. `graceful-degradation` passes: a missing token, a rate-limited provider, a thrown fetch, or an overrunning poll each degrade to the same `{ ok: false }` fallback shape and a recorded blind spot, never an aborted cycle. `fault-tolerance` passes: one provider's failure (network down, API error, timeout) never prevents the other three providers' polls, the endpoint probe, or the ledger write from completing. `timeout-handling` passes: `guard`'s `PROVIDER_POLL_TIMEOUT_MS` cap is exactly the "one slow/hung platform must not wedge the cycle" mechanism this check calls for. `idempotent-operations` passes: `retireEndpoint` is documented idempotent (an already-deleted id is a no-op), `upsertDeployments`/`learnProjectIds` are upserts, `pruneOlderThanDays` is a repeatable cutoff-keyed delete, and `stampLiveHosts` only writes rows whose computed value actually changed. `secure-log-output` passes: every `console.log`/`console.error` call in this file logs endpoint URLs, project names, hostnames, and error objects — never a provider token or any other credential value, even though `conn` (which holds them) is threaded through several of this file's own calls.
 

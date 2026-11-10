@@ -1,0 +1,3 @@
+
+Bleed extends a child element past the content column boundary toward one page edge, creating the visual effect of the element being cropped by the viewport rather than sitting politely inside the measure. This produces a "window onto something larger" visual metaphor: a frame with air on both sides reads as a picture of an app, while a frame the page edge cuts reads as the app itself. The component uses margin (not transform) to achieve this, forcing the neighboring column to surrender space. It is only meaningful when used inside a container with `overflow-x: clip` to prevent the overhang from widening the document.
+

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "19839612-1fd1-44c5-8659-674c264240be",
     "title": "Security Client",
-    "domain": "adhsdk://cookbook/adh/hub/security/security-client",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -27,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/adh/hub/security/authentication-client",
-      "adhsdk://cookbook/adh/hub/access"
+      "65fbb2b1-ca41-499f-ac03-7ecc0e206dcc",
+      "39a7192e-7e1e-4e93-b615-312a5ddf69b0"
     ],
     "references": [
       "packages/web/packages/data/src/security/tokens.ts (adhsdk)",
@@ -43,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f82455448da5c35b",
+  "synced": "ff8706eccbab2509",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -62,7 +61,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

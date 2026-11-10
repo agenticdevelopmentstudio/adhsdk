@@ -36,7 +36,7 @@
   (or the Community Toolkit's `DataGrid`) bound to an
   `ObservableCollection<Row>`, with the master/detail split via `TwoPaneView`
   (mirroring the peer layout of `ResizableSplit`,
-  adhsdk://recipes/resizable-split) or the `ListDetailsView`
+  [adhsdk.ingredient.ui.components.layout.resizable-split](cookbook:c21473ee-a075-4800-96db-ff3de0888515)) or the `ListDetailsView`
   control's built-in adaptive behavior. Reproduce the toolbar with a
   `CommandBar`'s
   `AppBarButton`s for "Admin notes" / "Send invitation" / "Add users", each

@@ -1,7 +1,6 @@
 ---
 id: 2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f
 title: "Badge"
-domain: adhsdk://cookbook/ui/controls/badge
 type: ingredient
 version: 1.3.0
 status: review
@@ -21,8 +20,7 @@ tags:
   - status-indicator
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/controls/badge
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references:
   - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
   - https://developer.apple.com/design/human-interface-guidelines/color
@@ -309,7 +307,7 @@ Not applicable: the source contains no logging calls.
   `padding: 2px 6px`, background/border/color driven by the equivalent style
   prop, and a `getContrastingTextColor` helper reimplementing the same
   0.299/0.587/0.114 luminance weights and 0.6 threshold. The sibling web
-  Badge recipe (`adhsdk://cookbook/ui/controls/badge`) already implements
+  Badge recipe ([adhsdk.ingredient.ui.controls.badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f)) already implements
   this on the web; reuse its formula so filled-style contrast decisions agree
   across platforms rather than re-deriving a possibly different threshold.
 - **AppKit / UIKit** (source platform): Source at
@@ -377,9 +375,9 @@ Not applicable: the source contains no logging calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` | unverified |
 
 ## Design Decisions
 
@@ -443,9 +441,9 @@ Not applicable: the source contains no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
 
 This status rests on `Badge.swift`: `contrastingTextColor(on:)` uses an
 unverified perceptual-luminance heuristic rather than a WCAG contrast-ratio

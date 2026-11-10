@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ae8d4137-e2fc-495f-9592-46ad4b1ac60f",
     "title": "Retired Storage",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/retired-storage",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/live-snapshot"
+      "ca7205d2-31c0-424a-95a2-a356bed30187"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0a374345182025b1",
+  "synced": "468eb231f39140ac",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

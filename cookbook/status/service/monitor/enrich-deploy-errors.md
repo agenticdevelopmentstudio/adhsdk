@@ -1,7 +1,6 @@
 ---
 id: e029def6-7d5d-4e52-b565-e2a6612179bb
 title: "Status Server Monitor Enrich Deploy Errors"
-domain: adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
 type: ingredient
 version: 1.0.2
 status: review
@@ -23,9 +22,9 @@ tags:
   - rate-limiting
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
 related: []
 references:
   - packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts (adhsdk)
@@ -189,9 +188,9 @@ No log line is emitted on a successful enrichment, an empty candidate set, or a 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` | unverified |
 
 ## Design Decisions
 
@@ -215,14 +214,14 @@ No log line is emitted on a successful enrichment, an empty candidate set, or a 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | partial | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | partial | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` is `failed` for this file specifically: `deploy-error-shaping.test.ts` exercises only the network-free shaping helpers `enrichDeployErrors` calls into indirectly (`composeVercelDeployError`, `buildLogTail`, `buildLogFull`, `fetchRailwayBuildLogTail`'s GraphQL-error branches) — no test in the given sources imports or invokes `enrichDeployErrors` itself, so its own candidate-selection, cooldown filter, dispatch, concurrency cap, and fail-soft catches are untested at this file's level. `separation-of-concerns` passes: this file owns exactly one concern — selecting candidates and dispatching/persisting their error text — delegating the actual provider fetch logic to `fetch-vercel.ts`/`fetch-railway.ts`, the cooldown check to `deploy-platform/cooldown`, the bounded fan-out to `deploy-platform/util`'s `mapLimit`, and every storage read/write to the `Storage` port, never touching a database directly. `explicit-error-handling` passes: every failure path this file can hit — the candidate query rejecting, and a per-row fetch or store rejecting — is caught explicitly and logged with a distinguishing `[enrich]`-prefixed message; nothing is silently swallowed without a signal. `timeout-configuration` passes: every per-row fetch carries an explicit 8,000ms deadline via `AbortController`/`setTimeout`, cleared in a `finally`. `retry-with-backoff` is `partial`: a failed row is never retried within the same call, and there is no backoff of any kind — but because the row remains a candidate (its `error_text` stays null) and `enrichDeployErrors` runs again on the very next full cycle, a failed fetch is naturally retried across cycles, just without exponential backoff or a retry cap other than the 14-day recency window; this is a real, if unconventional, retry mechanism, which is why the check is `partial` rather than `failed`. `rate-limit-handling` passes: the shared cooldown (`rateLimitedUntil`) is consulted before the candidate query is even built, so a throttled provider's rows wait for a later cycle instead of spending requests that would extend the throttle. `idempotent-operations` passes: `setErrorText` writes `error_text` once, and `listFailedWithoutError`'s own `isNull(errorText)` predicate then permanently excludes that row from future candidate sets — re-running the identical logic against an already-enriched row is a no-op by construction. `graceful-degradation` passes: no token, both providers cooling down, an empty candidate set, a query failure, or a per-row fetch failure all degrade to a skip/no-op for the affected scope rather than throwing, matching the caller's own "best-effort and fail-soft" framing in `sync.ts`.
 

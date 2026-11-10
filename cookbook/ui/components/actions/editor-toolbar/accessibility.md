@@ -1,0 +1,6 @@
+
+- **Role**: `toolbar` — identifies the region as a toolbar to assistive technology (see **toolbar-role**). The component establishes this semantic grouping only; see the Design Decisions entry below for what it deliberately does not provide.
+- **Accessible name**: MUST be provided via `aria-label`. The default name is `"Editor toolbar"` (see **aria-label-default**), which is announced by screen readers when focus enters or the region is explicitly searched. If a caller explicitly passes `ariaLabel=""`, the component applies it as given rather than falling back — see Edge Cases: **Empty ariaLabel** — which leaves the region with no accessible name; that is a caller error the component does not guard against.
+- **Child focus management**: The component does not manage focus; child elements are responsible for their own keyboard and focus behavior. Because `role="toolbar"` alone does not deliver the WAI-ARIA toolbar keyboard pattern (roving tabindex, arrow-key navigation, Home/End), consumers must not expect toolbar keyboard shortcuts from this container — see **keyboard-navigable** in Compliance and the Design Decisions entry below.
+- **Minimum tap target**: Not applicable to the container itself; child elements are responsible for meeting touch target size requirements (44×44pt minimum on iOS, 48×48dp minimum on Android, per platform guidelines).
+

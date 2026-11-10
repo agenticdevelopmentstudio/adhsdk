@@ -1,7 +1,6 @@
 ---
 id: 7152ec0d-01a9-433d-b1fd-1ac708400f40
 title: "Extension Webview View"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,11 +20,11 @@ tags:
   - webview
   - placeholder
 depends-on:
-  - adhsdk://cookbook/ui/layout/pane-view
-  - adhsdk://cookbook/ui/layout/composable-tabs/view-registry
+  - 2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe
+  - 52e34f70-c3d8-4ec6-a753-d9d3cea11789
 related:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 60b5767d-3cf5-4373-b2fc-074aa6b62fec
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -175,9 +174,9 @@ Not applicable: no `Logger`, `os_log`, or other logging call appears anywhere in
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/ExtensionWebviewViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/ExtensionWebviewViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -190,7 +189,7 @@ Not applicable: no `Logger`, `os_log`, or other logging call appears anywhere in
 **Approved**: pending
 
 **Decision**: (AppKit/UIKit) The resolver this component depends on is a closure typealias (`ContributedWebviewResolving`) rather than a protocol.
-**Rationale**: It is one verb with one production implementation, so a protocol would exist for a single conformer; taking it as a closure parameter also lets it be supplied to this component after construction, without needing a stateful lookup type. See `adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view` for the panel this closure returns.
+**Rationale**: It is one verb with one production implementation, so a protocol would exist for a single conformer; taking it as a closure parameter also lets it be supplied to this component after construction, without needing a stateful lookup type. See [adhsdk.ingredient.workspace.extensions.vscode-api.webviews.webview-panel-view](cookbook:60b5767d-3cf5-4373-b2fc-074aa6b62fec) for the panel this closure returns.
 **Approved**: pending
 
 **Decision**: This component wraps the panel rather than being the webview surface itself.
@@ -201,11 +200,11 @@ Not applicable: no `Logger`, `os_log`, or other logging call appears anywhere in
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 
 `graceful-degradation` and `platform-theming` are `passed` on the strength of two source-satisfied MUSTs — `remains-on-placeholder-when-unresolved`/`panel-removal-reverts-to-placeholder` for the former, `background-tracks-theme-surface` for the latter; `screen-reader-support` is `partial` because `show(_:)` swaps the entire visible content with no accompanying `NSAccessibility` notification (see **Accessibility**'s Announce state changes).
 

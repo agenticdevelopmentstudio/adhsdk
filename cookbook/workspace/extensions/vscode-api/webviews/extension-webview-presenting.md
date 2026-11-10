@@ -1,7 +1,6 @@
 ---
 id: c4f76978-5aef-430c-a7e1-a20326da6709
 title: "Extension Webview Presenting"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting
 type: ingredient
 version: 1.1.2
 status: review
@@ -21,9 +20,9 @@ tags:
   - webview
   - presenter
 depends-on:
-  - agenticdevelopercookbook://principles/fail-fast
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377
 related:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options
+  - 66759d9a-3884-42e1-acd9-5bad563e1e52
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/PaneWebviewPresenter.swift (adhsdk)
@@ -158,9 +157,9 @@ Not applicable: the given source contains no logging call of its own — diagnos
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift` | unverified |
 
 ## Design Decisions
 
@@ -176,9 +175,9 @@ Not applicable: the given source contains no logging call of its own — diagnos
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
 `separation-of-concerns` passes because the given file declares only a request value type, a panel-handle protocol, and a one-method presenting protocol — it performs no placement, no rendering, and no JavaScript-bridge work of its own; those are `PaneWebviewPresenter`'s, `WebviewPanelViewController`'s, and `MainThreadWebviews`'s jobs respectively (see Overview). `unit-test-coverage` is partial: no test file in the given sources exercises `ExtensionWebviewPresenting`/`ExtensionWebviewPanel` directly by name, since they are protocols; coverage instead comes indirectly, through `PaneWebviewPresenterTests` (exercising the production conformer) and `MainThreadWebviewsTests` (exercising fake conformers, `TestWebviewPanel`/`TestWebviewPresenter`, wired through the adaptor) — real, traceable coverage of the contract, but never a test that names the protocols themselves. `explicit-error-handling` passes because the protocol's one failure mode — nowhere to place a panel — is an explicit, documented `nil` return that `MainThreadWebviews` turns into a raised JavaScript exception; nothing is swallowed silently.
 

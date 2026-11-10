@@ -1,6 +1,6 @@
 
 The component represents one session as a tab-bar item inside
-[the tabbed view](adhsdk://cookbook/ui/layout/tabbed-view). It
+the tabbed view ([adhsdk.ingredient.ui.layout.tabbed-view](cookbook:d1257c76-fb28-47a5-bc2b-d4fb1ef87b53)). It
 conforms to a stacked-item interface, so the hosting bar can tell it apart
 from a plain title string: it carries selection (highlighted state) and how
 far it stands from the selected tab (stack depth), and it draws itself as a

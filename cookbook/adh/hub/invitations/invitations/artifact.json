@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "7e0508b5-cf96-42da-9902-51fbe31b432f",
     "title": "Hub Domain: Invitations",
-    "domain": "adhsdk://cookbook/adh/hub/invitations/invitations",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -31,10 +30,10 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/navigation/htdv",
-      "adhsdk://cookbook/adh/hub/ecosystems/ecosystems",
-      "adhsdk://cookbook/adh/hub/customers",
-      "adhsdk://cookbook/adh/hub/security/authentication-client"
+      "faa2c3f3-1ff7-45fb-b6da-efed3cc1d451",
+      "201572ee-2e0f-4839-94f5-252f8044c4bf",
+      "f81157d7-766f-42c9-a98a-44df19698bea",
+      "65fbb2b1-ca41-499f-ac03-7ecc0e206dcc"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/AdminNotesRail.swift (adhsdk)",
@@ -49,7 +48,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bc30e0e38768ffc1",
+  "synced": "487ab0535c294f68",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -68,7 +67,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

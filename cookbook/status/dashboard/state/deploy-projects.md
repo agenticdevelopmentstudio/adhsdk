@@ -1,7 +1,6 @@
 ---
 id: b14c03d8-1b93-41e0-9f92-76a81171cee9
 title: "Deploy Projects State"
-domain: adhsdk://cookbook/status/dashboard/state/deploy-projects
 type: ingredient
 version: 1.2.1
 status: review
@@ -17,9 +16,9 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/api
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 related:
-  - adhsdk://cookbook/status/dashboard/api
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +35,7 @@ Deploy Projects is the status dashboard's client for the backend's deploy-projec
 - a shared fresh-fetch latch and its arming operation;
 - the cached state itself, which caches the snapshot under the cache key `["deploy-projects"]`.
 
-All requests go through the injected status API client (see [status-web-api](adhsdk://cookbook/status/dashboard/api)), so paths are relative to the host's API base.
+All requests go through the injected status API client (see status-web-api ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad))), so paths are relative to the host's API base.
 
 ## Behavioral Requirements
 
@@ -210,9 +209,9 @@ Not applicable: the concept contains no logging calls; failures surface only as 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-deploy-projects.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-deploy-projects.ts` | unverified |
 
 ## Design Decisions
 
@@ -262,11 +261,11 @@ Not applicable: the concept contains no logging calls; failures surface only as 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | partial | performance |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | failed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | partial | performance |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | failed | reliability |
 
 The module separates transport (the injected `StatusApiClient`), request shaping (the two fetch helpers) and caching (the React Query hook), which satisfies separation of concerns. No test exercises this module's own code; the only related test mocks `fetchUnconfigured` wholesale, so unit-test coverage fails. Every non-ok response becomes a thrown `Error` carrying the status and is surfaced to callers through promise rejection or query error state, so errors are explicit rather than swallowed. The caching strategy is deliberate (browser cache bypassed, 60 s client stale window, server 30 s cache bypassed on demand) but only partial, because an arm made while a fetch is in flight can be lost, leaving the next fetch cache-served contrary to the documented latch contract. No timeout is set on either request and React Query's abort signal is not forwarded, so a hung request stays pending indefinitely.
 

@@ -1,7 +1,6 @@
 ---
-id: ED610AA4-2717-4242-A8B9-C4616377DBD9
+id: ed610aa4-2717-4242-a8b9-c4616377dbd9
 title: "Billing DTOs"
-domain: adhsdk://cookbook/foundation/billing/billing-dt-os
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,10 +21,10 @@ tags:
   - wire
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-xpc-client
-  - adhsdk://cookbook/foundation/billing/billing-xpc-protocol
-  - adhsdk://cookbook/foundation/billing/billing-model
-  - adhsdk://cookbook/foundation/billing/billing-prefs
+  - 8055f7c9-d336-4b71-9f95-1bf4bdef7b92
+  - 36c76e0f-b41c-4fd6-a349-a0e9241fb489
+  - 01942f60-6711-43e7-a7b2-a8e7cb4c2cda
+  - 0175f0bb-f4bd-4f72-94c2-57b087ad9df9
 references: []
 approved-by: ""
 approved-date: ""
@@ -140,9 +139,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDTOs.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDTOs.swift` | unverified |
 
 ## Design Decisions
 
@@ -158,8 +157,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 separation-of-concerns passes: the file holds shapes and shared constants only; storage, rules and transport are elsewhere. unit-test-coverage is partial: `BillingDTOsTests` covers the entry and segment round trips, integer totals, per-currency overview, the missing-currency decode and the status cases, and `BillingDTOEditingTests` covers the editing helpers; no test references `BillingLimits` (the clamp ranges), the defaults or the settings keys, and `BillingRefusalText.repoAlreadyClaimed` is used only by the `FakeBillingClient` test double, so vectors billing-dt-os-009 to 013 have no direct test.
 

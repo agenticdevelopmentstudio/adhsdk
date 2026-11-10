@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "31fe479f-e95e-4f03-b957-faa2314a03be",
     "title": "Status Server Config",
-    "domain": "adhsdk://cookbook/status/service/config",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -25,12 +24,12 @@
       "secrets"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/security/sensitive-data",
-      "agenticdevelopercookbook://guidelines/implementing/security/secure-storage",
-      "agenticdevelopercookbook://guidelines/implementing/security/cors"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/926dff1a-dc12-46a4-b8c1-bdedbc142afd",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8ea0409f-405a-4f4d-9bbf-54bf21c86d33"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/auth"
+      "735b4e58-bce9-4754-ad3f-bf0344fd4b32"
     ],
     "references": [
       "packages/web/packages/status-server/src/config/env.ts (adhsdk)",
@@ -46,7 +45,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e8b75ec65327391c",
+  "synced": "283255f700f01f29",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -65,7 +64,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

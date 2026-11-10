@@ -6,7 +6,7 @@ against that staged copy through a list-with-details pane and a nested note edit
 reports the result to the caller when Save is activated. Fetching and the actual persistence
 write live in the caller, never in this component. The "New note" control is supplied to the
 list-with-details pane as one of its actions; the list-with-details pane renders it and owns
-its placement — see `adhsdk://recipes/list-with-details-pane`.
+its placement — see [adhsdk.recipe.ui.blocks.list-with-details-pane](cookbook:6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73).
 
 A note record is used here with exactly seven fields: `id`, `content`, `author`,
 `addedDate`, `modifiedDate`, `subjectTable`, and `subjectId`, all strings. `addedDate` and

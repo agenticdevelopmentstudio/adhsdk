@@ -1,7 +1,6 @@
 ---
-id: 4BB40927-776A-41D6-86C9-962CCC1E43BC
+id: 4bb40927-776a-41d6-86c9-962ccc1e43bc
 title: "Live Timer Row View"
-domain: adhsdk://cookbook/ui/settings/views/live-timer-row-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - timer
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/views/live-timer-list-view
+  - f012373c-0094-46e8-9d40-b2a65a96c8b5
 references: []
 approved-by: ""
 approved-date: ""
@@ -149,9 +148,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerRowView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerRowView.swift` | unverified |
 
 ## Design Decisions
 
@@ -167,8 +166,8 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Separation-of-concerns is passed: the row only renders a model and reports stop, the clock is injected and scheduling lives in the separate ticker. Unit-test-coverage is passed: `LiveTimerRowViewTests.swift` covers title and subtitle, hidden subtitle, the clock, a backwards clock, update, stop, identifiers, ticker delivery and idempotent start, and origin tooltips.
 

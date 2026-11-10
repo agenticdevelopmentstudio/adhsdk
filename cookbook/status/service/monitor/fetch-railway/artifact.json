@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "6a84b15a-5e4e-4b1c-9d73-0ae8a8b602af",
     "title": "Status Server Monitor Fetch Railway",
-    "domain": "adhsdk://cookbook/status/service/monitor/fetch-railway",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,15 +25,15 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/networking/timeouts",
-      "agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience",
-      "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/fetch-cloudflare",
-      "adhsdk://cookbook/status/service/monitor/deploy-status",
-      "adhsdk://cookbook/status/service/monitor/alerts",
-      "adhsdk://cookbook/status/service/monitor/enrich-deploy-errors"
+      "b3e2495c-5478-411c-80d7-9eefc2f2e297",
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec",
+      "1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9",
+      "e029def6-7d5d-4e52-b565-e2a6612179bb"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/fetch-railway.ts (adhsdk)",
@@ -45,7 +44,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "13d122b732f6d246",
+  "synced": "12a92b6990aa0c72",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -64,7 +63,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "9f84dd73-abbf-4ad5-be6e-f3fb04f941c3",
     "title": "Edge Lock",
-    "domain": "adhsdk://cookbook/status/dashboard/state/edge-lock",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/activity-history"
+      "b7397142-dfab-4ea4-983e-3f0fdcc17fac"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "379e485619d2e015",
+  "synced": "de8528794dca4e5d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

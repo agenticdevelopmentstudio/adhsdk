@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "691f84ba-242a-40bc-a164-c95e535bb387",
     "title": "Deploy Display",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/deploy-display",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/deploy-status"
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0c079e27fcccead5",
+  "synced": "111c2b091835b4f1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

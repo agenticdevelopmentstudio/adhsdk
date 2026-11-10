@@ -10,7 +10,7 @@ text box. The concept also defines the number value contract itself — the
 interface a number type implements so a field can display it, read it back,
 and compare it — with two built-in conformances, integer and floating-point,
 each supplying its own locale-aware parsing and canonical text form. The
-Integer Field View (`adhsdk://cookbook/ui/settings/rows/integer-field-view`)
+Integer Field View ([adhsdk.ingredient.ui.settings.rows.integer-field-view](cookbook:a7653559-cb70-43db-a75c-d032e4f599b3))
 is a thin, forwarding wrapper around this component specialized for
 integers; this recipe documents the field itself, including the parsing
 contract that wrapper delegates to.

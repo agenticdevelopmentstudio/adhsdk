@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "081703b7-036f-4fff-b580-d5dc9e5342d2",
     "title": "File Content Viewer",
-    "domain": "adhsdk://cookbook/workspace/files/content-viewer-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -26,15 +25,15 @@
       "placeholder"
     ],
     "depends-on": [
-      "adhsdk://cookbook/workspace/files/file-tree-view",
-      "adhsdk://cookbook/workspace/files/file-browser-view"
+      "b307116d-3ab8-422a-b031-885710e11e70",
+      "ab6d7655-9476-4318-8c36-f431686e2d23"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e21c06bd527e010f",
+  "synced": "84276adc0ab3aac5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

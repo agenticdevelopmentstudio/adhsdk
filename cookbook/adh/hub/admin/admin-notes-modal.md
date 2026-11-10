@@ -1,7 +1,6 @@
 ---
 id: 589babce-b66e-447f-8049-f81af380bbef
 title: "Admin Notes Modal"
-domain: adhsdk://cookbook/adh/hub/admin/admin-notes-modal
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,10 +20,10 @@ tags:
   - admin
   - list-detail
 depends-on:
-  - adhsdk://recipes/dialog
-  - adhsdk://recipes/list-with-details-pane
-  - adhsdk://recipes/button
-  - adhsdk://recipes/textarea
+  - 972be0d0-a9f5-45cd-a23b-c8329410b3d1
+  - 6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73
+  - f3c25236-d72f-4a7b-839a-b7f335b3acd0
+  - 1e323e69-44d2-4a15-a11e-22a68e8e6a8c
 related: []
 references: []
 approved-by: ""
@@ -42,7 +41,7 @@ against that staged copy through a list-with-details pane and a nested note edit
 reports the result to the caller when Save is activated. Fetching and the actual persistence
 write live in the caller, never in this component. The "New note" control is supplied to the
 list-with-details pane as one of its actions; the list-with-details pane renders it and owns
-its placement — see `adhsdk://recipes/list-with-details-pane`.
+its placement — see [adhsdk.recipe.ui.blocks.list-with-details-pane](cookbook:6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73).
 
 A note record is used here with exactly seven fields: `id`, `content`, `author`,
 `addedDate`, `modifiedDate`, `subjectTable`, and `subjectId`, all strings. `addedDate` and
@@ -156,15 +155,15 @@ A note record is used here with exactly seven fields: `id`, `content`, `author`,
 ## Accessibility
 
 - Role and keyboard/focus-trap behavior for both dialogs (outer and note editor) come
-  unmodified from the shared dialog ingredient; see `adhsdk://recipes/dialog`
+  unmodified from the shared dialog ingredient; see [adhsdk.ingredient.ui.components.overlays.dialog](cookbook:972be0d0-a9f5-45cd-a23b-c8329410b3d1)
   rather than restating it here.
 - The note list carries the accessible label "Admin notes" (supplied to the list-with-details
   pane); how that label is applied internally is the list-with-details pane's own concern —
-  see `adhsdk://recipes/list-with-details-pane`.
+  see [adhsdk.recipe.ui.blocks.list-with-details-pane](cookbook:6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73).
 - The note editor's text field carries an accessible label of "Note content".
 - Cancel/Save (outer) and Cancel/Save/Edit (editor and detail pane) are all instances of the
   shared button ingredient, with visible text labels and native keyboard activation; see
-  `adhsdk://recipes/button`.
+  [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0).
 - Touch/click target sizing for every control in this component is the shared button
   ingredient's concern (all instances use its small size variant) and is not restated here.
 - The source defines no live-region announcement and no visual indicator tied to `busy`
@@ -361,9 +360,9 @@ Not applicable: the source contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/adh-ui/src/blocks/admin-notes-modal.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/adh-ui/src/blocks/admin-notes-modal.tsx` | unverified |
 
 ## Design Decisions
 
@@ -415,9 +414,9 @@ Not applicable: the source contains no logging call.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 The source shows no override of `Dialog`'s default focus-trap/dismissal
 handling on either dialog (no custom keydown handling, no manual `.focus()`

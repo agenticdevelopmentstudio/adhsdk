@@ -1,0 +1,24 @@
+
+- **accept-open-prop**: Component MUST render the dialog when the `open` prop is `true`, and hide it when `open` is `false`.
+- **open-change-on-dismiss**: Component MUST call `onOpenChange(false)` when the user dismisses the dialog — via Escape (delegated to the Dialog primitive, since the component adds no Escape handler of its own) or by selecting an item. When dismissal is triggered by selecting an item, `onOpenChange(false)` is called before the item's `onSelect()` callback runs.
+- **display-query**: Component MUST display the value of the `query` prop in the search input field.
+- **query-change-callback**: Component MUST call `onQueryChange(value)` when the user types in the search input field.
+- **render-groups-in-order**: Component MUST render groups in the order provided; a group with zero items is dropped entirely, including its heading, while a group with one or more items renders both its heading and its items.
+- **render-items-in-group-order**: Component MUST render items within each group in the order provided.
+- **reset-highlight-to-first-item**: Component MUST highlight the first item in the flattened list (across all groups) when the dialog opens, and MUST reset the highlight to the first item whenever the set of displayed items changes (measured by comparing item IDs across all groups) or whenever the dialog transitions from `open: false` to `open: true`.
+- **arrow-navigation**: Component MUST move the highlight up (ArrowUp) and down (ArrowDown) through the flattened list of items, wrapping around at the ends.
+- **home-end-navigation**: Component MUST move the highlight to the first item on Home and to the last item on End.
+- **run-on-enter**: Component MUST run the highlighted item's `onSelect` callback and close the dialog when Enter is pressed.
+- **run-on-click**: Component MUST run an item's `onSelect` callback and close the dialog when the item is clicked.
+- **update-highlight-on-hover**: Component MUST move the highlight to an item when the user hovers over it.
+- **scroll-highlighted-item-into-view**: Component MUST scroll the highlighted item into view using the nearest scrolling behavior when it is off-screen.
+- **display-loading-state**: Component MUST display a loading indicator and "Searching…" text below the item list when `loading` is `true`, without clearing the item list.
+- **display-error-message**: Component MUST display the `error` prop as inline error text in the list area when `error` is not `null`.
+- **display-empty-state**: Component MUST display the `emptyLabel` (default "No matches") when all groups are empty, the list is not loading, and `error` is `null`.
+- **render-footer-when-provided**: Component MUST render the `footer` prop in a footer strip separated by a top border when `footer` is not `undefined`.
+- **no-internal-filtering**: Component MUST NOT filter the groups or items provided; filtering is the host's responsibility.
+- **truncate-long-text**: Component MUST truncate an item's `label` and `description` with a CSS ellipsis when they overflow their row, rather than wrapping or growing the row.
+- **no-reserved-space-for-missing-icon-badge**: Component MUST NOT reserve layout space for an item's `icon` or `badge` when it is not provided.
+- **focus-input-on-open**: Component MUST focus the search input when the dialog opens.
+- **use-placeholder**: Component SHOULD display the `placeholder` prop (default "Search…") as the input field's placeholder text.
+

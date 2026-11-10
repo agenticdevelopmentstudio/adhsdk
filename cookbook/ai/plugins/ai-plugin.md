@@ -1,7 +1,6 @@
 ---
 id: 47eb19ef-2c42-4a52-a60b-54b6f01c8791
 title: "AI Plugin"
-domain: adhsdk://cookbook/ai/plugins/ai-plugin
 type: ingredient
 version: 1.1.0
 status: review
@@ -19,13 +18,13 @@ tags:
   - ai-plugin-runtime
   - protocol
 depends-on:
-  - adhsdk://cookbook/ai/chat/chat-context
-  - adhsdk://cookbook/ai/plugins/request-spec
-  - adhsdk://cookbook/ai/plugins/stream-event
+  - 613d7a36-d0cd-4415-97be-d983b3d6c644
+  - 72829b3b-ce4a-4730-877f-da7b48e7b3dd
+  - 2067e249-4f97-4575-b8ed-8f55f6dc96df
 related:
-  - adhsdk://cookbook/ai/plugins/plugin-manager
-  - adhsdk://cookbook/ai/plugins/plugin-transport
-  - adhsdk://cookbook/ai/plugins/plugin-descriptor
+  - 0a729d47-fc2d-427c-b474-26072dc8b336
+  - 7d5c5a1f-30df-460e-b6c4-7cfe9ab42784
+  - 39de0dff-2b26-4d3d-97a3-ebdbdb38846a
 references: []
 approved-by: ""
 approved-date: ""
@@ -211,9 +210,9 @@ Not applicable: this contract contains no logging call; it is a pure contract de
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPlugin.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPlugin.swift` | unverified |
 
 ## Design Decisions
 
@@ -237,10 +236,10 @@ Not applicable: this contract contains no logging call; it is a pure contract de
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [test-pyramid](agenticdevelopercookbook://compliance/best-practices#test-pyramid) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.test-pyramid](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/203de556-83a8-5211-acaf-155c49da0eb3) | passed | Best Practices |
 
 Notes: separation-of-concerns passes because the protocol's own requirements forbid a conforming type from owning transport, UI, secret storage, or presentation metadata (`transport-non-ownership`, `ui-non-ownership`, `secret-non-ownership`, `metadata-non-ownership`), so a plugin only describes and decodes while the host performs every other concern. unit-test-coverage passes because `AIPluginKitTests.swift` exercises `EchoPlugin` and `OpenAIPlugin` conformances directly — initialization, request description, decoder freshness, and the missing-API-key throw path. explicit-error-handling passes because `buildRequest(_:)` MUST throw an `Error` rather than return an invalid spec when the given context is insufficient, per `insufficient-context-error`. test-pyramid passes because `AIPluginKitTests.swift` exercises the protocol's contract entirely at the unit level, with no integration or UI test needed for a Foundation-only protocol.
 

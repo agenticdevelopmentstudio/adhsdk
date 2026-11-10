@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d4be0c36-834c-41aa-af89-478eaf660e0f",
     "title": "Extension Update Check",
-    "domain": "adhsdk://cookbook/workspace/extensions/registry/extension-update-check",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest"
+      "68d182dc-3fc0-489c-ab04-ff4da25fc4df"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift (apple)",
@@ -35,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c00625b5688329e3",
+  "synced": "a9f903e0cef5e053",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

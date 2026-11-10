@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5edf4567-65dd-40d7-814e-8604ee70f131",
     "title": "Monitor Types",
-    "domain": "adhsdk://cookbook/status/service/monitor/types",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,12 +25,12 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/health",
-      "adhsdk://cookbook/status/service/monitor/overall",
-      "adhsdk://cookbook/status/service/monitor/deploy-status",
-      "adhsdk://cookbook/status/service/monitor/provider-deploy",
-      "adhsdk://cookbook/status/service/monitor/integrations",
-      "adhsdk://cookbook/status/service/monitor/live-types"
+      "2871e97f-f971-46fe-a4d2-de57ad5c94c5",
+      "da69d02d-a3a9-4018-a90a-becee268624a",
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec",
+      "7ba98112-0f6d-4236-ab6b-aa18b72d76bd",
+      "da0c6c07-d0f4-4c6c-a1ef-51b696910c72",
+      "2c8b4572-3851-4111-97d6-a42792fb7150"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/types.ts (adhsdk)",
@@ -53,7 +52,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6c71bb957663887b",
+  "synced": "5e9e237ea0d0a2db",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -72,7 +71,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

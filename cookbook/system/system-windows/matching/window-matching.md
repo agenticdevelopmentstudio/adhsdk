@@ -1,7 +1,6 @@
 ---
 id: 840dc813-b4a3-483c-be87-2959ac551ea7
 title: "Window Matching"
-domain: adhsdk://cookbook/system/system-windows/matching/window-matching
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,10 +21,10 @@ tags:
   - fingerprinting
   - persistence
 depends-on:
-  - adhsdk://cookbook/system/system-windows/window-context-model
+  - d4b4359e-e9c8-439c-abcf-309fcc419348
 related:
-  - adhsdk://cookbook/system/system-windows/matching/title-heuristics
-  - adhsdk://cookbook/system/system-windows/system-windows-engine
+  - 77dbd38e-9acd-4053-ba54-738b45101f6b
+  - fcd4bf3d-445d-4f01-99a2-ba6f71ce087b
 references:
   - https://developer.apple.com/documentation/foundation/nsregularexpression
   - https://developer.apple.com/documentation/coregraphics/1455137-cgwindowlistcopywindowinfo
@@ -61,10 +60,10 @@ Use it whenever a window must be persisted by identity rather than by a
 volatile OS handle. The data types it consumes (a match strategy, a window
 fingerprint, a live window record, a dormant window snapshot, a window
 context) are specified in
-[Window Matching Core System Windows](adhsdk://cookbook/system/system-windows/window-context-model).
+Window Matching Core System Windows ([adhsdk.ingredient.system.system-windows.window-context-model](cookbook:d4b4359e-e9c8-439c-abcf-309fcc419348)).
 The per-app built-in heuristics (Xcode, Warp, Brave, VS Code, Terminal) are
 specified in
-[Window Matching Heuristics](adhsdk://cookbook/system/system-windows/matching/title-heuristics);
+Window Matching Heuristics ([adhsdk.ingredient.system.system-windows.matching.title-heuristics](cookbook:77dbd38e-9acd-4053-ba54-738b45101f6b));
 this recipe specifies only their registration, not their parsing rules.
 
 ## Behavioral Requirements
@@ -336,14 +335,14 @@ The rule store and the heuristic registry do not log; store errors are thrown to
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristic.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicRule.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicStore.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/SystemWindowMatcher.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristic.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicRule.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicStore.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/SystemWindowMatcher.swift` | unverified |
 
 ## Design Decisions
 
@@ -391,12 +390,12 @@ The rule store and the heuristic registry do not log; store errors are thrown to
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: parsing (`AppHeuristic`, `HeuristicTitleParser`), user rules, persistence (`CustomHeuristicStore`), lookup (`HeuristicRegistry`) and scoring/assignment (`SystemWindowMatcher`) are separate types, and applying match results is left to `SystemWindowContextManager`. `unit-test-coverage` is partial: `SystemWindowMatcherTests` covers the app gate, appOnly, the substring length guard, substring and regex scoring, the display bonus, threshold filtering, deterministic ties and `MatchResult` equality, and `HeuristicTests` covers the separators, custom-rule fingerprinting and `isBuiltIn`; nothing tests `CustomHeuristicStore`, `.appAndTitleExact` scoring, the fingerprint fallback, invalid regexes or `registerCustomRules` replacement. `explicit-error-handling` passes because store failures are thrown to the caller and invalid regexes are logged rather than swallowed. `no-hardcoded-strings` fails because `CustomMatchMode.displayName` and the default rule name are English literals shown in Settings. `data-integrity` is partial because rules are never validated: an invalid regex or empty app name is accepted and saved, and two rules for the same app leave one silently unused. `no-pii-in-logs` passes because only the user-authored regex pattern is logged, never a window title.
 

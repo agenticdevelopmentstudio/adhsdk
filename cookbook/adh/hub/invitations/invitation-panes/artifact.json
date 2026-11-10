@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a9222936-8474-4073-8581-d314a258bf0a",
     "title": "Invitation Panes",
-    "domain": "adhsdk://cookbook/adh/hub/invitations/invitation-panes",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,16 +24,16 @@
       "users"
     ],
     "depends-on": [
-      "adhsdk://recipes/list-with-details-pane",
-      "adhsdk://cookbook/adh/hub/invitations/send-invitation-modal",
-      "adhsdk://recipes/add-users-modal"
+      "6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73",
+      "633ab7e7-828e-4e7d-b2dc-9ba189536b6e",
+      "e1859aa2-d0c4-4d9a-b926-203dd5fbbca3"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "96f4ce9dc1f63ee0",
+  "synced": "e7493673b46f4bb7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

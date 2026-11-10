@@ -1,0 +1,44 @@
+
+- **render-crumbs-in-order**: `DocBreadcrumbs` MUST render a fixed home crumb first, then one crumb per entry of `crumbs` in the given order, separated by a `/` glyph before every crumb but never before home.
+- **render-current-page-as-text**: `DocBreadcrumbs` MUST render the LAST crumb as non-interactive text and every earlier crumb, plus home, as a link.
+- **hide-empty-trail**: `DocBreadcrumbs` MUST render nothing at all when `crumbs` is empty, rather than a lone home crumb pointing at the current page.
+- **route-through-injected-link**: `DocBreadcrumbs` and `DocNavTree` MUST render every navigational link through `LinkComponent`, passing the destination as `to`, and MUST default to a plain `<a href>` when the host injects none.
+- **accept-a-relabelled-home**: `DocBreadcrumbs` MUST honour `homeLabel` and `homeHref` so a host can re-point or rename the first crumb.
+- **render-trusted-html**: `DocArticle` MUST render the `html` string as markup inside its element, and MUST apply the family prose typography contract to it.
+- **expose-the-prose-contract**: The prose class list MUST be exported so a host can apply the same typography to prose it renders itself.
+- **honor-article-element**: `DocArticle` MUST render as an `article` by default and as the element named by `as` otherwise.
+- **render-one-row-per-field**: `DocMetadata` MUST render one `dt`/`dd` row per entry of `fields`, in the given order, right-aligned as a single column.
+- **group-list-values**: `DocMetadata` MUST render an array `value` as a wrapping right-aligned group of its items, and any other `value` as-is with no wrapper.
+- **hide-empty-metadata**: `DocMetadata` MUST render nothing when `fields` is empty.
+- **list-every-heading-by-default**: `DocTableOfContents` MUST list every entry of `headings`, in document order, when `excludeIds` is omitted — it MUST hold no opinion of its own about which headings belong.
+- **omit-excluded-headings**: `DocTableOfContents` MUST omit exactly the headings whose `id` appears in `excludeIds`, from both the rendered list and the set of observed elements.
+- **hide-empty-outline**: `DocTableOfContents` MUST render nothing when no heading survives filtering.
+- **indent-by-depth**: `DocTableOfContents` MUST indent a depth-3 heading further than a shallower one, and MUST render the list flat rather than nesting sub-lists.
+- **mark-the-current-heading**: `DocTableOfContents` MUST mark exactly one heading — the FIRST, in the order the ids were given, of those currently inside the band — and MUST move that marker rather than accumulating marks.
+- **scroll-not-navigate**: `DocTableOfContents` MUST prevent the anchor's default navigation and scroll to the heading smoothly, leaving the URL unchanged.
+- **track-by-id-value**: `useScrollSpy` MUST re-subscribe when the ids' VALUES change and MUST NOT re-subscribe when only the array's identity changes, so a caller may derive its ids inline on every render.
+- **observe-only-existing-elements**: `useScrollSpy` MUST skip ids with no matching element, and MUST disconnect its observer on unmount.
+- **carry-visibility-across-callbacks**: `useScrollSpy` MUST remember which ids are inside the band across callbacks, and MUST resolve the marked id from the ORDER OF `ids` rather than from the order the observer reported. An `IntersectionObserver` callback carries only what CHANGED, in no guaranteed order, so a consumer that re-reads each batch in isolation loses every heading it was not told about again.
+- **hold-the-last-position**: `useScrollSpy` MUST keep its marked id when the band empties — a reader between two headings is still somewhere.
+- **start-collapsed**: `ViewSourceDisclosure` MUST render no source panel until asked, and MUST omit it from the DOM entirely rather than hiding it, so the document's text is never duplicated for search or assistive tech.
+- **toggle-both-ways**: `ViewSourceDisclosure` MUST reveal the source on activation and hide it again on the next, and MUST honour `defaultOpen` for the initial state.
+- **render-source-verbatim**: `ViewSourceDisclosure` MUST render `source` as text, never as markup — a document whose source contains HTML shows that HTML.
+- **announce-its-state**: `ViewSourceDisclosure`'s trigger MUST carry `aria-expanded` reflecting the current state, and `aria-controls` naming the panel it reveals — present only while that panel is in the DOM, because `aria-controls` is an IDREF and one pointing at nothing is an authoring error (axe: `aria-valid-attr-value`), not a harmless no-op.
+- **collapse-only-the-top-level**: `DocNavTree` MUST render a collapse control for top-level sections only; every directory below that MUST render its children unconditionally.
+- **open-the-active-section**: `DocNavTree` MUST open, on mount, exactly those sections that contain or are the active page, and leave every other section closed.
+- **keep-the-readers-collapse-state**: `DocNavTree` MUST NOT re-derive a section's open state when `activePath` changes — once mounted, that state belongs to the reader.
+- **mark-the-active-page**: `DocNavTree` MUST mark exactly the node whose `href` equals `activePath` with `aria-current="page"`, and MUST move that mark rather than accumulating marks when `activePath` changes.
+- **list-pages-before-directories**: `DocNavTree` MUST render a node's childless children before its directory children, at every level, whatever order the host passed them in.
+- **inline-supplied-headings**: `DocNavTree` MUST render a leaf's `headings` beneath its link when the host supplies them, MUST filter none of them, and MUST render no sub-list when it supplies none.
+- **scroll-when-already-on-the-page**: A heading link MUST scroll smoothly and write the hash without navigating when its own page is the active one, and MUST behave as an ordinary link from anywhere else.
+- **drop-the-divider-with-the-rows**: `DocNav` MUST render the rule above the tree only when `topLinks` is non-empty.
+- **control-the-drawer**: `DocNav`'s mobile drawer MUST be controlled by `open`, and MUST call `onClose` from both dismiss targets — the scrim and the close button — because the control that opens it lives outside HDV.
+- **announce-one-dismiss-control**: The drawer MUST expose exactly ONE control named `closeLabel` to assistive tech. The scrim dismisses on click but MUST be `aria-hidden` and out of the tab order: two identically-named controls read as two different actions, and a named `button` spanning the viewport is announced over the whole document.
+- **share-one-nav**: `DocNav` MUST render the identical nav — the same fixed rows, rule, and tree — in the desktop column and in the drawer, and both MUST read ONE collapse state: a section the reader opens in the drawer is open in the column too, and stays open when the drawer closes.
+- **place-the-nav-before-the-document**: `HierarchicalDocumentView` MUST render `nav` first and the document region after it, and `DocPage` MUST render the document before the rail.
+- **slot-columns-unwrapped**: Both frames MUST render a slotted column as a direct child of their flex row, adding no wrapper of their own, so each column's own `sticky` offset resolves against the frame.
+- **drop-an-omitted-column**: Omitting `nav` or `toc` MUST leave no element behind — a reader with no tree gets no empty column, not a zero-width one.
+- **cap-the-measure**: `DocPage` MUST cap the document at the reader's measure and MUST allow that column to shrink below its content, so a wide code block cannot push the rail off the page.
+- **render-no-landmark**: Each frame MUST NOT render a `main` or any other landmark element. The host's app shell owns its landmarks; HDV owns the columns.
+- **spread-host-attributes**: `DocBreadcrumbs`, `DocArticle`, `DocMetadata`, `DocTableOfContents`, `ViewSourceDisclosure`, `DocNavTree`, `DocNav`, `HierarchicalDocumentView`, and `DocPage` MUST all spread remaining host attributes (`data-*`, `id`, handlers) onto their root element.
+

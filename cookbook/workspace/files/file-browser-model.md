@@ -1,7 +1,6 @@
 ---
 id: fa6a7094-40c2-4302-8cf3-742a072f5bb3
 title: "File System File Browser"
-domain: adhsdk://cookbook/workspace/files/file-browser-model
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,8 +20,8 @@ tags:
   - restoration
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/files/file-browser-view
-  - adhsdk://cookbook/workspace/files/file-tree-view
+  - ab6d7655-9476-4318-8c36-f431686e2d23
+  - b307116d-3ab8-422a-b031-885710e11e70
 references:
   - https://developer.apple.com/documentation/combine/observableobject
   - https://developer.apple.com/documentation/foundation/url/resolvingsymlinksinpath()
@@ -423,11 +422,11 @@ recipe specifies.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserRestorationState.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserRestorationState.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift` | unverified |
 
 ## Design Decisions
 
@@ -480,11 +479,11 @@ times out, or a request is cancelled — the source's own comment on
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
 `separation-of-concerns` passes: `FileTreeManager` only orchestrates,
 delegating directory scanning/watching to `DirectoryWatchCoordinator`, git

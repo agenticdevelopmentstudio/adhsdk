@@ -1,7 +1,6 @@
 ---
 id: 8ed694b4-e238-48c5-9589-81ce6aaebb32
 title: "Typed Window Content"
-domain: adhsdk://cookbook/ui/windows/window-controller
 type: ingredient
 version: 1.2.1
 status: review
@@ -19,7 +18,7 @@ tags:
   - window-controller
   - view-controller
 depends-on:
-  - adhsdk://cookbook/ui/windows/single-window-controller
+  - 3f6268b8-410d-4d3c-979c-2a9f9f1534f3
 related: []
 references: []
 approved-by: ""
@@ -35,7 +34,7 @@ window's content instead of the untyped content controller that the
 single-instance window base's content accessor returns.
 
 The window controller is an open subclass of the single-instance window base
-(see `adhsdk://cookbook/ui/windows/single-window-controller`, which
+(see [adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3), which
 this recipe depends on and does not restate) that adds exactly one member: a
 computed typed accessor that downcasts the base's content to a
 caller-supplied content-controller type. It overrides nothing else and
@@ -56,7 +55,7 @@ directly, bypassing nib/resource loading entirely.
 - **inherits-single-window-controller-lifecycle**: The window controller
   MUST inherit all window build, frame-persistence, visibility-persistence,
   and HUD behavior unchanged from the single-instance window base (see
-  `adhsdk://cookbook/ui/windows/single-window-controller`), since it
+  [adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3)), since it
   overrides no member of the base.
 - **exposes-typed-view-controller-accessor**: The window controller MUST
   expose a computed typed accessor equal to the base's content, downcast to
@@ -120,7 +119,7 @@ directly, bypassing nib/resource loading entirely.
 - Role/trait: Not applicable — the component sets no accessibility role,
   trait, or identifier of its own. The window's accessibility identifier is
   already the single-instance window base's concern (see
-  `adhsdk://cookbook/ui/windows/single-window-controller`); any
+  [adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3)); any
   content-level role belongs to whatever content-controller or view type the
   caller supplies — a child component with its own recipe, not this one.
 - Label requirements: Not applicable — the component sets no label, for the
@@ -201,7 +200,7 @@ Not applicable: the component reads no feature-flag system of its own.
 Not applicable: the component emits no analytics events of its own.
 Window-interaction tracking is the single-instance window base's concern
 (already documented as delegated to the window manager's interaction hook in
-`adhsdk://cookbook/ui/windows/single-window-controller`).
+[adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3)).
 
 ## Privacy
 
@@ -209,7 +208,7 @@ Window-interaction tracking is the single-instance window base's concern
 - **Storage**: None — the component persists nothing of its own; whatever
   frame/visibility persistence occurs on a window-controller instance is the
   single-instance window base's behavior, already documented in
-  `adhsdk://cookbook/ui/windows/single-window-controller`.
+  [adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3).
 - **Transmission**: Not applicable — the component contains no network code.
 - **Retention**: Not applicable — the component retains no data.
 
@@ -265,9 +264,9 @@ Not applicable: the component contains no logging calls of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/WindowController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/WindowController.swift` | unverified |
 
 ## Design Decisions
 
@@ -277,7 +276,7 @@ all window lifecycle, frame-persistence, visibility-persistence, and HUD
 behavior as inherited unchanged from `SingleWindowController`, cited through
 `depends-on` rather than restated.
 **Rationale**: `SingleWindowController` already has its own canonical recipe
-(`adhsdk://cookbook/ui/windows/single-window-controller`); restating its
+([adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3)); restating its
 requirements here would duplicate content that has its own source of truth
 and risks drift when that recipe changes, and would misrepresent this file's
 actual (much smaller) scope.
@@ -297,10 +296,10 @@ only fails at runtime when actually invoked.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 Statuses rest on both types being built entirely from stock
 `NSWindowController`/`NSViewController` plumbing with no custom-drawn chrome;

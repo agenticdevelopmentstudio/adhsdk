@@ -1,7 +1,6 @@
 ---
 id: 1c017caa-0dcc-4278-9b82-af4fa935a3d9
 title: "status-server-src-lib"
-domain: adhsdk://cookbook/status/service/links
 type: ingredient
 version: 1.0.3
 status: review
@@ -138,9 +137,9 @@ Not applicable: the module contains no logging calls. All errors (e.g., missing 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/lib/links.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/lib/links.ts` | unverified |
 
 ## Design Decisions
 
@@ -166,8 +165,8 @@ Not applicable: the module contains no logging calls. All errors (e.g., missing 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 **Separation of Concerns**: The module has a single responsibility — generating canonical links from configuration. Public functions are pure (no side effects), take only what they need as parameters, and return simple data structures. Concerns like platform canonicalization are delegated to the monitor submodule.
 

@@ -1,7 +1,6 @@
 ---
-id: 29A3044C-F785-4FA3-A1B9-746D069AE198
+id: 29a3044c-f785-4fa3-a1b9-746d069ae198
 title: "Timestamp Parsing"
-domain: adhsdk://cookbook/foundation/time/timestamp-parsing
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +21,8 @@ tags:
   - timestamps
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/time/utc-timestamp
-  - adhsdk://cookbook/foundation/time/local-time-text
+  - 59f7893e-58fe-4f11-abd9-f80c1e05c002
+  - a98dfca4-b6b0-4565-91b3-0657981d1ac8
 references: []
 approved-by: ""
 approved-date: ""
@@ -123,9 +122,9 @@ Not applicable: The parser calls no logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/TimestampParsing.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/TimestampParsing.swift` | unverified |
 
 ## Design Decisions
 
@@ -141,8 +140,8 @@ Not applicable: The parser calls no logging API.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `separation-of-concerns` passes because the type only turns text into an instant; writing the wire form and fast-path parsing are in the UTC timestamp spec. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Time/TimestampParsingTests.swift` covers fractional versus plain, the SQLite shape read as UTC, and empty and garbage text.
 

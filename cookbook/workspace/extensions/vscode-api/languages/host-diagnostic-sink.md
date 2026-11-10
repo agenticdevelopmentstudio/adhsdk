@@ -1,7 +1,6 @@
 ---
 id: 6a7598bd-afe0-4ae9-af93-237908b767f8
 title: "Host Diagnostic Sink"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/languages/host-diagnostic-sink
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - diagnostics
   - event-emitter
 depends-on:
-  - adhsdk://cookbook/workspace/extensions/host/extension-event
+  - 8e0d1a9d-27a1-4b5b-9a7d-5b9f9a5f7f2e
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift (adhsdk)
@@ -138,9 +137,9 @@ No other event in this component is logged: `diagnosticsChanged(for:)` has exact
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` | unverified |
 
 ## Design Decisions
 
@@ -164,11 +163,11 @@ No other event in this component is logged: `diagnosticsChanged(for:)` has exact
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because `HostDiagnosticSink` does exactly one thing — log, then forward to the emitter — and delegates every other concern (windowing, merging, mapping, JavaScript delivery) to the injected `ExtensionEventEmitter<[URL]>` rather than reimplementing any of it. `unit-test-coverage` is partial: no test in the given sources calls `HostDiagnosticSink.diagnosticsChanged(for:)` directly and asserts on it in isolation (the way `RecordingDiagnosticSink` is asserted on for the mutation-count suite); the given `MainThreadDiagnosticsTests.swift` "onDidChangeDiagnostics wiring" suite exercises the real `HostDiagnosticSink` only end to end, through `MainThreadDiagnostics`'s mutating methods and a subscribed JavaScript listener, and no given test asserts on the debug log message at all. `explicit-error-handling` passes, trivially: `diagnosticsChanged(for:)` has no failure path — it counts an array, logs, and calls `emitter.fire(uris)`, none of which can throw, return an error, or produce an optional — so there is nothing in this file for the open question of swallowed errors to apply to. `secure-log-output` passes because the only value logged is `uris.count`, a bare integer; no file path, URL, credential, or other potentially sensitive value is ever written to the log. `no-hardcoded-strings` fails because `"diagnostics changed for \(uris.count) uri(s)"` is an English string literal with no localization key, `String(localized:)` call, or String Catalog entry (see Localization).
 

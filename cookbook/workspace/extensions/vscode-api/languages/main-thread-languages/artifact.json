@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "bda54815-6dd8-4a7c-abfe-8cb0065824b2",
     "title": "VS Code Languages Bridge",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-languages",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ee45dea2ccc50f59",
+  "synced": "d409d68798a4a2ac",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

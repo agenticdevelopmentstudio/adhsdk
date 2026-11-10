@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "D0AA6237-E5D7-4CF8-A1CB-621033575421",
+    "id": "d0aa6237-e5d7-4cf8-a1cb-621033575421",
     "title": "Value Row View",
-    "domain": "adhsdk://cookbook/ui/settings/views/value-row-view",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -25,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/views/money-field-view"
+      "00136aa1-b327-4765-932a-f11af12f09c9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "246316c9e3a01bc7",
+  "synced": "3714883090f7ba9e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

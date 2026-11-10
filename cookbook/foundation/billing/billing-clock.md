@@ -1,7 +1,6 @@
 ---
-id: 51BF262A-9C94-4533-A34D-1AEADF63037B
+id: 51bf262a-9c94-4533-a34d-1aeadf63037b
 title: "Billing Clock"
-domain: adhsdk://cookbook/foundation/billing/billing-clock
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,7 +20,7 @@ tags:
   - time
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-rounding
+  - a1563ad8-d4e4-44f0-9823-3d9229c9321d
 references: []
 approved-by: ""
 approved-date: ""
@@ -110,9 +109,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingClock.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingClock.swift` | unverified |
 
 ## Design Decisions
 
@@ -124,8 +123,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 separation-of-concerns passes: the type owns only the billing day rule and delegates parsing and day formatting to the shared UTC timestamp utility. unit-test-coverage passes: `BillingRoundingTests` (`testLocalDayUsesTheSegmentsOwnZone`, `testLocalDayFallsBackToUTCForAnUnknownZone`) asserts the zone and fallback behavior.
 

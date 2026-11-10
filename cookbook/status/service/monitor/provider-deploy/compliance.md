@@ -1,10 +1,10 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
 `unit-test-coverage` is `partial`: `timestamp-validation.test.ts` gives `toValidDate` thorough coverage of its accept and reject branches, and separately asserts `isoOf`'s fail-soft epoch substitution through `providerDeployToDTO`'s `createdAt` field; `deploy-env.test.ts` separately gives the `tier` derivation (the gate plus both of `deployEnv`'s fallback paths) thorough coverage through `providerDeployToDTO`. But `dto-passthrough-fields`, `dto-provider-project-id-coalesce`, `dto-error-text-coalesce`, and `dto-phase-confirmed-at-fallback` have no dedicated assertion anywhere in this package — each is exercised only incidentally, as an unasserted field on a `DeploymentDTO` object the `tier`/`createdAt`-focused tests construct for another purpose. `separation-of-concerns` passes: this file's only responsibility is the `ProviderDeploy` data shape, trust-boundary timestamp parsing, and DTO shaping composed from two other pure modules' exported derivations; it performs no I/O, no persistence, and no presentation of its own. `explicit-error-handling` passes: `toValidDate` converts every unparseable or out-of-range input into an explicit `null` return rather than letting a downstream `.toISOString()` throw later, and `isoOf`'s fail-soft path logs the specific failure (naming the deploy's `id`) via `console.error` rather than silently substituting a value with no signal. `fault-tolerance` passes: `providerDeployToDTO` accepts a `ProviderDeploy` whose `createdAt` or `confirmedAt` may already be an Invalid Date — data this file did not itself validate at construction time — and still returns a well-formed `DeploymentDTO` rather than throwing, per `iso-serialize-invalid-date-fail-soft`.
 

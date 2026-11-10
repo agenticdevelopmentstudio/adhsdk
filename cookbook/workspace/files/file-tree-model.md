@@ -1,7 +1,6 @@
 ---
 id: 1b64553a-ab58-4154-b9d5-30f34eb33caf
 title: "File Tree Model"
-domain: adhsdk://cookbook/workspace/files/file-tree-model
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,10 +20,10 @@ tags:
   - model
   - concurrency
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19
 related:
-  - adhsdk://cookbook/workspace/files/file-tree-view
-  - adhsdk://cookbook/workspace/files/file-browser-view
+  - b307116d-3ab8-422a-b031-885710e11e70
+  - ab6d7655-9476-4318-8c36-f431686e2d23
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/DirectoryWatchCoordinator.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileSystemWatcher.swift (adhsdk)
@@ -63,9 +62,9 @@ reference to) alive across a re-sync rather than being silently replaced by
 structurally-equal-but-distinct objects. The direct consumer of this model
 is a file tree manager (out of scope for this recipe), which in turn feeds
 the file tree view — see
-[File Tree View](adhsdk://cookbook/workspace/files/file-tree-view)
+File Tree View ([adhsdk.ingredient.workspace.files.file-tree-view](cookbook:b307116d-3ab8-422a-b031-885710e11e70))
 and
-[File Browser](adhsdk://cookbook/workspace/files/file-browser-view)
+File Browser ([adhsdk.ingredient.workspace.files.file-browser-view](cookbook:ab6d7655-9476-4318-8c36-f431686e2d23))
 for how this model's `nil`-vs-empty-array `children` distinction and its
 swallowed directory-read failures are consumed one layer up.
 
@@ -559,7 +558,7 @@ type's own name.
   to `rootNode`'s `children`, calling `loadChildrenIfNeeded()` from
   `.onAppear` or the row's disclosure action, in place of the AppKit
   `NSOutlineView` consumer described in
-  [File Tree View](adhsdk://cookbook/workspace/files/file-tree-view).
+  File Tree View ([adhsdk.ingredient.workspace.files.file-tree-view](cookbook:b307116d-3ab8-422a-b031-885710e11e70)).
 - **Compose**: Model `@Published var children`/`isSyncing` as
   `mutableStateOf`/`StateFlow` fields observed from a `ViewModel`; run
   `fullSync()`/`handleChanges`'s background reads on
@@ -583,7 +582,7 @@ type's own name.
   for `FSEvents`, which has no iOS counterpart, and lives under a
   `macOS`-specific source directory with no `#if os(iOS)` branch. The direct
   AppKit consumer is `FileTreeOutlineViewController`
-  (see [File Tree View](adhsdk://cookbook/workspace/files/file-tree-view)).
+  (see File Tree View ([adhsdk.ingredient.workspace.files.file-tree-view](cookbook:b307116d-3ab8-422a-b031-885710e11e70))).
   An iOS port needs a different watch mechanism entirely — a
   `DispatchSource` file-descriptor watch or a polling timer — since
   `FSEventStreamCreate` is unavailable there.
@@ -649,9 +648,9 @@ type's own name.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` | unverified |
 
 ## Design Decisions
 
@@ -727,12 +726,12 @@ type's own name.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
-| [lazy-loading](agenticdevelopercookbook://compliance/performance#lazy-loading) | passed | Performance |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
+| [adc.check.performance.lazy-loading](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/93049d53-e8e2-5ea3-8a3a-9eb07e60d0e2) | passed | Performance |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 separation-of-concerns passes because these four files are pure model/logic
 — `FileTreeConfig` a passive value, `FileTreeNode` a tree node, `FileSystemWatcher`

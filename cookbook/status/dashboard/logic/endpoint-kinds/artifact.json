@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "f1167221-f233-4b5d-822c-ae26de4634db",
     "title": "Endpoint Kinds",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/endpoint-kinds",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,14 +20,14 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/api",
-      "adhsdk://cookbook/status/dashboard/state/config-status"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad",
+      "4bd200d7-f9d2-4348-af53-95ea02272c79"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a8a816480ffa58e5",
+  "synced": "660caf78ea970f7d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,0 +1,56 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8",
+    "title": "Hierarchical Topic / Detail View",
+    "type": "recipe",
+    "version": "1.22.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-06-30",
+    "modified": "2026-09-30",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Deep-linkable stack of collapsible topic lists under one breadcrumb, with hover-reveal, create affordance, crossfading detail pane, and narrow-mode navigation.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "hierarchical",
+      "topic-detail",
+      "master-detail",
+      "navigation",
+      "deep-linking"
+    ],
+    "ingredients": [
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f",
+      "c21473ee-a075-4800-96db-ff3de0888515",
+      "c99e2822-f5a9-4e84-8740-9341880bb82a",
+      "550f00f7-bfb2-415e-9b15-bd5dce015500"
+    ],
+    "depends-on": [],
+    "related": [
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "96fb8611d0723c48",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

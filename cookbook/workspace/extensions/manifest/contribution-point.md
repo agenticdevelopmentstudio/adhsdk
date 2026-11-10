@@ -1,7 +1,6 @@
 ---
 id: 088ed758-8c79-443d-999f-425c69df4d4d
 title: "Contribution Point"
-domain: adhsdk://cookbook/workspace/extensions/manifest/contribution-point
 type: ingredient
 version: 1.1.2
 status: review
@@ -152,9 +151,9 @@ Not applicable: `ContributionPoint.swift` contains no `os_log`, `Logger`, `print
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift` | unverified |
 
 ## Design Decisions
 
@@ -178,10 +177,10 @@ Not applicable: `ContributionPoint.swift` contains no `os_log`, `Logger`, `print
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 `separation-of-concerns` passes because `ContributionPoint.swift` performs no I/O, persistence, or networking of its own — it defines only the contract, the note protocol, and a pure in-memory bookkeeping struct; every conformer owns its own side effects. `idempotent-operations` passes because `record` replaces rather than accumulates (record-replaces-existing-entry), and `withdraw` and `remove` are both documented and tested safe to call on an identifier with nothing recorded (withdraw-safe-on-unapplied-identifier, remove-safe-on-unrecorded-identifier). `unit-test-coverage` is `partial`: `ContributionRegistrationsTests.swift` exhaustively covers `ContributionRegistrations` itself, but the `ContributionPoint` protocol's own contractual requirements — `apply-called-only-for-enabled-extensions`, `caller-error-isolation`, `reload-withdraws-before-reapplying`, and persisted-state-absence-distinction — are exercised only indirectly, through each conformer's own test suite (for example `ThemeContributionPointTests.swift`), never against the protocol's contract directly. `data-integrity` is `partial`: persisted-state-absence-distinction is documented as a MUST in the protocol's doc comment, but nothing in `ContributionPoint.swift` enforces it on a conformer — a non-atomic `apply` that throws partway (no compensating `withdraw` follows) is one further way a conformer's own state can drift from what the contract describes.
 

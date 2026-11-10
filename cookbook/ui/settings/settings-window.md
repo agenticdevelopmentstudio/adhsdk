@@ -1,7 +1,6 @@
 ---
 id: 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
 title: "Settings Window"
-domain: adhsdk://cookbook/ui/settings/settings-window
 type: ingredient
 version: 1.3.2
 status: review
@@ -21,11 +20,11 @@ tags:
   - settings
   - split-view
 depends-on:
-  - adhsdk://cookbook/ui/settings/settings-split-view
-  - adhsdk://cookbook/ui/windows/single-window-controller
+  - a11f34ff-116c-47d6-bffa-edd0799cbcb2
+  - 3f6268b8-410d-4d3c-979c-2a9f9f1534f3
 related:
-  - adhsdk://cookbook/ui/settings/settings-panel
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
+  - 432e8d4b-43c3-49fd-b481-036a759e7c55
+  - 55a394e6-9934-404b-941d-25bebbf71378
 references: []
 approved-by: ""
 approved-date: ""
@@ -243,7 +242,7 @@ way.
 - Color/contrast: header-bar and label colors are read from the shared
   theme palette; contrast is a design-system-level concern this file does
   not decide, per
-  `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
 - **minimum-contrast-ratio**: The window MUST draw the panel-title item's text in the theme's primary-text role and tint the help control from the theme's secondary-text/accent roles, each against whichever theme surface renders behind the transparent, unified header bar. The window performs no contrast-ratio check of its own between those roles and their background; contrast is whatever the active theme's palette provides.
 
 ## Conformance Test Vectors
@@ -513,14 +512,14 @@ Not applicable: no logging call appears anywhere in this file.
   window's trailing edge as the WinUI substitute for the AppKit help
   drawer — WinUI has no drawer primitive of its own, so `SplitView` is the
   standard stand-in, matching the pattern
-  `adhsdk://cookbook/ui/layout/composable-tabs/tabs-window` already uses
+  [adhsdk.ingredient.ui.layout.composable-tabs.tabs-window](cookbook:55a394e6-9934-404b-941d-25bebbf71378) already uses
   for its own drawer translation.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` | unverified |
 
 ## Design Decisions
 
@@ -600,14 +599,14 @@ whoever maintains `SettingsWindow.swift`.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 `screen-reader-support` and `keyboard-navigable` rest on the Accessibility
 section's Label requirements and Keyboard/focus bullets (explicit

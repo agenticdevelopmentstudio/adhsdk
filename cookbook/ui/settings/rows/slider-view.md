@@ -1,7 +1,6 @@
 ---
 id: 0cbe1932-5c7e-4546-829d-0294708d499c
 title: "Slider View"
-domain: adhsdk://cookbook/ui/settings/rows/slider-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - range
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/rows/captioned-slider-view
+  - 64825f85-8b4d-4406-befc-aa08ce55cc8b
 references: []
 approved-by: ""
 approved-date: ""
@@ -34,7 +33,7 @@ approved-date: ""
 The Slider View is a settings row: a title label and a slider in one
 horizontal row, with no trailing caption (contrast with the sibling
 captioned slider row
-(adhsdk://cookbook/ui/settings/rows/captioned-slider-view), which
+([adhsdk.ingredient.ui.settings.rows.captioned-slider-view](cookbook:64825f85-8b4d-4406-befc-aa08ce55cc8b)), which
 adds a formatter-derived value label). The row is driven by a range view
 model: the component sets the slider's range and value from the view
 model at construction, writes the user's slider interactions back into
@@ -324,16 +323,16 @@ logger reference anywhere in source).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SliderView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SliderView.swift` | unverified |
 
 ## Design Decisions
 
 - **Decision**: Re-apply the slider's minimum and maximum (in addition to the
   label text and the slider's value) inside the external-change handler,
   not just at initialization — unlike the sibling captioned slider row
-  (adhsdk://cookbook/ui/settings/rows/captioned-slider-view),
+  ([adhsdk.ingredient.ui.settings.rows.captioned-slider-view](cookbook:64825f85-8b4d-4406-befc-aa08ce55cc8b)),
   whose sync leaves the slider's range untouched after construction.
   **Rationale**: Lets a caller mutate the view model's range after the row is
   built and have the slider reflect the new bounds without recreating the
@@ -381,13 +380,13 @@ logger reference anywhere in source).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | platform-compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | platform-compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 `keyboard-navigable` and `screen-reader-support` rest on `NSSlider`/`NSTextField`'s
 default AppKit accessibility and focus behavior; `screen-reader-support` is

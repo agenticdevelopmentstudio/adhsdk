@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "4d75a371-181e-4d80-a16b-022d37dc0d48",
     "title": "Composable Tabs Leaf Pane",
-    "domain": "adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -25,18 +24,18 @@
       "accessibility"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/layout/pane-view"
+      "2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe"
     ],
     "related": [
-      "adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view",
-      "adhsdk://cookbook/ui/layout/composable-tabs/active-pane",
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "bfc2dcde-d905-4923-bff2-577c85f17d5f",
+      "08bfb299-851b-4b01-a84a-6a2a13e07c12",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3d55c83f294a5545",
+  "synced": "5ef31c947b61e38f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

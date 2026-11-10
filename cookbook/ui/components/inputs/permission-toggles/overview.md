@@ -1,0 +1,3 @@
+
+A toggle button group for managing CRUD (Create, Read, Update, Delete) permissions. The component renders four independent toggle buttons, one for each permission type. When a parent permission context is provided, capabilities forbidden by the parent are rendered disabled and visually suppressed, preventing child permissions from exceeding parent permissions. The component emits permission changes via callback; the capability being toggled is always clamped to what the parent allows, but any other capability already present in `value` passes through the emitted object unchanged, even if it already violates `parent` (see **clamp-emitted-values**).
+

@@ -1,0 +1,3 @@
+
+Renders a complete markdown document as an `NSAttributedString`. Distinguishes itself from fragment renderers by handling three document-specific concerns: frontmatter removal, GitHub-style alert blockquotes with semantic role-based coloring, and GitHub Flavored Markdown task list rendering with Unicode checkbox characters. The component accepts an optional code highlighter for syntax highlighting in fenced code blocks. Rendering also requires a semantic palette (used to resolve alert colors and other themed runs) and a base text color for ordinary text, both supplied by the caller — see Configuration.
+

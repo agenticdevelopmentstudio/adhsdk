@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "2B552BDE-D0BD-425A-9E79-FC624B52F516",
+    "id": "2b552bde-d0bd-425a-9e79-fc624b52f516",
     "title": "Claude OAuth Credential",
-    "domain": "adhsdk://cookbook/foundation/claude-accounts/claude-o-auth-credential",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,14 +25,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/claude-accounts/claude-credential-kind"
+      "d457c4d4-005c-4fcb-a3a6-3e1680bcb561"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The subject is the OAuth credential Claude Code stores; the product name is the thing being modelled.",
-  "synced": "3ffa505b37162b73",
+  "synced": "5d43b172a591f4cd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

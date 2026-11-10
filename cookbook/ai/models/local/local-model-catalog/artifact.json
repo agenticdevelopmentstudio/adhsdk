@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "79c8f46f-e934-46d1-8d0e-4bbee625e163",
     "title": "Local Model Catalog",
-    "domain": "adhsdk://cookbook/ai/models/local/local-model-catalog",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "85aa1a915ebe947d",
+  "synced": "998fd4f4ccb1a8f9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

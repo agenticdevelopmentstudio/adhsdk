@@ -1,7 +1,6 @@
 ---
 id: 2f1d9160-a055-4aca-8dff-86d39cc0b76a
 title: "Chat Transcript Row View"
-domain: adhsdk://cookbook/ai/chat/chat-window/chat-transcript-row-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,12 +19,12 @@ tags:
   - messaging
   - transcript
 depends-on:
-  - adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view
-  - adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view
+  - 24199c9b-53ce-41a7-9cce-3b914f0a424a
+  - 653874b6-86c4-41cb-9350-5f61bb5fca85
 related:
-  - adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view
-  - adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view
-  - adhsdk://recipes/transcript
+  - 24199c9b-53ce-41a7-9cce-3b914f0a424a
+  - 653874b6-86c4-41cb-9350-5f61bb5fca85
+  - 98e78d31-2c3a-47dc-a156-435a5732a29f
 references: []
 approved-by: ""
 approved-date: ""
@@ -43,7 +42,7 @@ The component is one row of a *merged* transcript — several conversations inte
 - **shows-icon-only-with-attribution**: The component MUST include the source application's icon in the header only when `message.attribution` is non-nil; a message with no attribution MUST render the header with no icon.
 - **icon-wired-only-when-jump-provided**: The component MUST set the app icon's target/action, tooltip, and accessibility label only when `actions.onJump` is non-nil; when `actions.onJump` is nil the icon MUST render with no target and no tooltip.
 - **jump-invokes-callback**: Clicking the app icon, when wired, MUST invoke `actions.onJump` with the row's message.
-- **renders-bubble-without-inline-timestamp**: The component MUST embed the chat bubble component (see `adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view`) with its inline timestamp disabled, so the bubble never draws its own timestamp.
+- **renders-bubble-without-inline-timestamp**: The component MUST embed the chat bubble component (see [adhsdk.ingredient.ai.chat.chat-window.chat-bubble-view](cookbook:24199c9b-53ce-41a7-9cce-3b914f0a424a)) with its inline timestamp disabled, so the bubble never draws its own timestamp.
 - **renders-own-timestamp**: The component MUST render the message's timestamp in its own label, on its own line below the bubble (or below the delivery indicator, when one is present).
 - **aligns-by-role**: The component MUST align the header, bubble, and timestamp against the trailing edge when `message.role == .user`, and against the leading edge for any other role.
 - **reserves-icon-column**: The component MUST reserve an outer margin of 44pt (8pt inset + 28pt icon + 8pt gap) on both sides for the icon column, regardless of which side's icon is actually filled.
@@ -58,7 +57,7 @@ The component is one row of a *merged* transcript — several conversations inte
 - **hover-fill-clears-on-exit**: When the pointer exits the row, the component MUST clear the hover fill unconditionally.
 - **pointing-cursor-when-pressable**: The component MUST show a pointing-hand cursor covering its full bounds when `actions.onOpen` is set, and MUST show no special cursor otherwise.
 - **selection-frame**: Setting `isSelected` to `true` MUST draw a 2pt border in the theme's `.selection` color around the row; setting it to `false` MUST remove the border (width 0, no color); setting it to its current value MUST be a no-op.
-- **delivery-sending-shows-indicator**: When `message.delivery == .sending`, the component MUST insert an animated instance of the typing indicator component (see `adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view`) between the bubble and the timestamp, and MUST start its animation.
+- **delivery-sending-shows-indicator**: When `message.delivery == .sending`, the component MUST insert an animated instance of the typing indicator component (see [adhsdk.ingredient.ai.chat.chat-window.typing-indicator-view](cookbook:653874b6-86c4-41cb-9350-5f61bb5fca85)) between the bubble and the timestamp, and MUST start its animation.
 - **delivery-failed-shows-reason**: When `message.delivery == .failed(reason)`, the component MUST insert a word-wrapping label between the bubble and the timestamp showing `reason`, using the theme's caption font and `.danger` color, and MUST NOT show a typing indicator.
 - **delivery-settled-no-extra-view**: When `message.delivery == .settled`, the component MUST insert no view between the bubble and the timestamp, and the timestamp MUST attach directly below the bubble.
 - **remeasure-failure-label-width**: Whenever the row's layout pass runs, the component MUST re-set the failure label's maximum layout width to the label's actual frame width, and invalidate its cached natural size, whenever the two differ and the frame has a non-zero width.
@@ -95,7 +94,7 @@ The component is one row of a *merged* transcript — several conversations inte
 
 ## Accessibility
 
-- **Role**: The row itself sets no explicit accessibility role or element-grouping value; it is a generic container. Its subviews carry their own accessibility: the header (labeled with the attribution's header line, tagged for UI-test identification) and the app icon (tagged for UI-test identification always; a target, tooltip ("Go to this conversation" or "Go to this conversation in {appIdentity}"), and accessibility label ("Go to {attribution's header line}") only when `actions.onJump` is set). The bubble's own accessibility is that component's concern — see `adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view`.
+- **Role**: The row itself sets no explicit accessibility role or element-grouping value; it is a generic container. Its subviews carry their own accessibility: the header (labeled with the attribution's header line, tagged for UI-test identification) and the app icon (tagged for UI-test identification always; a target, tooltip ("Go to this conversation" or "Go to this conversation in {appIdentity}"), and accessibility label ("Go to {attribution's header line}") only when `actions.onJump` is set). The bubble's own accessibility is that component's concern — see [adhsdk.ingredient.ai.chat.chat-window.chat-bubble-view](cookbook:24199c9b-53ce-41a7-9cce-3b914f0a424a).
 - **Label requirements**: See **icon-wired-only-when-jump-provided** and **renders-header-line** above; both header and (wired) icon carry meaningful labels traceable to `attribution.headerLine`.
 - **Announce state changes**: Theme changes repaint live (**reflect-theme-live**); no other state change in this view posts an accessibility notification.
 - **Minimum tap target**: The app icon is 28×28pt, short of the 44×44pt default this ingredient's touch-target concern is measured against. The source's own comment explains the choice (see Design Decisions); whether 28pt is acceptable for this control is not something the source settles.
@@ -198,7 +197,7 @@ None of the three literals — the two app-icon tooltips or the accessibility la
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Not applicable: this file animates nothing of its own — the hover fill and selection border are set as instantaneous property writes on the row's own background, not as animated transitions. The embedded typing indicator's own animation is that component's concern; see `adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view`. |
+| Reduce Motion | Not applicable: this file animates nothing of its own — the hover fill and selection border are set as instantaneous property writes on the row's own background, not as animated transitions. The embedded typing indicator's own animation is that component's concern; see [adhsdk.ingredient.ai.chat.chat-window.typing-indicator-view](cookbook:653874b6-86c4-41cb-9350-5f61bb5fca85). |
 | Increase Contrast | Not implemented in source: this view sets no independent high-contrast styling. All colors (`.selection`, `.timestampText`, `.danger`) are read from the active `SemanticPalette`; whatever contrast increase that palette provides on request is inherited automatically, and this file does nothing further. |
 | Differentiate Without Color | Selection is differentiated by shape (a border), not color alone (see Accessibility, "Color dependence"); hover is differentiated by color alone, with no accompanying shape or icon change — the source provides no alternative cue for hover. |
 
@@ -231,9 +230,9 @@ Not applicable: the component contains no logging calls (no `os_log`, `Logger`, 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatTranscriptRowView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatTranscriptRowView.swift` | unverified |
 
 ## Design Decisions
 
@@ -262,7 +261,7 @@ Not applicable: the component contains no logging calls (no `os_log`, `Logger`, 
 **Approved**: pending**
 
 **Decision**: `showsInlineTimestamp: false` is passed to the embedded bubble, and the row draws its own timestamp label on its own line instead.
-**Rationale**: The row's own timestamp is anchored to the same edge as the header's breadcrumb trail — the speaker's column — so it has to be a label this row positions itself; a timestamp the bubble drew inline would be part of the bubble's own shape and could not be pinned independently to that column (see `adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view`).
+**Rationale**: The row's own timestamp is anchored to the same edge as the header's breadcrumb trail — the speaker's column — so it has to be a label this row positions itself; a timestamp the bubble drew inline would be part of the bubble's own shape and could not be pinned independently to that column (see [adhsdk.ingredient.ai.chat.chat-window.chat-bubble-view](cookbook:24199c9b-53ce-41a7-9cce-3b914f0a424a)).
 **Approved**: pending**
 
 **Decision**: The app icon's 28x28pt hit area is not padded to 44x44pt.
@@ -273,17 +272,17 @@ Not applicable: the component contains no logging calls (no `os_log`, `Logger`, 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | partial | Accessibility |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | partial | Accessibility |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
-`touch-target-size` is omitted: this is a pointer-driven macOS surface with no touch input, so the check's 44×44pt-touch/48×48dp-touch grounds do not transfer directly; the 28×28pt app icon's click-target size is instead recorded as **minimum-tap-target** under Accessibility above and in its Design Decision, not a pass/fail against a touch default. `passed` rows rest on the source directly: the row emits no logging at all, so none can leak PII; and the view holds only the caller-supplied `message`/`attribution` in memory purely to render them, collecting and storing nothing further. `partial` rows reflect what this file alone can't settle, or shares with something else: the header and (wired) icon carry real accessibility labels, but the row's own selection state has no accessibility exposure — `isSelected` posts no `NSAccessibility` notification and sets no accessibility "selected" trait (see Accessibility above) — so screen-reader-support is partial rather than passed; `keyboard-navigable` is partial because this file itself has no keyboard path of its own, but `ChatView.swift`, the container that owns row selection, does supply a Return-to-open and Shift-Return-to-jump equivalent when it wires `isRowSelectionEnabled` (see the keyboard-path note under Accessibility above) — a guarantee that holds only when hosted by that container; `reduced-motion` is partial because this view animates nothing of its own, but it is the one that decides to call `startAnimating()` on the embedded `TypingIndicatorView`, whose own reduced-motion compliance is `failed` (see `adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view`); text sizing and color contrast are both delegated entirely to the active `SemanticPalette`, which this file neither reads for scaling nor independently verifies.
+`touch-target-size` is omitted: this is a pointer-driven macOS surface with no touch input, so the check's 44×44pt-touch/48×48dp-touch grounds do not transfer directly; the 28×28pt app icon's click-target size is instead recorded as **minimum-tap-target** under Accessibility above and in its Design Decision, not a pass/fail against a touch default. `passed` rows rest on the source directly: the row emits no logging at all, so none can leak PII; and the view holds only the caller-supplied `message`/`attribution` in memory purely to render them, collecting and storing nothing further. `partial` rows reflect what this file alone can't settle, or shares with something else: the header and (wired) icon carry real accessibility labels, but the row's own selection state has no accessibility exposure — `isSelected` posts no `NSAccessibility` notification and sets no accessibility "selected" trait (see Accessibility above) — so screen-reader-support is partial rather than passed; `keyboard-navigable` is partial because this file itself has no keyboard path of its own, but `ChatView.swift`, the container that owns row selection, does supply a Return-to-open and Shift-Return-to-jump equivalent when it wires `isRowSelectionEnabled` (see the keyboard-path note under Accessibility above) — a guarantee that holds only when hosted by that container; `reduced-motion` is partial because this view animates nothing of its own, but it is the one that decides to call `startAnimating()` on the embedded `TypingIndicatorView`, whose own reduced-motion compliance is `failed` (see [adhsdk.ingredient.ai.chat.chat-window.typing-indicator-view](cookbook:653874b6-86c4-41cb-9350-5f61bb5fca85)); text sizing and color contrast are both delegated entirely to the active `SemanticPalette`, which this file neither reads for scaling nor independently verifies.
 
 `separation-of-concerns` passes because `ChatTranscriptRowView` composes the header, icon, bubble and typing indicator for one row from a caller-supplied message and attribution; row selection, scrolling and message grouping stay in `ChatView`, and bubble drawing stays in `AIChatBubbleView`. `unit-test-coverage` is partial: `ConversationFocusTests.swift` constructs the row directly and checks `maxBubbleWidth(forRowWidth:)` and `hitTest(_:)`, and `BubbleTruncationTests.swift` and `ConversationsStatusLineTests.swift` inspect rows built by a chat view, but there is no `ChatTranscriptRowView` test file of its own and header/icon wiring, selection styling and theme repaint are not asserted.
 

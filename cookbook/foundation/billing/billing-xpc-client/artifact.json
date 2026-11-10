@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "8055F7C9-D336-4B71-9F95-1BF4BDEF7B92",
+    "id": "8055f7c9-d336-4b71-9f95-1bf4bdef7b92",
     "title": "Billing XPC Client",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-xpc-client",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,15 +25,15 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-xpc-protocol",
-      "adhsdk://cookbook/foundation/billing/billing-model",
-      "adhsdk://cookbook/foundation/billing/billing-dt-os"
+      "36c76e0f-b41c-4fd6-a349-a0e9241fb489",
+      "01942f60-6711-43e7-a7b2-a8e7cb4c2cda",
+      "ed610aa4-2717-4242-a8b9-c4616377dbd9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a43843a1d6af258a",
+  "synced": "7ae361f5f5f71d08",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

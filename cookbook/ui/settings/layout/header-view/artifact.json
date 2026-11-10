@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d908b337-53ba-4a29-8288-4601b12a4bb7",
     "title": "Header View",
-    "domain": "adhsdk://cookbook/ui/settings/layout/header-view",
     "type": "ingredient",
     "version": "1.3.2",
     "status": "review",
@@ -25,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/layout/group-view"
+      "775f1761-f757-41d0-b51b-354a410a11f4"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c32494a2aa23d95a",
+  "synced": "4e18011541faa301",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

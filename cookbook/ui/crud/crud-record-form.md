@@ -1,7 +1,6 @@
 ---
 id: 3dc693ab-28e4-4624-9b2d-8dc81f81e037
 title: "CRUD Record Form"
-domain: adhsdk://cookbook/ui/crud/crud-record-form
 type: recipe
 version: 1.4.2
 status: review
@@ -21,10 +20,10 @@ tags:
   - metadata
   - validation
 ingredients:
-  - adhsdk://recipes/field
+  - 0c199036-81c3-47c3-9e79-e4b8187ca69a
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/crud/crud-table
+  - ec64b22b-8a25-431d-8866-b7a01acd91fe
 references: []
 approved-by: ""
 approved-date: ""
@@ -60,7 +59,7 @@ hand-authored fields (see Platform Notes for its first consumer).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Field | adhsdk://recipes/field | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
+| Field | [adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a) | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
 
 Composed shared primitives without their own recipe domains: the per-type
 control picker (rendering a select, checkbox, textarea, or text input
@@ -255,9 +254,9 @@ implementation.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/crud/src/CrudRecordForm.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/crud/src/CrudRecordForm.tsx` | unverified |
 
 ## Design Decisions
 
@@ -306,12 +305,12 @@ row and a conflicting mode flag out of sync with each other.
 
 | Check | Status | Category |
 |---|---|---|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `screen-reader-support` and `keyboard-navigable` rest on `Field`'s label
 wrapping and the native `<label>`/`<input>`/`<button>` elements in

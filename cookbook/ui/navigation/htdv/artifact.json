@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "faa2c3f3-1ff7-45fb-b6da-efed3cc1d451",
     "title": "Hierarchical Topic Detail View",
-    "domain": "adhsdk://cookbook/ui/navigation/htdv",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -49,7 +48,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f63ca947af672e5f",
+  "synced": "67d66231879abb40",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -68,7 +67,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

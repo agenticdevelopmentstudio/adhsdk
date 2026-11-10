@@ -1,7 +1,6 @@
 ---
 id: 31fe479f-e95e-4f03-b957-faa2314a03be
 title: "Status Server Config"
-domain: adhsdk://cookbook/status/service/config
 type: ingredient
 version: 1.1.0
 status: review
@@ -21,11 +20,11 @@ tags:
   - security
   - secrets
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
-  - agenticdevelopercookbook://guidelines/implementing/security/secure-storage
-  - agenticdevelopercookbook://guidelines/implementing/security/cors
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/926dff1a-dc12-46a4-b8c1-bdedbc142afd
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8ea0409f-405a-4f4d-9bbf-54bf21c86d33
 related:
-  - adhsdk://cookbook/status/service/auth
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
 references:
   - packages/web/packages/status-server/src/config/env.ts (adhsdk)
   - packages/web/packages/status-server/src/config/port.ts (adhsdk)
@@ -528,9 +527,9 @@ Not applicable: none of `env.ts`, `port.ts`, or `seed.ts` contains a logging cal
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/config/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/config/` | unverified |
 
 ## Design Decisions
 
@@ -590,7 +589,7 @@ Not applicable: none of `env.ts`, `port.ts`, or `seed.ts` contains a logging cal
   rather than bundling twenty getters into one compound statement.
   **Approved**: pending
 - **Decision**: this recipe's `related` field links to
-  `adhsdk://cookbook/status/service/auth` one-directionally; the
+  [adhsdk.ingredient.status.service.auth](cookbook:735b4e58-bce9-4754-ad3f-bf0344fd4b32) one-directionally; the
   reverse link on `status-server-auth.md` was not added.
   **Rationale**: this recipe was authored under an explicit constraint to
   write only `cookbook/status/service/config.md` and touch no other file;
@@ -607,13 +606,13 @@ Not applicable: none of `env.ts`, `port.ts`, or `seed.ts` contains a logging cal
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [cors-allowlist](agenticdevelopercookbook://compliance/security#cors-allowlist) | passed | Security |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.security.cors-allowlist](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/7f948bd2-a0b7-580c-ae8a-338ca39339d4) | passed | Security |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: `port.ts` defines the contract and its pure
 derived helpers, `env.ts` is the one shipped adapter for a twelve-factor

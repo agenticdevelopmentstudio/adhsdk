@@ -1,7 +1,6 @@
 ---
 id: ea2dae31-1020-4930-aa12-15f7d04967a5
 title: "Progress View"
-domain: adhsdk://cookbook/ui/settings/rows/progress-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,9 +20,9 @@ tags:
   - progress
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/rows/checkbox-view
-  - adhsdk://cookbook/ui/settings/rows/button-view
-  - adhsdk://cookbook/ui/settings/layout/explanation-view
+  - e9c10ff7-4e13-4007-a963-d2a9e4006745
+  - f8e734aa-f401-4218-9f1e-56ed98c28d3d
+  - 25046f90-559d-4e32-8516-b5dae5f09c43
 references:
   - https://developer.apple.com/documentation/appkit/nsprogressindicator
   - https://developer.apple.com/documentation/uikit/uiprogressview
@@ -350,9 +349,9 @@ logger reference anywhere in source).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ProgressView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ProgressView.swift` | unverified |
 
 ## Design Decisions
 
@@ -417,10 +416,10 @@ source gives it no other placement to describe.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | failed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | passed | Accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | failed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | passed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 `contrast-ratio` is `passed` because `ProgressView` sets no color of its
 own — all rendering is `NSProgressIndicator`'s unmodified system chrome,

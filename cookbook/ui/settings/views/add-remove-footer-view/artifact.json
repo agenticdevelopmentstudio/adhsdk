@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "A1D787E2-2E3F-4742-A30B-120A8607C518",
+    "id": "a1d787e2-2e3f-4742-a30b-120a8607c518",
     "title": "Add Remove Footer View",
-    "domain": "adhsdk://cookbook/ui/settings/views/add-remove-footer-view",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -25,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/views/editable-table-card"
+      "9016cb03-9682-404f-b787-c271039f25b3"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1e1dfdccb3561cf1",
+  "synced": "6d9c3a3e1f6f943b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

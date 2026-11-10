@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ae0932d6-572f-4173-ba49-df68f4039ba4",
     "title": "Project Chooser Window",
-    "domain": "adhsdk://cookbook/workspace/projects/project-chooser-window",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "06cdacb4ba9fb1d9",
+  "synced": "d3b1dfe4acb3d79d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

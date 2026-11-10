@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "5296D0B7-8416-4E76-8F45-47A726F230CF",
+    "id": "5296d0b7-8416-4e76-8f45-47a726f230cf",
     "title": "Billing Persistence",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-persistence",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,16 +25,16 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-store",
-      "adhsdk://cookbook/foundation/billing/billing-rollup",
-      "adhsdk://cookbook/foundation/billing/billing-timer",
-      "adhsdk://cookbook/foundation/billing/billing-prefs"
+      "4df278a3-4897-4a87-a506-bd3f58db3121",
+      "a252605d-12ce-4235-9eb4-2582678f6f49",
+      "f2a31fe2-1302-46d9-8cb4-cc6e9a5e8a12",
+      "0175f0bb-f4bd-4f72-94c2-57b087ad9df9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "76dbddb636aad3e7",
+  "synced": "7fe5b66d2f2f4d7b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

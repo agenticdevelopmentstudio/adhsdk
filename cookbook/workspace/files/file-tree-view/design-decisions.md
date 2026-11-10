@@ -70,7 +70,7 @@ it in this component.
 **Rationale**: this component's own reselection logic only clears
 `selection.selectedNode` when the outgoing selection was a node; a selected
 root *header* (a root manager) that disappears from a reload is not cleared
-here. The [File Browser](adhsdk://cookbook/workspace/files/file-browser-view)'s
+here. The File Browser ([adhsdk.ingredient.workspace.files.file-browser-view](cookbook:ab6d7655-9476-4318-8c36-f431686e2d23))'s
 own `teardown-clears-orphaned-root-selection` requirement is what actually
 guarantees `selection.selectedRoot` is cleared when its root is removed.
 **Approved**: pending.

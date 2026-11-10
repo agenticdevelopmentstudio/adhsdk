@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a7653559-cb70-43db-a75c-d032e4f599b3",
     "title": "Integer Field View",
-    "domain": "adhsdk://cookbook/ui/settings/rows/integer-field-view",
     "type": "ingredient",
     "version": "1.2.4",
     "status": "review",
@@ -25,17 +24,17 @@
       "numeric"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/settings/rows/number-field-view"
+      "acd561ca-90a4-4303-a411-cfe23410b42a"
     ],
     "related": [
-      "adhsdk://cookbook/ui/settings/rows/checkbox-view",
-      "adhsdk://cookbook/ui/settings/rows/captioned-slider-view"
+      "e9c10ff7-4e13-4007-a963-d2a9e4006745",
+      "64825f85-8b4d-4406-befc-aa08ce55cc8b"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f07f1fc942da9b8c",
+  "synced": "f2f862fb338f85b1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from macOS and iOS source |
+| 1.1.0 | 2026-09-22 | Claude Sonnet 5 | Settled the three open review points from source: empty availableModes builds a hidden zero-segment control (traced to rebuildModeControl/syncSelection), and mode changes cannot occur during iOS's modal help sheet and only incidentally close macOS's transient popover |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added mode-change-callback-scope settling programmatic vs. repeat-tap firing, corrected test-vector mode cases to the real MarkdownEditorMode set and added vectors for empty/out-of-range modes, visibility toggling, and accessibility/announcement coverage, expanded localization keys per visible string and per mode, split the theme-before-window and help-before-window edge cases, added a Dynamic Type note to Appearance and a derived touch-target note to Accessibility, reformatted Design Decisions to Decision/Rationale/Approved, canonicalized the Compliance table with corrected touch-target and screen-reader statuses, merged the two AppKit/UIKit platform notes, added a React/Web platform note, named a single WinUI 3 control, and listed the parent editor in related |
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

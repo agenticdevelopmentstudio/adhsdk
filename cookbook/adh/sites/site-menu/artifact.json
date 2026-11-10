@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "f2d56415-ac36-4a27-bee5-b447c4186513",
     "title": "SiteMenu",
-    "domain": "adhsdk://cookbook/adh/sites/site-menu",
     "type": "recipe",
     "version": "1.1.1",
     "status": "review",
@@ -26,13 +25,13 @@
       "ui"
     ],
     "ingredients": [
-      "site-wordmark"
+      "21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5"
     ],
     "depends-on": [],
     "related": [
-      "site-wordmark",
-      "option-menu",
-      "topic-detail"
+      "21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5",
+      "4d0e04ff-39eb-472c-93a0-8070f1b64a6a",
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f"
     ],
     "references": [
       "agenticdeveloperhub://docs/deep-linking-foundation"
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9be0b49eae5a8879",
+  "synced": "129fd0c0ee228150",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
     {"part": "edge-cases", "heading": "Edge Cases"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

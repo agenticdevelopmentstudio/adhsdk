@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "77dbd38e-9acd-4053-ba54-738b45101f6b",
     "title": "Window Matching Heuristics",
-    "domain": "adhsdk://cookbook/system/system-windows/matching/title-heuristics",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -40,7 +39,7 @@
     "approved-date": ""
   },
   "names_hosts": "A test vector uses a real window title containing `Claude` as input to the Warp heuristic.",
-  "synced": "f00bdaa2f8947cea",
+  "synced": "958e4d5963302184",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

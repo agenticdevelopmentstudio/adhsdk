@@ -1,9 +1,9 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
 `unit-test-coverage` fails as written: no test file in the given source tree exercises `ENDPOINT_KINDS`, `EndpointKind`, or `isEndpointKind` directly — there is no dedicated test file for this module anywhere in `status-server` or `status-web`. The only test coverage touching this module's contents is indirect: `deploy-platform`'s `classify.test.ts` exercises `endpointNeedsWiring` (which reads the re-exported `NON_DEPLOY_KINDS`'s three members) against the same six kind strings this file's vocabulary defines, but that suite tests `classify.ts`'s own function, not anything exported from this file. `separation-of-concerns` passes: this file owns exactly one concern — the endpoint-kind vocabulary and a membership guard over it — and explicitly delegates the separate concern of which kinds are deploy-backed to the imported `NON_DEPLOY_KINDS`/`classify.ts`, per its own header comment that this list's knowledge stops short of the classifier's. `input-sanitization` is `partial`: `isEndpointKind` is exactly the validation primitive the module's header comment describes as backing "server-side validation (the endpoints routes)," but the given source tree has no call site anywhere that actually invokes `isEndpointKind` against an incoming `kind` value — whether any route currently performs that validation is unverified from this file alone, so the primitive exists and is correct on its own terms, but its wiring into an accept boundary cannot be confirmed as passing rather than merely available.
 

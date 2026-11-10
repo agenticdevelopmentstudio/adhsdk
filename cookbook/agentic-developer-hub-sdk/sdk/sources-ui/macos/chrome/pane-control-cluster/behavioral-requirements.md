@@ -1,0 +1,16 @@
+
+- **render-three-buttons**: The component MUST render exactly three buttons in left-to-right order: close, minimize, zoom.
+- **standard-glyphs**: The component MUST display SF Symbol glyphs in the default state: "xmark" for close, "minus" for minimize, "arrow.up.left.and.arrow.down.right" for zoom. State-dependent glyph changes are covered by **render-minimized-state** and **render-zoomed-state**.
+- **report-close-action**: The component MUST invoke the `onClose` closure when the close button is activated.
+- **report-minimize-action**: The component MUST invoke the `onMinimize` closure when the minimize button is activated in the non-minimized state, passing a reference to the button itself as an anchor point (for example, so the host can present a picker popover from it without looking the button up again). On platforms without a native view-reference type, the host receives an equivalent positional anchor (e.g., a frame/rect in the cluster's coordinate space).
+- **report-restore-action**: The component MUST invoke the `onRestore` closure when the minimize button is activated in the minimized state.
+- **report-zoom-action**: The component MUST invoke the `onZoom` closure when the zoom button is activated.
+- **render-minimized-state**: When `isMinimized` is true, the component MUST render the minimize button with a "plus" glyph, "Restore Pane" label, "pane.restore" accessibility ID, and enable it regardless of `canMinimize`.
+- **render-zoomed-state**: When `isZoomed` is true, the component MUST render the zoom button with the "arrow.down.right.and.arrow.up.left" glyph and "Unzoom Pane" label; when false, MUST render "arrow.up.left.and.arrow.down.right" and "Zoom Pane" label.
+- **disable-close-button**: When `canClose` is false, the component MUST disable the close button and tint it with the tertiary text color (in place of the secondary text color used when enabled).
+- **disable-minimize-button**: When `canMinimize` is false and `isMinimized` is false, the component MUST disable the minimize button and tint it with the tertiary text color (in place of the secondary text color used when enabled).
+- **respond-to-state-changes**: The component MUST respond to changes in `isZoomed`, `isMinimized`, `canMinimize`, and `canClose` properties and update the button appearances and enabled states accordingly.
+- **borderless-icon-buttons**: The component MUST render each button borderless, with only its glyph visible (no title text, no bezel/border).
+- **tinted-glyph-color**: The component MUST tint each glyph using a single content color, so the color can be swapped centrally for enabled/disabled state and for theme changes (see **theme-aware-tinting**).
+- **theme-aware-tinting**: The component MUST observe `ThemeManager.didChangeNotification` and `ThemeScope.didChangeNotification`, and re-apply tinting to all buttons whenever either fires: secondary text color for enabled buttons, tertiary text color for disabled buttons. These notifications post on an explicit theme selection, an in-place edit of the active theme, or a text-scale change — never directly from the OS's Increase Contrast setting or a bare system light/dark appearance switch, neither of which the component observes on its own (see Edge Cases).
+

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "e71918a5-9874-48eb-927a-cea5e9b51cdc",
     "title": "Window Management Recents",
-    "domain": "adhsdk://cookbook/ui/windows/window-recents",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -32,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "45c083b90d63e8a9",
+  "synced": "e89af615e1f7c30e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

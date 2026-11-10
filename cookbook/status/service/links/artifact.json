@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "1c017caa-0dcc-4278-9b82-af4fa935a3d9",
     "title": "status-server-src-lib",
-    "domain": "adhsdk://cookbook/status/service/links",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -28,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "34eae57b62d37938",
+  "synced": "37c2ffea9b88b47a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

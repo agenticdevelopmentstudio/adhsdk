@@ -45,7 +45,7 @@
   `static`) because it overrides `TextEditView`'s `open class func
   makeTextField`, which trips SwiftLint's `static_over_final_class` rule
   (see Design Decisions). `TextEditView.swift`
-  (`adhsdk://cookbook/ui/settings/rows/text-edit-view`) supplies everything else — row
+  ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)) supplies everything else — row
   layout, content-hugging, the `textFieldChanged(_:)` target/action commit
   path, `observeTheme` styling, and `viewModel.onChange` sync — and is out of
   this recipe's scope. There is no UIKit code path in source; a UIKit port

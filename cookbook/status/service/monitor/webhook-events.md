@@ -1,7 +1,6 @@
 ---
 id: 937650ae-ac85-43f4-8aa4-708207e0d745
 title: "Status Server Monitor Webhook Events"
-domain: adhsdk://cookbook/status/service/monitor/webhook-events
 type: ingredient
 version: 1.0.3
 status: review
@@ -22,14 +21,14 @@ tags:
   - mapper
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/security/input-validation
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/4ca8a3d5-cdcc-4f74-a2ec-3a198608b419
 related:
-  - adhsdk://cookbook/status/service/monitor/deploy-status
-  - adhsdk://cookbook/status/service/monitor/format
-  - adhsdk://cookbook/status/service/monitor/provider-deploy
-  - adhsdk://cookbook/status/service/monitor/live-buffer
-  - adhsdk://cookbook/status/service/monitor/fetch-vercel
-  - adhsdk://cookbook/status/service/monitor/fetch-railway
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
+  - ae9a73de-80c8-4deb-82ab-89c7c5854c54
+  - 7ba98112-0f6d-4236-ab6b-aa18b72d76bd
+  - fdfdaf38-95de-4475-98f4-e09fb998bb57
+  - c7b38706-a6bc-4ad6-852c-425a4ed11a27
+  - 6a84b15a-5e4e-4b1c-9d73-0ae8a8b602af
 references:
   - packages/web/packages/status-server/src/monitor/webhook-events.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
@@ -47,7 +46,7 @@ approved-date: ""
 
 ## Overview
 
-`webhook-events.ts` (`packages/web/packages/status-server/src/monitor/webhook-events.ts`) exports two pure, synchronous functions — `mapVercelDeployEvent` and `mapRailwayDeployEvent` — that each translate one already-JSON-parsed provider webhook body into a `ProviderDeploy` row (`./provider-deploy`, external), the same shape the poll fetchers produce, or return `null` when the body is not a deployment event this monitor ingests. Both functions are called exactly once each, by `routes/hooks.ts` (external), after that route has verified the request's signature or shared secret (`webhook-verify.ts`, external) and parsed the raw body as JSON; a non-`null` result is then passed to `storage.deploy.upsertDeployments` for persistence, to `pushDeployEvent` (`live-buffer.ts`, external) for the in-memory live overlay, and into the board's issue-derivation and alerting path — none of which this file performs itself. This file makes no network call, touches no database, and holds no state between calls; its only work is field extraction, a fixed lookup table (Vercel), a small string transform (Railway), and delegation to three sibling pure modules — `vercelPhases`/`railwayPhases` (`./deploy-status`, adhsdk://cookbook/status/service/monitor/deploy-status) for the build/deploy lifecycle, `shortSha`/`commitFullMessage` (`./format`, adhsdk://cookbook/status/service/monitor/format) for commit display fields, and `toValidDate` (`./provider-deploy`, adhsdk://cookbook/status/service/monitor/provider-deploy) for the trust-boundary timestamp parse.
+`webhook-events.ts` (`packages/web/packages/status-server/src/monitor/webhook-events.ts`) exports two pure, synchronous functions — `mapVercelDeployEvent` and `mapRailwayDeployEvent` — that each translate one already-JSON-parsed provider webhook body into a `ProviderDeploy` row (`./provider-deploy`, external), the same shape the poll fetchers produce, or return `null` when the body is not a deployment event this monitor ingests. Both functions are called exactly once each, by `routes/hooks.ts` (external), after that route has verified the request's signature or shared secret (`webhook-verify.ts`, external) and parsed the raw body as JSON; a non-`null` result is then passed to `storage.deploy.upsertDeployments` for persistence, to `pushDeployEvent` (`live-buffer.ts`, external) for the in-memory live overlay, and into the board's issue-derivation and alerting path — none of which this file performs itself. This file makes no network call, touches no database, and holds no state between calls; its only work is field extraction, a fixed lookup table (Vercel), a small string transform (Railway), and delegation to three sibling pure modules — `vercelPhases`/`railwayPhases` (`./deploy-status`, [adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec)) for the build/deploy lifecycle, `shortSha`/`commitFullMessage` (`./format`, [adhsdk.ingredient.status.service.monitor.format](cookbook:ae9a73de-80c8-4deb-82ab-89c7c5854c54)) for commit display fields, and `toValidDate` (`./provider-deploy`, [adhsdk.ingredient.status.service.monitor.provider-deploy](cookbook:7ba98112-0f6d-4236-ab6b-aa18b72d76bd)) for the trust-boundary timestamp parse.
 
 ## Behavioral Requirements
 
@@ -83,7 +82,7 @@ approved-date: ""
 - **vercel-branch**: A returned Vercel row's `branch` field MUST be `meta.githubCommitRef ?? null`.
 - **vercel-commit-repo**: A returned Vercel row's `commitRepo` field MUST be the string `` <githubCommitOrg>/<githubCommitRepo> `` when both `meta.githubCommitOrg` and `meta.githubCommitRepo` are truthy, otherwise `null`.
 - **vercel-url**: A returned Vercel row's `url` field MUST be `event.payload.links.deployment` when present, otherwise, when `event.payload.deployment.url` is present, MUST be that value prefixed with the literal `` https:// ``, otherwise MUST be `null`.
-- **vercel-created-at**: A returned Vercel row's `createdAt` field MUST be `toValidDate(event.createdAt) ?? new Date()` — the current wall-clock time (the webhook's receipt time) whenever `event.createdAt` is absent or does not parse to a finite `Date` via `toValidDate` (`./provider-deploy`, adhsdk://cookbook/status/service/monitor/provider-deploy). Per the source's own comment, "a webhook is often the only witness of a terminal state, so approximate time beats a dropped event (and an Invalid Date must never leave this boundary)."
+- **vercel-created-at**: A returned Vercel row's `createdAt` field MUST be `toValidDate(event.createdAt) ?? new Date()` — the current wall-clock time (the webhook's receipt time) whenever `event.createdAt` is absent or does not parse to a finite `Date` via `toValidDate` (`./provider-deploy`, [adhsdk.ingredient.status.service.monitor.provider-deploy](cookbook:7ba98112-0f6d-4236-ab6b-aa18b72d76bd)). Per the source's own comment, "a webhook is often the only witness of a terminal state, so approximate time beats a dropped event (and an Invalid Date must never leave this boundary)."
 
 ### Railway Status Derivation
 
@@ -192,9 +191,9 @@ Not applicable: this file makes no `console.error`, `console.warn`, or any other
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/webhook-events.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/webhook-events.ts` | unverified |
 
 ## Design Decisions
 
@@ -215,13 +214,13 @@ Not applicable: this file makes no `console.error`, `console.warn`, or any other
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-`unit-test-coverage` passes: `deploy-mappers.test.ts` gives both exported functions thorough, table-driven coverage of every `VERCEL_STATE` entry and every `railwayPhases` status, plus dedicated tests for the missing-required-field, provider-project-id, environment, and receipt-time-fallback branches; `timestamp-validation.test.ts` separately re-confirms the receipt-time fallback for a garbage timestamp on both mappers; `hooks.int.test.ts` exercises both mappers indirectly through a live signed request against the full `/hooks/vercel` and `/hooks/railway` routes. `separation-of-concerns` passes: this file's only responsibility is translating one provider's webhook body into a `ProviderDeploy` row or `null`; it delegates phase computation to `vercelPhases`/`railwayPhases`, commit formatting to `shortSha`/`commitFullMessage`, and timestamp validation to `toValidDate`, reimplementing none of them. `input-sanitization` passes: every field this file reads off the untrusted, caller-parsed webhook body is read through optional chaining against a cast-to-`unknown` interface, an unrecognized `type`/missing required field is rejected to `null` (never assumed present), a non-string `commitHash`/`commitMessage`/`branch`/`repo` on the Railway body is rejected to `null` rather than passed through (railway-commit-hash through railway-commit-repo), and every timestamp is routed through the trust-boundary parser `toValidDate` rather than trusted as already-valid — see agenticdevelopercookbook://guidelines/implementing/security/input-validation. `explicit-error-handling` is `partial`: every malformed-input branch resolves to a well-defined `null` or a documented fallback value rather than throwing (no-throw), but neither function nor its caller distinguishes, in any signal this file produces, "the event was well-formed but not one we ingest" from "the event was malformed" — both collapse to the identical `null` return, a fact recorded here rather than defended as a full pass. `graceful-degradation` passes: a webhook body missing a required field, carrying an unrecognized event type, or carrying an unparseable timestamp never fails the call; it degrades to `null` (asking nothing further of the caller) or to a receipt-time timestamp (preserving the event rather than discarding it), per the Design Decisions above.
+`unit-test-coverage` passes: `deploy-mappers.test.ts` gives both exported functions thorough, table-driven coverage of every `VERCEL_STATE` entry and every `railwayPhases` status, plus dedicated tests for the missing-required-field, provider-project-id, environment, and receipt-time-fallback branches; `timestamp-validation.test.ts` separately re-confirms the receipt-time fallback for a garbage timestamp on both mappers; `hooks.int.test.ts` exercises both mappers indirectly through a live signed request against the full `/hooks/vercel` and `/hooks/railway` routes. `separation-of-concerns` passes: this file's only responsibility is translating one provider's webhook body into a `ProviderDeploy` row or `null`; it delegates phase computation to `vercelPhases`/`railwayPhases`, commit formatting to `shortSha`/`commitFullMessage`, and timestamp validation to `toValidDate`, reimplementing none of them. `input-sanitization` passes: every field this file reads off the untrusted, caller-parsed webhook body is read through optional chaining against a cast-to-`unknown` interface, an unrecognized `type`/missing required field is rejected to `null` (never assumed present), a non-string `commitHash`/`commitMessage`/`branch`/`repo` on the Railway body is rejected to `null` rather than passed through (railway-commit-hash through railway-commit-repo), and every timestamp is routed through the trust-boundary parser `toValidDate` rather than trusted as already-valid — see [adc.guideline.implementing.security.input-validation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/4ca8a3d5-cdcc-4f74-a2ec-3a198608b419). `explicit-error-handling` is `partial`: every malformed-input branch resolves to a well-defined `null` or a documented fallback value rather than throwing (no-throw), but neither function nor its caller distinguishes, in any signal this file produces, "the event was well-formed but not one we ingest" from "the event was malformed" — both collapse to the identical `null` return, a fact recorded here rather than defended as a full pass. `graceful-degradation` passes: a webhook body missing a required field, carrying an unrecognized event type, or carrying an unparseable timestamp never fails the call; it degrades to `null` (asking nothing further of the caller) or to a receipt-time timestamp (preserving the event rather than discarding it), per the Design Decisions above.
 
 ## Change History
 

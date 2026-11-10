@@ -1,7 +1,6 @@
 ---
 id: 28581588-68f5-465d-8e8e-3aaaaef00560
 title: "Teams"
-domain: adhsdk://cookbook/adh/hub/teams
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,7 +22,7 @@ tags:
   - slug
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
+  - 201572ee-2e0f-4839-94f5-252f8044c4bf
 references:
   - packages/web/packages/data/src/teams/team-members.ts (adhsdk)
   - packages/web/packages/data/src/teams/teams.ts (adhsdk)
@@ -395,9 +394,9 @@ host application, not of this domain component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/teams/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/teams/` | unverified |
 
 ## Design Decisions
 
@@ -457,15 +456,15 @@ has (file header: "The caller resolves the id with
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [api-design-conventions](agenticdevelopercookbook://compliance/access-patterns#api-design-conventions) | partial | access-patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | failed | reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | reliability |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | internationalization |
-| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | passed | security |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | security |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | partial | access-patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | failed | reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | passed | security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | security |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | security |
 
 Every logic component in this cookbook is held to at least
 `separation-of-concerns` and `unit-test-coverage`. **`separation-of-concerns`**

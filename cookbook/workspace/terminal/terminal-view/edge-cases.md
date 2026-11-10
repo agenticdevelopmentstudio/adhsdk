@@ -33,7 +33,7 @@
   marks-active-pane flag is `true`**: the caret stays filled regardless
   of the marks-active-pane flag — only the always-hollow flag can force
   it hollow outside composable-tabs context — because
-  `adhsdk://cookbook/ui/layout/composable-tabs/active-pane#requirements/view-outside-any-pane-counts-as-active`
+  view-outside-any-pane-counts-as-active ([adhsdk.ingredient.ui.layout.composable-tabs.active-pane](cookbook:08bfb299-851b-4b01-a84a-6a2a13e07c12))
   treats such a view as always "in the active pane."
 - **Multiple instances across different windows**: each instance ignores
   a change notification whose named window does not match its own

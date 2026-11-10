@@ -1,7 +1,6 @@
 ---
 id: ac044c52-64bb-4e4f-b0d8-56dd88ab7d47
 title: "Snapshot Staleness"
-domain: adhsdk://cookbook/status/dashboard/logic/snapshot-staleness
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,9 +17,9 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/logic/board-staleness
-  - adhsdk://cookbook/status/dashboard/state/portfolio-indicator
-  - adhsdk://cookbook/status/dashboard/state/live-snapshot
+  - 01f6f7b6-4bc5-4f35-a46a-1e80fe470097
+  - 43d93a67-c469-40d1-8465-076cd782e1b2
+  - ca7205d2-31c0-424a-95a2-a356bed30187
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,7 +31,7 @@ approved-date: ""
 
 `snapshot-staleness.ts` (`packages/web/packages/status-web/src/lib/snapshot-staleness.ts`) is the status dashboard's single staleness rule for the live snapshot: "how stale the displayed status data is". It exports a three-valued `SnapshotFreshness` type, the constant `SNAPSHOT_STALE_FLOOR_MS`, the window function `snapshotStaleMs`, and the verdict function `snapshotFreshness`.
 
-The doc comment calls it "the ONE staleness rule". It is shared by the board-wide `SnapshotStaleBanner` component and the [usePortfolioIndicator](adhsdk://cookbook/status/dashboard/state/portfolio-indicator) hook, so the banner and the header/home status sign can never disagree. Both callers read `lastCycleAt`, `generatedAt` and `probeIntervalMs` off the snapshot held by [useLiveSnapshot](adhsdk://cookbook/status/dashboard/state/live-snapshot). The sibling [Board Staleness](adhsdk://cookbook/status/dashboard/logic/board-staleness) module derives its data-clock window from `snapshotStaleMs`.
+The doc comment calls it "the ONE staleness rule". It is shared by the board-wide `SnapshotStaleBanner` component and the usePortfolioIndicator ([adhsdk.ingredient.status.dashboard.state.portfolio-indicator](cookbook:43d93a67-c469-40d1-8465-076cd782e1b2)) hook, so the banner and the header/home status sign can never disagree. Both callers read `lastCycleAt`, `generatedAt` and `probeIntervalMs` off the snapshot held by useLiveSnapshot ([adhsdk.ingredient.status.dashboard.state.live-snapshot](cookbook:ca7205d2-31c0-424a-95a2-a356bed30187)). The sibling Board Staleness ([adhsdk.ingredient.status.dashboard.logic.board-staleness](cookbook:01f6f7b6-4bc5-4f35-a46a-1e80fe470097)) module derives its data-clock window from `snapshotStaleMs`.
 
 The lag is measured server clock against server clock: the snapshot's `generatedAt` (stamped at read time) minus its newest persisted probe `lastCycleAt`. The window mirrors the backend scheduler's `staleAfterMs` (`max(interval×5, 5min)` in `status-server/src/scheduler.ts`). The module has no state, no I/O and no side effects.
 
@@ -181,12 +180,6 @@ Not applicable: the module makes no log calls; its verdict reaches the user thro
 - **AppKit / UIKit**: Use the same pure Swift functions as the SwiftUI port, placed in a shared framework target since nothing is UI-bound. The banner equivalent re-evaluates whenever the live snapshot model publishes a new value; no `Timer` is needed because the rule never reads the client clock.
 - **WinUI 3**: Port as a `public static class SnapshotStaleness` in C# with `public const long StaleFloorMs = 5 * 60_000;`, `public static long StaleMs(long? probeIntervalMs) => Math.Max((probeIntervalMs ?? 0) * 5, StaleFloorMs);`, and `public enum SnapshotFreshness { Fresh, Stale, VeryStale }` (add `[JsonStringEnumMemberName("very-stale")]` if it crosses `System.Text.Json`). Parse each timestamp with `DateTimeOffset.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)`; since .NET has no NaN parse result, a `false` return must map to `Fresh` to preserve the fail-open rule. Compute the lag with `ToUnixTimeMilliseconds()` on both values; `long` arithmetic removes the NaN-interval case. Keep the functions synchronous with no `Task` and no `DateTimeOffset.UtcNow`. The view model that owns the live snapshot recomputes the verdict when a new snapshot arrives and raises `INotifyPropertyChanged` for a derived `Freshness` property, which an `InfoBar` binds to (`IsOpen` when not `Fresh`, `Severity="Warning"` for `Stale`, `Severity="Error"` for `VeryStale`).
 
-## Reference Implementations
-
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/snapshot-staleness.ts` |
-
 ## Design Decisions
 
 **Decision**: Measure the lag server clock against server clock (`generatedAt` minus `lastCycleAt`), never against the client's `Date.now()`.
@@ -213,11 +206,11 @@ Not applicable: the module makes no log calls; its verdict reaches the user thro
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | partial | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | partial | reliability |
 
 **Separation of concerns.** The module holds only the rule and its thresholds, with no React, I/O or rendering; the banner and hook apply it.
 

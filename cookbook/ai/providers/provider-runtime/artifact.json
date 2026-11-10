@@ -1,8 +1,7 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "3b310d80-e18d-4f45-9041-10a278f775c1",
-    "domain": "adhsdk://cookbook/ai/providers/provider-runtime",
     "type": "ingredient",
     "title": "Provider Runtime",
     "version": "1.2.0",
@@ -50,7 +49,7 @@
     ]
   },
   "names_hosts": "Provider metadata names real providers and model ids (Claude, Haiku, gpt-5) as the literal values it builds requests from.",
-  "synced": "a65054e4cab0601c",
+  "synced": "0e9b188eae1aca89",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -69,7 +68,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

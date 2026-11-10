@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "4e32bf7a-b87a-44f6-aa16-f57a533e3b77",
     "title": "Status Server Monitor Self-Check Stability",
-    "domain": "adhsdk://cookbook/status/service/monitor/self-check-stability",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -27,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/integrations",
-      "adhsdk://cookbook/status/service/monitor/issue-sources"
+      "da0c6c07-d0f4-4c6c-a1ef-51b696910c72",
+      "86e7936a-c295-4e1f-8f7a-7278b4849008"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/self-check-stability.ts (adhsdk)",
@@ -39,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "47a82678ca4aab3e",
+  "synced": "7806d817a6278884",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

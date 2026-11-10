@@ -1,0 +1,3 @@
+
+Not applicable: ResourceCard does not directly respond to platform accessibility display options (Reduce Motion, Increase Contrast, etc.). The `transition-colors` class applies a CSS transition on hover/focus state changes; it does not include a `motion-reduce:` variant, so the transition still plays for viewers with `prefers-reduced-motion` enabled — the browser does not suppress it automatically. Consumers who need to respect that preference should add `motion-reduce:transition-none` (or equivalent) via the `className` prop. Focus outline styling (focus-accent) is always present and is not affected by Increase Contrast or other options.
+

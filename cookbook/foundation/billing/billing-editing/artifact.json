@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "359A896F-ECC0-45D7-991A-B4FBC24C9511",
+    "id": "359a896f-ecc0-45d7-991a-b4fbc24c9511",
     "title": "Billing Editing",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-editing",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-dt-os",
-      "adhsdk://cookbook/foundation/billing/billing-rate"
+      "ed610aa4-2717-4242-a8b9-c4616377dbd9",
+      "bbe7358f-2001-4e67-83cb-0627de522c42"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "55a4c32a60f13d15",
+  "synced": "b2ee9eed0af93d4a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

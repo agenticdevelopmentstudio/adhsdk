@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "7B3E5D12-9A64-4C0F-8E21-5F1D6A7C3B90",
+    "id": "7b3e5d12-9a64-4c0f-8e21-5f1d6a7c3b90",
     "title": "UseTablesWithRows",
-    "domain": "adhsdk://cookbook/ui/crud/use-tables-with-rows",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/crud/crud-table"
+      "ec64b22b-8a25-431d-8866-b7a01acd91fe"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "06efd46524ee2de8",
+  "synced": "9e60f0da5df15a2f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

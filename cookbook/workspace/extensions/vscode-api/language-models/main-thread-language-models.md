@@ -1,7 +1,6 @@
 ---
 id: 2beaca09-67b4-4e19-b4a4-f66f048687b8
 title: "VS Code Language Models Bridge"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/language-models/main-thread-language-models
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +21,8 @@ tags:
   - streaming
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
-  - adhsdk://cookbook/workspace/extensions/host/extension-event
+  - a602608c-c061-44b6-a7ab-829e798d6b0c
+  - 8e0d1a9d-27a1-4b5b-9a7d-5b9f9a5f7f2e
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadLanguageModelsTests.swift (adhsdk)
@@ -265,9 +264,9 @@ No other event in this component is logged: a rejected `selectChatModels`/`sendR
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` | unverified |
 
 ## Design Decisions
 
@@ -299,11 +298,11 @@ No other event in this component is logged: a rejected `selectChatModels`/`sendR
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because this file's responsibilities stay cleanly divided: selector matching (`LanguageModelChatSelectorCriteria`), the readonly object-handback shape (`makeChatModelObject`), request/option parsing (`handleSendRequest`, `parseRequestOptions`), the tee itself (`LanguageModelResponseRequest`, `startPump`, `scan`/`next`/`wake`), and event filtering (`availableChatModelsDidChange`) each live in their own type or function, none reaching into `provider`'s own streaming implementation. `unit-test-coverage` passes: `MainThreadLanguageModelsTests.swift`'s 47 test methods exercise every documented branch this recipe cites — selector matching in all three shapes, both readonly-getter and count-tokens paths, the one-outstanding-`next()` gate, every tee/cursor independence and termination case, every `sendRequest` rejection path (torn-down, role validation, seam throw, cancellation before and during streaming), and every `onDidChangeChatModels` filtering and teardown case. `explicit-error-handling` passes: every failure path this file defines — torn-down responses, role rejection, seam throws, bridging failures, malformed tool-call JSON, cancellation — settles as a typed rejection, a raised exception, or a logged-and-substituted value, per the Behavioral Requirements and Edge Cases above; none of them is swallowed with no signal. `secure-log-output` passes because none of this file's four log events (a dropped model, a displaced waiter, a bridging failure, a JSON parse failure) includes message content, `justification`, or tool-call argument values — each names only the failure kind and an identifier, never the conversation itself. `no-hardcoded-strings` fails because every rejection message, teardown message, and log message this file produces is an English literal with no localization mechanism (see Localization).
 

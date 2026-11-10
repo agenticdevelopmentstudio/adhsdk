@@ -1,7 +1,6 @@
 ---
 id: 0640ca96-95c5-4234-925e-386425cc4435
 title: "Composable Tabs"
-domain: adhsdk://cookbook/ui/layout/composable-tabs
 type: ingredient
 version: 1.3.0
 status: review
@@ -22,8 +21,8 @@ tags:
   - tabs
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
-  - adhsdk://cookbook/ui/layout/composable-tabs/pane-spacing
+  - 4d75a371-181e-4d80-a16b-022d37dc0d48
+  - 4c528e38-b70a-4ed3-bedc-9009292ad908
 references: []
 approved-by: ""
 approved-date: ""
@@ -746,9 +745,9 @@ Not applicable: source contains no logging call anywhere in this component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -810,10 +809,10 @@ Not applicable: source contains no logging call anywhere in this component.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | failed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | failed | Accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | failed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | failed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Keyboard-navigable is failed because no keyboard path exists in
 source for resizing a divider (see the non-pointer-resize

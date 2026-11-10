@@ -14,7 +14,7 @@
   space"), which the screen reader reads as the button's label. This
   mirrors the same control-to-title linkage gap already noted on the
   sibling ingredient
-  (`adhsdk://cookbook/ui/settings/rows/captioned-slider-view#accessibility`).
+  (accessibility ([adhsdk.ingredient.ui.settings.rows.captioned-slider-view](cookbook:64825f85-8b4d-4406-befc-aa08ce55cc8b))).
 - **Announce state changes (e.g., loading, disabled)**: Not applicable — the
   component has no loading or disabled state (see States) for a change to
   announce.

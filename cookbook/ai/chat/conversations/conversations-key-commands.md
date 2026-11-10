@@ -1,7 +1,6 @@
 ---
 id: 143b0352-49d4-46a9-a922-bb45c4cc0e7e
 title: "Conversations Key Commands"
-domain: adhsdk://cookbook/ai/chat/conversations/conversations-key-commands
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +20,8 @@ tags:
   - conversations
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/controls/key-command-capture-field
-  - adhsdk://cookbook/ui/settings/rows/key-command-row-view
+  - 969b7f76-3fff-4a13-9b85-a61df25c70ee
+  - 1d2f69b6-1156-4dfa-a390-a240925ba1bd
 references: []
 approved-by: ""
 approved-date: ""
@@ -202,9 +201,9 @@ Not applicable: the source contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` | unverified |
 
 ## Design Decisions
 
@@ -224,9 +223,9 @@ wrong way round: the panel is where you go to find out what the app can do."
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because the component only declares commands;
 the registry performs them and the window decides ownership.

@@ -1,7 +1,6 @@
 ---
 id: 7f122a27-5b49-4f03-9439-1152249bc08f
 title: "Focused Topic Detail (FTD) View"
-domain: adhsdk://cookbook/ui/navigation/focused-topic-detail
 type: recipe
 version: 1.2.5
 status: accepted
@@ -21,12 +20,12 @@ tags:
   - layout
   - navigation
 ingredients:
-  - adhsdk://recipes/resizable-split
-  - adhsdk://recipes/option-menu
-  - adhsdk://recipes/alert-and-dialog
-  - adhsdk://recipes/data-table
-  - adhsdk://recipes/disclosure
-  - adhsdk://recipes/topic-detail
+  - c21473ee-a075-4800-96db-ff3de0888515
+  - 4d0e04ff-39eb-472c-93a0-8070f1b64a6a
+  - 550f00f7-bfb2-415e-9b15-bd5dce015500
+  - d04eef56-2dbf-4148-964b-c095f242227f
+  - c99e2822-f5a9-4e84-8740-9341880bb82a
+  - 8fa7aaae-df62-44ea-b10c-182f3094ed9f
 depends-on: []
 related: []
 references: []
@@ -82,12 +81,12 @@ view rather than a 404.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| FocusedTopicDetail block | adhsdk://recipes/topic-detail | The master/detail layout (topic list + detail panel) every route composes | yes | `topics`, `paneOwnedActions` |
-| OptionMenu | adhsdk://recipes/option-menu | The selector popup that switches focus and hosts the New action | yes | radio entities + All + trailing New item |
-| AlertAndDialog | adhsdk://recipes/alert-and-dialog | Step-1 warning alert + step-2 type-to-confirm delete dialog | yes | destructive; `Entity`/`rdid`/`childEntities` params |
-| Disclosure | adhsdk://recipes/disclosure | The collapsible Danger Zone in the entity pane | yes | collapsed default; apt-red accent only when open |
-| DataTable | adhsdk://recipes/data-table | The All view "list" render mode (one row per entity) | yes | name + identifier + key meta columns |
-| ResizableSplit | adhsdk://recipes/resizable-split | Optional split layout within a topic's detail panel | no | as needed per topic |
+| FocusedTopicDetail block | [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f) | The master/detail layout (topic list + detail panel) every route composes | yes | `topics`, `paneOwnedActions` |
+| OptionMenu | [adhsdk.ingredient.ui.components.inputs.option-menu](cookbook:4d0e04ff-39eb-472c-93a0-8070f1b64a6a) | The selector popup that switches focus and hosts the New action | yes | radio entities + All + trailing New item |
+| AlertAndDialog | [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500) | Step-1 warning alert + step-2 type-to-confirm delete dialog | yes | destructive; `Entity`/`rdid`/`childEntities` params |
+| Disclosure | [adhsdk.ingredient.ui.components.layout.disclosure](cookbook:c99e2822-f5a9-4e84-8740-9341880bb82a) | The collapsible Danger Zone in the entity pane | yes | collapsed default; apt-red accent only when open |
+| DataTable | [adhsdk.ingredient.ui.components.data.data-table](cookbook:d04eef56-2dbf-4148-964b-c095f242227f) | The All view "list" render mode (one row per entity) | yes | name + identifier + key meta columns |
+| ResizableSplit | [adhsdk.ingredient.ui.components.layout.resizable-split](cookbook:c21473ee-a075-4800-96db-ff3de0888515) | Optional split layout within a topic's detail panel | no | as needed per topic |
 
 ## Integration Requirements
 
@@ -215,13 +214,13 @@ Color only via `apt-*` tokens (`apt-red` destructive, `apt-border`, `apt-text-mu
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/ui/src/blocks/focused-topic-detail.tsx` |
-| web | `packages/web/packages/ui/src/blocks/topic-detail.tsx` |
-| web | `packages/web/packages/ui/src/blocks/popup-menu.tsx` |
-| web | `packages/web/packages/ui/src/blocks/resource-card.tsx` |
-| web | `packages/web/packages/ui/src/blocks/section-header.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/ui/src/blocks/focused-topic-detail.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/topic-detail.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/popup-menu.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/resource-card.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/section-header.tsx` | unverified |
 
 ## Design Decisions
 
@@ -305,21 +304,21 @@ cache as Ecosystems.
 
 | Check | Status | Category |
 |---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [safe-defaults](agenticdevelopercookbook://compliance/user-safety#safe-defaults) | passed | User Safety |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [test-pyramid](agenticdevelopercookbook://compliance/best-practices#test-pyramid) | partial | Best Practices |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-| [deep-linking-support](agenticdevelopercookbook://compliance/platform-compliance#deep-linking-support) | passed | Platform Compliance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | passed | User Safety |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.test-pyramid](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/203de556-83a8-5211-acaf-155c49da0eb3) | partial | Best Practices |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.platform-compliance.deep-linking-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c2a477a7-bd42-5e3f-9ebd-5a64b4b63de4) | passed | Platform Compliance |
 
 The passed rows rest on `DeleteEntitySection`'s `@base-ui/react/dialog`
 primitive (focus trap, Escape-to-close), its `Label htmlFor` wiring, its

@@ -1,7 +1,6 @@
 ---
 id: 94dc5dad-be14-4520-8afe-e944e59a0117
 title: "VS Code API Bridge"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,11 +21,11 @@ tags:
   - bridge
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
-  - adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics
-  - adhsdk://cookbook/workspace/extensions/vscode-api/language-models/main-thread-language-models
-  - adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-languages
-  - adhsdk://cookbook/workspace/extensions/host/js-value-bridge
+  - 5141968f-3922-47f2-a31f-ba953b92a048
+  - f5432726-5b0f-47c5-b0f6-c0b19a9db5bb
+  - 2beaca09-67b4-4e19-b4a4-f66f048687b8
+  - bda54815-6dd8-4a7c-abfe-8cb0065824b2
+  - cb25bd84-9a11-4070-8b3c-f178cff76068
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/VSCodeAPISettlementTests.swift (adhsdk)
@@ -453,9 +452,9 @@ Subsystem: matches the host's logging subsystem | Category: the bridge's own cat
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift` | unverified |
 
 ## Design Decisions
 
@@ -491,12 +490,12 @@ Subsystem: matches the host's logging subsystem | Category: the bridge's own cat
 
 | Check | Status | Category |
 | --- | --- | --- |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `VSCodeAPI` is exactly the ceremony every `vscode.*` adaptor needs and nothing an adaptor's own domain logic — command lookup, diagnostic storage, tree data — should be doing itself, so separation-of-concerns passes. `VSCodeAPISettlementTests.swift`, `VSCodeAPIDisposableTests.swift`, and `VSCodeAPISubNamespaceTests.swift` cover `settlement(of:in:)`, `disposable(in:onDispose:)`, and `subNamespace(path:members:in:recordMiss:recordProbe:)` in real depth, but `arrayLength(of:)`, `raise(_:in:)`, the promise builders, `call(_:thisArg:arguments:)`, `canDispatch(in:)`, `observeRejection(of:in:_:)`, and `member(_:of:whenTornDown:body:)` have no dedicated test in those suites — they are exercised only indirectly through adaptors such as `MainThreadCommands` — so unit-test-coverage is partial. Every failure path answers an explicit `.unavailable`/`.threw`/`.rejected` case, a raised exception, or a logged error rather than silently swallowing anything, so explicit-error-handling passes. Nothing this file logs is a secret, token, or credential — only member paths, counts, and diagnostic error text — so secure-log-output passes. `arrayLength(of:)`'s hard ceiling on decodable array length, and its refusal to trust `toInt32()`'s wraparound-prone conversion, are exactly the kind of untrusted-input bound input-sanitization asks for, so it passes. Every user-facing string this file produces — the dispatch-unavailable message, the `NotImplementedError` message, and the read-only `TypeError` messages — is a hardcoded English literal with no localization key, so no-hardcoded-strings fails.
 

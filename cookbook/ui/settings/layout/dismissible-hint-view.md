@@ -1,7 +1,6 @@
 ---
 id: f3d7adbb-ece4-4b00-97af-f7e3db9d5999
 title: "Dismissible Hint View"
-domain: adhsdk://cookbook/ui/settings/layout/dismissible-hint-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -20,9 +19,9 @@ tags:
   - onboarding
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/layout/conditional-view
-references:
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 537cf2a7-6be6-4a09-9a6c-8f8ecc6012da
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -39,7 +38,7 @@ session." It self-reports visibility changes so a hosting group view can
 collapse the padding and hairline around a card row whose content has
 hidden itself, rather than leaving an empty band behind — the same
 mechanism the sibling conditional view recipe
-(`adhsdk://cookbook/ui/settings/layout/conditional-view`) uses for
+([adhsdk.ingredient.ui.settings.layout.conditional-view](cookbook:537cf2a7-6be6-4a09-9a6c-8f8ecc6012da)) uses for
 the same reason.
 
 ## Behavioral Requirements
@@ -226,7 +225,7 @@ a runtime behavior assertion.
   following turn. This is a MUST-level consequence of the mechanism this
   component observes through — the same underlying mechanism the sibling
   conditional view recipe
-  (`adhsdk://cookbook/ui/settings/layout/conditional-view`)
+  ([adhsdk.ingredient.ui.settings.layout.conditional-view](cookbook:537cf2a7-6be6-4a09-9a6c-8f8ecc6012da))
   documents for its own observed setting.
 - Repeated taps on the dismiss button: each tap unconditionally sets the
   setting's value to `true` again, with no read-back of the setting's
@@ -258,7 +257,7 @@ applies.
 `buttonTitle`'s default value, the English literal `"Got It"`, carries no
 localization key or lookup — `text` and any explicit `buttonTitle`
 argument are the caller's responsibility to localize (the same treatment
-as the sibling Badge recipe (`adhsdk://cookbook/ui/controls/badge`)
+as the sibling Badge recipe ([adhsdk.ingredient.ui.controls.badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f))
 gives fully caller-supplied text), but this one default value ships baked
 directly into the component itself; a call site that never overrides
 `buttonTitle` ships this English literal regardless of the app's locale.
@@ -401,9 +400,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift` | unverified |
 
 ## Design Decisions
 
@@ -416,7 +415,7 @@ Not applicable: the component performs no logging of its own.
   asynchronously-delivered change notification arrives, and avoids firing
   `onVisibilityChange` for a hosting `GroupView` before that view has even
   finished adding this row — the same reasoning the sibling `ConditionalView`
-  recipe (`adhsdk://cookbook/ui/settings/layout/conditional-view`) documents for its own
+  recipe ([adhsdk.ingredient.ui.settings.layout.conditional-view](cookbook:537cf2a7-6be6-4a09-9a6c-8f8ecc6012da)) documents for its own
   initial-visibility evaluation.
   **Approved**: pending
 - **Decision**: Guard the `onChange` handler with `dismissed != self.isHidden`
@@ -451,14 +450,14 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | Internationalization |
 
 Statuses rest on `DismissibleHintView.swift`: `NSTextField`/`NSButton`/
 `NSStackView` are native, unmodified system controls with default

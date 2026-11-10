@@ -1,7 +1,6 @@
 ---
 id: 2871e97f-f971-46fe-a4d2-de57ad5c94c5
 title: "Status Server Monitor Health"
-domain: adhsdk://cookbook/status/service/monitor/health
 type: ingredient
 version: 1.0.2
 status: review
@@ -168,9 +167,9 @@ Not applicable: this file contains no logging or console call of any kind; `clas
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/health.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/health.ts` | unverified |
 
 ## Design Decisions
 
@@ -191,10 +190,10 @@ Not applicable: this file contains no logging or console call of any kind; `clas
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
 `unit-test-coverage` is `partial`: `health.test.ts` gives `classify` six assertions with meaningful expectations, covering fast/slow 2xx, a 5xx, a missing body marker, a non-ok health-kind JSON body, and a non-2xx `expectedStatus` match — but four branches this recipe traces directly to the source (a non-JSON body falling through, a JSON body with no `status` field falling through, the exact `DEGRADED_THRESHOLD_MS` latency boundary, and the case-insensitive/non-string `status` coercion) have no assertion of their own anywhere in `health.test.ts`. `separation-of-concerns` passes: this file's only responsibility is turning an already-observed probe outcome into a `HealthStatus` verdict; it performs no I/O, no persistence, and no HTTP/DNS work of its own, leaving fetching, timing, and body-reading to `probe.ts` (external). `explicit-error-handling` passes: the one error `classify` can encounter — `JSON.parse` throwing on a non-JSON `bodyText` — is caught by an explicit `try`/`catch` whose empty body is documented by an inline comment explaining the fall-through is deliberate, not an unhandled or silently-ignored exception path. `fault-tolerance` passes: `classify` accepts an arbitrary `bodyText` string (malformed JSON, HTML, or any other content) and an arbitrary `status` field shape (string, number, boolean, object) without throwing or crashing, per health-kind-json-parse-failure-falls-through and health-kind-status-field-string-coercion.
 

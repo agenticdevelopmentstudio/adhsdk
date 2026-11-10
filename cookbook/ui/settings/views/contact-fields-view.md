@@ -1,7 +1,6 @@
 ---
-id: 6F98F569-B8C7-4FD9-BCDD-EA9768666A16
+id: 6f98f569-b8c7-4fd9-bcdd-ea9768666a16
 title: "Contact Fields View"
-domain: adhsdk://cookbook/ui/settings/views/contact-fields-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +21,7 @@ tags:
   - form
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/setting-observing
+  - 64c9047d-53a2-4912-8817-2f35372e505f
 references: []
 approved-by: ""
 approved-date: ""
@@ -142,9 +141,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ContactFieldsView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ContactFieldsView.swift` | unverified |
 
 ## Design Decisions
 
@@ -164,8 +163,8 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Separation-of-concerns is passed: the view only binds four fields to one record and reports it, leaving storage and validation to the caller. Unit-test-coverage is partial: `ContactFieldsViewTests.swift` covers the empty start, loading, no report on load, whole-record reporting, identifiers, round trip and keeping the field being edited; `revert(attempted:stored:)` has no test.
 

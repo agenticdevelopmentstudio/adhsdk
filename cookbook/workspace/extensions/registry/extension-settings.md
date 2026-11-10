@@ -1,7 +1,6 @@
 ---
 id: b360162a-7acb-4354-af85-0f131c84c601
 title: "Extension Settings"
-domain: adhsdk://cookbook/workspace/extensions/registry/extension-settings
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - storage-keys
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/contributed-settings
+  - c4375e0e-091f-4627-b3c9-e7d36221802f
 references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionSettings.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift (adhsdk)
@@ -151,9 +150,9 @@ Not applicable: this concept makes no logging call of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionSettings.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionSettings.swift` | unverified |
 
 ## Design Decisions
 
@@ -177,10 +176,10 @@ Not applicable: this concept makes no logging call of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [safe-defaults](agenticdevelopercookbook://compliance/user-safety#safe-defaults) | passed | User Safety |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | passed | User Safety |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
 `separation-of-concerns` passes because `ExtensionSettings.swift` declares only the setting's identity and default; the read/write/remove/observe mechanics live in `UserSetting`/`SettingsStore`, the persistence mechanics live in `UserDefaultsSettingsStorageProvider`, and the enablement logic that interprets the set lives in `ExtensionRegistry` — none of that logic is duplicated here. `unit-test-coverage` passes because `ExtensionSettingsTests.swift` asserts both facts this declaration is responsible for: the pinned key string and the empty default, exactly the two properties the file's own doc comments call out as load-bearing. `safe-defaults` passes because the default is an empty set, meaning no extension is silently disabled on a fresh install or after a decode failure — the failure mode and the absent-value case both resolve to "nothing disabled," never to an unpredictable or partially-populated set. `explicit-error-handling` is partial because a decode failure on the stored `Data` (per `corrupt-data-falls-back-to-default`) and an encode failure on a write both fall back silently to a default value or a no-op with no signal surfaced to the caller — safe, but not surfaced, and that behavior is inherited from `UserDefaultsSettingsStorageProvider` rather than handled explicitly by this file.
 

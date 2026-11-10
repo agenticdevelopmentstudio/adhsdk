@@ -1,13 +1,13 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 
 `screen-reader-support` passes because `SettingsSearchField`'s only interactive control is a genuine `NSSearchField` (`ThemedSearchField`), which carries its own search-field accessibility role and description; the four pure layout views (`SettingsGroup`, `SettingsCard`, `SettingsCardRow`, `SettingsCardDivider`) render no interactive elements of their own. `keyboard-navigable` passes for the same reason — `NSSearchField`'s native focus, typing, and Escape-to-clear behavior come for free from wrapping the real control (see Focused in States). `dynamic-type-support` is partial because the caption's `.caption` style is scaled by the active theme's `sizeScale` (`ThemeTypography.defaultStyle(.caption)`), and whether that tracks the system's text-size preference depends on the active theme, which this file cannot determine on its own. `contrast-ratio` is partial because the `secondaryText` and `divider` roles each guarantee only a fixed minimum-contrast floor (3.0 and unstated, respectively) from their derivation formula, not a guarantee that any specific active theme clears WCAG's 4.5:1 (text) or 3:1 (non-text UI) thresholds — see **minimum-contrast-ratio** and its Design Decision. `no-hardcoded-strings` passes because the file's only user-facing text, `title` and `placeholder`, are caller-supplied parameters with no literal string of this file's own baked in (see Localization).
 

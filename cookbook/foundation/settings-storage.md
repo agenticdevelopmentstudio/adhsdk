@@ -1,7 +1,6 @@
 ---
 id: 6363b5ff-f511-4e21-9ba7-6850787dba62
 title: "Settings Storage"
-domain: adhsdk://cookbook/foundation/settings-storage
 type: ingredient
 version: 1.2.1
 status: review
@@ -274,38 +273,38 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/ColorSetting.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySecureSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/KeychainSecureSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SecureStoredSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingPropertyWrapper.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Editor.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Appearance/AppearanceManager.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/ColorSetting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySecureSettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/KeychainSecureSettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SecureStoredSettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingPropertyWrapper.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Editor.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Appearance/AppearanceManager.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift` | unverified |
 
 ## Design Decisions
 
@@ -337,12 +336,12 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | Performance |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
 The `SettingsStorageProvider` contract cleanly separates the key/value contract from six independent backends, and `SettingsStore`/`UserSettings` route by `key.isSecure` with no backend-specific branching in the router (separation-of-concerns: passed). `InMemorySettingsStorageProvider`, `UserDefaultsSettingsStorageProvider`, `KeychainSecureSettingsStorageProvider`, and `SqliteStorageProvider` each have a dedicated XCTest file covering defaults, round trips, contains/remove, and change notifications, but no test file exists for `iCloudSettingsStorageProvider` under the same test directory (unit-test-coverage: partial). Secrets route exclusively through `KeychainSecureSettingsStorageProvider`, which stores them in the OS-encrypted Keychain rather than plain `UserDefaults` or SQLite (secure-storage: passed). The same provider memoizes every keychain read, hit or confirmed miss, to avoid repeat round-trips to the keychain daemon (caching-strategy: passed). `KeychainSecureSettingsStorageProvider` and `SqliteStorageProvider` log every encode/SQL failure through `Loggable`, but `UserDefaultsSettingsStorageProvider.set` and `iCloudSettingsStorageProvider.set` return silently with no log call when JSON encoding fails, which this recipe records as open questions rather than passing requirements (explicit-error-handling: partial). `SqliteStorageProvider`'s `settings_kv` table declares a primary-key `key` column and a `NOT NULL` `value` column, and every write goes through one upsert statement, so a key can never end up with more than one row or a null value (data-integrity: passed).
 

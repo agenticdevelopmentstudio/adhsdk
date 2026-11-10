@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b1a34260-3966-4309-ac58-6249752c95fb",
     "title": "Webview Panel State",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-state",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view"
+      "60b5767d-3cf5-4373-b2fc-074aa6b62fec"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelState.swift (adhsdk)",
@@ -38,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "373f2c09ed53ec63",
+  "synced": "938bb1804d8ce720",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -57,7 +56,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

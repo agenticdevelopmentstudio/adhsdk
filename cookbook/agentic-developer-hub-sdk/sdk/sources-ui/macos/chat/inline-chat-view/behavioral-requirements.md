@@ -1,0 +1,35 @@
+
+- **render-messages**: Component MUST render an ordered list of committed messages with their full text, preserving order and vertical spacing of 12pt (Apple) or frame default (web).
+- **render-drafts**: Component MUST render in-flight drafts (active message compositions) inline with committed messages using the same bubble styling.
+- **align-by-participant**: Component MUST render the local participant's messages aligned to the right with a leading spacer (≥60pt on Apple); remote participants' messages aligned to the left.
+- **render-thinking-indicator**: Component MUST display a thinking indicator above the input field while a remote participant has an active status, or — as a fallback when no remote participant has an explicit status — a remote participant is typing. The local user's own typing never triggers it (see the **Status prioritizes remote statuses over typing flag** design decision below).
+- **render-input-field**: Component MUST display a single-line text input field with a send affordance (button or shortcut) that clears on successful submission.
+- **submit-on-return**: Component MUST submit the input text when the user presses Return (web Enter, Apple ⏎).
+- **trim-whitespace**: Component MUST reject submission of input containing only whitespace and newlines.
+- **auto-scroll-to-bottom**: Component MUST auto-scroll the transcript to the bottom when a new message arrives, unless the user has scrolled more than 40pt away from the bottom; once the transcript is back within 40pt of the bottom, new messages resume auto-scrolling (Apple: see Platform Notes for the tracking mechanism).
+- **support-sizing-behavior**: Component MUST accept a sizing configuration defining active and optional inactive height behaviors (`fixed`, `content-hugging`, `minimal`), applied immediately and retained across rebuilds.
+- **animate-sizing-transitions**: When `sizing.transition` is `animated`, component MUST apply 0.2s duration sizing transitions between active and inactive states; when `none`, apply instantly.
+- **track-engagement**: Component MUST track an internal engaged state: true when the input field has focus, false on Escape or a click outside the view (web `focusin`/`pointerdown`/`Escape` triad; Apple focus/click/Escape).
+- **apply-engaged-sizing**: Component MUST apply `sizing.active` when engaged is true and `sizing.inactive` when false (defaulting to `active` if `inactive` is omitted, reproducing fixed sizing).
+- **collapse-to-minimal**: When resolved inactive sizing is `{ mode: 'minimal' }`, component MUST collapse the transcript entirely (height 0, scroll view hidden) and display only the input row on disengage; re-expand to active size on re-engage (Apple: see Platform Notes and the **Minimal mode uses exact zero, not isHidden** design decision).
+- **respect-max-width**: Component MUST constrain message bubbles to 75% of the transcript scroll view width, with a minimum of 200pt (Apple).
+- **render-think-status**: Component MUST display thinking indicator text as configured via `thinkingLabels` (web) or `thinkingIndicator.configure(_:)` (Apple), or fall back to three pulsing dots if not configured.
+- **render-think-glyph**: When `thinkingFrames` or `thinkingDoneGlyph` are provided, component MUST render the rotating glyph animation (think phase) and settled glyph (done phase) from those frames.
+- **support-status-utterance**: Component MUST display `statusUtterance` (web) or `status.utterance` (Apple) as a transient override of the current thinking indicator text.
+- **support-idle-phrase**: Component MUST display `idlePhrase` when no remote participant is active and no `statusUtterance` is set.
+- **stream-while-thinking**: On platforms that expose `statusWhileStreaming` (web), component MUST keep the thinking indicator animating while a reply is streaming in, not only while awaiting the first token. On Apple, the indicator already animates for as long as a status is present, independent of a separate streaming flag.
+- **fade-older**: Component SHOULD dim each older message proportionally less bright than the one below it when `fadeOlder` is true; dimming is optional if not set.
+- **disable-input**: When `inputDisabled` is true, component MUST render the input field but prevent typing and submission, on both web and Apple (see Platform Notes for the underlying mechanism on each platform).
+- **support-placeholder**: Component MUST display an optional placeholder string in the input field (web prop, Apple via `chrome.inputPlaceholder`).
+- **support-custom-prompt**: Component MUST render an optional prompt glyph before the input (web `❯`, Apple via `chrome.promptGlyph`).
+- **support-custom-send-glyph**: Component MUST support an optional custom send affordance glyph or text, falling back to the default send icon when not configured. Apple only (`chrome.sendGlyph`, falling back to the SF Symbol `arrow.up.circle.fill`); web has no equivalent.
+- **render-input-divider**: Component SHOULD render a divider (1pt line) between the typing indicator row and input row when configured (Apple `chrome.showsDivider`).
+- **support-backdrop**: Component MUST accept an optional backdrop view (Apple `backdrop` property) pinned to all edges, positioned below all other content, and hidden/shown without cost when `showsBackdrop` toggles.
+- **start-stop-animated-backdrop**: If a backdrop conforms to `AnimatedBackdrop`, component MUST start its animation when `showsBackdrop` becomes true and stop it when false.
+- **support-surface-transparency**: Component MUST apply `surfaceTransparency` (0–100) as a multiplier on the theme's surface color alpha, thinning the surface fill without affecting text or chrome (Apple).
+- **support-text-scale**: Component MUST respond to ⌘+, ⌘−, and ⌘0 keyboard events (Apple only) and fire `onTextScaleNudge` callback with +1, −1, or 0 (Apple); scaling applies only to the chat's own `themeScope`, not globally.
+- **text-scale-requires-enabled-input**: Text scale shortcuts MUST fire only when the input field is enabled; they do not require the input to have focus. The key equivalent is dispatched down the whole key window's view tree, so the shortcut fires from anywhere in that window as long as the composer accepts typing (input enabled).
+- **render-theme-scope**: Component MUST resolve its color palette through a dedicated `themeScope` instance separate from the window's, allowing independent text-size control per chat instance.
+- **render-command-activity**: Component MUST render command activity (tool invocations) as `ToolCallPillView` rows below the transcript, above the thinking indicator, in invocation order (Apple).
+- **handle-send-errors**: Component SHOULD catch and handle errors from `submitMessage` without crashing or surfacing the error (Apple: silently ignored); web behavior undefined from source.
+

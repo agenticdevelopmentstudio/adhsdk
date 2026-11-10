@@ -1,7 +1,6 @@
 ---
 id: f5f0f19f-065e-4484-8c81-e591eee6db3c
 title: "Response History"
-domain: adhsdk://cookbook/status/dashboard/state/response-history
 type: ingredient
 version: 1.1.1
 status: review
@@ -17,9 +16,9 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/api
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 related:
-  - adhsdk://cookbook/status/dashboard/state/history
+  - 3bb63ddd-6c9a-41c1-a906-6c8542cb4e5c
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,7 +28,7 @@ approved-date: ""
 
 ## Overview
 
-Response History is state in the status dashboard that loads the portfolio-wide response-time history over the last `hours` hours, for the overview graph. It wraps one shared-cache read keyed by the window length. It requests `/response-history?hours=<hours>` through the dashboard's status API client (see [status-web-api](adhsdk://cookbook/status/dashboard/api)), polls every 60 seconds, and returns the read result typed as `ResponseHistory`. Its one caller in the package is the overview stats view, which passes the selected span's `hours` (24, 168, 720 or 2160) and draws `data.points` as the "avg response" sparkline, falling back to an empty array while no data is loaded. It is the portfolio-level sibling of [status-web-hooks-use-history](adhsdk://cookbook/status/dashboard/state/history), which loads one service's checks.
+Response History is state in the status dashboard that loads the portfolio-wide response-time history over the last `hours` hours, for the overview graph. It wraps one shared-cache read keyed by the window length. It requests `/response-history?hours=<hours>` through the dashboard's status API client (see status-web-api ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad))), polls every 60 seconds, and returns the read result typed as `ResponseHistory`. Its one caller in the package is the overview stats view, which passes the selected span's `hours` (24, 168, 720 or 2160) and draws `data.points` as the "avg response" sparkline, falling back to an empty array while no data is loaded. It is the portfolio-level sibling of status-web-hooks-use-history ([adhsdk.ingredient.status.dashboard.state.history](cookbook:3bb63ddd-6c9a-41c1-a906-6c8542cb4e5c)), which loads one service's checks.
 
 ## Behavioral Requirements
 
@@ -159,9 +158,9 @@ Not applicable: Response History makes no log calls; failures reach the caller o
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-response-history.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-response-history.ts` | unverified |
 
 ## Design Decisions
 
@@ -199,11 +198,11 @@ Not applicable: Response History makes no log calls; failures reach the caller o
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of Concerns**: The hook contains no presentation. The base path and transport live in `StatusApiClient`, the caching, polling and state machine in React Query, and the rendering in `OverviewStats`.
 

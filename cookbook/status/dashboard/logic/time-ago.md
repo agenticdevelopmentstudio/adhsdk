@@ -1,7 +1,6 @@
 ---
 id: 66b7f642-d41d-4d84-aea7-624a5f47eef3
 title: "Status Web Time Ago"
-domain: adhsdk://cookbook/status/dashboard/logic/time-ago
 type: ingredient
 version: 1.0.2
 status: review
@@ -20,9 +19,9 @@ tags:
   - pure-function
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/time-ago
-  - adhsdk://cookbook/status/dashboard/state/now
-  - adhsdk://cookbook/status/dashboard/session-client
+  - 839f5416-d1e3-43fb-91a0-4829abdff427
+  - 0b171409-02f8-4ad2-97d3-8f4b1adfa340
+  - 5935b39d-9451-48c1-8b99-bd510d66d1a0
 references:
   - packages/web/packages/status-web/src/lib/time-ago.ts (adhsdk)
   - packages/web/packages/status-web/src/lib/time-ago.test.ts (adhsdk)
@@ -43,7 +42,7 @@ in for testability." Its callers are dashboard components (`DeployList`, `Dashbo
 `configure/ProjectBrowser`); most take `nowMs` from the `useNow` hook, and
 `SnapshotStaleBanner` passes `Date.parse(snapshot.generatedAt)` instead. The function body
 is byte-for-byte identical to the status server's
-[Status Server Monitor Time Ago](adhsdk://cookbook/status/service/monitor/time-ago);
+Status Server Monitor Time Ago ([adhsdk.ingredient.status.service.monitor.time-ago](cookbook:839f5416-d1e3-43fb-91a0-4829abdff427));
 the two copies share one contract and differ only in their callers and in the web copy
 having a test file (`time-ago.test.ts`).
 
@@ -220,9 +219,9 @@ Not applicable: `time-ago.ts` contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/time-ago.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/time-ago.ts` | unverified |
 
 ## Design Decisions
 
@@ -249,10 +248,10 @@ Not applicable: `time-ago.ts` contains no logging call.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
 `unit-test-coverage` passes: `time-ago.test.ts` asserts every bucket and every bucket
 boundary. `separation-of-concerns` passes: the file only formats, and it leaves the clock

@@ -29,7 +29,7 @@ import {
 
 /**
  * The cascading view's rules, one test per recipe rule id
- * (`recipes/hierarchical-topic-detail.md` — "Cascading view — motion, ground and the selection
+ * (`cookbook/ui/blocks/hierarchical-topic-detail/integration-requirements.md` — "Cascading view — motion, ground and the selection
  * chain"). Every rule here was reported, fixed, and then REGRESSED by a later fix, which is why the
  * decisions were pulled out of the component into `cascade-rules` and pinned here: the component's
  * geometry needs a layout engine and jsdom has none, so anything left inside it as an expression was

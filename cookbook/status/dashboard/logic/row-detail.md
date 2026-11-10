@@ -1,7 +1,6 @@
 ---
 id: d76fe59c-9633-4d9f-82c7-4091c5e7f54e
 title: "Row Detail"
-domain: adhsdk://cookbook/status/dashboard/logic/row-detail
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,7 +17,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/logic/deploy-display
+  - 691f84ba-242a-40bc-a164-c95e535bb387
 references: []
 approved-by: ""
 approved-date: ""
@@ -28,7 +27,7 @@ approved-date: ""
 
 ## Overview
 
-This logic turns one status-board row (specified in [Status Row Model](adhsdk://cookbook/status/dashboard/logic/row-model)) into the fields the details pane shows for a selected row, and turns those fields into plaintext for the pane's "copy" button. Its callers are the activity panel view and the activity details view.
+This logic turns one status-board row (specified in Status Row Model ([adhsdk.ingredient.status.dashboard.logic.row-model](cookbook:a0ae2ae1-7d51-4639-8f3b-062dcf750b66))) into the fields the details pane shows for a selected row, and turns those fields into plaintext for the pane's "copy" button. Its callers are the activity panel view and the activity details view.
 
 It provides one data shape and two pure functions:
 
@@ -36,13 +35,13 @@ It provides one data shape and two pure functions:
 - **The detail-building function** maps a row to a row detail. Its documented intent is that it "mirrors the row's own link derivations so the row and the details pane always agree on titles/links", and it renders the status word exactly as the server sent it.
 - **The serialization function** turns a row detail into "a clean, labeled plaintext block" so "the whole problem ... can be pasted straight into an LLM without opening the provider dashboard".
 
-This logic depends on a host-extraction helper, which returns a URL's host or the input unchanged when parsing fails, and on the platform label function specified in [Deploy Display](adhsdk://cookbook/status/dashboard/logic/deploy-display). It has no state, no I/O and no side effects.
+This logic depends on a host-extraction helper, which returns a URL's host or the input unchanged when parsing fails, and on the platform label function specified in Deploy Display ([adhsdk.ingredient.status.dashboard.logic.deploy-display](cookbook:691f84ba-242a-40bc-a164-c95e535bb387)). It has no state, no I/O and no side effects.
 
 ## Behavioral Requirements
 
 ### Data shapes
 
-- **row-input-shape**: The detail-building function MUST accept a row with these fields (named as in [Status Row Model](adhsdk://cookbook/status/dashboard/logic/row-model)): `key`, `source`, `platform` (string or absent), `name`, `environment` (string or absent), `statusWord`, `tone` (one of `good`, `bad`, `progress`, `neutral`, `stale`), `sha`, `commitUrl`, `message`, `detail`, `at` (an ISO timestamp), `sourceUrl`, `liveUrl`, plus the optional `commitBody`, `statusCode`, `responseTimeMs`, `lastCheckedAt`, `downSince`, `branch` and `errorText`.
+- **row-input-shape**: The detail-building function MUST accept a row with these fields (named as in Status Row Model ([adhsdk.ingredient.status.dashboard.logic.row-model](cookbook:a0ae2ae1-7d51-4639-8f3b-062dcf750b66))): `key`, `source`, `platform` (string or absent), `name`, `environment` (string or absent), `statusWord`, `tone` (one of `good`, `bad`, `progress`, `neutral`, `stale`), `sha`, `commitUrl`, `message`, `detail`, `at` (an ISO timestamp), `sourceUrl`, `liveUrl`, plus the optional `commitBody`, `statusCode`, `responseTimeMs`, `lastCheckedAt`, `downSince`, `branch` and `errorText`.
 - **row-detail-shape**: The row detail MUST hold exactly these fields: `title` (a string), and the following, each nullable: `titleUrl`, `environment`, `platformText`, `platformLink`, `problem`, `problemLink`, `statusCode` (a number or null), `responseTime`, `branch`, `since`, `lastChecked`, `sha`, `commitSubject`, `commitUrl`, `commitBody`, `errorText`, and `deployOutcome` (one of `success`, `failed`, or null).
 - **optional-fields-null**: Every optional row field that is absent MUST become `null` in the row detail. This covers `statusCode`, `branch`, `lastChecked`, `commitBody` and `errorText`.
 
@@ -232,9 +231,9 @@ Not applicable: this logic has no logging calls and no failure path to log.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/row-detail.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/row-detail.ts` | unverified |
 
 ## Design Decisions
 
@@ -270,10 +269,10 @@ Not applicable: this logic has no logging calls and no failure path to log.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
 
 **Separation of concerns.** The module only maps a `Row` to display fields and serializes them. Platform labels come from `deploy-display.ts`, host parsing comes from `url.ts`, and rendering and the clipboard write belong to the calling components.
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "1b64553a-ab58-4154-b9d5-30f34eb33caf",
     "title": "File Tree Model",
-    "domain": "adhsdk://cookbook/workspace/files/file-tree-model",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -25,11 +24,11 @@
       "concurrency"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19"
     ],
     "related": [
-      "adhsdk://cookbook/workspace/files/file-tree-view",
-      "adhsdk://cookbook/workspace/files/file-browser-view"
+      "b307116d-3ab8-422a-b031-885710e11e70",
+      "ab6d7655-9476-4318-8c36-f431686e2d23"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/DirectoryWatchCoordinator.swift (adhsdk)",
@@ -43,7 +42,7 @@
     "approved-date": ""
   },
   "names_hosts": "`.claude` is named as a literal dotfile directory the tree must include.",
-  "synced": "9421aaa97097e5f7",
+  "synced": "522cf6c566ad22c9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -62,7 +61,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

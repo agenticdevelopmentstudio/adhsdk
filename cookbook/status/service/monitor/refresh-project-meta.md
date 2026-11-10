@@ -1,7 +1,6 @@
 ---
 id: 1c3d8661-12f2-4a84-bef4-7ccd4e3841e7
 title: "Status Server Monitor Refresh Project Meta"
-domain: adhsdk://cookbook/status/service/monitor/refresh-project-meta
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,13 +21,13 @@ tags:
   - persistence
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/data/constraints-and-validation
-  - agenticdevelopercookbook://guidelines/implementing/data/transactions-and-concurrency
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f28a4638-c2ae-4a9b-817f-0f19b5712168
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab416d40-2688-4531-95fb-613f0d2fa8cf
 related:
-  - adhsdk://cookbook/status/service/monitor/fetch-vercel-projects
-  - adhsdk://cookbook/status/service/monitor/provider-conn
-  - adhsdk://cookbook/status/service/config
-  - adhsdk://cookbook/status/service/storage/libsql
+  - 4b16f67f-3877-47d3-97eb-af99581a5b11
+  - 4aad9d0a-4984-4021-ad1f-d8aa6a15b066
+  - 31fe479f-e95e-4f03-b957-faa2314a03be
+  - 6bf27f64-59d0-4b2a-8715-92dba2856814
 references:
   - packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (adhsdk)
   - packages/web/packages/status-server/test/refresh-project-meta.int.test.ts (adhsdk)
@@ -293,9 +292,9 @@ itself. No other logger or `console.*` call appears anywhere in this file.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/refresh-project-meta.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/refresh-project-meta.ts` | unverified |
 
 ## Design Decisions
 
@@ -344,12 +343,12 @@ itself. No other logger or `console.*` call appears anywhere in this file.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` passes: `test/refresh-project-meta.int.test.ts` exercises
 both `syncVercelProjectMeta` (five cases: full eviction, chunked upsert/prune,

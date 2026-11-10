@@ -1,7 +1,6 @@
 ---
 id: 2469d716-84aa-4984-9e71-4cfe49d05854
 title: "Projects Coordinator"
-domain: adhsdk://cookbook/workspace/projects/projects-coordinator
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,13 +22,13 @@ tags:
   - command-palette
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/git-repo
-  - adhsdk://cookbook/workspace/projects/project-database
-  - adhsdk://cookbook/workspace/projects/project-reconciler
-  - adhsdk://cookbook/workspace/projects/git-repo-scanner
-  - adhsdk://cookbook/workspace/projects/project-chooser-window
-  - adhsdk://cookbook/workspace/projects/project-scan-progress-window
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
+  - 1463e7a2-e290-4b8c-8643-df9462a758e6
+  - c212ea39-10e7-4146-89dd-36edb3b3455a
+  - fcff7387-19aa-49ab-b75d-f0c7bfcdf27c
+  - 3bec9b27-a9e3-4716-b516-688cc7f5a1c5
+  - ae0932d6-572f-4173-ba49-df68f4039ba4
+  - 46e79f87-0dbb-4bd5-b11c-bd65ae0087a9
+  - 55a394e6-9934-404b-941d-25bebbf71378
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
@@ -427,7 +426,7 @@ stopping's failed checkpoint, make no log call at all — see
   layout (`Ctrl+Alt+P` for Open Project, mirroring the macOS
   `[.command, .option]` combination). Back `database` with the same
   SQLite file through `Microsoft.Data.Sqlite` (see
-  `adhsdk://cookbook/workspace/projects/project-database`'s WinUI
+  [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)'s WinUI
   bullet for the schema/migration port) and call its `Checkpoint()`
   equivalent from `Stop()`, logging any exception there explicitly to
   close **stop-checkpoint-failure-unsignaled** rather than reproducing the
@@ -448,9 +447,9 @@ stopping's failed checkpoint, make no log call at all — see
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift` | unverified |
 
 ## Design Decisions
 
@@ -512,11 +511,11 @@ takes effect on the next scan rather than the next launch"
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | partial | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 Notes: separation-of-concerns passes because `ProjectsCoordinator` owns
 exactly the `repos` list, the scan/reconcile/persist sequencing in

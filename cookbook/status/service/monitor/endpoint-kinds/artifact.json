@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "990362d5-9c3a-4263-828f-a174b2dd2134",
     "title": "Monitor Endpoint Kinds",
-    "domain": "adhsdk://cookbook/status/service/monitor/endpoint-kinds",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -34,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0470018ed0462ef3",
+  "synced": "cc9a405ce7b8a116",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

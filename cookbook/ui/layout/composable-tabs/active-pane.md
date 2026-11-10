@@ -1,7 +1,6 @@
 ---
 id: 08bfb299-851b-4b01-a84a-6a2a13e07c12
 title: "Composable Tabs Active Pane"
-domain: adhsdk://cookbook/ui/layout/composable-tabs/active-pane
 type: ingredient
 version: 1.3.0
 status: review
@@ -20,9 +19,9 @@ tags:
   - active-pane
   - focus
 depends-on:
-  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - 4d75a371-181e-4d80-a16b-022d37dc0d48
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view
+  - bfc2dcde-d905-4923-bff2-577c85f17d5f
 references:
   - https://developer.apple.com/documentation/appkit/nsevent/addlocalmonitorforevents(matching:handler:)
   - https://developer.apple.com/documentation/appkit/nswindow/makefirstresponder(_:)
@@ -530,9 +529,9 @@ this file.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` | unverified |
 
 ## Design Decisions
 
@@ -620,10 +619,10 @@ this file.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 `focus-management` passes because every pointer-driven activation is
 paired with a standard `NSResponder` focus change, with no private

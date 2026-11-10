@@ -1,7 +1,6 @@
 ---
 id: ce157d5a-c145-4348-b58f-6a76c9fda1d6
 title: "Status Server MCP"
-domain: adhsdk://cookbook/status/service/mcp
 type: ingredient
 version: 1.0.2
 status: review
@@ -20,12 +19,12 @@ tags:
   - authorization
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/security/mcp-server-security
-  - agenticdevelopercookbook://guidelines/implementing/security/mcp-input-validation
-  - agenticdevelopercookbook://guidelines/implementing/networking/mcp-server-design
-  - agenticdevelopercookbook://guidelines/implementing/security/authorization
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab8ed68c-949d-42c8-8c07-416674795a65
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/355028de-c329-48dd-b609-41aba903e01c
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/788f1c1d-69af-4570-a279-748d89fcc0e0
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2609037a-fb89-4b49-88b0-7e4295e5d6f6
 related:
-  - adhsdk://cookbook/status/service/auth
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
 references:
   - packages/web/packages/status-server/src/mcp/route.ts (adhsdk)
   - packages/web/packages/status-server/src/mcp/server.ts (adhsdk)
@@ -534,9 +533,9 @@ Not applicable: none of `route.ts`, `server.ts`, or `tools.ts` contains a loggin
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/mcp/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/mcp/` | unverified |
 
 ## Design Decisions
 
@@ -593,12 +592,12 @@ Not applicable: none of `route.ts`, `server.ts`, or `tools.ts` contains a loggin
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
 `server-side-authorization` passes: both fail-closed layers
 (`mcp-registers-tier-set-only`, `mcp-handler-recheck`) resolve tier

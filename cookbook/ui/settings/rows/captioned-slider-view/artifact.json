@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "64825f85-8b4d-4406-befc-aa08ce55cc8b",
     "title": "Captioned Slider View",
-    "domain": "adhsdk://cookbook/ui/settings/rows/captioned-slider-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,16 +24,16 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/rows/slider-view",
-      "adhsdk://cookbook/ui/settings/rows/checkbox-view",
-      "adhsdk://cookbook/ui/settings/rows/number-field-view",
-      "adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view"
+      "0cbe1932-5c7e-4546-829d-0294708d499c",
+      "e9c10ff7-4e13-4007-a963-d2a9e4006745",
+      "acd561ca-90a4-4303-a411-cfe23410b42a",
+      "3a3e4da0-e900-4281-a19c-e29cbd34cbab"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "45805d8129c2db29",
+  "synced": "489558de149cff83",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "1f14e4d7-07ea-4f59-8365-5a15eb162def",
+    "title": "Chat Contract",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-23",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The shared attachments, backend, chat-state, command, configuration, hook, message, and permission protocols the Swift and TypeScript chat UIs are both built against.",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios",
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "chat",
+      "contract",
+      "backend",
+      "messaging"
+    ],
+    "depends-on": [],
+    "related": [
+      "447d0e33-c66e-4bf9-8511-e7823bdbcf9b",
+      "0ae70642-28e7-436a-b934-0b445652ac09",
+      "91114bf5-ad41-4cbd-b91b-c49bba9625d5"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "c87eedac4f6f3c34",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

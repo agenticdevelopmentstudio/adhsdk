@@ -1,0 +1,61 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "88dc87c9-8058-446d-9513-acfa618c950f",
+    "title": "Search Dialog",
+    "type": "ingredient",
+    "version": "1.2.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Modal dialog component for searching and selecting from indexed entries, with keyboard navigation and visual result preview.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "search",
+      "dialog",
+      "modal",
+      "form"
+    ],
+    "depends-on": [],
+    "related": [
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "e626a6fc-0d60-4ba5-a42a-d1849d7e1506"
+    ],
+    "references": [
+      "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html",
+      "https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "7c3221f0fd26eabf",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

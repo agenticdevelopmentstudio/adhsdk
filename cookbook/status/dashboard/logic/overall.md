@@ -1,7 +1,6 @@
 ---
 id: ef8570df-111e-484f-aad7-20ad49bd34dc
 title: "Overall Status Rollup"
-domain: adhsdk://cookbook/status/dashboard/logic/overall
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/overall
-  - adhsdk://cookbook/status/dashboard/session-client
+  - da69d02d-a3a9-4018-a90a-becee268624a
+  - 5935b39d-9451-48c1-8b99-bd510d66d1a0
 references: []
 approved-by: ""
 approved-date: ""
@@ -33,7 +32,7 @@ approved-date: ""
 
 The rule is: no statuses is `"unknown"`; every status `"down"` is `"major_outage"`; any status `"down"` or `"degraded"` short of all-down is `"degraded"`; otherwise `"operational"`.
 
-Within status-web, `OverallStatus` is re-exported by `src/types.ts` and types the `overall` field of `StatusResponse`, the shape of the payload the status server returns. No status-web module calls `computeOverall` at runtime; the verdict a page shows arrives already computed in `StatusResponse.overall`. The status server owns the authoritative rollup in its own `monitor/overall.ts` (see [Status Server Monitor Overall](adhsdk://cookbook/status/service/monitor/overall)), which carries the same `computeOverall` plus an extra `publicOverall` step that this client copy does not have.
+Within status-web, `OverallStatus` is re-exported by `src/types.ts` and types the `overall` field of `StatusResponse`, the shape of the payload the status server returns. No status-web module calls `computeOverall` at runtime; the verdict a page shows arrives already computed in `StatusResponse.overall`. The status server owns the authoritative rollup in its own `monitor/overall.ts` (see Status Server Monitor Overall ([adhsdk.ingredient.status.service.monitor.overall](cookbook:da69d02d-a3a9-4018-a90a-becee268624a))), which carries the same `computeOverall` plus an extra `publicOverall` step that this client copy does not have.
 
 ## Behavioral Requirements
 
@@ -144,9 +143,9 @@ Not applicable: `overall.ts` makes no log calls; it has no error path to report.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/overall.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/overall.ts` | unverified |
 
 ## Design Decisions
 
@@ -166,9 +165,9 @@ Not applicable: `overall.ts` makes no log calls; it has no error path to report.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 
 Separation-of-concerns passes: the rollup is a pure, framework-free function in `src/lib`, apart from the components that display status and from the fetch code that loads `StatusResponse`. Unit-test-coverage passes: `overall.test.ts` checks each of the four return values, including the all-down boundary. Explicit-error-handling passes because the function has no failure path to hide: it neither catches nor throws, and a malformed argument that gets past the type system fails loudly with a `TypeError`. The client copy duplicates the server's `monitor/overall.ts` without the server's `publicOverall` step. That is recorded under Design Decisions and Edge Cases and is not a compliance failure.
 

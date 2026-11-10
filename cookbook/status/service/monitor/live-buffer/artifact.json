@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "fdfdaf38-95de-4475-98f4-e09fb998bb57",
     "title": "Status Server Monitor Live Buffer",
-    "domain": "adhsdk://cookbook/status/service/monitor/live-buffer",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -27,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/provider-deploy"
+      "7ba98112-0f6d-4236-ab6b-aa18b72d76bd"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/live-buffer.ts (adhsdk)",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e91a56664c7d0ef8",
+  "synced": "aa4ef09eb4938086",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "cd71721b-e80e-4525-a7a1-fc1ac2158267",
     "title": "Auto Configure",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/auto-configure",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,14 +20,14 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/api",
-      "adhsdk://cookbook/status/dashboard/state/config-status"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad",
+      "4bd200d7-f9d2-4348-af53-95ea02272c79"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a77a79bbe31988a2",
+  "synced": "9c06726a8dd04477",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

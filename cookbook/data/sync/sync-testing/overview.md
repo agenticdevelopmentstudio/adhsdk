@@ -17,7 +17,7 @@ Sync Engine Testing is the pair of reference fakes that ship inside the
 - `SyncStoreFailure` — the error enum both stores throw
   (`unknownResource`, `invalidChange`, `pullOnlyResource`).
 
-Use them to drive [SyncEngine](adhsdk://cookbook/data/sync/sync-engine) in unit
+Use them to drive SyncEngine ([adhsdk.ingredient.data.sync.sync-engine](cookbook:355a8f54-aee5-45cd-a28d-12c3b7a3085c)) in unit
 tests and previews without SQLite or a network, and as the executable
 specification a port's own store and transport fakes are checked against.
 

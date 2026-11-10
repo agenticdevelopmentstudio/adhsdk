@@ -1,7 +1,6 @@
 ---
 id: b2cf12e3-71de-4d87-9216-d5e8d604169c
 title: "Extension Host"
-domain: adhsdk://cookbook/workspace/extensions/host/extension-host
 type: ingredient
 version: 1.2.0
 status: review
@@ -20,15 +19,15 @@ tags:
   - extension-host
   - not-implemented-ledger
 depends-on:
-  - adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
-  - adhsdk://cookbook/workspace/extensions/registry/extension-registry
+  - a29c23d4-a086-4413-9843-6b319e340646
+  - f6acc431-0443-4b14-8ae4-e1f2dc227c0c
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
+  - 4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
-  - adhsdk://cookbook/workspace/extensions/registry/extension-registry
+  - a29c23d4-a086-4413-9843-6b319e340646
+  - f6acc431-0443-4b14-8ae4-e1f2dc227c0c
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
+  - 4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70
 references: []
 approved-by: ""
 approved-date: ""
@@ -253,9 +252,9 @@ Subsystem: the app's bundle identifier (falling back to a placeholder when unset
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/` | unverified |
 
 ## Design Decisions
 
@@ -299,11 +298,11 @@ Subsystem: the app's bundle identifier (falling back to a placeholder when unset
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
 `separation-of-concerns` passes because `ExtensionHost` delegates entry-point path resolution to `ExtensionResourcePath`, activation-trigger matching to `ActivationEventMatcher`, and manifest structure to `ExtensionManifest`/`LoadedExtension`, keeping its own responsibility limited to running one extension's JavaScript; `ExtensionHostInstaller` in turn delegates code identity to `InstalledIdentity`/`FileSignature`, per-namespace adaptor behavior to the eight `MainThread*` types, and unimplemented-member bookkeeping to the standalone `NotImplementedLedger`, none of which any of these three files re-implements. `unit-test-coverage` passes: `ExtensionHostTests.swift` (75 `@Test` functions), `ExtensionHostInstallerTests.swift` (6), `ExtensionHostTimerClampTests.swift` (9), and `NotImplementedLedgerTests.swift` (14) together exercise entry-point resolution and refusal, the full activation-state precedence and terminal-boundary contract, cancellation-versus-failure semantics, the complete timer lifecycle including every clamp boundary, `defineVSCodeMember` across every host state, hostile-JavaScript defenses, the ledger's dedup/probe/sort contract, and the installer's identity-based reconciliation and workspace-scan race guard — as traced in the Conformance Test Vectors above. `fault-tolerance` passes because a compile or module-load failure that runs no extension code leaves the host retryable rather than spent (failure-before-boundary-is-retryable), a thrown subscription disposable never strands the rest of the teardown list (dispose-subscriptions-idempotent), and an adaptor's misspelled namespace withdraws itself rather than failing every future activation (define-vscode-member-withdraws-on-refusal). `idempotent-operations` passes because `activate()` shares one outcome across concurrent callers and is a no-op once activated (activate-idempotent-shared-outcome), `dispose()` and `disposeSubscriptions()` are both safe to call more than once (dispose-idempotent, dispose-subscriptions-idempotent), and `reconcile()` leaves an extension whose identity has not moved untouched. `explicit-error-handling` is `partial`: every activation-time failure is a typed, `Equatable` `ExtensionHostError` with its own `errorDescription`, but `ExtensionHostInstaller.scan(roots:)` silently swallows a `resourceValues(forKeys:)` failure via `try?` (treating an unreadable directory entry as simply "not a directory" and continuing) with no completeness signal analogous to `ExtensionRegistry`'s own `establishedIdentifiers`/`readEverything` pattern for the same class of failure — see the open question on workspace-scan-incomplete-signal above.
 

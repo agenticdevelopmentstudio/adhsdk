@@ -1,0 +1,8 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Selection highlight is palette-driven, not platform-chosen; support-theme, Themed row, mtpane-012, and Differentiate Without Color corrected. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added enable-find-bar-macos and preserve-default-undo-ios with test vectors; completed the macOS substitution test vectors and fixed the insets vector to assert `textContainerInset` instead of "baseline"; corrected the `applyTheme` signature citation and named each platform's cursor-color property; rewrote the Accessibility label bullet, Reduce Motion bullet, and Differentiate Without Color bullet to match the source; gave the iOS focus-off-screen edge case a definite result; corrected the SwiftUI, Compose, and WinUI 3 platform notes; reformatted Design Decisions to the three-field form; replaced the Compliance prose with a checks table while keeping the accessible-name gap as a marker; unquoted `modified`; linked the sibling recipes that host this pane |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Compliance: narrowed the accessibility review marker to the missing fact (no accessible name, `textView` is private with no label-forwarding member) and what would settle it |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "aea5e7b2-00d2-4f23-bfc5-8dc64e8d0d2a",
     "title": "Composable Tabs Add Pane Sheet",
-    "domain": "adhsdk://cookbook/ui/layout/composable-tabs/add-pane-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -24,14 +23,14 @@
       "form-control"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/layout/composable-tabs"
+      "0640ca96-95c5-4234-925e-386425cc4435"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cca42e9caac147e3",
+  "synced": "36b70a287c79d00e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

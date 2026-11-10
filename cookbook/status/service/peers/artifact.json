@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b1622d2b-587f-4207-89ed-2130f8309f8c",
     "title": "Status Server Peers",
-    "domain": "adhsdk://cookbook/status/service/peers",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,15 +25,15 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/networking/timeouts",
-      "agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience",
-      "agenticdevelopercookbook://guidelines/implementing/security/token-handling",
-      "agenticdevelopercookbook://guidelines/implementing/security/input-validation"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2598f495-1820-47e7-b7e7-ce548d390148",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/4ca8a3d5-cdcc-4f74-a2ec-3a198608b419"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/config",
-      "adhsdk://cookbook/status/service/mcp",
-      "adhsdk://cookbook/status/service/monitor/cycle-runner"
+      "31fe479f-e95e-4f03-b957-faa2314a03be",
+      "ce157d5a-c145-4348-b58f-6a76c9fda1d6",
+      "99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db"
     ],
     "references": [
       "packages/web/packages/status-server/src/peers/base-url.ts (adhsdk)",
@@ -46,7 +45,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a5c359e70326fed0",
+  "synced": "18d6e9b61cf15ed1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -65,7 +64,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

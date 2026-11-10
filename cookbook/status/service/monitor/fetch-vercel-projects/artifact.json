@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "4b16f67f-3877-47d3-97eb-af99581a5b11",
     "title": "Status Server Monitor Fetch Vercel Projects",
-    "domain": "adhsdk://cookbook/status/service/monitor/fetch-vercel-projects",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -26,17 +25,17 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/networking/timeouts",
-      "agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience",
-      "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting",
-      "agenticdevelopercookbook://guidelines/implementing/networking/pagination",
-      "agenticdevelopercookbook://guidelines/implementing/networking/caching"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/49acdf9f-e4cb-4492-a620-809438eefb37",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3416a359-e01c-40b2-8876-4a8634d4395e"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/alerts",
-      "adhsdk://cookbook/status/service/monitor/fetch-cloudflare",
-      "adhsdk://cookbook/status/service/monitor/fetch-crunchy",
-      "adhsdk://cookbook/status/service/monitor/deploy-status"
+      "1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9",
+      "b3e2495c-5478-411c-80d7-9eefc2f2e297",
+      "f236e0ab-2623-4543-a3d9-9ffb4ba3f147",
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (adhsdk)",
@@ -54,7 +53,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e1eed7f0063324cd",
+  "synced": "41c307773e6fc6c5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -73,7 +72,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

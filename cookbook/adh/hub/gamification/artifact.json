@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "cef42b4b-e10e-4816-b1f8-0156699bec21",
     "title": "Gamification",
-    "domain": "adhsdk://cookbook/adh/hub/gamification",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -28,7 +27,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config"
+      "87ca0139-6cd0-46dd-a9fb-40ad3406f175"
     ],
     "references": [
       "packages/web/packages/data/src/gamification/gamification.ts (adhsdk)",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3a586d542ffa2672",
+  "synced": "3bce07aa475855af",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

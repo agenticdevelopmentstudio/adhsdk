@@ -1,7 +1,6 @@
 ---
-id: 37DFDD98-266A-4253-8F0A-42987017844A
+id: 37dfdd98-266a-4253-8f0a-42987017844a
 title: "Billing Activity Cache"
-domain: adhsdk://cookbook/foundation/billing/billing-activity-cache
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,9 +20,9 @@ tags:
   - cache
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-persistence
-  - adhsdk://cookbook/foundation/billing/billing-derivation
-  - adhsdk://cookbook/foundation/billing/billing-store
+  - 5296d0b7-8416-4e76-8f45-47a726f230cf
+  - bc417768-9933-49b1-b0ba-4bf537167805
+  - 4df278a3-4897-4a87-a506-bd3f58db3121
 references: []
 approved-by: ""
 approved-date: ""
@@ -122,9 +121,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingActivityCache.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingActivityCache.swift` | unverified |
 
 ## Design Decisions
 
@@ -136,8 +135,8 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 separation-of-concerns passes: the cache owns only history merging and cursor bookkeeping; eviction and locking are delegated to the shared LRU cache and the read to the persistence protocol. unit-test-coverage fails: a search of the Tests directories finds no test that references the cache or `merging`.
 

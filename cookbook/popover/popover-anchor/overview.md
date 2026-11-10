@@ -1,0 +1,5 @@
+
+PopoverAnchor is a positioning context wrapper that groups a popover trigger and its associated panel as a single hover target. It establishes `position: relative` as the reference frame for the popover's absolute positioning, and it suppresses `onMouseLeave` when the pointer moves from the trigger to the panel (or back), rather than treating that crossing as leaving the group.
+
+That suppression follows DOM containment, not visual geometry: as long as every point the pointer can cross between the trigger and the panel hit-tests to a DOM descendant of the anchor, `onMouseLeave` never fires along the way — even when the panel is visually offset outside the anchor's own box, provided something hit-testable (for example a bridging element) spans the visual gap. A panel rendered with an offsetting margin or transform and no such bridge, or one rendered through a portal instead of as a normal child, can still leave a dismissal gap the anchor does not close — see **panel-in-anchor-flow** and the Edge Cases below.
+

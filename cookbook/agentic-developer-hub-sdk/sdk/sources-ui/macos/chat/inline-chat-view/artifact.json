@@ -1,0 +1,61 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "1794948f-2bb2-4f25-b9b5-72b1e6306ea1",
+    "title": "Inline Chat",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Scrolling message transcript with typing indicator and single-line composer for inline chat interactions.",
+    "platforms": [
+      "typescript",
+      "web",
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "chat",
+      "messaging",
+      "transcript"
+    ],
+    "depends-on": [
+      "46e0a509-8eac-460a-b24a-d39a8b71b02c",
+      "98e78d31-2c3a-47dc-a156-435a5732a29f",
+      "7d2b41f0-63aa-47d1-94f8-19a06caedc6a",
+      "e5165b31-6a06-4d79-8fb8-98ba491623b1"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "709fac7404aee67a",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

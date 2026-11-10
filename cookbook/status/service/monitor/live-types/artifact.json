@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "2c8b4572-3851-4111-97d6-a42792fb7150",
     "title": "Status Server Monitor Live Types",
-    "domain": "adhsdk://cookbook/status/service/monitor/live-types",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -27,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/live-events"
+      "635cbbe4-a8e1-4ae1-a8a5-437f5bba27a6"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/live-types.ts (adhsdk)",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fed9f0bf453e7ddd",
+  "synced": "b0c77a8e05c90e28",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

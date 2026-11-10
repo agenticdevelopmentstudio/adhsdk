@@ -1,7 +1,6 @@
 ---
 id: f5432726-5b0f-47c5-b0f6-c0b19a9db5bb
 title: "VS Code Diagnostics Bridge"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics
 type: ingredient
 version: 1.1.2
 status: review
@@ -21,8 +20,8 @@ tags:
   - diagnostics
   - event-emitter
 depends-on:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/languages/diagnostic-types
-  - adhsdk://cookbook/workspace/extensions/host/extension-event
+  - 6fa79a51-8e62-4a99-8979-c93a4269dac8
+  - 8e0d1a9d-27a1-4b5b-9a7d-5b9f9a5f7f2e
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (adhsdk)
@@ -479,9 +478,9 @@ No other event in this component is logged: this component itself contains no di
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` | unverified |
 
 ## Design Decisions
 
@@ -505,11 +504,11 @@ No other event in this component is logged: this component itself contains no di
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because the file cleanly splits storage (`ExtensionDiagnosticStore`, holding only plain Swift values with no JavaScriptCore dependency) from the JS-facing adaptor (`MainThreadDiagnostics`, which validates/decodes arguments and builds JS objects), and delegates all `Diagnostic`/`Uri` decoding to `DiagnosticTypes.swift`/`Uri.swift` rather than duplicating that logic (see Overview). `unit-test-coverage` passes: `MainThreadDiagnosticsTests.swift`'s twenty-three test methods exercise name collision and generation, both `set` overloads' semantics, delete/clear distinctness, `forEach`/`Symbol.iterator` agreement, disposal freeing and inertness (including post-reuse inertness), cross-collection reads, sink notification on every mutation and on no read, name immutability, adaptor-scoped disposal, and all five documented `onDidChangeDiagnostics` behaviors (per-mutation events, window coalescing, Uri-identity dedup, insertion-order preservation, and frozen-array tamper-resistance). `explicit-error-handling` passes: every validation failure raises a specific, purpose-written JS exception message naming exactly which argument or entry failed, rather than a generic error or a swallowed `nil`; the sole deliberate exception is disposed-collection inertness, which the source documents as an intentional inert-not-thrown divergence rather than an omission. `input-sanitization` passes because every argument-decoding path (`VSCodeAPI.url(from:in:)`, `diagnosticArray`, `setEntriesArray`, the `Function` `instanceof` check) refuses a value that does not genuinely decode before acting on it, and every array walk is bounded by `VSCodeAPI.arrayLength(of:)`'s 100,000-element ceiling rather than trusting an untrusted extension's reported `length`. `no-hardcoded-strings` fails because all fourteen raised exception messages are English literals with no localization mechanism (see Localization).
 

@@ -5,7 +5,7 @@
  * later fix — because each one lived as a boolean expression tangled into a 3000-line component
  * where nothing named it and nothing could test it. A behaviour that has a rule id here cannot
  * silently regress: it fails a test (`cascadeRules.test.ts`, citing the recipe rule it implements —
- * `recipes/hierarchical-topic-detail.md`, "Cascading view — motion, ground and the selection
+ * `cookbook/ui/blocks/hierarchical-topic-detail/integration-requirements.md`, "Cascading view — motion, ground and the selection
  * chain").
  *
  * v1.16.0 rebuilt the interaction layer around the STORED state machine below (`CascadeMode`).

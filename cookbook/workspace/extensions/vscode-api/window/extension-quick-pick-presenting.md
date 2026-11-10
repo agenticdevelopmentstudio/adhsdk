@@ -1,7 +1,6 @@
 ---
 id: 720cc52e-9567-4643-9639-014403ef0ea7
 title: "Extension Quick Pick Presenting"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +21,8 @@ tags:
   - presenting
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view
+  - 5c2d7315-314e-4343-93fd-f3aa1a0c803e
+  - b85dc186-31e9-472b-99ea-2c097fc926c8
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)
@@ -185,9 +184,9 @@ Not applicable: this component contains no logging call of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` | unverified |
 
 ## Design Decisions
 
@@ -219,8 +218,8 @@ Not applicable: this component contains no logging call of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because this file's only responsibility is declaring the contract — two plain data types and a single-method protocol — with no presentation logic, no AppKit dependency, and no networking or persistence of its own; it was split out of `MainThreadWindow.swift` specifically to keep that file from growing further, and is declared apart from `ExtensionMessagePresenting` on an explicit interface-segregation rationale (see Overview and Design Decisions). `unit-test-coverage` is partial: every runtime-observable behavior in this contract — the `nil`-vs-`[]` distinction, index-based (not label-based) selection, answer-order preservation, separator field defaulting, and highlight forwarding — has a direct test among the given sources (see Conformance Test Vectors 001–009, 011), but the two purely structural requirements about calling discipline and actor/type constraints (**presenting-highlight-after-return-prohibited**, **presenting-single-context-execution**, **presenting-class-only**, **presenting-single-requirement**, the **item-thread-safe-equatable**/**request-thread-safe-equatable** guarantees) are verified by code inspection or by the compiler rather than by a dedicated runtime assertion in the given test files.
 

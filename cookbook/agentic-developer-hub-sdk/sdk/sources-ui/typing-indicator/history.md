@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; resolved the announce-on-word-rotation contradiction and the utterance-vs-settled-line conflict; deduplicated the empty-word-bag and empty-frame-array restatements; replaced the "Not applicable" Compliance and Localization claims with grounded content; documented colorful mode's contrast limitation; corrected the web source path and non-existent SwiftUI/Compose/WinUI 3 API names in Platform Notes; reformatted Design Decisions to Decision/Rationale/Approved; split the Configuration table by platform; added `related` and `references` entries; added test vectors for utterance-over-done, tint, frame/word intervals, word-bag rebuild suppression, theme-palette fallback, and idle-phrase-without-words. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Scoped utterance-survives-turn-end MUSTs and colorful 1s-cycle MUST to web; documented actual macOS/iOS divergence (utterance drop, single-draw hue, dots never hidden) in reqs/states/vectors (ti-001/ti-010/ti-017). Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |

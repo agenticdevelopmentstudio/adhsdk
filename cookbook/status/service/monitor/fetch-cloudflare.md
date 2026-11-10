@@ -1,7 +1,6 @@
 ---
 id: b3e2495c-5478-411c-80d7-9eefc2f2e297
 title: "Status Server Monitor Fetch Cloudflare"
-domain: adhsdk://cookbook/status/service/monitor/fetch-cloudflare
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,11 +21,11 @@ tags:
   - fetcher
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
 related:
-  - adhsdk://cookbook/status/service/monitor/alerts
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
 references:
   - packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts (adhsdk)
   - packages/web/packages/status-server/test/cloudflare-deployments.test.ts (adhsdk)
@@ -191,9 +190,9 @@ A fully successful poll (every script fetched, no 429, budget not exhausted) pro
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts` | unverified |
 
 ## Design Decisions
 
@@ -223,13 +222,13 @@ A fully successful poll (every script fetched, no 429, budget not exhausted) pro
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` passes: `cloudflare-deployments.test.ts` exercises the no-op precondition, the happy-path listing-then-fetch, a partial failure that still keeps the healthy scripts' deploys, the budget-exhaustion partial, the listing-spends-the-budget contract, the blind-spot-vs-fallback distinction, and bounded concurrency; `provider-cooldown.test.ts` exercises the cross-call cooldown gate. `separation-of-concerns` passes: this file owns exactly one concern (fetching and mapping Cloudflare deploys); it delegates script enumeration to `listWorkerScripts`, bounded fan-out to `mapLimit`, cooldown state to the shared registry, and persistence entirely to its caller, none of which this file reimplements. `explicit-error-handling` passes: every failure path (non-2xx per-script response, a thrown fetch, an unparseable `created_on`) is caught and logged via `console.error` with a distinguishing message, and is reflected in the returned `ok`/`deploys` shape — nothing fails silently with no trace. `timeout-configuration` passes: both the listing call and every per-script call carry an `AbortController` deadline derived from the overall budget. `rate-limit-handling` passes: a 429 from either the listing call (inside `listWorkerScripts`, external) or a per-script call is recorded via `noteRateLimited` honoring `Retry-After`, and `rateLimitedUntil` is checked before this function does any work at all. `retry-with-backoff` fails as written: no failed call of any kind — a non-2xx response, a thrown error, or a 429 — is retried within this function; a failure is logged (or cooled down) once and the call moves on to the next script, relying entirely on the caller's next poll cycle to try again, a deliberate tradeoff recorded as fact in Design Decisions above, not a defended pass. `graceful-degradation` passes: a missing token/account id is a full no-op rather than an error, a partial failure keeps and returns whatever rows were successfully fetched rather than discarding them, and every failure mode resolves to a well-formed `{ ok, deploys }` value rather than throwing out of the function.
 

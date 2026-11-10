@@ -13,5 +13,5 @@ All other conformance test vectors — row layout, content-hugging, action
 wiring, view-model sync, theme styling, placeholder restyling,
 constituent-view exposure, the initializer traps, and UI-thread
 confinement — are inherited unmodified from the text edit row; see
-`adhsdk://cookbook/ui/settings/rows/text-edit-view#conformance-test-vectors`.
+conformance-test-vectors ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 

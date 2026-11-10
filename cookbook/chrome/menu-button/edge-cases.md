@@ -1,0 +1,7 @@
+
+- **No label prop**: `label` is a required, non-optional `string` prop with no default, so omitting it is a TypeScript compile-time error; the component performs no runtime check. A caller outside TypeScript's reach that omits it renders a button with `aria-label={undefined}` — a button with no accessible name.
+- **Icon prop invalid value**: Component expects `icon` to be `'menu'` or `'close'`, but the type is not enforced at runtime. The third bar and the `menu-button--close` class are gated independently — the third bar on `icon === 'menu'`, the class on `icon === 'close'` — so a value that is neither (e.g., `icon="hamburger"`) renders neither the full three-bar menu icon nor the close variant: only two bars, uncrossed, with no `menu-button--close` class (see menu-button-013). This is a source bug (logged), not a documented fallback.
+- **Empty string label**: An empty `label=""` satisfies the type requirement but results in an inaccessible button with no meaningful name. The component accepts this but the caller SHOULD provide a meaningful label.
+- **Disabled state interaction**: When disabled, the button MUST NOT respond to clicks; this is standard HTML button behavior and does not depend on component logic.
+- **Multiple class combinations**: Component combines `menu-button`, the conditional `menu-button--close`, and any custom `className` prop. Classes are filtered and joined with spaces; empty strings are removed (see menu-button-014 and menu-button-018).
+

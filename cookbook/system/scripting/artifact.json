@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d5812249-f235-43df-9cd7-504220da1a7d",
     "title": "Scripting Support",
-    "domain": "adhsdk://cookbook/system/scripting",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -24,8 +23,8 @@
       "cocoa-scripting"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency",
-      "agenticdevelopercookbook://principles/fail-fast"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377"
     ],
     "related": [],
     "references": [
@@ -38,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2a502cd2a44c5c37",
+  "synced": "9238df7e72c7a010",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -57,7 +56,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,7 +1,6 @@
 ---
 id: 77fe79f8-7d45-4e51-aee0-d6de78b459e1
 title: "Alert Message Presenter"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/alert-message-presenter
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,7 +19,7 @@ tags:
   - vscode-api
   - message-presenting
 depends-on:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting
+  - 0aa82a1f-42ed-4585-9f65-bb20aa110712
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift (adhsdk)
@@ -36,7 +35,7 @@ approved-date: ""
 ## Overview
 
 This component is the one production implementation of the message-presenting
-role documented in [Extension Message Presenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)
+role documented in Extension Message Presenting ([adhsdk.ingredient.workspace.extensions.vscode-api.window.extension-message-presenting](cookbook:0aa82a1f-42ed-4585-9f65-bb20aa110712))
 given among the sources: it turns a `vscode.window.show*Message` request into
 a native alert attached to a window. Where the protocol recipe documents the
 contract every implementation must satisfy, this recipe documents this
@@ -244,7 +243,7 @@ Not applicable — this is a message-presentation implementation that hands the 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `window` | window-lookup function | none (required; construction takes no default) | Queried fresh on every presentation call to decide which window an alert attaches to; an absent result falls back to selecting any visible window before the message is dropped. |
-| `request` | message request | none (required, supplied per presentation call) | The per-call payload — severity, message, detail, modal flag, item titles, close-affordance indices; its own field shapes, defaults, and invariants are documented in [Extension Message Presenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting) rather than restated here. |
+| `request` | message request | none (required, supplied per presentation call) | The per-call payload — severity, message, detail, modal flag, item titles, close-affordance indices; its own field shapes, defaults, and invariants are documented in Extension Message Presenting ([adhsdk.ingredient.workspace.extensions.vscode-api.window.extension-message-presenting](cookbook:0aa82a1f-42ed-4585-9f65-bb20aa110712)) rather than restated here. |
 
 ## Deep Linking
 
@@ -308,9 +307,9 @@ Subsystem: the app's own identifier (or a fixed fallback literal when unset) | C
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift` | unverified |
 
 ## Design Decisions
 
@@ -335,7 +334,7 @@ Subsystem: the app's own identifier (or a fixed fallback literal when unset) | C
 **Approved**: pending
 
 **Decision**: `closeAffordanceIndices`'s last-wins tie-break in the cancel slot is applied here, not re-derived here.
-**Rationale**: the rule itself — the *last* flagged item's index wins the single cancel slot — is documented in full, with its upstream justification, in [ExtensionMessagePresenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)'s Design Decisions; **button-plan-cancel-slot** in this recipe applies that same rule to this conformer's concrete AppKit button layout rather than restating the rationale.
+**Rationale**: the rule itself — the *last* flagged item's index wins the single cancel slot — is documented in full, with its upstream justification, in ExtensionMessagePresenting ([adhsdk.ingredient.workspace.extensions.vscode-api.window.extension-message-presenting](cookbook:0aa82a1f-42ed-4585-9f65-bb20aa110712))'s Design Decisions; **button-plan-cancel-slot** in this recipe applies that same rule to this conformer's concrete AppKit button layout rather than restating the rationale.
 **Approved**: pending
 
 **Decision**: `presentedResponse(for:)` bridges `beginSheetModal(for:completionHandler:)` into `async` with `withCheckedContinuation`, unlike every other `beginSheetModal` site in this tier.
@@ -350,10 +349,10 @@ Subsystem: the app's own identifier (or a fixed fallback literal when unset) | C
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | failed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | failed | Security |
 
 `separation-of-concerns` passes because the file's own header comment states it was split out of `MainThreadWindow.swift` specifically to keep the adaptor's argument parsing and promise settlement testable without AppKit, and the file itself confines its own responsibility to turning one `ExtensionMessageRequest` into `NSAlert` calls and back into an index. `unit-test-coverage` is partial: `MainThreadWindowTests` directly pins `buttonPlan(for:)` and `escapeKeyEquivalentPosition(in:)`, but every test exercising message *presentation* substitutes a `RecordingMessagePresenter`/`SuspendingMessagePresenter` double for `NSAlertMessagePresenter` itself, so `presentMessage(_:)`, `sheetWindow()`, `presentedResponse(for:)`, `alertStyle(for:)`, and `anyVisibleWindow()` have no given test of their own. `fault-tolerance` passes: the no-window case (**drop-when-no-window**) and an out-of-range button response (**out-of-range-response-resolves-absent**) both resolve to `nil` rather than crash, block, or throw, and neither depends on an external service being reachable. `secure-log-output` fails: `presentedResponse(for:)`'s dropped-message log interpolates `alert.messageText` — i.e., `request.message`, arbitrary caller-supplied text with no length or content constraint — with `privacy: .public`, so any sensitive content an extension happened to put in that message is not redacted from the unified log, contrary to the guideline's requirement that log output not carry PII.
 

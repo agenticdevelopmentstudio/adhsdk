@@ -1,7 +1,6 @@
 ---
 id: d5812249-f235-43df-9cd7-504220da1a7d
 title: "Scripting Support"
-domain: adhsdk://cookbook/system/scripting
 type: ingredient
 version: 1.1.0
 status: review
@@ -20,8 +19,8 @@ tags:
   - applescript
   - cocoa-scripting
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
-  - agenticdevelopercookbook://principles/fail-fast
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/AppleScriptRunner.swift (adhsdk)
@@ -181,9 +180,9 @@ Not applicable: none of the three given primitives call a logger or any other di
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/` | unverified |
 
 ## Design Decisions
 
@@ -207,7 +206,7 @@ Not applicable: none of the three given primitives call a logger or any other di
 
 **Decision**: both `MainActorScriptCommand.performDefaultImplementation()` and `applicationElementSpecifier(key:uniqueID:)` bridge onto the main actor with `MainActor.assumeIsolated`, which traps if invoked off the main thread, rather than a runtime check that returns an error or `nil`.
 
-**Rationale**: Cocoa Scripting's own contract guarantees `performDefaultImplementation()` is always invoked on the main thread when the script suite is registered in the app's `Info.plist`; trapping converts a violation of that guarantee into an immediate, loud failure at the call site instead of letting undefined AppKit/main-actor state propagate silently, consistent with agenticdevelopercookbook://principles/fail-fast.
+**Rationale**: Cocoa Scripting's own contract guarantees `performDefaultImplementation()` is always invoked on the main thread when the script suite is registered in the app's `Info.plist`; trapping converts a violation of that guarantee into an immediate, loud failure at the call site instead of letting undefined AppKit/main-actor state propagate silently, consistent with [adc.principle.fail-fast](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377).
 
 **Approved**: pending
 
@@ -231,11 +230,11 @@ Not applicable: none of the three given primitives call a logger or any other di
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | partial | Performance |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | partial | Performance |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 
 `separation-of-concerns` **passed**: each of the three pieces has exactly one
 job — `AppleScriptRunner` only compiles/executes AppleScript source and
@@ -260,7 +259,7 @@ dependency is in an unexpected state, but it and
 `MainActorScriptCommand.performDefaultImplementation()` both trap via
 `MainActor.assumeIsolated` if ever invoked off the main thread — a
 deliberate fail-fast choice (see Design Decisions) that satisfies
-agenticdevelopercookbook://principles/fail-fast but not this check's literal
+[adc.principle.fail-fast](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377) but not this check's literal
 "without crashing" bar.
 
 ## Change History

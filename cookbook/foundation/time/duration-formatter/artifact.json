@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "E3A194DC-3ACC-4206-AE6E-105A15FB9F55",
+    "id": "e3a194dc-3acc-4206-ae6e-105a15fb9f55",
     "title": "Duration Formatter",
-    "domain": "adhsdk://cookbook/foundation/time/duration-formatter",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,14 +25,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/money",
-      "adhsdk://cookbook/foundation/money/increment-rounding"
+      "7233995d-9b7e-4760-ac44-ab4b668b5cc1",
+      "e846a572-e09a-4123-a6bf-4766a8460154"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0179725e66b3ee46",
+  "synced": "ef6bdaf2b925645b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

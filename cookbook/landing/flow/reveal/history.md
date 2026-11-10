@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed early-reveal-margin to delayed-reveal-margin and corrected direction: -12% bottom margin fires later, not earlier. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and fixed RFC-2119 casing, promoted edge-case details (arm-below-fold, early-reveal-margin) into named requirements with test vectors and corrected two test-vector mappings, added concrete Appearance values from `flow.css`, made requirements platform-neutral and moved web class names into the React/Web platform note, aligned native platform notes to real viewport APIs and a consistent fade-plus-translate animation, reformatted Design Decisions and dropped the implementation-detail entry, replaced the Compliance section with a real table, filled `related` with sibling landing/flow recipes and switched frontmatter dates to bare ISO values, corrected the summary's unsupported performance claim, and corrected an Accessibility claim that contradicted the source's lack of an IntersectionObserver-availability guard |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

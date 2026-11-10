@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "66759d9a-3884-42e1-acd9-5bad563e1e52",
     "title": "Webview Panel Options",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,11 +25,11 @@
       "vscode-compatibility"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/security/content-security-policy"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6f4cfd55-cb09-4ede-a53c-feaeb5781127"
     ],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view",
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path"
+      "60b5767d-3cf5-4373-b2fc-074aa6b62fec",
+      "f6acc431-0443-4b14-8ae4-e1f2dc227c0c"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift (adhsdk)",
@@ -47,7 +46,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2e5f8d1e8314fcbf",
+  "synced": "6e62f1ca10fe867a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -66,7 +65,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

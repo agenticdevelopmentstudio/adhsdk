@@ -1,7 +1,6 @@
 ---
 id: 92d66361-a16d-4c35-a0d3-4c1c8bbd5f52
 title: "Composable Tabs Settings View"
-domain: adhsdk://cookbook/ui/layout/composable-tabs/settings-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -21,9 +20,9 @@ tags:
   - split-view
   - sheet
 depends-on:
-  - adhsdk://cookbook/ui/settings/settings-split-view
-  - adhsdk://cookbook/ui/settings/layout/group-view
-  - adhsdk://cookbook/ui/controls/spacing-control
+  - a11f34ff-116c-47d6-bffa-edd0799cbcb2
+  - 775f1761-f757-41d0-b51b-354a410a11f4
+  - f064de5a-b117-4147-96a9-c1ed11d5c976
 related: []
 references: []
 approved-by: ""
@@ -143,7 +142,7 @@ staged state, no commit, and no cancel.
 
 - **Corner radius**: The shared settings layout's card-corner-radius token,
   inherited by composing the group component's themed card — see
-  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
+  appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)) for the
   current value. This file sets no corner radius of its own.
 - **Padding**: The sheet itself contributes 0pt of padding around the topic
   list (pinned flush to the root view's top/leading/trailing) and fixed
@@ -159,7 +158,7 @@ staged state, no commit, and no cancel.
   card-horizontal-inset and card-vertical-inset tokens pad each row's
   content, and its caption-spacing token separates each group's caption
   from its card — see
-  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
+  appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)) for the
   current values, since the group component is what consumes them.
 - **Font**: Each group's caption ("Tab Bars", "Frame Spacing", "Pane Divider
   Spacing") renders with a caption text role (the group component's own
@@ -169,7 +168,7 @@ staged state, no commit, and no cancel.
   implementation, not to this component.
 - **Background**: The sheet's root view paints the `.windowBackground`
   theme role. Each group's card paints the theme's `.elevatedSurface` role
-  — see adhsdk://cookbook/ui/settings/layout/group-view#appearance
+  — see appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4))
   for its exact construction. The topic list's own panel body additionally
   paints the window-background color behind the cards (composed by the
   panel component, not set directly by this component).
@@ -181,7 +180,7 @@ staged state, no commit, and no cancel.
 - **Border**: Each card has no border stroke of its own, and a hairline
   divider separates a card row from the row above it — both are the group
   component's construction, not this component's; see
-  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
+  appearance ([adhsdk.ingredient.ui.settings.layout.group-view](cookbook:775f1761-f757-41d0-b51b-354a410a11f4)) for the
   current values (the shared layout's divider-thickness token, drawn as a
   themed divider).
 - **Shadow**: Not applicable — no shadow property is set anywhere in this
@@ -501,9 +500,9 @@ Not applicable: this component contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -567,14 +566,14 @@ Not applicable: this component contains no logging call.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | platform-compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | internationalization |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | platform-compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | internationalization |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
 
 `keyboard-navigable` and `screen-reader-support` are `partial` because the
 Done button and the four checkboxes rely on AppKit's default key-view loop

@@ -1,7 +1,6 @@
 ---
 id: ab36ce5f-4624-4097-bb66-a339dfecc4c9
 title: "Status Server Paths"
-domain: adhsdk://cookbook/status/service/openapi/paths
 type: ingredient
 version: 1.0.2
 status: review
@@ -21,19 +20,19 @@ tags:
   - api
   - docs
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/api-design
-  - agenticdevelopercookbook://guidelines/implementing/networking/error-responses
-  - agenticdevelopercookbook://guidelines/implementing/security/token-handling
-  - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/49399746-a81f-4163-8b07-0cfa11d87c2e
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/631b7b61-985a-4f5d-9c44-2cfbfdb9091b
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2598f495-1820-47e7-b7e7-ce548d390148
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c
 related:
-  - adhsdk://cookbook/status/service/auth
-  - adhsdk://cookbook/status/service/board
-  - adhsdk://cookbook/status/service/config
-  - adhsdk://cookbook/status/service/middleware
-  - adhsdk://cookbook/status/service/monitor/types
-  - adhsdk://cookbook/status/service/monitor/live-types
-  - adhsdk://cookbook/status/service/monitor/uptime
-  - adhsdk://cookbook/status/service/telemetry/fetchers
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
+  - 7984f592-a12d-49da-806c-ff39d9557998
+  - 31fe479f-e95e-4f03-b957-faa2314a03be
+  - d1098650-e0d0-4d4b-9bbc-3ceeac8635fe
+  - 5edf4567-65dd-40d7-814e-8604ee70f131
+  - 2c8b4572-3851-4111-97d6-a42792fb7150
+  - 88dabdf6-14a3-44eb-ab0d-ae18007c683e
+  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
 references:
   - packages/web/packages/status-server/src/openapi/shared.ts (adhsdk)
   - packages/web/packages/status-server/src/openapi/build.ts (adhsdk)
@@ -212,9 +211,9 @@ Subsystem: n/a (status backend) | Category: n/a
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/openapi/paths/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/openapi/paths/` | unverified |
 
 ## Design Decisions
 
@@ -232,12 +231,12 @@ Subsystem: n/a (status backend) | Category: n/a
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [api-design-conventions](agenticdevelopercookbook://compliance/access-patterns#api-design-conventions) | passed | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | passed | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: all 14 modules and `shared.ts` build a static
 document; no module handles a real request, touches storage, or enforces auth —

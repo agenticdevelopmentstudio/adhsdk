@@ -1,7 +1,6 @@
 ---
 id: 3f6268b8-410d-4d3c-979c-2a9f9f1534f3
 title: "Single-Instance Window"
-domain: adhsdk://cookbook/ui/windows/single-window-controller
 type: ingredient
 version: 1.2.2
 status: review
@@ -22,9 +21,9 @@ tags:
   - singleton
 depends-on: []
 related:
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
-  - adhsdk://cookbook/ui/windows/window-controller
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 8ed694b4-e238-48c5-9589-81ce6aaebb32
+  - 55a394e6-9934-404b-941d-25bebbf71378
 references: []
 approved-by: ""
 approved-date: ""
@@ -552,9 +551,9 @@ Not applicable — this class contains no logging calls of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/SingleWindowController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/SingleWindowController.swift` | unverified |
 
 ## Design Decisions
 
@@ -634,11 +633,11 @@ first; until then this recipe carries the debt rather than hiding it.
 
 | Check | Status | Category |
 |---|---|---|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Statuses rest on direct inspection of `SingleWindowController.swift`: native
 `NSWindow`/`NSPanel` construction with no custom-drawn chrome

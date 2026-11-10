@@ -1,12 +1,12 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | partial | Reliability |
 
 Notes: separation-of-concerns passes because verdict computation is delegated entirely to `ModelFitPolicy.verdict`, RAM and pressure are delegated to the injected `SystemMemoryMonitoring`, and the exclusive-run mutex is kept independent of the verdict path (`verdict-independent-of-exclusive-lock`). unit-test-coverage passes because `LocalInferenceGuardTests.swift` exercises thresholds, FIFO ordering, deadlines, and cancellation directly across 24 vectors. explicit-error-handling passes because a guard refusal is raised as a distinct `AIGuardError` type kept deliberately separate from `DaemonAIChat.ChatError`, so it is never silently reinterpreted as a transport failure (`guard-refusal-non-transport`). timeout-handling passes because a deadline expiry cancels the operation and still runs `release()` afterward, handing the lock to the next waiter and leaving the mutex in a consistent state (`deadline-enforced-per-operation`, `deadline-cancellation-preserves-handoff`). graceful-degradation passes because an unknown model size — the `LocalModelCatalog` size lookup returning `nil` — fails open to `.allow` under normal pressure rather than blocking or crashing (`unknown-size-fail-open`). health-observability is partial because `verdict` emits one `notice`-level log only when the computed tier is `.warn`, with no equivalent signal for the mutex's own long-lived state, such as waiter-queue depth or contention.
 

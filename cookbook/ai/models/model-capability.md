@@ -1,7 +1,6 @@
 ---
 id: 4ebd01d4-1326-42fa-83ba-58b0aebb31c7
 title: "Model Capability"
-domain: adhsdk://cookbook/ai/models/model-capability
 type: ingredient
 version: 1.1.1
 status: review
@@ -19,7 +18,7 @@ tags:
   - ai-plugin
   - capability
 depends-on:
-  - adhsdk://cookbook/ai/models/model-catalog
+  - c8438764-89c9-4286-9b58-10c9cd175a97
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift (adhsdk)
@@ -302,9 +301,9 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift` | unverified |
 
 ## Design Decisions
 
@@ -348,10 +347,10 @@ Not applicable: this component contains no logging call of any kind.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 
 Notes: no-hardcoded-strings fails because `title` and `detail` return
 English-only literals with no localization mechanism (see Localization).

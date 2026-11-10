@@ -1,0 +1,8 @@
+
+- **Role**: The component uses the semantic HTML5 `<input type="range">` element, which has an implicit role of `slider`.
+- **Label association**: When a `label` prop is provided, the component renders a `<label>` element with `htmlFor` pointing to the input's ID (see **label-association**), creating a proper semantic association. No fallback ARIA property (`aria-label`, `aria-labelledby`) is implemented; when `label` is omitted, the control has no accessible name from the component itself.
+- **Min/Max exposure**: The `min`, `max`, and `step` attributes are directly set on the input element, making them available to assistive technologies.
+- **Value announcements**: Assistive technologies announce the current value and range from the input's native `value`, `min`, and `max` attributes. When `caption` is a function, its formatted output is rendered visually as a sibling `<span>` but is not exposed via `aria-valuetext`, so assistive technology announces only the raw numeric value, not the formatted caption text.
+- **Hint association**: The hint paragraph renders as a sibling of the slider container but is not linked to the input via `aria-describedby`; assistive technology does not announce it as a description of the control.
+- **Minimum tap/click target**: The range input's rendered size is set entirely by CSS (see Appearance); the source sets no explicit dimensions, so whether a given stylesheet meets a minimum target size cannot be determined here. WCAG 2.2 SC 2.5.8 (Target Size, Minimum, Level AA) requires at least 24×24 CSS pixels; WCAG 2.1 SC 2.5.5 (Target Size, Level AAA) recommends 44×44 CSS pixels as an enhanced target. CSS must enforce whichever level the product targets.
+

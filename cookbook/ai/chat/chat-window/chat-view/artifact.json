@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "4d0c6859-ed34-46ca-bfe4-ca87234ad684",
     "title": "Chat View",
-    "domain": "adhsdk://cookbook/ai/chat/chat-window/chat-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -26,17 +25,17 @@
       "transcript"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ai/chat/chat-window/chat-day-banner-view",
-      "adhsdk://cookbook/ai/chat/chat-window/chat-transcript-row-view",
-      "adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view",
-      "adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view"
+      "ce1cec62-6244-4d1c-89db-cf31dea0f0be",
+      "2f1d9160-a055-4aca-8dff-86d39cc0b76a",
+      "24199c9b-53ce-41a7-9cce-3b914f0a424a",
+      "653874b6-86c4-41cb-9350-5f61bb5fca85"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "27da9927c03ec770",
+  "synced": "c4e615d6630989f0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

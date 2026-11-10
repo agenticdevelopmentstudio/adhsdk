@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "214977ad-b330-4e32-97cf-9383ad9d4e8c",
     "title": "Text Geometry",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/languages/text-geometry",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/host/extension-host",
-      "adhsdk://cookbook/workspace/extensions/vscode-api/languages/diagnostic-types"
+      "b2cf12e3-71de-4d87-9216-d5e8d604169c",
+      "6fa79a51-8e62-4a99-8979-c93a4269dac8"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/TextGeometry.swift (adhsdk)",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2042de3f6fc962d8",
+  "synced": "ef86cd7b96404eb0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,7 +1,6 @@
 ---
 id: 130fb0f2-e3a0-452a-bf7d-e49dbb56843e
 title: "Monitor Issues"
-domain: adhsdk://cookbook/status/service/monitor/issues
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,14 +20,14 @@ tags:
   - issues
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/data/constraints-and-validation
-  - agenticdevelopercookbook://guidelines/implementing/observability/logging
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f28a4638-c2ae-4a9b-817f-0f19b5712168
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65
 related:
-  - adhsdk://cookbook/status/service/monitor/alerts
-  - adhsdk://cookbook/status/service/monitor/issue-sources
-  - adhsdk://cookbook/status/service/board
-  - adhsdk://cookbook/status/service/monitor/cycle-runner
-  - adhsdk://cookbook/status/service/storage/libsql
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
+  - 86e7936a-c295-4e1f-8f7a-7278b4849008
+  - 7984f592-a12d-49da-806c-ff39d9557998
+  - 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
+  - 6bf27f64-59d0-4b2a-8715-92dba2856814
 references:
   - packages/web/packages/status-server/src/monitor/issues.ts (adhsdk)
   - packages/web/packages/status-server/test/issues.test.ts (adhsdk)
@@ -207,9 +206,9 @@ A successful open, update, or recovered/unmonitored resolve produces no log outp
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/issues.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/issues.ts` | unverified |
 
 ## Design Decisions
 
@@ -240,12 +239,12 @@ A successful open, update, or recovered/unmonitored resolve produces no log outp
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 `unit-test-coverage` passes: `test/issues.test.ts` exercises `openByTarget`'s grouping and duplicate-preserving behavior, `applyBoardToLedger`'s open/update/resolve paths, the recovered-vs-unmonitored distinction, the full-target-string comparison fix for the old `issueOrphaned` bug, the per-row fail-soft isolation on both a failed insert and a failed update, and the shadow-row repair path with the unique index deliberately dropped. `separation-of-concerns` passes: this file owns exactly one concern — recording a verdict `deriveBoard` already reached — and reads no config and derives no Problem itself; the raw CRUD lives behind `storage.issues`, and the decision of WHEN a Problem exists lives entirely in `board/`, external to this file. `explicit-error-handling` passes: every storage call this file makes is wrapped in a `try/catch` that logs via `console.error`/`console.warn` with a specific, traceable message and excludes the failed target from the returned counts — no failure is silently dropped, though see `data-integrity` below for the accounting nuance that follows from where the catch boundary sits. `idempotent-operations` passes: `reapply-is-idempotent` is directly asserted by the test suite, and `reconcileBoardLedger`'s own doc comment states it is "safe to call on every mutation... calling it twice resolves nothing the second time." `fault-tolerance` passes: `per-target-write-isolation` is the file's central design decision, explicitly justified by what a propagated exception would cost the rest of the monitor cycle (`cycle-runner.ts`'s `finally` block). `data-integrity` is `partial`: this file actively repairs a violated database invariant (`uniq_open_issue_per_target`) rather than assuming it holds, which is a strength — but the repair mechanism itself has two open edges recorded above rather than fully resolved: the `updated`/`resolvedTargets` accounting asymmetry around `closeShadows` failures (Design Decisions), and the unaddressed concurrent-write-ordering question for `updateIssue`/`resolveIssue` (the `concurrent-write-ordering` marker under Behavioral Requirements), neither of which corrupts data outright but both of which mean this file's guarantees about a target's ledger state under concurrent or partially-failing writes are not fully specified.
 

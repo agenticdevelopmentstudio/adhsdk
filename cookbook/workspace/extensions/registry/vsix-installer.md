@@ -1,7 +1,6 @@
 ---
 id: 35dd47a6-23f3-4306-9c81-e3823b79a7a3
 title: "VSIXInstaller"
-domain: adhsdk://cookbook/workspace/extensions/registry/vsix-installer
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,15 +21,15 @@ tags:
   - filesystem
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-identity-component
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest-localization
-  - adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range
-  - adhsdk://cookbook/workspace/extensions/registry/vsix-archive
-  - adhsdk://cookbook/workspace/extensions/registry/open-vsx-catalog
-  - adhsdk://cookbook/workspace/extensions/registry/open-vsx-client
-  - adhsdk://cookbook/workspace/extensions/registry/extension-registry
+  - 5b0fea72-dbb8-4299-a54f-dc16486df1ae
+  - f6acc431-0443-4b14-8ae4-e1f2dc227c0c
+  - 68d182dc-3fc0-489c-ab04-ff4da25fc4df
+  - 24e1710c-a805-4f6e-b720-fbd869472ca9
+  - fea35fb1-9eeb-4647-b185-902c1d1cb988
+  - dbe4b3b6-ac5b-4d45-ba2a-84aad1a8582e
+  - 1bbc9593-4064-4e79-8bce-08b3cf00c13d
+  - bc4c4fe9-aa33-47a7-94d2-fb688e70caec
+  - 4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70
 references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift (adhsdk)
@@ -606,9 +605,9 @@ Category: `VSIXInstaller`
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` | unverified |
 
 ## Design Decisions
 
@@ -681,13 +680,13 @@ recovery that did the safe thing) as having failed.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
 `separation-of-concerns` passes because `VSIXInstaller` delegates every
 concern it does not own: byte verification and archive expansion to

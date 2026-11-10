@@ -1,7 +1,6 @@
 ---
 id: 4d7ed9a3-c6d8-491b-911a-cf257fde1c38
 title: "Daemon AI Chat"
-domain: adhsdk://cookbook/ai/chat/daemon-ai-chat
 type: ingredient
 version: 1.1.2
 status: review
@@ -23,17 +22,17 @@ tags:
   - inference-guard
   - cli-fallback
 depends-on:
-  - adhsdk://cookbook/ai/plugins/ai-plugin
-  - adhsdk://cookbook/ai/plugins/plugin-descriptor
-  - adhsdk://cookbook/ai/chat/chat-context
-  - adhsdk://cookbook/ai/plugins/request-spec
-  - adhsdk://cookbook/ai/plugins/stream-event
-  - adhsdk://cookbook/ai/providers/provider-configuration
-  - adhsdk://cookbook/ai/providers/provider-config-keys
-  - adhsdk://cookbook/ai/providers/daemon-provider-resolver
-  - adhsdk://cookbook/ai/models/local/local-inference-guard
+  - 47eb19ef-2c42-4a52-a60b-54b6f01c8791
+  - 39de0dff-2b26-4d3d-97a3-ebdbdb38846a
+  - 613d7a36-d0cd-4415-97be-d983b3d6c644
+  - 72829b3b-ce4a-4730-877f-da7b48e7b3dd
+  - 2067e249-4f97-4575-b8ed-8f55f6dc96df
+  - a8054368-9885-4b83-90cf-5029728ab397
+  - 0f65ea61-3b0f-4a9b-842e-912555b7af62
+  - ef2a5ca9-04a4-46ab-8fef-3fdc6db2041d
+  - 8d827e9d-3638-4eaf-b04b-223b29b53389
 related:
-  - adhsdk://cookbook/ai/plugins/plugin-manager
+  - 0a729d47-fc2d-427c-b474-26072dc8b336
 references: []
 approved-by: ""
 approved-date: ""
@@ -226,9 +225,9 @@ Not applicable: this component contains no logging call; it is orchestration log
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` | unverified |
 
 ## Design Decisions
 
@@ -256,12 +255,12 @@ Not applicable: this component contains no logging call; it is orchestration log
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | Reliability |
 
 Secure-storage passes because `DaemonAIChat.swift` never persists a credential itself — it only reads through the injected `SecretStoring` abstraction (Keychain-backed by default) and forwards the resolved value in memory for the duration of one call, per the Privacy section. Explicit-error-handling is `partial`: every plugin-path failure (load, `buildRequest`, streaming, empty reply) and every guard refusal is a typed, thrown error, but the CLI path passes an error other than `ClaudeCLI.CLIError` through unwrapped (see `cli-foreign-error-passthrough`). No-hardcoded-strings fails because every `ChatError.errorDescription` and every constructed `providerError` message this file authors is an unlocalized English literal (see Localization). Graceful-degradation is `partial`: the CLI path IS a designed fallback for the "no provider configured yet" case, but a CONFIGURED provider's own failure (a guard refusal, a network error, an empty stream) never falls back to the CLI path — it hard-fails with a thrown `ChatError`/`AIGuardError` instead.
 

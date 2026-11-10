@@ -22,7 +22,7 @@ consists of:
 
 Use it wherever an app or daemon has to show or obtain a privacy grant;
 the UI that renders it lives in
-[Permission Row View](adhsdk://cookbook/system/permissions/permission-row-view)
+Permission Row View ([adhsdk.ingredient.system.permissions.permission-row-view](cookbook:c3269cfa-a8ec-4ba9-bc68-9cdf98e7e1fc))
 and
-[Permissions Panel View](adhsdk://cookbook/system/permissions/permissions-panel-view).
+Permissions Panel View ([adhsdk.ingredient.system.permissions.permissions-panel-view](cookbook:07388a5c-901d-4cf3-b818-bf52c180be08)).
 

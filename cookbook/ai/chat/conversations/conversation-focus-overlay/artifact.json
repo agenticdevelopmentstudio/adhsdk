@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "08448e7e-b673-49b3-97d4-d83136d108d6",
     "title": "Conversation Focus Overlay",
-    "domain": "adhsdk://cookbook/ai/chat/conversations/conversation-focus-overlay",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -24,17 +23,17 @@
       "conversations"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/containers/dismissible-overlay-view"
+      "0bc93127-4078-4bc6-a250-04dde181788b"
     ],
     "related": [
-      "adhsdk://cookbook/ai/chat/chat-window/chat-view",
-      "adhsdk://cookbook/ai/chat/mock-chat-session"
+      "4d0c6859-ed34-46ca-bfe4-ca87234ad684",
+      "91bd3986-da9d-418e-a969-c878efa88d50"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cb65d2b17ea252f4",
+  "synced": "fd671972b69c5f62",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

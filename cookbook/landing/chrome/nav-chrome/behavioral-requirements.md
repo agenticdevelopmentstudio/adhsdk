@@ -1,0 +1,29 @@
+
+- **render-bar**: Component MUST render a fixed bar containing a burger menu button and an optional brand container.
+- **render-burger**: Component MUST render a button that opens the drawer, labeled via `openLabel` prop (default: 'Open menu'). The button only ever opens the drawer; it does not close it (see **drawer-toggle-controls**).
+- **render-drawer**: Component MUST render a navigation drawer containing an array of anchor links passed via the `links` prop.
+- **render-close-button**: Component MUST render a close button inside the drawer, labeled via `closeLabel` prop (default: 'Close menu').
+- **render-scrim**: Component MUST render a scrim overlay that covers the page when the drawer is open.
+- **render-optional-brand**: Component MUST render the `brand` prop content in the bar if provided; MUST NOT render a brand container if `brand` is undefined.
+- **render-optional-footer**: Component MUST render the `footer` prop content in the drawer if provided; MUST NOT render a footer container if `footer` is undefined.
+- **set-nav-label**: Component MUST set `aria-label` on the `<nav>` element to the `navLabel` prop (default: 'Site').
+- **drawer-toggle-controls**: The burger button MUST only open the drawer (clicking it while the drawer is already open MUST have no effect — it does not close the drawer). The scrim, the drawer's close button, Escape, and clicking a navigation link MUST close the drawer when clicked/pressed while it is open. The close button sits in the same visual position the burger occupied, so closing reads as if the control itself changed, even though no single control both opens and closes.
+- **close-on-link-click**: Component MUST close the drawer when any navigation link is clicked, regardless of whether the link resolves to a same-page fragment, an off-page URL, or no target at all.
+- **trap-tab-inside-drawer**: While the drawer is open, Tab focus MUST stay inside it: pressing Tab on the last focusable element wraps focus to the first; pressing Shift+Tab on the first wraps focus to the last; and if focus is ever outside the drawer while it is open (for example, on the scrim), pressing Tab MUST bring focus back inside, to the first focusable element.
+- **close-on-escape**: Component MUST close the drawer when the Escape key is pressed while the drawer is open.
+- **return-focus-to-burger**: Component MUST return focus to the burger button when the drawer is closed, provided the drawer was previously open (not on initial render).
+- **move-focus-to-close-button**: Component MUST move focus to the close button inside the drawer immediately after the drawer opens.
+- **set-inert-when-closed**: Component MUST set the `inert` attribute on the drawer when it is closed, removing it when open.
+- **dynamic-focusable-elements**: The set of focusable elements the drawer's Tab trap cycles through (buttons and links within the drawer) MUST reflect the current contents at the moment Tab is pressed — an element added or removed while the drawer is open MUST be included or excluded immediately, without requiring the drawer to close and reopen.
+- **navigate-to-fragment-target**: Component MUST resolve a same-page fragment link (an `href` beginning with `#`) to the element with that id and, when found, scroll it into view.
+- **move-focus-to-fragment-target**: Component MUST move focus to the target element after a same-page fragment scroll, using `tabindex="-1"` to make arbitrary elements focusable.
+- **prevent-default-navigation-on-fragment-match**: When a same-page fragment link's target element is found, the component MUST prevent the browser's default anchor navigation and move focus to and scroll to the target itself; when no target is found (or the link is off-page), default navigation MUST proceed unimpeded. Smooth scrolling comes from `scroll-behavior: smooth`, which the host sets on its own `html` element.
+- **handle-encoded-fragments**: Component MUST decode percent-encoded fragment IDs using `decodeURIComponent()`, and MUST gracefully handle malformed percent-encoding by falling back to the raw fragment.
+- **fragment-focus-not-overridden-by-close-return**: When a fragment link click moves focus to the target element, the drawer's close→burger focus-return behavior MUST NOT subsequently move focus away from that target back to the burger button.
+- **handle-empty-focusables**: Component MUST not throw an error if no focusable elements are found inside the drawer (e.g., if the links array is empty and no footer is provided).
+- **aria-expand-burger**: Component MUST set `aria-expanded` on the burger button to `true` when the drawer is open, `false` when closed.
+- **aria-hide-scrim**: Component MUST set `aria-hidden="true"` on the scrim.
+- **use-button-type**: Component MUST render burger and close buttons with `type="button"` to prevent form submission.
+- **support-custom-labels**: Component MUST accept `openLabel`, `closeLabel`, and `navLabel` props; MUST use default values ('Open menu', 'Close menu', 'Site') when props are undefined.
+- **prevent-focus-steal-on-load**: Component MUST NOT move focus on the initial render.
+

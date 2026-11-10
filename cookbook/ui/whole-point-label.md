@@ -1,7 +1,6 @@
 ---
-id: 29AB3757-55FC-488F-85F1-4F804E17040B
+id: 29ab3757-55fc-488f-85f1-4f804e17040b
 title: "Whole Point Label"
-domain: adhsdk://cookbook/ui/whole-point-label
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,7 +20,7 @@ tags:
   - layout
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/views/value-row-view
+  - d0aa6237-e5d7-4cf8-a1cb-621033575421
 references: []
 approved-by: ""
 approved-date: ""
@@ -129,9 +128,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/WholePointLabel.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/WholePointLabel.swift` | unverified |
 
 ## Design Decisions
 
@@ -143,8 +142,8 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 Separation-of-concerns is passed: the label only adjusts its intrinsic size and holds no layout or settings logic. Unit-test-coverage is failed: no test in the repository's test targets references `WholePointLabel`, so none of the vectors is executed.
 

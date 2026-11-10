@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5161980d-20b6-4779-867f-16ed45278a33",
     "title": "Extension Input Box Presenting",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view"
+      "b85dc186-31e9-472b-99ea-2c097fc926c8"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift (adhsdk)"
@@ -34,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "aa0d05272bbbad9e",
+  "synced": "4fe1fd1dfec58611",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

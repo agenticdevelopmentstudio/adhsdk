@@ -1,7 +1,6 @@
 ---
 id: fea35fb1-9eeb-4647-b185-902c1d1cb988
 title: "VSCodeEngineRange"
-domain: adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range
 type: ingredient
 version: 1.0.3
 status: review
@@ -22,7 +21,7 @@ tags:
   - version-range
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher
+  - a29c23d4-a086-4413-9843-6b319e340646
 references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)
@@ -382,9 +381,9 @@ states).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift` | unverified |
 
 ## Design Decisions
 
@@ -455,10 +454,10 @@ states).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `separation-of-concerns` passes because the type splits parsing
 (`parse(_:)`, producing a private `Requirement`) from evaluation

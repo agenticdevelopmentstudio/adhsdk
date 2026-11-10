@@ -1,7 +1,6 @@
 ---
 id: ef2a5ca9-04a4-46ab-8fef-3fdc6db2041d
 title: "Daemon Provider Resolver"
-domain: adhsdk://cookbook/ai/providers/daemon-provider-resolver
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,7 +20,7 @@ tags:
   - configuration
   - provider-resolver
 depends-on:
-  - adhsdk://cookbook/ai/providers/provider-config-keys
+  - 0f65ea61-3b0f-4a9b-842e-912555b7af62
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)
@@ -321,9 +320,9 @@ decode-failure-diagnostics for the one place this absence is a recorded gap.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift` | unverified |
 
 ## Design Decisions
 
@@ -347,11 +346,11 @@ decode-failure-diagnostics for the one place this absence is a recorded gap.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `separation-of-concerns` passes because the file's only responsibility is resolving registry/selection/model reads through a caller-supplied closure; it performs no storage, no secret handling, and no plugin-loading logic of its own (that lives in `DaemonAIChat`). `idempotent-operations` passes because every function is a deterministic read of its arguments and the current closure state (see `stateless-namespace`, `no-caching`). `data-minimization` passes because the file collects, stores, or transmits no data itself (see Privacy). `input-sanitization` passes because every malformed or absent input this type can receive — a missing key, an empty string, invalid JSON, a JSON value of the wrong shape, or a non-UUID id string — is handled by failing closed to `[]`/`nil`/`""` rather than throwing, crashing, or producing a corrupted result (see `configurations-empty-when-malformed`, `selected-configuration-malformed-id`).
 

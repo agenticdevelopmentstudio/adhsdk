@@ -50,7 +50,7 @@
   the pane view model a `ScriptablePane`-equivalent holds. Resolve the git
   branch through the same `GitClient`/`BranchController` port this family's
   siblings already define (see
-  `adhsdk://cookbook/workspace/projects/branch-controller`), folding
+  [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)), folding
   a `null` result to `string.Empty` at the same point `ComposableTabsWindowController.scriptingTabs(branch:)`
   does, and enforce main-thread confinement with `DispatcherQueue` in place
   of `@MainActor`.

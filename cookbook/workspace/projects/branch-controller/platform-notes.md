@@ -44,7 +44,7 @@
   thread-affinity of its own — mirror the main-thread confinement by only
   ever touching this object from the UI thread (`DispatcherQueue`), the
   same discipline the git status provider's WinUI port already assumes
-  (see `adhsdk://cookbook/workspace/files/git-status-provider`).
+  (see [adhsdk.ingredient.workspace.files.git-status-provider](cookbook:9a4aa2a8-c01b-4cec-b789-6c89c100d8d3)).
   Replace `NSHashTable<TabPaneViewController>.weakObjects()` with a
   `List<WeakReference<TabPaneViewController>>` (or a
   `ConditionalWeakTable`), pruning dead entries on each scan since .NET has

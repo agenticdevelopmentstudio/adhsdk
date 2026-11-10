@@ -1,0 +1,7 @@
+
+- **Role**: No explicit ARIA role applied. The component is a passive display element and does not interact with the user.
+- **Error identification**: The error span carries an optional `id` attribute (via `errorId` prop) so that a form control can reference it with `aria-describedby`, allowing screen readers to announce the error message when the control is focused.
+- **Hint handling**: Hints are not assigned an `id` and are not referenced via `aria-describedby` by this component or by its composing wrapper — only the error gets that treatment. In the shipped composition a hint instead becomes part of the control's accessible *name*, not its description: `Field` renders the caption, the control, and `FieldFootnote`'s hint text all inside one native `<label>` element, and a native `<label>` contributes its full text content to the accessible name of whatever it labels. No code in this stack wires a hint's text into a control's accessible description.
+- **Semantics**: The component uses a generic `<span>` element; no `role="alert"` or `role="status"` is applied. The error line is not automatically announced on appearance; screen readers announce it when the control with `aria-describedby` is focused.
+- **Color dependence**: Error (red) and hint (dim) are currently distinguished only by color; no icon, prefix, or other non-color cue is present in the source. See **Accessibility Options** below for how this behaves under Differentiate Without Color.
+

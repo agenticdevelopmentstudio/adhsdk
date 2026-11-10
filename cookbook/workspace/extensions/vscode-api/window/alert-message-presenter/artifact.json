@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "77fe79f8-7d45-4e51-aee0-d6de78b459e1",
     "title": "Alert Message Presenter",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/alert-message-presenter",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -24,7 +23,7 @@
       "message-presenting"
     ],
     "depends-on": [
-      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting"
+      "0aa82a1f-42ed-4585-9f65-bb20aa110712"
     ],
     "related": [],
     "references": [
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b62dfa49fe9e0aeb",
+  "synced": "986c2b942c17262e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

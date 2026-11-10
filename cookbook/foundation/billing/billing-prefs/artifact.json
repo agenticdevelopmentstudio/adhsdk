@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "0175F0BB-F4BD-4F72-94C2-57B087AD9DF9",
+    "id": "0175f0bb-f4bd-4f72-94c2-57b087ad9df9",
     "title": "Billing Preferences",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-prefs",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,15 +24,15 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-user-settings",
-      "adhsdk://cookbook/foundation/billing/billing-persistence",
-      "adhsdk://cookbook/foundation/billing/billing-dt-os"
+      "c1caa827-f7f1-4e69-b4c6-adbfef22e636",
+      "5296d0b7-8416-4e76-8f45-47a726f230cf",
+      "ed610aa4-2717-4242-a8b9-c4616377dbd9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fca503d4536c2e59",
+  "synced": "c2e56f77b0d2881e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "63f8a602-58f8-4fdc-9461-b959be427a4d",
     "title": "Status Web Colors",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/colors",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/session-client"
+      "5935b39d-9451-48c1-8b99-bd510d66d1a0"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "026003df2131f706",
+  "synced": "d6dd5a6fb18fe231",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -14,7 +14,7 @@ own; a shared settings-storage layer supplies that behavior, and a shared
 storage provider supplies the persistence mechanics. This recipe covers
 those collaborators only for the contract they give these three settings —
 their own general contract belongs to a collaborator's own recipe (the
-[Git Repo Scanner](adhsdk://cookbook/workspace/projects/git-repo-scanner)
+Git Repo Scanner ([adhsdk.ingredient.workspace.projects.git-repo-scanner](cookbook:3bec9b27-a9e3-4716-b516-688cc7f5a1c5))
 recipe already covers the scanner that consumes the skip-patterns
 setting). The code that reads the skip-patterns setting and constructs a
 scanner from it, the settings panel that edits all three, and the

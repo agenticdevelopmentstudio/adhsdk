@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "7f122a27-5b49-4f03-9439-1152249bc08f",
     "title": "Focused Topic Detail (FTD) View",
-    "domain": "adhsdk://cookbook/ui/navigation/focused-topic-detail",
     "type": "recipe",
     "version": "1.2.5",
     "status": "accepted",
@@ -25,12 +24,12 @@
       "navigation"
     ],
     "ingredients": [
-      "adhsdk://recipes/resizable-split",
-      "adhsdk://recipes/option-menu",
-      "adhsdk://recipes/alert-and-dialog",
-      "adhsdk://recipes/data-table",
-      "adhsdk://recipes/disclosure",
-      "adhsdk://recipes/topic-detail"
+      "c21473ee-a075-4800-96db-ff3de0888515",
+      "4d0e04ff-39eb-472c-93a0-8070f1b64a6a",
+      "550f00f7-bfb2-415e-9b15-bd5dce015500",
+      "d04eef56-2dbf-4148-964b-c095f242227f",
+      "c99e2822-f5a9-4e84-8740-9341880bb82a",
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f"
     ],
     "depends-on": [],
     "related": [],
@@ -38,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7bc5799e14ecce02",
+  "synced": "c03e92fa0a76eccb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
     {"part": "edge-cases", "heading": "Edge Cases"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

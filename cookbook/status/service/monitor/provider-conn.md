@@ -1,7 +1,6 @@
 ---
 id: 4aad9d0a-4984-4021-ad1f-d8aa6a15b066
 title: "Status Server Monitor Provider Connection"
-domain: adhsdk://cookbook/status/service/monitor/provider-conn
 type: ingredient
 version: 1.0.3
 status: review
@@ -21,12 +20,12 @@ tags:
   - secrets
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
-  - agenticdevelopercookbook://guidelines/implementing/security/secure-storage
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/926dff1a-dc12-46a4-b8c1-bdedbc142afd
 related:
-  - adhsdk://cookbook/status/service/config
-  - adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
-  - adhsdk://cookbook/status/service/monitor/fetch-vercel-projects
+  - 31fe479f-e95e-4f03-b957-faa2314a03be
+  - e029def6-7d5d-4e52-b565-e2a6612179bb
+  - 4b16f67f-3877-47d3-97eb-af99581a5b11
 references:
   - packages/web/packages/status-server/src/monitor/provider-conn.ts (adhsdk)
   - packages/web/packages/status-server/src/config/port.ts (adhsdk)
@@ -159,9 +158,9 @@ Neither `providerConn` nor `enumerateDeployProjects` calls `console.*` or any ot
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/provider-conn.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/provider-conn.ts` | unverified |
 
 ## Design Decisions
 
@@ -179,11 +178,11 @@ Neither `providerConn` nor `enumerateDeployProjects` calls `console.*` or any ot
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | failed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | failed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
 `unit-test-coverage` fails: no test file in `packages/web/packages/status-server/test/` exercises `providerConn` or `enumerateDeployProjects` directly — a repo-wide search finds only a comment mentioning `providerConnFromConfig` in `issues.test.ts`, not an assertion against this file's own two exports; the ten vectors above are derived directly from reading the source, not from an existing test suite, per this recipe's own authoring rules. `separation-of-concerns` passes: this file owns exactly one concern — translating the storage/config ports into the shapes `deploy-platform`'s pure `providerConnFromIntegrations` and `enumerateDeployProjectsFrom` expect — and delegates all per-provider field mapping, network access, and project enumeration to that vendored package, reimplementing none of it. `explicit-error-handling` passes on its narrow "MUST NOT silently swallow" bar: neither function contains a `try`/`catch` of any kind, so nothing here catches-and-discards an error; every rejection from `storage` or from `enumerateDeployProjectsFrom` surfaces intact to the caller, which is exactly the fail-fast, caller-decides pattern `monitor/sync.ts`'s own explicit `.catch` around `enumerateDeployProjects` (external) depends on. `graceful-degradation` fails as written: this file itself has no fallback for an unavailable `storage` or a rejecting `enumerateDeployProjectsFrom` — every dependency failure propagates as an unhandled rejection, and any degradation (an empty-enumeration fallback, for instance) is implemented entirely by the caller, not here — a deliberate design choice recorded above in Design Decisions, not a defended pass. `fault-tolerance` passes: `providerConn`'s own composition tolerates malformed-but-well-typed input without crashing — a missing integration row, a `null` `tokenEnvVar`, or an absent `config` key each resolve to `undefined` fields via optional chaining and nullish coalescing in `providerConnFromIntegrations`, never a thrown `TypeError`, per provider-conn-shape and the null/empty-input edge cases above.
 

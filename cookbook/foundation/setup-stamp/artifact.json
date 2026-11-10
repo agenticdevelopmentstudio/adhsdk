@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "469A222D-AF34-409F-9675-9B1F2659BAEC",
+    "id": "469a222d-af34-409f-9675-9b1f2659baec",
     "title": "Setup Stamp",
-    "domain": "adhsdk://cookbook/foundation/setup-stamp",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/file-system"
+      "016f5ba0-f4ee-4b39-b1a2-83629768acdd"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ad054ce7e56d0eb9",
+  "synced": "da9df8bc1102742f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

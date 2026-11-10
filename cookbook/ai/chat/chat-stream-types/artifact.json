@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "f305da79-fa03-493e-9c08-7186530943c6",
     "title": "Chat Stream Types",
-    "domain": "adhsdk://cookbook/ai/chat/chat-stream-types",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -27,14 +26,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ai/plugins/stream-event",
-      "adhsdk://cookbook/ai/chat/chat-context"
+      "2067e249-4f97-4575-b8ed-8f55f6dc96df",
+      "613d7a36-d0cd-4415-97be-d983b3d6c644"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "53ed7e729b578469",
+  "synced": "1a75b38fe4d77ab6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

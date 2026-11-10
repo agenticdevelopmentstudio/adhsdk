@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "92d66361-a16d-4c35-a0d3-4c1c8bbd5f52",
     "title": "Composable Tabs Settings View",
-    "domain": "adhsdk://cookbook/ui/layout/composable-tabs/settings-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -25,16 +24,16 @@
       "sheet"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/settings/settings-split-view",
-      "adhsdk://cookbook/ui/settings/layout/group-view",
-      "adhsdk://cookbook/ui/controls/spacing-control"
+      "a11f34ff-116c-47d6-bffa-edd0799cbcb2",
+      "775f1761-f757-41d0-b51b-354a410a11f4",
+      "f064de5a-b117-4147-96a9-c1ed11d5c976"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "97650129211a61be",
+  "synced": "a59661204ad7daae",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

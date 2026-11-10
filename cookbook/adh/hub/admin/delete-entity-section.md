@@ -1,7 +1,6 @@
 ---
 id: 96bc198e-c726-476a-bc4a-ddc1d5c0c2f8
 title: "Delete Entity Section"
-domain: adhsdk://cookbook/adh/hub/admin/delete-entity-section
 type: recipe
 version: 1.4.2
 status: review
@@ -22,13 +21,13 @@ tags:
   - disclosure
   - settings
 ingredients:
-  - adhsdk://recipes/disclosure
-  - adhsdk://recipes/button
-  - adhsdk://recipes/dialog
+  - c99e2822-f5a9-4e84-8740-9341880bb82a
+  - f3c25236-d72f-4a7b-839a-b7f335b3acd0
+  - 972be0d0-a9f5-45cd-a23b-c8329410b3d1
 depends-on: []
 related:
-  - adhsdk://recipes/field-group
-  - adhsdk://cookbook/ui/navigation/focused-topic-detail
+  - 781740e8-c83f-40a1-8215-43abfb8d8f56
+  - 7f122a27-5b49-4f03-9439-1152249bc08f
 references: []
 approved-by: ""
 approved-date: ""
@@ -62,17 +61,16 @@ dialog, plus the shared text-input and label primitives.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Disclosure | adhsdk://recipes/disclosure | The collapsed-by-default Danger-zone container; its open/closed state is controlled by the section so the red accent tracks whether it is disclosed | yes | Open state bound to the section's disclosed state; red styling and title color applied only while disclosed; carries the warning glyph in its title |
-| Button | adhsdk://recipes/button | The disclosed Delete trigger, and the dialog's Cancel/Yes/Permanently-Delete actions | yes | Uses the shared button ingredient's destructive-ghost style for Delete and Yes, a neutral style for Cancel, and its strongest destructive style for the final Permanently Delete action |
-| Dialog | adhsdk://recipes/dialog | The modal that carries the two-phase confirm (warn → type-to-confirm) | yes | Open state controlled by the section; its close control is hidden while busy; uses the shared header/title/description/footer structure |
+| Disclosure | [adhsdk.ingredient.ui.components.layout.disclosure](cookbook:c99e2822-f5a9-4e84-8740-9341880bb82a) | The collapsed-by-default Danger-zone container; its open/closed state is controlled by the section so the red accent tracks whether it is disclosed | yes | Open state bound to the section's disclosed state; red styling and title color applied only while disclosed; carries the warning glyph in its title |
+| Button | [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) | The disclosed Delete trigger, and the dialog's Cancel/Yes/Permanently-Delete actions | yes | Uses the shared button ingredient's destructive-ghost style for Delete and Yes, a neutral style for Cancel, and its strongest destructive style for the final Permanently Delete action |
+| Dialog | [adhsdk.ingredient.ui.components.overlays.dialog](cookbook:972be0d0-a9f5-45cd-a23b-c8329410b3d1) | The modal that carries the two-phase confirm (warn → type-to-confirm) | yes | Open state controlled by the section; its close control is hidden while busy; uses the shared header/title/description/footer structure |
 
 Composed shared primitives without their own recipe domains: a text input (the
 type-to-confirm field, which autofocuses and disables autocomplete and spell-check),
 a label (visually hidden, for that input), and the trash/warning/archive glyphs.
 
-The frontmatter `ingredients` field points to `adhsdk://recipes/…`
-domains rather than `ingredients/…` domains because Disclosure, Button, and
-Dialog are each documented as their own recipe in that toolkit, not as bare
+The `ingredients` field links Disclosure, Button, and Dialog as recipes
+rather than as bare ingredients because each is documented as their own recipe in that toolkit, not as bare
 ingredients — this recipe composes those recipes, it doesn't restate them as
 ingredients of its own.
 
@@ -305,7 +303,7 @@ Dialog · phase "warn"                    Dialog · phase "confirm"
   `delete-entity-section` (regenerate `sources.generated.ts` via
   `gen-sources.py` after source changes); verify responsively via Playwright at
   375 / 768 / 1440. Shared across every focused-topic-detail settings route
-  (`adhsdk://cookbook/ui/navigation/focused-topic-detail`), usually as the final
+  ([adhsdk.recipe.ui.navigation.focused-topic-detail](cookbook:7f122a27-5b49-4f03-9439-1152249bc08f)), usually as the final
   group in a settings pane below the `FieldGroup`s.
 - **AppKit/UIKit**: On macOS, build the disclosure from an `NSButton` with
   `bezelStyle = .disclosure` (there is no `NSDisclosureButton` class) toggling a
@@ -360,9 +358,9 @@ Dialog · phase "warn"                    Dialog · phase "confirm"
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/adh-ui/src/blocks/delete-entity-section.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/adh-ui/src/blocks/delete-entity-section.tsx` | unverified |
 
 ## Design Decisions
 
@@ -411,11 +409,11 @@ consistent no matter which verb a caller passes.
 
 | Check | Status | Category |
 |---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes: `delete-entity-section.tsx` renders the disclosure and two-phase dialog only; the destructive action is the caller-supplied `onConfirm`, and any navigation after deletion is the caller's. `unit-test-coverage` is `partial`: `deleteEntitySection.test.tsx` covers the default and reversible wording through both dialog phases, the archive versus trash glyph, the "Archiving…" busy label, and the non-Error rejection fallback, and the two busy/failure tests type the identifier only as a step toward clicking confirm, but no test asserts that the confirm button stays disabled until the typed text matches, or exercises the empty-`confirmValue` guard. `platform-theming` passes: every color in source is an `apt-*` token class with no raw hex value or `!important`. `focus-management` passes: the confirm flow rides the shared `Dialog` primitive with no override of its focus handling, and the type-to-confirm `Input` is labeled by a screen-reader-only `Label htmlFor`. `no-hardcoded-strings` fails: the copy ("Do you wish to proceed?", "Permanently", "This cannot be undone") is English JSX literal text with no translation call.
 

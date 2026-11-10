@@ -1,7 +1,6 @@
 ---
 id: aaf56f9b-896b-4f74-9e18-1ef4116270a9
 title: "Window Contexts"
-domain: adhsdk://cookbook/system/system-windows/window-contexts
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,9 +21,9 @@ tags:
   - persistence
 depends-on: []
 related:
-  - adhsdk://cookbook/system/system-windows/window-context-model
-  - adhsdk://cookbook/system/system-windows/system-windows-engine
-  - adhsdk://cookbook/system/system-windows/matching/title-heuristics
+  - d4b4359e-e9c8-439c-abcf-309fcc419348
+  - fcd4bf3d-445d-4f01-99a2-ba6f71ce087b
+  - 77dbd38e-9acd-4053-ba54-738b45101f6b
 references:
   - https://developer.apple.com/documentation/coregraphics/cgwindowid
   - https://man7.org/linux/man-pages/man2/flock.2.html
@@ -385,15 +384,15 @@ Window-controller failures (move, set frame, focus) and notification authorizati
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/ReconcileModels.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextStore.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsSettings.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsState.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextError.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextManager.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextsModel.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/ReconcileModels.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextStore.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsSettings.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsState.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextError.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextManager.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextsModel.swift` | unverified |
 
 ## Design Decisions
 
@@ -457,15 +456,15 @@ Window-controller failures (move, set frame, focus) and notification authorizati
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [encryption-at-rest](agenticdevelopercookbook://compliance/privacy-and-data#encryption-at-rest) | failed | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.privacy-and-data.encryption-at-rest](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2a8a8918-3e9d-5e0f-a154-106b4f34ca17) | failed | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: persistence is in the store, window and context logic in the `@MainActor` manager, SwiftUI publishing and user-facing messages in the model, and host branding in an injected configuration, with the window controller and matcher injected. `unit-test-coverage` is partial because `SystemWindowContextManagerTests` covers parking on attach, the no-active-context case, active-context deletion, and both load-time invalidation paths, but nothing tests the store, the settings decoder, the model, switching, or event re-matching. `explicit-error-handling` is partial: store and manager errors are typed and surfaced, but window-controller failures are discarded without a log (the open question on restore-failure-silent) and event operations log rather than surface persistence failures. `data-integrity` is partial because `saveAll` is atomic per file but not across files, and batch assignment can give one window to two snapshots. `state-recovery` passes because a corrupt context file is skipped rather than failing the load, and dormant snapshots keep fingerprints so windows re-attach after relaunch. `graceful-degradation` passes because a missing state file yields an empty state and a failed rules load yields an empty rule list. `no-hardcoded-strings` fails because every error and notification string is an English literal. `encryption-at-rest` fails because window titles and app names are stored in plain JSON. `no-pii-in-logs` passes because logged names and titles go through `Logger` interpolation, which is private by default.
 

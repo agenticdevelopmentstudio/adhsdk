@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "775f1761-f757-41d0-b51b-354a410a11f4",
     "title": "Group View",
-    "domain": "adhsdk://cookbook/ui/settings/layout/group-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,9 +24,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/layout/conditional-view",
-      "adhsdk://cookbook/ui/settings/layout/dismissible-hint-view",
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "537cf2a7-6be6-4a09-9a6c-8f8ecc6012da",
+      "f3d7adbb-ece4-4b00-97af-f7e3db9d5999",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [
       "https://developer.apple.com/design/human-interface-guidelines/lists-and-tables",
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "127e42015c05fea0",
+  "synced": "b7bc9b959f530fea",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

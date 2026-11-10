@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "b7a4a259-620f-42a3-8bc2-9e5c07c1819d",
+    "title": "StatCard",
+    "type": "recipe",
+    "version": "1.4.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-07-03",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The dashboard stat card — an InfoPanel headed by an icon + title with a '{tool} ↗' deep link, over StatRows, freeform children, and a muted mono footnote.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "block",
+      "stat",
+      "card",
+      "dashboard",
+      "ui"
+    ],
+    "ingredients": [
+      "2ad7c681-6a9e-43ae-a9d9-b448939d3455",
+      "bba42d5f-8a52-487f-88c5-4f988dfa714b",
+      "b329d08b-9812-47d0-8094-516359d82d19"
+    ],
+    "depends-on": [],
+    "related": [
+      "2ad7c681-6a9e-43ae-a9d9-b448939d3455",
+      "bba42d5f-8a52-487f-88c5-4f988dfa714b",
+      "b329d08b-9812-47d0-8094-516359d82d19"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "f783cab96963b6e7",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

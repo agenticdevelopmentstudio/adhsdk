@@ -1,7 +1,6 @@
 ---
 id: b307116d-3ab8-422a-b031-885710e11e70
 title: "File Tree View"
-domain: adhsdk://cookbook/workspace/files/file-tree-view
 type: ingredient
 version: 1.2.3
 status: review
@@ -20,8 +19,8 @@ tags:
   - tree-view
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/files/file-browser-view
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - ab6d7655-9476-4318-8c36-f431686e2d23
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references:
   - https://developer.apple.com/documentation/appkit/nsoutlineview
   - https://developer.apple.com/design/human-interface-guidelines/lists-and-tables
@@ -37,7 +36,7 @@ This component draws the file tree itself: one collapsible header row per
 root directory (a root manager), and the files and folders under each one,
 in a tree outline rather than a flat list. It is hosted inside the file
 browser (see
-[File Browser](adhsdk://cookbook/workspace/files/file-browser-view)),
+File Browser ([adhsdk.ingredient.workspace.files.file-browser-view](cookbook:ab6d7655-9476-4318-8c36-f431686e2d23))),
 which owns the footer strip and the per-root managers; this component owns
 only the tree surface: lazy per-directory loading, expand/collapse and
 selection state kept in sync with injected shared state (a selection model,
@@ -671,9 +670,9 @@ Not applicable: this component contains no logging calls of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -748,7 +747,7 @@ it in this component.
 **Rationale**: this component's own reselection logic only clears
 `selection.selectedNode` when the outgoing selection was a node; a selected
 root *header* (a root manager) that disappears from a reload is not cleared
-here. The [File Browser](adhsdk://cookbook/workspace/files/file-browser-view)'s
+here. The File Browser ([adhsdk.ingredient.workspace.files.file-browser-view](cookbook:ab6d7655-9476-4318-8c36-f431686e2d23))'s
 own `teardown-clears-orphaned-root-selection` requirement is what actually
 guarantees `selection.selectedRoot` is cleared when its root is removed.
 **Approved**: pending.
@@ -757,13 +756,13 @@ guarantees `selection.selectedRoot` is cleared when its root is removed.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 
 `keyboard-navigable` passes because the source overrides none of
 `NSOutlineView`'s default keyboard/type-ahead handling

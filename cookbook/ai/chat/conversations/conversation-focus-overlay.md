@@ -1,7 +1,6 @@
 ---
 id: 08448e7e-b673-49b3-97d4-d83136d108d6
 title: "Conversation Focus Overlay"
-domain: adhsdk://cookbook/ai/chat/conversations/conversation-focus-overlay
 type: ingredient
 version: 1.0.0
 status: review
@@ -20,10 +19,10 @@ tags:
   - overlay
   - conversations
 depends-on:
-  - adhsdk://cookbook/ui/containers/dismissible-overlay-view
+  - 0bc93127-4078-4bc6-a250-04dde181788b
 related:
-  - adhsdk://cookbook/ai/chat/chat-window/chat-view
-  - adhsdk://cookbook/ai/chat/mock-chat-session
+  - 4d0c6859-ed34-46ca-bfe4-ca87234ad684
+  - 91bd3986-da9d-418e-a969-c878efa88d50
 references: []
 approved-by: ""
 approved-date: ""
@@ -273,9 +272,9 @@ Not applicable: the source contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift` | unverified |
 
 ## Design Decisions
 
@@ -309,10 +308,10 @@ to see."
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because the overlay owns only the conversation
 (the poll, the narrowed session and the Return rule) and leaves backdrop,

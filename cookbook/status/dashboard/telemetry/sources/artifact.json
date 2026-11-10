@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "77a6910a-090c-464a-b3f2-4a7af36aa212",
     "title": "Telemetry Sources",
-    "domain": "adhsdk://cookbook/status/dashboard/telemetry/sources",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -20,17 +19,17 @@
     ],
     "tags": [],
     "depends-on": [
-      "adhsdk://cookbook/status/dashboard/api"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
     ],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/telemetry",
-      "adhsdk://cookbook/status/service/telemetry"
+      "9ff57831-bdf9-47ad-b009-bcc1de59d5f4",
+      "a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4c2770bb3fbd7ba9",
+  "synced": "5696f2d9a4810d1a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,12 +1,12 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 
 `separation-of-concerns` passes because each of the four files owns exactly one concern — offset/position math and mutation (`TextDocument`), open/close reference counting (`TextDocumentStore`), debounced persistence timing (`TextDocumentSaveScheduler`, with the actual write injected by its caller), and one string conversion (`URL.documentUri`) — with no file reaching into another's internals. `unit-test-coverage` passes on the strength of `TextDocumentTests`, `TextDocumentSaveSchedulerTests`, and `TextDocumentStoreTests`, which exercise round-tripping, clamping, the edit-ordering contract, debounce coalescing, failed-write retention, and refcounted open/close with meaningful assertions, not placeholders. `explicit-error-handling` passes because a failed autosave write is never silently swallowed: it is logged, the document stays dirty, and the entry stays pending for a later retry or flush to discover. `idempotent-operations` passes because a retried autosave write always persists the document's current full text rather than an incremental delta, so repeating a write after a transient failure produces the same on-disk result as the first attempt would have. `data-integrity` is partial: the version-staleness check in `scheduler-markClean-version-guarded` prevents the dirty flag from lying about whether the in-memory buffer matches what was written, but nothing in the given sources verifies that the bytes the injected `write` closure produced actually landed correctly on disk — success or failure is entirely whatever that closure reports. `unicode-support` passes because `TextDocument`'s offset and position math is built explicitly around UTF-16 code units, surrogate pairs (including emoji), and CRLF terminators, with dedicated boundary-rounding logic and tests for exactly those cases.
 

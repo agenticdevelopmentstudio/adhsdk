@@ -1,7 +1,6 @@
 ---
 id: da18e58b-c2d9-4798-8143-2dd30b5976fc
 title: "Status Server Monitor Reconcile Stuck Deploys"
-domain: adhsdk://cookbook/status/service/monitor/reconcile-stuck-deploys
 type: ingredient
 version: 1.0.2
 status: review
@@ -23,13 +22,13 @@ tags:
   - rate-limiting
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
 related:
-  - adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
-  - adhsdk://cookbook/status/service/monitor/deploy-status
-  - adhsdk://cookbook/status/service/monitor/provider-conn
+  - e029def6-7d5d-4e52-b565-e2a6612179bb
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
+  - 4aad9d0a-4984-4021-ad1f-d8aa6a15b066
 references:
   - packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
@@ -50,7 +49,7 @@ approved-date: ""
 
 ## Overview
 
-`reconcile-stuck-deploys.ts` (`packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts`) is the status backend's by-id healer for Vercel/Railway deploy rows that the recent-deploys poll can no longer terminalize. Its own header comment states the problem: the poll reads only a provider's newest ~100 deployments, so a deployment that leaves that window while still in flight would otherwise freeze at `building` forever — observed in production, where a 45-project rebuild left rows reading `building` roughly 15 minutes after every build was green. The module exports two independent operations, both invoked from `sync.ts`'s `runCycle`: `reconcileVanishedDeploys(storage, conn)`, which re-fetches a bounded, cooldown-aware, per-row-backed-off batch of stale in-flight candidates by id and persists their real phases (or terminalizes them as `canceled` when the provider reports the deployment gone), and `expireUnconfirmedDeploys(storage)`, a terminal backstop that collapses any in-flight lifecycle unconfirmed for `EXPIRE_UNCONFIRMED_MS` (6 hours) to `unknown`. Both delegate the actual phase-mapping and in-flight vocabulary to `deploy-status.ts` (see `adhsdk://cookbook/status/service/monitor/deploy-status`) and their provider connection resolution to `deploy-platform/conn` (see `adhsdk://cookbook/status/service/monitor/provider-conn`); this file owns only the candidate selection, per-row dispatch, backoff bookkeeping, and persistence around those two operations.
+`reconcile-stuck-deploys.ts` (`packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts`) is the status backend's by-id healer for Vercel/Railway deploy rows that the recent-deploys poll can no longer terminalize. Its own header comment states the problem: the poll reads only a provider's newest ~100 deployments, so a deployment that leaves that window while still in flight would otherwise freeze at `building` forever — observed in production, where a 45-project rebuild left rows reading `building` roughly 15 minutes after every build was green. The module exports two independent operations, both invoked from `sync.ts`'s `runCycle`: `reconcileVanishedDeploys(storage, conn)`, which re-fetches a bounded, cooldown-aware, per-row-backed-off batch of stale in-flight candidates by id and persists their real phases (or terminalizes them as `canceled` when the provider reports the deployment gone), and `expireUnconfirmedDeploys(storage)`, a terminal backstop that collapses any in-flight lifecycle unconfirmed for `EXPIRE_UNCONFIRMED_MS` (6 hours) to `unknown`. Both delegate the actual phase-mapping and in-flight vocabulary to `deploy-status.ts` (see [adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec)) and their provider connection resolution to `deploy-platform/conn` (see [adhsdk.ingredient.status.service.monitor.provider-conn](cookbook:4aad9d0a-4984-4021-ad1f-d8aa6a15b066)); this file owns only the candidate selection, per-row dispatch, backoff bookkeeping, and persistence around those two operations.
 
 ## Behavioral Requirements
 
@@ -84,7 +83,7 @@ approved-date: ""
 - **vercel-429-suppressed**: when `noteIfRateLimited("vercel", res)` returns true (a 429 response, already recorded into the shared cooldown by that call), `fetchVercelPhasesById` MUST return `null` without any further processing of the response.
 - **vercel-non-ok-logged-null**: for any other non-ok response, `fetchVercelPhasesById` MUST log `` `[reconcile] Vercel deployment ${uid} detail ${res.status}` `` via `console.error` and return `null`.
 - **vercel-missing-ready-state-null**: when the parsed JSON body has no `readyState`, `fetchVercelPhasesById` MUST return `null`.
-- **vercel-phases-delegated**: on a body with a `readyState`, `fetchVercelPhasesById` MUST return `vercelPhases(d.readyState, d.readySubstate, d.target)` unchanged — the phase-mapping contract owned by `adhsdk://cookbook/status/service/monitor/deploy-status`, not reimplemented here.
+- **vercel-phases-delegated**: on a body with a `readyState`, `fetchVercelPhasesById` MUST return `vercelPhases(d.readyState, d.readySubstate, d.target)` unchanged — the phase-mapping contract owned by [adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec), not reimplemented here.
 - **railway-detail-request**: `fetchRailwayPhasesById` MUST call `gqlPost(token, "query($id: String!) { deployment(id: $id) { status } }", signal, { id })`, passing the deployment id as a GraphQL variable rather than interpolating it into the query string.
 - **railway-429-suppressed**: when the response status is 429, `fetchRailwayPhasesById` MUST return `null` without logging — `gqlPost` has already recorded the cooldown for that response.
 - **railway-non-ok-logged-null**: for any other non-ok response, `fetchRailwayPhasesById` MUST log `` `[reconcile] Railway deployment ${id} detail ${res.status}` `` via `console.error` and return `null`.
@@ -240,9 +239,9 @@ No log line is emitted on a successful phase heal, an empty candidate set, a no-
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts` | unverified |
 
 ## Design Decisions
 
@@ -278,14 +277,14 @@ No log line is emitted on a successful phase heal, an empty candidate set, a no-
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | passed | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | passed | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` passes: `reconcile-stuck-deploys.test.ts` calls `reconcileVanishedDeploys` and `expireUnconfirmedDeploys` directly, against a real migrated in-memory libSQL database, exercising the healthy-heal, gone/404, GraphQL-null-gone, per-lifecycle-preservation, transient-failure, rate-limit, backoff-parking, head-of-line, and expiry paths — the module's own exported surface is under test, not only its downstream helpers. `separation-of-concerns` passes: this file owns exactly one concern — selecting stale/expired in-flight candidates and dispatching/persisting their resolved phases — delegating the phase-mapping vocabulary to `deploy-status.ts`, the cooldown check to `deploy-platform/cooldown`, the bounded fan-out to `deploy-platform/util`'s `mapLimit`, the Railway GraphQL transport to `providers/railway.ts`'s `gqlPost`, and every storage read/write to the `Storage` port, never touching a database directly. `explicit-error-handling` passes: every failure path this file can hit — the candidate query rejecting, a per-row fetch or store rejecting, and the expiry sweep rejecting — is caught explicitly and logged with a distinguishing `[reconcile]`-prefixed message; nothing is silently swallowed without a signal. `timeout-configuration` passes: every per-row by-id fetch carries an explicit 8,000ms deadline via `AbortController`/`setTimeout`, cleared in a `finally`. `retry-with-backoff` passes: a failing row is parked under a genuine exponential backoff (`RECONCILE_BACKOFF_BASE_MS` doubling per consecutive failure up to `RECONCILE_BACKOFF_MAX_MS`, with a memory window that lets escalation resume rather than reset), not merely a fixed per-cycle retry. `rate-limit-handling` passes: the shared cooldown (`rateLimitedUntil`) is consulted before the candidate query is built, and a 429 response is fed back into that same shared cooldown via `noteIfRateLimited`, so a throttled provider's rows wait for a later cycle instead of spending requests that would extend the throttle. `idempotent-operations` passes: `markDeployPhases` and `markDeployGone` both write via a deterministic mapping of provider truth to phase columns, and re-running either against an already-settled row (or `expireStaleInFlight` against an already-`unknown` row) is a no-op by construction — the in-flight predicate that gates candidacy excludes rows the write already terminalized. `graceful-degradation` passes: no pollable platform, an empty candidate set, a query failure, a per-row fetch/store failure, and an expiry-sweep failure all degrade to a skip/no-op for the affected scope rather than throwing, matching the module's own "best-effort and fail-soft" framing echoed in `sync.ts`'s comments at both call sites.
 

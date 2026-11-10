@@ -65,13 +65,13 @@
   its own locale-aware `NumberFormatter`-equivalent parsing has no fallback
   ordering to reproduce this source's
   parses-locale-aware-integer-text/POSIX-first behavior (see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/parses-posix-integer-first`),
+  parses-posix-integer-first ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a))),
   so a value written by this source's POSIX `settingsFieldString` can read
   differently under a non-en-US Windows locale; and `NumberBox.Minimum`/
   `Maximum`, when both set with `Minimum > Maximum`, has no documented
   skip-the-clamp behavior matching
   skips-clamp-on-contradictory-bounds (see
-  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/skips-clamp-on-contradictory-bounds`)
+  skips-clamp-on-contradictory-bounds ([adhsdk.ingredient.ui.settings.rows.number-field-view](cookbook:acd561ca-90a4-4303-a411-cfe23410b42a)))
   — a WinUI port needs an explicit `Minimum > Maximum` check before relying
   on `NumberBox`'s own clamping.
 

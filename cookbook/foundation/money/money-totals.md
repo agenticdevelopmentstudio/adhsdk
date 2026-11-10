@@ -1,7 +1,6 @@
 ---
-id: 9D3A57D7-C9BB-4AFC-BDAB-4C42278FD8C8
+id: 9d3a57d7-c9bb-4afc-bdab-4c42278fd8c8
 title: "Money Totals"
-domain: adhsdk://cookbook/foundation/money/money-totals
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +21,8 @@ tags:
   - currency
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/money
-  - adhsdk://cookbook/foundation/money/money-formatter
+  - 7233995d-9b7e-4760-ac44-ab4b668b5cc1
+  - f1868607-3458-427a-b784-b05be97c7e8f
 references: []
 approved-by: ""
 approved-date: ""
@@ -124,9 +123,9 @@ Not applicable: The totals type calls no logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/MoneyTotals.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/MoneyTotals.swift` | unverified |
 
 ## Design Decisions
 
@@ -142,8 +141,8 @@ Not applicable: The totals type calls no logging API.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `separation-of-concerns` passes because the type only buckets hundredths by currency and delegates formatting to the money formatter. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/MoneyTotalsTests.swift` covers keeping currencies apart, merging totals, and the code-ordered description.
 

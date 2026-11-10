@@ -1,7 +1,6 @@
 ---
 id: 25046f90-559d-4e32-8516-b5dae5f09c43
 title: "Explanation View"
-domain: adhsdk://cookbook/ui/settings/layout/explanation-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,7 +19,7 @@ tags:
   - static-text
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/layout/panel-heading-view
+  - 9e21151e-dc58-49a2-be1e-4984529f4396
 references:
   - https://www.w3.org/TR/WCAG21/#contrast-minimum
 approved-by: ""
@@ -329,9 +328,9 @@ Not applicable: the view contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift` | unverified |
 
 ## Design Decisions
 
@@ -398,10 +397,10 @@ would only duplicate behavior `NSTextField` already provides for free.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | failed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | failed | Accessibility |
 
 Both statuses rest on `ExplanationView.swift`'s reliance on the theme's
 `.secondaryText`/`.caption` roles: contrast is partial because

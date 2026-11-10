@@ -1,7 +1,6 @@
 ---
 id: 2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe
 title: "Pane View"
-domain: adhsdk://cookbook/ui/layout/pane-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -20,15 +19,15 @@ tags:
   - view-controller
   - accessibility
 depends-on:
-  - adhsdk://recipes/pane-title-bar-view
-  - adhsdk://recipes/pane-minimize-picker
-  - adhsdk://recipes/pane-minimized-strip-view
-  - adhsdk://recipes/options-dialog-view-controller
+  - 9c5e7d75-e253-4dce-b12c-7eaede9ee405
+  - 0c8a7db3-9948-466c-8c97-20de2ae53a17
+  - 5ec45ac4-a02f-4ee7-becb-7894c2893f23
+  - 56388aa3-bc75-4d0a-830b-222f39750a9d
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
-  - adhsdk://recipes/window-options-dialog
-  - adhsdk://recipes/pane-control-cluster
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 4d75a371-181e-4d80-a16b-022d37dc0d48
+  - 9c1e6915-44ec-435e-a159-57b80b455698
+  - f7fbabba-4b48-4b6b-a99c-b888cedec056
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -304,9 +303,9 @@ Not applicable: no logging call of any kind appears anywhere in this concept.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -338,12 +337,12 @@ Not applicable: no logging call of any kind appears anywhere in this concept.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | partial | Reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Statuses rest on `PaneViewController.swift` and `PaneSpacingOverride.swift` as built: the gear and spacing-reset buttons carry real accessibility labels and identifiers, but no `NSAccessibility` notification is posted anywhere when the title, minimize state, or zoom state changes (`screen-reader-support`, partial); every user-facing string (`fallbackTitle`, the gear's tooltip/label, the "Settings…" and "Use Default" titles) is a hardcoded Swift literal with no localization key (`string-externalization`, failed); `PaneSpacingOverride`'s `JSONEncoder`/`JSONDecoder` calls are wrapped in `try?` so a corrupt or unwritable row is silently dropped rather than reported (`data-integrity`, partial); and the default `EphemeralPaneStateStore` keeps state in memory only, so nothing survives an actual process restart unless the caller injects a persistent store (`state-recovery`, partial).
 

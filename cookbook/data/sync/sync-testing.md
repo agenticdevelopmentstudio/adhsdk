@@ -1,7 +1,6 @@
 ---
 id: fbb19775-20c8-4857-9945-53947a2078df
 title: "Sync Engine Testing"
-domain: adhsdk://cookbook/data/sync/sync-testing
 type: ingredient
 version: 1.0.4
 status: review
@@ -21,10 +20,10 @@ tags:
   - offline
   - testing
 depends-on:
-  - adhsdk://cookbook/data/sync/sync-engine
+  - 355a8f54-aee5-45cd-a28d-12c3b7a3085c
 related:
-  - adhsdk://cookbook/data/sync/sync-engine
-  - adhsdk://cookbook/data/sync/offline-sync-client
+  - 355a8f54-aee5-45cd-a28d-12c3b7a3085c
+  - d3a0b65f-92c0-43c1-b04c-77638eb72044
 references:
   - packages/apple/AgenticDeveloperHubSDK/Sync/Testing/InMemorySyncStore.swift
   - packages/apple/AgenticDeveloperHubSDK/Sync/Testing/ScriptedSyncTransport.swift
@@ -58,7 +57,7 @@ Sync Engine Testing is the pair of reference fakes that ship inside the
 - `SyncStoreFailure` — the error enum both stores throw
   (`unknownResource`, `invalidChange`, `pullOnlyResource`).
 
-Use them to drive [SyncEngine](adhsdk://cookbook/data/sync/sync-engine) in unit
+Use them to drive SyncEngine ([adhsdk.ingredient.data.sync.sync-engine](cookbook:355a8f54-aee5-45cd-a28d-12c3b7a3085c)) in unit
 tests and previews without SQLite or a network, and as the executable
 specification a port's own store and transport fakes are checked against.
 
@@ -265,10 +264,10 @@ Not applicable: neither source makes a log call; outcomes are observed through r
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Testing/InMemorySyncStore.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Testing/ScriptedSyncTransport.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Testing/InMemorySyncStore.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Testing/ScriptedSyncTransport.swift` | unverified |
 
 ## Design Decisions
 
@@ -316,12 +315,12 @@ Not applicable: neither source makes a log call; outcomes are observed through r
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
 Each fake implements exactly one protocol seam (`SyncStore` or `SyncTransport`) with no I/O, and `InMemorySyncStoreTests` covers staging, coalescing, adoption, atomic apply, resync, purge and pull-only refusal, while `SyncEngineTests` exercises the transport. The fakes are deterministic apart from generated opIds, which tests capture rather than predict. Batches apply all-or-nothing and inflight ops replay under their original opId. Explicit error handling is partial because `pendingOps(limit:)` traps on a negative limit instead of reporting it, and `complete` silently skips results for unknown opIds by design.
 

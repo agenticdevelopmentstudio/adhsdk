@@ -1,17 +1,17 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | passed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | passed | Security |
 
 `separation-of-concerns` passes: `fetchCrunchyClusters` only fetches and maps; `crunchyPhases` and `toValidDate` are pure, network-free functions it delegates to, and persisting the resulting deploy rows is a job external to this file. `unit-test-coverage` passes: `crunchy-deployments.test.ts` is a dedicated suite exercising the no-token no-op, successful mapping for all three phase outcomes, the Bearer header, both failure paths (HTTP error and thrown), the environment default, the absent-`clusters` case, and the absent-`state` default. `explicit-error-handling` passes: every failure path (HTTP error, 429, thrown/aborted request) is caught, logged, and resolved as an explicit `{ ok: false, deploys: [] }` — nothing is silently swallowed. `timeout-configuration` passes: the single request is bounded by an `AbortController` cleared in a `finally` block. `retry-with-backoff` fails as written: this file makes exactly one attempt and never retries, a deliberate choice recorded in Design Decisions, not an oversight. `rate-limit-handling` passes: a 429 is recorded via `noteRateLimited` honoring the `retry-after` header, and every subsequent call checks `rateLimitedUntil` before issuing a request, per **cooldown-gate** and **rate-limit-recorded**. `error-response-handling` passes: a non-`ok` HTTP response, a 429, and a thrown/aborted request are each handled by name in the source, even though they converge on the same return shape. `graceful-degradation` passes: an unconfigured integration and every failure mode resolve cleanly rather than throwing past this file's own boundary. `data-integrity` passes: `createdAt` is gated through `toValidDate` with a safe fallback, per **created-at-fallback**, so this file can never construct an Invalid Date. `no-pii-in-logs` passes: both `console.error` lines name only an HTTP status or a caught error, never the token or a response body. `secure-transport` passes: unlike its sibling GlitchTip/PostHog/Cloudflare fetchers, this file hardcodes its request origin to `https://api.crunchybridge.com` rather than accepting a caller-supplied host, so the transport scheme cannot be misconfigured to a non-TLS origin.
 

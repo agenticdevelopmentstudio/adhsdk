@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5e9843b1-cc8d-4048-97e7-21991bf5830c",
     "title": "Horizontal Stack View",
-    "domain": "adhsdk://cookbook/ui/settings/layout/horizontal-stack-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/layout/vertical-stack-view",
-      "adhsdk://cookbook/ui/settings/layout/divider-view"
+      "765b853f-36a2-4e4f-b8aa-2cd15714a67f",
+      "18ad68ea-187b-463d-9f5c-b855b9bc36a9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "791b821300dcd265",
+  "synced": "e24ec4928367f0af",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

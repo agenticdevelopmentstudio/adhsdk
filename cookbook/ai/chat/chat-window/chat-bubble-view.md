@@ -1,7 +1,6 @@
 ---
 id: 24199c9b-53ce-41a7-9cce-3b914f0a424a
 title: "Chat Bubble View"
-domain: adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,9 +20,9 @@ tags:
   - ui-component
 depends-on: []
 related:
-  - adhsdk://cookbook/ai/chat/chat-window/chat-day-banner-view
-  - adhsdk://cookbook/ai/chat/chat-window/chat-transcript-row-view
-  - adhsdk://recipes/message-bubble
+  - ce1cec62-6244-4d1c-89db-cf31dea0f0be
+  - 2f1d9160-a055-4aca-8dff-86d39cc0b76a
+  - 46e0a509-8eac-460a-b24a-d39a8b71b02c
 references: []
 approved-by: ""
 approved-date: ""
@@ -225,9 +224,9 @@ Not applicable: the source contains no logging calls (no `Logger`, `os_log`, or 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/AIChatBubbleView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/AIChatBubbleView.swift` | unverified |
 
 ## Design Decisions
 
@@ -271,17 +270,17 @@ Not applicable: the source contains no logging calls (no `Logger`, `os_log`, or 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | failed | Accessibility |
-| [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
-| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | failed | Accessibility |
+| [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | failed | Internationalization |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | passed | Internationalization |
 
 Statuses rest on: the expand toggle's explicit accessibility label versus the bubble container having no label or grouping of its own (screen-reader-support); the bubble itself having no `keyDown`/`acceptsFirstResponder`, with the equivalent path supplied only by its host `ChatView`'s row-selection keyboard handling, which this recipe traces but which this component alone does not provide (keyboard-navigable — see Accessibility); the palette's dimmed text roles (`secondaryText`, `timestampText`) enforcing a minimum contrast floor against the window background while nothing verifies contrast between a role's own paired fill and text color, e.g. `userText` against `userBubble` (contrast-ratio); the message text being pinned to the separate Terminal font-size setting rather than the app's general typography scale (`SemanticPalette.size(_:)`/`scaled(by:)`) that the "Text Size" reader control and other UI use — increasing that control changes nothing in this bubble's message text (dynamic-type-support); the fixed `h:mm a` pattern ignoring the user's locale hour-cycle preference, unlike `AgenticDeveloperHubSDK`'s `MessageBubbleView` (locale-aware-formatting); the component rendering arbitrary caller-provided Unicode text via `NSAttributedString`/`NSTextView` without special-casing (unicode-support); the "Show the whole message" / "Show less" / "…" strings being Swift string literals in `AIChatBubbleView.swift` rather than sourced from a resource table (string-externalization, no-hardcoded-strings); and the bubble measuring and sizing to whatever text it is given, up to `maxWidth`, rather than assuming a fixed width for a fixed string length (text-expansion-tolerance).
 

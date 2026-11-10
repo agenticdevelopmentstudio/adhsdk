@@ -1,7 +1,6 @@
 ---
-id: A0D31E57-2B64-4C0E-8F1B-5E7C9D4A3B22
+id: a0d31e57-2b64-4c0e-8f1b-5e7c9d4a3b22
 title: "Record Detail Window Controller"
-domain: adhsdk://cookbook/ui/settings/record-detail-window-controller
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +21,7 @@ tags:
   - windows
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/record-detail-panel
+  - 0b7e4c0a-3c55-4b4f-9e52-6d1a8f2c7a11
 references: []
 approved-by: ""
 approved-date: ""
@@ -209,9 +208,9 @@ Not applicable: the window performs no logging.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailWindowController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailWindowController.swift` | unverified |
 
 ## Design Decisions
 
@@ -239,8 +238,8 @@ Not applicable: the window performs no logging.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Separation-of-concerns is passed: the window owns only list-to-pane mapping and selection, with chrome inherited from `SettingsWindow` and all model changes delegated to the owner through callbacks. Unit-test-coverage is partial: `RecordDetailWindowControllerTests.swift` has fifteen tests covering panes per record, selection, neighbour selection, the empty list, the footer, add and remove, the veto and single selection reports, but fixed panels, `onConfigurePanel` and the `confirm` and `reportFailure` defaults have no tests there.
 

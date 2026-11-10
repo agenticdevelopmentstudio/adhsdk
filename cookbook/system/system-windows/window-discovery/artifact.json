@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "0ab38622-b4a9-424c-89e2-5d27073680c7",
     "title": "Window Discovery",
-    "domain": "adhsdk://cookbook/system/system-windows/window-discovery",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -24,13 +23,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/system/system-windows/window-explorer-view"
+      "8aee173a-25e4-443e-a9ab-d629b58817e1"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6af5178f232b9e2b",
+  "synced": "d9d5504771759500",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

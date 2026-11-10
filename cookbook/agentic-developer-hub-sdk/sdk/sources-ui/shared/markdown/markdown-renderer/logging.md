@@ -1,0 +1,3 @@
+
+Not applicable: Markdown Renderer does not emit console/debug logging by design. (Apple) Parse failures and highlighter failures degrade silently to a plaintext or monospaced-fallback output — see **parse-resilient** and **handle-missing-highlighter**; the `render` function never throws. (Web) a pipeline failure is not logged either, but it IS surfaced as an observable failure signal: the component transitions to its error render state and displays an accessible error pane (`role="alert"`) instead of silently degrading — see **emit-error-pane**. Debug output, if needed, is the responsibility of the injected highlighter or calling code.
+

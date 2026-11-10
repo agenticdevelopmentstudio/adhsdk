@@ -1,0 +1,7 @@
+
+- **Role/Trait**: The component renders a native HTML `<input>` or `<textarea>` element, which have implicit `textbox` role. When a `<label>` is present, it is associated via `htmlFor` attribute matching the input's `id`.
+- **Label requirements**: A `label` prop MAY be provided and is rendered as a `<label>` element associated to the input via `htmlFor`. No label is rendered if the `label` prop is omitted or falsy. The component's prop interface does not accept `aria-label`, `aria-labelledby`, or any other rest props, so there is no way to attach an accessible name to the input through this component when `label` is omitted.
+- **Announce state changes**: The `disabled` state is communicated to assistive technologies via the `disabled` attribute on the input element; no additional ARIA attributes are set by the component.
+- **Minimum tap target**: Target size is defined by CSS; the component does not enforce a minimum size. WCAG 2.1 Success Criterion 2.5.5 Target Size (Enhanced, Level AAA) recommends interactive targets be at least 44×44 CSS pixels; this spec follows the AAA recommendation (SC 2.5.5) rather than the AA minimum in SC 2.5.8 (24×24px). CSS styling SHOULD ensure this.
+- **Hint association**: Hint text is rendered in a `<p>` element but is not explicitly associated to the input via `aria-describedby`; neither the input nor the hint paragraph exposes an id a caller could wire together, so this association cannot currently be added from outside the component (see **Design Decisions**).
+

@@ -1,0 +1,32 @@
+
+- **render-combobox**: Component MUST render an autocomplete combobox input that accepts free-form text matching against the `options` list.
+- **render-browser-button**: Component MUST render a "Choose…" button that opens an entity browser dialog to browse and create options.
+- **update-value-on-combobox-change**: Component MUST call `onChange` with the new value when the combobox selection changes.
+- **update-value-on-browser-select**: Component MUST call `onChange` with the new value when the entity browser dialog selects an option.
+- **accept-value-not-in-options**: Component MUST allow `value` to hold a name not present in the `options` list (e.g., newly created or added by another surface), without requiring a pre-defined option.
+- **display-breadcrumbs-when-nodes-provided**: Component MUST display one or more breadcrumb trails showing the filing path(s) of the selected value when a `nodes` hierarchy is provided and `value` resolves to a node.
+- **show-all-filing-paths**: Component MUST display one breadcrumb trail per distinct filing path when a category node has multiple parents (DAG structure), up to a maximum of 4 trails (`MAX_TRAILS`), allowing the user to see the category's filing locations without an unbounded walk of a DAG's exponentially many paths. A 5th or later distinct filing path is silently not displayed.
+- **path-count-aria-label**: Component MUST use `aria-label="<label> paths"` (plural) when multiple breadcrumb trails are displayed, and `aria-label="<label> path"` (singular) when one trail is displayed.
+- **chevron-separators**: Component MUST display a 12px ChevronRight icon between each pair of adjacent breadcrumbs in a trail, with no chevron before the first breadcrumb, to visually separate hierarchy levels.
+- **leaf-breadcrumb-accent**: Component MUST render the final breadcrumb in each trail in the leaf-accent color to distinguish the selected node from its ancestors.
+- **ancestor-breadcrumb-muted**: Component MUST render non-leaf breadcrumbs in a muted color to de-emphasize ancestors.
+- **breadcrumb-truncation**: Component MUST truncate breadcrumb text to prevent overflow on narrow viewports.
+- **rename-button-when-onrename-provided**: Component MUST render each breadcrumb as a clickable button when `onRename` is provided and the component is not disabled.
+- **static-breadcrumb-without-onrename**: Component MUST render breadcrumbs as static text spans when `onRename` is not provided.
+- **static-breadcrumb-when-disabled**: Component MUST render breadcrumbs as static text spans when `disabled={true}`, regardless of whether `onRename` is provided.
+- **rename-button-label**: Component MUST set the rename button's `aria-label` to `"Rename <noun> <node.name>"` to announce the category name and action.
+- **open-rename-dialog-on-crumb-click**: Component MUST open the CategoryRenameDialog modal when a breadcrumb button is clicked.
+- **rename-dialog-receives-node**: Component MUST pass the clicked node, full `nodes` tree, `options` (as the dialog's `extraNames`, so the dialog's duplicate-name guard also rejects a name known to autocomplete but not yet in `nodes`), `noun`, and `onRename` callback to the CategoryRenameDialog. It does not pass `value`.
+- **close-rename-dialog-on-confirm-or-cancel**: Component MUST close the CategoryRenameDialog when the user confirms or cancels the rename action.
+- **rename-follows-selected**: Component MUST call `onChange` with the new name when a rename succeeds and the renamed node is the currently selected node (`selected.id === renamed.id`), ensuring the field's value follows the node's new name.
+- **rename-ignores-unselected**: Component MUST NOT call `onChange` if the renamed node is not the currently selected node.
+- **disabled-state**: Component MUST disable both combobox and entity chooser when `disabled={true}`, and MUST NOT allow rename button interaction when disabled.
+- **layout-prop**: Component MUST forward the `layout` prop ("stacked" or "inline") to the Field wrapper to control label positioning.
+- **classname-prop**: Component MUST apply the `className` prop to the Field wrapper for custom styling.
+- **hint-prop**: Component MUST render optional `hint` content passed to the Field wrapper.
+- **hide-breadcrumbs-without-trail**: Component MUST NOT render any breadcrumb trail when `value === ""`, or when the `nodes` tree is omitted or empty.
+- **combobox-placeholder**: Component MUST set the combobox placeholder to `"Type a <noun>…"` using the `noun` prop.
+- **browser-trigger-label**: Component MUST set the entity chooser's trigger button label to `"Choose…"`.
+- **browser-input-label**: Component MUST set the entity chooser's input label to `"Filter or add a <noun>"` and placeholder to `"Filter or add a <noun>…"` using the `noun` prop.
+- **browser-aria-label-from-label**: Component MUST set the entity chooser's `ariaLabel` to `"Browse <label.toLowerCase()>"`, built from `label` (not `noun`), to indicate the browsing action.
+

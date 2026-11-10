@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d7171e41-4638-4243-9821-7a46cecf15c2",
     "title": "Project Tab Reconciler",
-    "domain": "adhsdk://cookbook/workspace/projects/project-tab-reconciler",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -27,9 +26,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/projects/project-controller",
-      "adhsdk://cookbook/workspace/projects/project-checkout",
-      "adhsdk://cookbook/workspace/projects/project-database-layout"
+      "5bfadad5-c93b-432a-807e-04be57ff16b4",
+      "7ae3de90-35f2-415c-93c7-cf579689e438",
+      "ded9b397-958d-437d-8235-48ef85ae7386"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift (adhsdk)",
@@ -43,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7da90d80f9b7a710",
+  "synced": "aa7dafcd13cfcdf7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -62,7 +61,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

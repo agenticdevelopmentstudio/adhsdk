@@ -1,7 +1,6 @@
 ---
 id: 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
 title: "Status Server Monitor Cycle Runner"
-domain: adhsdk://cookbook/status/service/monitor/cycle-runner
 type: ingredient
 version: 1.0.2
 status: review
@@ -21,12 +20,12 @@ tags:
   - worker
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/observability/logging
-  - agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e80d67b3-813f-47fb-8894-aa4e6f6479f3
 related:
-  - adhsdk://cookbook/status/service/monitor/alerts
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
 references:
   - packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)
@@ -128,7 +127,7 @@ Not applicable: this file defines no application URL scheme or HTTP route of its
 
 ## Localization
 
-This file's only literal string is the hardcoded English `console.log` message it builds for a retention prune (maintenance-prune-logged-on-deletion). It routes through no localization mechanism, and unlike the Slack/Discord-rendered lines in `alerts.ts` (see the [Status Server Monitor Alerts](adhsdk://cookbook/status/service/monitor/alerts) recipe), this string's only audience is an operator reading container stdout, never an end user or a webhook receiver.
+This file's only literal string is the hardcoded English `console.log` message it builds for a retention prune (maintenance-prune-logged-on-deletion). It routes through no localization mechanism, and unlike the Slack/Discord-rendered lines in `alerts.ts` (see the Status Server Monitor Alerts ([adhsdk.ingredient.status.service.monitor.alerts](cookbook:1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9)) recipe), this string's only audience is an operator reading container stdout, never an end user or a webhook receiver.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
@@ -174,9 +173,9 @@ This is the only log line this file emits directly; a full sync whose prune dele
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/cycle-runner.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/cycle-runner.ts` | unverified |
 
 ## Design Decisions
 
@@ -197,13 +196,13 @@ This is the only log line this file emits directly; a full sync whose prune dele
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
 `unit-test-coverage` is `partial`: `heartbeat.int.test.ts`'s "cycle-runner heartbeat wiring" suite exercises `runMonitorCycle` directly for the full-sync/probe-only gating and for failure-propagation (vectors 001-003), but no test file targets `cycle-runner.ts` for its own sake — the maintenance-logging behavior, the strict five-step ordering, and the config-threading facts (vectors 005-010, 012) are traceable to reading the source rather than to an existing assertion. `separation-of-concerns` passes: the file's own header comment states its role is to keep "the worker entry (`worker.ts`) pure glue," and it contains no business logic of its own — every decision (what to probe, how to alert, how to prune) lives in the collaborator it calls. `explicit-error-handling` passes: this file never swallows an error itself; `runCycle` and `runMaintenance` failures explicitly propagate (core-sweep-failure-propagates, maintenance-phase-failure-aborts-remainder), and every other collaborator's fail-soft contract is documented in that collaborator's own module. `error-recovery` passes: a failed cycle does not crash the host process — the caller (`scheduler.ts`'s `tick()`, external) catches and logs the rejection and retries on the next tick, while each collaborator this file depends on recovers transiently-failing calls (a peer, a provider, a webhook) independently. `graceful-degradation` passes: every optional dependency this file's collaborators reach — the peer roster, GlitchTip, PostHog, the heartbeat URL, the alert webhook — degrades to a no-op or a recorded-unreachable state rather than aborting the cycle when unset or unreachable. `health-observability` passes: the `[maintenance]` log line and the heartbeat ping are exactly the external-facing health signals this check calls for in a long-running background process. `idempotent-operations` passes: every write this file triggers on a retried (next-cycle) run is documented idempotent or non-duplicating by its own module — `rollupMetrics`-driven upserts, cutoff-keyed chunked pruning, an interval-gated snapshot, and a ping/flush that simply repeat with no side effect from repetition.
 

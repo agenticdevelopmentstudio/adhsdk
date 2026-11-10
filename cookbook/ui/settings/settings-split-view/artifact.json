@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a11f34ff-116c-47d6-bffa-edd0799cbcb2",
     "title": "Settings Split View",
-    "domain": "adhsdk://cookbook/ui/settings/settings-split-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -26,14 +25,14 @@
       "search"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/settings/settings-panel-list",
-      "adhsdk://cookbook/ui/settings/layout/panel-host-view",
-      "adhsdk://cookbook/ui/settings/layout/panel-scroll-view"
+      "a41760b2-4ffd-413b-970f-c0373c9bd3b6",
+      "faf4ec69-7b5c-44c2-a8c2-d7e81dc94ea8",
+      "45b6d470-4e58-4035-b1c7-e65dbe7716b9"
     ],
     "related": [
-      "adhsdk://cookbook/ui/settings/settings-panel-split",
-      "adhsdk://cookbook/ui/settings/settings-window",
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "ba8d9517-2528-4ae9-bc52-16046d68b126",
+      "7cac2263-94fe-47ec-ab1d-6cf5a12baf14",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [
       "https://developer.apple.com/design/human-interface-guidelines/split-views"
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9e423e6b607b8213",
+  "synced": "3089eabbbe9c8a0b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

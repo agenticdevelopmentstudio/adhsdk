@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "4af83bb1-0178-462a-b0fc-ae009b63133f",
     "title": "Personas",
-    "domain": "adhsdk://cookbook/adh/hub/personas",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -31,7 +30,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/navigation/htdv"
+      "faa2c3f3-1ff7-45fb-b6da-efed3cc1d451",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/04fe1298-3880-4584-8a4a-c7a538eb5193",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d65ed7a3-6125-4c9f-b3af-f3b26ad61dfb",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0d3aaa29-0ce3-4803-8f8a-a7023713b574",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/19648d85-adba-4f38-b513-a38ca58e9fb0",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/47563e88-307b-4eef-a63c-ddc18e85a945",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e48a04d7-c479-427d-9d8e-fe9e9b990c77"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/PersonasDataSource.swift (adhsdk)",
@@ -59,18 +64,12 @@
       "packages/web/packages/data/src/personas/__tests__/demo-preview.test.ts (adhsdk)",
       "packages/web/packages/data/src/personas/__tests__/fields.test.ts (adhsdk)",
       "packages/web/packages/data/src/personas/__tests__/personas.test.ts (adhsdk)",
-      "packages/web/packages/data/src/personas/__tests__/special-interests.test.ts (adhsdk)",
-      "agenticdevelopercookbook://guidelines/behavioral-requirements",
-      "agenticdevelopercookbook://guidelines/completeness",
-      "agenticdevelopercookbook://guidelines/cookbook-compliance",
-      "agenticdevelopercookbook://guidelines/cross-recipe-consistency",
-      "agenticdevelopercookbook://guidelines/source-fidelity",
-      "agenticdevelopercookbook://guidelines/template-conformance"
+      "packages/web/packages/data/src/personas/__tests__/special-interests.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3896aa8844c16959",
+  "synced": "e82b405de5cfbcc2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -89,7 +88,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

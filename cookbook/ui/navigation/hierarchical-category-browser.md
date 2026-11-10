@@ -1,7 +1,6 @@
 ---
 id: e36ff99d-0ebd-42ca-87f0-2881a8bfedea
 title: "Hierarchical Category Browser"
-domain: adhsdk://cookbook/ui/navigation/hierarchical-category-browser
 type: recipe
 version: 1.3.5
 status: review
@@ -22,18 +21,18 @@ tags:
   - navigation
   - master-detail
 ingredients:
-  - adhsdk://recipes/category-picker-dialog
+  - 88d69611-4a12-4777-9509-8af6c0626dc7
 depends-on:
-  - adhsdk://recipes/hierarchical-topic-detail
+  - 0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8
 related:
-  - adhsdk://recipes/hierarchical-topic-detail
-  - adhsdk://recipes/topic-detail
-  - adhsdk://recipes/category-picker-dialog
-  - adhsdk://recipes/list-chooser
-  - adhsdk://recipes/entity-chooser
-  - adhsdk://recipes/dialog
-  - adhsdk://recipes/dialog-actions
-  - adhsdk://recipes/alert-and-dialog
+  - 0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8
+  - 8fa7aaae-df62-44ea-b10c-182f3094ed9f
+  - 88d69611-4a12-4777-9509-8af6c0626dc7
+  - 40827b84-406e-4091-951b-9498b2f78253
+  - 79f7ed30-3193-49bc-856b-d7dd01303baa
+  - 972be0d0-a9f5-45cd-a23b-c8329410b3d1
+  - f679a77e-04f7-4e43-b898-6d78a637a760
+  - 550f00f7-bfb2-415e-9b15-bd5dce015500
 references: []
 approved-by: ""
 approved-date: ""
@@ -46,11 +45,11 @@ approved-date: ""
 The **Hierarchical Category Browser** is the shared rail every markdown surface
 that classifies its documents into a category hierarchy — the notebook today, and
 research — mounts as the leading levels of a
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))
 stack. It is a thin, category-specific layer over that substrate: HTDV owns the stack's
 chrome, deep linking, breadcrumb, disclosure and narrow-mode behavior (see
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
-and [Topic Detail](adhsdk://recipes/topic-detail) for that contract,
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))
+and Topic Detail ([adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f)) for that contract,
 which this recipe does not restate). What this recipe adds is everything that is TRUE OF
 **CATEGORIES** on top of it:
 
@@ -83,14 +82,14 @@ about the rail itself differs between them (see Design Decisions).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Category Picker | adhsdk://recipes/category-picker-dialog | The dialog behind BOTH place-picking gear actions — browses the folded forest and returns a place to file the selected category under. | yes | Move: `confirmLabel="Move"`, `allowRoot`, `rootLabel` = "Top level" or "Remove from “<parent>”" (see #integration-requirements/not-call-an-unfiling-a-rooting), `disabledIds` = the moved category + its own descendants. Also file: `confirmLabel="File"`, `initialSelectedId={null}`, NO `allowRoot` (a root is a category with no parents, so there is nothing to add), `disabledIds` = the category + its descendants + every parent it is ALREADY filed under. |
+| Category Picker | [adhsdk.ingredient.ui.blocks.category-picker-dialog](cookbook:88d69611-4a12-4777-9509-8af6c0626dc7) | The dialog behind BOTH place-picking gear actions — browses the folded forest and returns a place to file the selected category under. | yes | Move: `confirmLabel="Move"`, `allowRoot`, `rootLabel` = "Top level" or "Remove from “<parent>”" (see #integration-requirements/not-call-an-unfiling-a-rooting), `disabledIds` = the moved category + its own descendants. Also file: `confirmLabel="File"`, `initialSelectedId={null}`, NO `allowRoot` (a root is a category with no parents, so there is nothing to add), `disabledIds` = the category + its descendants + every parent it is ALREADY filed under. |
 
 The other three gear dialogs (Rename, Delete, and the one-field Add) are plain
 compositions of the shared `Dialog`/`Input`/`DialogActions`/`AlertModal`
 primitives with no dedicated recipe of their own — see
-[Dialog](adhsdk://recipes/dialog),
-[Dialog Actions](adhsdk://recipes/dialog-actions) and
-[Alert and Dialog](adhsdk://recipes/alert-and-dialog) for those.
+[adhsdk.ingredient.ui.components.overlays.dialog](cookbook:972be0d0-a9f5-45cd-a23b-c8329410b3d1),
+Dialog Actions ([adhsdk.ingredient.ui.components.overlays.dialog-actions](cookbook:f679a77e-04f7-4e43-b898-6d78a637a760)) and
+Alert and Dialog ([adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500)) for those.
 `useCategoryLevels` wires all four; this recipe documents the whole.
 
 ## Integration Requirements
@@ -116,7 +115,7 @@ primitives with no dedicated recipe of their own — see
   own `sortOrder`, then name — and MUST NOT re-sort. The root is the one exception
   (above) because it is the one level with no context to read an order from; deeper,
   the arriving order is the owner's, `buildCategoryTree` documents that it preserves
-  it, and the [Category Picker](adhsdk://recipes/category-picker-dialog)
+  it, and the Category Picker ([adhsdk.ingredient.ui.blocks.category-picker-dialog](cookbook:88d69611-4a12-4777-9509-8af6c0626dc7))
   browsing the same forest does not sort — so a rail
   that re-sorted would discard a deliberate ordering and disagree with the picker
   about the same subtree in the same session.
@@ -254,7 +253,7 @@ primitives with no dedicated recipe of their own — see
 
 The browser contributes N rail levels (N = the walked depth + 1) into an
 existing
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))
 stack; it draws no chrome of its own:
 
 ```
@@ -275,7 +274,7 @@ stack; it draws no chrome of its own:
 ```
 
 Narrow-mode drill-down, disclosure, and the breadcrumb are entirely HTDV's — see
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)'s
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))'s
 own Layout section.
 
 ## Shared State
@@ -405,7 +404,7 @@ own Layout section.
 - Consumers: `packages/web/packages/features/notebook/src/NotebookPane.tsx` (rail + note list, `itemNoun="notes"`) and `packages/web/packages/features/research/src/ResearchPane.tsx` (rail + document list, `itemNoun="documents"`), each supplying its own `rows` fetch, `idPrefix`, and `workspaceSlug`.
 - Demo: `local/ui-showcase/app/page.tsx` (Topic id `hierarchical-category-browser`) + the showcase source registry. The demo assembles the same `packages/web/packages/ui/src/blocks` primitives this hook composes — `buildCategoryTree`, `chainAfterRename`, `chainAfterMove`, `CategoryGearMenu`, `CategoryPickerDialog`, `CategoryRenameDialog`, `CategoryDeleteDialog` — against an in-memory `CategoryTreeNode[]` fixture, since `useCategoryLevels` itself reaches a real `taxonomyApi`/`markdownApi` the showcase has no backend for.
 - Responsive: verify via the ui-showcase demo at 375 / 768 / 1440 — the rail levels inherit
-  [Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)'s
+  Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))'s
   own disclosure/narrow-mode behavior; this recipe adds no layout of its own to verify beyond
   the gear menu and its dialogs at each width.
 - **SwiftUI**: Not applicable — web-only (platforms: typescript, web).
@@ -415,12 +414,12 @@ own Layout section.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/features/categories/src/useCategoryLevels.tsx` |
-| web | `packages/web/packages/ui/src/blocks/category-picker-dialog.tsx` |
-| web | `packages/web/packages/ui/src/blocks/category-gear-menu.tsx` |
-| web | `packages/web/packages/ui/src/blocks/category-tree.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/features/categories/src/useCategoryLevels.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/category-picker-dialog.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/category-gear-menu.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/category-tree.ts` | unverified |
 
 ## Design Decisions
 
@@ -457,7 +456,7 @@ own Layout section.
   **Approved**: pending
 - **Decision**: The gear reads its target from a plain prop, every render.
   **Rationale**: `CategoryGearMenu` is deliberately dumb (see
-  [Category Picker](adhsdk://recipes/category-picker-dialog)'s
+  Category Picker ([adhsdk.ingredient.ui.blocks.category-picker-dialog](cookbook:88d69611-4a12-4777-9509-8af6c0626dc7))'s
   sibling components) and the hook feeds it `selectedNode`/`levelParent`
   recomputed in the SAME render that builds `selectedId` — because HTDV's
   `levelsKey` cache ignores `ReactNode` props, a gear that closed over a stale
@@ -480,7 +479,7 @@ own Layout section.
   is the owner's own arrangement, and `buildCategoryTree` promises to
   preserve it. Sorting everywhere was one line shorter and made the rail
   contradict both that promise and the
-  [Category Picker](adhsdk://recipes/category-picker-dialog)
+  Category Picker ([adhsdk.ingredient.ui.blocks.category-picker-dialog](cookbook:88d69611-4a12-4777-9509-8af6c0626dc7))
   rendering the same subtree unsorted beside it.
   **Approved**: pending
 - **Decision**: A move writes the new parent edge before removing the old one
@@ -501,15 +500,15 @@ own Layout section.
 
 | Check | Status | Category |
 |---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
-| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 Passed rows rest on the WAI-ARIA tree/listbox/treeitem/option roles, `aria-*`
 attributes, and roving-tabindex keyboard handling in

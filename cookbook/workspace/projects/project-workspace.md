@@ -1,7 +1,6 @@
 ---
 id: 33086772-2d36-49f5-8e1d-725163d7ce8f
 title: "Project Workspace"
-domain: adhsdk://cookbook/workspace/projects/project-workspace
 type: ingredient
 version: 1.2.1
 status: review
@@ -24,14 +23,14 @@ tags:
   - caching
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/project-database
-  - adhsdk://cookbook/workspace/projects/project-database-layout
-  - adhsdk://cookbook/workspace/projects/git-repo
-  - adhsdk://cookbook/workspace/projects/project-checkout
-  - adhsdk://cookbook/workspace/projects/branch-controller
-  - adhsdk://cookbook/workspace/projects/project-controller
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
-  - adhsdk://cookbook/foundation/git/git-client
+  - c212ea39-10e7-4146-89dd-36edb3b3455a
+  - ded9b397-958d-437d-8235-48ef85ae7386
+  - 1463e7a2-e290-4b8c-8643-df9462a758e6
+  - 7ae3de90-35f2-415c-93c7-cf579689e438
+  - 92f11498-2cb2-4b04-92b9-560d9f2de6ee
+  - 5bfadad5-c93b-432a-807e-04be57ff16b4
+  - 55a394e6-9934-404b-941d-25bebbf71378
+  - 779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectWorkspaceTabsTests.swift (adhsdk)
@@ -281,7 +280,7 @@ renders itself.
   project directories from one instance are not serialized against
   calls from another — but ordering that race, when it matters, is the
   project controller's job (see
-  `adhsdk://cookbook/workspace/projects/project-controller`),
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)),
   not this file's; the workspace itself makes no ordering claim across
   instances.
 - **Error states**: Every database-backed operation except reading
@@ -299,7 +298,7 @@ renders itself.
   git-status-provider lookup hands out an object built on the project's
   git client, but the git subprocess calls that object goes on to make
   are that object's own concern, not this file's (see
-  `adhsdk://cookbook/foundation/git/git-client`).
+  [adhsdk.ingredient.foundation.git.git-client](cookbook:779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344)).
 - **Cancellation and timeouts**: No operation on the workspace is
   asynchronous; every operation here is a synchronous database call, a
   synchronous cache lookup, or a pure computation, so there is no
@@ -374,8 +373,8 @@ Not applicable: this file makes no analytics or event-tracking call.
 - **Storage**: Everything persisted here (tabs, pane state, project
   settings, extra directories) is written to the one database this
   project was constructed with, scoped by the repository's id; see
-  `adhsdk://cookbook/workspace/projects/project-database` and
-  `adhsdk://cookbook/workspace/projects/project-database-layout`
+  [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a) and
+  [adhsdk.ingredient.workspace.projects.project-database-layout](cookbook:ded9b397-958d-437d-8235-48ef85ae7386)
   for that store's own durability guarantees. The cache directory names,
   but does not itself populate, a filesystem location beside the
   database.
@@ -436,7 +435,7 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
   scope this object to on the web; a browser-hosted project workspace would
   keep `repo`/tabs/pane-state/settings as component state populated from and
   persisted through a server-side API standing in for `ProjectDatabase` (see
-  `adhsdk://cookbook/workspace/projects/project-database`), and would
+  [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)), and would
   reproduce the two weak, directory-keyed caches with a JavaScript `WeakMap`
   (optionally paired with `FinalizationRegistry` to detect eviction) keyed by
   a normalized directory identifier, since JavaScript has no
@@ -447,13 +446,13 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
   and directory-cache logic unchanged; it would still need its own
   `FileBrowserDirectories`/`GitStatusProvider`-equivalent collaborators, and,
   per the multi-checkout note in
-  `adhsdk://cookbook/workspace/projects/project-controller`, iOS
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4), iOS
   sandboxing makes exposing more than one linked worktree under one project
   an unusual arrangement to design a browser for.
 - **WinUI 3**: Port `ProjectWorkspace` as a plain C# class with no interface
   requiring thread-affinity of its own, touched only from the UI thread
   (`DispatcherQueue`) by convention — the same discipline
-  `adhsdk://cookbook/workspace/projects/branch-controller`'s WinUI
+  [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)'s WinUI
   port assumes for `@MainActor`. Reproduce the two `WeakCache`s with a
   `Dictionary<string, WeakReference<T>>` (or `ConditionalWeakTable`) keyed by
   a normalized, reparse-point-resolved path (`Path.GetFullPath`/
@@ -466,17 +465,17 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
   `JSONEncoder`/`JSONDecoder`. Route every persisted accessor
   (`storedTabs`/`saveTabs`, `paneState`/`setPaneState`, `setting`/
   `setSetting`, `loadProjectDirectories`/`saveProjectDirectories`) through
-  the same SQLite-backed port `adhsdk://cookbook/workspace/projects/project-database`
-  and `adhsdk://cookbook/workspace/projects/project-database-layout`
+  the same SQLite-backed port [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)
+  and [adhsdk.ingredient.workspace.projects.project-database-layout](cookbook:ded9b397-958d-437d-8235-48ef85ae7386)
   describe, keeping this file's swallow-and-log convention on every path
   except the one flagged as a pending decision above.
 - **confines-to-ui-thread** (scope): The workspace has no thread-safety guarantee of its own; every stored property and method is confined to the UI thread by that declaration alone.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift` | unverified |
 
 ## Design Decisions
 
@@ -564,13 +563,13 @@ back to the default' are the same state and neither accumulates"
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | partial | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 Notes: separation-of-concerns passes because `ProjectWorkspace` owns exactly
 the tab tree, the pane-state/setting bag, the extra-directory list, and the

@@ -1,7 +1,6 @@
 ---
 id: c1787e74-2485-4d7b-a219-feb4c07cf97c
 title: "Text Edit View"
-domain: adhsdk://cookbook/ui/settings/rows/text-edit-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - text-input
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/rows/secure-text-edit-view
+  - 2e0bf51e-905d-476d-9c0c-48465174ba59
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +36,7 @@ field through an overridable construction point so a variant can substitute
 a different control type while inheriting everything else — the row layout,
 the theme-driven font/color styling, the edit-completion commit path, and
 the view-model sync. The Secure Text Edit View (documented separately at
-`adhsdk://cookbook/ui/settings/rows/secure-text-edit-view`) is the
+[adhsdk.ingredient.ui.settings.rows.secure-text-edit-view](cookbook:2e0bf51e-905d-476d-9c0c-48465174ba59)) is the
 one variant that exists today, overriding only that construction point to
 return a secure text-entry control. This recipe documents the Text Edit View
 itself: the behavior every row built from it — plain or secure — inherits.
@@ -348,9 +347,9 @@ Not applicable: the component performs no logging.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift` | unverified |
 
 ## Design Decisions
 
@@ -432,13 +431,13 @@ Not applicable: the component performs no logging.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | Platform Compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `native-controls-preference` and `platform-design-language` rest on
 `textField` being an unmodified `NSTextField` with AppKit's default bezel

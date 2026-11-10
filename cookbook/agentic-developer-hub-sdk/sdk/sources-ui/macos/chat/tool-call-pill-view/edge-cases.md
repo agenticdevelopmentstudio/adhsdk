@@ -1,0 +1,7 @@
+
+- **Empty command name**: If `invocation.commandName` is an empty string, `title(for:)` returns the empty string unless the result failed with a non-empty message, in which case the text becomes `" — <message>"` (a leading separator with no name before it). The pill still renders its status color, border, and padding; only the text content is empty or leads with the separator.
+- **Nil error message with failed result**: If `result.ok` is `false` but `result.errorMessage` is `nil`, the component displays only the command name (no error message appended). This is a MUST per requirement display-error-on-failure.
+- **Very long error message**: If the error message is very long, the combined "name — message" text is truncated at the tail with an ellipsis. The full text is not available via tooltip or other means (see **Design Decisions**: No Tooltip for Truncated Text).
+- **Theme palette deallocated**: The observer closure captures `self` weakly (`[weak self] palette in self?.applyTheme(palette)` in the reference implementation), so if the pill is deallocated while the observer is still registered, the closure becomes a no-op via optional chaining rather than crashing or retaining the view.
+- **Multiple theme changes in rapid succession**: Each theme change triggers a full recolor via `applyTheme(_:)`. No debouncing or batching is implemented; rapid theme changes apply each update immediately.
+

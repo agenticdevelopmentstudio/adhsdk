@@ -1,7 +1,6 @@
 ---
 id: 60b5767d-3cf5-4373-b2fc-074aa6b62fec
 title: "Webview Panel"
-domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,8 +20,8 @@ tags:
   - webview
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-view
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 7152ec0d-01a9-433d-b1fd-1ac708400f40
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -271,9 +270,9 @@ Subsystem: `{{bundle_id}}` | Category: `WebviewPanel`
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift` | unverified |
 
 ## Design Decisions
 
@@ -321,12 +320,12 @@ Subsystem: `{{bundle_id}}` | Category: `WebviewPanel`
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
 
 These all rest on this file's own code: the theme-tracking closure installed in `loadView()` (`platform-theming`), the `responds(to:)` fallback around the private occlusion selector and the drop-not-crash handling of unbridgeable `post`/`setState` values (`graceful-degradation`), the `guard !isDisposed` early return in `dispose()` (`idempotent-operations`), and the postability and JSON-validity checks applied to every value before it reaches WebKit or storage (`input-sanitization`).
 

@@ -1,5 +1,5 @@
 
-This file's only literal strings are hardcoded English `console.log`/`console.error` messages (operator-facing, container stdout) and the two alert `detail` strings assembled in `retire-unclaimed-monitors`' `why` callback (`its <platform> project "<name>" no longer exists`, `no deploy project serves <host> any more`) — all routed through no localization mechanism, all consumed by an operator or by `notifyIssueAlert`'s own Slack/Discord-rendering (external, documented in the [Status Server Monitor Alerts](adhsdk://cookbook/status/service/monitor/alerts) recipe), never by an end user.
+This file's only literal strings are hardcoded English `console.log`/`console.error` messages (operator-facing, container stdout) and the two alert `detail` strings assembled in `retire-unclaimed-monitors`' `why` callback (`its <platform> project "<name>" no longer exists`, `no deploy project serves <host> any more`) — all routed through no localization mechanism, all consumed by an operator or by `notifyIssueAlert`'s own Slack/Discord-rendering (external, documented in the Status Server Monitor Alerts ([adhsdk.ingredient.status.service.monitor.alerts](cookbook:1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9)) recipe), never by an end user.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|

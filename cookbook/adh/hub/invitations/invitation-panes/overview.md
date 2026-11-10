@@ -3,12 +3,12 @@ This is the group of three sibling panes covering one stage each of the Invitati
 workflow: incoming requests, pending users awaiting an invite, and sent invites (the
 Requests pane, the Pending Users pane, and the Invites pane, respectively). Each is
 built on a shared master-detail list-with-details layout
-(adhsdk://recipes/list-with-details-pane) configured with pane-specific
+([adhsdk.recipe.ui.blocks.list-with-details-pane](cookbook:6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73)) configured with pane-specific
 columns, an empty label, a storage key, and a shared "Admin notes" toolbar action. The
 Pending Users pane additionally offers "Send invitation" and "Add users" actions that
 open the send-invitation modal
-(adhsdk://cookbook/adh/hub/invitations/send-invitation-modal) and the add-users
-modal (adhsdk://recipes/add-users-modal).
+([adhsdk.recipe.adh.hub.invitations.send-invitation-modal](cookbook:633ab7e7-828e-4e7d-b2dc-9ba189536b6e)) and the add-users
+modal ([adhsdk.recipe.ui.blocks.add-users-modal](cookbook:e1859aa2-d0c4-4d9a-b926-203dd5fbbca3)).
 
 None of the three panes fetch data, persist anything, or own the notes/history UI:
 rows, the delete/send/add callbacks, and the notes render-prop slots (a

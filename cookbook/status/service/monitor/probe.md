@@ -1,7 +1,6 @@
 ---
 id: 1094926a-e89e-416d-aa62-8bfd42afa1b4
 title: "Status Server Monitor Probe"
-domain: adhsdk://cookbook/status/service/monitor/probe
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,12 +21,12 @@ tags:
   - http
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
 related:
-  - adhsdk://cookbook/status/service/monitor/health
-  - adhsdk://cookbook/status/service/monitor/endpoint-kinds
+  - 2871e97f-f971-46fe-a4d2-de57ad5c94c5
+  - 990362d5-9c3a-4263-828f-a174b2dd2134
 references:
   - packages/web/packages/status-server/src/monitor/probe.ts (adhsdk)
   - packages/web/packages/status-server/test/probe.test.ts (adhsdk)
@@ -197,9 +196,9 @@ This is the only log line this file emits directly; every other outcome (DNS fai
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/probe.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/probe.ts` | unverified |
 
 ## Design Decisions
 
@@ -223,13 +222,13 @@ This is the only log line this file emits directly; every other outcome (DNS fai
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
 
 `unit-test-coverage` is `partial`: `probe.test.ts` gives `probe` five assertions covering a healthy 2xx, a 5xx, a CNAME-only default-on resolution, a narrowed DNS-check-type failure, and every DNS check disabled — but it exercises none of the HTTP-body path (`expectBody`, the truncation-annotated marker error, the `isHealthKind` JSON-body branch reached through `classify`), none of the whole-leg timeout or fetch-rejection branch, none of the malformed-`svc.url` hostname-parse-failure path, and no test targets `probeEndpoints`'s bounded concurrency or order-preservation at all. `separation-of-concerns` passes: this file's only responsibility is producing one `Probe` result per endpoint; it delegates the verdict computation to `classify` (`health.ts`, external) and performs no persistence of its own, per the header comment's explicit design goal of staying "free of any DB import." `explicit-error-handling` passes: every failure path this file can take — DNS failure, non-2xx status, fetch rejection, timeout, body-read failure — is caught explicitly and converted into a documented field on the returned `Probe`, with no unhandled promise rejection or silently dropped error anywhere in the file. `timeout-handling` passes: both the DNS step and the HTTP step are bounded by explicit, configurable deadlines (`dnsTimeoutMs`, `timeoutMs`), each defaulting to a named constant, with the fetch-timeout handle explicitly cleared in a `finally` block. `fault-tolerance` passes: a malformed `svc.url`, an unreachable host, a black-holed DNS resolver, a huge or endless response body, and a body that fails mid-read are all absorbed into a `"down"` (or degraded/healthy, as appropriate) `Probe` result rather than crashing the caller or leaving a promise unsettled. `timeout-configuration` (Access Patterns) passes: every network request this file issues — the DNS lookup and the HTTP fetch — has an explicit, caller-overridable timeout; none can wait indefinitely. `retry-with-backoff` (Access Patterns) is `failed`, stated plainly rather than smoothed over: this file makes exactly one DNS attempt and one HTTP attempt per `probe` call, with no retry, no backoff, and no jitter of any kind on either leg; a single transient DNS hiccup or connection reset is reported as `"down"` for that cycle with no attempt to retry within the same call — the next scheduled monitor cycle (external to this file, in `sync.ts`/the scheduler) is the only retry this design provides.
 

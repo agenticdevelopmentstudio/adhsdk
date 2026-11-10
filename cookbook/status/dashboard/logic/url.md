@@ -1,7 +1,6 @@
 ---
 id: 9ab21212-c31d-4a4a-b563-2a2666eec03d
 title: "Status Web URL Host"
-domain: adhsdk://cookbook/status/dashboard/logic/url
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,9 +17,9 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/session-client
-  - adhsdk://cookbook/status/dashboard/logic/row-detail
-  - adhsdk://cookbook/status/dashboard/logic/stale-monitors
+  - 5935b39d-9451-48c1-8b99-bd510d66d1a0
+  - d76fe59c-9633-4d9f-82c7-4091c5e7f54e
+  - 9d2d3132-0853-4e3a-8e81-503356e4585d
 references:
   - https://url.spec.whatwg.org/#dom-url-host
 approved-by: ""
@@ -152,9 +151,9 @@ Not applicable: `hostOf` has no logging calls. The caught parse error is turned 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/url.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/url.ts` | unverified |
 
 ## Design Decisions
 
@@ -174,10 +173,10 @@ Not applicable: `hostOf` has no logging calls. The caught parse error is turned 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of concerns.** The module is one pure parsing function with no React, DOM or I/O. Presentation choices, such as empty-label fallbacks and lowercasing, stay with the calling components.
 

@@ -1,7 +1,6 @@
 ---
 id: d7171e41-4638-4243-9821-7a46cecf15c2
 title: "Project Tab Reconciler"
-domain: adhsdk://cookbook/workspace/projects/project-tab-reconciler
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,9 +22,9 @@ tags:
   - pure-function
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/project-controller
-  - adhsdk://cookbook/workspace/projects/project-checkout
-  - adhsdk://cookbook/workspace/projects/project-database-layout
+  - 5bfadad5-c93b-432a-807e-04be57ff16b4
+  - 7ae3de90-35f2-415c-93c7-cf579689e438
+  - ded9b397-958d-437d-8235-48ef85ae7386
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectTabReconcilerTests.swift (adhsdk)
@@ -384,9 +383,9 @@ caller is the one that acts on the plan this file returns.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift` | unverified |
 
 ## Design Decisions
 
@@ -454,11 +453,11 @@ longer exists (`ProjectTabReconciler.swift`).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 Notes: separation-of-concerns passes because `ProjectTabReconciler.swift`
 does exactly one thing — decide keep/add/drop from given state — and

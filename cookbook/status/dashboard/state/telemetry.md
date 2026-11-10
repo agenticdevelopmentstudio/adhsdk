@@ -1,7 +1,6 @@
 ---
 id: 9ff57831-bdf9-47ad-b009-bcc1de59d5f4
 title: "Telemetry State"
-domain: adhsdk://cookbook/status/dashboard/state/telemetry
 type: ingredient
 version: 1.2.1
 status: review
@@ -18,7 +17,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/telemetry
+  - a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f
 references: []
 approved-by: ""
 approved-date: ""
@@ -65,7 +64,7 @@ This is the source variant currently wired in the composition root; an alternati
 
 - **live-request**: The live source's read MUST issue one request to `/telemetry` with no request options (a `GET` to `<basePath>/telemetry`).
 - **live-http-error**: A non-2xx response MUST make the live source's read reject with an error whose message is `telemetry <status>` (for example `telemetry 502`).
-- **live-body-cast**: A 2xx response body MUST be parsed as JSON and returned as a snapshot object by cast, with no shape validation; a body that is not JSON rejects the read with the JSON parse error. The response shape is owned by the backend `/telemetry` route (see [Status Server Telemetry](adhsdk://cookbook/status/service/telemetry)).
+- **live-body-cast**: A 2xx response body MUST be parsed as JSON and returned as a snapshot object by cast, with no shape validation; a body that is not JSON rejects the read with the JSON parse error. The response shape is owned by the backend `/telemetry` route (see Status Server Telemetry ([adhsdk.ingredient.status.service.telemetry](cookbook:a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f))).
 
 ### Cache hydration
 
@@ -200,9 +199,9 @@ Not applicable: the source contains no log calls; the cache adapter swallows sto
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-telemetry.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-telemetry.ts` | unverified |
 
 ## Design Decisions
 
@@ -234,12 +233,12 @@ Not applicable: the source contains no log calls; the cache adapter swallows sto
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | failed | best-practices |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | performance |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | partial | reliability |
-| [secure-data-storage](agenticdevelopercookbook://compliance/privacy-and-data#secure-data-storage) | partial | privacy-and-data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | best-practices |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | reliability |
+| [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | partial | privacy-and-data |
 
 The hook depends only on the source and cache ports; transport, persistence and backend choice live in separate adapters composed in `telemetry/client.ts`. `parseSnapshot` has direct unit tests in `local-cache.test.ts` (null, empty, malformed JSON, wrong shapes, round trip), but the hook itself, `liveSource` and the `localCache` I/O wrapper have none, hence partial. Error handling fails the check because the hook discards the query error entirely: a source that never answers looks like an empty, healthy snapshot, and storage failures are swallowed without a log. Caching is deliberate: one shared react-query key, a 60-second poll, and a persisted last-known snapshot for instant paint. Degradation is partial because stale or empty data is served during an outage without any staleness indicator. Storage is partial because error titles, culprits and permalinks sit unencrypted in `localStorage` with no expiry.
 

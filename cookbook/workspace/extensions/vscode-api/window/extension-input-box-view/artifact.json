@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b85dc186-31e9-472b-99ea-2c097fc926c8",
     "title": "Extension Input Box",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view"
+      "5c2d7315-314e-4343-93fd-f3aa1a0c803e"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0f2b96a3f2556445",
+  "synced": "17b842f9af294984",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

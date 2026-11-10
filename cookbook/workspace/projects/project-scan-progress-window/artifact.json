@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "46e79f87-0dbb-4bd5-b11c-bd65ae0087a9",
     "title": "Project Scan Progress Window",
-    "domain": "adhsdk://cookbook/workspace/projects/project-scan-progress-window",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/projects/git-repo-scanner"
+      "3bec9b27-a9e3-4716-b516-688cc7f5a1c5"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift (adhsdk)",
@@ -35,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "70829c2d1f74d4e3",
+  "synced": "bb178b4c482476e7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

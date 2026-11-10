@@ -1,7 +1,6 @@
 ---
 id: 9d2d3132-0853-4e3a-8e81-503356e4585d
 title: "Stale Monitors"
-domain: adhsdk://cookbook/status/dashboard/logic/stale-monitors
 type: ingredient
 version: 1.0.3
 status: review
@@ -17,9 +16,9 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/logic/live-types
+  - 41f840c1-ea34-489d-9b9f-a61dec2a9402
 related:
-  - adhsdk://cookbook/status/dashboard/logic/board-staleness
+  - 01f6f7b6-4bc5-4f35-a46a-1e80fe470097
 references: []
 approved-by: ""
 approved-date: ""
@@ -33,7 +32,7 @@ approved-date: ""
 
 Per the module header, this is "the AMBIGUOUS half of ghost cleanup, and only that half". A monitor whose project or host provably stopped existing is deleted by the backend cycle (`retireUnclaimedMonitors` in the status server's `src/monitor/sync`) and never reaches this function. What remains is a monitor still claimed by a live deploy project but DOWN for a week: that may be a site nobody turned off or an outage nobody fixed, so it is surfaced for the operator to decide rather than removed. DNS resolution selects nothing in either direction; it is carried through only so the UI can word its confirm prompt.
 
-The input rows are `LiveServiceDTO` values from the live snapshot ([Live Types](adhsdk://cookbook/status/dashboard/logic/live-types)). The sole production call site is the `StaleMonitorsBanner` component, which calls the function with a day-floored clock and turns each row into a retire button backed by `deleteEndpoint(slug)`.
+The input rows are `LiveServiceDTO` values from the live snapshot (Live Types ([adhsdk.ingredient.status.dashboard.logic.live-types](cookbook:41f840c1-ea34-489d-9b9f-a61dec2a9402))). The sole production call site is the `StaleMonitorsBanner` component, which calls the function with a day-floored clock and turns each row into a retire button backed by `deleteEndpoint(slug)`.
 
 ## Behavioral Requirements
 
@@ -176,12 +175,6 @@ Not applicable: the module makes no log calls.
 - **AppKit / UIKit**: Use the same pure Swift function as the SwiftUI port, placed in a shared framework target since nothing in it is UI-bound. Drive the day-floored `nowMs` from a `Timer` or the app's clock and re-run on snapshot change.
 - **WinUI 3**: Port as a `public static class StaleMonitors` with `public const long StaleMonitorMs = 7L * 24 * 60 * 60 * 1000;`, a `public sealed record StaleMonitor(string Slug, string Name, string Url, string? Environment, string Detail, bool DnsOk, string DownSince, long AgeMs);` and `public static IReadOnlyList<StaleMonitor> Select(IReadOnlyList<LiveServiceDto> services, long nowMs, long thresholdMs = StaleMonitorMs)`. Parse with `DateTimeOffset.TryParse(s.DownSince, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)` and skip on `false`, since .NET has no NaN parse result; compute `nowMs - t.ToUnixTimeMilliseconds()`. Use LINQ `OrderByDescending(m => m.AgeMs)`, which is stable like the source (`List<T>.Sort` is not). Map the empty-string environment with `string.IsNullOrEmpty(env) ? null : env` and the detail with `s.Error ?? (s.StatusCode is int c ? $"HTTP {c}" : "down")`. The DTOs deserialise with `System.Text.Json` (camelCase naming policy). The view model that owns the banner would hold the result in an `ObservableCollection<StaleMonitor>` refreshed when the snapshot changes or a `DispatcherQueueTimer` crosses a day boundary, raising `INotifyPropertyChanged`; the function itself stays synchronous with no `Task`.
 
-## Reference Implementations
-
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/stale-monitors.ts` |
-
 ## Design Decisions
 
 **Decision**: Offer only down-for-a-week monitors that the backend has not already deleted, and never delete automatically.
@@ -212,11 +205,11 @@ Not applicable: the module makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of concerns.** The module owns only the selection rule; rendering, confirmation and deletion live in `StaleMonitorsBanner` and the API client.
 

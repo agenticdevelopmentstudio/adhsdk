@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "b0ce8cbb-31ac-425a-889c-68e699d24578",
+    "title": "Table",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A semantic table for displaying rows of data under labeled columns, with a required caption identifying the data and optional visual caption display.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "table",
+      "data-display",
+      "accessibility"
+    ],
+    "depends-on": [],
+    "related": [
+      "d04eef56-2dbf-4148-964b-c095f242227f"
+    ],
+    "references": [
+      "https://www.w3.org/WAI/tutorials/tables/",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-caption-element",
+      "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/th#attr-scope"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "370ffc4d180908c1",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

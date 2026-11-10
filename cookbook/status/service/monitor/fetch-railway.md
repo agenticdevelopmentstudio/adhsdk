@@ -1,7 +1,6 @@
 ---
 id: 6a84b15a-5e4e-4b1c-9d73-0ae8a8b602af
 title: "Status Server Monitor Fetch Railway"
-domain: adhsdk://cookbook/status/service/monitor/fetch-railway
 type: ingredient
 version: 1.0.3
 status: review
@@ -22,14 +21,14 @@ tags:
   - fetcher
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
-  - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202
 related:
-  - adhsdk://cookbook/status/service/monitor/fetch-cloudflare
-  - adhsdk://cookbook/status/service/monitor/deploy-status
-  - adhsdk://cookbook/status/service/monitor/alerts
-  - adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
+  - b3e2495c-5478-411c-80d7-9eefc2f2e297
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
+  - 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
+  - e029def6-7d5d-4e52-b565-e2a6612179bb
 references:
   - packages/web/packages/status-server/src/monitor/fetch-railway.ts (adhsdk)
   - packages/web/packages/status-server/test/railway-deployments.test.ts (adhsdk)
@@ -249,9 +248,9 @@ A fully successful poll (every project fetched, no 429, budget not exhausted, no
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-railway.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/fetch-railway.ts` | unverified |
 
 ## Design Decisions
 
@@ -287,13 +286,13 @@ A fully successful poll (every project fetched, no 429, budget not exhausted, no
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | passed | Access Patterns |
-| [rate-limit-handling](agenticdevelopercookbook://compliance/access-patterns#rate-limit-handling) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
+| [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `unit-test-coverage` passes: `railway-deployments.test.ts` exercises the no-op precondition, both branches of the blind-spot-vs-empty-account distinction, the happy-path listing-then-fetch, the configured-projects fallback, the budget-exhaustion partial, the environment-fetch-failure-drops-everything cases (GraphQL error and non-200), the unresolvable-environment row drop, the pinned page size, the full-page log, the genuinely-empty-environments case, the listing-spends-the-budget contract, and all four retry-vs-no-retry branches; `deploy-error-shaping.test.ts` exercises `buildLogTail`, `buildLogFull`, and both build-log fetchers' permanent-sentinel and transient-null branches; `provider-cooldown.test.ts` exercises the cross-call cooldown gate. `separation-of-concerns` passes: this file owns exactly one concern (fetching and mapping Railway deploys, and fetching/shaping Railway build logs); it delegates the GraphQL transport and its own 429 side-effect to `gqlPost`, project enumeration to `listRailwayProjects`, bounded fan-out to `mapLimit`, cooldown state to the shared registry, phase derivation to `railwayPhases`, and persistence entirely to its callers, none of which this file reimplements. `explicit-error-handling` passes: every failure path (a non-ok or GraphQL-error environments/deployments/buildLogs response, a thrown fetch, an unparseable `createdAt`, an unresolvable `environmentId`) is caught and logged with a distinguishing message, and is reflected in the returned `ok`/`deploys` shape or the `null`/`RAILWAY_NO_BUILD_TEXT` return value — nothing fails silently with no trace. `timeout-configuration` passes: the listing call, every per-project call, and every build-log call carry an `AbortController` deadline derived from the overall budget or the caller's own signal. `rate-limit-handling` passes: `fetchRailwayDeployments` checks `rateLimitedUntil("railway")` before doing any work, and the vendored `gqlPost` every one of its GraphQL calls goes through notes a 429 via `noteRateLimited`, honoring `Retry-After`. `retry-with-backoff` fails as literally written: this file DOES retry the listing call and each project's own poll once (see Design Decisions), but that retry fires immediately with no delay and no jitter — it is not exponential backoff, and no failure OTHER than our own timeout (a real error answer, or a build-log fetch failure) is retried at all within this function; the check's own wording requires "exponential backoff and jitter," which this file's one-retry-on-timeout-only design deliberately does not implement, for the reason recorded in Design Decisions above. `graceful-degradation` passes: a missing token is a full no-op rather than an error, a partial poll keeps and returns whatever rows were successfully fetched rather than discarding them, an unresolvable per-deployment field drops only that one deployment rather than the whole project, and every failure mode resolves to a well-formed `{ ok, deploys }` or `string | null` value rather than throwing out of an exported function.
 

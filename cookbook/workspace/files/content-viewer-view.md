@@ -1,7 +1,6 @@
 ---
 id: 081703b7-036f-4fff-b580-d5dc9e5342d2
 title: "File Content Viewer"
-domain: adhsdk://cookbook/workspace/files/content-viewer-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,8 +21,8 @@ tags:
   - metadata
   - placeholder
 depends-on:
-  - adhsdk://cookbook/workspace/files/file-tree-view
-  - adhsdk://cookbook/workspace/files/file-browser-view
+  - b307116d-3ab8-422a-b031-885710e11e70
+  - ab6d7655-9476-4318-8c36-f431686e2d23
 related: []
 references: []
 approved-by: ""
@@ -156,8 +155,8 @@ This component is the detail pane of a file browser: it renders a placeholder me
 - **Null input — no selection**: `selectedNode == nil` renders the placeholder only; no grid, header, or divider appears. MUST (see `show-placeholder-without-selection`).
 - **Null input — no file size**: `node.fileSize == nil` (always true for directories, and possible for a file whose attributes read failed upstream) omits the "Size:" row entirely rather than showing a placeholder value. MUST (see `grid-size-row-conditional`).
 - **Null input — no modification date**: `node.modificationDate == nil` omits the "Modified:" row entirely. MUST (see `grid-modified-row-conditional`).
-- **Null input — no children**: `node.children == nil` omits the "Items:" row entirely. Per `adhsdk://cookbook/workspace/files/file-tree-view`'s Design Decision on `FileTreeNode`'s children semantics, `nil` covers every file, every package, and any directory that has already been read and found to have no children; `FileTreeNode` deliberately reserves an empty array (`[]`) for a directory whose children have not been read yet (see the next edge case). MUST (see `grid-items-row-conditional`).
-- **Boundary — children not yet loaded**: `node.children == []` (an empty, non-`nil` array — per `adhsdk://cookbook/workspace/files/file-tree-view`, a directory whose children have not been read yet) still satisfies `node.children != nil`, so the "Items:" row is shown with value "0" — indistinguishable, from this view alone, from a directory that was read and genuinely has zero children. MUST (see `grid-items-row-conditional`).
+- **Null input — no children**: `node.children == nil` omits the "Items:" row entirely. Per [adhsdk.ingredient.workspace.files.file-tree-view](cookbook:b307116d-3ab8-422a-b031-885710e11e70)'s Design Decision on `FileTreeNode`'s children semantics, `nil` covers every file, every package, and any directory that has already been read and found to have no children; `FileTreeNode` deliberately reserves an empty array (`[]`) for a directory whose children have not been read yet (see the next edge case). MUST (see `grid-items-row-conditional`).
+- **Boundary — children not yet loaded**: `node.children == []` (an empty, non-`nil` array — per [adhsdk.ingredient.workspace.files.file-tree-view](cookbook:b307116d-3ab8-422a-b031-885710e11e70), a directory whose children have not been read yet) still satisfies `node.children != nil`, so the "Items:" row is shown with value "0" — indistinguishable, from this view alone, from a directory that was read and genuinely has zero children. MUST (see `grid-items-row-conditional`).
 - **Empty input — no extension**: A file with an empty `pathExtension` omits the "Extension:" row and reports the type description as the literal "File" rather than "` File"` with a blank extension. MUST (see `grid-extension-row-conditional`, `type-description-fallback-extension`).
 - **Boundary — very long name**: `node.name` longer than fits two lines is clipped to 2 lines with default (tail) truncation, since no other truncation mode is set — unlike this pane's own Path row, which allows 3 lines before truncating, also with the default tail mode. MUST.
 - **Boundary — very long path**: `node.url.path` longer than fits 3 lines is clipped to 3 lines with default tail truncation, but because that value's text remains selectable, the full untruncated string remains selectable and copyable regardless of what is visually clipped. MUST (see `grid-path-line-limit`, `grid-path-value-selectable`).
@@ -235,9 +234,9 @@ Not applicable: no logging call appears anywhere in this component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/ContentViewerView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/ContentViewerView.swift` | unverified |
 
 ## Design Decisions
 
@@ -269,14 +268,14 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
-| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
+| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | passed | Internationalization |
 
 The accessibility statuses are partial because this view relies entirely on SwiftUI's default `Text`/`Image` accessibility behavior — it sets no custom label, trait, or accessibility notification of its own, including no explicit notification when the selection changes (see the Accessibility section's Announce state changes item). Dynamic-type-support is partial because text scales with the theme's own `sizeScale` preference rather than the system's native Dynamic Type category, and the two icon sizes do not scale with either. `no-hardcoded-strings` failed because the computed type description strings (`Directory`, `Package`, the per-extension names, and the `<EXTENSION> File` fallback — see Localization) are `String` values passed to `Text(_:)` with no localization lookup; the seven fixed grid/placeholder labels are literals passed directly to `Text("…")`, which SwiftUI does look up as a `LocalizedStringKey`. The internationalization passes hold because every string is plain Unicode `Text`, and the grid's leading/trailing alignment mirrors automatically for right-to-left locales.
 

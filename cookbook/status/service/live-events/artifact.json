@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "635cbbe4-a8e1-4ae1-a8a5-437f5bba27a6",
     "title": "Status Server Live",
-    "domain": "adhsdk://cookbook/status/service/live-events",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -25,9 +24,9 @@
       "pub-sub"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://principles/separation-of-concerns",
-      "agenticdevelopercookbook://principles/fail-fast",
-      "agenticdevelopercookbook://guidelines/implementing/networking/caching"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1357be12-5a58-4143-a570-849c114770c5",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3416a359-e01c-40b2-8876-4a8634d4395e"
     ],
     "related": [],
     "references": [
@@ -43,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ad9681245338dd47",
+  "synced": "b8fef92def773f47",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -62,7 +61,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,7 +1,6 @@
 ---
 id: 0a627830-a764-4f44-8300-faf4279089a1
 title: "SEO Metadata"
-domain: adhsdk://cookbook/adh/sites/seo-metadata
 type: ingredient
 version: 1.1.0
 status: review
@@ -21,7 +20,7 @@ tags:
   - site-registry
 depends-on: []
 related:
-  - site-wordmark
+  - 21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5
 references: []
 approved-by: ""
 approved-date: ""
@@ -350,9 +349,9 @@ returns a value instead of writing to a log.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/adh-registry/src/seo/metadata.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/adh-registry/src/seo/metadata.ts` | unverified |
 
 ## Design Decisions
 
@@ -400,10 +399,10 @@ without remembering this file exists.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | Internationalization |
 
 `separation-of-concerns` passes: `metadata.ts` contains zero DOM, fetch, or rendering
 code — only `import type` reaches into `next`, and the one value that needs the live

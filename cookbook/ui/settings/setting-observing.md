@@ -1,7 +1,6 @@
 ---
-id: 64C9047D-53A2-4912-8817-2F35372E505F
+id: 64c9047d-53a2-4912-8817-2f35372e505f
 title: "Setting Observing"
-domain: adhsdk://cookbook/ui/settings/setting-observing
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +20,7 @@ tags:
   - binding
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/settings/views/value-row-view
+  - d0aa6237-e5d7-4cf8-a1cb-621033575421
 references: []
 approved-by: ""
 approved-date: ""
@@ -122,9 +121,9 @@ Not applicable: the component performs no logging of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/SettingObserving.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/SettingObserving.swift` | unverified |
 
 ## Design Decisions
 
@@ -140,8 +139,8 @@ Not applicable: the component performs no logging of its own.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Separation-of-concerns is passed: the protocol and closure observer only read, write and notify, with no view, storage or layout logic. Unit-test-coverage is passed: `SettingObservingTests.swift` covers the closure observer reading, writing and notifying, the callback firing after the write lands, a view-model closure initializer driving a checkbox, and the persisted-settings observer conforming.
 
