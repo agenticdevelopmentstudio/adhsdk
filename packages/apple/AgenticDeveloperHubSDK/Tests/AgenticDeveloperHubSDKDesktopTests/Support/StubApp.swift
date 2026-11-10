@@ -10,6 +10,8 @@ final class StubApp: DesktopApp {
     var menus: [NSMenu] = []
     /// When set, `makeSettingsViewController` returns it.
     var settingsViewController: NSViewController?
+    /// True by default so tests can open Settings for a schema-less stub.
+    var hasSettings = true
     /// Weak, so a test can tell whether closing a window released its content.
     var contentViewControllers: [NSViewController] { weakContents.compactMap(\.value) }
     private var weakContents: [WeakBox] = []

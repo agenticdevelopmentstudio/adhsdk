@@ -12,6 +12,10 @@ public protocol DesktopApp: AnyObject {
     /// Called after `makeContentViewController(context:)` for the same context.
     func makeMenus(context: DesktopAppContext) -> [NSMenu]
     func makeSettingsViewController(context: DesktopAppContext) -> NSViewController?
+    /// Whether the App has settings to show. Defaults to whether its schema has fields; an App
+    /// whose `makeSettingsViewController(context:)` returns its own view must return true.
+    /// Without settings, its menu has no Settings… item and `showSettings()` does nothing.
+    var hasSettings: Bool { get }
     /// Called when the App's own window closes; release anything the content holds.
     /// It fires only then: hiding or closing the Desktop window, or quitting, does not call it.
     func appWillClose(context: DesktopAppContext)
@@ -21,6 +25,7 @@ public extension DesktopApp {
     var resourceBundle: Bundle { Bundle(for: type(of: self)) }
     func makeMenus(context: DesktopAppContext) -> [NSMenu] { [] }
     func makeSettingsViewController(context: DesktopAppContext) -> NSViewController? { nil }
+    var hasSettings: Bool { !descriptor.settingsSchema.fields.isEmpty }
     func appWillClose(context: DesktopAppContext) {}
 }
 

@@ -66,6 +66,9 @@ public final class EmailApp: DesktopApp {
         return [menu]
     }
 
+    /// Email's settings are the accounts panel, not a schema form.
+    public var hasSettings: Bool { true }
+
     public func makeSettingsViewController(context: DesktopAppContext) -> NSViewController? {
         IntegrationsSettingsPanel(client: client)
     }

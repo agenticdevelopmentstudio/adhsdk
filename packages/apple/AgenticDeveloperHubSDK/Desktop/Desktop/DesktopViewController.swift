@@ -96,7 +96,7 @@ public final class DesktopViewController: NSViewController {
     }
 
     public func showSettings(forApp identifier: String) {
-        guard let app = registry.app(withIdentifier: identifier) else { return }
+        guard let app = registry.app(withIdentifier: identifier), app.hasSettings else { return }
         let appSettings = settings.appSettings(for: app)
         openWindow(kind: .settings, app: app) { context in
             app.makeSettingsViewController(context: context)

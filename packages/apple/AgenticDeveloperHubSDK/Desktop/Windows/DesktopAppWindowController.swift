@@ -143,7 +143,9 @@ final class DesktopAppWindowController {
         let name = app.descriptor.displayName
         let menu = NSMenu(title: name)
         menu.addItem(menuItem(title: "About \(name)", key: "") { [weak self] in self?.showAbout() })
-        menu.addItem(menuItem(title: "Settings…", key: ",") { [weak self] in self?.showSettings() })
+        if app.hasSettings {
+            menu.addItem(menuItem(title: "Settings…", key: ",") { [weak self] in self?.showSettings() })
+        }
         menu.addItem(.separator())
         menu.addItem(closeItem(title: "Close \(name)"))
         return menu

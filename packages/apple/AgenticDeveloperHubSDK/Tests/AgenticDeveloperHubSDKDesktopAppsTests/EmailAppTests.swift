@@ -38,6 +38,7 @@ final class EmailAppTests: XCTestCase {
         let context = FakeDesktopAppContext(app: app)
         XCTAssertTrue(app.makeContentViewController(context: context) is MailBrowserViewController)
         XCTAssertTrue(app.makeSettingsViewController(context: context) is IntegrationsSettingsPanel)
+        XCTAssertTrue(app.hasSettings)
     }
 
     func test_email_menus_containMailboxRefresh_cmdR() throws {

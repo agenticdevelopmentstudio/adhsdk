@@ -43,6 +43,10 @@ final class DesktopSettingsAppTests: XCTestCase {
         XCTAssertEqual(descriptor.minimumWindowSize, CGSize(width: 560, height: 360))
     }
 
+    func test_settingsApp_hasNoSettingsOfItsOwn() {
+        XCTAssertFalse(DesktopSettingsApp(settings: settings).hasSettings)
+    }
+
     func test_sidebar_listsAppearanceThenMenuBar_withAppearanceSelected() {
         let controller = makeController()
         XCTAssertEqual(controller.sidebar.numberOfRows, 2)

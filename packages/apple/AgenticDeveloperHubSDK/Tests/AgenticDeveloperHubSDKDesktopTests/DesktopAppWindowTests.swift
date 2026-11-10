@@ -117,6 +117,17 @@ final class DesktopAppWindowTests: XCTestCase {
         XCTAssertEqual(menu.items[3].keyEquivalentModifierMask, .command)
     }
 
+    func test_standardAppMenu_omitsSettings_forAnAppWithoutSettings() throws {
+        app.hasSettings = false
+        let controller = makeController()
+        controller.openApp(identifier: "a")
+        let window = try XCTUnwrap(controller.windowController("a"))
+        let menu = try XCTUnwrap(window.menus.first)
+        XCTAssertEqual(menu.items.map(\.title), ["About Alpha", "", "Close Alpha"])
+        controller.showSettings(forApp: "a")
+        XCTAssertFalse(controller.isShowingSettings(forApp: "a"))
+    }
+
     func test_appMenus_followStandardMenu_inOrder() throws {
         app.menus = [NSMenu(title: "File"), NSMenu(title: "View")]
         let controller = makeController()
