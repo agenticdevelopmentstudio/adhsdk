@@ -230,6 +230,25 @@ final class IngestionPipelineTests: XCTestCase {
         await pipeline.stop()
     }
 
+    /// An empty drop file on the pipeline path leaves a terminal `lost` row in the
+    /// ingestion-error log, as the legacy path does, and lights no badge.
+    func testWithClaudeAnEmptyDropIsLoggedAsLost() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        let drop = handles.hookSource.dropDirectory
+        try FileManager.default.createDirectory(at: drop, withIntermediateDirectories: true)
+        let file = drop.appendingPathComponent("1793361600000-aaaaaaaa.json")
+        try Data().write(to: file)
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date().addingTimeInterval(-60)], ofItemAtPath: file.path)
+
+        XCTAssertEqual(try handles.pollHookDrops(), 1)
+        let rows = try database.recentIngestionErrors()
+        XCTAssertEqual(rows.map(\.filename), ["1793361600000-aaaaaaaa.json"])
+        XCTAssertEqual(rows.first?.status, "lost")
+        XCTAssertEqual(pipeline.quarantine.count(), 0)
+        await pipeline.stop()
+    }
+
     /// Preserving a file whose key already holds other bytes (a reused file name)
     /// keeps the new bytes under the key with their sha256 appended.
     func testWithClaudeAReusedFileNameIsPreservedUnderAFallbackKey() async throws {
