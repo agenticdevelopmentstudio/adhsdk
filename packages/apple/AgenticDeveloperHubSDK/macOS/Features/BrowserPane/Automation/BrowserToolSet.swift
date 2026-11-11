@@ -444,8 +444,15 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             let ref = try args.string("ref"), generation = try args.int("generation")
             let values = try args.candidates("value")
             for value in values.dropLast() {
-                if let delta = try? await automation.select(ref: ref, generation: generation, value: value) {
-                    return delta.rendered()
+                // A miss tries the next value; a cancellation does not, since
+                // the attempt may already have fired input and change, and a
+                // cancelled call must not act on the page again.
+                do {
+                    return try await automation.select(ref: ref, generation: generation, value: value).rendered()
+                } catch let error as CancellationError {
+                    throw error
+                } catch {
+                    try Task.checkCancellation()
                 }
             }
             return try await automation.select(ref: ref, generation: generation, value: values.last ?? "").rendered()
