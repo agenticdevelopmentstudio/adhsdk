@@ -82,6 +82,17 @@ public struct ClaudeTranscriptPayload: Codable, Equatable, Sendable {
         return "\(sessionID):\(stem)@\(byteOffset):\(hash)"
     }
 
+    /// The line's identity wherever it sits: `"<sessionId>:<sha256 hex of the
+    /// line's bytes>"`, the dedup key without the file and offset. A resumed or
+    /// forked transcript copies earlier lines with their own `sessionId`, and a
+    /// rewrite can move a line; each extra occurrence is its own raw record, but
+    /// rows keyed on this (a uuid-less message, a title or dispatch event) are
+    /// the same row. A byte-identical line repeated in one session shares it.
+    public static func contentKey(line: String, file: String, lineBytes: Data? = nil) -> String {
+        let sessionID = JSONLScanner.parseRawLine(line, lineNo: 0, fileStem: fileStem(file)).sessionId
+        return "\(sessionID):\(SHA256.hash(data: lineBytes ?? Data(line.utf8)).hexString)"
+    }
+
     /// The file name without its `.jsonl` extension, as `JSONLScanner.scanRawLines` derives it.
     public static func fileStem(_ file: String) -> String {
         URL(fileURLWithPath: file).deletingPathExtension().lastPathComponent
