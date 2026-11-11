@@ -18,8 +18,8 @@ public enum MailCommandLine {
         message id or Gmail's.
         list: a message must carry every --label (AND) and, if any are given, at least one
           --any-label (OR); the two combine.
-        move: adds the --to label and removes each --from label the message carries, in one
-          Gmail write per message. With no --from it removes INBOX (nothing for --to INBOX).
+        move: adds the --to label and removes every --from label, in one Gmail write. With no
+          --from it removes INBOX (nothing for --to INBOX).
         exit status: 0 success, 1 failure, \(notFoundStatus) a message id matches nothing, 64 usage error.
         """
     }

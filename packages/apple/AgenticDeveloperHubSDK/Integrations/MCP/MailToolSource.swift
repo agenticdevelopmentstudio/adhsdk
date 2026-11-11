@@ -55,8 +55,8 @@ public struct MailToolSource: ChatToolSource {
                     ], required: ["account", "message_ids"])),
             ToolDefinition(
                 name: "mail_move_messages",
-                description: "Moves messages to a label, in Gmail: per message, one change that adds the label "
-                    + "and removes INBOX, or each of from that the message carries. Reports what each lost and gained.",
+                description: "Moves messages to a label, in Gmail: one change that adds the label and removes INBOX, "
+                    + "or every label in from. Reports what each message really lost and gained.",
                 parametersJSONSchema: ToolJSONSchema.object(
                     properties: [
                         "account": account,

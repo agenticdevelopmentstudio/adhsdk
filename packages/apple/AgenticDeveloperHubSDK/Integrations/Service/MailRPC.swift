@@ -232,8 +232,9 @@ public struct MailMessagePage: Codable, Sendable, Equatable {
     }
 }
 
-/// One message a move changed: its refreshed copy and the names of the labels the move added
-/// and removed. `added` is empty when the message already carried the destination.
+/// One message a move touched: its refreshed copy and the names of the labels it gained and
+/// lost, measured against Gmail just before the write. `added` is empty when the message
+/// already carried the destination.
 public struct MailMoveResult: Codable, Sendable, Equatable {
     public var message: MailMessage
     public var added: [String]

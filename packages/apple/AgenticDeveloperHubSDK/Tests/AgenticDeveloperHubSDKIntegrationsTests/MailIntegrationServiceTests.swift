@@ -703,7 +703,7 @@ struct MailIntegrationServiceTests {
         #expect(page.messages.count == 2_500)
     }
 
-    @Test func moveAddsTheDestinationAndRemovesInboxInOneWritePerMessage() async throws {
+    @Test func moveAddsTheDestinationAndRemovesInboxInOneWrite() async throws {
         let harness = try Harness()
         harness.api.setMessage(harness.dto("m3", labels: ["Label_1"]))
         let account = try await labelled(harness)
@@ -712,10 +712,9 @@ struct MailIntegrationServiceTests {
         let response = await harness.service.handle(.moveMessages(
             account: account.email, messageIds: [local.id, "m2", "m3"], destination: "Work/Projects", from: nil))
 
-        // m3 is not in the inbox: it gains the label and loses nothing, in a write of its own.
+        // m3 is not in the inbox: Gmail ignores the removal, so it shares the one write.
         #expect(harness.api.batchModifyCalls == [
-            FakeGmailAPI.BatchModifyCall(ids: ["m1", "m2"], add: ["Label_2"], remove: ["INBOX"]),
-            FakeGmailAPI.BatchModifyCall(ids: ["m3"], add: ["Label_2"], remove: [])
+            FakeGmailAPI.BatchModifyCall(ids: ["m1", "m2", "m3"], add: ["Label_2"], remove: ["INBOX"])
         ])
         guard case .moved(let results) = response else {
             Issue.record("moveMessages returned \(response)")
@@ -733,14 +732,13 @@ struct MailIntegrationServiceTests {
         #expect(log.status == "ok")
     }
 
-    @Test func moveRemovesOnlyTheFromLabelsEachMessageCarries() async throws {
+    @Test func moveReportsOnlyTheFromLabelsEachMessageCarried() async throws {
         let harness = try Harness()
         let account = try await labelled(harness)
         let response = await harness.service.handle(.moveMessages(
             account: account.id, messageIds: ["m1", "m2"], destination: "STARRED", from: ["Work", "INBOX"]))
         #expect(harness.api.batchModifyCalls == [
-            FakeGmailAPI.BatchModifyCall(ids: ["m1"], add: ["STARRED"], remove: ["INBOX"]),
-            FakeGmailAPI.BatchModifyCall(ids: ["m2"], add: ["STARRED"], remove: ["Label_1", "INBOX"])
+            FakeGmailAPI.BatchModifyCall(ids: ["m1", "m2"], add: ["STARRED"], remove: ["Label_1", "INBOX"])
         ])
         guard case .moved(let results) = response else {
             Issue.record("moveMessages returned \(response)")
@@ -779,6 +777,47 @@ struct MailIntegrationServiceTests {
             account: account.id, messageIds: ["m1"], destination: "INBOX", from: ["INBOX"]))
             == .failure("cannot move to INBOX: it is also a label to move from"))
         #expect(harness.api.batchModifyCalls.isEmpty)
+    }
+
+    @Test func moveReadsGmailFirstSoAStaleCopyStillLosesItsInbox() async throws {
+        let harness = try Harness()
+        harness.api.setMessage(harness.dto("m3", labels: ["Label_1"]))
+        let account = try await labelled(harness)
+        // Back in the Inbox in Gmail since the last sync; the local copy doesn't know.
+        harness.api.setMessage(harness.dto("m3", labels: ["Label_1", "INBOX"]))
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m3"], destination: "STARRED", from: nil))
+        #expect(harness.api.batchModifyCalls == [
+            FakeGmailAPI.BatchModifyCall(ids: ["m3"], add: ["STARRED"], remove: ["INBOX"])
+        ])
+        guard case .moved(let results) = response else {
+            Issue.record("moveMessages returned \(response)")
+            return
+        }
+        #expect(results.first?.added == ["STARRED"])
+        #expect(results.first?.removed == ["INBOX"])
+        #expect(results.first?.message.labels == ["Label_1", "STARRED"])
+    }
+
+    @Test func moveSkipsMessagesAlreadyMovedAndLeavesOutOnesGmailLost() async throws {
+        let harness = try Harness()
+        harness.api.setMessage(harness.dto("m3", labels: ["Label_1"]))
+        let account = try await labelled(harness)
+        harness.api.messages["m2"] = nil
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1", "m2", "m3"], destination: "Work", from: nil))
+        // m3 already has Work and no INBOX: nothing to write. m2 is gone from Gmail.
+        #expect(harness.api.batchModifyCalls == [
+            FakeGmailAPI.BatchModifyCall(ids: ["m1"], add: ["Label_1"], remove: ["INBOX"])
+        ])
+        guard case .moved(let results) = response else {
+            Issue.record("moveMessages returned \(response)")
+            return
+        }
+        #expect(results.map(\.message.gmailId) == ["m1", "m3"])
+        #expect(results.map(\.added) == [["Work"], []])
+        #expect(results.map(\.removed) == [["INBOX"], []])
+        #expect(try !harness.liveIds(account.id).contains("m2"))
     }
 
     @Test func moveToInboxWithNoFromOnlyAddsInbox() async throws {

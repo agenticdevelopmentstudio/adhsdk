@@ -534,16 +534,20 @@ public actor MailIntegrationService {
         }
         let payload = ModifyPayload(messageIds: originals.map(\.externalId), add: addIds, remove: removeIds)
         let fetched = try await writeLabels(
-            [LabelWrite(indices: Array(originals.indices), add: addIds, remove: removeIds)],
+            LabelWrite(indices: Array(originals.indices), add: addIds, remove: removeIds),
             originals: originals, connection: connection, actionType: "modify_labels", payload: Self.json(payload))
         return originals.indices.compactMap { fetched[$0] }.map {
             Self.mailMessage($0, account: account, names: names, includeBodies: false)
         }
     }
 
-    /// Adds `destination` to each message and removes whichever of `from` it carries, in one
-    /// Gmail write per message: messages that lose the same labels share a `batchModify`. A
-    /// message Gmail no longer has when it is re-read is left out of the result.
+    /// Adds `destination` to each message and removes every label in `from`, in a single Gmail
+    /// write (chunked at Gmail's limit). Gmail ignores a removal of a label a message doesn't
+    /// carry, so the write is the same for every message and never depends on the local copy,
+    /// which can be up to a sync interval old. The messages are read from Gmail first, so
+    /// `added`/`removed` say what each one really gained and lost, and one that already has the
+    /// destination and none of `from` is not written. A message Gmail no longer has is left out
+    /// of the result.
     private func moveMessages(
         connection: IntegrationConnection, messageIds: [String], destination: String, from: [String]?
     ) async throws -> [MailMoveResult] {
@@ -556,31 +560,39 @@ public actor MailIntegrationService {
         let originals = try storedMessages(messageIds, connection: connection)
         guard !originals.isEmpty else { return [] }
 
-        let removals = originals.map { message in fromIds.filter(message.labelIds.contains) }
-        var writes: [LabelWrite] = []
-        for (index, remove) in removals.enumerated() {
-            if let existing = writes.firstIndex(where: { $0.remove == remove }) {
-                writes[existing].indices.append(index)
-            } else {
-                writes.append(LabelWrite(indices: [index], add: [destinationId], remove: remove))
-            }
+        let before: [Int: EmailMessage]
+        do {
+            before = try await fetch(originals, api: try gmailAPI(for: connection.id), connectionId: connection.id)
+        } catch {
+            if (error as? IntegrationError) == .revoked { record(error, connectionId: connection.id) }
+            throw error
         }
-        let payload = MovePayload(destination: destinationId, from: fromIds, writes: writes.map { write in
-            ModifyPayload(messageIds: write.indices.map { originals[$0].externalId }, add: write.add,
-                          remove: write.remove)
-        })
-        let fetched = try await writeLabels(
-            writes, originals: originals, connection: connection, actionType: "move_messages",
-            payload: Self.json(payload))
+        let changing = originals.indices.filter { index in
+            guard let message = before[index] else { return false }
+            return !message.labelIds.contains(destinationId) || message.labelIds.contains(where: fromIds.contains)
+        }
+        // The rest are stored as just read: refreshed, or tombstoned when Gmail no longer has them.
+        let unchanged = originals.indices.filter { !changing.contains($0) }
+        try storeRefetched(before, originals: originals, indices: unchanged, connectionId: connection.id)
+        var after = before.filter { unchanged.contains($0.key) }
+        if !changing.isEmpty {
+            let payload = ModifyPayload(
+                messageIds: changing.map { originals[$0].externalId }, add: [destinationId], remove: fromIds)
+            let written = try await writeLabels(
+                LabelWrite(indices: changing, add: [destinationId], remove: fromIds), originals: originals,
+                connection: connection, actionType: "move_messages", payload: Self.json(payload))
+            after.merge(written) { _, new in new }
+        }
 
         let names = Self.labelNames(labels)
         let account = connection.externalAccountId
         return originals.indices.compactMap { index in
-            guard let message = fetched[index] else { return nil }
-            let added = originals[index].labelIds.contains(destinationId) ? [] : [destinationId]
+            guard let old = before[index], let message = after[index] else { return nil }
+            let added = old.labelIds.contains(destinationId) ? [] : [destinationId]
+            let removed = fromIds.filter(old.labelIds.contains)
             return MailMoveResult(
                 message: Self.mailMessage(message, account: account, names: names, includeBodies: false),
-                added: added.map { names[$0] ?? $0 }, removed: removals[index].map { names[$0] ?? $0 })
+                added: added.map { names[$0] ?? $0 }, removed: removed.map { names[$0] ?? $0 })
         }
     }
 
@@ -603,17 +615,17 @@ public actor MailIntegrationService {
 
     /// One label change for some of the messages: `indices` into the originals.
     private struct LabelWrite {
-        var indices: [Int]
+        let indices: [Int]
         let add: [String]
         let remove: [String]
     }
 
-    /// Logs the action, writes each change to Gmail (`batchModify`, chunked at Gmail's limit),
-    /// then re-reads and stores the messages. Returns the re-read messages keyed by index into
-    /// `originals`; one Gmail no longer has is absent. A Gmail failure logs how many ids it had
-    /// already applied; a failure to re-read after the write still logs the action as done.
+    /// Logs the action, writes the change to Gmail (`batchModify`, chunked at Gmail's limit),
+    /// then re-reads and stores the messages it wrote. Returns the re-read messages keyed by index
+    /// into `originals`; one Gmail no longer has is absent. A Gmail failure logs how many ids it
+    /// had already applied; a failure to re-read after the write still logs the action as done.
     private func writeLabels(
-        _ writes: [LabelWrite], originals: [EmailMessage], connection: IntegrationConnection,
+        _ write: LabelWrite, originals: [EmailMessage], connection: IntegrationConnection,
         actionType: String, payload: String
     ) async throws -> [Int: EmailMessage] {
         let logId = Self.newId()
@@ -624,14 +636,12 @@ public actor MailIntegrationService {
         var applied = 0
         do {
             api = try gmailAPI(for: connection.id)
-            for write in writes {
-                let gmailIds = write.indices.map { originals[$0].externalId }
-                for start in stride(from: 0, to: gmailIds.count, by: GmailRESTClient.batchModifyLimit) {
-                    let end = min(start + GmailRESTClient.batchModifyLimit, gmailIds.count)
-                    let chunk = Array(gmailIds[start..<end])
-                    try await api.batchModify(ids: chunk, add: write.add, remove: write.remove)
-                    applied += chunk.count
-                }
+            let gmailIds = write.indices.map { originals[$0].externalId }
+            for start in stride(from: 0, to: gmailIds.count, by: GmailRESTClient.batchModifyLimit) {
+                let end = min(start + GmailRESTClient.batchModifyLimit, gmailIds.count)
+                let chunk = Array(gmailIds[start..<end])
+                try await api.batchModify(ids: chunk, add: write.add, remove: write.remove)
+                applied += chunk.count
             }
         } catch {
             try? store.finishActionLog(id: logId, status: "error", result: Self.json(["applied": applied]),
@@ -642,8 +652,8 @@ public actor MailIntegrationService {
 
         // The change is in Gmail now, so the action succeeded even if refreshing the local copies fails.
         do {
-            let fetched = try await fetch(originals, api: api, connectionId: connection.id)
-            try storeRefetched(fetched, originals: originals, connectionId: connection.id)
+            let fetched = try await fetch(originals, indices: write.indices, api: api, connectionId: connection.id)
+            try storeRefetched(fetched, originals: originals, indices: write.indices, connectionId: connection.id)
             try store.finishActionLog(
                 id: logId, status: "ok", result: Self.json(ModifyResult(modified: applied)), error: nil)
             return fetched
@@ -657,12 +667,6 @@ public actor MailIntegrationService {
         }
     }
 
-    private struct MovePayload: Encodable {
-        let destination: String
-        let from: [String]
-        let writes: [ModifyPayload]
-    }
-
     private struct ModifyPayload: Encodable {
         let messageIds: [String]
         let add: [String]
@@ -674,18 +678,20 @@ public actor MailIntegrationService {
         var refreshError: String?
     }
 
-    /// Re-reads each message from Gmail, `refetchConcurrency` at a time. The result is keyed by index into
-    /// `originals`; a message Gmail no longer has (404) is absent.
+    /// Re-reads the messages at `indices` (every one when nil) from Gmail, `refetchConcurrency`
+    /// at a time. The result is keyed by index into `originals`; a message Gmail no longer has
+    /// (404) is absent.
     private func fetch(
-        _ originals: [EmailMessage], api: any GmailAPI, connectionId: String
+        _ originals: [EmailMessage], indices: [Int]? = nil, api: any GmailAPI, connectionId: String
     ) async throws -> [Int: EmailMessage] {
         var fetched: [Int: EmailMessage] = [:]
         let now = now()
+        let wanted = indices ?? Array(originals.indices)
         try await withThrowingTaskGroup(of: (Int, EmailMessage?).self) { group in
             var next = 0
             func addNext() {
-                guard next < originals.count else { return }
-                let index = next
+                guard next < wanted.count else { return }
+                let index = wanted[next]
                 let original = originals[index]
                 next += 1
                 group.addTask {
@@ -707,21 +713,21 @@ public actor MailIntegrationService {
         return fetched
     }
 
-    /// Stores re-read messages, or tombstones them when the connection no longer mirrors their class
-    /// or Gmail no longer has them. Returns the re-read messages in order.
+    /// Stores the re-read messages at `indices`, or tombstones them when the connection no longer
+    /// mirrors their class or Gmail no longer has them. Returns the re-read messages in order.
     ///
     /// Synchronous on purpose: the connection is re-read here, after the fetch's awaits, so settings
     /// changed or an account removed meanwhile are honoured, and nothing can change it again before
     /// the writes. A removed account gets no writes at all.
     @discardableResult
     private func storeRefetched(
-        _ fetched: [Int: EmailMessage], originals: [EmailMessage], connectionId: String
+        _ fetched: [Int: EmailMessage], originals: [EmailMessage], indices: [Int], connectionId: String
     ) throws -> [EmailMessage] {
-        let refreshed = originals.indices.compactMap { fetched[$0] }
+        let refreshed = indices.sorted().compactMap { fetched[$0] }
         guard let current = try store.connection(idOrEmail: connectionId) else { return refreshed }
         let settings = current.syncSettings
         let kept = refreshed.filter { settings.allows($0.mailClass) }
-        let gone = originals.indices.filter { fetched[$0] == nil }.map { originals[$0].externalId }
+        let gone = indices.filter { fetched[$0] == nil }.map { originals[$0].externalId }
             + refreshed.filter { !settings.allows($0.mailClass) }.map(\.externalId)
         try store.upsertMessages(kept)
         try store.tombstoneMessages(connectionId: connectionId, externalIds: gone)
