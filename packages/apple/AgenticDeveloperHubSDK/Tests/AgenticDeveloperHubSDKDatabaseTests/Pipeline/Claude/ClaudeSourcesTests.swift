@@ -5,6 +5,14 @@ import XCTest
 
 /// The Claude ingest sources against temp directories and a real spool: drop-directory
 /// hook files, the HTTP/socket capture record, and transcript byte cursors.
+/// What a drop source reported through `onUnreadable`, in order.
+private final class ReportedDrops: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: [(name: String, reason: String)] = []
+    var entries: [(name: String, reason: String)] { lock.withLock { stored } }
+    func append(_ name: String, _ reason: String) { lock.withLock { stored.append((name, reason)) } }
+}
+
 final class ClaudeSourcesTests: XCTestCase {
 
     private var tmpDir: URL!
@@ -144,11 +152,18 @@ final class ClaudeSourcesTests: XCTestCase {
         try XCTSkipIf(FileManager.default.isReadableFile(atPath: unreadable.path), "running with read override")
         try writeDrop("1793361601000-bbbbbbbb.json", try Self.hookFixture("PreToolUse"))
 
-        XCTAssertEqual(try ClaudeHookDropSource(dropDirectory: dropDir).poll(into: spool), 1)
+        let reported = ReportedDrops()
+        let source = ClaudeHookDropSource(dropDirectory: dropDir) { moved, reason in
+            reported.append(moved.lastPathComponent, reason)
+        }
+        XCTAssertEqual(try source.poll(into: spool), 1)
         XCTAssertFalse(exists(unreadable))
         let moved = dropDir.appendingPathComponent("errors/error-1793361600000-aaaaaaaa.json")
         XCTAssertTrue(exists(moved))
         XCTAssertEqual(try pending().map(\.dedupKey), ["1793361601000-bbbbbbbb"])
+        let entries = reported.entries
+        XCTAssertEqual(entries.map(\.name), ["error-1793361600000-aaaaaaaa.json"])
+        XCTAssertTrue(entries.first?.reason.hasPrefix("unreadable drop file: ") ?? false, "\(entries)")
     }
 
     /// Review Focus 4: no `session_id`, an empty body and invalid JSON are all archived

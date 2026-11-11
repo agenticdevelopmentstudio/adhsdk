@@ -207,6 +207,29 @@ final class IngestionPipelineTests: XCTestCase {
         XCTAssertTrue(try ClaudeNormalizer().normalize(ArchivedRecord(id: 1, record: record)).isEmpty)
     }
 
+    /// An unreadable drop file is quarantined with a reason (listed, not "unknown"),
+    /// and clearing the quarantine deletes it: it has no bytes to preserve.
+    func testWithClaudeAnUnreadableDropIsQuarantinedWithAReasonAndClears() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        let drop = handles.hookSource.dropDirectory
+        try FileManager.default.createDirectory(at: drop, withIntermediateDirectories: true)
+        let file = drop.appendingPathComponent("1793361600000-aaaaaaaa.json")
+        try Data(#"{"event":"Stop","hook_data":{"session_id":"s"}}"#.utf8).write(to: file)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o000, .modificationDate: Date().addingTimeInterval(-60)], ofItemAtPath: file.path)
+        try XCTSkipIf(FileManager.default.isReadableFile(atPath: file.path), "running with read override")
+
+        XCTAssertEqual(try handles.pollHookDrops(), 0)
+        let listed = pipeline.quarantine.list()
+        XCTAssertEqual(listed.map(\.filename), ["error-1793361600000-aaaaaaaa.json"])
+        XCTAssertTrue(listed.first?.reason.hasPrefix("unreadable drop file: ") ?? false, "\(listed)")
+
+        pipeline.quarantine.clear()
+        XCTAssertEqual(pipeline.quarantine.count(), 0, "nothing to preserve, so nothing holds it")
+        XCTAssertEqual(try handles.archive.count(), 0)
+        await pipeline.stop()
+    }
+
     /// Preserving a file whose key already holds other bytes (a reused file name)
     /// keeps the new bytes under the key with their sha256 appended.
     func testWithClaudeAReusedFileNameIsPreservedUnderAFallbackKey() async throws {
