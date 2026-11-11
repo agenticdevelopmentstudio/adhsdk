@@ -91,16 +91,19 @@ final class ConversationMessagesTests: XCTestCase {
     }
 
     /// A headless `claude -p` that hands its task to an agent: its own file
-    /// holds no dialogue, its subagent's file holds it all.
+    /// holds no dialogue, its subagent's file holds it all — every line of it
+    /// a sidechain, and script-driven (`sdk-cli`), as Claude Code writes them.
     func testWorkOutputWeavesInTheSubagentsTranscripts() throws {
         try database.insertTranscriptLines([
             prompt(1, at: "2026-09-01T10:00:00Z", "review this")
         ], filePath: "/tmp/\(session).jsonl")
-        var sub = reply(1, at: "2026-09-01T10:00:05Z", "found a bug")
-        sub = JSONLScanner.RawTranscriptLine(
-            lineNo: sub.lineNo, sessionId: session, entryUuid: sub.entryUuid, parentUuid: "",
-            entryType: sub.entryType, role: sub.role, timestamp: sub.timestamp, isSidechain: true,
-            rawJSON: sub.rawJSON, isQueuedPrompt: false)
+        let sub = JSONLScanner.RawTranscriptLine(
+            lineNo: 1, sessionId: session, entryUuid: UUID().uuidString, parentUuid: "",
+            entryType: "assistant", role: "assistant", timestamp: "2026-09-01T10:00:05Z", isSidechain: true,
+            rawJSON: #"{"type":"assistant","isSidechain":true,"agentId":"a48","entrypoint":"sdk-cli","#
+                + #""message":{"role":"assistant","stop_reason":"end_turn","#
+                + #""content":[{"type":"text","text":"found a bug"}]}}"#,
+            isQueuedPrompt: false)
         try database.insertTranscriptLines([sub], filePath: "/tmp/\(session)/subagents/agent-a48.jsonl")
 
         XCTAssertEqual(try page().messages.map(\.content), ["review this"], "the main agent alone")

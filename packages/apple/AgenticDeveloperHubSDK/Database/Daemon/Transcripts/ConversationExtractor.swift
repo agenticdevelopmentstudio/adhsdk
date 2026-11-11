@@ -119,16 +119,21 @@ public enum ConversationExtractor {
     /// and "malformed" collapse to the same answer deliberately: a feed that
     /// silently skips a line it can't read is right, and one that surfaces
     /// `{"type":…` at the human is not.
-    public static func extract(rawJSON: String) -> [Line] {
+    ///
+    /// - Parameter includeMachinery: keep a sub-agent's sidechain and a
+    ///   script-driven (``isSDKDriven(_:)``) entry. The merged feed leaves them
+    ///   out; a reader that asks one session for its work output wants exactly
+    ///   them — a headless `claude -p` worker has nothing else.
+    public static func extract(rawJSON: String, includeMachinery: Bool = false) -> [Line] {
         guard let data = rawJSON.data(using: .utf8),
               let entry = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return [] }
 
         // Sub-agent traffic is a different conversation, and meta entries are
         // the harness talking to itself.
-        if entry["isSidechain"] as? Bool == true { return [] }
+        if !includeMachinery, entry["isSidechain"] as? Bool == true { return [] }
         if entry["isMeta"] as? Bool == true { return [] }
-        if isSDKDriven(entry) { return [] }
+        if !includeMachinery, isSDKDriven(entry) { return [] }
 
         // The harness says what it wrote, where it says so. `turnOrigin` and
         // `isCompactSummary` are the entry's own account of not being typed by

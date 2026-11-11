@@ -328,12 +328,12 @@ public struct ConversationStore: Sendable {
     ///   - throughId: stop at this message (inclusive); nil runs to the newest.
     ///   - limit: at most this many messages, whole transcript entries only —
     ///     an entry bigger than `limit` by itself is returned whole.
-    ///   - includeWorkOutput: include `progress` and `thinking` lines, and the
+    ///   - includeWorkOutput: include `progress` and `thinking` lines, the
     ///     session's subagents' own transcripts (`subagents/agent-*.jsonl`),
     ///     woven in by time with each message's ``ConversationMessageDTO/agentId``
-    ///     set. A headless `claude -p` that hands its task to an agent writes
-    ///     almost nothing to its main transcript, so without them its
-    ///     conversation reads as empty.
+    ///     set, and a script-driven session's lines (the extractor's
+    ///     `includeMachinery`). A headless `claude -p` that hands its task to an
+    ///     agent writes almost nothing else, so without them it reads as empty.
     /// - Throws: ``ConversationRangeError/unknownMessageId(_:)`` for a cursor
     ///   that names no line of the session.
     public func conversationMessages(
@@ -379,7 +379,8 @@ public struct ConversationStore: Sendable {
                 let agentId = JSONLScanner.subagentId(ofPath: filePath)
                 // Offsets are taken before any filter, as the feed takes
                 // them, so a message's id never depends on what was asked.
-                let shown = self.extractCache.lines(lineId: lineId, rawJSON: rawJSON)
+                let shown = self.extractCache.lines(
+                    lineId: lineId, rawJSON: rawJSON, includeMachinery: includeWorkOutput)
                     .enumerated()
                     .prefix(stride)
                     .filter { includeWorkOutput || !$0.element.kind.isWorkOutput }
