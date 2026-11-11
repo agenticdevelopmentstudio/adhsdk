@@ -36,7 +36,10 @@ public struct SessionDTO: Codable, Sendable {
     public let lastEventType: String
     /// When `summary` was written (`datetime()` format), empty when never.
     public let summaryAt: String
-    public let eventCount: Int
+    /// Settable so a reader that adds the count afterwards copies every other
+    /// field as it is (`var copy = session; copy.eventCount = n`), never
+    /// rebuilding the DTO and dropping a field it forgot.
+    public var eventCount: Int
     /// Whether a **subagent** of this session was doing something just now.
     ///
     /// `lastEventType` deliberately cannot say — it tracks the *main agent's*

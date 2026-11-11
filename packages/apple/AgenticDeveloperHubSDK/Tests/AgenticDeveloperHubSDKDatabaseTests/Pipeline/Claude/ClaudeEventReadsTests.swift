@@ -263,6 +263,16 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(try database.claudeEventCounts(sessionIds: ["s1", "s2", "none"]), ["s1": 2, "s2": 1])
     }
 
+    /// Adding the count keeps every other field, `turnStateAt` among them.
+    func testACountedSessionKeepsItsTurnStateAt() throws {
+        try harness.ingest([hook("Stop", "s1", "2026-06-01T12:01:00Z")])
+        try database.execute("UPDATE sessions SET turn_state_at = '2026-06-01 12:01:00' WHERE session_id = 's1'")
+
+        XCTAssertEqual(try database.fetchSessions().map(\.turnStateAt), ["2026-06-01 12:01:00"])
+        XCTAssertEqual(try database.fetchSession(sessionId: "s1")?.turnStateAt, "2026-06-01 12:01:00")
+        XCTAssertEqual(try database.fetchSession(sessionId: "s1")?.eventCount, 1)
+    }
+
     func testLastEventTypeOrdersByEventTimeNotCapture() throws {
         try harness.ingest(hook("Stop", "s1", "2026-06-01T12:05:00Z"))
         try harness.ingest(hook("PreToolUse", "s1", "2026-06-01T12:00:00Z", ["tool_name": "Read"]))
