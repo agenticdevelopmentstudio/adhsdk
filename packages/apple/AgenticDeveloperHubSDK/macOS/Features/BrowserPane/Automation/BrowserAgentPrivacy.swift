@@ -16,10 +16,25 @@ import AgenticDeveloperHubSDKCore
 ///   or the keychain refused them without a prompt). The pane is closed to
 ///   models until they can be, rather than handed over unconcealed
 ///   (`fail-fast`).
+/// - `conflicting`: the setting is on, but a stand-in contains a real word
+///   ("Alice = Bob; Bob = Alice", "Fred = Ed", "a = b; b = c"). The page is
+///   drawn through the words once, and a model's reads are concealed again on
+///   top, to catch what the page script skips (a textarea, an editor); that
+///   second pass is harmless only when no stand-in holds a real word, so with
+///   these words it would rewrite stand-ins and hand models the real words.
+///   The pane is closed to models, and its page drawn as it is, until the
+///   words are changed.
 public enum BrowserAgentPrivacy: Sendable, Equatable {
     case off
     case enabled(TextSubstitutionFilter)
     case unavailable
+    case conflicting
+
+    /// `.enabled(filter)`, or `.conflicting` when concealing with `filter`
+    /// twice would not give what concealing once does.
+    public static func checking(_ filter: TextSubstitutionFilter) -> BrowserAgentPrivacy {
+        filter.standInsHoldRealWords ? .conflicting : .enabled(filter)
+    }
 
     public var isOn: Bool { self != .off }
 
@@ -35,6 +50,20 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
         "Agent Privacy is on for this browser pane, but the privacy words could not be read, "
         + "so the pane is closed to models until they can be."
 
+    static let conflictingRefusal =
+        "Agent Privacy is on for this browser pane, but one privacy word's stand-in contains another's real word, "
+        + "so the pane is closed to models until the privacy words are changed."
+
+    /// The sentence a tool call is refused with, or `nil` when the pane is
+    /// open to the call as far as Agent Privacy goes.
+    func closedRefusal() -> String? {
+        switch self {
+        case .unavailable: Self.unavailableRefusal
+        case .conflicting: Self.conflictingRefusal
+        case .off, .enabled: nil
+        }
+    }
+
     static func refusal(for tool: String) -> String {
         "\(tool) is refused on this browser pane: Agent Privacy is on, and \(tool) cannot be concealed."
     }
@@ -46,7 +75,7 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
         switch self {
         case .off: text
         case .enabled(let filter): filter.includingURLForms.concealing(text, matchingCase: true)
-        case .unavailable: "(concealed)"
+        case .unavailable, .conflicting: "(concealed)"
         }
     }
 
@@ -61,6 +90,17 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
 }
 
 extension TextSubstitutionFilter {
+
+    /// Whether some pair's alias contains some pair's real text, ignoring
+    /// case. When none does, concealing is idempotent: what one pass wrote
+    /// holds no real word for a second pass to find.
+    public var standInsHoldRealWords: Bool {
+        let reals = pairs.map { $0.real.lowercased() }
+        return pairs.contains { pair in
+            let alias = pair.alias.lowercased()
+            return reals.contains { alias.contains($0) }
+        }
+    }
 
     /// The pairs, plus each pair again in the forms a URL writes a word in
     /// when that differs from the word: every character but the unreserved

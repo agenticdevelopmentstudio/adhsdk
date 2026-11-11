@@ -255,7 +255,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         if pane.access == .readOnly, !Self.readToolNames.contains(name) {
             throw ToolError(sentence: Self.readOnlyRefusal)
         }
-        if pane.agentPrivacy == .unavailable { throw ToolError(sentence: BrowserAgentPrivacy.unavailableRefusal) }
+        if let refusal = pane.agentPrivacy.closedRefusal() { throw ToolError(sentence: refusal) }
         if pane.agentPrivacy.isOn, BrowserAgentPrivacy.refusedToolNames.contains(name) {
             throw ToolError(sentence: BrowserAgentPrivacy.refusal(for: name))
         }

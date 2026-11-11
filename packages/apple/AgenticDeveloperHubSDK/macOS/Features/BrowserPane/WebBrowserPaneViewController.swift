@@ -181,7 +181,7 @@ open class WebBrowserPaneViewController: NSViewController {
         guard let privacyVault else { return .unavailable }
         do {
             guard try privacyVault.load(), let filter = privacyVault.filter else { return .unavailable }
-            return .enabled(filter)
+            return .checking(filter)
         } catch {
             logger.error(
                 "Agent Privacy could not read the privacy words: \(error.localizedDescription, privacy: .public)")
@@ -410,7 +410,8 @@ open class WebBrowserPaneViewController: NSViewController {
     }
 
     /// The words the page is drawn through: the privacy words while Agent
-    /// Privacy is on and they can be read, otherwise none. The one place
+    /// Privacy is on and they can be read and used (`BrowserAgentPrivacy`),
+    /// otherwise none. The one place
     /// that answer is computed, so the switch, an edit of the words and a
     /// rebuilt engine (through `wireEngine`) all land on the same one.
     private var pageWordFilter: TextSubstitutionFilter? {

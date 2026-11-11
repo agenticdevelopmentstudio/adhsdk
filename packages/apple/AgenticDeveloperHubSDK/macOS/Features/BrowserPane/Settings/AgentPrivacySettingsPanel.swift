@@ -51,7 +51,10 @@ final class AgentPrivacySettingsPanel: BrowserTopicPanel {
                     + "whose answer can be any part of the page in any form. If the privacy "
                     + "words cannot be read without asking you — the keychain refused them — "
                     + "the pane refuses every tool until they can be, rather than show the "
-                    + "page unconcealed."
+                    + "page unconcealed. The same happens when one word's stand-in contains "
+                    + "another's real word, as when two words swap: a page cannot be "
+                    + "concealed reliably with those words, so the pane refuses every tool, "
+                    + "and draws the page as it is, until they are changed."
             ),
             .init(
                 title: "Privacy Words",

@@ -565,6 +565,17 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(directory.revealed, [])
     }
 
+    func testWordsWhoseStandInsHoldRealWordsCloseThePane() async {
+        XCTAssertEqual(BrowserAgentPrivacy.checking(privateWords), .enabled(privateWords))
+        for words in ["Alice = Bob; Bob = Alice", "Fred = Ed", "a = b; b = c", "Mikey = Mike"] {
+            XCTAssertEqual(BrowserAgentPrivacy.checking(TextSubstitutionFilter(parsing: words)), .conflicting, words)
+        }
+        directory.panes = [handle("A"), privateHandle("B", .conflicting)]
+        let reply = await call("browser_text", ["pane_id": "B"])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, BrowserAgentPrivacy.conflictingRefusal)
+    }
+
     func testListConcealsAPrivatePane() async {
         directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
         var reply = await call("browser_list")
