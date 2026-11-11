@@ -8,11 +8,14 @@ public enum MailCommandLine {
         usage: \(program) <command> [--json]
           \(program) accounts
           \(program) labels <account>
-          \(program) list <account> [--since D] [--until D] [--label L]... [--limit N] [--cursor C] [--bodies]
+          \(program) list <account> [--since D] [--until D] [--label L]... [--any-label L]... [--limit N]
+              [--cursor C] [--bodies]
           \(program) get <account> <id>
           \(program) label add <account> <label> <id>...
           \(program) label remove <account> <label> <id>...
-        D is YYYY-MM-DD or an ISO-8601 timestamp.
+        D is YYYY-MM-DD or an ISO-8601 timestamp. L is a label id or exact name.
+        list: a message must carry every --label (AND) and, if any are given, at least one
+          --any-label (OR); the two combine.
         """
     }
 
@@ -104,7 +107,8 @@ public enum MailCommandLine {
 
     private static func parseList(_ args: [String]) -> Parsed? {
         guard let options = split(
-            args, valued: ["--since", "--until", "--label", "--limit", "--cursor"], boolean: ["--bodies"]),
+            args, valued: ["--since", "--until", "--label", "--any-label", "--limit", "--cursor"],
+            boolean: ["--bodies"]),
             options.positionals.count == 1 else { return nil }
         var filter = MailMessageFilter(account: options.positionals[0])
         if let since = options.values["--since"]?.last {
@@ -120,6 +124,7 @@ public enum MailCommandLine {
             filter.limit = value
         }
         filter.labels = options.values["--label"] ?? []
+        filter.anyLabels = options.values["--any-label"] ?? []
         filter.cursor = options.values["--cursor"]?.last
         filter.includeBodies = options.flags.contains("--bodies")
         return (.list(filter), options.json)

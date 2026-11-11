@@ -36,8 +36,9 @@ public enum MailRequest: Codable, Sendable, Equatable {
     }
 }
 
-/// Which messages to list. `since`/`until` are inclusive ISO-8601 strings; `labels` (ids or
-/// names) must all be present; `cursor` is the `nextCursor` of the previous page.
+/// Which messages to list. `since`/`until` are inclusive ISO-8601 strings; labels are ids or
+/// names: a message must carry every one of `labels` (AND) and, when `anyLabels` is not empty,
+/// at least one of `anyLabels` (OR). `cursor` is the `nextCursor` of the previous page.
 public struct MailMessageFilter: Codable, Sendable, Equatable {
     public static let limitRange = 1...500
     public static let defaultLimit = 50
@@ -46,6 +47,7 @@ public struct MailMessageFilter: Codable, Sendable, Equatable {
     public var since: String?
     public var until: String?
     public var labels: [String]
+    public var anyLabels: [String]
     public var limit: Int {
         didSet { limit = Self.clamp(limit) }
     }
@@ -54,19 +56,21 @@ public struct MailMessageFilter: Codable, Sendable, Equatable {
 
     public init(
         account: String, since: String? = nil, until: String? = nil, labels: [String] = [],
-        limit: Int = MailMessageFilter.defaultLimit, cursor: String? = nil, includeBodies: Bool = false
+        anyLabels: [String] = [], limit: Int = MailMessageFilter.defaultLimit, cursor: String? = nil,
+        includeBodies: Bool = false
     ) {
         self.account = account
         self.since = since
         self.until = until
         self.labels = labels
+        self.anyLabels = anyLabels
         self.limit = Self.clamp(limit)
         self.cursor = cursor
         self.includeBodies = includeBodies
     }
 
     private enum CodingKeys: String, CodingKey {
-        case account, since, until, labels, limit, cursor, includeBodies
+        case account, since, until, labels, anyLabels, limit, cursor, includeBodies
     }
 
     /// Lenient: only `account` is required; the rest take their defaults.
@@ -77,6 +81,7 @@ public struct MailMessageFilter: Codable, Sendable, Equatable {
             since: try container.decodeIfPresent(String.self, forKey: .since),
             until: try container.decodeIfPresent(String.self, forKey: .until),
             labels: try container.decodeIfPresent([String].self, forKey: .labels) ?? [],
+            anyLabels: try container.decodeIfPresent([String].self, forKey: .anyLabels) ?? [],
             limit: try container.decodeIfPresent(Int.self, forKey: .limit) ?? Self.defaultLimit,
             cursor: try container.decodeIfPresent(String.self, forKey: .cursor),
             includeBodies: try container.decodeIfPresent(Bool.self, forKey: .includeBodies) ?? false)

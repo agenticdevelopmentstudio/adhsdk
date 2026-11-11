@@ -9,6 +9,8 @@ public struct MessageQuery: Codable, Sendable, Equatable {
     public var until: String?
     /// AND: a message must carry every one.
     public var labelIds: [String]
+    /// OR: when not empty, a message must carry at least one.
+    public var anyLabelIds: [String]
     public var limit: Int
     public var offset: Int
     /// Only rows after this one in the query's newest-first order. A page that resumes from
@@ -17,12 +19,13 @@ public struct MessageQuery: Codable, Sendable, Equatable {
 
     public init(
         connectionId: String, since: String? = nil, until: String? = nil, labelIds: [String] = [],
-        limit: Int = 50, offset: Int = 0, after: MessageKey? = nil
+        anyLabelIds: [String] = [], limit: Int = 50, offset: Int = 0, after: MessageKey? = nil
     ) {
         self.connectionId = connectionId
         self.since = since
         self.until = until
         self.labelIds = labelIds
+        self.anyLabelIds = anyLabelIds
         self.limit = limit
         self.offset = offset
         self.after = after
@@ -290,6 +293,11 @@ public final class IntegrationsStore: Sendable {
         for label in query.labelIds {
             clauses.append("EXISTS (SELECT 1 FROM json_each(label_ids) WHERE value = ?)")
             arguments.append(label)
+        }
+        if !query.anyLabelIds.isEmpty {
+            let marks = Array(repeating: "?", count: query.anyLabelIds.count).joined(separator: ", ")
+            clauses.append("EXISTS (SELECT 1 FROM json_each(label_ids) WHERE value IN (\(marks)))")
+            arguments.append(contentsOf: query.anyLabelIds)
         }
         if let after = query.after {
             clauses.append("(internal_date < ? OR (internal_date = ? AND id > ?))")

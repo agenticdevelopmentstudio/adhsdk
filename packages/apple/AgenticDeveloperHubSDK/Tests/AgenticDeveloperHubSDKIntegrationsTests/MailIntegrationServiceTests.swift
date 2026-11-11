@@ -773,6 +773,36 @@ struct MailIntegrationServiceTests {
         #expect(recent.messages.first?.bodyText == "hello")
     }
 
+    @Test func listMessagesMatchesAnyOfAnyLabels() async throws {
+        let harness = try Harness()
+        harness.api.labels = [
+            GmailLabelDTO(id: "INBOX", name: "INBOX", type: "system"),
+            GmailLabelDTO(id: "Label_1", name: "Job Search/00. Inbox", type: "user"),
+            GmailLabelDTO(id: "Label_2", name: "Other", type: "user")
+        ]
+        harness.api.setMessage(harness.dto("in", labels: ["INBOX"], ageDays: 1))
+        harness.api.setMessage(harness.dto("job", labels: ["Label_1"], ageDays: 2))
+        harness.api.setMessage(harness.dto("other", labels: ["Label_2"], ageDays: 3))
+        let account = try await harness.connect()
+
+        let both = MailMessageFilter(account: account.id, labels: ["INBOX", "Job Search/00. Inbox"])
+        guard case .messages(let allOf) = await harness.service.handle(.listMessages(both)) else {
+            Issue.record("listMessages failed")
+            return
+        }
+        #expect(allOf.messages.isEmpty)
+
+        let either = MailMessageFilter(account: account.id, anyLabels: ["INBOX", "Job Search/00. Inbox"])
+        guard case .messages(let anyOf) = await harness.service.handle(.listMessages(either)) else {
+            Issue.record("listMessages failed")
+            return
+        }
+        #expect(anyOf.messages.map(\.gmailId) == ["in", "job"])
+
+        let unknown = MailMessageFilter(account: account.id, anyLabels: ["INBOX", "Nope"])
+        #expect(await harness.service.handle(.listMessages(unknown)) == .failure("unknown label: Nope"))
+    }
+
     @Test func messageFilterClampsLimit() throws {
         #expect(MailMessageFilter(account: "a", limit: 0).limit == 1)
         #expect(MailMessageFilter(account: "a", limit: 9_999).limit == 500)
@@ -780,6 +810,7 @@ struct MailIntegrationServiceTests {
         #expect(decoded == MailMessageFilter(account: "a"))
         #expect(decoded.limit == 50)
         #expect(decoded.includeBodies == false)
+        #expect(decoded.anyLabels == [])
     }
 
     @Test func getMessageByGmailId() async throws {

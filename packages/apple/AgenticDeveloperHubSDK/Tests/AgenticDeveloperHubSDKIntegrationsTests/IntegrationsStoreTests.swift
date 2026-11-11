@@ -68,6 +68,24 @@ struct IntegrationsStoreTests {
         #expect(none.isEmpty)
     }
 
+    @Test("anyLabelIds matches a message carrying at least one, and combines with labelIds")
+    func queryMatchesAnyLabel() throws {
+        let (store, _) = try makeStore()
+        try store.upsertMessages([
+            message("e1", day: 1, labels: ["INBOX"]),
+            message("e2", day: 2, labels: ["Label_1"]),
+            message("e3", day: 3, labels: ["Label_2", "STARRED"]),
+            message("e4", day: 4, labels: ["INBOX", "Label_1", "STARRED"])
+        ])
+        let either = try store.messages(MessageQuery(connectionId: "c1", anyLabelIds: ["INBOX", "Label_1"]))
+        #expect(either.map(\.externalId) == ["e4", "e2", "e1"])
+        let starred = try store.messages(MessageQuery(
+            connectionId: "c1", labelIds: ["STARRED"], anyLabelIds: ["INBOX", "Label_1"]))
+        #expect(starred.map(\.externalId) == ["e4"])
+        let none = try store.messages(MessageQuery(connectionId: "c1", anyLabelIds: ["Nope"]))
+        #expect(none.isEmpty)
+    }
+
     @Test("a query pages with limit and offset")
     func queryPagesWithLimitAndOffset() throws {
         let (store, _) = try makeStore()

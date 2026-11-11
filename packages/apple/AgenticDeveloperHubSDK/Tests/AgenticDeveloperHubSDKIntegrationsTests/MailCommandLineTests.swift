@@ -32,6 +32,23 @@ struct MailCommandLineTests {
             labels: ["Work", "INBOX"], limit: 10, cursor: "20", includeBodies: true))])
     }
 
+    @Test func listParsesAnyLabelAsItsOwnRepeatableOption() async {
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil)))
+        let (code, _) = await run(
+            ["list", "a", "--any-label", "INBOX", "--label", "STARRED", "--any-label", "Job Search/00. Inbox"],
+            mail)
+        #expect(code == 0)
+        #expect(mail.requests == [.listMessages(MailMessageFilter(
+            account: "a", labels: ["STARRED"], anyLabels: ["INBOX", "Job Search/00. Inbox"]))])
+    }
+
+    @Test func usageDocumentsHowLabelFiltersCombine() {
+        let usage = MailCommandLine.usage()
+        #expect(usage.contains("[--label L]... [--any-label L]..."))
+        #expect(usage.contains("every --label (AND)"))
+        #expect(usage.contains("at least one\n  --any-label (OR)"))
+    }
+
     @Test func listPrintsMessagesAndNextCursor() async {
         let page = MailMessagePage(messages: [ScriptedMail.message()], nextCursor: "50")
         let (code, out) = await run(["list", "a"], ScriptedMail(.messages(page)))
@@ -206,7 +223,7 @@ struct MailCommandLineTests {
     }
 
     @Test func optionMissingValueIsUsageError() async {
-        for option in ["--since", "--until", "--label", "--limit", "--cursor"] {
+        for option in ["--since", "--until", "--label", "--any-label", "--limit", "--cursor"] {
             let (code, _) = await run(["list", "a", option], ScriptedMail(.ok))
             #expect(code == 64, "\(option)")
         }

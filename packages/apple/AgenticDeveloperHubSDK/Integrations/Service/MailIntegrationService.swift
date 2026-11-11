@@ -485,10 +485,11 @@ public actor MailIntegrationService {
         let limit = MailMessageFilter.clamp(filter.limit)
         let labels = try store.labels(connectionId: owner.id)
         let labelIds = try Self.resolveLabels(filter.labels, in: labels)
+        let anyLabelIds = try Self.resolveLabels(filter.anyLabels, in: labels)
         // One extra row tells whether another page follows.
         let rows = try store.messages(MessageQuery(
             connectionId: owner.id, since: filter.since, until: filter.until, labelIds: labelIds,
-            limit: limit + 1, after: after))
+            anyLabelIds: anyLabelIds, limit: limit + 1, after: after))
         let names = Self.labelNames(labels)
         let messages = rows.prefix(limit).map {
             Self.mailMessage($0, account: owner.externalAccountId, names: names,

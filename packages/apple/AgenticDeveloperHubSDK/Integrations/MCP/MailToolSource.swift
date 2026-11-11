@@ -32,6 +32,8 @@ public struct MailToolSource: ChatToolSource {
                         "since": ToolJSONSchema.string("Earliest date: YYYY-MM-DD or an ISO-8601 timestamp."),
                         "until": ToolJSONSchema.string("Latest date: YYYY-MM-DD or an ISO-8601 timestamp."),
                         "labels": strings("Label ids or names; a message must carry all of them."),
+                        "any_labels": strings(
+                            "Label ids or names; a message must carry at least one of them. Combines with labels."),
                         "limit": ToolJSONSchema.integer("Page size, 1 to 500. Defaults to 50."),
                         "cursor": ToolJSONSchema.string("The nextCursor of the previous page."),
                         "include_bodies": ToolJSONSchema.boolean("Include message bodies.")
@@ -91,6 +93,7 @@ public struct MailToolSource: ChatToolSource {
         filter.since = try bound("since", arguments, edge: .start)
         filter.until = try bound("until", arguments, edge: .end)
         filter.labels = try strings("labels", arguments)
+        filter.anyLabels = try strings("any_labels", arguments)
         if let limit = arguments["limit"] {
             guard let value = Self.integer(limit), value > 0 else {
                 throw ArgumentError(message: "limit must be a positive integer")

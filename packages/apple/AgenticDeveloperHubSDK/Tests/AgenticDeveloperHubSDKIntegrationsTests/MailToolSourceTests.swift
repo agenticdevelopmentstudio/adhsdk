@@ -31,6 +31,19 @@ struct MailToolSourceTests {
             labels: ["Work", "INBOX"], limit: 25, cursor: "50", includeBodies: true))])
     }
 
+    @Test func listMessagesMapsAnyLabels() async {
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil)))
+        let result = await call(MailToolSource(client: mail.client), "mail_list_messages",
+                                #"{"account":"a","labels":["STARRED"],"any_labels":["INBOX","Job Search/00. Inbox"]}"#)
+        #expect(!result.isError)
+        #expect(mail.requests == [.listMessages(MailMessageFilter(
+            account: "a", labels: ["STARRED"], anyLabels: ["INBOX", "Job Search/00. Inbox"]))])
+        let bad = await call(MailToolSource(client: mail.client), "mail_list_messages",
+                             #"{"account":"a","any_labels":"INBOX"}"#)
+        #expect(bad.isError)
+        #expect(bad.content == "any_labels must be an array of strings")
+    }
+
     @Test func resultsArePrettySortedJSON() async throws {
         let message = ScriptedMail.message()
         let mail = ScriptedMail(.message(message))
