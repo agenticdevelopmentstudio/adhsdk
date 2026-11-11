@@ -174,6 +174,7 @@ public struct MailMessage: Codable, Sendable, Equatable {
     /// `labels` mapped to names, falling back to the id.
     public var labelNames: [String]
     public var subject: String
+    /// Gmail's preview text, with the HTML entities Gmail leaves in it decoded.
     public var snippet: String
     public var date: String
     public var mailClass: MailClass

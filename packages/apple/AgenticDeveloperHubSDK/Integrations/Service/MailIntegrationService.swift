@@ -670,8 +670,8 @@ public actor MailIntegrationService {
             id: message.id, gmailId: message.externalId, threadId: message.threadId, account: account,
             from: message.fromAddress, to: message.toAddresses, cc: message.ccAddresses,
             labels: message.labelIds, labelNames: message.labelIds.map { names[$0] ?? $0 },
-            subject: message.subject, snippet: message.snippet, date: message.internalDate,
-            mailClass: message.mailClass,
+            subject: message.subject, snippet: MailHTMLText.decodeEntities(message.snippet),
+            date: message.internalDate, mailClass: message.mailClass,
             bodyText: includeBodies ? bodyText(message) : nil, bodyHtml: includeBodies ? message.bodyHtml : nil,
             attachments: message.attachments)
     }

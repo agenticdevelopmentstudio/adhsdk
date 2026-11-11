@@ -820,7 +820,7 @@ struct MailIntegrationServiceTests {
     @Test func htmlOnlyMessageGetsBodyTextReadFromItsHTML() async throws {
         let harness = try Harness()
         let html = "<html><head><style>p{}</style></head><body><p>Hi,</p><p>We&#39;d like to talk.</p></body></html>"
-        harness.api.setMessage(htmlDTO("h1", html: html, snippet: "Hi, We would like to talk."))
+        harness.api.setMessage(htmlDTO("h1", html: html, snippet: "Hi, We&#39;d like to talk. &lt;3"))
         let account = try await harness.connect()
         let response = await harness.service.handle(.getMessage(account: account.id, id: "h1"))
         guard case .message(let message) = response else {
@@ -829,6 +829,7 @@ struct MailIntegrationServiceTests {
         }
         #expect(message.bodyHtml == html)
         #expect(message.bodyText == "Hi,\n\nWe'd like to talk.")
+        #expect(message.snippet == "Hi, We'd like to talk. <3")
 
         let filter = MailMessageFilter(account: account.id, includeBodies: true)
         guard case .messages(let page) = await harness.service.handle(.listMessages(filter)) else {
@@ -842,6 +843,7 @@ struct MailIntegrationServiceTests {
             return
         }
         #expect(bare.messages.first?.bodyText == nil)
+        #expect(bare.messages.first?.snippet == "Hi, We'd like to talk. <3")
     }
 
     @Test func textPartWinsOverHTMLForBodyText() async throws {
