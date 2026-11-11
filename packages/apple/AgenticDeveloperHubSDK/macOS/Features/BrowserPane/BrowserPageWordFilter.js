@@ -13,7 +13,8 @@
 // replaces ("BLUEBIRD" -> "REDBIRD", "bluebird" -> "redbird").
 //
 // Rewritten: text nodes (not inside script, style, textarea or an editable
-// region, where rewriting would change what a form sends or move the caret)
+// region, where rewriting would change what a form sends or move the caret;
+// an option's value is pinned to its real text before its text is rewritten)
 // and the title, alt, placeholder and aria-label attributes. The page's title
 // is its <title> element's text node, rewritten as any other, so it is never
 // substituted a second time; a script that sets document.title replaces that
@@ -89,10 +90,23 @@
     return false;
   }
 
+  // An option with no value attribute takes its value from its text, so
+  // drawing a stand-in there would also make the form send it (a <select>
+  // or a <datalist> pick alike). Its value is pinned to the real text first.
+  function pinOptionValue(node) {
+    var option = node.parentElement;
+    if (option && option.localName === 'option' && !option.hasAttribute('value')) {
+      option.setAttribute('value', option.value);
+    }
+  }
+
   function filterText(node) {
     if (written.get(node) === node.data || skips(node)) { return; }
     var next = substitute(node.data);
-    if (next !== node.data) { node.data = next; }
+    if (next !== node.data) {
+      pinOptionValue(node);
+      node.data = next;
+    }
     written.set(node, node.data);
   }
 
