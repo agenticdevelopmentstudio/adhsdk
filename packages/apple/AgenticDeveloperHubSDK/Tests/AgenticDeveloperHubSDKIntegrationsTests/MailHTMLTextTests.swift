@@ -136,6 +136,20 @@ struct MailHTMLTextTests {
         #expect(MailHTMLText.plainText(fromHTML: hostile[1]) == "x")
     }
 
+    @Test func preKeepsItsLineBreaksAndIndentation() {
+        #expect(MailHTMLText.plainText(fromHTML: "<pre>step 1 ok\nstep 2 FAILED</pre>") == "step 1 ok\nstep 2 FAILED")
+        #expect(MailHTMLText.plainText(fromHTML: "<pre>\n  indented\r\n\tTab  \nx&#10;y</pre>")
+            == "  indented\n\tTab\nx\ny")
+        let mixed = "<p>a   b</p><PRE>x  <b>y</b></PRE><p>c\n d</p>"
+        #expect(MailHTMLText.plainText(fromHTML: mixed) == "a b\n\nx  y\n\nc d")
+    }
+
+    @Test func encodedLineBreaksAreCollapsibleWhitespace() {
+        let html = "<p>Thank you for applying.&#13;\nWe will review it&#13;\nand reply.</p>"
+        #expect(MailHTMLText.plainText(fromHTML: html) == "Thank you for applying. We will review it and reply.")
+        #expect(MailHTMLText.plainText(fromHTML: "a&#10;&#9;b") == "a b")
+    }
+
     @Test func emptyOrInvisibleHTMLIsEmpty() {
         #expect(MailHTMLText.plainText(fromHTML: "") == "")
         #expect(MailHTMLText.plainText(fromHTML: "<html><head><style>a{}</style></head><body> </body></html>") == "")

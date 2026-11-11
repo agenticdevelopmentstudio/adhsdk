@@ -6,28 +6,32 @@ import Foundation
 /// make an HTML-only message readable in a terminal or to a model. `style`, `script`, `title`,
 /// `noscript` and comments are dropped; block elements and `<br>` become line breaks (a paragraph
 /// or heading a blank line); every other tag is removed; entities are decoded; whitespace is
-/// collapsed as a browser would, keeping the line breaks.
+/// collapsed as a browser would, keeping the line breaks, except inside `<pre>`, which keeps it.
 ///
 /// The HTML is sender-controlled, so the conversion is one linear pass: nothing is rescanned, and
 /// an unclosed comment, tag or hidden element runs to the end of the input, as in a browser.
 public enum MailHTMLText {
     /// The text of `html`.
     public static func plainText(fromHTML html: String) -> String {
-        tidy(decodeEntities(resolveBreaks(markup(Array(html.unicodeScalars)))))
+        restorePreformatted(tidy(resolveBreaks(markup(Array(html.unicodeScalars)))))
     }
 
     // MARK: - Tags
 
-    /// The text with source whitespace collapsed to single spaces, each tag replaced by its break
-    /// marker (or nothing), and hidden elements removed.
+    /// The text with its entities decoded and whitespace collapsed to single spaces (kept, as
+    /// markers, inside `<pre>`), each tag replaced by its break marker (or nothing), and hidden
+    /// elements removed.
     private static func markup(_ html: [Unicode.Scalar]) -> String {
-        var result = String.UnicodeScalarView()
+        var writer = TextWriter()
+        var run = String.UnicodeScalarView()
         var index = 0
         while index < html.count {
             let scalar = html[index]
             if scalar == "<", index + 1 < html.count, opensTag(html[index + 1]) {
+                writer.write(text: run)
+                run = String.UnicodeScalarView()
                 guard let tag = tag(in: html, at: index) else { break }
-                result.append(contentsOf: replacement(for: tag).unicodeScalars)
+                writer.write(tag: tag)
                 index = tag.end
                 if !tag.closing, hidden.contains(tag.name) {
                     guard let after = endOfElement(tag.name, in: html, from: index) else { break }
@@ -35,16 +39,76 @@ public enum MailHTMLText {
                 }
                 continue
             }
+            run.append(scalar)
             index += 1
-            if isHTMLSpace(scalar) {
-                // Source whitespace is insignificant in HTML: any run of it is one space.
-                if result.last != " " { result.append(" ") }
-            } else if !isControl(scalar) {
-                // Controls are dropped here so a raw one can't pose as a break marker.
-                result.append(scalar)
+        }
+        writer.write(text: run)
+        return String(writer.result)
+    }
+
+    /// Writes text runs and tags, minding whether it is inside `<pre>`.
+    private struct TextWriter {
+        var result = String.UnicodeScalarView()
+        private var preDepth = 0
+        /// A browser drops the line break straight after `<pre>`.
+        private var atPreStart = false
+        private var afterCarriageReturn = false
+
+        mutating func write(tag: Tag) {
+            result.append(contentsOf: replacement(for: tag).unicodeScalars)
+            guard tag.name == "pre" else { return }
+            preDepth = tag.closing ? max(0, preDepth - 1) : preDepth + 1
+            atPreStart = !tag.closing
+        }
+
+        /// Decodes the run first, so `&#10;` is whitespace like any other: collapsed outside
+        /// `<pre>`, a line break inside it. Decoding also drops controls, so a raw one can't pose
+        /// as a break marker.
+        mutating func write(text run: String.UnicodeScalarView) {
+            guard !run.isEmpty else { return }
+            for scalar in decodeEntities(String(run)).unicodeScalars {
+                if scalar == preSpace || scalar == preTab { continue }
+                if preDepth > 0 {
+                    writePreformatted(scalar)
+                } else if isHTMLSpace(scalar) {
+                    // Source whitespace is insignificant in HTML: any run of it is one space.
+                    if result.last != " " { result.append(" ") }
+                } else {
+                    result.append(scalar)
+                }
             }
         }
-        return String(result)
+
+        private mutating func writePreformatted(_ scalar: Unicode.Scalar) {
+            defer {
+                atPreStart = false
+                afterCarriageReturn = scalar == "\r"
+            }
+            switch scalar {
+            case "\n" where afterCarriageReturn: return
+            case "\n", "\r": if !atPreStart { result.append("\n") }
+            case " ": result.append(preSpace)
+            case "\t": result.append(preTab)
+            default: result.append(scalar)
+            }
+        }
+    }
+
+    /// Stand-ins for the spaces and tabs inside `<pre>` while the rest of the text is tidied:
+    /// private-use scalars, which are neither whitespace nor controls.
+    private static let preSpace: Unicode.Scalar = "\u{E000}"
+    private static let preTab: Unicode.Scalar = "\u{E001}"
+
+    /// The text with `<pre>`'s spaces and tabs put back, and trailing ones trimmed from each line.
+    private static func restorePreformatted(_ text: String) -> String {
+        guard text.unicodeScalars.contains(where: { $0 == preSpace || $0 == preTab }) else { return text }
+        var scalars = String.UnicodeScalarView()
+        for scalar in text.unicodeScalars {
+            scalars.append(scalar == preSpace ? " " : scalar == preTab ? "\t" : scalar)
+        }
+        return String(scalars).components(separatedBy: "\n")
+            .map { line in String(line.reversed().drop { $0 == " " || $0 == "\t" }.reversed()) }
+            .joined(separator: "\n")
     }
 
     /// A tag: its lowercased name (`!--` for a comment, `!` for any other `<!…>` or `<?…>`),
