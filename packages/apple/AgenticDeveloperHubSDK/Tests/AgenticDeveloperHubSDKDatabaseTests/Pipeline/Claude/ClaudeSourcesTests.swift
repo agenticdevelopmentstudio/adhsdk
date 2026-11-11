@@ -507,6 +507,27 @@ final class ClaudeSourcesTests: XCTestCase {
         XCTAssertEqual(try source.poll(into: spool), 1, "touched again: garbage cursor → restart at 0")
     }
 
+    /// A transcript the sweep cannot read is listed in `failingFiles` (and logged),
+    /// holds the watermark below its mtime, and leaves the list once it reads.
+    func testUnreadableTranscriptIsReportedAndHoldsTheWatermark() throws {
+        try transcript("aaaaaaaa-0000-4000-8000-000000000001", lines: [Self.userLine(1, session: "a")], mtime: base)
+        let blocked = try transcript("bbbbbbbb-0000-4000-8000-000000000002",
+                                     lines: [Self.userLine(2, session: "b")], mtime: base.addingTimeInterval(1))
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: blocked.path)
+        try XCTSkipIf(FileManager.default.isReadableFile(atPath: blocked.path), "running with read override")
+        let source = ClaudeTranscriptSource(projectsDirectory: projectsDir)
+        XCTAssertEqual(try source.poll(into: spool), 1)
+        let path = String(ClaudeTranscriptSource.cursorKey(for: blocked).dropFirst("file:".count))
+        XCTAssertEqual(Array(source.failingFiles.keys), [path])
+        XCTAssertEqual(try source.poll(into: spool), 0, "still unreadable")
+        XCTAssertEqual(source.failingFiles.count, 1)
+
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: blocked.path)
+        XCTAssertEqual(try source.poll(into: spool), 1, "the watermark stayed below the unreadable file")
+        XCTAssertEqual(try payloads().last?.line, Self.userLine(2, session: "b"))
+        XCTAssertTrue(source.failingFiles.isEmpty)
+    }
+
     func testFilesPerPollTakesEveryFileAtTheBoundaryMTime() throws {
         let mtimes = [0, 1, 1, 1, 2].map { base.addingTimeInterval(TimeInterval($0)) }
         for (index, date) in mtimes.enumerated() {
