@@ -446,8 +446,14 @@ public final class PipelineDrainer: @unchecked Sendable {
         let signal = wakeSignal
         let worker = Thread { [weak self] in
             // Hold self only for the duration of a pass, so a dropped drainer can deallocate.
-            while Self.passIfRunning(self) {
-                _ = signal.wait(timeout: .now() + idlePoll)
+            while let failed = Self.passIfRunning(self) {
+                let deadline = DispatchTime.now() + idlePoll
+                // After a failed pass a wake does not cut the wait short: a burst of
+                // appends would retry a failing destination back to back and spend
+                // every record's attempts in moments. Only stop or the deadline ends it.
+                while signal.wait(timeout: deadline) == .success, failed, !Self.isStopping(self) {}
+                // One pass answers every wake banked while the last one ran.
+                while signal.wait(timeout: .now()) == .success {}
             }
             self?.workerDidExit()
             done.signal()
@@ -498,10 +504,15 @@ public final class PipelineDrainer: @unchecked Sendable {
         }
     }
 
-    /// One drain-until-empty if the drainer is alive and not asked to stop.
-    private static func passIfRunning(_ drainer: PipelineDrainer?) -> Bool {
-        guard let drainer, !drainer.shouldStop() else { return false }
-        drainer.drainUntilEmpty()
-        return !drainer.shouldStop()
+    /// One drain-until-empty if the drainer is alive and not asked to stop: whether
+    /// it failed, or nil when the worker should exit.
+    private static func passIfRunning(_ drainer: PipelineDrainer?) -> Bool? {
+        guard let drainer, !drainer.shouldStop() else { return nil }
+        let failed = drainer.drainUntilEmpty().failed
+        return drainer.shouldStop() ? nil : failed
+    }
+
+    private static func isStopping(_ drainer: PipelineDrainer?) -> Bool {
+        drainer?.shouldStop() ?? true
     }
 }

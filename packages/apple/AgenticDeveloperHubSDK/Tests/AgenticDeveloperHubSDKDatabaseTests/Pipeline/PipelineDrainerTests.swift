@@ -339,6 +339,24 @@ final class PipelineDrainerTests: XCTestCase {
         pipe.stop()
     }
 
+    func testWakesAfterAFailedPassDoNotRetryBeforeTheIdlePoll() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0")])
+        struct SinkDown: Error {}
+        let passes = LockedBox(0)
+        let pipe = try drainer(rig, sinks: [ClosureSink { _, _ in passes.update { $0 += 1 }; throw SinkDown() }])
+        XCTAssertTrue(pipe.start(idlePoll: 30))
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline, passes.value == 0 { Thread.sleep(forTimeInterval: 0.01) }
+        for _ in 0..<20 { pipe.wake() }
+        Thread.sleep(forTimeInterval: 0.3)
+        XCTAssertEqual(passes.value, 1, "banked wakes must not replay the failing pass")
+        XCTAssertEqual(try rig.spool.pendingBatch(limit: 10).map(\.attempts), [1])
+        let began = Date()
+        pipe.stop()
+        XCTAssertLessThan(Date().timeIntervalSince(began), 2, "stop still ends the back-off at once")
+    }
+
     func testStartRefusesWhileWorkerIsAlive() throws {
         let rig = try makeRig()
         let pipe = try drainer(rig)
