@@ -129,6 +129,20 @@ struct MailCommandLineTests {
         #expect(out.stderr == ["Error: boom"])
     }
 
+    @Test func notFoundMessageReturnsItsOwnStatus() async {
+        for args in [["get", "a", "zz"], ["label", "add", "a", "Work", "zz"], ["get", "a", "zz", "--json"]] {
+            let (code, out) = await run(args, ScriptedMail(.notFound("No message matches “zz”")))
+            #expect(code == MailCommandLine.notFoundStatus, "\(args)")
+            #expect(code == 3, "\(args)")
+            #expect(out.stderr == ["Error: No message matches “zz”"], "\(args)")
+            #expect(out.stdout.isEmpty, "\(args)")
+        }
+    }
+
+    @Test func usageDocumentsExitStatuses() {
+        #expect(MailCommandLine.usage().contains("3 a message id matches nothing"))
+    }
+
     @Test func jsonFlagEmitsJSON() async throws {
         let (code, out) = await run(["accounts", "--json"], ScriptedMail(.accounts([account()])))
         #expect(code == 0)

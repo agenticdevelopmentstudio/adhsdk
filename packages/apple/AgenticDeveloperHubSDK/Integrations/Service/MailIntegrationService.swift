@@ -60,10 +60,13 @@ public actor MailIntegrationService {
 
     // MARK: - Requests
 
-    /// Never throws: every error becomes `.failure(localizedDescription)`.
+    /// Never throws: a message id that matches nothing becomes `.notFound(localizedDescription)`,
+    /// every other error `.failure(localizedDescription)`.
     public func handle(_ request: MailRequest) async -> MailResponse {
         do {
             return try await dispatch(request)
+        } catch IntegrationError.unknownMessage(let id) {
+            return .notFound(IntegrationError.unknownMessage(id).localizedDescription)
         } catch {
             return .failure(error.localizedDescription)
         }

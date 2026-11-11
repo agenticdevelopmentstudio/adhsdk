@@ -666,7 +666,7 @@ struct MailIntegrationServiceTests {
         let account = try await labelled(harness)
         let response = await harness.service.handle(.modifyLabels(
             account: account.id, messageIds: ["nope"], add: ["Work"], remove: []))
-        #expect(response == .failure("No message matches “nope”"))
+        #expect(response == .notFound("No message matches “nope”"))
         #expect(harness.api.batchModifyCalls.isEmpty)
     }
 
@@ -830,7 +830,7 @@ struct MailIntegrationServiceTests {
         #expect(message.mailClass == .filed)
         #expect(await harness.service.handle(.getMessage(account: account.id, id: message.id)) == response)
         #expect(await harness.service.handle(.getMessage(account: account.id, id: "zz"))
-            == .failure("No message matches “zz”"))
+            == .notFound("No message matches “zz”"))
     }
 
     private func htmlDTO(_ id: String, html: String, text: String? = nil, snippet: String) -> GmailMessageDTO {
@@ -936,6 +936,10 @@ struct MailIntegrationServiceTests {
             try await client.labels(account: "x")
         }
         #expect(MailClientError.remote("boom").localizedDescription == "boom")
+        await #expect(throws: MailClientError.notFound("gone")) {
+            try await ScriptedMail(.notFound("gone")).client.message(account: "a", id: "m")
+        }
+        #expect(MailClientError.notFound("gone").localizedDescription == "gone")
     }
 
     // MARK: - Concurrency and failure handling

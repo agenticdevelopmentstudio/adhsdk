@@ -238,15 +238,19 @@ public enum MailResponse: Codable, Sendable, Equatable {
     // swiftlint:disable:next identifier_name
     case ok
     case failure(String)
+    /// A message id matched nothing. Its own case so a caller can tell it from other failures.
+    case notFound(String)
 }
 
-/// A `.failure` reply from the service, or a reply of the wrong shape.
+/// A `.failure` reply from the service, or a reply of the wrong shape; `.notFound` for a
+/// `.notFound` reply.
 public enum MailClientError: Error, Equatable, LocalizedError {
     case remote(String)
+    case notFound(String)
 
     public var errorDescription: String? {
         switch self {
-        case .remote(let message): return message
+        case .remote(let message), .notFound(let message): return message
         }
     }
 }
@@ -259,11 +263,13 @@ public struct MailClient: Sendable {
         self.transport = transport
     }
 
-    /// `.failure(message)` throws `MailClientError.remote(message)`.
+    /// `.failure(message)` throws `MailClientError.remote(message)`; `.notFound(message)` throws
+    /// `MailClientError.notFound(message)`.
     public func send(_ request: MailRequest) async throws -> MailResponse {
         let reply = try await transport(try JSONEncoder().encode(request))
         let response = try JSONDecoder().decode(MailResponse.self, from: reply)
         if case .failure(let message) = response { throw MailClientError.remote(message) }
+        if case .notFound(let message) = response { throw MailClientError.notFound(message) }
         return response
     }
 

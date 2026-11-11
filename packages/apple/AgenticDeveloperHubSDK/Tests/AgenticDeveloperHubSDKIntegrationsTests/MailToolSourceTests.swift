@@ -114,6 +114,13 @@ struct MailToolSourceTests {
         #expect(mail.requests == [.modifyLabels(account: "a", messageIds: ["m1", "m2"], add: ["Work"], remove: [])])
     }
 
+    @Test func notFoundIsAnErrorResult() async {
+        let mail = ScriptedMail(.notFound("No message matches “zz”"))
+        let result = await call(MailToolSource(client: mail.client), "mail_get_message", #"{"account":"a","id":"zz"}"#)
+        #expect(result.isError)
+        #expect(result.content == "No message matches “zz”")
+    }
+
     @Test func toolErrorSurfacesRemoteFailure() async {
         let mail = ScriptedMail(.failure("unknown label: Nope"))
         let result = await call(MailToolSource(client: mail.client), "mail_list_accounts", "{}")

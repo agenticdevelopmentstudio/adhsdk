@@ -13,14 +13,20 @@ public enum MailCommandLine {
           \(program) get <account> <id>
           \(program) label add <account> <label> <id>...
           \(program) label remove <account> <label> <id>...
-        D is YYYY-MM-DD or an ISO-8601 timestamp. L is a label id or exact name.
+        D is YYYY-MM-DD or an ISO-8601 timestamp. L is a label id or exact name. An id is our
+        message id or Gmail's.
         list: a message must carry every --label (AND) and, if any are given, at least one
           --any-label (OR); the two combine.
+        exit status: 0 success, 1 failure, \(notFoundStatus) a message id matches nothing, 64 usage error.
         """
     }
 
+    /// The exit status when a message id matches nothing (`get`, `label`).
+    public static let notFoundStatus: Int32 = 3
+
     /// 0 on success or when help was asked for (printed to stdout), 64 for a usage error (the
-    /// usage goes to stderr), 1 for a failure.
+    /// usage goes to stderr), `notFoundStatus` when a message id matches nothing, 1 for any
+    /// other failure.
     public static func run(
         _ args: [String], program: String = "mail", client: MailClient,
         stdout: @Sendable (String) -> Void, stderr: @Sendable (String) -> Void
@@ -38,6 +44,9 @@ public enum MailCommandLine {
             let output = try await execute(parsed.command, json: parsed.json, client: client)
             if !output.isEmpty { stdout(output) }
             return 0
+        } catch MailClientError.notFound(let message) {
+            stderr("Error: \(message)")
+            return notFoundStatus
         } catch {
             stderr("Error: \(error.localizedDescription)")
             return 1
