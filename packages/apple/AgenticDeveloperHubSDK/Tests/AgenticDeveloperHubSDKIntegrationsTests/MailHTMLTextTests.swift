@@ -22,6 +22,17 @@ struct MailHTMLTextTests {
         #expect(MailHTMLText.decodeEntities("Hi&zwnj;&#847;&#8203; there\u{FEFF}") == "Hi there")
     }
 
+    @Test func keepsJoinersThatJoinVisibleCharacters() {
+        let coder = "👨\u{200D}💻"
+        #expect(MailHTMLText.decodeEntities(coder) == coder)
+        #expect(MailHTMLText.decodeEntities("👨&zwj;💻") == coder)
+        let persian = "می\u{200C}خواهم"
+        #expect(MailHTMLText.decodeEntities(persian) == persian)
+        #expect(MailHTMLText.decodeEntities("می&zwnj;خواهم") == persian)
+        // Preview padding: joiners between spaces, or at either end, join nothing.
+        #expect(MailHTMLText.decodeEntities("&zwnj; &zwnj;&nbsp;Sale\u{200C}") == " \u{00A0}Sale")
+    }
+
     @Test func plainTextWithoutAmpersandIsUnchanged() {
         #expect(MailHTMLText.decodeEntities("plain words") == "plain words")
     }

@@ -71,8 +71,8 @@ public enum MailHTMLText {
 
     /// `text` with its HTML character references decoded: the common named ones and every
     /// numeric one (`&#39;`, `&#x27;`). One that is malformed or unknown is left as written.
-    /// Invisible padding characters (zero-width spaces and joiners, soft hyphens) are dropped:
-    /// marketing mail fills its preview text with them.
+    /// Invisible padding characters (zero-width spaces, soft hyphens, and joiners that join
+    /// nothing) are dropped: marketing mail fills its preview text with them.
     public static func decodeEntities(_ text: String) -> String {
         guard text.contains("&") else { return stripInvisible(text) }
         var result = ""
@@ -132,15 +132,30 @@ public enum MailHTMLText {
         "Auml": "Ä", "Ouml": "Ö", "Uuml": "Ü", "ntilde": "ñ", "Ntilde": "Ñ", "ccedil": "ç", "szlig": "ß"
     ]
 
-    /// Characters that take no space: zero-width space, non-joiner, joiner, word joiner, BOM,
-    /// soft hyphen and the combining grapheme joiner.
+    /// Characters that take no space and mean nothing: zero-width space, word joiner, BOM, soft
+    /// hyphen and the combining grapheme joiner.
+    private static let invisible: Set<Unicode.Scalar> = ["\u{200B}", "\u{2060}", "\u{FEFF}", "\u{00AD}", "\u{034F}"]
+    /// The zero-width non-joiner and joiner shape the characters on either side (emoji sequences
+    /// such as 👨‍💻, Persian and Indic words), so they are kept between two visible characters and
+    /// dropped only where they join nothing, as preview-text padding does.
+    private static let joiners: Set<Unicode.Scalar> = ["\u{200C}", "\u{200D}"]
+
     private static func stripInvisible(_ text: String) -> String {
-        let invisible: Set<Unicode.Scalar> = ["\u{200B}", "\u{200C}", "\u{200D}", "\u{2060}", "\u{FEFF}",
-                                              "\u{00AD}", "\u{034F}"]
-        guard text.unicodeScalars.contains(where: invisible.contains) else { return text }
-        var scalars = String.UnicodeScalarView()
-        scalars.append(contentsOf: text.unicodeScalars.filter { !invisible.contains($0) })
-        return String(scalars)
+        let scalars = Array(text.unicodeScalars)
+        guard scalars.contains(where: { invisible.contains($0) || joiners.contains($0) }) else { return text }
+        var result = String.UnicodeScalarView()
+        for (index, scalar) in scalars.enumerated() where !invisible.contains(scalar) {
+            if joiners.contains(scalar) {
+                let next = scalars[(index + 1)...].first { !invisible.contains($0) }
+                guard let previous = result.last, joinable(previous), let next, joinable(next) else { continue }
+            }
+            result.append(scalar)
+        }
+        return String(result)
+    }
+
+    private static func joinable(_ scalar: Unicode.Scalar) -> Bool {
+        !joiners.contains(scalar) && !scalar.properties.isWhitespace
     }
 
     // MARK: - Whitespace
