@@ -292,6 +292,14 @@ struct MailCommandLineTests {
         #expect(out.stdout[0].hasSuffix("\n\nDear Mike,\n\nIt's a match."))
     }
 
+    @Test func getTextFallsBackToSnippetWhenTheHTMLHasNoText() async {
+        var message = ScriptedMail.message()
+        message.bodyText = nil
+        message.bodyHtml = #"<html><body><a href="https://x"><img src="promo.png"></a></body></html>"#
+        let (_, out) = await run(["get", "a", "m1"], ScriptedMail(.message(message)))
+        #expect(out.stdout[0].hasSuffix("\n\nsnip"))
+    }
+
     @Test func unknownOptionIsUsageError() async {
         let mail = ScriptedMail(.ok)
         let (code, out) = await run(["list", "a", "--bogus"], mail)

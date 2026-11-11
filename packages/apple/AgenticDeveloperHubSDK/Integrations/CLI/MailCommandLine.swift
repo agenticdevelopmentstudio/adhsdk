@@ -214,14 +214,20 @@ public enum MailCommandLine {
         return "\(messageLine(result.message))  \(summary)"
     }
 
+    private static func htmlText(_ html: String?) -> String? {
+        guard let text = html.map(MailHTMLText.plainText(fromHTML:)), !text.isEmpty else { return nil }
+        return text
+    }
+
     private static func detail(_ message: MailMessage) -> String {
         [
             "From: \(message.from)", "To: \(message.to.joined(separator: ", "))",
             "Date: \(message.date)", "Subject: \(message.subject)",
             "Labels: \(message.labelNames.joined(separator: ", "))", "",
             // The service fills `bodyText` from the HTML itself; converting here as well keeps
-            // HTML-only mail readable from a service that predates that.
-            message.bodyText ?? message.bodyHtml.map(MailHTMLText.plainText(fromHTML:)) ?? message.snippet
+            // HTML-only mail readable from a service that predates that. HTML with no text (an
+            // image-only promotion) converts to "", which falls through to the snippet.
+            message.bodyText ?? htmlText(message.bodyHtml) ?? message.snippet
         ].joined(separator: "\n")
     }
 }
