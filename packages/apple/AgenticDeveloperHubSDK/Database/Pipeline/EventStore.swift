@@ -177,7 +177,9 @@ public final class EventStore: @unchecked Sendable {
             // What `trim` deleted from `turns`, kept so a session's totals survive it:
             // per (provider, session, model) sums of the trimmed turns, and the key
             // of every trimmed turn, so a redelivered one is never stored (and so
-            // never counted) twice. See `EventStore+Trim.swift`.
+            // never counted) twice. A key's `folded` is what its turn added to the
+            // sums (NULL on a key recorded before it was kept), so a later
+            // observation of the turn corrects them. See `EventStore+Trim.swift`.
             try conn.execute(sql: """
                 CREATE TABLE IF NOT EXISTS trimmed_turns (
                     provider TEXT NOT NULL, session_id TEXT NOT NULL, model TEXT NOT NULL,
@@ -188,9 +190,13 @@ public final class EventStore: @unchecked Sendable {
                 """)
             try conn.execute(sql: """
                 CREATE TABLE IF NOT EXISTS trimmed_turn_keys (
-                    provider TEXT NOT NULL, dedup_key TEXT NOT NULL,
+                    provider TEXT NOT NULL, dedup_key TEXT NOT NULL, folded TEXT,
                     PRIMARY KEY (provider, dedup_key)) WITHOUT ROWID
                 """)
+            let keyColumns = try String.fetchAll(conn, sql: "SELECT name FROM pragma_table_info('trimmed_turn_keys')")
+            if !keyColumns.contains("folded") {
+                try conn.execute(sql: "ALTER TABLE trimmed_turn_keys ADD COLUMN folded TEXT")
+            }
             // After `trimmed_turn_keys` exists: the upgrade seeds its sequence
             // from the keys the trim recorded.
             try Self.upgradeTurnsToAutoincrement(conn)
@@ -727,35 +733,31 @@ public final class EventStore: @unchecked Sendable {
         var asOf: Double
     }
 
+    /// What `trimmed_turn_keys` holds for a turn the trim folded.
+    private enum TrimmedTurn {
+        /// The fields the fold read (``foldedTurnFields``), with their `as_of`.
+        case folded(MergedFields)
+        /// Folded before those fields were kept: nothing to correct against.
+        case unrecorded
+    }
+
     /// Folds every observation of one turn in the batch, reads and writes the row
     /// once, and returns the merged turn when the row changed.
     private static func merge(turns: [TurnRow], provider: String, _ conn: Database) throws -> TurnRow? {
         guard let first = turns.first else { return nil }
         let stored = try loadTurn(provider: provider, dedupKey: first.dedupKey, conn)
         // A turn the trim already folded into `trimmed_turns` (an old transcript
-        // imported again) is counted there; storing it again would count it twice.
-        if stored == nil, try isTrimmedTurn(provider: provider, dedupKey: first.dedupKey, conn) { return nil }
-        var state = stored ?? TurnState(asOf: (first.asOf ?? first.time).timeIntervalSince1970)
-        for turn in turns {
-            let asOf = (turn.asOf ?? turn.time).timeIntervalSince1970
-            let offered: [(String, NormalizedValue?)] = [
-                ("session_id", .string(turn.sessionID)),
-                ("time", .number(turn.time.timeIntervalSince1970)),
-                ("model", turn.model.map { .string($0) }),
-                ("account", turn.account.map { .string($0) }),
-                ("agent", turn.agent.map { .string($0) }),
-                ("tool_name", turn.toolName.map { .string($0) }),
-                ("input_tokens", .number(Double(turn.inputTokens))),
-                ("output_tokens", .number(Double(turn.outputTokens))),
-                ("cache_read_tokens", .number(Double(turn.cacheReadTokens))),
-                ("cache_write_tokens", .number(Double(turn.cacheWriteTokens))),
-                ("cost_usd", turn.costUSD.map { .number($0) }),
-                ("raw_ref", .number(Double(turn.rawRef)))
-            ]
-            for (field, value) in offered { state.fields.offer(field, value, asOf: asOf) }
-            state.fields.offer(attrs: turn.attrs, asOf: asOf)
-            state.asOf = max(state.asOf, asOf)
+        // imported again, or a turn's later lines arriving after a trim folded
+        // its first) is counted there; storing it again would count it twice.
+        // What its new observations change is moved into the sums instead.
+        if stored == nil, let trimmed = try trimmedTurn(provider: provider, dedupKey: first.dedupKey, conn) {
+            if case .folded(let before) = trimmed {
+                try refold(before, with: turns, provider: provider, dedupKey: first.dedupKey, conn)
+            }
+            return nil
         }
+        var state = stored ?? TurnState(asOf: (first.asOf ?? first.time).timeIntervalSince1970)
+        offer(turns, into: &state)
         if let stored, stored == state { return nil }
 
         let fields = state.fields
@@ -790,10 +792,57 @@ public final class EventStore: @unchecked Sendable {
             costUSD: fields.number("cost_usd"), attrs: fields.attrs, rawRef: int("raw_ref"))
     }
 
-    private static func isTrimmedTurn(provider: String, dedupKey: String, _ conn: Database) throws -> Bool {
-        try Bool.fetchOne(conn, sql: """
-            SELECT EXISTS (SELECT 1 FROM trimmed_turn_keys WHERE provider = ? AND dedup_key = ?)
-            """, arguments: [provider, dedupKey]) ?? false
+    /// Offers every observation of one turn to `state`.
+    private static func offer(_ turns: [TurnRow], into state: inout TurnState) {
+        for turn in turns {
+            let asOf = (turn.asOf ?? turn.time).timeIntervalSince1970
+            let offered: [(String, NormalizedValue?)] = [
+                ("session_id", .string(turn.sessionID)),
+                ("time", .number(turn.time.timeIntervalSince1970)),
+                ("model", turn.model.map { .string($0) }),
+                ("account", turn.account.map { .string($0) }),
+                ("agent", turn.agent.map { .string($0) }),
+                ("tool_name", turn.toolName.map { .string($0) }),
+                ("input_tokens", .number(Double(turn.inputTokens))),
+                ("output_tokens", .number(Double(turn.outputTokens))),
+                ("cache_read_tokens", .number(Double(turn.cacheReadTokens))),
+                ("cache_write_tokens", .number(Double(turn.cacheWriteTokens))),
+                ("cost_usd", turn.costUSD.map { .number($0) }),
+                ("raw_ref", .number(Double(turn.rawRef)))
+            ]
+            for (field, value) in offered { state.fields.offer(field, value, asOf: asOf) }
+            state.fields.offer(attrs: turn.attrs, asOf: asOf)
+            state.asOf = max(state.asOf, asOf)
+        }
+    }
+
+    /// Offers a trimmed turn's new observations to what the fold read for it.
+    /// When the folded fields change, the old contribution comes out of its
+    /// (session, model) row of `trimmed_turns` and the new one goes in (so a
+    /// changed model moves the turn between rows), and the key keeps the new
+    /// fields. `first_time`/`last_time` only ever widen: a moved turn's old
+    /// time stays in its old row's range.
+    private static func refold(_ before: MergedFields, with turns: [TurnRow], provider: String,
+                               dedupKey: String, _ conn: Database) throws {
+        var state = TurnState(fields: before, asOf: 0)
+        offer(turns, into: &state)
+        let after = foldedFields(of: state.fields)
+        guard after != before else { return }
+        let old = FoldedTurn(before), new = FoldedTurn(after)
+        if old != new {
+            try add(old, sign: -1, provider: provider, conn)
+            try add(new, sign: 1, provider: provider, conn)
+        }
+        try conn.execute(sql: "UPDATE trimmed_turn_keys SET folded = ? WHERE provider = ? AND dedup_key = ?",
+                         arguments: [try foldedText(after), provider, dedupKey])
+    }
+
+    private static func trimmedTurn(provider: String, dedupKey: String, _ conn: Database) throws -> TrimmedTurn? {
+        guard let row = try Row.fetchOne(conn, sql: """
+            SELECT folded FROM trimmed_turn_keys WHERE provider = ? AND dedup_key = ?
+            """, arguments: [provider, dedupKey]) else { return nil }
+        guard let text: String = row["folded"] else { return .unrecorded }
+        return .folded(try foldedFields(text))
     }
 
     private static func loadTurn(provider: String, dedupKey: String, _ conn: Database) throws -> TurnState? {

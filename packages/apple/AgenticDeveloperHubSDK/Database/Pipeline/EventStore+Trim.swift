@@ -313,12 +313,12 @@ extension EventStore {
 
     /// One batch of the turns stage, inside the caller's write transaction: picks the
     /// oldest `limit` turns before `cutoff`, adds their sums to `trimmed_turns` (per
-    /// provider, session and model), records their keys in `trimmed_turn_keys`, then
-    /// deletes them. The fold and the delete commit together or not at all, so a
-    /// crash between them cannot count a turn twice or lose it; a turn whose key is
-    /// already recorded (stored again by a replay into this file) is deleted without
-    /// being added again. Returns the turns deleted. `maxTurnId` keeps every turn
-    /// with a larger id (nil: no bound).
+    /// provider, session and model), records their keys in `trimmed_turn_keys` with
+    /// what each added (``foldedTurnFields``), then deletes them. The fold and the
+    /// delete commit together or not at all, so a crash between them cannot count a
+    /// turn twice or lose it; a turn whose key is already recorded (stored again by a
+    /// replay into this file) is deleted without being added again. Returns the turns
+    /// deleted. `maxTurnId` keeps every turn with a larger id (nil: no bound).
     static func foldAndDeleteTurns(olderThan cutoff: Double, maxTurnId: Int64? = nil, limit: Int,
                                    _ conn: Database) throws -> Int {
         try foldAndDeleteTurns(selecting: """
@@ -389,13 +389,115 @@ extension EventStore {
                 last_time = COALESCE(MAX(last_time, excluded.last_time), last_time, excluded.last_time)
             """)
         try conn.execute(sql: """
-            INSERT OR IGNORE INTO trimmed_turn_keys(provider, dedup_key)
-            SELECT provider, dedup_key FROM turns WHERE id IN (SELECT id FROM temp.trim_turn_batch)
+            INSERT OR IGNORE INTO trimmed_turn_keys(provider, dedup_key, folded)
+            SELECT t.provider, t.dedup_key, \(foldedSnapshot)
+            FROM turns t WHERE t.id IN (SELECT id FROM temp.trim_turn_batch)
             """)
         try conn.execute(sql: "DELETE FROM turns WHERE id IN (SELECT id FROM temp.trim_turn_batch)")
         let deleted = conn.changesCount
         try conn.execute(sql: "DELETE FROM temp.trim_turn_batch")
         return deleted
+    }
+
+    /// The fields of a turn the fold adds to `trimmed_turns`, each with the
+    /// column of `turns t` it reads. `trimmed_turn_keys.folded` keeps them as
+    /// `{field: [value, as_of]}`, so a later observation of the turn is merged
+    /// as `merge(turns:)` would have and only its difference moves the sums.
+    static let foldedTurnFields: [(field: String, column: String)] = [
+        ("session_id", "t.session_id"), ("time", "t.time"), ("model", "t.model"),
+        ("input_tokens", "t.input_tokens"), ("output_tokens", "t.output_tokens"),
+        ("cache_read_tokens", "t.cache_read_tokens"), ("cache_write_tokens", "t.cache_write_tokens"),
+        ("attrs.cache_creation_1h_tokens", "json_extract(t.attrs, '$.cache_creation_1h_tokens')")
+    ]
+
+    /// The `folded` JSON of `turns t`'s row (``foldedTurnFields``).
+    static var foldedSnapshot: String {
+        let pairs = foldedTurnFields.map { field, column in
+            "'\(field)', json_array(\(column), json_extract(t.field_as_of, '$.\"\(field)\"'))"
+        }
+        return "json_object(\(pairs.joined(separator: ", ")))"
+    }
+
+    /// Reads a `folded` JSON back; a field without a value or an `as_of` is left out.
+    static func foldedFields(_ text: String) throws -> MergedFields {
+        var fields = MergedFields()
+        guard case .object(let object) = try JSONDecoder().decode(NormalizedValue.self, from: Data(text.utf8))
+        else { return fields }
+        for (field, _) in foldedTurnFields {
+            guard case .array(let pair) = object[field], pair.count == 2, pair[0] != .null,
+                  case .number(let asOf) = pair[1] else { continue }
+            fields.values[field] = pair[0]
+            fields.times[field] = asOf
+        }
+        return fields
+    }
+
+    /// `fields` cut down to ``foldedTurnFields``.
+    static func foldedFields(of fields: MergedFields) -> MergedFields {
+        var result = MergedFields()
+        for (field, _) in foldedTurnFields {
+            guard let value = fields.values[field], let asOf = fields.times[field] else { continue }
+            result.values[field] = value
+            result.times[field] = asOf
+        }
+        return result
+    }
+
+    /// The `folded` JSON of `fields`, in the shape ``foldedSnapshot`` writes.
+    static func foldedText(_ fields: MergedFields) throws -> String {
+        var object: [String: NormalizedValue] = [:]
+        for (field, value) in fields.values {
+            guard let asOf = fields.times[field] else { continue }
+            object[field] = .array([value, .number(asOf)])
+        }
+        return try NormalizedValue.object(object).canonicalString()
+    }
+
+    /// One trimmed turn's contribution to its `trimmed_turns` row, read as the
+    /// fold's SQL reads it.
+    struct FoldedTurn: Equatable {
+        var sessionID: String, model: String, time: Double?
+        var input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64, cacheWrite1h: Int64
+
+        init(_ fields: MergedFields) {
+            func int(_ field: String) -> Int64 { Int64(fields.number(field) ?? 0) }
+            sessionID = fields.string("session_id") ?? ""
+            model = fields.string("model") ?? ""
+            time = fields.number("time").flatMap { $0 > 0 ? $0 : nil }
+            input = int("input_tokens")
+            output = int("output_tokens")
+            cacheRead = int("cache_read_tokens")
+            cacheWrite = int("cache_write_tokens")
+            cacheWrite1h = int("attrs.cache_creation_1h_tokens")
+        }
+    }
+
+    /// Adds (`sign` 1) or takes out (`sign` -1) one turn's contribution to its
+    /// `trimmed_turns` row; a row left with no turns is deleted. Taking out
+    /// leaves `first_time`/`last_time` as they are.
+    static func add(_ turn: FoldedTurn, sign: Int64, provider: String, _ conn: Database) throws {
+        let time: Double? = sign > 0 ? turn.time : nil
+        try conn.execute(sql: """
+            INSERT INTO trimmed_turns(provider, session_id, model, turn_count, input_tokens, output_tokens,
+                                      cache_read_tokens, cache_write_tokens, cache_write_1h_tokens,
+                                      first_time, last_time)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(provider, session_id, model) DO UPDATE SET
+                turn_count = turn_count + excluded.turn_count,
+                input_tokens = input_tokens + excluded.input_tokens,
+                output_tokens = output_tokens + excluded.output_tokens,
+                cache_read_tokens = cache_read_tokens + excluded.cache_read_tokens,
+                cache_write_tokens = cache_write_tokens + excluded.cache_write_tokens,
+                cache_write_1h_tokens = cache_write_1h_tokens + excluded.cache_write_1h_tokens,
+                first_time = COALESCE(MIN(first_time, excluded.first_time), first_time, excluded.first_time),
+                last_time = COALESCE(MAX(last_time, excluded.last_time), last_time, excluded.last_time)
+            """, arguments: [
+                provider, turn.sessionID, turn.model, sign, sign * turn.input, sign * turn.output,
+                sign * turn.cacheRead, sign * turn.cacheWrite, sign * turn.cacheWrite1h, time, time
+            ])
+        try conn.execute(sql: """
+            DELETE FROM trimmed_turns WHERE provider = ? AND session_id = ? AND model = ? AND turn_count <= 0
+            """, arguments: [provider, turn.sessionID, turn.model])
     }
 
     /// The distinct providers in `messages`, by a skip-scan over `messages_time`
