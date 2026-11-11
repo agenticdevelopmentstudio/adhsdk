@@ -94,6 +94,18 @@ struct MailHTMLTextTests {
         #expect(MailHTMLText.plainText(fromHTML: html) == "Role Engineer\nWhere Remote\n\n- First\n- Second & last")
     }
 
+    @Test func listItemsWithBlockChildrenKeepTheirBullets() {
+        let html = "<ul><li><p>First</p></li><li><p>Second</p></li></ul>"
+        #expect(MailHTMLText.plainText(fromHTML: html) == "- First\n\n- Second")
+        #expect(MailHTMLText.plainText(fromHTML: "<ol><li><div>One</div></li><li> Two</li></ol>") == "- One\n- Two")
+    }
+
+    @Test func closingBrIsABreakAndASpaceAfterBrAddsNoBlankLine() {
+        #expect(MailHTMLText.plainText(fromHTML: "Line one</br>Line two") == "Line one\nLine two")
+        #expect(MailHTMLText.plainText(fromHTML: "Line<br> <div>Next</div>") == "Line\nNext")
+        #expect(MailHTMLText.plainText(fromHTML: "Line<br>\n  <p>Para</p>") == "Line\n\nPara")
+    }
+
     @Test func htmlLinksKeepTheirTextAndEscapedTagsSurvive() {
         let html = #"<p>See <a href="https://example.com/x?a=1&amp;b=2">the posting</a> &lt;b&gt;now&lt;/b&gt;</p>"#
         #expect(MailHTMLText.plainText(fromHTML: html) == "See the posting <b>now</b>")

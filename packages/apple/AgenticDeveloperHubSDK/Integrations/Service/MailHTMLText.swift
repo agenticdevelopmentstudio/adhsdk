@@ -208,8 +208,9 @@ public enum MailHTMLText {
     private static func replacement(for tag: Tag) -> String {
         switch tag.name {
         case "!--": return " "
-        case "br" where !tag.closing: return "\n"
-        case "li" where !tag.closing: return "\(lineBreak)- "
+        // Browsers read a stray `</br>` as `<br>`.
+        case "br": return "\n"
+        case "li" where !tag.closing: return lineBreak + bullet
         case "td", "th": return " "
         case _ where hidden.contains(tag.name): return tag.closing ? "" : " "
         case _ where paragraphElements.contains(tag.name): return paragraphBreak
@@ -248,21 +249,27 @@ public enum MailHTMLText {
         ("A"..."Z").contains(scalar) ? Unicode.Scalar(scalar.value + 32)! : scalar
     }
 
-    /// Soft break markers: control characters no mail body text carries.
+    /// Soft break markers: control characters no mail body text carries (decoding drops them).
     private static let lineBreak = "\u{1}"
     private static let paragraphBreak = "\u{2}"
+    /// A list item's bullet, written before the item's first text, after any breaks its block
+    /// children add, so `<li><p>First</p></li>` reads `- First`, not `-` alone on a line.
+    private static let bullet = "\u{3}"
 
     /// Turns each run of soft breaks into the largest one in it, counting the newlines the text
-    /// already ends with, and drops soft breaks at the very start and end.
+    /// already ends with (spaces after them don't count), and drops soft breaks at the very start
+    /// and end. A pending bullet is written before the next text.
     private static func resolveBreaks(_ text: String) -> String {
         var result = ""
         var pending = 0
         var trailingNewlines = 0
+        var bulletPending = false
         for char in text {
             switch char {
             case "\u{1}": pending = max(pending, 1)
             case "\u{2}": pending = max(pending, 2)
-            case " " where pending > 0:
+            case "\u{3}": bulletPending = true
+            case " " where pending > 0 || bulletPending:
                 continue
             default:
                 if pending > 0, !result.isEmpty {
@@ -273,8 +280,16 @@ public enum MailHTMLText {
                     }
                 }
                 pending = 0
+                if bulletPending, char != "\n" {
+                    result += "- "
+                    bulletPending = false
+                }
                 result.append(char)
-                trailingNewlines = char == "\n" ? trailingNewlines + 1 : 0
+                if char == "\n" {
+                    trailingNewlines += 1
+                } else if char != " " {
+                    trailingNewlines = 0
+                }
             }
         }
         return result
