@@ -71,6 +71,52 @@ final class EventStoreTests: XCTestCase {
         XCTAssertTrue(changed.events.isEmpty && changed.turns.isEmpty && changed.messages.isEmpty)
     }
 
+    private func titleEvent(time: Double, rawRef: Int64, latest: Bool) -> NormalizedBatch {
+        var batch = NormalizedBatch()
+        batch.events = [NormalizedEvent(
+            dedupKey: "s1:title", sessionID: "s1", kind: .other, providerType: "custom-title",
+            time: date(time), summary: "A", rawRef: rawRef, keepsLatestTime: latest)]
+        return batch
+    }
+
+    private func storedEvent(_ store: EventStore) throws -> (time: Double?, rawRef: Int64?) {
+        try store.read { conn in
+            (try Double.fetchOne(conn, sql: "SELECT time FROM events WHERE dedup_key = 's1:title'"),
+             try Int64.fetchOne(conn, sql: "SELECT raw_ref FROM events WHERE dedup_key = 's1:title'"))
+        }
+    }
+
+    /// A `keepsLatestTime` event re-offered later takes the later time and raw
+    /// ref, in either order; an earlier sighting changes nothing.
+    func testKeepsLatestTimeEventMovesToItsLatestSighting() throws {
+        let store = try makeStore()
+        try store.write(titleEvent(time: 1, rawRef: 1, latest: true), provider: "mock")
+        let later = try store.write(titleEvent(time: 5, rawRef: 3, latest: true), provider: "mock")
+        XCTAssertEqual(later.events.count, 1, "a later sighting is a change")
+        XCTAssertTrue(try store.write(titleEvent(time: 3, rawRef: 2, latest: true), provider: "mock").isEmpty)
+        XCTAssertTrue(try store.write(titleEvent(time: 5, rawRef: 3, latest: true), provider: "mock").isEmpty)
+        let stored = try storedEvent(store)
+        XCTAssertEqual(try XCTUnwrap(stored.time), date(5).timeIntervalSince1970, accuracy: 1e-6)
+        XCTAssertEqual(stored.rawRef, 3)
+        XCTAssertEqual(try store.counts().events, 1)
+
+        let reversed = try makeStore("reversed.db")
+        for (time, ref) in [(5.0, Int64(3)), (3, 2), (1, 1)] {
+            try reversed.write(titleEvent(time: time, rawRef: ref, latest: true), provider: "mock")
+        }
+        XCTAssertEqual(try reversed.canonicalDump(), try store.canonicalDump())
+    }
+
+    /// Without the flag the first stored row stays, as a hook redelivery does.
+    func testEventWithoutKeepsLatestTimeKeepsItsFirstRow() throws {
+        let store = try makeStore()
+        try store.write(titleEvent(time: 1, rawRef: 1, latest: false), provider: "mock")
+        XCTAssertTrue(try store.write(titleEvent(time: 5, rawRef: 3, latest: false), provider: "mock").isEmpty)
+        let stored = try storedEvent(store)
+        XCTAssertEqual(try XCTUnwrap(stored.time), date(1).timeIntervalSince1970, accuracy: 1e-6)
+        XCTAssertEqual(stored.rawRef, 1)
+    }
+
     func testTurnMergeIsOrderIndependent() throws {
         // One turn seen by three records: different as_of, overlapping attrs, and a tie.
         let rows = [

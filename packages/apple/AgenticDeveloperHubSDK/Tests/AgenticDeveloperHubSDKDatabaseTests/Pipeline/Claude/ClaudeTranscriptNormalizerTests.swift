@@ -78,6 +78,10 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
         try rawRecord(stem).dedupKey
     }
 
+    private static func contentKey(_ line: String) -> String {
+        ClaudeTranscriptPayload.contentKey(line: line, file: mainFile)
+    }
+
     // MARK: - Payload and dedup key (Ruling 3)
 
     func testPayloadEncodesSortedSnakeCaseKeysAndRoundTrips() throws {
@@ -401,7 +405,8 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
             let batch = try Self.normalize(stem)
             let event = try XCTUnwrap(batch.events.first, stem)
             XCTAssertEqual(batch.events.count, 1, stem)
-            XCTAssertEqual(event.dedupKey, try Self.key(stem), stem)
+            XCTAssertEqual(event.dedupKey, Self.contentKey(try Self.line(stem)), stem)
+            XCTAssertTrue(event.keepsLatestTime, stem)
             XCTAssertEqual(event.kind, .other, stem)
             XCTAssertEqual(event.providerType, stem)
             XCTAssertEqual(event.summary, title)
@@ -425,12 +430,30 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
         }
     }
 
+    /// A title or dispatch line copied into another file (a resumed transcript)
+    /// or moved by a rewrite is the same event, not a second one.
+    func testCopiedTitleAndDispatchLinesKeepOneEventKey() throws {
+        for stem in ["custom-title", "ai-title", "agent-dispatch"] {
+            let original = try Self.payload(stem)
+            let copy = ClaudeTranscriptPayload(
+                file: "/Users/dev/.claude/projects/-Users-dev-work-myapp/resumed.jsonl",
+                lineNo: original.lineNo + 40, subagentFile: false, line: original.line)
+            let normalizer = ClaudeTranscriptNormalizer()
+            let one = try XCTUnwrap(normalizer.normalize(
+                ArchivedRecord(id: 1, record: try Self.record(original))).events.first, stem)
+            let two = try XCTUnwrap(normalizer.normalize(
+                ArchivedRecord(id: 2, record: try Self.record(copy))).events.first, stem)
+            XCTAssertNotEqual(try Self.record(original).dedupKey, try Self.record(copy).dedupKey, stem)
+            XCTAssertEqual(one.dedupKey, two.dedupKey, stem)
+        }
+    }
+
     func testAgentDispatchResultIsASubagentStopEvent() throws {
         let batch = try Self.normalize("agent-dispatch")
         let event = try XCTUnwrap(batch.events.first)
         XCTAssertEqual(batch.events.count, 1)
-        XCTAssertEqual(event.dedupKey, try Self.key("agent-dispatch") + "#agent-dispatch",
-                       "the line's message already holds the record key")
+        XCTAssertEqual(event.dedupKey, Self.contentKey(try Self.line("agent-dispatch")) + "#agent-dispatch")
+        XCTAssertFalse(event.keepsLatestTime, "a copied dispatch line carries the same timestamp")
         XCTAssertEqual(event.kind, .subagentStop)
         XCTAssertEqual(event.providerType, "agent-dispatch")
         XCTAssertEqual(event.sessionID, Self.sessionID)
