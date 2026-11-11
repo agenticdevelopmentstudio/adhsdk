@@ -354,13 +354,28 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
 
     /// The filter's script goes in with the other user scripts, at document
     /// start in every frame, so a frame from another site is drawn through it
-    /// too; the reload brings the page showing to the new answer.
+    /// too; the reload brings the page showing to the new answer. Only a
+    /// change of script reloads: no filter and a filter with no pairs both
+    /// draw the page as it is, as the Chromium engine also decides.
     public func setPageWordFilter(_ filter: TextSubstitutionFilter?) {
-        guard filter != pageWordFilter else { return }
+        let script = filter.flatMap(BrowserPageWordFilter.script(for:))
         pageWordFilter = filter
+        guard script != pageWordScript else { return }
+        pageWordScript = script
         installUserScripts()
-        if webView.url != nil { webView.reload() }
+        guard webView.url != nil else { return }
+        isReloadingForPageWords = true
+        webView.reload()
     }
+
+    /// The script `setPageWordFilter` last installed.
+    private var pageWordScript: String?
+
+    /// Set while the reload a filter change asked for is being decided. A
+    /// page reached by a POST would be posted again by that reload — an order
+    /// submitted twice — so its resubmission is cancelled and the page left
+    /// as it is drawn; the next page it loads follows the new filter.
+    private var isReloadingForPageWords = false
 
     /// The cookie policy belongs to the data store, which may be shared; the
     /// pane decides what goes on it and says so only when the answer moves.
@@ -387,7 +402,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         if let shieldScript = activationShield.userScript {
             controller.addUserScript(shieldScript)
         }
-        if let filter = pageWordFilter, let source = BrowserPageWordFilter.script(for: filter) {
+        if let source = pageWordScript {
             controller.addUserScript(WKUserScript(
                 source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false,
                 in: .world(name: BrowserPageWordFilter.worldName)))
@@ -649,6 +664,14 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
     ) async -> (WKNavigationActionPolicy, WKWebpagePreferences) {
         preferences.allowsContentJavaScript = settings.get(UserSettings.browserJavaScriptEnabled)
         preferences.isLockdownModeEnabled = settings.get(UserSettings.browserLockdownMode)
+        if navigationAction.targetFrame?.isMainFrame ?? true {
+            let forPageWords = isReloadingForPageWords
+            isReloadingForPageWords = false
+            if forPageWords, navigationAction.navigationType == .formResubmitted {
+                logger.info("page word filter reload would resubmit a form; the page is left as drawn")
+                return (.cancel, preferences)
+            }
+        }
         return (navigationAction.shouldPerformDownload ? .download : .allow, preferences)
     }
 
