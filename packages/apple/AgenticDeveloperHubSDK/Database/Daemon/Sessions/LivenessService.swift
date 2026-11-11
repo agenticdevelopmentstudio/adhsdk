@@ -85,6 +85,10 @@ public struct LivenessService: Sendable {
     /// Only a *missing* directory is replaced. One that exists is left alone even
     /// when it differs from the process's, since a session legitimately sits below
     /// where its process runs (an agent `cd`s into a subdirectory).
+    ///
+    /// The process's own directory need not exist. A session that left one deleted
+    /// worktree for another, which was then deleted too, idles in the second: the
+    /// kernel still names it, and it is where the session is — the first is not.
     func relocateStrandedSessions(
         shown: [(sessionId: String, status: String, cwd: String)],
         processes: [LiveClaudeProcess]
@@ -96,8 +100,7 @@ public struct LivenessService: Sendable {
         let fileManager = FileManager.default
         for session in shown where !session.cwd.isEmpty {
             guard let liveCwd = processCwd[session.sessionId], liveCwd != session.cwd,
-                  !fileManager.fileExists(atPath: session.cwd),
-                  fileManager.fileExists(atPath: liveCwd) else { continue }
+                  !fileManager.fileExists(atPath: session.cwd) else { continue }
             let branch = SessionEnricher.gitBranch(at: liveCwd) ?? ""
             logger.info("""
                 Session \(session.sessionId, privacy: .public) moved from deleted \
