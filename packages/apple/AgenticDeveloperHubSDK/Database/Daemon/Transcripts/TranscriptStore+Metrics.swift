@@ -385,6 +385,16 @@ extension DaemonDatabase {
             )
         }
 
+        // The revision is recorded only when this pass reached every session.
+        // A history backfill still replaying leaves sessions out of the scan,
+        // and a trim during it leaves some short (the guard below keeps their
+        // old cost). Either way the costs written now are kept, and the next
+        // launch runs the pass again and overwrites them with the full figures.
+        let incomplete = Self.repricingIncomplete(
+            backfillPending: claudeHistoryBackfillPending(deadline: Self.maintenanceReadDeadline),
+            trimmedBefore: trimmed,
+            trimmedAfter: try claudeTrimmedTurnTotals(deadline: Self.maintenanceReadDeadline))
+
         try migrationTransaction {
             // A session with more turns recorded than the store accounts for
             // (live plus trimmed sums) lost turns before the trim kept sums,
@@ -396,12 +406,35 @@ extension DaemonDatabase {
                     params: [cost, sessionId, turnCounts[sessionId] ?? 0]
                 )
             }
-            try setSetting(Self.pricingRevisionKey, String(TranscriptPricing.revision))
+            if incomplete == nil {
+                try setSetting(Self.pricingRevisionKey, String(TranscriptPricing.revision))
+            }
+        }
+        if let incomplete {
+            logger.info("""
+                repriced \(costs.count, privacy: .public) sessions; revision \
+                \(TranscriptPricing.revision, privacy: .public) not recorded (\(incomplete, privacy: .public)), \
+                repricing again next launch
+                """)
+            return
         }
         logger.info("""
             repriced \(costs.count, privacy: .public) sessions at pricing revision \
             \(TranscriptPricing.revision, privacy: .public)
             """)
+    }
+
+    /// Why a repricing pass could not reach every session, or nil when it
+    /// did: a history backfill still pending, or a trim that folded turns
+    /// away while the scan ran (the trimmed totals count more turns after it
+    /// than before).
+    static func repricingIncomplete(
+        backfillPending: Bool, trimmedBefore: [ClaudeTurnTotals], trimmedAfter: [ClaudeTurnTotals]
+    ) -> String? {
+        if backfillPending { return "history backfill pending" }
+        let before = trimmedBefore.reduce(0) { $0 + $1.turnCount }
+        let after = trimmedAfter.reduce(0) { $0 + $1.turnCount }
+        return before == after ? nil : "trimmed during the scan"
     }
 }
 #endif
