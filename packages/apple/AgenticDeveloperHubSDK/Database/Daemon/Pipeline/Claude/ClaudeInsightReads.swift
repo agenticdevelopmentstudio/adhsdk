@@ -296,6 +296,26 @@ extension DaemonDatabase {
         }
     }
 
+    /// Whether a history backfill still has archive records to replay: its
+    /// target is set and ``ClaudeArchiveReplay/lastRawIDKey`` is below it.
+    /// True when `events.db` is unavailable or either value cannot be read,
+    /// so a caller guarding against a half-replayed day stays guarded.
+    public func claudeHistoryBackfillPending(deadline: Duration? = nil) -> Bool {
+        do {
+            return try withEventReads(true, deadline: deadline) { conn in
+                func value(_ key: String) throws -> String? {
+                    try String.fetchOne(conn, sql: "SELECT value FROM store_meta WHERE key = ?", arguments: [key])
+                }
+                guard let text = try value(ClaudeArchiveReplay.backfillTargetKey) else { return false }
+                guard let target = Int64(text) else { return true }
+                guard let last = try value(ClaudeArchiveReplay.lastRawIDKey) else { return true }
+                return Int64(last).map { $0 < target } ?? true
+            }
+        } catch {
+            return true
+        }
+    }
+
     /// The largest `turns.id` held, every provider; 0 when there are none.
     public func turnsMaxId(deadline: Duration? = nil) throws -> Int64 {
         try withEventReads(0, deadline: deadline) { conn in
