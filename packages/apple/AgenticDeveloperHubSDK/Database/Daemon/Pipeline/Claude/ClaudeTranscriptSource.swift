@@ -1,6 +1,7 @@
 #if canImport(AgenticDeveloperHubSDKCore)
 import AgenticDeveloperHubSDKCore
 import Foundation
+import os
 
 public enum ClaudeTranscriptSourceError: Error, Equatable {
     /// The file's size or inode could not be read, so its cursor cannot be checked.
@@ -31,7 +32,9 @@ public enum ClaudeTranscriptSourceError: Error, Equatable {
 ///   sweep fully consumed (`jsonl_import_last_run_at` today). A sweep takes files
 ///   with a newer mtime, oldest first, `filesPerPoll` at a time plus every file
 ///   sharing the boundary mtime; a file that failed stops the watermark short of
-///   its mtime, so it and everything newer is visited again next time.
+///   its mtime, so it and everything newer is visited again next time. The
+///   failure is logged (a warning, once per file and reason) and listed in
+///   `failingFiles` until a later sweep reads the file.
 ///
 /// Paths are canonicalized (`/private/var/…`, not `/var/…`) so a tail woken with a
 /// hook's spelling of a path and the sweep's walk share one cursor and one payload.
@@ -43,6 +46,11 @@ public final class ClaudeTranscriptSource: IngestSource {
     public let filesPerPoll: Int
     public let linesPerChunk: Int
     private let faultInjector: (@Sendable (SourceStep) throws -> Void)?
+    private let failures = OSAllocatedUnfairLock<[String: String]>(initialState: [:])
+
+    /// The files a sweep could not read, by canonical path, with the error. A file
+    /// leaves the list when a later sweep reads it.
+    public var failingFiles: [String: String] { failures.withLock { $0 } }
 
     /// `faultInjector` is for tests: it fires around each chunk's append (see `SourceStep`).
     public init(projectsDirectory: URL, filesPerPoll: Int = 50, linesPerChunk: Int = 500,
@@ -84,10 +92,12 @@ public final class ClaudeTranscriptSource: IngestSource {
             for (url, modified) in batch {
                 do {
                     appended += try read(url, into: spool)
+                    noteReadable(url)
                 } catch let error as SpoolAppendError {
                     throw error.underlying
                 } catch {
                     earliestFailure = earliestFailure.map { min($0, modified) } ?? modified
+                    noteFailure(url, error)
                 }
             }
             // Oldest first, so the newest file before the earliest failure is the
@@ -111,6 +121,28 @@ public final class ClaudeTranscriptSource: IngestSource {
         } catch let error as SpoolAppendError {
             throw error.underlying
         }
+    }
+
+    /// Logs a file the sweep could not read, once per file and reason, so a file
+    /// that holds the watermark back is never silent.
+    private func noteFailure(_ file: URL, _ error: any Error) {
+        let path = Self.canonicalPath(file)
+        let reason = String(describing: error)
+        let isNew = failures.withLock { state -> Bool in
+            guard state[path] != reason else { return false }
+            state[path] = reason
+            return true
+        }
+        guard isNew else { return }
+        Self.logger.warning(
+            "transcript unreadable, watermark held: \(path, privacy: .public): \(reason, privacy: .public)")
+    }
+
+    private func noteReadable(_ file: URL) {
+        guard !failures.withLock({ $0.isEmpty }) else { return }
+        let path = Self.canonicalPath(file)
+        guard failures.withLock({ $0.removeValue(forKey: path) }) != nil else { return }
+        Self.logger.info("transcript readable again: \(path, privacy: .public)")
     }
 
     // MARK: - One file
@@ -232,5 +264,9 @@ public final class ClaudeTranscriptSource: IngestSource {
               let value = Double(text) else { return nil }
         return Date(timeIntervalSinceReferenceDate: value)
     }
+}
+
+extension ClaudeTranscriptSource: Loggable {
+    public static nonisolated let logger = makeLogger()
 }
 #endif
