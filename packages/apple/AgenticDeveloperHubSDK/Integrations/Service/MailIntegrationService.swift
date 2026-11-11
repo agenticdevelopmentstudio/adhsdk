@@ -112,9 +112,7 @@ public actor MailIntegrationService {
             return .messages(try listMessages(filter))
         case .getMessage(let account, let id):
             let owner = try connection(account)
-            guard let message = try store.message(connectionId: owner.id, idOrExternalId: id) else {
-                throw IntegrationError.unknownMessage(id)
-            }
+            let message = try await resolveMessages([id], connection: owner)[0]
             return .message(try mailMessage(message, connection: owner, includeBodies: true))
         case .modifyLabels(let account, let messageIds, let add, let remove):
             let messages = try await modifyLabels(
@@ -526,7 +524,7 @@ public actor MailIntegrationService {
         let labels = try store.labels(connectionId: connection.id)
         let addIds = try Self.resolveLabels(add, in: labels)
         let removeIds = try Self.resolveLabels(remove, in: labels)
-        let originals = try storedMessages(messageIds, connection: connection)
+        let originals = try await resolveMessages(messageIds, connection: connection)
         let names = Self.labelNames(labels)
         let account = connection.externalAccountId
         guard !addIds.isEmpty || !removeIds.isEmpty, !originals.isEmpty else {
@@ -557,7 +555,7 @@ public actor MailIntegrationService {
         guard !fromIds.contains(destinationId) else {
             throw RequestFailure("cannot move to \(destination): it is also a label to move from")
         }
-        let originals = try storedMessages(messageIds, connection: connection)
+        let originals = try await resolveMessages(messageIds, connection: connection)
         guard !originals.isEmpty else { return [] }
 
         let before: [Int: EmailMessage]
@@ -602,15 +600,35 @@ public actor MailIntegrationService {
         destinationId == "INBOX" ? [] : ["INBOX"]
     }
 
-    /// The stored messages for `ids` (ours or Gmail's), in order; `unknownMessage` for the first
-    /// that matches none.
-    private func storedMessages(_ ids: [String], connection: IntegrationConnection) throws -> [EmailMessage] {
-        try ids.map { id in
-            guard let message = try store.message(connectionId: connection.id, idOrExternalId: id) else {
-                throw IntegrationError.unknownMessage(id)
+    /// The messages for `ids` (ours or Gmail's), in order. The mirror holds only the classes and
+    /// window a connection syncs, so an id with no live row (a message trashed or sent to spam,
+    /// aged out of the window, or never synced) is read from Gmail, by the Gmail id of its
+    /// tombstoned row when the id is ours. `unknownMessage` for the first that Gmail doesn't have
+    /// either. A message read this way is not stored here: a write stores it if it is mirrored.
+    private func resolveMessages(_ ids: [String], connection: IntegrationConnection) async throws -> [EmailMessage] {
+        var messages: [EmailMessage] = []
+        var api: (any GmailAPI)?
+        for id in ids {
+            if let live = try store.message(connectionId: connection.id, idOrExternalId: id) {
+                messages.append(live)
+                continue
             }
-            return message
+            let tombstoned = try store.message(connectionId: connection.id, idOrExternalId: id, includingDeleted: true)
+            let gmail = try api ?? gmailAPI(for: connection.id)
+            api = gmail
+            do {
+                let dto = try await gmail.message(id: tombstoned?.externalId ?? id)
+                messages.append(GmailMessageParser.parse(
+                    dto, connectionId: connection.id, existingId: tombstoned?.id, now: now()))
+            } catch IntegrationError.gmail(status: 400, message: _), IntegrationError.gmail(status: 404, message: _) {
+                // 400: not even shaped like a Gmail id.
+                throw IntegrationError.unknownMessage(id)
+            } catch {
+                if (error as? IntegrationError) == .revoked { record(error, connectionId: connection.id) }
+                throw error
+            }
         }
+        return messages
     }
 
     /// One label change for some of the messages: `indices` into the originals.

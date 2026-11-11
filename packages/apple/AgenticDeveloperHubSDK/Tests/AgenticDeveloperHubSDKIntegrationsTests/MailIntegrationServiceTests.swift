@@ -820,6 +820,53 @@ struct MailIntegrationServiceTests {
         #expect(try !harness.liveIds(account.id).contains("m2"))
     }
 
+    @Test func aMessageTheMirrorTombstonedIsStillFoundInGmail() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        harness.api.labels.append(GmailLabelDTO(id: "TRASH", name: "TRASH", type: "system"))
+        _ = await harness.service.handle(.syncNow(account: account.id))
+        let local = try #require(try harness.store.message(connectionId: account.id, idOrExternalId: "m1"))
+
+        guard case .moved = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1"], destination: "TRASH", from: nil)) else {
+            Issue.record("move to TRASH failed")
+            return
+        }
+        // Trash isn't mirrored by default, so the local copy is tombstoned.
+        #expect(try harness.store.message(connectionId: account.id, idOrExternalId: "m1") == nil)
+
+        guard case .message(let trashed) = await harness.service.handle(.getMessage(account: account.id, id: local.id))
+        else {
+            Issue.record("getMessage of a trashed message failed")
+            return
+        }
+        #expect(trashed.id == local.id)
+        #expect(trashed.labels == ["TRASH"])
+
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: [local.id], destination: "INBOX", from: ["TRASH"]))
+        guard case .moved(let results) = response else {
+            Issue.record("moving back out of the trash returned \(response)")
+            return
+        }
+        #expect(results.first?.removed == ["TRASH"])
+        #expect(results.first?.message.labels == ["INBOX"])
+        #expect(try harness.store.message(connectionId: account.id, idOrExternalId: "m1")?.id == local.id)
+    }
+
+    @Test func aMessageNeverSyncedIsReadFromGmailAndAMissingOneIsNotFound() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        harness.api.setMessage(harness.dto("old", labels: ["Label_1"], ageDays: 4_000))
+        guard case .message(let old) = await harness.service.handle(.getMessage(account: account.id, id: "old")) else {
+            Issue.record("getMessage of an unsynced message failed")
+            return
+        }
+        #expect(old.gmailId == "old")
+        #expect(await harness.service.handle(.getMessage(account: account.id, id: "nope"))
+            == .notFound("No message matches “nope”"))
+    }
+
     @Test func moveToInboxWithNoFromOnlyAddsInbox() async throws {
         let harness = try Harness()
         harness.api.setMessage(harness.dto("m3", labels: ["Label_1"]))

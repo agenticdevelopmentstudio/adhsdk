@@ -270,12 +270,16 @@ public final class IntegrationsStore: Sendable {
         }
     }
 
-    public func message(connectionId: String, idOrExternalId: String) throws -> EmailMessage? {
+    /// The live message whose id or Gmail id is `idOrExternalId`; with `includingDeleted`, a
+    /// tombstoned one too (a live row wins).
+    public func message(
+        connectionId: String, idOrExternalId: String, includingDeleted: Bool = false
+    ) throws -> EmailMessage? {
         try database.read { conn in
-            try EmailMessage
-                .filter(Column("connection_id") == connectionId && Column("is_deleted") == false
-                    && (Column("id") == idOrExternalId || Column("external_id") == idOrExternalId))
-                .fetchOne(conn)
+            var request = EmailMessage.filter(Column("connection_id") == connectionId
+                && (Column("id") == idOrExternalId || Column("external_id") == idOrExternalId))
+            if !includingDeleted { request = request.filter(Column("is_deleted") == false) }
+            return try request.order(Column("is_deleted")).fetchOne(conn)
         }
     }
 
