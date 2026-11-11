@@ -1,5 +1,4 @@
 {
-  "originHash" : "92fc45965557dada3d8baa514d932aad11a305a8c9c9a95e76e452544a756035",
   "pins" : [
     {
       "identity" : "appauth-ios",
@@ -8,15 +7,6 @@
       "state" : {
         "revision" : "a972daac82d449d58ab119e91c68153e29ddac33",
         "version" : "3.0.0"
-      }
-    },
-    {
-      "identity" : "codeeditlanguages",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CodeEditApp/CodeEditLanguages.git",
-      "state" : {
-        "revision" : "331d5dbc5fc8513be5848fce8a2a312908f36a11",
-        "version" : "0.1.20"
       }
     },
     {
@@ -202,7 +192,7 @@
     {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections.git",
+      "location" : "https://github.com/apple/swift-collections",
       "state" : {
         "revision" : "98ef3c98609a1e31b7e157b5b619579001a789d6",
         "version" : "1.7.1"
@@ -380,5 +370,5 @@
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }

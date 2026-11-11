@@ -26,6 +26,9 @@ settings:
     PRODUCT_NAME: $(TARGET_NAME)
     STRING_CATALOG_GENERATE_SYMBOLS: YES
     SWIFT_ENABLE_EXPLICIT_MODULES: NO
+    # One clang module cache per machine, not one per DerivedData folder:
+    # implicit modules (above) are keyed by hash and lock-safe to share.
+    MODULE_CACHE_DIR: $(HOME)/Library/Developer/Xcode/SharedModuleCache
     LD_RUNPATH_SEARCH_PATHS:
       - $(inherited)
       - "@executable_path/../Frameworks"

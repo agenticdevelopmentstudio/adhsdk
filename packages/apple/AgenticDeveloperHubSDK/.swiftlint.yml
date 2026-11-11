@@ -12,6 +12,8 @@ excluded:
   # byte-for-byte rather than restyled as part of the move.
   - Activity
   - Tests/AgenticDeveloperHubSDKActivityTests
+  # Third-party packages vendored as upstream ships them (Vendor/*/README.md).
+  - Vendor
   - .build
   - .swiftpm
   - DerivedData

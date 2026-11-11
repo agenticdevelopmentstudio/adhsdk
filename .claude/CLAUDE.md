@@ -200,6 +200,20 @@ A workspace (this one or a consumer's) that reached either by a second path
 would build a duplicate target into the same products directory, and Xcode
 fails the whole workspace with "Multiple commands produce …".
 
+Swift packages are cloned once per machine, not once per build folder: Xcode
+and `xcodebuild` both honour
+`defaults write com.apple.dt.Xcode IDEClonedSourcePackagesDirPathOverride ~/Library/Developer/Xcode/SharedSourcePackages`.
+Without it every DerivedData folder (one per worktree) carries its own ~1.8 GB
+of clones. The cost of sharing: two worktrees that pin *different* versions of a
+package and resolve at the same time can switch its checkout under each other.
+Third-party code we must carry ourselves goes under
+`packages/apple/AgenticDeveloperHubSDK/Vendor/` as a local package (see
+`Vendor/CodeEditLanguages/README.md`), which SwiftLint skips. The clang module
+cache is shared the same way: each project's `MODULE_CACHE_DIR` points at
+`~/Library/Developer/Xcode/SharedModuleCache`, which is safe because these
+projects build with implicit modules (`SWIFT_ENABLE_EXPLICIT_MODULES: NO`). Keep
+the two settings together.
+
 Always pass `-derivedDataPath` so artifacts stay out of the working tree. Do
 not set `SYMROOT`/`OBJROOT` in `project.yml` — that triggers Xcode's "legacy
 build locations" mode and breaks the external SPM packages. Unattended builds

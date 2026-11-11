@@ -2,15 +2,6 @@
   "originHash" : "5fbf287607819c8cd33e62afb9b0761f4eb04d4296c5c13790efda63d292114a",
   "pins" : [
     {
-      "identity" : "codeeditlanguages",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CodeEditApp/CodeEditLanguages.git",
-      "state" : {
-        "revision" : "331d5dbc5fc8513be5848fce8a2a312908f36a11",
-        "version" : "0.1.20"
-      }
-    },
-    {
       "identity" : "codeeditsourceeditor",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/CodeEditApp/CodeEditSourceEditor.git",

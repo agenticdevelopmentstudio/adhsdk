@@ -7721,6 +7721,7 @@
 		43F9785D03F3BD8EA04D9280 /* ThemedViewsUIKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemedViewsUIKitTests.swift; sourceTree = "<group>"; };
 		43FC8C95FE755B5DF9F2B8A6 /* PermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionStatus.swift; sourceTree = "<group>"; };
 		44031DED56A4130B3ED307A9 /* ConversationsWorkOutputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsWorkOutputTests.swift; sourceTree = "<group>"; };
+		4425FB389BD6CBFC55D569A1 /* CodeEditLanguages */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CodeEditLanguages; path = Vendor/CodeEditLanguages; sourceTree = SOURCE_ROOT; };
 		442EBE522CBD5CC3945F07ED /* NotesCoordinatorMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesCoordinatorMenuTests.swift; sourceTree = "<group>"; };
 		4432D0040E5377120EF5405E /* ReopenOnLaunchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReopenOnLaunchPolicy.swift; sourceTree = "<group>"; };
 		4433D556EC0B079840BEF970 /* ContextEventFieldsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEventFieldsTests.swift; sourceTree = "<group>"; };
@@ -16617,6 +16618,7 @@
 		FBB0B8D85014C765C57B3F5B /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				4425FB389BD6CBFC55D569A1 /* CodeEditLanguages */,
 				88A9CDB62F6A854FC45E85F3 /* SharedRuntime */,
 			);
 			name = Packages;
@@ -18743,7 +18745,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				488DCCE6B69CFEAD6778CD41 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */,
-				350CBAC1D9CB92DB1F29ED5B /* XCRemoteSwiftPackageReference "CodeEditLanguages" */,
 				EC6013EB899EC9DF1CB65775 /* XCRemoteSwiftPackageReference "CodeEditSourceEditor" */,
 				72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */,
 				903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
@@ -18757,6 +18758,7 @@
 				54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */,
 				5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
 				D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
+				9AC00754B768D43BFF4C38E1 /* XCLocalSwiftPackageReference "Vendor/CodeEditLanguages" */,
 				D066ADEA67DF9B5A611C8F12 /* XCLocalSwiftPackageReference "SharedRuntime" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -28225,6 +28227,7 @@
 				LM_FILTER_WARNINGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0.0;
+				MODULE_CACHE_DIR = "$(HOME)/Library/Developer/Xcode/SharedModuleCache";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -28905,6 +28908,7 @@
 				LM_FILTER_WARNINGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0.0;
+				MODULE_CACHE_DIR = "$(HOME)/Library/Developer/Xcode/SharedModuleCache";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -30148,6 +30152,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		9AC00754B768D43BFF4C38E1 /* XCLocalSwiftPackageReference "Vendor/CodeEditLanguages" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/CodeEditLanguages;
+		};
 		D066ADEA67DF9B5A611C8F12 /* XCLocalSwiftPackageReference "SharedRuntime" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = SharedRuntime;
@@ -30169,14 +30177,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.9.2;
-			};
-		};
-		350CBAC1D9CB92DB1F29ED5B /* XCRemoteSwiftPackageReference "CodeEditLanguages" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CodeEditApp/CodeEditLanguages.git";
-			requirement = {
-				kind = exactVersion;
-				version = 0.1.20;
 			};
 		};
 		446E0D9312FC0A50A3D82267 /* XCRemoteSwiftPackageReference "LanguageClient" */ = {
@@ -30397,7 +30397,6 @@
 		};
 		51484FAF5FC1C6C07E8A559D /* CodeEditLanguages */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 350CBAC1D9CB92DB1F29ED5B /* XCRemoteSwiftPackageReference "CodeEditLanguages" */;
 			productName = CodeEditLanguages;
 		};
 		5755D2B088275B9813CC6264 /* FlyingFox */ = {
