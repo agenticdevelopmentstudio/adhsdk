@@ -64,7 +64,9 @@ public final class ThinkingIndicatorView: NSView, Themeable {
     }
     private var dotsStack: NSStackView!
 
-    private var timer: Timer?
+    /// `nonisolated(unsafe)`: set only on the main actor; the nonisolated
+    /// `deinit` reads it only once no other reference remains.
+    nonisolated(unsafe) private var timer: Timer?
     private var step = 0
     private var themeObserver: ThemePaletteObserver?
 
@@ -96,7 +98,9 @@ public final class ThinkingIndicatorView: NSView, Themeable {
     private var currentUtterance: String?
     private var lastRenderedWordIndex = -1
     private var colorfulColor: RGBAColor?
-    private var phaseTimer: Timer?
+    /// `nonisolated(unsafe)`: set only on the main actor; the nonisolated
+    /// `deinit` reads it only once no other reference remains.
+    nonisolated(unsafe) private var phaseTimer: Timer?
 
     /// `nil` while the words-empty dot fallback is in effect — the phase
     /// machine never runs in that mode. Test-only visibility (`@testable`);

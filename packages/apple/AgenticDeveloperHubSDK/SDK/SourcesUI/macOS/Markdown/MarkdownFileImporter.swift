@@ -8,7 +8,7 @@ public enum MarkdownFileImporter {
 
     public static func present(
         from presenter: PlatformViewController,
-        completion: @escaping (String?) -> Void
+        completion: @escaping @MainActor (String?) -> Void
     ) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false

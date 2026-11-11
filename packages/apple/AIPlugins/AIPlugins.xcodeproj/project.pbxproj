@@ -975,7 +975,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
-				SWIFT_VERSION = 6.3;
+				SWIFT_VERSION = 6.4;
 			};
 			name = Debug;
 		};
@@ -1188,7 +1188,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
-				SWIFT_VERSION = 6.3;
+				SWIFT_VERSION = 6.4;
 			};
 			name = Release;
 		};

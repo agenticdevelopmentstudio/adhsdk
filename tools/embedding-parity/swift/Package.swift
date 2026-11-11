@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.4
 //
 // The Apple side of the semantic search parity spike: the same bundle, run
 // with ONNX Runtime and the swift-transformers tokenizer, checked against the

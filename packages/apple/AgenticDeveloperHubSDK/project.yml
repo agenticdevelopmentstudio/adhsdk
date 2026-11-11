@@ -11,7 +11,7 @@ options:
 
 settings:
   base:
-    SWIFT_VERSION: "6.3"
+    SWIFT_VERSION: "6.4"
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
     GCC_TREAT_WARNINGS_AS_ERRORS: YES
     SWIFT_STRICT_CONCURRENCY: complete
@@ -128,11 +128,11 @@ packages:
 
 settingGroups:
   # The targets that were the AgenticDeveloperHubSDK project until Phase 5
-  # folded it in. They keep the settings they always built with: Swift 5.10,
-  # minimal concurrency checking, and warnings that stay warnings.
+  # folded it in. They build in Swift 6 language mode with complete
+  # concurrency checking like everything else; warnings stay warnings.
   PersonaSettings:
-    SWIFT_VERSION: "5.10"
-    SWIFT_STRICT_CONCURRENCY: minimal
+    SWIFT_VERSION: "6.4"
+    SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
     GCC_TREAT_WARNINGS_AS_ERRORS: NO
     ENABLE_MODULE_VERIFIER: NO

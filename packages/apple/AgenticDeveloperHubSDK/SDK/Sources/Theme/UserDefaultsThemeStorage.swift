@@ -26,7 +26,10 @@ public final class UserDefaultsThemeStorage: ThemeStorage {
     }
 
     private let defaults: UserDefaults
-    private var observer: NSObjectProtocol?
+    /// Written once in `init`, read once in `deinit`, never touched between,
+    /// so the nonisolated `deinit` cannot race it. (`isolated deinit` would
+    /// say this in the type system, but needs macOS 15.4 / iOS 18.4.)
+    nonisolated(unsafe) private var observer: NSObjectProtocol?
 
     /// The values this object last wrote or last saw. The change hook fires
     /// only when what is stored differs from these, which is what makes it mean
