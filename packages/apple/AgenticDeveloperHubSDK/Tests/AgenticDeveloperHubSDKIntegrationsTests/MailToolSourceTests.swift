@@ -130,9 +130,11 @@ struct MailToolSourceTests {
         #expect(result.content == (try expectedJSON(results)))
         _ = await call(source, "mail_move_messages",
                        #"{"account":"a","message_ids":["m1","m2"],"to":"Work","from":["Later"]}"#)
+        _ = await call(source, "mail_move_messages", #"{"account":"a","message_ids":["m1"],"to":"Work","from":[]}"#)
         #expect(mail.requests == [
-            .moveMessages(account: "a", messageIds: ["m1"], destination: "Work", from: []),
-            .moveMessages(account: "a", messageIds: ["m1", "m2"], destination: "Work", from: ["Later"])
+            .moveMessages(account: "a", messageIds: ["m1"], destination: "Work", from: nil),
+            .moveMessages(account: "a", messageIds: ["m1", "m2"], destination: "Work", from: ["Later"]),
+            .moveMessages(account: "a", messageIds: ["m1"], destination: "Work", from: [])
         ])
     }
 

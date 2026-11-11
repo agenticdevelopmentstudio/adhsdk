@@ -82,7 +82,7 @@ struct MailCommandLineTests {
             mail)
         #expect(withFrom == 0)
         #expect(mail.requests == [
-            .moveMessages(account: "a", messageIds: ["m1", "m2"], destination: "Work", from: []),
+            .moveMessages(account: "a", messageIds: ["m1", "m2"], destination: "Work", from: nil),
             .moveMessages(account: "a", messageIds: ["m1"], destination: "Job Search/01. Applied",
                           from: ["INBOX", "Job Search/00. Inbox"])
         ])

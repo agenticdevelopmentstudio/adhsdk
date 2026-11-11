@@ -18,8 +18,8 @@ public enum MailCommandLine {
         message id or Gmail's.
         list: a message must carry every --label (AND) and, if any are given, at least one
           --any-label (OR); the two combine.
-        move: adds the --to label and removes INBOX, or each --from label the message carries,
-          in one Gmail write per message.
+        move: adds the --to label and removes each --from label the message carries, in one
+          Gmail write per message. With no --from it removes INBOX (nothing for --to INBOX).
         exit status: 0 success, 1 failure, \(notFoundStatus) a message id matches nothing, 64 usage error.
         """
     }
@@ -64,7 +64,7 @@ public enum MailCommandLine {
         case list(MailMessageFilter)
         case get(account: String, id: String)
         case modify(account: String, ids: [String], add: [String], remove: [String])
-        case move(account: String, ids: [String], destination: String, from: [String])
+        case move(account: String, ids: [String], destination: String, from: [String]?)
     }
 
     private typealias Parsed = (command: Command, json: Bool)
@@ -161,7 +161,7 @@ public enum MailCommandLine {
               let destinations = options.values["--to"], destinations.count == 1 else { return nil }
         let command = Command.move(
             account: options.positionals[0], ids: Array(options.positionals.dropFirst()),
-            destination: destinations[0], from: options.values["--from"] ?? [])
+            destination: destinations[0], from: options.values["--from"])
         return (command, options.json)
     }
 

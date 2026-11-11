@@ -20,9 +20,10 @@ public enum MailRequest: Codable, Sendable, Equatable {
     case getMessage(account: String, id: String)
     /// Messages by our id or Gmail's; labels by Gmail label id or exact name.
     case modifyLabels(account: String, messageIds: [String], add: [String], remove: [String])
-    /// Per message, one Gmail write that adds `destination` and removes whichever of `from`
-    /// the message carries; an empty `from` means INBOX. Ids and labels as for `modifyLabels`.
-    case moveMessages(account: String, messageIds: [String], destination: String, from: [String])
+    /// Adds `destination` and removes every label in `from`. A `nil` `from` means INBOX, or
+    /// nothing when `destination` is INBOX; an empty one removes nothing. Ids and labels as for
+    /// `modifyLabels`.
+    case moveMessages(account: String, messageIds: [String], destination: String, from: [String]?)
 
     /// True for the requests that read or label mail in accounts already signed in: everything
     /// `MailCommandLine` and `MailToolSource` send. False for the ones that administer the
@@ -327,7 +328,7 @@ public struct MailClient: Sendable {
     }
 
     public func moveMessages(
-        account: String, messageIds: [String], destination: String, from: [String]
+        account: String, messageIds: [String], destination: String, from: [String]? = nil
     ) async throws -> [MailMoveResult] {
         let request = MailRequest.moveMessages(
             account: account, messageIds: messageIds, destination: destination, from: from)

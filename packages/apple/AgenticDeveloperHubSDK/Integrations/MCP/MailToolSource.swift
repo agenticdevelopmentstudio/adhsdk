@@ -62,7 +62,8 @@ public struct MailToolSource: ChatToolSource {
                         "account": account,
                         "message_ids": strings("The messages to move."),
                         "to": ToolJSONSchema.string("The label id or name to move them to."),
-                        "from": strings("Label ids or names to move them out of. Defaults to INBOX.")
+                        "from": strings("Label ids or names to move them out of. Omitted: INBOX (nothing when "
+                            + "to is INBOX); empty: nothing, so the label is only added.")
                     ], required: ["account", "message_ids", "to"]))
         ]
     }
@@ -139,7 +140,7 @@ public struct MailToolSource: ChatToolSource {
         let account = try string("account", arguments)
         let ids = try strings("message_ids", arguments)
         let destination = try string("to", arguments)
-        let from = try strings("from", arguments)
+        let from = arguments["from"] == nil ? nil : try strings("from", arguments)
         guard !ids.isEmpty else { throw ArgumentError(message: "message_ids must not be empty") }
         return try await client.moveMessages(account: account, messageIds: ids, destination: destination, from: from)
     }

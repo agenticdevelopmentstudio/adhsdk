@@ -541,15 +541,15 @@ public actor MailIntegrationService {
         }
     }
 
-    /// Adds `destination` to each message and removes whichever of `from` (INBOX when empty) it
-    /// carries, in one Gmail write per message: messages that lose the same labels share a
-    /// `batchModify`. A message Gmail no longer has when it is re-read is left out of the result.
+    /// Adds `destination` to each message and removes whichever of `from` it carries, in one
+    /// Gmail write per message: messages that lose the same labels share a `batchModify`. A
+    /// message Gmail no longer has when it is re-read is left out of the result.
     private func moveMessages(
-        connection: IntegrationConnection, messageIds: [String], destination: String, from: [String]
+        connection: IntegrationConnection, messageIds: [String], destination: String, from: [String]?
     ) async throws -> [MailMoveResult] {
         let labels = try store.labels(connectionId: connection.id)
         let destinationId = try Self.resolveLabels([destination], in: labels)[0]
-        let fromIds = try Self.resolveLabels(from.isEmpty ? ["INBOX"] : from, in: labels)
+        let fromIds = try Self.resolveLabels(from ?? Self.defaultMoveSources(to: destinationId), in: labels)
         guard !fromIds.contains(destinationId) else {
             throw RequestFailure("cannot move to \(destination): it is also a label to move from")
         }
@@ -582,6 +582,12 @@ public actor MailIntegrationService {
                 message: Self.mailMessage(message, account: account, names: names, includeBodies: false),
                 added: added.map { names[$0] ?? $0 }, removed: removals[index].map { names[$0] ?? $0 })
         }
+    }
+
+    /// What a move takes a message out of when the caller names nothing: the Inbox, unless the
+    /// move is into the Inbox, which then only adds it.
+    static func defaultMoveSources(to destinationId: String) -> [String] {
+        destinationId == "INBOX" ? [] : ["INBOX"]
     }
 
     /// The stored messages for `ids` (ours or Gmail's), in order; `unknownMessage` for the first

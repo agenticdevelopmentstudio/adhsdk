@@ -710,7 +710,7 @@ struct MailIntegrationServiceTests {
         let local = try #require(try harness.store.message(connectionId: account.id, idOrExternalId: "m1"))
 
         let response = await harness.service.handle(.moveMessages(
-            account: account.email, messageIds: [local.id, "m2", "m3"], destination: "Work/Projects", from: []))
+            account: account.email, messageIds: [local.id, "m2", "m3"], destination: "Work/Projects", from: nil))
 
         // m3 is not in the inbox: it gains the label and loses nothing, in a write of its own.
         #expect(harness.api.batchModifyCalls == [
@@ -753,7 +753,7 @@ struct MailIntegrationServiceTests {
         let harness = try Harness()
         let account = try await labelled(harness)
         let response = await harness.service.handle(.moveMessages(
-            account: account.id, messageIds: ["m2"], destination: "Work", from: []))
+            account: account.id, messageIds: ["m2"], destination: "Work", from: nil))
         guard case .moved(let results) = response else {
             Issue.record("moveMessages returned \(response)")
             return
@@ -767,18 +767,51 @@ struct MailIntegrationServiceTests {
         let harness = try Harness()
         let account = try await labelled(harness)
         #expect(await harness.service.handle(.moveMessages(
-            account: account.id, messageIds: ["m1", "nope"], destination: "Work", from: []))
+            account: account.id, messageIds: ["m1", "nope"], destination: "Work", from: nil))
             == .notFound("No message matches “nope”"))
         #expect(await harness.service.handle(.moveMessages(
-            account: account.id, messageIds: ["m1"], destination: "work", from: []))
+            account: account.id, messageIds: ["m1"], destination: "work", from: nil))
             == .failure("unknown label: work"))
         #expect(await harness.service.handle(.moveMessages(
             account: account.id, messageIds: ["m1"], destination: "Work", from: ["Nope"]))
             == .failure("unknown label: Nope"))
         #expect(await harness.service.handle(.moveMessages(
-            account: account.id, messageIds: ["m1"], destination: "INBOX", from: []))
+            account: account.id, messageIds: ["m1"], destination: "INBOX", from: ["INBOX"]))
             == .failure("cannot move to INBOX: it is also a label to move from"))
         #expect(harness.api.batchModifyCalls.isEmpty)
+    }
+
+    @Test func moveToInboxWithNoFromOnlyAddsInbox() async throws {
+        let harness = try Harness()
+        harness.api.setMessage(harness.dto("m3", labels: ["Label_1"]))
+        let account = try await labelled(harness)
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m3"], destination: "INBOX", from: nil))
+        #expect(harness.api.batchModifyCalls == [
+            FakeGmailAPI.BatchModifyCall(ids: ["m3"], add: ["INBOX"], remove: [])
+        ])
+        guard case .moved(let results) = response else {
+            Issue.record("moveMessages returned \(response)")
+            return
+        }
+        #expect(results.first?.added == ["INBOX"])
+        #expect(results.first?.removed == [])
+    }
+
+    @Test func moveWithAnEmptyFromRemovesNothing() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1"], destination: "Work", from: []))
+        #expect(harness.api.batchModifyCalls == [
+            FakeGmailAPI.BatchModifyCall(ids: ["m1"], add: ["Label_1"], remove: [])
+        ])
+        guard case .moved(let results) = response else {
+            Issue.record("moveMessages returned \(response)")
+            return
+        }
+        #expect(results.first?.removed == [])
+        #expect(results.first?.message.labels == ["INBOX", "Label_1"])
     }
 
     @Test func moveBatchFailureLogsAnError() async throws {
@@ -786,7 +819,7 @@ struct MailIntegrationServiceTests {
         let account = try await labelled(harness)
         harness.api.batchModifyError = IntegrationError.gmail(status: 500, message: "boom")
         let response = await harness.service.handle(.moveMessages(
-            account: account.id, messageIds: ["m1"], destination: "Work", from: []))
+            account: account.id, messageIds: ["m1"], destination: "Work", from: nil))
         #expect(response == .failure("Gmail returned 500: boom"))
         let log = try #require(try harness.actionLogs().last)
         #expect(log.actionType == "move_messages")
