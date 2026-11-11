@@ -513,6 +513,41 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(try database.setting(for: Self.pricingRevisionKey), String(TranscriptPricing.revision))
     }
 
+    func testRepricingDuringAPendingBackfillWritesCostsButLeavesTheRevisionUnrecorded() throws {
+        try turn("a", "s1", "2026-06-01T12:00:00Z", output: 2000)
+        try storeCost(999, session: "s1", in: database)
+        try harness.store.setMetaValue("5", forKey: ClaudeArchiveReplay.backfillTargetKey)
+        try harness.store.setMetaValue("2", forKey: ClaudeArchiveReplay.lastRawIDKey)
+
+        database.repriceSessionMetricsIfNeeded()
+
+        let expected = TranscriptPricing.cost(
+            model: "claude-sonnet-4-6", inputTokens: 0, outputTokens: 2000, cacheReadTokens: 0,
+            cacheCreationTokens: 0, cacheCreation1hTokens: 0)
+        XCTAssertEqual(try XCTUnwrap(try database.metricsForSession(sessionId: "s1")).totalCostUsd,
+                       expected, accuracy: 1e-9)
+        XCTAssertNil(try database.setting(for: Self.pricingRevisionKey),
+                     "a pass that cannot see the unreplayed history runs again next launch")
+
+        // The backfill finishes: the next pass records the revision.
+        try harness.store.setMetaValue("5", forKey: ClaudeArchiveReplay.lastRawIDKey)
+        database.repriceSessionMetricsIfNeeded()
+        XCTAssertEqual(try database.setting(for: Self.pricingRevisionKey), String(TranscriptPricing.revision))
+    }
+
+    func testRepricingIsIncompleteWhenATrimFoldsTurnsDuringTheScan() {
+        func totals(_ turns: Int) -> [ClaudeTurnTotals] {
+            [ClaudeTurnTotals(key: "s1", model: "m", turnCount: turns, inputTokens: 0, outputTokens: 0,
+                              cacheReadTokens: 0, cacheCreationTokens: 0, cacheCreation1hTokens: 0)]
+        }
+        XCTAssertNil(DaemonDatabase.repricingIncomplete(
+            backfillPending: false, trimmedBefore: totals(3), trimmedAfter: totals(3)))
+        XCTAssertEqual(DaemonDatabase.repricingIncomplete(
+            backfillPending: false, trimmedBefore: totals(3), trimmedAfter: totals(5)), "trimmed during the scan")
+        XCTAssertEqual(DaemonDatabase.repricingIncomplete(
+            backfillPending: true, trimmedBefore: [], trimmedAfter: []), "history backfill pending")
+    }
+
     // MARK: - Trimmed turns
 
     /// Every total of a session's metrics, cost to the nanodollar.
