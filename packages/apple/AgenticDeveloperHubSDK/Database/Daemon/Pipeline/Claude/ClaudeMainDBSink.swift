@@ -48,11 +48,16 @@ public final class ClaudeMainDBSink: PipelineSink {
         // event store's own connection; it is ordering, not routing, that this
         // protects.)
         let derived = try derive(transcripts)
+        let lastTools = try newestTools(hooks)
         let earliest = Self.earliestTimes(batch)
 
         try database.transaction {
             for hook in hooks {
                 try apply(hook)
+            }
+            for (sessionId, tool) in lastTools.sorted(by: { $0.key < $1.key }) {
+                try database.execute(
+                    "UPDATE sessions SET last_tool = ? WHERE session_id = ?", params: [tool, sessionId])
             }
             try applyTranscripts(transcripts, derived: derived, fallbackAccount: fallbackAccount)
             try lowerStartedAt(earliest)
@@ -114,6 +119,36 @@ public final class ClaudeMainDBSink: PipelineSink {
             let account = database.resolveIngestAccount(
                 accountEmail: parsed.accountEmail, oauthAccountEmail: parsed.oauthAccountEmail)
             return HookEvent(event: parsed, account: account)
+        }
+    }
+
+    /// For each session with a tool hook in the batch, the tool of its newest
+    /// stored tool hook. `applySessionState` orders `last_tool` against
+    /// `last_activity_at`, which a transcript stub also sets, so a hook backlog
+    /// drained after the stub was made would never set it; read back from the
+    /// event store, it is the newest tool hook's whatever the arrival order. Only
+    /// hook events carry a `tool_name` there. A session with none stored (its
+    /// hooks already trimmed) keeps what `applySessionState` wrote. Must run
+    /// outside the session database's writer.
+    private func newestTools(_ hooks: [HookEvent]) throws -> [String: String] {
+        var sessions: Set<String> = []
+        for hook in hooks {
+            let data = hook.event.hookData
+            guard let sessionId = data["session_id"] as? String, !sessionId.isEmpty,
+                  let tool = data["tool_name"] as? String, !tool.isEmpty else { continue }
+            sessions.insert(sessionId)
+        }
+        guard !sessions.isEmpty else { return [:] }
+        return try eventReads.read { conn -> [String: String] in
+            var tools: [String: String] = [:]
+            for sessionId in sessions {
+                tools[sessionId] = try String.fetchOne(conn, sql: """
+                    SELECT tool_name FROM events
+                    WHERE provider = ? AND session_id = ? AND tool_name IS NOT NULL AND tool_name <> ''
+                    ORDER BY time DESC, id DESC LIMIT 1
+                    """, arguments: [ClaudeProvider.name, sessionId])
+            }
+            return tools
         }
     }
 

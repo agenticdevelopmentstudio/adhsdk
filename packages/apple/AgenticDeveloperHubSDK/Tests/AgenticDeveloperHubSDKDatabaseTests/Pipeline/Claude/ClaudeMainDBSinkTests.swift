@@ -437,6 +437,24 @@ final class ClaudeMainDBSinkTests: XCTestCase {
         XCTAssertEqual(try dumpAll(pipeline.database), before)
     }
 
+    /// A hook backlog drained after the transcript made the session (its
+    /// last_activity_at already at the newest turn) still sets last_tool, to the
+    /// newest tool hook whatever order the batches arrive in.
+    func testAHookBacklogAfterTheTranscriptStubSetsLastTool() throws {
+        let pipeline = try makePipeline()
+        try pipeline.deliver(try transcriptRecords())
+        let lastTool = "SELECT last_tool FROM sessions WHERE session_id = '\(Self.sessionID)'"
+        XCTAssertEqual(try scalar(pipeline.database, lastTool), "")
+
+        let older = try Self.hookRecord("PreToolUse", id: 1)
+        let newer = try Self.hookRecord(
+            "PreToolUse", id: 2, key: "later-tool", timestamp: "2026-10-30T12:01:00Z", hookData: ["tool_name": "Edit"])
+        try pipeline.deliver([newer])
+        XCTAssertEqual(try scalar(pipeline.database, lastTool), "Edit")
+        try pipeline.deliver([older])
+        XCTAssertEqual(try scalar(pipeline.database, lastTool), "Edit", "an older tool hook arriving later")
+    }
+
     // MARK: - Accounts
 
     func testAccountIsFirstWinsAsTheLegacyWritersLeaveIt() throws {
