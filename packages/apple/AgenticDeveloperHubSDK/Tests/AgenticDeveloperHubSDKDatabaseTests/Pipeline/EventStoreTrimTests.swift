@@ -79,6 +79,20 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertEqual(floor, EventStore.minimumTrimBatch)
     }
 
+    /// Out of pass time, an ejected batch is not retried: the stage stops with
+    /// nothing from it, and the halved size is kept for the next pass.
+    func testABatchOutOfPassTimeStopsHalving() throws {
+        var limit = 500
+        var tried: [Int] = []
+        let deleted = try EventStore.shrinkingOnDeadline(&limit, until: .now) { size -> Int in
+            tried.append(size)
+            throw BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)
+        }
+        XCTAssertNil(deleted)
+        XCTAssertEqual(tried, [500])
+        XCTAssertEqual(limit, 250)
+    }
+
     func testAFastBatchGrowsTheNextBackToTheFullBatch() {
         XCTAssertEqual(EventStore.grownTrimBatch(62, upTo: 500, took: .seconds(1)), 124)
         XCTAssertEqual(EventStore.grownTrimBatch(400, upTo: 500, took: .seconds(1)), 500)

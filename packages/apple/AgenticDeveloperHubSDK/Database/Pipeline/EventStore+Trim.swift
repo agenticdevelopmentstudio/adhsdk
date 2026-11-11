@@ -193,10 +193,10 @@ extension EventStore {
                    batchWork: ((Database, Int) throws -> Int)? = nil) throws -> Bool {
             while true {
                 if ranBatch && ContinuousClock.now >= end { return false }
-                let deleted: Int
+                let outcome: Int?
                 let started = ContinuousClock.now
                 do {
-                    deleted = try Self.shrinkingOnDeadline(&limit) { size in
+                    outcome = try Self.shrinkingOnDeadline(&limit, until: end) { size in
                         try pool.write(deadline: nil) { conn -> Int in
                             if let batchWork { return try batchWork(conn, size) }
                             try conn.execute(sql: sql, arguments: arguments + [size])
@@ -206,6 +206,9 @@ extension EventStore {
                 } catch {
                     throw EventStoreTrimFailure(partial: result, underlying: error)
                 }
+                // Out of pass time after an ejection: stop, unfinished, with
+                // the smaller size carried to the next pass.
+                guard let deleted = outcome else { return false }
                 ranBatch = true
                 result[keyPath: field] += deleted
                 let used = limit
@@ -276,13 +279,21 @@ extension EventStore {
     /// on a slow disk that a replay is also writing, 500 of them could run past the
     /// deadline, which failed the stage and left the pass unfinished. A batch at the
     /// minimum that still runs out throws the deadline error.
+    ///
+    /// Halving stops once `end` has passed, returning nil with `limit` already
+    /// halved: each ejected batch costs the full write deadline, so 500 → 25 is six
+    /// of them, and without the check one batch could run a 300 s pass to 660 s
+    /// (``vacuumSteps(pagesPerStep:carry:until:_:)`` has the same check). nil
+    /// `end` never stops.
     static func shrinkingOnDeadline<T>(_ limit: inout Int, minimum: Int = minimumTrimBatch,
-                                       _ body: (Int) throws -> T) throws -> T {
+                                       until end: ContinuousClock.Instant? = nil,
+                                       _ body: (Int) throws -> T) throws -> T? {
         while true {
             do {
                 return try body(limit)
             } catch BoundedDatabaseError.deadlineExceeded where limit > minimum {
                 limit = max(minimum, limit / 2)
+                if let end, ContinuousClock.now >= end { return nil }
             }
         }
     }
