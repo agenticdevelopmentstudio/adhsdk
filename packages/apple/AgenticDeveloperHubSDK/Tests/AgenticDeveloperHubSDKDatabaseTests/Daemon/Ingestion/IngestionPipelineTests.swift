@@ -249,6 +249,27 @@ final class IngestionPipelineTests: XCTestCase {
         await pipeline.stop()
     }
 
+    /// A hook record the normalizer refuses is listed from the spool quarantine
+    /// with its event, session and reason, once it is out of attempts.
+    func testWithClaudeASpoolQuarantinedHookIsListed() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        try handles.spool.append([RawRecord(
+            provider: ClaudeProvider.name, sourceKind: ClaudeProvider.hookKind,
+            dedupKey: "1793361600000-aaaaaaaa", receivedAt: Date(),
+            payload: Data(#"{"event":"Stop","hook_data":{"session_id":"s1"},"timestamp":5}"#.utf8))])
+        try handles.spool.quarantine(id: try XCTUnwrap(handles.spool.pendingBatch(limit: 1).first?.id),
+                                     reason: "refused")
+
+        let listed = handles.quarantinedErrors()
+        XCTAssertEqual(listed.map(\.filename), ["1793361600000-aaaaaaaa"])
+        XCTAssertEqual(listed.first?.eventType, "Stop")
+        XCTAssertEqual(listed.first?.sessionId, "s1")
+        XCTAssertEqual(listed.first?.reason, "refused")
+        XCTAssertEqual(listed.first?.exhausted, true)
+        XCTAssertEqual(handles.quarantinedCount(), listed.count)
+        await pipeline.stop()
+    }
+
     /// Preserving a file whose key already holds other bytes (a reused file name)
     /// keeps the new bytes under the key with their sha256 appended.
     func testWithClaudeAReusedFileNameIsPreservedUnderAFallbackKey() async throws {
