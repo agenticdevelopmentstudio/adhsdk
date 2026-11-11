@@ -220,15 +220,17 @@ final class ClaudeLegacyRecordTests: XCTestCase {
         result.replayed = 1
         result.skipped = 1
         result.skippedIDs = [2]
+        result.skippedByKind = ["hook-legacy": 1]
         result.failed = 1
         result.failures = [.init(rawID: 3, error: "unparseable(\"k\")")]
         result.lastRawID = 3
         result.seconds = 0.5
         let object = try XCTUnwrap(JSONSerialization.jsonObject(with: result.jsonData()) as? [String: Any])
         XCTAssertEqual(Set(object.keys), [
-            "records", "replayed", "skipped", "skipped_ids", "failed", "failed_this_run", "failures",
-            "last_raw_id", "interrupted", "recovered_bulk_load", "seconds"
+            "records", "replayed", "skipped", "skipped_ids", "skipped_by_kind", "failed", "failed_this_run",
+            "failures", "last_raw_id", "interrupted", "recovered_bulk_load", "seconds"
         ])
+        XCTAssertEqual(object["skipped_by_kind"] as? [String: Int], ["hook-legacy": 1])
         XCTAssertEqual(object["last_raw_id"] as? Int, 3)
         let failures = try XCTUnwrap(object["failures"] as? [[String: Any]])
         XCTAssertEqual(failures.first?["raw_id"] as? Int, 3)

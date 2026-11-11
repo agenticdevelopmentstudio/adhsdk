@@ -12,6 +12,8 @@ public struct ReplayReport: Sendable, Equatable {
     public var skipped = 0
     /// The first `Replayer.maxReportedFailures` skipped archive ids, in replay order.
     public var skippedIDs: [Int64] = []
+    /// `skipped` by the record's `source_kind`, every skip counted (never capped).
+    public var skippedByKind: [String: Int] = [:]
     /// Archive id to error description. Only the first `Replayer.maxReportedFailures` are kept.
     public var failures: [Int64: String] = [:]
     /// The highest archive id this replay has written (or skipped as failed). Pass it
@@ -221,14 +223,14 @@ public enum Replayer {
                 // nothing from it either.
                 if archived.record.isConflictCopy {
                     report.normalized += 1
-                    skip(&report, id: archived.id)
+                    skip(&report, archived)
                     continue
                 }
                 do {
                     let batch = try source.normalizer.normalize(archived)
                     report.normalized += 1
                     if batch.isEmpty {
-                        skip(&report, id: archived.id)
+                        skip(&report, archived)
                     } else {
                         combined.append(batch)
                     }
@@ -247,9 +249,10 @@ public enum Replayer {
         }
     }
 
-    private static func skip(_ report: inout ReplayReport, id: Int64) {
+    private static func skip(_ report: inout ReplayReport, _ archived: ArchivedRecord) {
         report.skipped += 1
-        if report.skippedIDs.count < maxReportedFailures { report.skippedIDs.append(id) }
+        report.skippedByKind[archived.record.sourceKind, default: 0] += 1
+        if report.skippedIDs.count < maxReportedFailures { report.skippedIDs.append(archived.id) }
     }
 
     private static func fail(_ report: inout ReplayReport, _ chunkFailures: inout [Int64: String],
