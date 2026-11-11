@@ -51,8 +51,27 @@ public enum BrowserJarReconciler {
 
         public static var webKit: DataStores {
             DataStores(
-                identifiers: { await WKWebsiteDataStore.allDataStoreIdentifiers },
-                remove: { try await WKWebsiteDataStore.remove(forIdentifier: $0) }
+                // WebKit's class-level store calls reply on WebKit's main
+                // RunLoop, which WebKit only creates when its first object is
+                // made. Called at launch, before any web view exists, the
+                // reply dispatches to a null RunLoop and the app dies
+                // (SIGSEGV in `WTF::RunLoop::dispatch`). Touching the default
+                // store first initializes WebKit; the completion-handler forms
+                // keep the calls on the main actor.
+                identifiers: { @MainActor in
+                    _ = WKWebsiteDataStore.default()
+                    return await withCheckedContinuation { done in
+                        WKWebsiteDataStore.fetchAllDataStoreIdentifiers { done.resume(returning: $0) }
+                    }
+                },
+                remove: { @MainActor id in
+                    _ = WKWebsiteDataStore.default()
+                    try await withCheckedThrowingContinuation { (done: CheckedContinuation<Void, Error>) in
+                        WKWebsiteDataStore.remove(forIdentifier: id) { error in
+                            if let error { done.resume(throwing: error) } else { done.resume() }
+                        }
+                    }
+                }
             )
         }
 
