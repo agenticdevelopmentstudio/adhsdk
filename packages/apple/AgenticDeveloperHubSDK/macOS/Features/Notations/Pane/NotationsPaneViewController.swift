@@ -1,3 +1,4 @@
+import os
 import AppKit
 import Combine
 import AgenticDeveloperHubSDKCore

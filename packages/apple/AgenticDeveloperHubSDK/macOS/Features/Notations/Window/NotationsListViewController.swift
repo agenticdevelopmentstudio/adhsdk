@@ -209,7 +209,9 @@ final class NotationsListViewController: NSViewController {
         roots = order.compactMap { groups[$0] }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         for group in roots {
-            group.notations.sort { $0.notation.branch.localizedStandardCompare($1.notation.branch) == .orderedAscending }
+            group.notations.sort {
+                $0.notation.branch.localizedStandardCompare($1.notation.branch) == .orderedAscending
+            }
         }
         outline.reloadData()
         outline.expandItem(nil, expandChildren: true)
@@ -394,11 +396,11 @@ extension NotationsListViewController: NSOutlineViewDataSource, NSOutlineViewDel
         }
         guard let row = item as? NotationsNotationItem else { return nil }
         let notation = row.notation
-        let go: (() -> Void)? = notation.state == .active
+        let goToProject: (() -> Void)? = notation.state == .active
             ? { [weak self] in self?.onGoToProject?(notation) }
             : nil
         return NotationsRowView(title: notation.branch, symbol: "arrow.triangle.branch", isSection: false,
-                                goAction: go)
+                                goAction: goToProject)
     }
 
     func outlineView(_ outlineView: NSOutlineView, shouldSelectItem item: Any) -> Bool {
