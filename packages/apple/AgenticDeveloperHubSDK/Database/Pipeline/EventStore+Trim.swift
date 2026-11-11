@@ -219,7 +219,7 @@ extension EventStore {
 
         // A row with no time (`time <= 0`: the line carried no timestamp) has an
         // unknown age, not an old one: the time stages skip it, and it goes only
-        // with its session, once that session has ended before the cutoff.
+        // with its session, once that session was last seen before the cutoff.
         guard try drain("""
             DELETE FROM events WHERE id IN (
                 SELECT id FROM events WHERE time > 0 AND time < ? ORDER BY time LIMIT ?)
@@ -243,19 +243,19 @@ extension EventStore {
             try Self.foldAndDeleteTurns(olderThan: cutoff, maxTurnId: maxTurnId, limit: size, conn)
         }) else { return result }
 
-        // The untimed rows of sessions that ended before the cutoff.
+        // The untimed rows of sessions last seen before the cutoff.
         guard try drain("DELETE FROM events WHERE id IN (\(Self.untimedRows(of: "events")))",
                         [cutoff], into: \.events) else { return result }
         guard try drain("DELETE FROM messages WHERE id IN (\(Self.untimedRows(of: "messages")))",
                         [cutoff], into: \.messages) else { return result }
         guard try drain("", [], into: \.turns, batchWork: { conn, size in
-            try Self.foldAndDeleteTurns(untimedOfSessionsEndedBefore: cutoff, limit: size, conn)
+            try Self.foldAndDeleteTurns(untimedOfSessionsLastSeenBefore: cutoff, limit: size, conn)
         }) else { return result }
 
         guard try drain("""
             DELETE FROM sessions WHERE (provider, session_id) IN (
                 SELECT s.provider, s.session_id FROM sessions s
-                WHERE \(Self.endedBefore)
+                WHERE \(Self.lastSeenBefore)
                   AND NOT EXISTS (SELECT 1 FROM events e
                                   WHERE e.provider = s.provider AND e.session_id = s.session_id)
                   AND NOT EXISTS (SELECT 1 FROM messages m
@@ -326,15 +326,15 @@ extension EventStore {
             """, arguments: [cutoff, maxTurnId ?? Int64.max, limit], conn)
     }
 
-    /// One batch of untimed turns (`time <= 0`) of sessions that ended before
-    /// `cutoff` (``endedBefore``), folded and deleted like any other.
-    static func foldAndDeleteTurns(untimedOfSessionsEndedBefore cutoff: Double, limit: Int,
+    /// One batch of untimed turns (`time <= 0`) of sessions last seen before
+    /// `cutoff` (``lastSeenBefore``), folded and deleted like any other.
+    static func foldAndDeleteTurns(untimedOfSessionsLastSeenBefore cutoff: Double, limit: Int,
                                    _ conn: Database) throws -> Int {
         try foldAndDeleteTurns(selecting: untimedRows(of: "turns"), arguments: [cutoff, limit], conn)
     }
 
     /// The ids (one `?` for the cutoff, one for the limit) of `table`'s untimed rows
-    /// (`time <= 0`) whose session ``endedBefore`` the cutoff. CROSS JOIN keeps
+    /// (`time <= 0`) whose session was last seen before the cutoff (``lastSeenBefore``). CROSS JOIN keeps
     /// `sessions` the outer loop, searched through `sessions_last_seen`, with each
     /// session's untimed rows found by its `(provider, session_id, time)` index;
     /// left to itself the planner scanned all of `messages_session_time`.
@@ -342,23 +342,22 @@ extension EventStore {
         """
         SELECT r.id FROM sessions s CROSS JOIN \(table) r
           ON r.provider = s.provider AND r.session_id = s.session_id AND r.time <= 0
-        WHERE \(endedBefore) LIMIT ?
+        WHERE \(lastSeenBefore) LIMIT ?
         """
     }
 
-    /// A session the trim may remove (its rows first): ended (`status = 'ended'`
-    /// or `ended_at IS NOT NULL`), not `active`, last observed before the bound
-    /// cutoff. Alias `s`; one `?`. The last term is the expression of the
-    /// `sessions_last_seen` index, word for word, so the planner reads only the
-    /// sessions seen before the cutoff instead of the whole table: on a USB disk a
-    /// full scan of 9600 sessions took 45 s, every pass scanned it four times
-    /// inside write transactions, and a pass that had nothing to delete ran past
-    /// the 60 s write deadline.
-    static let endedBefore = """
-        (s.status = 'ended' OR s.ended_at IS NOT NULL)
-          AND s.status IS NOT 'active'
-          AND MAX(COALESCE(s.ended_at, s.as_of), s.as_of) < ?
-        """
+    /// A session the trim may remove (its rows first): last observed before the
+    /// bound cutoff, whatever its status. Only a hook `SessionEnd` writes
+    /// `status = 'ended'` or `ended_at`, so a session killed without one stays
+    /// `active` and a transcript-only one has no status; the cutoff is the
+    /// history window (7 days at the least), so a session silent that long is
+    /// not live, and one that resumes gets a fresh row from its next record.
+    /// Alias `s`; one `?`. The expression is the `sessions_last_seen` index's,
+    /// word for word, so the planner reads only the sessions seen before the
+    /// cutoff instead of the whole table (on a USB disk a full scan of 9600
+    /// sessions took 45 s, four times a pass, inside write transactions), and
+    /// every session that range returns is one the stage can act on.
+    static let lastSeenBefore = "MAX(COALESCE(s.ended_at, s.as_of), s.as_of) < ?"
 
     private static func foldAndDeleteTurns(selecting selection: String, arguments: StatementArguments,
                                            _ conn: Database) throws -> Int {

@@ -101,7 +101,7 @@ public struct TrimHold: Sendable, Equatable {
 /// One storage trim pass over a daemon database and its optional event store.
 ///
 /// **What it deletes.** `events.db` events, messages and turns older than the
-/// cutoff (and that file's ended, empty `sessions` rows, by `EventStore.trim`),
+/// cutoff (and that file's empty `sessions` rows last seen before it, by `EventStore.trim`),
 /// old `rate_limit_snapshots` rows except the newest per account, and whatever
 /// the injected `extraMainTrims` delete. Nothing else: never a main-db
 /// `sessions` row, never a raw archive, spool, rollup or summary table.
