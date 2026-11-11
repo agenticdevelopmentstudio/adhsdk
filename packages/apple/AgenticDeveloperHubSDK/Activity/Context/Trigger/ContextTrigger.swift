@@ -82,9 +82,9 @@ public protocol ContextPermissionGate: Sendable {
     ///
     /// This belongs on the gate — i.e. in the daemon's process — because the
     /// answer has to be observed by the process that will do the reading, at
-    /// the moment it reads. Not, as I-4 originally reasoned, because olylod
+    /// the moment it reads. Not, as I-4 originally reasoned, because temporald
     /// carries a TCC identity of its own: measured on macOS 26 it does not,
-    /// and the grant lands on `app.olylo.Olylo` whichever of the two asks.
+    /// and the grant lands on `com.fishlamp.temporal-macos` whichever of the two asks.
     /// `MacPermissionGate.request` records what was observed.
     func request(_ permission: ContextPermission) async -> ContextPermissionState
 }

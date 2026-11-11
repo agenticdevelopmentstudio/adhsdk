@@ -33,25 +33,25 @@ public struct MacPermissionGate: ContextPermissionGate {
 
     /// Prompts for the permission a trigger needs.
     ///
-    /// Called **in `olylod`**, reached from the app over XPC (I-4). The
+    /// Called **in `temporald`**, reached from the app over XPC (I-4). The
     /// reason I-4 gave for that was wrong, and the correction matters here
-    /// because it is the opposite of what you would guess: I-4 assumed olylod
+    /// because it is the opposite of what you would guess: I-4 assumed temporald
     /// carried its own TCC identity, so a prompt raised in the app's process
-    /// would authorize `Olylo.app` and leave the daemon blocked. Measured on
-    /// macOS 26 instead — after olylod answered `granted` for Accessibility,
-    /// `TCC.db` held **no `olylod` row at all**, only `app.olylo.Olylo`,
-    /// allowed. olylod ships inside the app bundle and is authorized under
+    /// would authorize `Temporal.app` and leave the daemon blocked. Measured on
+    /// macOS 26 instead — after temporald answered `granted` for Accessibility,
+    /// `TCC.db` held **no `temporald` row at all**, only `com.fishlamp.temporal-macos`,
+    /// allowed. temporald ships inside the app bundle and is authorized under
     /// the app's identity, which is also why it can use CoreLocation at all:
     /// the `NSLocation*UsageDescription` strings it needs live in
-    /// `Olylo.app/Contents/Info.plist` and nowhere else. So there is no
-    /// `olylod` row for the owner to find in System Settings, and no copy may
+    /// `Temporal.app/Contents/Info.plist` and nowhere else. So there is no
+    /// `temporald` row for the owner to find in System Settings, and no copy may
     /// send them looking for one — see `TriggerRowPresenter.advice`.
     ///
-    /// Asking from olylod is still right, for a reason that survives the
+    /// Asking from temporald is still right, for a reason that survives the
     /// correction: the answer has to be observed by the process that will do
     /// the reading, at the moment it reads. See
     /// `ContextCollector.requestPermission` for the consent check that guards
-    /// this, and Olylo's planning `STATUS.md` ("Verification status") for what
+    /// this, and Temporal's planning `STATUS.md` ("Verification status") for what
     /// each permission was observed to do from the daemon on real hardware.
     @discardableResult
     public func request(_ permission: ContextPermission) async -> ContextPermissionState {

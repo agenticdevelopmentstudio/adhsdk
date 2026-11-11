@@ -17,7 +17,7 @@ final class ContextCollectorTests: XCTestCase {
     // every property access in here nonisolated.
     override func setUp() async throws {
         dir = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-collector-\(UUID().uuidString)")
+            .appendingPathComponent("temporal-collector-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         db = try BoundedDatabase(path: dir.appendingPathComponent("test.sqlite").path)
         store = ContextStore(database: db)

@@ -18,7 +18,7 @@ import AppKit
 /// `onResume` fires on both wake-from-sleep and screen-unlock so the collector
 /// can re-emit focus and re-open a segment in the same app (existing `stop()`
 /// `removeObserver` calls on both centers already cover the new observers).
-// Public, and its `PowerSource` witnesses are public too: `olylod`
+// Public, and its `PowerSource` witnesses are public too: `temporald`
 // constructs this directly and hands it to `UsageCollector`'s public
 // initializer as a `PowerSource` — a public type's public conformance to a
 // public protocol requires its witnesses be public as well.

@@ -14,7 +14,7 @@ public struct TriggerRowState: Sendable, Equatable {
         case unknown
         case off
         /// `isEnabled == false` but `isRunning == true`: the opt-in reads as
-        /// off (which can itself mean "user turned it off" or "olylod
+        /// off (which can itself mean "user turned it off" or "temporald
         /// failed closed after a settings-read error" — the client cannot
         /// tell which), but the trigger has not actually stopped collecting
         /// yet. Rendering this as plain `.off` would show an unchecked box
@@ -84,7 +84,7 @@ public struct TriggerRowState: Sendable, Equatable {
 /// Kept out of AppKit so it is unit-testable in `AgenticDeveloperHubSDKActivityTests` without a
 /// settings window — the AppKit layer's job is only to project these values
 /// onto controls (fact 5 of Task 16: as much logic as possible lives in
-/// shared code, precisely because neither `Olylo` nor `olylod` has a test
+/// shared code, precisely because neither `Temporal` nor `temporald` has a test
 /// bundle of its own).
 public enum TriggerRowPresenter {
     /// `states` is the full `triggerStates()` reply. An empty array means the
@@ -139,11 +139,11 @@ public enum TriggerRowPresenter {
     public static func explanation(for row: TriggerRowState) -> String? {
         switch row.availability {
         case .unknown:
-            return "Waiting for olylod to answer…"
+            return "Waiting for temporald to answer…"
         case .off:
             return nil
         case .offButRunning:
-            return "Still recording — olylod hasn't confirmed this is off yet. "
+            return "Still recording — temporald hasn't confirmed this is off yet. "
                 + "It should stop within \(ContextRefresh.phrase)."
         case .on:
             guard row.isBlocked else { return nil }
@@ -172,7 +172,7 @@ public enum TriggerRowPresenter {
         }
     }
 
-    /// What to say after olylod has asked the OS for a permission, and whether
+    /// What to say after temporald has asked the OS for a permission, and whether
     /// the owner has to be sent to System Settings to finish the job.
     ///
     /// A value rather than a side effect: the decision is a pure function of
@@ -196,10 +196,10 @@ public enum TriggerRowPresenter {
     ///
     /// Here rather than in the settings panel because it is a rule, and
     /// because it is the copy that has to survive the one fact this branch
-    /// keeps having to re-learn: **there is no `olylod` row in System
-    /// Settings**. olylod ships inside the app bundle and macOS authorizes the
-    /// two under the app's identity, so the entry to switch on is *Olylo*.
-    /// Telling someone to look for olylod sends them hunting for a row that
+    /// keeps having to re-learn: **there is no `temporald` row in System
+    /// Settings**. temporald ships inside the app bundle and macOS authorizes the
+    /// two under the app's identity, so the entry to switch on is *Temporal*.
+    /// Telling someone to look for temporald sends them hunting for a row that
     /// does not exist.
     public static func advice(for result: PermissionRequestResult,
                               permission: ContextPermission) -> PermissionRequestAdvice {
@@ -207,7 +207,7 @@ public enum TriggerRowPresenter {
         switch result {
         case .granted:
             return PermissionRequestAdvice(
-                message: "olylod has \(name) permission.",
+                message: "temporald has \(name) permission.",
                 opensSystemSettings: false)
         case .denied, .undetermined:
             // The daemon asked and did not get it. macOS shows its prompt only
@@ -216,7 +216,7 @@ public enum TriggerRowPresenter {
             // not a failure, and the only route left is the Settings pane.
             return PermissionRequestAdvice(
                 message: "macOS didn't grant \(name). Open the list that just appeared and "
-                    + "switch on Olylo — that one entry covers olylod too. (macOS only ever "
+                    + "switch on Temporal — that one entry covers temporald too. (macOS only ever "
                     + "shows its own prompt once per program, so after the first time this "
                     + "is the only way to change it.)",
                 opensSystemSettings: true)
@@ -229,7 +229,7 @@ public enum TriggerRowPresenter {
                 opensSystemSettings: false)
         case .unavailable:
             return PermissionRequestAdvice(
-                message: "olylod isn't responding, so nothing was asked for.",
+                message: "temporald isn't responding, so nothing was asked for.",
                 opensSystemSettings: false)
         }
     }

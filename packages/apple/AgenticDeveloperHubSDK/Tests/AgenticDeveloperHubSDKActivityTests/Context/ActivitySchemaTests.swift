@@ -8,13 +8,13 @@ import AgenticDeveloperHubSDKDatabase
 /// holds rows. `SchemaMigratorTests` proves the migrator; this proves the
 /// registry — specifically that an upgrade does not leave old rows in a state
 /// the reader has to guess about.
-final class OlyloSchemaTests: XCTestCase {
+final class ActivitySchemaTests: XCTestCase {
     private var dir: URL!
     private var db: BoundedDatabase!
 
     override func setUpWithError() throws {
         dir = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-schema-\(UUID().uuidString)")
+            .appendingPathComponent("temporal-schema-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         db = try BoundedDatabase(path: dir.appendingPathComponent("test.sqlite").path)
     }
@@ -25,7 +25,7 @@ final class OlyloSchemaTests: XCTestCase {
     }
 
     func testVersionsAreUniqueAndContiguous() throws {
-        let versions = OlyloSchema.migrations.map(\.version).sorted()
+        let versions = ActivitySchema.migrations.map(\.version).sorted()
         XCTAssertEqual(Set(versions).count, versions.count, "two migrations share a version")
         XCTAssertEqual(versions, Array(1...versions.count),
                        "a gap in the version space means a database can record a version "
@@ -33,10 +33,10 @@ final class OlyloSchemaTests: XCTestCase {
     }
 
     func testMigratingIsIdempotent() throws {
-        try OlyloSchema.migrate(db)
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
+        try ActivitySchema.migrate(db)
         XCTAssertEqual(try SchemaMigrator(database: db).appliedVersions(),
-                       Set(OlyloSchema.migrations.map(\.version)))
+                       Set(ActivitySchema.migrations.map(\.version)))
     }
 
     // MARK: - 7. Input events became transitions
@@ -86,7 +86,7 @@ final class OlyloSchemaTests: XCTestCase {
     func testMigrationSevenLeavesNewRowsSayingWhatTheyAre() throws {
         // The column takes no DEFAULT, so a later insert that forgot to name
         // it would write NULL rather than silently claiming to be a sample.
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
         let store = ContextStore(database: db)
         let machineID = UUID()
         try store.upsertMachine(
@@ -140,7 +140,7 @@ final class OlyloSchemaTests: XCTestCase {
             }
         }
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         try db.read { db in
             let moved = try XCTUnwrap(Row.fetchOne(
@@ -177,7 +177,7 @@ final class OlyloSchemaTests: XCTestCase {
             (180, 122), (210, 152), (240, 182), (270, 212), (300, 3),
         ])
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         let rows = try inputRows()
         XCTAssertEqual(rows.count, 3, "eleven samples describe three moments")
@@ -218,7 +218,7 @@ final class OlyloSchemaTests: XCTestCase {
             (180, 122), (210, 152), (240, 182), (270, 212), (300, 3),
         ], keyDelta: 1)
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         let rows = try inputRows()
         XCTAssertEqual(rows[1]["key_count_delta"] as Int64?, 8,
@@ -238,7 +238,7 @@ final class OlyloSchemaTests: XCTestCase {
         try insertSamples(machine: machine, [(0, 5), (30, 35)])
         try insertSamples(machine: machine, [(400, 500), (430, 530)])
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         let rows = try inputRows()
         XCTAssertEqual(rows.count, 2)
@@ -269,7 +269,7 @@ final class OlyloSchemaTests: XCTestCase {
                 """, arguments: [event])
         }
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         let rows = try inputRows()
         XCTAssertEqual(rows.count, 1)
@@ -293,7 +293,7 @@ final class OlyloSchemaTests: XCTestCase {
         let machine = try insertMachine()
         try insertSamples(machine: machine, [(0, 5), (30, 25), (60, 3)])
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         let rows = try inputRows()
         XCTAssertEqual(rows.count, 3, "25 seconds of quiet is an absence at this threshold")
@@ -316,7 +316,7 @@ final class OlyloSchemaTests: XCTestCase {
             (240, 42.40528, -71.0589),
         ])
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         let rows = try locationRows()
         XCTAssertEqual(rows.count, 2, "two places, however many fixes described them")
@@ -337,7 +337,7 @@ final class OlyloSchemaTests: XCTestCase {
             (120, 42.36118, -71.0589),  // 60m further, 120m from the first
         ])
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         XCTAssertEqual(try locationRows().count, 2,
                        "the third fix is 120m from the one that was kept, so it is a move")
@@ -354,7 +354,7 @@ final class OlyloSchemaTests: XCTestCase {
         try insertLocations(machine: there, [(60, 37.7749, -122.4194)])
         try insertLocations(machine: here,  [(120, 42.36018, -71.0589)])
 
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
 
         let rows = try locationRows()
         XCTAssertEqual(rows.count, 2,
@@ -447,7 +447,7 @@ final class OlyloSchemaTests: XCTestCase {
     /// database an older build left behind.
     private func migrate(throughVersion version: Int) throws {
         try SchemaMigrator(database: db)
-            .migrate(OlyloSchema.migrations.filter { $0.version <= version })
+            .migrate(ActivitySchema.migrations.filter { $0.version <= version })
     }
 }
 #endif

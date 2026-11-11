@@ -1,6 +1,6 @@
 import Foundation
 
-// Public: `olylod` builds this directly (`FocusTracker()`) and hands it to
+// Public: `temporald` builds this directly (`FocusTracker()`) and hands it to
 // `UsageCollector`'s public initializer. `handle`/`stop`/`current` stay
 // internal — only `UsageCollector` (same module) and `@testable` tests call
 // them.

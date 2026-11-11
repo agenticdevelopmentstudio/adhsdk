@@ -10,7 +10,7 @@ final class SchemaMigratorTests: XCTestCase {
 
     override func setUpWithError() throws {
         dir = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-migrator-\(UUID().uuidString)")
+            .appendingPathComponent("temporal-migrator-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         db = try BoundedDatabase(path: dir.appendingPathComponent("test.sqlite").path)
     }
@@ -52,13 +52,13 @@ final class SchemaMigratorTests: XCTestCase {
 
     /// A version can be recorded as applied between the migrator deciding it
     /// is unapplied and the migrator applying it. In the field that is the app
-    /// and olylod opening the same database at once, both reading `{1, 2, 3}`
+    /// and temporald opening the same database at once, both reading `{1, 2, 3}`
     /// before either writes; two entries for one version in a single call
     /// reproduces the identical stale-set condition deterministically, because
     /// the loop's membership test is what has to notice.
     ///
     /// The colliding migration is a bare `ALTER TABLE … ADD COLUMN`, which is
-    /// the shape migration 4 actually ships (`OlyloSchema.swift`) and which
+    /// the shape migration 4 actually ships (`ActivitySchema.swift`) and which
     /// SQLite has no `IF NOT EXISTS` form for. Anything re-runnable here — a
     /// `CREATE TABLE IF NOT EXISTS`, say — would encode the assumption instead
     /// of testing it: the run would survive the second pass by luck rather

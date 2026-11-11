@@ -223,27 +223,27 @@ final class TriggerRowPresenterTests: XCTestCase {
     /// Denied and undetermined are the same advice on purpose: macOS shows its
     /// prompt once per executable, ever, so "nothing appeared" and "the user
     /// said no" both leave System Settings as the only remaining route.
-    func testARefusedRequestOpensSystemSettingsAndNamesTheOlyloEntry() {
+    func testARefusedRequestOpensSystemSettingsAndNamesTheTemporalEntry() {
         for result in [PermissionRequestResult.denied, .undetermined] {
             let advice = TriggerRowPresenter.advice(for: result, permission: .location)
             XCTAssertTrue(advice.opensSystemSettings, "\(result) must offer the pane")
             XCTAssertTrue(advice.message.contains("Location"), "got \(advice.message)")
-            XCTAssertTrue(advice.message.contains("Olylo"), "got \(advice.message)")
+            XCTAssertTrue(advice.message.contains("Temporal"), "got \(advice.message)")
         }
     }
 
-    /// The one instruction this surface must never give: there is no `olylod`
+    /// The one instruction this surface must never give: there is no `temporald`
     /// row in System Settings to switch on. The daemon ships inside the app
     /// bundle and macOS authorizes both under the app's identity, so naming
-    /// olylod sends the owner hunting for a row that does not exist.
-    func testNoAdviceTellsTheOwnerToLookForAnOlylodEntry() {
+    /// temporald sends the owner hunting for a row that does not exist.
+    func testNoAdviceTellsTheOwnerToLookForAnTemporaldEntry() {
         let results: [PermissionRequestResult] =
             [.granted, .denied, .undetermined, .notNeeded, .unavailable]
         for result in results {
             for permission in ContextPermission.allCases {
                 let message = TriggerRowPresenter.advice(for: result, permission: permission).message
-                XCTAssertFalse(message.contains("switch on olylod"), "got \(message)")
-                XCTAssertFalse(message.contains("find olylod"), "got \(message)")
+                XCTAssertFalse(message.contains("switch on temporald"), "got \(message)")
+                XCTAssertFalse(message.contains("find temporald"), "got \(message)")
             }
         }
     }
@@ -259,7 +259,7 @@ final class TriggerRowPresenterTests: XCTestCase {
     func testAnUnavailableDaemonIsNotReportedAsARefusal() {
         let advice = TriggerRowPresenter.advice(for: .unavailable, permission: .accessibility)
         XCTAssertFalse(advice.opensSystemSettings)
-        XCTAssertTrue(advice.message.contains("olylod isn't responding"), "got \(advice.message)")
+        XCTAssertTrue(advice.message.contains("temporald isn't responding"), "got \(advice.message)")
     }
 
     // MARK: - title(for:)

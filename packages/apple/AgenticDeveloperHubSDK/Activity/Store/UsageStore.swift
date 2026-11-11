@@ -7,7 +7,7 @@ import Foundation
 import AgenticDeveloperHubSDKDatabase
 import GRDB
 
-// Public: `olylod` opens the local database and constructs this directly
+// Public: `temporald` opens the local database and constructs this directly
 // (`UsageStore(database:)`) before handing it to `UsageCollector`'s public
 // initializer. Its query/mutation methods below stay internal — only
 // `UsageCollector` (same module) and `@testable` tests call them.
@@ -22,14 +22,14 @@ public final class UsageStore {
     private func s(_ d: Date) -> String { ISO8601Timestamp.string(from: d) }
 
     /// Brings the whole database up to date; the usage tables are versions 1
-    /// and 4 of ``OlyloSchema``'s single registry.
+    /// and 4 of ``ActivitySchema``'s single registry.
     ///
     /// This used to be the *only* place versions 1 and 4 were declared, and it
     /// is reached only from `UsageCollector.start()` — so a daemon on which
     /// capture had never been switched on had a database missing two of the
     /// four versions its `schema_migrations` table was numbered against.
     func runMigrations() throws {
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
     }
 
     func insertSegment(_ seg: FocusSegment) throws {

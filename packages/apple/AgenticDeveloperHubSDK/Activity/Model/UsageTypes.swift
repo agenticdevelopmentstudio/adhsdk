@@ -7,7 +7,7 @@ import Foundation
 // The other domain types below (`EndReason`, `FocusSegment`, `FocusEvent`)
 // are used only inside `AgenticDeveloperHubSDKActivity` (by
 // `UsageStore`/`UsageCollector`/`FocusTracker`) and stay internal —
-// `olylod` never names them directly.
+// `temporald` never names them directly.
 //
 // `WindowLifecycleKind` outlives the retired `usage_window_events` table
 // because it still names the shape of a window change; the row struct that

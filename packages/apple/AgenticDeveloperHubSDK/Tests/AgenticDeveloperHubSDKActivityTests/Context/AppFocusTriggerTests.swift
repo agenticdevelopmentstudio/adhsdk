@@ -220,7 +220,7 @@ final class AppFocusTriggerTests: XCTestCase {
 
     func testFileReaderReadsARealFile() throws {
         let url = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-doc-\(UUID().uuidString).swift")
+            .appendingPathComponent("temporal-doc-\(UUID().uuidString).swift")
         try Data("let x = 1\n".utf8).write(to: url)
         defer { try? FileManager.default.removeItem(at: url) }
 
@@ -239,9 +239,9 @@ final class AppFocusTriggerTests: XCTestCase {
     func testFileReaderFollowsSymlinksAndTolerantlyHandlesDirectories() throws {
         let fm = FileManager.default
         let target = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-target-\(UUID().uuidString).swift")
+            .appendingPathComponent("temporal-target-\(UUID().uuidString).swift")
         let link = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-link-\(UUID().uuidString).swift")
+            .appendingPathComponent("temporal-link-\(UUID().uuidString).swift")
         try Data("let x = 1\n".utf8).write(to: target)
         try fm.createSymbolicLink(at: link, withDestinationURL: target)
         defer {

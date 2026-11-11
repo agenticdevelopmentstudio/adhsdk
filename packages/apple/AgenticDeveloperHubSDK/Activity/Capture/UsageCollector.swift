@@ -5,7 +5,7 @@
 import Foundation
 import os
 
-// Public: `olylod` constructs this directly (`UsageCollector(store:...)`)
+// Public: `temporald` constructs this directly (`UsageCollector(store:...)`)
 // and calls `start()`/`stop()` on it from `DaemonDelegate`.
 @MainActor
 public final class UsageCollector {
@@ -21,7 +21,7 @@ public final class UsageCollector {
     private var spanID: UUID?
     private var heartbeat: Timer?
     private var isRunning = false
-    private let log = Logger(subsystem: "app.olylo.olylod", category: "collector")
+    private let log = Logger(subsystem: "com.fishlamp.temporald", category: "collector")
 
     public init(store: UsageStore, tracker: FocusTracker, focus: FocusSource,
          windows: WindowLifecycleSource, idle: IdleSource, power: PowerSource, machineID: UUID,
@@ -46,7 +46,7 @@ public final class UsageCollector {
     /// LaunchAgent's StandardErrorPath) and os_log, so failures are visible
     /// without requiring `log stream`/Console access.
     private func logError(_ what: String, _ error: Error) {
-        let line = "olylod: \(what) failed: \(error)\n"
+        let line = "temporald: \(what) failed: \(error)\n"
         FileHandle.standardError.write(Data(line.utf8))
         log.error("\(what) failed: \(String(describing: error))")
     }

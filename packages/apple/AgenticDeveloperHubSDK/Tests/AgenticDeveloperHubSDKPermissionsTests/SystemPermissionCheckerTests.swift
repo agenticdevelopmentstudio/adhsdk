@@ -70,7 +70,7 @@ struct AutomationMappingTests {
         // by raw value, so rawValue 4 — its documented raw value — exercises
         // the identical arm. "While Using the App" reading as granted would let
         // a location trigger start even though the OS will not serve it once
-        // olylod's daemon is running with no app in the foreground — this is
+        // temporald's daemon is running with no app in the foreground — this is
         // the arm most worth pinning.
         let authorizedWhenInUse = CLAuthorizationStatus(rawValue: 4)!
         #expect(SystemPermissionChecker.locationStatus(authorizedWhenInUse) == .denied)

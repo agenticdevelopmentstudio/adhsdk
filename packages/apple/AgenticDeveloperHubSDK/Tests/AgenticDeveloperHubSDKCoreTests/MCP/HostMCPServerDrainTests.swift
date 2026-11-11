@@ -5,7 +5,7 @@ import MCP
 @testable import AgenticDeveloperHubSDKCore
 
 /// A transport whose input is a fixed script that ends at once. That is what
-/// `printf '…' | olylo mcp` looks like: stdin hits EOF right after the last
+/// `printf '…' | temporal mcp` looks like: stdin hits EOF right after the last
 /// request, before any reply is written. It records everything the server sends.
 private actor ScriptedTransport: Transport {
     nonisolated let logger = Logger(label: "test.scripted", factory: { _ in SwiftLogNoOpLogHandler() })

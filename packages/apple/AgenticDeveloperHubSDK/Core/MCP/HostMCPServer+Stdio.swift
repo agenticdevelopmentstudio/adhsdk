@@ -3,7 +3,7 @@ import MCP
 
 extension HostMCPServer {
     /// How long a server whose stdin has closed keeps waiting for the replies it
-    /// still owes. A tool call can be slow: olylo's mail sign-in waits up to 300 s
+    /// still owes. A tool call can be slow: temporal's mail sign-in waits up to 300 s
     /// for the browser, plus an XPC timeout above that.
     public static let stdioDrainDeadline: Duration = .seconds(360)
 

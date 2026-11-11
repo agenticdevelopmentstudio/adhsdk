@@ -12,7 +12,7 @@ import Foundation
 /// `UsageCollector` heartbeat timer). Same `MainActor.assumeIsolated` pattern
 /// as `UsageCollector.start()`'s heartbeat — see `WindowLifecycleAdapter`
 /// for the shared rationale.
-// Public, and its `IdleSource` witnesses are public too: `olylod`
+// Public, and its `IdleSource` witnesses are public too: `temporald`
 // constructs this directly and hands it to `UsageCollector`'s public
 // initializer as an `IdleSource` — a public type's public conformance to a
 // public protocol requires its witnesses be public as well.

@@ -97,8 +97,8 @@ final class DesktopSettingsAppTests: XCTestCase {
 
     func test_chosenPicture_writesPath_andRemoveClearsIt() {
         let controller = makeController()
-        controller.appearance.applyChosenPhoto(url: URL(fileURLWithPath: "/tmp/olylo-none.png"))
-        XCTAssertEqual(settings.backgroundImagePath, "/tmp/olylo-none.png")
+        controller.appearance.applyChosenPhoto(url: URL(fileURLWithPath: "/tmp/temporal-none.png"))
+        XCTAssertEqual(settings.backgroundImagePath, "/tmp/temporal-none.png")
         XCTAssertTrue(controller.appearance.removePhotoButton.isEnabled)
         fire(controller.appearance.removePhotoButton)
         XCTAssertNil(settings.backgroundImagePath)

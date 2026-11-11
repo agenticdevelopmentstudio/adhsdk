@@ -5,7 +5,7 @@
 import Foundation
 import AgenticDeveloperHubSDKDatabase
 
-/// The one ordered registry of schema versions for the Olylo database.
+/// The one ordered registry of schema versions for the Temporal database.
 ///
 /// Every store in this module — usage capture, context events, settings —
 /// writes into the *same* SQLite file and shares one `schema_migrations`
@@ -34,7 +34,7 @@ import AgenticDeveloperHubSDKDatabase
 ///
 /// Adding a version: append to ``migrations``, never edit an existing entry.
 /// A migration is frozen the moment it has run anywhere.
-public enum OlyloSchema {
+public enum ActivitySchema {
 
     /// Applies every migration this database is missing, in version order.
     ///

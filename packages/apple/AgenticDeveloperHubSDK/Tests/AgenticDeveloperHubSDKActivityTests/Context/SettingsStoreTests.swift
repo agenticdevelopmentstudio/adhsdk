@@ -11,7 +11,7 @@ final class SettingsStoreTests: XCTestCase {
 
     override func setUpWithError() throws {
         dir = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-settings-\(UUID().uuidString)")
+            .appendingPathComponent("temporal-settings-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         db = try BoundedDatabase(path: dir.appendingPathComponent("test.sqlite").path)
         settings = SettingsStore(database: db)

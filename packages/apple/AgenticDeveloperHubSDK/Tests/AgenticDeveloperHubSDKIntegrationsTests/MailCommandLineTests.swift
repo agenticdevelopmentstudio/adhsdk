@@ -97,12 +97,12 @@ struct MailCommandLineTests {
     @Test func usageNamesTheCommandAsTheHostSpellsIt() async {
         let output = Output()
         let code = await MailCommandLine.run(
-            ["--help"], program: "olylo mail", client: ScriptedMail(.ok).client,
+            ["--help"], program: "temporal mail", client: ScriptedMail(.ok).client,
             stdout: { output.writeOut($0) }, stderr: { output.writeErr($0) })
         #expect(code == 0)
         let text = output.stdout.joined()
-        #expect(text.hasPrefix("usage: olylo mail <command>"))
-        #expect(text.contains("  olylo mail list <account>"))
+        #expect(text.hasPrefix("usage: temporal mail <command>"))
+        #expect(text.contains("  temporal mail list <account>"))
         #expect(!text.contains("\n  mail "))
     }
 

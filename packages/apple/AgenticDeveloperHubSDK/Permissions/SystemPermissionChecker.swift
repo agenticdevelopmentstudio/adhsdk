@@ -85,7 +85,7 @@ public struct SystemPermissionChecker: PermissionChecking {
             return Self.automationStatus(status)
         case .location:
             // `requestAlwaysAuthorization` is the background-capable grant —
-            // olylod observes location while the user is not in the app. It is
+            // temporald observes location while the user is not in the app. It is
             // also fire-and-forget: the decision arrives later through the
             // delegate, which `locationCoordinator` awaits so this returns the
             // user's actual answer rather than the pre-prompt status.
@@ -251,7 +251,7 @@ public struct SystemPermissionChecker: PermissionChecking {
     static func locationStatus(_ status: CLAuthorizationStatus) -> PermissionStatus {
         switch status {
         case .authorizedAlways: return .granted
-        // "While Using the App" is not a grant we can use: olylod reads location
+        // "While Using the App" is not a grant we can use: temporald reads location
         // while the user is in no app at all. Reported as `.denied` rather than
         // `.undetermined` so PermissionPresenter's Settings-pane fallback fires and
         // the user has a route to upgrade it to Always — `requestAlwaysAuthorization()`

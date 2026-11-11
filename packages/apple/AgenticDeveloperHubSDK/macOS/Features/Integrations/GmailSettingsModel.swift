@@ -3,7 +3,7 @@ import Foundation
 import AgenticDeveloperHubSDKIntegrations
 
 /// Orders the Gmail sign-ins started in this app, so the surface that started the latest
-/// one can be told apart when the browser comes back (`olylo://signed-in` says only that a
+/// one can be told apart when the browser comes back (`temporal://signed-in` says only that a
 /// sign-in finished, not where it began). Every settings model shares one tracker.
 @MainActor
 public final class GmailSignInTracker {

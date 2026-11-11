@@ -1066,7 +1066,7 @@ targets:
       base:
         MACOSX_DEPLOYMENT_TARGET: "26.0"
 
-  # Activity capture and tracking, moved verbatim from Olylo's OlyloCore:
+  # Activity capture and tracking, moved verbatim from Olylo's Timeline:
   # the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore),
   # the context-event model/store/triggers, the capture permission gate, and
   # usage sync. Two targets for the same reason as AgenticDeveloperHubSDKMarkdown:

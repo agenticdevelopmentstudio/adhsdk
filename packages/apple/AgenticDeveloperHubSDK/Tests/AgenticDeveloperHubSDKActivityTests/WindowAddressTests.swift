@@ -29,8 +29,8 @@ final class WindowAddressTests: XCTestCase {
         // Apple Events consent. The authority is the machine we are already
         // running on, so the path alone is the whole address.
         XCTAssertEqual(
-            WindowAddress(rawDocument: "file://me@my-mac.local/Users/me/projects/olylo"),
-            .file("/Users/me/projects/olylo"))
+            WindowAddress(rawDocument: "file://me@my-mac.local/Users/me/projects/temporal"),
+            .file("/Users/me/projects/temporal"))
     }
 
     func testAWebAddressIsAURL() {

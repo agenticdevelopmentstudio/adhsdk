@@ -2,7 +2,7 @@ import Foundation
 
 /// The `mail …` command line: parses the arguments after `mail`, asks a `MailClient`, prints.
 public enum MailCommandLine {
-    /// The usage text. `program` is how the host's users type the command, such as `olylo mail`.
+    /// The usage text. `program` is how the host's users type the command, such as `temporal mail`.
     public static func usage(program: String = "mail") -> String {
         """
         usage: \(program) <command> [--json]

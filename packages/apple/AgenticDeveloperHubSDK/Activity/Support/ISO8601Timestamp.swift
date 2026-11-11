@@ -1,6 +1,6 @@
 import Foundation
 
-/// The one ISO-8601 timestamp format every Olylo store reads and writes.
+/// The one ISO-8601 timestamp format every Temporal store reads and writes.
 ///
 /// Previously three byte-identical `makeFormatter()` copies (`ContextStore`,
 /// `SchemaMigrator`, `UsageStore`) each had to stay in agreement about UTC and

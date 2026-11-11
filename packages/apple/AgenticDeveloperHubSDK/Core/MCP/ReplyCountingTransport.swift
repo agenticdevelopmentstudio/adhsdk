@@ -11,7 +11,7 @@ import MCP
 /// unstructured `Task`. `Server.waitUntilCompleted()` waits only for the
 /// receive loop, and that loop ends at the input's EOF. Without this,
 /// stopping the server at that point throws away every reply still being
-/// worked on. `printf '…' | olylo mcp` gets nothing back, for example.
+/// worked on. `printf '…' | temporal mcp` gets nothing back, for example.
 ///
 /// How a request is counted:
 /// - A message with both an `id` and a `method` is a request that is owed a

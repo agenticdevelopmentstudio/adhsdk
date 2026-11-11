@@ -42,7 +42,7 @@ final class DesktopSettingsViewControllerTests: XCTestCase {
         settings.backgroundColorHex = "#102030"
         settings.iconArrangement = .smallIcons
         settings.keepArranged = false
-        settings.backgroundImagePath = "/tmp/olylo-none.png"
+        settings.backgroundImagePath = "/tmp/temporal-none.png"
         let controller = makeController()
         XCTAssertEqual(controller.colorWell.color.desktopHex, "#102030")
         XCTAssertEqual(controller.arrangePopUp.titleOfSelectedItem, "Small Icons")
@@ -119,14 +119,14 @@ final class DesktopSettingsViewControllerTests: XCTestCase {
     }
 
     func test_photo_reloadsOnlyWhenPathChanges() {
-        settings.backgroundImagePath = "/tmp/olylo-a.png"
+        settings.backgroundImagePath = "/tmp/temporal-a.png"
         let controller = makeController()
         XCTAssertEqual(controller.photoLoadCount, 1)
         settings.keepArranged = false
         settings.iconArrangement = .smallIcons
         settings.backgroundColorHex = "#010203"
         XCTAssertEqual(controller.photoLoadCount, 1)
-        settings.backgroundImagePath = "/tmp/olylo-b.png"
+        settings.backgroundImagePath = "/tmp/temporal-b.png"
         XCTAssertEqual(controller.photoLoadCount, 2)
     }
 }

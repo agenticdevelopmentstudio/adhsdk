@@ -20,7 +20,7 @@ struct PermissionMetadataTests {
         #expect(Permission.notifications.displayName == "Notifications")
         #expect(Permission.automation(targetBundleID: "com.googlecode.iterm2").displayName == "Automation")
         // Exact string match matters here beyond cosmetics: MacPermissionGateTests'
-        // ScriptedChecker (in the OlyloCore superproject) keys its answers by
+        // ScriptedChecker (in the Timeline superproject) keys its answers by
         // this displayName, so a drift here would silently answer .undetermined
         // for every location query there.
         #expect(Permission.location.displayName == "Location")

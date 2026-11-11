@@ -23,12 +23,12 @@ public final class ContextStore: Sendable {
 
     /// Brings the whole database up to date, not just the context tables.
     ///
-    /// The SQL lives in ``OlyloSchema`` — one registry for every store sharing
+    /// The SQL lives in ``ActivitySchema`` — one registry for every store sharing
     /// this file and its `schema_migrations` table. Kept as a method here (and
     /// on the other stores) so the many callers that open a database and
     /// migrate through whichever store they need keep working unchanged.
     public func runMigrations() throws {
-        try OlyloSchema.migrate(database)
+        try ActivitySchema.migrate(database)
     }
 
     // MARK: - Machines
