@@ -160,6 +160,7 @@ public final class TrimService: Sendable {
     private let turnsReadThrough: (@Sendable () -> Int64?)?
     private let willTrimEvents: (@Sendable (_ cutoff: Double) throws -> Void)?
     private let hold: (@Sendable () throws -> TrimHold?)?
+    private let coverageWait: (@Sendable () -> String?)?
     private let extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int]
     private let now: @Sendable () -> Date
 
@@ -180,6 +181,10 @@ public final class TrimService: Sendable {
     ///     deleted, so the daemon can record which days are about to lose rows;
     ///     when it throws, the pass deletes nothing from `events.db` and reports
     ///     the error.
+    ///   - coverageWait: why the covered day stops where it does, when the
+    ///     daemon knows it is waiting on something; reported as `waitingFor`
+    ///     by a pass whose cutoff the covered day (not the history window)
+    ///     sets and no hold lowered.
     ///   - extraMainTrims: the daemon's own main-db trims, each returning rows deleted.
     public init(
         database: DaemonDatabase, eventStore: EventStore?, historyDays: Int,
@@ -188,6 +193,7 @@ public final class TrimService: Sendable {
         turnsReadThrough: (@Sendable () -> Int64?)? = nil,
         willTrimEvents: (@Sendable (_ cutoff: Double) throws -> Void)? = nil,
         hold: (@Sendable () throws -> TrimHold?)? = nil,
+        coverageWait: (@Sendable () -> String?)? = nil,
         extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int] = [],
         now: @escaping @Sendable () -> Date = Date.init
     ) {
@@ -199,6 +205,7 @@ public final class TrimService: Sendable {
         self.turnsReadThrough = turnsReadThrough
         self.willTrimEvents = willTrimEvents
         self.hold = hold
+        self.coverageWait = coverageWait
         self.extraMainTrims = extraMainTrims
         self.now = now
     }
@@ -286,6 +293,10 @@ public final class TrimService: Sendable {
             return report
         }
         var cutoff = unheld
+        let today = UTCDay.string(from: started)
+        if let window = Self.cutoff(now: started, historyDays: historyDays, coveredThroughDay: today), unheld < window {
+            report.waitingFor = coverageWait?()
+        }
         // The hold fails closed: one that cannot be read, or names a day that is
         // not a day, deletes nothing this pass.
         let held: TrimHold?
