@@ -528,6 +528,15 @@ open class WebBrowserPaneViewController: NSViewController {
             let shown = tab.engine.url.flatMap { $0 == Self.blankPage ? nil : $0 }
             return tab.engine.heldLoadURL ?? shown ?? tab.requestedURL ?? tab.pendingURL
         }
+        // Each tab's name, too: a new engine has no title until its page
+        // loads, and a tab behind the front one loads only when brought
+        // forward, so without this it would be stored as New Tab.
+        let titles = tabs.map { tab -> String? in
+            guard let title = tab.engine.title, !title.isEmpty, title != Self.blankPage.absoluteString else {
+                return tab.storedTitle
+            }
+            return title
+        }
         for tab in tabs {
             tab.engine.teardown()
             tab.engine.view.removeFromSuperview()
@@ -547,6 +556,7 @@ open class WebBrowserPaneViewController: NSViewController {
             let made = makeEngine(configuration(
                 consoleLog: capturesConsole ? consoleLogs[index] : BrowserConsoleLog()))
             tab.engine = made
+            tab.storedTitle = titles[index]
             tab.resetVisit()
             wireEngine(made)
             onEngineMade?(made)
