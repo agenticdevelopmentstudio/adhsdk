@@ -293,7 +293,8 @@ public final class EventStore: @unchecked Sendable {
 
     /// One transaction; safe to repeat and to apply in any order. Returns what the
     /// write changed: events and messages actually inserted (a redelivery inserts
-    /// nothing), and turns and sessions whose stored row changed, as merged.
+    /// nothing), events whose time moved later (`keepsLatestTime`), and turns and
+    /// sessions whose stored row changed, as merged.
     ///
     /// `checkpoint`, when given, commits in the same transaction: its cursor goes to
     /// `store_meta` and its failures to `replay_failures`, so a replay's position
@@ -510,13 +511,18 @@ public final class EventStore: @unchecked Sendable {
         return order.compactMap { groups[$0] }
     }
 
-    /// True when a row was inserted.
+    /// True when a row was inserted, or, for a `keepsLatestTime` event, when the
+    /// stored row's time moved later. Either way the result is the same whatever
+    /// order the sightings arrive in.
     private static func insert(_ event: NormalizedEvent, provider: String, _ conn: Database) throws -> Bool {
+        let onConflict = event.keepsLatestTime
+            ? "DO UPDATE SET time = excluded.time, raw_ref = excluded.raw_ref WHERE excluded.time > events.time"
+            : "DO NOTHING"
         try conn.execute(sql: """
             INSERT INTO events(provider, dedup_key, session_id, kind, provider_type, time,
                                cwd, tool_name, summary, attrs, raw_ref)
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(provider, dedup_key) DO NOTHING
+            ON CONFLICT(provider, dedup_key) \(onConflict)
             """, arguments: [
                 provider, event.dedupKey, event.sessionID, event.kind.rawValue, event.providerType,
                 event.time.timeIntervalSince1970, event.cwd, event.toolName, event.summary,

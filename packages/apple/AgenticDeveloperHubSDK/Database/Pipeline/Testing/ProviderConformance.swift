@@ -25,9 +25,9 @@ public enum ProviderConformance {
     ///   replayMismatch: nothing is lost. Every fixture is archived; no well-formed fixture throws or
     ///   yields an empty batch; the quarantined set and the replay failures equal `malformedKeys` exactly.
     /// - unstoredFixture: after the live drain the store holds a row for every well-formed fixture:
-    ///   an event or message whose `dedup_key` is `<dedupKey>` or `<dedupKey>#<suffix>`, or a turn row
-    ///   under a turn key the fixture emits (turns merge across records, so their key need not carry
-    ///   the record's).
+    ///   an event or message whose `dedup_key` is `<dedupKey>` or `<dedupKey>#<suffix>`, or a row
+    ///   under any key the fixture itself emits (turns merge across records, and an event keyed by
+    ///   its content rather than its position, so neither key need carry the record's).
     /// - purity: `normalize(r)` twice gives equal batches (or equal thrown descriptions).
     /// - keys: every event and message dedup key is unique across the fixtures; turn keys may repeat
     ///   (records that describe one turn merge into it) but never reuse an event or message key; all
@@ -80,7 +80,7 @@ public enum ProviderConformance {
                                 passes: 1, crashAt: nil, rng: &rng)
         failures += try checkPipelineLoss(live, fixtures: fixtures, malformedKeys: malformedKeys)
         failures += checkStored(live.dump, fixtures: fixtures, malformedKeys: malformedKeys,
-                                turnKeys: turnKeys(normalizer, archived))
+                                emittedKeys: emittedKeys(normalizer, archived))
 
         let replayed = try replayDump(normalizer, archive: live.archive, in: root.appendingPathComponent("replay"))
         if live.dump != replayed.dump {
@@ -258,20 +258,18 @@ public enum ProviderConformance {
     }
 
     /// Every well-formed fixture must have a stored event or message whose dedup key is the fixture's
-    /// dedup key or that key followed by "#suffix", or a stored turn under a key it emits.
+    /// dedup key or that key followed by "#suffix", or a stored row under a key it emits.
     private static func checkStored(_ dump: [String], fixtures: [RawRecord], malformedKeys: Set<String>,
-                                    turnKeys: [String: Set<String>]) -> [ConformanceFailure] {
+                                    emittedKeys: [String: Set<String>]) -> [ConformanceFailure] {
         var roots = Set<String>()
-        var storedTurns = Set<String>()
+        var stored = Set<String>()
         for line in dump {
             guard let data = line.data(using: .utf8),
                   let object = try? JSONDecoder().decode([String: NormalizedValue].self, from: data),
                   case .string(let table)? = object["table"], table != "sessions",
                   case .string(let key)? = object["dedup_key"] else { continue }
-            if table == "turns" {
-                storedTurns.insert(key)
-                continue
-            }
+            stored.insert("\(table)|\(key)")
+            if table == "turns" { continue }
             roots.insert(key)
             for (offset, character) in key.enumerated() where character == "#" {
                 roots.insert(String(key.prefix(offset)))
@@ -280,7 +278,7 @@ public enum ProviderConformance {
         var failures: [ConformanceFailure] = []
         var reported = Set<String>()
         for fixture in fixtures where !malformedKeys.contains(fixture.dedupKey) && !roots.contains(fixture.dedupKey) {
-            if let emitted = turnKeys[fixture.dedupKey], !emitted.isDisjoint(with: storedTurns) { continue }
+            if let emitted = emittedKeys[fixture.dedupKey], !emitted.isDisjoint(with: stored) { continue }
             if reported.insert(fixture.dedupKey).inserted {
                 failures.append(ConformanceFailure(
                     check: "unstoredFixture",
@@ -290,12 +288,15 @@ public enum ProviderConformance {
         return failures
     }
 
-    /// The turn keys each record emits, by record dedup key.
-    private static func turnKeys(_ normalizer: any Normalizer, _ archived: [ArchivedRecord]) -> [String: Set<String>] {
+    /// The `table|dedup_key` of every event, message and turn each record emits, by record dedup key.
+    private static func emittedKeys(_ normalizer: any Normalizer,
+                                    _ archived: [ArchivedRecord]) -> [String: Set<String>] {
         var result: [String: Set<String>] = [:]
         for item in archived {
             guard case .batch(let batch) = run(normalizer, item) else { continue }
-            result[item.record.dedupKey, default: []].formUnion(batch.turns.map(\.dedupKey))
+            let keys = batch.events.map { "events|\($0.dedupKey)" } + batch.messages.map { "messages|\($0.dedupKey)" }
+                + batch.turns.map { "turns|\($0.dedupKey)" }
+            result[item.record.dedupKey, default: []].formUnion(keys)
         }
         return result
     }

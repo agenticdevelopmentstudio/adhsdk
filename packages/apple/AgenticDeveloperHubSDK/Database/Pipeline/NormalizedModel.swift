@@ -101,11 +101,16 @@ public struct NormalizedEvent: Sendable, Equatable {
     public var attrs: [String: NormalizedValue]
     /// The raw archive id this was derived from.
     public var rawRef: Int64
+    /// When the event is offered again under the same key with a later `time`,
+    /// the stored row takes that time and `rawRef`: the event stands for its
+    /// latest sighting (a title set A, then B, then A again reads A). Off, the
+    /// first stored row is kept as it is, as for a hook redelivery.
+    public var keepsLatestTime: Bool
 
     public init(
         dedupKey: String, sessionID: String, kind: EventKind, providerType: String, time: Date,
         cwd: String? = nil, toolName: String? = nil, summary: String? = nil,
-        attrs: [String: NormalizedValue] = [:], rawRef: Int64
+        attrs: [String: NormalizedValue] = [:], rawRef: Int64, keepsLatestTime: Bool = false
     ) {
         self.dedupKey = dedupKey
         self.sessionID = sessionID
@@ -117,6 +122,7 @@ public struct NormalizedEvent: Sendable, Equatable {
         self.summary = summary
         self.attrs = attrs
         self.rawRef = rawRef
+        self.keepsLatestTime = keepsLatestTime
     }
 }
 

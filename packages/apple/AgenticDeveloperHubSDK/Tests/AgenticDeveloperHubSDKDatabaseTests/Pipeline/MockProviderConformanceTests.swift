@@ -146,9 +146,10 @@ final class MockProviderConformanceTests: XCTestCase {
     }
 
     func testConformanceCatchesFixtureWhoseRowsNeverReachTheStore() throws {
+        // A row stored under any key its record emits counts, whatever that key
+        // is: an event may be keyed by its content rather than by its record.
         let mangled = try failures(.mangledKey)
-        XCTAssertEqual(mangled.filter { $0.check == "unstoredFixture" }.map(\.detail),
-                       ["no event, turn or message in the store is keyed by k4"], "\(mangled)")
+        XCTAssertTrue(mangled.filter { $0.check == "unstoredFixture" }.isEmpty, "\(mangled)")
         let dropped = try failures(.dropsOne)
         XCTAssertTrue(dropped.contains { $0.check == "unstoredFixture" && $0.detail.hasSuffix("by k8") }, "\(dropped)")
     }
