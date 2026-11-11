@@ -177,6 +177,34 @@ final class RetentionServiceTests: XCTestCase {
         XCTAssertEqual(try database.fetchSessions().count, 0)
     }
 
+    /// The count of sessions selected, not deleted, says whether more remain,
+    /// and sessions that still have legacy `event_log` rows are never selected,
+    /// so a run of them sorted first cannot fill every batch and starve the
+    /// empty sessions behind them.
+    func testReapSelectsPastSessionsWithLegacyEventLogRows() throws {
+        try attachEventStore()
+        for index in 0..<3 {
+            let sessionId = "a-legacy-\(index)"
+            try ingestEvents(count: 1, sessionId: sessionId)
+            database.updateSessionStatus(.ended, sessionId: sessionId)
+        }
+        try endedSession("z-empty-0")
+        try endedSession("z-empty-1")
+        try endedSession("z-empty-2")
+
+        let first = try database.reapEndedSessionsWithNoEvents(batchSize: 2)
+        XCTAssertEqual(first.selected, 2, "a full batch selected: more may remain")
+        XCTAssertEqual(first.deleted, 2)
+        let second = try database.reapEndedSessionsWithNoEvents(batchSize: 2)
+        XCTAssertEqual(second.selected, 1)
+        XCTAssertEqual(second.deleted, 1)
+        XCTAssertNil(try database.fetchSession(sessionId: "z-empty-2"))
+        for index in 0..<3 {
+            XCTAssertNotNil(try database.fetchSession(sessionId: "a-legacy-\(index)"),
+                            "a session with event_log rows is kept")
+        }
+    }
+
     // MARK: - Keep tables (a trimmed session keeps its summary, so it is never reaped)
 
     func testTrimmedSessionWithASummaryRowIsKept() throws {
