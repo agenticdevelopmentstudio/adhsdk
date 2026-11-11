@@ -179,7 +179,9 @@ public enum MailCommandLine {
             "From: \(message.from)", "To: \(message.to.joined(separator: ", "))",
             "Date: \(message.date)", "Subject: \(message.subject)",
             "Labels: \(message.labelNames.joined(separator: ", "))", "",
-            message.bodyText ?? message.snippet
+            // The service fills `bodyText` from the HTML itself; converting here as well keeps
+            // HTML-only mail readable from a service that predates that.
+            message.bodyText ?? message.bodyHtml.map(MailHTMLText.plainText(fromHTML:)) ?? message.snippet
         ].joined(separator: "\n")
     }
 }

@@ -187,6 +187,14 @@ struct MailCommandLineTests {
         #expect(out.stdout[0].hasSuffix("\n\nsnip"))
     }
 
+    @Test func getTextReadsHTMLWhenThereIsNoBodyText() async {
+        var message = ScriptedMail.message()
+        message.bodyText = nil
+        message.bodyHtml = "<style>x{}</style><p>Dear Mike,</p><p>It&#39;s a match.</p>"
+        let (_, out) = await run(["get", "a", "m1"], ScriptedMail(.message(message)))
+        #expect(out.stdout[0].hasSuffix("\n\nDear Mike,\n\nIt's a match."))
+    }
+
     @Test func unknownOptionIsUsageError() async {
         let mail = ScriptedMail(.ok)
         let (code, out) = await run(["list", "a", "--bogus"], mail)

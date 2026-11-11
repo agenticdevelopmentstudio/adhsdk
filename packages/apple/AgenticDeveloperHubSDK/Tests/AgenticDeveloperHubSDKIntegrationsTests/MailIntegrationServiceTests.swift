@@ -802,6 +802,71 @@ struct MailIntegrationServiceTests {
             == .failure("No message matches “zz”"))
     }
 
+    private func htmlDTO(_ id: String, html: String, text: String? = nil, snippet: String) -> GmailMessageDTO {
+        func part(_ mime: String, _ body: String) -> GmailPart {
+            GmailPart(mimeType: mime, body: GmailBody(data: Data(body.utf8).base64EncodedString()
+                .replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")))
+        }
+        let millis = Int((start.timeIntervalSince1970 - 86_400) * 1000)
+        return GmailMessageDTO(
+            id: id, threadId: "t-\(id)", labelIds: ["INBOX"], snippet: snippet, historyId: "1",
+            internalDate: String(millis),
+            payload: GmailPart(
+                mimeType: "multipart/alternative",
+                headers: [GmailHeader(name: "Subject", value: "subject \(id)")],
+                parts: (text.map { [part("text/plain", $0)] } ?? []) + [part("text/html", html)]))
+    }
+
+    @Test func htmlOnlyMessageGetsBodyTextReadFromItsHTML() async throws {
+        let harness = try Harness()
+        let html = "<html><head><style>p{}</style></head><body><p>Hi,</p><p>We&#39;d like to talk.</p></body></html>"
+        harness.api.setMessage(htmlDTO("h1", html: html, snippet: "Hi, We would like to talk."))
+        let account = try await harness.connect()
+        let response = await harness.service.handle(.getMessage(account: account.id, id: "h1"))
+        guard case .message(let message) = response else {
+            Issue.record("getMessage returned \(response)")
+            return
+        }
+        #expect(message.bodyHtml == html)
+        #expect(message.bodyText == "Hi,\n\nWe'd like to talk.")
+
+        let filter = MailMessageFilter(account: account.id, includeBodies: true)
+        guard case .messages(let page) = await harness.service.handle(.listMessages(filter)) else {
+            Issue.record("listMessages failed")
+            return
+        }
+        #expect(page.messages.first?.bodyText == "Hi,\n\nWe'd like to talk.")
+        guard case .messages(let bare) = await harness.service.handle(
+            .listMessages(MailMessageFilter(account: account.id))) else {
+            Issue.record("listMessages failed")
+            return
+        }
+        #expect(bare.messages.first?.bodyText == nil)
+    }
+
+    @Test func textPartWinsOverHTMLForBodyText() async throws {
+        let harness = try Harness()
+        harness.api.setMessage(htmlDTO("h2", html: "<p>html</p>", text: "plain &amp; simple", snippet: "s"))
+        let account = try await harness.connect()
+        guard case .message(let message) = await harness.service.handle(
+            .getMessage(account: account.id, id: "h2")) else {
+            Issue.record("getMessage failed")
+            return
+        }
+        // The text part is shown as sent: entities mean nothing in text/plain.
+        #expect(message.bodyText == "plain &amp; simple")
+        #expect(message.bodyHtml == "<p>html</p>")
+    }
+
+    @Test func blankTextPartFallsBackToHTML() {
+        let message = EmailMessage(
+            id: "x", connectionId: "c", externalId: "x", threadId: "t", fromAddress: "", toAddresses: [],
+            ccAddresses: [], subject: "", snippet: "", bodyText: " \n ", bodyHtml: "<b>Bold</b> text",
+            labelIds: [], internalDate: "2026-01-01T00:00:00.000Z", historyId: nil, attachments: [],
+            mailClass: .filed)
+        #expect(MailIntegrationService.bodyText(message) == "Bold text")
+    }
+
     @Test func removeAccountForgetsCredentialAndDeletesConnection() async throws {
         let harness = try Harness()
         let account = try await harness.connect()

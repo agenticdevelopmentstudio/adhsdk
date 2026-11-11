@@ -672,8 +672,18 @@ public actor MailIntegrationService {
             labels: message.labelIds, labelNames: message.labelIds.map { names[$0] ?? $0 },
             subject: message.subject, snippet: message.snippet, date: message.internalDate,
             mailClass: message.mailClass,
-            bodyText: includeBodies ? message.bodyText : nil, bodyHtml: includeBodies ? message.bodyHtml : nil,
+            bodyText: includeBodies ? bodyText(message) : nil, bodyHtml: includeBodies ? message.bodyHtml : nil,
             attachments: message.attachments)
+    }
+
+    /// The `text/plain` part; for a message with none (or a blank one), its HTML read as text.
+    static func bodyText(_ message: EmailMessage) -> String? {
+        if let text = message.bodyText, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return text
+        }
+        guard let html = message.bodyHtml else { return message.bodyText }
+        let converted = MailHTMLText.plainText(fromHTML: html)
+        return converted.isEmpty ? message.bodyText : converted
     }
 
     private static func account(_ connection: IntegrationConnection) -> MailAccount {

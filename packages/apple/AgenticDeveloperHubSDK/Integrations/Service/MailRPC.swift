@@ -177,7 +177,10 @@ public struct MailMessage: Codable, Sendable, Equatable {
     public var snippet: String
     public var date: String
     public var mailClass: MailClass
+    /// With bodies only: the `text/plain` part, or for a message without one, its HTML read as
+    /// text (`MailHTMLText`).
     public var bodyText: String?
+    /// With bodies only: the `text/html` part, as sent.
     public var bodyHtml: String?
     public var attachments: [EmailAttachmentRef]
 
