@@ -13,8 +13,11 @@
 // replaces ("BLUEBIRD" -> "REDBIRD", "bluebird" -> "redbird").
 //
 // Rewritten: text nodes (not inside script, style, textarea or an editable
-// region, where rewriting would change what a form sends or move the caret),
-// the title, and the title, alt, placeholder and aria-label attributes.
+// region, where rewriting would change what a form sends or move the caret)
+// and the title, alt, placeholder and aria-label attributes. The page's title
+// is its <title> element's text node, rewritten as any other, so it is never
+// substituted a second time; a script that sets document.title replaces that
+// node, and the new one arrives as an added node.
 // Open shadow roots are followed. A word split across elements, drawn on a
 // canvas, or inside a closed shadow root is not recognised.
 //
@@ -119,14 +122,6 @@
     }
   }
 
-  var lastTitle = null;
-  function filterTitle() {
-    if (document.title === lastTitle) { return; }
-    var next = substitute(document.title);
-    if (next !== document.title) { document.title = next; }
-    lastTitle = document.title;
-  }
-
   var observer = new MutationObserver(function (records) {
     for (var i = 0; i < records.length; i++) {
       var record = records[i];
@@ -141,7 +136,6 @@
         }
       }
     }
-    filterTitle();
   });
 
   function observe(root) {
@@ -155,5 +149,4 @@
 
   observe(document);
   filterTree(document);
-  filterTitle();
 })();
