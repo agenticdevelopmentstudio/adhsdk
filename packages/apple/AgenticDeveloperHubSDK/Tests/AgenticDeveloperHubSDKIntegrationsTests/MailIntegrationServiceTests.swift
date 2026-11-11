@@ -356,7 +356,7 @@ struct MailIntegrationServiceTests {
     @Test func signInWithoutProviderFails() async throws {
         let harness = try Harness()
         let response = await harness.service.handle(.signIn)
-        guard case .failure(let message) = response else {
+        guard case .failure(let message, _) = response else {
             Issue.record("expected failure, got \(response)")
             return
         }
@@ -1007,6 +1007,8 @@ struct MailIntegrationServiceTests {
             return
         }
         #expect(anyOf.messages.map(\.gmailId) == ["in", "job"])
+        #expect(anyOf.appliedAnyLabels)
+        #expect(!allOf.appliedAnyLabels)
 
         let unknown = MailMessageFilter(account: account.id, anyLabels: ["INBOX", "Nope"])
         #expect(await harness.service.handle(.listMessages(unknown)) == .failure("unknown label: Nope"))
@@ -1149,6 +1151,32 @@ struct MailIntegrationServiceTests {
             try await ScriptedMail(.notFound("gone")).client.message(account: "a", id: "m")
         }
         #expect(MailClientError.notFound("gone").localizedDescription == "gone")
+    }
+
+    /// The reply shape a client built before `notFound` joined `.failure` decodes.
+    private enum OldMailResponse: Decodable { case failure(String) }
+
+    @Test func notFoundStillDecodesAsAFailureForAnOlderClient() throws {
+        let reply = try JSONEncoder().encode(MailResponse.notFound("No message matches “zz”"))
+        guard case .failure(let message) = try JSONDecoder().decode(OldMailResponse.self, from: reply) else {
+            Issue.record("an older client could not read the reply")
+            return
+        }
+        #expect(message == "No message matches “zz”")
+        // And a failure from an older service, with no notFound key, is a plain failure.
+        let old = Data(#"{"failure":{"_0":"boom"}}"#.utf8)
+        #expect(try JSONDecoder().decode(MailResponse.self, from: old) == .failure("boom"))
+    }
+
+    @Test func aPageFromAServiceThatIgnoredAnyLabelsIsRefused() async throws {
+        let old = Data(#"{"messages":{"_0":{"messages":[]}}}"#.utf8)
+        let page = try JSONDecoder().decode(MailResponse.self, from: old)
+        #expect(page == .messages(MailMessagePage(messages: [], nextCursor: nil)))
+        let client = MailClient { _ in old }
+        await #expect(throws: MailClient.anyLabelsIgnored) {
+            try await client.messages(MailMessageFilter(account: "a", anyLabels: ["INBOX"]))
+        }
+        #expect(try await client.messages(MailMessageFilter(account: "a")).messages.isEmpty)
     }
 
     // MARK: - Concurrency and failure handling

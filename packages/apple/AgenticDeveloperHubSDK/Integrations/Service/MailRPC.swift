@@ -225,10 +225,27 @@ public struct MailMessagePage: Codable, Sendable, Equatable {
     public var messages: [MailMessage]
     /// The next offset as a decimal string; `nil` on the last page.
     public var nextCursor: String?
+    /// True when the service applied the filter's `anyLabels`. A service built before that
+    /// field decodes the filter without it and lists everything, and its reply leaves this out
+    /// (so it decodes as false), which lets `MailClient.messages` refuse the page.
+    public var appliedAnyLabels: Bool
 
-    public init(messages: [MailMessage], nextCursor: String?) {
+    public init(messages: [MailMessage], nextCursor: String?, appliedAnyLabels: Bool = false) {
         self.messages = messages
         self.nextCursor = nextCursor
+        self.appliedAnyLabels = appliedAnyLabels
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case messages, nextCursor, appliedAnyLabels
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            messages: try container.decode([MailMessage].self, forKey: .messages),
+            nextCursor: try container.decodeIfPresent(String.self, forKey: .nextCursor),
+            appliedAnyLabels: try container.decodeIfPresent(Bool.self, forKey: .appliedAnyLabels) ?? false)
     }
 }
 
@@ -257,13 +274,17 @@ public enum MailResponse: Codable, Sendable, Equatable {
     case moved([MailMoveResult])
     // swiftlint:disable:next identifier_name
     case ok
-    case failure(String)
-    /// A message id matched nothing. Its own case so a caller can tell it from other failures.
-    case notFound(String)
+    /// `notFound` is true when a message id matched nothing, so a caller can tell that from
+    /// other failures. It rides inside `.failure`, not in a case of its own, so a client built
+    /// before it still decodes the reply and shows the message.
+    case failure(String, notFound: Bool? = nil)
+
+    /// A message id matched nothing.
+    public static func notFound(_ message: String) -> MailResponse { .failure(message, notFound: true) }
 }
 
 /// A `.failure` reply from the service, or a reply of the wrong shape; `.notFound` for a
-/// `.notFound` reply.
+/// failure that says a message id matched nothing.
 public enum MailClientError: Error, Equatable, LocalizedError {
     case remote(String)
     case notFound(String)
@@ -283,13 +304,14 @@ public struct MailClient: Sendable {
         self.transport = transport
     }
 
-    /// `.failure(message)` throws `MailClientError.remote(message)`; `.notFound(message)` throws
-    /// `MailClientError.notFound(message)`.
+    /// `.failure(message)` throws `MailClientError.remote(message)`, or
+    /// `MailClientError.notFound(message)` when the failure says a message id matched nothing.
     public func send(_ request: MailRequest) async throws -> MailResponse {
         let reply = try await transport(try JSONEncoder().encode(request))
         let response = try JSONDecoder().decode(MailResponse.self, from: reply)
-        if case .failure(let message) = response { throw MailClientError.remote(message) }
-        if case .notFound(let message) = response { throw MailClientError.notFound(message) }
+        if case .failure(let message, let notFound) = response {
+            throw notFound == true ? MailClientError.notFound(message) : MailClientError.remote(message)
+        }
         return response
     }
 
@@ -308,8 +330,10 @@ public struct MailClient: Sendable {
         return labels
     }
 
+    /// Throws rather than return a page the service didn't filter by `anyLabels`.
     public func messages(_ filter: MailMessageFilter) async throws -> MailMessagePage {
         guard case .messages(let page) = try await send(.listMessages(filter)) else { throw Self.unexpected }
+        if !filter.anyLabels.isEmpty && !page.appliedAnyLabels { throw Self.anyLabelsIgnored }
         return page
     }
 
@@ -338,4 +362,6 @@ public struct MailClient: Sendable {
     }
 
     private static let unexpected = MailClientError.remote("unexpected response from the mail service")
+    static let anyLabelsIgnored = MailClientError.remote(
+        "The mail service is too old to filter by any of several labels; restart it and try again.")
 }

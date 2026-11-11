@@ -32,7 +32,7 @@ struct MailToolSourceTests {
     }
 
     @Test func listMessagesMapsAnyLabels() async {
-        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil)))
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil, appliedAnyLabels: true)))
         let result = await call(MailToolSource(client: mail.client), "mail_list_messages",
                                 #"{"account":"a","labels":["STARRED"],"any_labels":["INBOX","Job Search/00. Inbox"]}"#)
         #expect(!result.isError)

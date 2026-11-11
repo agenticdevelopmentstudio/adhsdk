@@ -60,8 +60,8 @@ public actor MailIntegrationService {
 
     // MARK: - Requests
 
-    /// Never throws: a message id that matches nothing becomes `.notFound(localizedDescription)`,
-    /// every other error `.failure(localizedDescription)`.
+    /// Never throws: every error becomes `.failure(localizedDescription)`, marked `notFound` when
+    /// a message id matches nothing.
     public func handle(_ request: MailRequest) async -> MailResponse {
         do {
             return try await dispatch(request)
@@ -500,7 +500,8 @@ public actor MailIntegrationService {
                              includeBodies: filter.includeBodies)
         }
         let last = rows.count > limit ? rows.prefix(limit).last : nil
-        return MailMessagePage(messages: messages, nextCursor: last.map(Self.encodeCursor))
+        return MailMessagePage(
+            messages: messages, nextCursor: last.map(Self.encodeCursor), appliedAnyLabels: !anyLabelIds.isEmpty)
     }
 
     /// A page cursor names the last row it returned, not a count of rows to skip: a sync or a

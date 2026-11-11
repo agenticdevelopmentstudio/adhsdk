@@ -33,13 +33,21 @@ struct MailCommandLineTests {
     }
 
     @Test func listParsesAnyLabelAsItsOwnRepeatableOption() async {
-        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil)))
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil, appliedAnyLabels: true)))
         let (code, _) = await run(
             ["list", "a", "--any-label", "INBOX", "--label", "STARRED", "--any-label", "Job Search/00. Inbox"],
             mail)
         #expect(code == 0)
         #expect(mail.requests == [.listMessages(MailMessageFilter(
             account: "a", labels: ["STARRED"], anyLabels: ["INBOX", "Job Search/00. Inbox"]))])
+    }
+
+    @Test func anyLabelFromAServiceThatIgnoresItFailsInsteadOfListingEverything() async {
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [ScriptedMail.message()], nextCursor: nil)))
+        let (code, out) = await run(["list", "a", "--any-label", "INBOX"], mail)
+        #expect(code == 1)
+        #expect(out.stdout.isEmpty)
+        #expect(out.stderr.joined().contains("too old to filter by any of several labels"))
     }
 
     @Test func usageDocumentsHowLabelFiltersCombine() {
