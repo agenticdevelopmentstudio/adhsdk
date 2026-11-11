@@ -440,8 +440,16 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Puts `url` in the address field as the pane shows it; the blank page
     /// and no page at all leave it empty.
     private func showAddress(_ url: URL?) {
-        addressField.stringValue = url.map { $0 == Self.blankPage ? "" : shown($0.absoluteString) } ?? ""
+        let text = url.map { $0 == Self.blankPage ? "" : shown($0.absoluteString) } ?? ""
+        addressField.stringValue = text
+        shownAddress = url.map { (text, $0) }
     }
+
+    /// What `showAddress` last wrote into the field and the address it stands
+    /// for. Return on that text, unedited, loads the address itself: the
+    /// stand-ins it shows cannot always be revealed back to it (a real word
+    /// inside a longer one is concealed but never revealed).
+    private var shownAddress: (text: String, url: URL)?
 
     private func observePrivacyWords() {
         privacyWordsObservation = privacyVault?.$filter
@@ -1057,8 +1065,13 @@ open class WebBrowserPaneViewController: NSViewController {
     // MARK: - Actions
 
     @objc private func navigateToTypedAddress() {
-        // The field shows the stand-ins, so what is sent is revealed first.
-        let typed = pageWordFilter?.revealing(addressField.stringValue) ?? addressField.stringValue
+        if let shownAddress, shownAddress.text == addressField.stringValue, shownAddress.url != Self.blankPage {
+            load(shownAddress.url)
+            return
+        }
+        // The field shows the stand-ins, so what is sent is revealed first,
+        // whole words only, so an alias inside a host is not rewritten.
+        let typed = pageWordFilter?.revealing(addressField.stringValue, wholeWords: true) ?? addressField.stringValue
         guard let url = Self.resolveAddress(typed) else {
             // What was typed is the user's, and may be anything; it stays out
             // of the public log.

@@ -51,6 +51,15 @@ struct TextSubstitutionFilterTests {
         #expect(birds.concealing("bluebird") == "Redbird", "without matchingCase, as written")
     }
 
+    @Test("wholeWords reveals an alias only where no letter or digit touches it")
+    func revealsWholeWords() {
+        let robin = TextSubstitutionFilter(parsing: "Robin = Mike")
+        #expect(robin.revealing("robinhood.com", wholeWords: true) == "robinhood.com")
+        #expect(robin.revealing("https://x.test/Robin/q?robin", wholeWords: true) == "https://x.test/Mike/q?Mike")
+        #expect(robin.revealing("robin2 Robin.", wholeWords: true) == "robin2 Mike.")
+        #expect(robin.revealing("robinhood.com") == "Mikehood.com", "without wholeWords, anywhere")
+    }
+
     @Test("casing leaves text with no letters as given")
     func casingWithoutLetters() {
         #expect(TextSubstitutionFilter.casing("Ab", like: "42") == "Ab")

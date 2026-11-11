@@ -49,9 +49,11 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
     }
 
     /// `text` as the page should receive it, each real word as the pair
-    /// gives it.
+    /// gives it. Only whole aliases are revealed: what is revealed goes into a
+    /// page or onto the network, and an alias's letters inside a longer word
+    /// or a host name ("Sam" in samsung.com) are not the alias.
     public func revealing(_ text: String) -> String {
-        if case .enabled(let filter) = self { return filter.revealing(text) }
+        if case .enabled(let filter) = self { return filter.revealing(text, wholeWords: true) }
         return text
     }
 }
