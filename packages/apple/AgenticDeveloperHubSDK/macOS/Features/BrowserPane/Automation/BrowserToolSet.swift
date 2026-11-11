@@ -488,14 +488,16 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let panes = directory.browserPanes()
         if panes.isEmpty { return "no browser pane is open; call browser_open" }
         let defaultID = (try? resolvePane(Arguments(tool: "browser_list", values: [:]), caller: caller))?.id
-        // A private pane's title and address are the page's words, so they
-        // are concealed here as everywhere else; one whose words cannot be
-        // read shows neither.
+        // A private pane's row is concealed whole, as a private terminal
+        // conceals its project and branch: the title and address are the
+        // page's words, and the project and tab names are the user's. One
+        // whose words cannot be used shows none of them.
         let rows: [[String: Any]] = panes.map { pane in
-            [
-                "id": pane.id, "title": pane.agentPrivacy.concealing(pane.title),
-                "url": pane.agentPrivacy.concealing(pane.url), "project": pane.project,
-                "tab": pane.tab, "engine": pane.engine.rawValue, "is_default": pane.id == defaultID,
+            let privacy = pane.agentPrivacy
+            return [
+                "id": pane.id, "title": privacy.concealing(pane.title),
+                "url": privacy.concealing(pane.url), "project": privacy.concealing(pane.project),
+                "tab": privacy.concealing(pane.tab), "engine": pane.engine.rawValue, "is_default": pane.id == defaultID,
                 "access": Self.accessName(pane.access), "agent_privacy": pane.agentPrivacy.isOn
             ]
         }

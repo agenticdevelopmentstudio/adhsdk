@@ -582,6 +582,13 @@ final class BrowserToolSetTests: XCTestCase {
         var rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
         XCTAssertEqual(rows.map { $0["title"] as? String }, ["Alpha", "Gamma"])
         XCTAssertEqual(rows.map { $0["agent_privacy"] as? Bool }, [false, true])
+        directory.panes = [handle("A"), BrowserPaneHandle(
+            id: "B", project: "beta-portal", tab: "Beta Q3",
+            automation: directory.panes[1].automation, agentPrivacy: .enabled(privateWords))]
+        reply = await call("browser_list")
+        rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.last?["project"] as? String, "gamma-portal", "the project name is concealed")
+        XCTAssertEqual(rows.last?["tab"] as? String, "Gamma Q3", "the tab name is concealed")
         directory.panes = [handle("A"), privateHandle("B", .unavailable)]
         reply = await call("browser_list")
         rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
