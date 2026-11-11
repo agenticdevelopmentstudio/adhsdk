@@ -27,12 +27,15 @@ public struct TrimReportDTO: Codable, Sendable, Equatable {
     /// so the next pass comes back soon to vacuum them. Nil from a daemon that
     /// predates the field.
     public let vacuumPending: Bool?
+    /// A vacuum that failed after every row was deleted; the pass is still
+    /// finished. Nil when none failed, or from a daemon that predates the field.
+    public let vacuumError: String?
 
     public init(
         startedAt: Double, finishedAt: Double, cutoff: Double? = nil, waitingFor: String? = nil,
         events: Int = 0, messages: Int = 0, turns: Int = 0, sessions: Int = 0, rateLimitSnapshots: Int = 0,
         reclaimedBytes: Int64 = 0, vacuum: String = "skipped", finished: Bool = true, error: String? = nil,
-        vacuumPending: Bool? = nil
+        vacuumPending: Bool? = nil, vacuumError: String? = nil
     ) {
         self.startedAt = startedAt
         self.finishedAt = finishedAt
@@ -48,6 +51,7 @@ public struct TrimReportDTO: Codable, Sendable, Equatable {
         self.finished = finished
         self.error = error
         self.vacuumPending = vacuumPending
+        self.vacuumError = vacuumError
     }
 }
 

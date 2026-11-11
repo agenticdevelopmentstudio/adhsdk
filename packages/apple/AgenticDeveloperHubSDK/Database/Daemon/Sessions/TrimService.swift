@@ -39,12 +39,17 @@ public struct TrimReport: Sendable, Codable, Equatable {
     /// the vacuum ran out of time, so the caller comes back soon rather than
     /// a day later. Reports stored before this field existed read as false.
     public var vacuumPending: Bool
+    /// A vacuum that failed (`events.db`'s incremental one or the main
+    /// database's full `VACUUM`). Kept apart from ``error``: every row was
+    /// already deleted, so the pass is still finished and not counted as
+    /// failed. Reports stored before this field existed read as nil.
+    public var vacuumError: String?
 
     public init(
         startedAt: Double, finishedAt: Double, cutoff: Double? = nil, waitingFor: String? = nil,
         events: Int = 0, messages: Int = 0, turns: Int = 0, sessions: Int = 0, rateLimitSnapshots: Int = 0,
         reclaimedBytes: Int64 = 0, vacuum: String = TrimService.vacuumSkipped, finished: Bool = true,
-        error: String? = nil, vacuumPending: Bool = false
+        error: String? = nil, vacuumPending: Bool = false, vacuumError: String? = nil
     ) {
         self.startedAt = startedAt
         self.finishedAt = finishedAt
@@ -60,11 +65,12 @@ public struct TrimReport: Sendable, Codable, Equatable {
         self.finished = finished
         self.error = error
         self.vacuumPending = vacuumPending
+        self.vacuumError = vacuumError
     }
 
     private enum CodingKeys: String, CodingKey {
         case startedAt, finishedAt, cutoff, waitingFor, events, messages, turns, sessions
-        case rateLimitSnapshots, reclaimedBytes, vacuum, finished, error, vacuumPending
+        case rateLimitSnapshots, reclaimedBytes, vacuum, finished, error, vacuumPending, vacuumError
     }
 
     public init(from decoder: Decoder) throws {
@@ -83,6 +89,7 @@ public struct TrimReport: Sendable, Codable, Equatable {
         finished = try container.decode(Bool.self, forKey: .finished)
         error = try container.decodeIfPresent(String.self, forKey: .error)
         vacuumPending = try container.decodeIfPresent(Bool.self, forKey: .vacuumPending) ?? false
+        vacuumError = try container.decodeIfPresent(String.self, forKey: .vacuumError)
     }
 }
 
@@ -123,7 +130,9 @@ public struct TrimHold: Sendable, Equatable {
 public final class TrimService: Sendable {
     /// The setting the last report is kept in, as JSON.
     public static let lastTrimKey = "storage_last_trim"
-    /// The setting holding when the main database was last fully vacuumed (epoch seconds).
+    /// The setting holding when a full vacuum of the main database was last
+    /// attempted (epoch seconds), whether or not it succeeded, so a failing
+    /// `VACUUM` waits ``mainVacuumInterval`` like a successful one.
     public static let lastMainVacuumKey = "storage_last_main_vacuum"
 
     public static let minimumHistoryDays = 7
@@ -162,6 +171,7 @@ public final class TrimService: Sendable {
     private let hold: (@Sendable () throws -> TrimHold?)?
     private let coverageWait: (@Sendable () -> String?)?
     private let extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int]
+    private let mainVacuum: (@Sendable (DaemonDatabase) throws -> Void)?
     private let now: @Sendable () -> Date
 
     /// - Parameters:
@@ -186,6 +196,8 @@ public final class TrimService: Sendable {
     ///     by a pass whose cutoff the covered day (not the history window)
     ///     sets and no hold lowered.
     ///   - extraMainTrims: the daemon's own main-db trims, each returning rows deleted.
+    ///   - mainVacuum: runs the main database's full vacuum; nil runs `VACUUM`.
+    ///     A test seam.
     public init(
         database: DaemonDatabase, eventStore: EventStore?, historyDays: Int,
         coveredThroughDay: @escaping @Sendable () -> String?,
@@ -195,6 +207,7 @@ public final class TrimService: Sendable {
         hold: (@Sendable () throws -> TrimHold?)? = nil,
         coverageWait: (@Sendable () -> String?)? = nil,
         extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int] = [],
+        mainVacuum: (@Sendable (DaemonDatabase) throws -> Void)? = nil,
         now: @escaping @Sendable () -> Date = Date.init
     ) {
         self.database = database
@@ -207,6 +220,7 @@ public final class TrimService: Sendable {
         self.hold = hold
         self.coverageWait = coverageWait
         self.extraMainTrims = extraMainTrims
+        self.mainVacuum = mainVacuum
         self.now = now
     }
 
@@ -322,6 +336,8 @@ public final class TrimService: Sendable {
         report.cutoff = cutoff
         let bytesBefore = totalBytes()
         var errors: [String] = []
+        // Kept out of `errors`: a vacuum runs only once every row is deleted.
+        var vacuumErrors: [String] = []
         var vacuum = Self.vacuumSkipped
 
         // 1. rate_limit_snapshots, the newest row per account always kept.
@@ -362,7 +378,7 @@ public final class TrimService: Sendable {
                     do {
                         vacuum = try vacuumEvents(eventStore, deadline: deadline)
                     } catch {
-                        errors.append("events.db vacuum: \(error.localizedDescription)")
+                        vacuumErrors.append("events.db vacuum: \(error.localizedDescription)")
                     }
                     // Read after a failed vacuum too: its committed steps count.
                     // Unreadable stats read as nothing pending: the next daily pass looks again.
@@ -393,13 +409,14 @@ public final class TrimService: Sendable {
                     vacuum = vacuum == Self.vacuumSkipped ? Self.vacuumFullMain : "\(vacuum), \(Self.vacuumFullMain)"
                 }
             } catch {
-                errors.append("main vacuum: \(error.localizedDescription)")
+                vacuumErrors.append("main vacuum: \(error.localizedDescription)")
             }
         }
 
         report.vacuum = vacuum
         report.reclaimedBytes = max(0, bytesBefore - totalBytes())
         report.error = errors.isEmpty ? nil : errors.joined(separator: "; ")
+        report.vacuumError = vacuumErrors.isEmpty ? nil : vacuumErrors.joined(separator: "; ")
         // A failed stage left rows behind: not finished, so the caller retries soon.
         if report.error != nil { report.finished = false }
         report.finishedAt = now().timeIntervalSince1970
@@ -410,6 +427,9 @@ public final class TrimService: Sendable {
             """)
         if let error = report.error {
             logger.error("Trim stage failed: \(error, privacy: .public)")
+        }
+        if let vacuumError = report.vacuumError {
+            logger.error("Trim vacuum failed: \(vacuumError, privacy: .public)")
         }
         store(report)
         return report
@@ -489,7 +509,8 @@ public final class TrimService: Sendable {
     }
 
     /// Runs a full `VACUUM` of the main database when ``shouldVacuumMain`` allows
-    /// it, and records when. Returns whether it ran.
+    /// it, recording the attempt first so a failing one is not retried every
+    /// pass. Returns whether it ran.
     private func vacuumMainIfDue() throws -> Bool {
         let (pageCount, freelist) = try database.read { conn in
             (try Int.fetchOne(conn, sql: "PRAGMA page_count") ?? 0,
@@ -500,10 +521,14 @@ public final class TrimService: Sendable {
         guard Self.shouldVacuumMain(
             bytes: StoreFileStats.diskBytes(path: database.path), pageCount: pageCount,
             freelistCount: freelist, lastVacuum: last, now: current) else { return false }
-        try database.writeWithoutTransaction(deadline: DaemonDatabase.migrationWriteDeadline) { conn in
-            try conn.execute(sql: "VACUUM")
-        }
         try database.setSetting(Self.lastMainVacuumKey, String(current.timeIntervalSince1970))
+        if let mainVacuum {
+            try mainVacuum(database)
+        } else {
+            try database.writeWithoutTransaction(deadline: DaemonDatabase.migrationWriteDeadline) { conn in
+                try conn.execute(sql: "VACUUM")
+            }
+        }
         return true
     }
 }
@@ -520,7 +545,7 @@ extension TrimReportDTO {
             waitingFor: report.waitingFor, events: report.events, messages: report.messages, turns: report.turns,
             sessions: report.sessions, rateLimitSnapshots: report.rateLimitSnapshots,
             reclaimedBytes: report.reclaimedBytes, vacuum: report.vacuum, finished: report.finished,
-            error: report.error, vacuumPending: report.vacuumPending)
+            error: report.error, vacuumPending: report.vacuumPending, vacuumError: report.vacuumError)
     }
 }
 
