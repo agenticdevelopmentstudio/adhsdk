@@ -17,7 +17,9 @@ import Foundation
 ///   message with an id emits no turn, so it can never overwrite real counts.
 /// - Message (Ruling 6): one per user/assistant line and per queued prompt,
 ///   keyed by the record's dedup key, with `content` kept verbatim in
-///   `attrs.blocks` and its text blocks flattened into `text`.
+///   `attrs.blocks` and its text blocks flattened into `text`. Its `uuid` (the
+///   store's identity) is the line's own, else the line's content key, so a
+///   uuid-less line seen at two places is still one message.
 /// - Events (Ruling 7): only title lines and Agent-dispatch results. Nothing
 ///   is synthesized for prompts or tool calls; the hooks own those.
 /// - Session: the line's cwd, branch and time; the model and transcript path
@@ -63,6 +65,8 @@ private struct Line {
     let root: [String: Any]
     let recordID: Int64
     let dedupKey: String
+    /// `ClaudeTranscriptPayload.contentKey`: the line's session and hash, not its place.
+    let contentKey: String
     let raw: JSONLScanner.RawTranscriptLine
     let turn: JSONLScanner.ParsedTurn?
     /// The line's own session id; empty when the line carries none.
@@ -82,6 +86,8 @@ private struct Line {
         self.root = root
         recordID = record.id
         dedupKey = record.record.dedupKey
+        contentKey = ClaudeTranscriptPayload.contentKey(
+            line: payload.line, file: payload.file, lineBytes: payload.lineBytes)
         raw = JSONLScanner.parseRawLine(
             payload.line, lineNo: payload.lineNo, fileStem: ClaudeTranscriptPayload.fileStem(payload.file))
         turn = JSONLScanner.parse(payload.line, isSubagentFile: payload.subagentFile)
@@ -138,7 +144,7 @@ private struct Line {
         }
         appendConversationFacts(to: &attrs)
         batch.messages.append(MessageRow(
-            dedupKey: dedupKey, uuid: raw.entryUuid.isEmpty ? dedupKey : raw.entryUuid,
+            dedupKey: dedupKey, uuid: raw.entryUuid.isEmpty ? contentKey : raw.entryUuid,
             parentUUID: Self.nonEmpty(raw.parentUuid), sessionID: raw.sessionId, role: role, time: time,
             isSidechain: raw.isSidechain, text: Self.text(content), attrs: attrs, rawRef: recordID))
     }
