@@ -21,7 +21,10 @@ import Foundation
 ///   store's identity) is the line's own, else the line's content key, so a
 ///   uuid-less line seen at two places is still one message.
 /// - Events (Ruling 7): only title lines and Agent-dispatch results. Nothing
-///   is synthesized for prompts or tool calls; the hooks own those.
+///   is synthesized for prompts or tool calls; the hooks own those. Both are
+///   keyed by the line's content key, so a line copied into a resumed
+///   transcript, or moved by a rewrite, is the same event. A title event keeps
+///   its latest sighting's time: a title set again is the newest again.
 /// - Session: the line's cwd, branch and time; the model and transcript path
 ///   only from a main-session line, so a subagent's file never stands in for
 ///   the parent's.
@@ -114,10 +117,10 @@ private struct Line {
         // keeps `asOf`, so a timed observation still outranks it.
         let eventTime = parsedTime ?? ingestTime
         batch.events.append(NormalizedEvent(
-            dedupKey: dedupKey, sessionID: title.sessionId, kind: .other, providerType: raw.entryType,
+            dedupKey: contentKey, sessionID: title.sessionId, kind: .other, providerType: raw.entryType,
             time: eventTime, cwd: cwd, summary: title.title,
             attrs: ["title": .string(title.title), "title_source": .string(title.source.rawValue)],
-            rawRef: recordID))
+            rawRef: recordID, keepsLatestTime: true))
         batch.sessions.append(SessionUpsert(sessionID: title.sessionId, asOf: asOf, title: title.title))
     }
 
@@ -185,7 +188,7 @@ private struct Line {
         ]
         if !dispatch.status.isEmpty { attrs["status"] = .string(dispatch.status) }
         batch.events.append(NormalizedEvent(
-            dedupKey: dedupKey + ClaudeTranscriptNormalizer.dispatchKeySuffix, sessionID: dispatch.sessionId,
+            dedupKey: contentKey + ClaudeTranscriptNormalizer.dispatchKeySuffix, sessionID: dispatch.sessionId,
             kind: .subagentStop, providerType: "agent-dispatch", time: time, cwd: cwd,
             summary: dispatch.agentType, attrs: attrs, rawRef: recordID))
     }
