@@ -39,11 +39,13 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
         "\(tool) is refused on this browser pane: Agent Privacy is on, and \(tool) cannot be concealed."
     }
 
-    /// `text` as a model may see it.
+    /// `text` as a model may see it. A real word is also concealed in the
+    /// forms an address writes it in (`TextSubstitutionFilter.includingURLForms`),
+    /// since replies and `browser_list` carry addresses as they are encoded.
     public func concealing(_ text: String) -> String {
         switch self {
         case .off: text
-        case .enabled(let filter): filter.concealing(text, matchingCase: true)
+        case .enabled(let filter): filter.includingURLForms.concealing(text, matchingCase: true)
         case .unavailable: "(concealed)"
         }
     }
@@ -55,5 +57,38 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
     public func revealing(_ text: String) -> String {
         if case .enabled(let filter) = self { return filter.revealing(text, wholeWords: true) }
         return text
+    }
+}
+
+extension TextSubstitutionFilter {
+
+    /// The pairs, plus each pair again in the forms a URL writes a word in
+    /// when that differs from the word: every character but the unreserved
+    /// ones percent-escaped ("Zoë" as "Zo%C3%AB", a space as "%20"), and the
+    /// same with a space as "+", as a form's query string has it. The alias is
+    /// written in the same form, so a concealed address stays an address.
+    /// Matching ignores case, which covers lower-case escapes too.
+    public var includingURLForms: TextSubstitutionFilter {
+        var extra: [Pair] = []
+        for pair in pairs {
+            for form in [Self.percentEscaped, Self.formEscaped] {
+                let real = form(pair.real)
+                if real != pair.real { extra.append(Pair(alias: form(pair.alias), real: real)) }
+            }
+        }
+        return extra.isEmpty ? self : TextSubstitutionFilter(pairs: pairs + extra)
+    }
+
+    /// RFC 3986's unreserved characters, the only ones never escaped.
+    private static let unreserved = CharacterSet(
+        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+
+    private static func percentEscaped(_ text: String) -> String {
+        text.addingPercentEncoding(withAllowedCharacters: unreserved) ?? text
+    }
+
+    private static func formEscaped(_ text: String) -> String {
+        (text.addingPercentEncoding(withAllowedCharacters: unreserved.union(CharacterSet(charactersIn: " "))) ?? text)
+            .replacingOccurrences(of: " ", with: "+")
     }
 }

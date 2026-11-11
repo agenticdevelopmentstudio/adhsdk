@@ -601,6 +601,13 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(privacy.revealing("https://github.com/Acme/repo"), "https://github.com/OpenAI/repo")
     }
 
+    func testAnEncodedRealWordIsConcealed() {
+        let privacy = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Alex = Mike Fullerton; Zed = Zoë"))
+        XCTAssertEqual(privacy.concealing("navigated to https://www.google.com/search?q=Mike+Fullerton"),
+                       "navigated to https://www.google.com/search?q=Alex")
+        XCTAssertEqual(privacy.concealing("https://x.test/Mike%20Fullerton/zo%c3%ab"), "https://x.test/Alex/zed")
+    }
+
     func testAnAliasInsideAHostIsNotRevealed() {
         let privacy = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Sam = Mike; Robin = Mike"))
         let args = BrowserToolSet.Arguments(tool: "browser_navigate", values: ["url": "https://www.samsung.com/robinhood"])

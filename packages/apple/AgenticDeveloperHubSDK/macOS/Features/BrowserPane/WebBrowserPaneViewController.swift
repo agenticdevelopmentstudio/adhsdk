@@ -440,7 +440,13 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Puts `url` in the address field as the pane shows it; the blank page
     /// and no page at all leave it empty.
     private func showAddress(_ url: URL?) {
-        let text = url.map { $0 == Self.blankPage ? "" : shown($0.absoluteString) } ?? ""
+        let text = url.map { address -> String in
+            guard address != Self.blankPage else { return "" }
+            // An address carries its words escaped, so they are concealed
+            // in those forms too.
+            return pageWordFilter?.includingURLForms.concealing(address.absoluteString, matchingCase: true)
+                ?? address.absoluteString
+        } ?? ""
         addressField.stringValue = text
         shownAddress = url.map { (text, $0) }
     }
