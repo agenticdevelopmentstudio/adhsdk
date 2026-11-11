@@ -29,8 +29,11 @@ public final class WebBrowserWindowController: SingleWindowController {
     /// What a window is for. Get Extensions… looks for the window it opened
     /// before and brings that one forward rather than opening another.
     public enum Purpose: Sendable, Equatable {
-        /// File ▸ New Web Browser.
+        /// File ▸ New Web Browser Window.
         case browsing
+        /// File ▸ New Private Web Browser Window: private browsing on for
+        /// this window alone, whatever the shared setting says.
+        case privateBrowsing
         /// The Chrome Web Store, for installing extensions in the global jar.
         case extensions
         /// The Chrome Web Store in a Safari pane, for installing the global
@@ -39,7 +42,7 @@ public final class WebBrowserWindowController: SingleWindowController {
         /// extension's options) open there too, since only WebKit can show them.
         case safariExtensions
 
-        var isExtensions: Bool { self != .browsing }
+        var isExtensions: Bool { self == .extensions || self == .safariExtensions }
     }
 
     /// Builds the browser a window shows, over the state store and the
@@ -92,6 +95,9 @@ public final class WebBrowserWindowController: SingleWindowController {
             // nowhere at all.
             settings.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
             settings.set(false, for: UserSettings.browserPrivateBrowsing)
+        }
+        if purpose == .privateBrowsing {
+            settings.set(true, for: UserSettings.browserPrivateBrowsing)
         }
         let controller = WebBrowserWindowController(pane: build(store, settings), purpose: purpose)
         openWindows.append(controller)

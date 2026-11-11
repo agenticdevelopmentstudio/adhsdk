@@ -51,15 +51,12 @@ public final class TerminalCoordinator: AppFeature, TerminalSessionWindowLifecyc
         ))
 
         self.menuContributions = [
+            // ⌘T is File ▸ New Tab's, and a new session in the key terminal
+            // window is that window's New (⌘N, through `newItemProviders`).
             MenuContribution(
-                slot: .file, title: "New Terminal Window",
+                slot: .fileNew, title: "New Terminal Window",
                 commandID: CommandID.newWindow, registry: registry,
-                order: 0, key: "t"
-            ),
-            MenuContribution(
-                slot: .file, title: "New Terminal Session",
-                commandID: CommandID.newSession, registry: registry,
-                order: 10
+                order: 30
             ),
             MenuContribution(
                 slot: .view, title: "Toggle Sidebar",

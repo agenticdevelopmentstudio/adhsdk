@@ -585,6 +585,72 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         return true
     }
 
+    /// Whether `addPaneBesideActivePane(showing:)` would add `viewID` now.
+    public func canAddPaneBesideActivePane(showing viewID: ComposableTabsViewID) -> Bool {
+        guard let pane = activePane, let split = pane.parent as? ComposableTabsViewController else { return false }
+        return split.allowedInsertions(beside: pane).contains { $0.viewID == viewID }
+    }
+
+    /// Every pane type this project's registry can build, placeholder aside,
+    /// sorted by title — what Projects ▸ Add Project Panel lists. Whether
+    /// one fits beside the active pane right now is
+    /// `canAddPaneBesideActivePane(showing:)`'s to say.
+    public var addablePaneChoices: [(viewID: ComposableTabsViewID, title: String, symbolName: String?)] {
+        let registry = project.layout.registry
+        return registry.registeredViewIDs
+            .filter { $0 != .placeholder && !project.layout.spec.retiredViews.contains($0) }
+            .map { viewID in
+                let descriptor = registry.descriptor(for: viewID)
+                return (viewID, descriptor.displayName, descriptor.symbolName)
+            }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
+    // MARK: - Tab commands (File menu)
+
+    /// What Reopen Tab brings back: the last tab closed in each project,
+    /// keyed by project so a project window never reopens another project's
+    /// tab. In memory only — a closed tab is not worth a schema.
+    private struct ClosedTab {
+        let title: String
+        let workingDirectory: URL
+    }
+    private static var lastClosedTabByProject: [UUID: ClosedTab] = [:]
+
+    /// File ▸ New Tab: a new project-level tab, exactly as the tab bar's "+"
+    /// makes one.
+    public func addTab() {
+        addTabGroup()
+    }
+
+    /// The last tab stays — closing it is Close Window's job.
+    public var canCloseActiveTab: Bool {
+        tabGroups.count > 1 && tabbed.activeTabID != nil
+    }
+
+    /// File ▸ Close Tab: closes the active tab's whole group.
+    public func closeActiveTab() {
+        guard let id = tabbed.activeTabID else { return }
+        closeTabGroup(containing: id)
+    }
+
+    /// The active tab's layout tree — `ComposableTabsViewContext.treeID` of
+    /// every pane in it — so a host can reach what it keyed by tab.
+    public var activeTreeID: UUID? {
+        activeSplit?.nodeID
+    }
+
+    public var canReopenClosedTab: Bool {
+        Self.lastClosedTabByProject[project.id] != nil
+    }
+
+    /// File ▸ Reopen Tab: a new tab with the closed one's title and working
+    /// directory, wearing the window's current arrangement like every tab.
+    public func reopenClosedTab() {
+        guard let closed = Self.lastClosedTabByProject.removeValue(forKey: project.id) else { return }
+        addTabGroup(title: closed.title, workingDirectory: closed.workingDirectory)
+    }
+
     // MARK: - Arrange mode and project settings
 
     /// Also the target of the Window ▸ Arrange menu item, reached down the
@@ -661,10 +727,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     /// Creates a project-level tab: one member per enabled edge, all
     /// sharing a title, and activates the first member.
-    private func addTabGroup() {
-        let title = "Tab \(tabGroups.count + 1)"
+    private func addTabGroup(title: String? = nil, workingDirectory: URL? = nil) {
+        let title = title ?? "Tab \(tabGroups.count + 1)"
         var group = TabGroup(
-            id: UUID(), title: title, members: [:], workingDirectory: project.directoryURL)
+            id: UUID(), title: title, members: [:],
+            workingDirectory: workingDirectory ?? project.directoryURL)
         for edge in Edge.allCases where tabbed.isEdgeEnabled(edge) {
             let id = UUID()
             // The group's directory, never `project.directoryURL` again: the
@@ -1711,11 +1778,20 @@ extension ComposableTabsWindowController: MultiTabbedViewControllerDelegate {
         didRequestCloseTab id: UUID,
         on edge: Edge
     ) {
-        // Closing any member closes its whole group. Refuse to close the
-        // last group (mirrors Safari/Terminal keeping one tab).
+        closeTabGroup(containing: id)
+    }
+
+    /// Closing any member closes its whole group, from the tab bar's close
+    /// button and File ▸ Close Tab alike. Refuses the last group (mirrors
+    /// Safari/Terminal keeping one tab), and records what it closed for
+    /// Reopen Tab.
+    func closeTabGroup(containing id: UUID) {
+        let controller = tabbed
         guard let groupIndex = tabGroups.firstIndex(where: { $0.members.values.contains(id) }) else { return }
         guard tabGroups.count > 1 else { return }
         let group = tabGroups.remove(at: groupIndex)
+        Self.lastClosedTabByProject[project.id] = ClosedTab(
+            title: group.title, workingDirectory: group.workingDirectory)
         // Remove the clicked member first: if it is active, the controller
         // activates its neighbor on the same edge before the rest of the
         // group disappears.

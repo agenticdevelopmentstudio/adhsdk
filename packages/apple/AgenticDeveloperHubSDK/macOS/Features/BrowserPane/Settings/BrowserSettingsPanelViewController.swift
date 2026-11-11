@@ -607,6 +607,12 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
     override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
+                title: "“New” Opens Tabs",
+                body: "File ▸ New (⌘N) over a web browser window normally opens another web "
+                    + "browser window. With this on, it opens a new tab in the window in front "
+                    + "instead, as File ▸ New Tab does."
+            ),
+            .init(
                 title: "Home Page",
                 body: "What a new browser pane opens on when it has no page to go back to. "
                     + "Blank opens an empty page, with the address bar ready. A bare host "
@@ -637,16 +643,32 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
     }
 
     static let keywords: [String] = [
-        "home page", "start page", "zoom", "font size", "javascript", "pop-up", "popup", "user agent"
+        "new opens tabs", "new tab", "home page", "start page", "zoom", "font size",
+        "javascript", "pop-up", "popup", "user agent"
     ]
 
     override var searchKeywords: [String] { Self.keywords }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        // A window's New, not a pane's: shown only in the app's Settings.
+        if !binding.isPaneScope {
+            settingsView.addGroup(makeWindowsGroup())
+        }
         settingsView.addGroup(makeHomeGroup())
         settingsView.addGroup(makePageGroup())
         settingsView.addGroup(makeUserAgentGroup())
+    }
+
+    private func makeWindowsGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Windows")
+        let checkbox = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
+            title: "“New” opens tabs",
+            setting: UserSettings.browserNewOpensTabs
+        ))
+        _ = checkbox.accessibilityID("settings.browser.general.new-opens-tabs")
+        group.addSettingSubview(checkbox)
+        return group
     }
 
     private func makeHomeGroup() -> ComposableSettings.GroupView {

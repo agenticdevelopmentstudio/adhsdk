@@ -16,6 +16,13 @@ public struct MenuContribution {
         case app
         /// File menu — typically New / Open / Close / Save.
         case file
+        /// File menu's "New" section — the commands that open a new window of
+        /// some kind (web browser, terminal, File Browser). Kept apart from
+        /// `.file` so the app can put them together under its own "New" item.
+        case fileNew
+        /// Projects menu, after View — the project commands (open, scan,
+        /// project settings, adding a panel to the key project window).
+        case projects
         /// View menu — typically Toggle Sidebar / Enter Full Screen.
         case view
         /// Notes menu, between View and Window — the commands that open the

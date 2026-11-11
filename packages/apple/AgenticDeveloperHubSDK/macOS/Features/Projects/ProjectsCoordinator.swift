@@ -136,22 +136,31 @@ public final class ProjectsCoordinator: AppFeature {
             run: { [weak self] in self?.scan() }
         ))
 
+        // The Projects menu puts Add Project Panel ▸ between orders below 100
+        // and the rest (see the host's menu builder).
         self.menuContributions = [
             MenuContribution(
-                slot: .file,
+                slot: .projects,
+                title: "New Development Project Window",
+                commandID: CommandID.newProjectWindow,
+                registry: registry,
+                order: 0
+            ),
+            MenuContribution(
+                slot: .projects,
                 title: "Open Project…",
                 commandID: CommandID.openProject,
                 registry: registry,
-                order: 0,
+                order: 10,
                 key: "p",
                 modifiers: [.command, .option]
             ),
             MenuContribution(
-                slot: .file,
+                slot: .projects,
                 title: "Scan for Projects",
                 commandID: CommandID.scanForProjects,
                 registry: registry,
-                order: 10,
+                order: 100,
                 isHidden: { [weak self] in self?.isScanning ?? false }
             )
         ]

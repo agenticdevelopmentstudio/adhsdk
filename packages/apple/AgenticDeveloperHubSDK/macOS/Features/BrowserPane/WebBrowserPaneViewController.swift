@@ -1243,6 +1243,24 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Every tab's engine, in bar order.
     public var tabEngines: [BrowserEngine] { tabs.map(\.engine) }
 
+    public var tabCount: Int { tabs.count }
+
+    /// File ▸ Close Tab: closes the tab in front, as its close button would.
+    public func closeActiveTab() {
+        closeTab(activeTab)
+    }
+
+    /// The address of the last web tab closed in any browser pane, for
+    /// File ▸ Reopen Tab. Never set by a private pane, and in memory only.
+    public private(set) static var lastClosedURL: URL?
+
+    /// Hands Reopen Tab the last closed address once, so a second Reopen Tab
+    /// does not bring the same page back again.
+    public static func takeLastClosedURL() -> URL? {
+        defer { lastClosedURL = nil }
+        return lastClosedURL
+    }
+
     /// Opens a tab on `url` (a blank page for nil) after the one in front,
     /// in front unless `inBackground`, and returns its engine: what a web
     /// extension's `tabs.create` gets back.
@@ -1303,6 +1321,11 @@ open class WebBrowserPaneViewController: NSViewController {
             tabStrip.selectTab(id: opener.id, on: .top)
         }
         tabObserver?.pane(self, willCloseTab: tab.engine)
+        if !settings.get(UserSettings.browserPrivateBrowsing),
+           let address = [tab.engine.url, tab.requestedURL].lazy.compactMap({ $0 })
+               .first(where: { $0 != Self.blankPage }) {
+            Self.lastClosedURL = address
+        }
         // Out of the list first, so any neighbour the strip brings forward is
         // activated with this one already gone.
         tabs.removeAll { $0 === tab }

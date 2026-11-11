@@ -215,6 +215,11 @@ extension UserSettings {
     public static let browserAcceptsCookies = UserSetting<Bool>("browser.accepts_cookies", default: true)
     public static let browserPrivateBrowsing = UserSetting<Bool>("browser.private_browsing", default: false)
 
+    // Windows
+    /// File ▸ New (⌘N) over a web browser window opens a new tab in it
+    /// rather than a new window. App-wide: a window's New, not a pane's.
+    public static let browserNewOpensTabs = UserSetting<Bool>("browser.new_opens_tabs", default: false)
+
     // Privacy and security
     public static let browserFraudWarning = UserSetting<Bool>("browser.fraud_warning", default: true)
     public static let browserUpgradesToHTTPS = UserSetting<Bool>("browser.upgrades_to_https", default: true)
