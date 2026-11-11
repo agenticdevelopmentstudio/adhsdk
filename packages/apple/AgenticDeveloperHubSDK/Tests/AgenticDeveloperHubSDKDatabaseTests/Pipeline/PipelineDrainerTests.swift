@@ -248,6 +248,42 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.archive.count(), 6)
     }
 
+    func testAStoreOutageFailsThePassWithoutChargingAnyRecord() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<4).map { record("k\($0)") })
+        // Another connection holds the write lock past the store's busy timeout.
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        var lockerConfig = Configuration()
+        lockerConfig.allowsUnsafeTransactions = true   // the lock outlives one access
+        let locker = try DatabaseQueue(path: path, configuration: lockerConfig)
+        try locker.inDatabase { try $0.execute(sql: "BEGIN IMMEDIATE") }
+
+        let began = Date()
+        let failed = try drainer(rig).drainOnce()
+        XCTAssertTrue(failed.failed)
+        XCTAssertTrue(failed.failureReason?.hasPrefix(PipelineDrainer.storeFailurePrefix) ?? false,
+                      failed.failureReason ?? "")
+        XCTAssertLessThan(Date().timeIntervalSince(began), 15, "one busy wait, not one per record")
+        XCTAssertEqual(try rig.spool.pendingBatch(limit: 10).map(\.attempts), [0, 0, 0, 0])
+
+        try locker.inDatabase { try $0.execute(sql: "ROLLBACK") }
+        let recovered = try drainer(rig).drainUntilEmpty()
+        XCTAssertFalse(recovered.failed, recovered.failureReason ?? "")
+        XCTAssertEqual(try rig.store.counts().events, 4)
+    }
+
+    func testStoreOutageClassification() {
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(DatabaseError(resultCode: .SQLITE_FULL)))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(DatabaseError(resultCode: .SQLITE_IOERR_WRITE)))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(DatabaseError(resultCode: .SQLITE_BUSY)))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(
+            BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000)))
+        XCTAssertFalse(PipelineDrainer.isStoreOutage(DatabaseError(resultCode: .SQLITE_ERROR)))
+        XCTAssertFalse(PipelineDrainer.isStoreOutage(DatabaseError(resultCode: .SQLITE_CONSTRAINT)))
+        struct Other: Error {}
+        XCTAssertFalse(PipelineDrainer.isStoreOutage(Other()))
+    }
+
     func testUnstorableRecordIsIsolatedChargedAndQuarantinedWithoutBlockingItsBatch() throws {
         let rig = try makeRig()
         try rig.spool.append([record("k0"), record("poison"), record("k1")])

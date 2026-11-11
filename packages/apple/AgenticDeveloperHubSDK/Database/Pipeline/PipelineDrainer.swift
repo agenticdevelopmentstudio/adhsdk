@@ -1,4 +1,5 @@
 import Foundation
+import GRDB
 
 /// The points in a drain pass where a test can inject a failure.
 public enum DrainStep: String, Sendable, CaseIterable {
@@ -359,6 +360,10 @@ public final class PipelineDrainer: @unchecked Sendable {
 
         do {
             _ = try store.write(merged, provider: normalizer.provider)
+        } catch where Self.isStoreOutage(error) {
+            // The store itself is down: no record is at fault, so none is charged,
+            // and writing them one by one would only wait out the outage per record.
+            throw StepFailure(description: "\(Self.storeFailurePrefix)\(error)")
         } catch {
             let kept = try isolateStoreFailure(
                 error, Array(zip(normalizedSpooled, zip(normalizedRecords, normalizedBatches))), &outcome)
@@ -390,7 +395,8 @@ public final class PipelineDrainer: @unchecked Sendable {
 
     /// After a failed batch write: writes each record's rows on its own, charges the
     /// records that still fail, and returns the ones that are now stored. Throws the
-    /// original failure when nothing could be stored.
+    /// original failure when nothing could be stored. A store outage met on the way
+    /// fails the pass there, charging no further record.
     private func isolateStoreFailure(
         _ batchError: Error, _ items: [(SpooledRecord, (ArchivedRecord, NormalizedBatch))],
         _ outcome: inout DrainOutcome
@@ -400,12 +406,29 @@ public final class PipelineDrainer: @unchecked Sendable {
             do {
                 _ = try store.write(batch, provider: normalizer.provider)
                 kept.append((item, archived, batch))
+            } catch where Self.isStoreOutage(error) {
+                throw StepFailure(description: "\(Self.storeFailurePrefix)\(error)")
             } catch {
                 try charge(item, reason: "\(Self.storeFailurePrefix)\(error)", &outcome)
             }
         }
         if kept.isEmpty { throw StepFailure(description: "store write failed: \(batchError)") }
         return kept
+    }
+
+    /// A failure of the store as a whole (disk full, I/O, a lock held past the busy
+    /// timeout, a write ejected at its deadline), which says nothing about the
+    /// records being written.
+    static func isStoreOutage(_ error: Error) -> Bool {
+        if error is BoundedDatabaseError { return true }
+        guard let databaseError = error as? DatabaseError else { return false }
+        switch databaseError.resultCode {
+        case .SQLITE_FULL, .SQLITE_IOERR, .SQLITE_BUSY, .SQLITE_LOCKED, .SQLITE_READONLY,
+             .SQLITE_CANTOPEN, .SQLITE_NOMEM, .SQLITE_PROTOCOL, .SQLITE_INTERRUPT:
+            return true
+        default:
+            return false
+        }
     }
 
     // MARK: - Background thread
