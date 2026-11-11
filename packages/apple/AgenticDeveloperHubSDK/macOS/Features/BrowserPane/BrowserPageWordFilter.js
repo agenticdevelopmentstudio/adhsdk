@@ -67,7 +67,10 @@
     });
   }
 
-  var SKIPPED = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1, TEMPLATE: 1 };
+  // Keyed by localName, which is lower case for HTML, SVG and MathML elements
+  // and in XHTML documents alike; tagName is upper case only for HTML
+  // elements of an HTML document, so an SVG <style> would slip past it.
+  var SKIPPED = { script: 1, style: 1, noscript: 1, textarea: 1, template: 1 };
   var ATTRIBUTES = ['title', 'alt', 'placeholder', 'aria-label'];
   // What this script last wrote into each text node, so its own write is not
   // taken for a change and rewritten again (a stand-in that is itself another
@@ -80,7 +83,7 @@
   function skips(node) {
     var element = node.nodeType === 1 ? node : node.parentElement;
     for (var current = element; current; current = current.parentElement) {
-      if (SKIPPED[current.tagName]) { return true; }
+      if (SKIPPED[current.localName]) { return true; }
       if (current.isContentEditable) { return true; }
     }
     return false;
@@ -110,7 +113,7 @@
     if (root.nodeType === 3) { filterText(root); return; }
     if (root.nodeType !== 1 && root.nodeType !== 9 && root.nodeType !== 11) { return; }
     if (root.nodeType === 1) {
-      if (SKIPPED[root.tagName]) { return; }
+      if (SKIPPED[root.localName]) { return; }
       filterAttributes(root);
       if (root.shadowRoot) { observe(root.shadowRoot); filterTree(root.shadowRoot); }
     }
