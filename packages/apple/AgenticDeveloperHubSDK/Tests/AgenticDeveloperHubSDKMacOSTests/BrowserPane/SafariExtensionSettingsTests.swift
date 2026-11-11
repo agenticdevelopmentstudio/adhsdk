@@ -59,6 +59,7 @@ final class SafariExtensionSettingsTests: XCTestCase {
         XCTAssertEqual(invalid, ["not a site"])
     }
 
+    @MainActor
     func test_typedPattern_showsAWholeSiteAsItsName() {
         XCTAssertEqual(SafariExtensionDetailsView.typed(pattern: "*://example.com/*"), "example.com")
         XCTAssertEqual(SafariExtensionDetailsView.typed(pattern: "https://example.com/*"), "https://example.com/*")
