@@ -296,6 +296,7 @@ public final class SettingsSnapshotPush {
         seedGeneration += 1
         let mine = seedGeneration
         let startedAt = generation
+        let localAtStart = snapshot()
         seedTask = Task { @MainActor [weak self] in
             let apply = await pull()
             guard let self, self.seedGeneration == mine else { return }
@@ -309,9 +310,21 @@ public final class SettingsSnapshotPush {
             self.seedFailures = 0
             self.awaitingFirstPull = false
             guard self.generation == startedAt, !self.localChangePending else { return }
-            apply()
-            self.receiverBody = self.snapshot()
+            self.applyPull(apply, localAtStart: localAtStart)
         }
+    }
+
+    /// Writes a pulled value in, unless the local values changed while the read
+    /// was out. An observer reports a change one main-queue hop after it is
+    /// made, so a read can come back before ``push()`` has heard of it; that
+    /// change is newer than what was read, so it is sent instead of overwritten.
+    private func applyPull(_ apply: @MainActor () -> Void, localAtStart: Data?) {
+        guard snapshot() == localAtStart else {
+            push()
+            return
+        }
+        apply()
+        receiverBody = snapshot()
     }
 
     /// Retries a failed seed after ``reconnectDelay`` for the seed failure count,
@@ -363,6 +376,7 @@ public final class SettingsSnapshotPush {
             return
         }
         let startedAt = generation
+        let localAtStart = snapshot()
         refreshTask = Task { @MainActor [weak self] in
             let apply = await pull()
             guard let self else { return }
@@ -370,8 +384,7 @@ public final class SettingsSnapshotPush {
             // A change made while the read was out is newer than what it read.
             guard let apply, self.observing, self.generation == startedAt,
                   !self.localChangePending else { return }
-            apply()
-            self.receiverBody = self.snapshot()
+            self.applyPull(apply, localAtStart: localAtStart)
         }
     }
 
