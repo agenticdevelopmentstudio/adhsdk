@@ -371,6 +371,26 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
         XCTAssertTrue(other.messages.isEmpty)
     }
 
+    /// A line without a uuid is keyed by its session and content, not its place:
+    /// the same line archived from two files (a resumed transcript's copy) or at
+    /// two offsets is one message in the store.
+    func testUuidlessLineKeepsOneMessageIdentityWhereverItSits() throws {
+        let line = #"{"type":"attachment","sessionId":"s1","timestamp":"2026-10-30T12:00:00Z","#
+            + #""attachment":{"type":"queued_command","prompt":"cap retries","commandMode":"prompt"}}"#
+        let first = ClaudeTranscriptPayload(file: "/p/s1.jsonl", lineNo: 3, subagentFile: false, line: line)
+        let copy = ClaudeTranscriptPayload(file: "/p/s2.jsonl", lineNo: 9, subagentFile: false, line: line)
+        let firstRecord = try Self.record(first)
+        let copyRecord = try Self.record(copy)
+        XCTAssertNotEqual(firstRecord.dedupKey, copyRecord.dedupKey, "each occurrence is its own raw record")
+
+        let normalizer = ClaudeTranscriptNormalizer()
+        let one = try XCTUnwrap(normalizer.normalize(ArchivedRecord(id: 1, record: firstRecord)).messages.first)
+        let two = try XCTUnwrap(normalizer.normalize(ArchivedRecord(id: 2, record: copyRecord)).messages.first)
+        XCTAssertEqual(one.uuid, two.uuid)
+        XCTAssertEqual(one.uuid, ClaudeTranscriptPayload.contentKey(line: line, file: first.file))
+        XCTAssertTrue(one.uuid.hasPrefix("s1:"))
+    }
+
     // MARK: - Events (Ruling 7)
 
     func testTitlesBecomeEventsAndASessionTitle() throws {
