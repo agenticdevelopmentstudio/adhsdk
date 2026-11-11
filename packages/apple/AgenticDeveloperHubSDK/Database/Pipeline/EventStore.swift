@@ -102,7 +102,7 @@ public final class EventStore: @unchecked Sendable {
          "CREATE INDEX IF NOT EXISTS messages_session_time ON messages(provider, session_id, time)"),
         // The Conversations feed's merged read: every session's messages newest first.
         ("messages_time", "CREATE INDEX IF NOT EXISTS messages_time ON messages(provider, time)"),
-        // The trim's ended-before test (`EventStore.endedBefore`, the same expression
+        // The trim's last-seen test (`EventStore.lastSeenBefore`, the same expression
         // word for word): only the sessions last seen before the cutoff are read.
         ("sessions_last_seen",
          "CREATE INDEX IF NOT EXISTS sessions_last_seen ON sessions(MAX(COALESCE(ended_at, as_of), as_of))"),

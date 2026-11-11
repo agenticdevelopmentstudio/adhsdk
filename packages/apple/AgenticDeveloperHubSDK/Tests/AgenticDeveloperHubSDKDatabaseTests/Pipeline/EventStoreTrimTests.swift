@@ -175,7 +175,7 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertEqual(try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future).turns, 2)
     }
 
-    func testTrimDeletesOnlyEndedSessionsLeftEmpty() throws {
+    func testTrimDeletesOnlySessionsLastSeenBeforeTheCutoffLeftEmpty() throws {
         let store = try makeStore()
         var batch = NormalizedBatch()
         // Ended by status; every row old, so the trim empties it.
@@ -191,25 +191,30 @@ final class EventStoreTrimTests: XCTestCase {
                                             endedAt: date(7)))
         batch.events.append(event("b1", session: "ended-with-turn", at: 4))
         batch.turns.append(turn("b2", session: "ended-with-turn", at: 200))
-        // Active with no rows.
-        batch.sessions.append(SessionUpsert(sessionID: "active-empty", asOf: date(8), status: "active",
+        // Killed without a SessionEnd: still `active`, last seen before the cutoff.
+        batch.sessions.append(SessionUpsert(sessionID: "killed", asOf: date(8), status: "active",
+                                            startedAt: date(8)))
+        // Transcript-only: no status at all.
+        batch.sessions.append(SessionUpsert(sessionID: "transcript-only", asOf: date(9), startedAt: date(9)))
+        // Active and seen after the cutoff, with no rows.
+        batch.sessions.append(SessionUpsert(sessionID: "seen-late", asOf: date(200), status: "active",
                                             startedAt: date(8)))
         try store.write(batch, provider: "mock")
 
         let result = try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future)
 
-        XCTAssertEqual(result, EventStoreTrimResult(events: 2, messages: 1, turns: 1, sessions: 2, finished: true))
-        XCTAssertEqual(try sessionIDs(store), ["active-empty", "ended-with-turn"])
+        XCTAssertEqual(result, EventStoreTrimResult(events: 2, messages: 1, turns: 1, sessions: 4, finished: true))
+        XCTAssertEqual(try sessionIDs(store), ["ended-with-turn", "seen-late"])
     }
 
-    /// A row with no time (epoch 0) has an unknown age: a live session keeps it,
-    /// and it goes only with a session that ended before the cutoff (a turn folded
-    /// into `trimmed_turns` like any other).
-    func testUntimedRowsGoOnlyWithASessionThatEndedBeforeTheCutoff() throws {
+    /// A row with no time (epoch 0) has an unknown age: a session seen after the
+    /// cutoff keeps it, and it goes only with a session last seen before the
+    /// cutoff, ended or not (a turn folded into `trimmed_turns` like any other).
+    func testUntimedRowsGoOnlyWithASessionLastSeenBeforeTheCutoff() throws {
         let store = try makeStore()
         let epoch = Date(timeIntervalSince1970: 0)
         var batch = NormalizedBatch()
-        for session in ["live", "gone", "ended-late"] {
+        for session in ["live", "gone", "ended-late", "killed"] {
             batch.events.append(NormalizedEvent(
                 dedupKey: "e-\(session)", sessionID: session, kind: .toolCall, providerType: "PreToolUse",
                 time: epoch, toolName: "Bash", attrs: [:], rawRef: 1))
@@ -219,7 +224,8 @@ final class EventStoreTrimTests: XCTestCase {
                                        inputTokens: 7, rawRef: 2))
         }
         batch.sessions = [
-            SessionUpsert(sessionID: "live", asOf: date(1), status: "active", startedAt: date(1)),
+            SessionUpsert(sessionID: "live", asOf: date(300), status: "active", startedAt: date(1)),
+            SessionUpsert(sessionID: "killed", asOf: date(2), status: "active", startedAt: date(1)),
             SessionUpsert(sessionID: "gone", asOf: date(5), status: "ended", startedAt: date(1), endedAt: date(5)),
             SessionUpsert(sessionID: "ended-late", asOf: date(500), status: "ended", endedAt: date(500))
         ]
@@ -227,17 +233,17 @@ final class EventStoreTrimTests: XCTestCase {
 
         let result = try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future)
 
-        XCTAssertEqual(result, EventStoreTrimResult(events: 1, messages: 1, turns: 1, sessions: 1, finished: true))
+        XCTAssertEqual(result, EventStoreTrimResult(events: 2, messages: 2, turns: 2, sessions: 2, finished: true))
         XCTAssertEqual(try sessionIDs(store), ["ended-late", "live"])
         let left = try store.read { conn in
             try String.fetchAll(conn, sql: "SELECT session_id FROM turns ORDER BY 1")
         }
         XCTAssertEqual(left, ["ended-late", "live"])
         let folded = try store.read { conn in
-            try Row.fetchAll(conn, sql: "SELECT session_id, input_tokens FROM trimmed_turns")
+            try Row.fetchAll(conn, sql: "SELECT session_id, input_tokens FROM trimmed_turns ORDER BY session_id")
         }
-        XCTAssertEqual(folded.map { $0["session_id"] as String }, ["gone"])
-        XCTAssertEqual(folded.map { $0["input_tokens"] as Int }, [7])
+        XCTAssertEqual(folded.map { $0["session_id"] as String }, ["gone", "killed"])
+        XCTAssertEqual(folded.map { $0["input_tokens"] as Int }, [7, 7])
     }
 
     func testTrimKeepsAnEndedEmptySessionThatEndedAfterTheCutoff() throws {
@@ -437,7 +443,7 @@ final class EventStoreTrimTests: XCTestCase {
             }
         }
         let plans = try ["events", "messages", "turns"].map { try plan(EventStore.untimedRows(of: $0)) }
-            + [try plan("SELECT 1 FROM sessions s WHERE \(EventStore.endedBefore) LIMIT ?")]
+            + [try plan("SELECT 1 FROM sessions s WHERE \(EventStore.lastSeenBefore) LIMIT ?")]
         for found in plans {
             XCTAssertTrue(found.contains("sessions_last_seen"), found)
             XCTAssertFalse(found.contains("SCAN"), found)
