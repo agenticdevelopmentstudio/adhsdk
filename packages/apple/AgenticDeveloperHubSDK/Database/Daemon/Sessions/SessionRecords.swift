@@ -407,27 +407,9 @@ extension DaemonDatabase {
         guard !sessions.isEmpty else { return sessions }
         let counts = try claudeEventCounts(sessionIds: sessions.map(\.sessionId))
         return sessions.map { session in
-            SessionDTO(
-                sessionId: session.sessionId,
-                cwd: session.cwd,
-                model: session.model,
-                startedAt: session.startedAt,
-                lastActivityAt: session.lastActivityAt,
-                lastTool: session.lastTool,
-                status: session.status,
-                gitBranch: session.gitBranch,
-                summary: session.summary,
-                pid: session.pid,
-                termProgram: session.termProgram,
-                projectRoot: session.projectRoot,
-                termSessionId: session.termSessionId,
-                transcriptTitle: session.transcriptTitle,
-                lastOutput: session.lastOutput,
-                lastEventType: session.lastEventType,
-                summaryAt: session.summaryAt,
-                eventCount: counts[session.sessionId] ?? 0,
-                subagentWorking: session.subagentWorking
-            )
+            var counted = session
+            counted.eventCount = counts[session.sessionId] ?? 0
+            return counted
         }
     }
 
