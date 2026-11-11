@@ -44,14 +44,20 @@ enum AILogRoutes {
             // taking the timestamp of the oldest entry of the previous page.
             // `?session_id=<id>` narrows to one session's conversation — a different
             // query, not a sieve over the merged page, which holds only a fraction of
-            // any one session.
+            // any one session. An unparseable `before` is a 400, never a page
+            // that silently compares a stray string against the timestamps.
             RouteTable.route("GET", where: { $0 == ["conversations"] }) { request, _ in
+                let before: String?
+                switch request.validatedTimestamp("before") {
+                case .success(let value): before = value
+                case .failure(let invalid): return .error(invalid.message, status: 400)
+                }
                 do {
                     return .json(
                         try conversations.conversationEntries(
                             limit: request.boundedLimit(default: 200, max: 500),
                             includeWorkOutput: request.query("work") == "true",
-                            before: request.query("before"),
+                            before: before,
                             sessionId: request.query("session_id")
                         )
                     )
