@@ -12,7 +12,9 @@ import GRDB
 /// - Hook records (`hook`, `hook-legacy`): the envelope is re-parsed and handed to
 ///   `DaemonDatabase.applySessionState`, the session half of `ingestEvent`.
 /// - Transcript records: a session the daemon never saw gets a stub row (as the
-///   importer makes one), dispatches are upserted, and each touched session's
+///   importer makes one), and a later batch's newer lines advance its
+///   `last_activity_at`, model and branch (`advanceSession`), as the importer's
+///   whole-file fold would have; dispatches are upserted, and each touched session's
 ///   title and `session_metrics` are recomputed from the event store, so the
 ///   result does not depend on which batch a line arrived in.
 ///
@@ -274,6 +276,7 @@ public final class ClaudeMainDBSink: PipelineSink {
                 sessionId: sessionId, cwd: bucket.cwd, model: bucket.model,
                 startedAt: bucket.firstTs, lastActivityAt: bucket.lastTs, gitBranch: bucket.gitBranch,
                 accountEmail: account(sessionId), authMethod: "unknown")
+            try advanceSession(sessionId, bucket: bucket)
         }
         for dispatch in fold.dispatches {
             try database.upsertAgentDispatch(
@@ -287,6 +290,36 @@ public final class ClaudeMainDBSink: PipelineSink {
         for (sessionId, metrics) in derived.metrics.sorted(by: { $0.key < $1.key }) {
             try database.upsertSessionMetrics(metrics, accountEmail: account(sessionId))
         }
+    }
+
+    /// A stub keeps what the batch that created it knew, and a drain batch holds
+    /// at most a few hundred records, so a long transcript-only session would
+    /// otherwise keep its first batch's last activity, model and branch. This
+    /// raises `last_activity_at` to the batch's newest line time when that is later
+    /// than the stored one (both compared in `datetime` form, written in it), and
+    /// takes the batch's model and branch with it when it has them; an empty
+    /// model, branch or cwd is filled from the batch either way. Older lines move
+    /// nothing, so the outcome does not depend on which batch a line arrived in.
+    /// Must run inside the batch's transaction, after the row exists.
+    private func advanceSession(_ sessionId: String, bucket: TranscriptFold.Bucket) throws {
+        if !bucket.lastTs.isEmpty {
+            try database.execute("""
+                UPDATE sessions SET
+                    last_activity_at = datetime(?),
+                    model = CASE WHEN ? <> '' THEN ? ELSE model END,
+                    git_branch = CASE WHEN ? <> '' THEN ? ELSE git_branch END
+                WHERE session_id = ? AND datetime(?) IS NOT NULL
+                  AND (datetime(last_activity_at) IS NULL OR datetime(last_activity_at) < datetime(?))
+                """, params: [bucket.lastTs, bucket.model, bucket.model, bucket.gitBranch, bucket.gitBranch,
+                              sessionId, bucket.lastTs, bucket.lastTs])
+        }
+        try database.execute("""
+            UPDATE sessions SET
+                model = CASE WHEN model = '' THEN ? ELSE model END,
+                git_branch = CASE WHEN git_branch = '' THEN ? ELSE git_branch END,
+                cwd = CASE WHEN cwd = '' THEN ? ELSE cwd END
+            WHERE session_id = ? AND (model = '' OR git_branch = '' OR cwd = '')
+            """, params: [bucket.model, bucket.gitBranch, bucket.cwd, sessionId])
     }
 
     /// The session's newest ai title and its newest custom title, read from
