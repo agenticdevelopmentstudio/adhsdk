@@ -42,6 +42,8 @@ public struct ClaudeArchiveReplayResult: Sendable, Equatable {
     public var skipped = 0
     /// The first `Replayer.maxReportedFailures` skipped archive ids, this run.
     public var skippedIDs: [Int64] = []
+    /// `skipped` by archive `source_kind`, this run; every skip, never capped.
+    public var skippedByKind: [String: Int] = [:]
     /// Records that failed to normalize or could not be decoded, over every run.
     public var failed = 0
     /// Of `failed`, the ones this run found.
@@ -71,13 +73,14 @@ public struct ClaudeArchiveReplayResult: Sendable, Equatable {
     /// The report as one line of sorted-key JSON:
     /// `{"failed", "failed_this_run", "failures": [{"error", "raw_id"}], "interrupted",
     /// "last_raw_id", "records", "recovered_bulk_load", "replayed", "seconds",
-    /// "skipped", "skipped_ids"}`.
+    /// "skipped", "skipped_by_kind", "skipped_ids"}`.
     public func jsonData() throws -> Data {
         let object: [String: Any] = [
             "records": records,
             "replayed": replayed,
             "skipped": skipped,
             "skipped_ids": skippedIDs,
+            "skipped_by_kind": skippedByKind,
             "failed": failed,
             "failed_this_run": failedThisRun,
             "failures": failures.map { ["raw_id": $0.rawID, "error": $0.error] as [String: Any] },
@@ -267,6 +270,7 @@ public enum ClaudeArchiveReplay {
         result.records = report.records
         result.skipped = report.skipped
         result.skippedIDs = report.skippedIDs
+        result.skippedByKind = report.skippedByKind
         result.replayed = report.normalized - report.skipped
         result.failedThisRun = report.failed
         result.failed = report.failed
