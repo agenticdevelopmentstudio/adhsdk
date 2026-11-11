@@ -50,7 +50,8 @@ final class TrimServiceTests: XCTestCase {
         hold: TrimHold? = nil,
         holdFails: Bool = false,
         coverageWait: String? = nil,
-        extra: [@Sendable (Double, Date) throws -> Int] = []
+        extra: [@Sendable (Double, Date) throws -> Int] = [],
+        mainVacuum: (@Sendable (DaemonDatabase) throws -> Void)? = nil
     ) -> TrimService {
         TrimService(
             database: database, eventStore: eventStore ?? store, historyDays: historyDays,
@@ -59,7 +60,8 @@ final class TrimServiceTests: XCTestCase {
             hold: {
                 if holdFails { throw HoldUnreadable() }
                 return hold
-            }, coverageWait: { coverageWait }, extraMainTrims: extra, now: { Self.now })
+            }, coverageWait: { coverageWait }, extraMainTrims: extra,
+            mainVacuum: mainVacuum, now: { Self.now })
     }
 
     private struct HoldUnreadable: Error {}
@@ -349,6 +351,7 @@ final class TrimServiceTests: XCTestCase {
              "rateLimitSnapshots":0,"reclaimedBytes":0,"vacuum":"incremental","finished":true}
             """.utf8)
         XCTAssertFalse(try JSONDecoder().decode(TrimReport.self, from: old).vacuumPending)
+        XCTAssertNil(try JSONDecoder().decode(TrimReport.self, from: old).vacuumError)
         let pending = TrimReport(startedAt: 1, finishedAt: 2, vacuumPending: true)
         let back = try JSONDecoder().decode(TrimReport.self, from: JSONEncoder().encode(pending))
         XCTAssertEqual(back, pending)
@@ -534,6 +537,39 @@ final class TrimServiceTests: XCTestCase {
         try database.execute("DELETE FROM filler")
         let second = try service(covered: Self.day(1)).run(deadline: future)
         XCTAssertFalse(second.vacuum.contains("full main"), second.vacuum)
+    }
+
+    /// A failing full vacuum is reported apart from `error`: every row is
+    /// already gone, so the pass stays finished. Its attempt is recorded, so
+    /// the next pass inside seven days does not run it again.
+    func testAFailedMainVacuumLeavesThePassFinishedAndWaitsSevenDays() throws {
+        struct Boom: Error {}
+        try database.execute("CREATE TABLE filler (x BLOB)")
+        for _ in 0..<200 {
+            try database.execute("INSERT INTO filler(x) VALUES (zeroblob(8192))")
+        }
+        try database.execute("DELETE FROM filler")
+        let attempts = OSAllocatedUnfairLockBox()
+
+        let report = try service(covered: Self.day(1), mainVacuum: { _ in
+            attempts.set(1)
+            throw Boom()
+        }).run(deadline: future)
+
+        XCTAssertTrue(report.finished)
+        XCTAssertNil(report.error)
+        XCTAssertTrue(report.vacuumError?.hasPrefix("main vacuum: ") ?? false, String(describing: report.vacuumError))
+        XCTAssertFalse(report.vacuum.contains("full main"), report.vacuum)
+        XCTAssertEqual(TrimReportDTO(report).vacuumError, report.vacuumError)
+        XCTAssertEqual(try database.setting(for: TrimService.lastMainVacuumKey).flatMap(Double.init),
+                       Self.now.timeIntervalSince1970)
+
+        let second = try service(covered: Self.day(1), mainVacuum: { _ in
+            attempts.set(2)
+            throw Boom()
+        }).run(deadline: future)
+        XCTAssertNil(second.vacuumError)
+        XCTAssertEqual(attempts.value, 1, "the second pass ran the vacuum again")
     }
 }
 
