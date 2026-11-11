@@ -49,6 +49,7 @@ final class TrimServiceTests: XCTestCase {
         willTrimEvents: (@Sendable (Double) throws -> Void)? = nil,
         hold: TrimHold? = nil,
         holdFails: Bool = false,
+        coverageWait: String? = nil,
         extra: [@Sendable (Double, Date) throws -> Int] = []
     ) -> TrimService {
         TrimService(
@@ -58,7 +59,7 @@ final class TrimServiceTests: XCTestCase {
             hold: {
                 if holdFails { throw HoldUnreadable() }
                 return hold
-            }, extraMainTrims: extra, now: { Self.now })
+            }, coverageWait: { coverageWait }, extraMainTrims: extra, now: { Self.now })
     }
 
     private struct HoldUnreadable: Error {}
@@ -156,6 +157,24 @@ final class TrimServiceTests: XCTestCase {
         XCTAssertEqual(try count("messages"), 1)
         XCTAssertTrue(report.finished)
         XCTAssertNil(report.error)
+    }
+
+    /// The coverage wait is reported only when the covered day, not the
+    /// history window, sets the cutoff, and a hold that lowers it further
+    /// names the hold instead.
+    func testTheCoverageWaitIsReportedOnlyWhenTheCoveredDaySetsTheCutoff() throws {
+        let behind = try service(covered: Self.day(20), coverageWait: "usage reset instants").run(deadline: future)
+        XCTAssertEqual(behind.cutoff, Self.midnight(19))
+        XCTAssertEqual(behind.waitingFor, "usage reset instants")
+        XCTAssertTrue(behind.finished)
+
+        let current = try service(covered: Self.day(1), coverageWait: "usage reset instants").run(deadline: future)
+        XCTAssertNil(current.waitingFor)
+
+        let held = TrimHold(day: Self.day(30), reason: TrimService.waitingForBilling)
+        let both = try service(covered: Self.day(20), hold: held, coverageWait: "usage reset instants")
+            .run(deadline: future)
+        XCTAssertEqual(both.waitingFor, "billing")
     }
 
     /// A hold that lowers the cutoff trims up to it and says why, in the report
