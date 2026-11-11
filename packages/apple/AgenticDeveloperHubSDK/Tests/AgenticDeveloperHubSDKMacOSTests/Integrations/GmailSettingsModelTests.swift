@@ -27,6 +27,21 @@ struct GmailSettingsModelTests {
         #expect(model.accounts.count == 1)
     }
 
+    @Test func onlyTheModelThatStartedTheLatestSignInClaimsIt() async {
+        let service = ScriptedMailService()
+        let signIns = GmailSignInTracker()
+        let desktop = GmailSettingsModel(client: service.client, signIns: signIns)
+        let settings = GmailSettingsModel(client: service.client, signIns: signIns)
+        #expect(desktop.startedLatestSignIn == false)
+        #expect(settings.startedLatestSignIn == false)
+        await desktop.addAccount()
+        #expect(desktop.startedLatestSignIn)
+        #expect(settings.startedLatestSignIn == false)
+        await settings.addAccount()
+        #expect(desktop.startedLatestSignIn == false)
+        #expect(settings.startedLatestSignIn)
+    }
+
     @Test func updateSendsSettings() async {
         let service = ScriptedMailService(accounts: [.fixture()])
         let model = GmailSettingsModel(client: service.client)

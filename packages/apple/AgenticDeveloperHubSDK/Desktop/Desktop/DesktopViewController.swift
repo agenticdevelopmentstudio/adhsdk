@@ -104,6 +104,12 @@ public final class DesktopViewController: NSViewController {
         windowLayer.contains(DesktopAppWindowController.Kind.settings.windowID(forApp: identifier))
     }
 
+    /// The content of the App's open Settings window, or nil when none is open.
+    public func settingsContent(forApp identifier: String) -> NSViewController? {
+        windowControllers[DesktopAppWindowController.Kind.settings.windowID(forApp: identifier)]?
+            .contentViewController
+    }
+
     public func showSettings(forApp identifier: String) {
         guard let app = registry.app(withIdentifier: identifier), app.hasSettings else { return }
         let appSettings = settings.appSettings(for: app)

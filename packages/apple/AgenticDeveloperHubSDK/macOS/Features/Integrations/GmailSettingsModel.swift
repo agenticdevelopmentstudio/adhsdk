@@ -2,6 +2,28 @@ import Combine
 import Foundation
 import AgenticDeveloperHubSDKIntegrations
 
+/// Orders the Gmail sign-ins started in this app, so the surface that started the latest
+/// one can be told apart when the browser comes back (`olylo://signed-in` says only that a
+/// sign-in finished, not where it began). Every settings model shares one tracker.
+@MainActor
+public final class GmailSignInTracker {
+    public static let shared = GmailSignInTracker()
+    private var latest = 0
+
+    public init() {}
+
+    /// Records a sign-in starting and returns its ticket.
+    func begin() -> Int {
+        latest += 1
+        return latest
+    }
+
+    /// Whether `ticket` belongs to the most recent sign-in started.
+    func isLatest(_ ticket: Int?) -> Bool {
+        ticket == latest
+    }
+}
+
 /// The state behind the Gmail settings view. Every action the view offers goes through
 /// here, so this is the tested unit; the view only reads it and calls it.
 @MainActor
@@ -25,6 +47,9 @@ public final class GmailSettingsModel: ObservableObject {
     }
 
     private let client: MailClient
+    private let signIns: GmailSignInTracker
+    /// The ticket of the last sign-in this model started; nil until it starts one.
+    private var signInTicket: Int?
     /// Calls in flight; `busy` is true while any is.
     private var inFlight = 0 {
         didSet { busy = inFlight > 0 }
@@ -42,8 +67,15 @@ public final class GmailSettingsModel: ObservableObject {
     /// failure alerts even when its message is the same.
     private var alertedErrors: [String: String] = [:]
 
-    public init(client: MailClient) {
+    public init(client: MailClient, signIns: GmailSignInTracker = .shared) {
         self.client = client
+        self.signIns = signIns
+    }
+
+    /// Whether the most recent sign-in started in this app was started here, so the browser's
+    /// return lands on this surface rather than another one showing the same settings.
+    public var startedLatestSignIn: Bool {
+        signInTicket.map(signIns.isLatest) ?? false
     }
 
     /// The account the detail controls edit.
@@ -133,6 +165,7 @@ public final class GmailSettingsModel: ObservableObject {
 
     /// Also the "Reconnect" flow: the service matches the account by email and reuses it.
     public func addAccount() async {
+        signInTicket = signIns.begin()
         signingIn = true
         defer { signingIn = false }
         await perform { _ = try await self.client.send(.signIn) }

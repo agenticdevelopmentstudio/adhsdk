@@ -223,6 +223,20 @@ final class DesktopAppWindowTests: XCTestCase {
         XCTAssertFalse(controller.isShowingSettings(forApp: "a"))
     }
 
+    func test_settingsContent_isTheOpenSettingsWindowsController() {
+        let custom = NSViewController()
+        custom.view = NSView()
+        app.settingsViewController = custom
+        let controller = makeController()
+        XCTAssertNil(controller.settingsContent(forApp: "a"))
+        controller.openApp(identifier: "a")
+        XCTAssertNil(controller.settingsContent(forApp: "a"))
+        controller.showSettings(forApp: "a")
+        XCTAssertTrue(controller.settingsContent(forApp: "a") === custom)
+        controller.closeWindow(id: "settings:a")
+        XCTAssertNil(controller.settingsContent(forApp: "a"))
+    }
+
     func test_showAbout_opensAboutWindow() {
         let controller = makeController()
         controller.showAbout(forApp: "a")

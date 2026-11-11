@@ -19,8 +19,8 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
         accessibilityPrefix: "integrations.add-remove", separatorAbove: true)
     private var providerObserver: AnyCancellable?
 
-    public init(client: MailClient) {
-        let model = GmailSettingsModel(client: client)
+    public init(client: MailClient, signIns: GmailSignInTracker = .shared) {
+        let model = GmailSettingsModel(client: client, signIns: signIns)
         self.model = model
         self.gmailPanel = GmailSettingsPanel(model: model)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
@@ -67,6 +67,15 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
             // `$provider` publishes before the new value lands; look one turn later.
             DispatchQueue.main.async { self?.rebuildIfListingChanged() }
         }
+        Task { await model.reload() }
+    }
+
+    /// Whether the most recent Gmail sign-in in this app was started from this panel.
+    public var startedLatestSignIn: Bool { model.startedLatestSignIn }
+
+    /// Reloads the accounts after a sign-in finished in the browser. A panel brought back to
+    /// the front gets no appearance callback, so the landing asks for the reload itself.
+    public func reloadAfterSignIn() {
         Task { await model.reload() }
     }
 
