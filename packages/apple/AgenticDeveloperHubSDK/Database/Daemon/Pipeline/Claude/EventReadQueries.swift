@@ -263,15 +263,19 @@ extension DaemonDatabase {
         }
     }
 
-    /// The hook name of the session's newest event, or "" when it has none.
+    /// The hook name of the session's newest hook event, or "" when it has none.
+    /// The transcript's own events (titles, agent dispatches) are not hooks: a
+    /// title written after `Stop` must not read as the session being mid-response.
     public func claudeLastEventType(sessionId: String) throws -> String {
-        try withEventReads("") { conn in
+        let excluded = ClaudeLiveObserver.transcriptEventTypes.sorted()
+        let marks = Array(repeating: "?", count: excluded.count).joined(separator: ", ")
+        return try withEventReads("") { conn in
             try String.fetchOne(conn, sql: """
                 SELECT provider_type FROM events
-                WHERE provider = ? AND session_id = ?
+                WHERE provider = ? AND session_id = ? AND provider_type NOT IN (\(marks))
                 ORDER BY time DESC, id DESC
                 LIMIT 1
-                """, arguments: [ClaudeProvider.name, sessionId]) ?? ""
+                """, arguments: StatementArguments([ClaudeProvider.name, sessionId] + excluded)) ?? ""
         }
     }
 
