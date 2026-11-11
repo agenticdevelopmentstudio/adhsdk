@@ -799,11 +799,19 @@ public final class EventStore: @unchecked Sendable {
     }
 
     /// Offers every observation of one turn to `state`.
+    ///
+    /// Every field is latest-wins except `session_id`: the turn belongs to the
+    /// session that archived it first. A resumed or forked transcript copies
+    /// earlier lines (same message id, same time) under its own session id, and
+    /// must not take the turn from the session that made the call. Its rank is
+    /// `-raw_ref`, so the lowest archive id wins whatever order the observations
+    /// arrive in. (A row stored before this rule ranks by its `as_of`, which is
+    /// positive and so keeps its session.)
     private static func offer(_ turns: [TurnRow], into state: inout TurnState) {
         for turn in turns {
             let asOf = (turn.asOf ?? turn.time).timeIntervalSince1970
+            state.fields.offer("session_id", .string(turn.sessionID), asOf: -Double(turn.rawRef))
             let offered: [(String, NormalizedValue?)] = [
-                ("session_id", .string(turn.sessionID)),
                 ("time", .number(turn.time.timeIntervalSince1970)),
                 ("model", turn.model.map { .string($0) }),
                 ("account", turn.account.map { .string($0) }),

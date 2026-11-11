@@ -117,6 +117,38 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(stored.rawRef, 1)
     }
 
+    private func forkedTurn(session: String, asOf: Double, tokens: Int, rawRef: Int64) -> NormalizedBatch {
+        var batch = NormalizedBatch()
+        batch.turns = [TurnRow(
+            dedupKey: "msg_1", sessionID: session, time: date(2), asOf: date(asOf), model: "m",
+            inputTokens: tokens, outputTokens: 4, costUSD: 0.5, rawRef: rawRef)]
+        return batch
+    }
+
+    /// A forked or resumed transcript copies a turn's line under its own session
+    /// id. The turn stays with the session that archived it first (lowest raw
+    /// ref), in any order, even when the copy's session id sorts later or the
+    /// copy is a later observation; its other fields still merge latest-wins.
+    func testTurnStaysWithTheSessionThatArchivedItFirst() throws {
+        let observations = [
+            forkedTurn(session: "a-original", asOf: 2, tokens: 3, rawRef: 5),
+            forkedTurn(session: "z-fork", asOf: 2, tokens: 3, rawRef: 9),
+            forkedTurn(session: "z-fork", asOf: 7, tokens: 30, rawRef: 12)
+        ]
+        var dumps: [[String]] = []
+        for (index, order) in [[0, 1, 2], [2, 1, 0], [1, 2, 0]].enumerated() {
+            let store = try makeStore("fork\(index).db")
+            for position in order { try store.write(observations[position], provider: "mock") }
+            let row = try store.read { conn in
+                try Row.fetchOne(conn, sql: "SELECT session_id, input_tokens FROM turns WHERE dedup_key = 'msg_1'")
+            }
+            XCTAssertEqual(row?["session_id"] as String?, "a-original", "order \(order)")
+            XCTAssertEqual(row?["input_tokens"] as Int?, 30, "order \(order)")
+            dumps.append(try store.canonicalDump())
+        }
+        XCTAssertEqual(Set(dumps.map { $0.joined(separator: "\n") }).count, 1)
+    }
+
     func testTurnMergeIsOrderIndependent() throws {
         // One turn seen by three records: different as_of, overlapping attrs, and a tie.
         let rows = [
