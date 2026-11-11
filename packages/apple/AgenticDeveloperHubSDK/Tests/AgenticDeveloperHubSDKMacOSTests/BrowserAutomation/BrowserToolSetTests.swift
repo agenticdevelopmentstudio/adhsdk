@@ -582,8 +582,8 @@ final class BrowserToolSetTests: XCTestCase {
         let privacy = BrowserAgentPrivacy.enabled(privateWords)
         let typed = BrowserToolSet.Arguments(tool: "browser_type", values: ["text": "zwei", "url": "https://gamma.test"])
             .revealing(privacy)
-        XCTAssertEqual(typed.values["text"] as? String, "two")
-        XCTAssertEqual(typed.values["url"] as? String, "https://beta.test")
+        XCTAssertEqual(typed.values["text"] as? String, "Two", "a real word is revealed as the pair gives it")
+        XCTAssertEqual(typed.values["url"] as? String, "https://Beta.test")
         let found = BrowserToolSet.Arguments(tool: "browser_find", values: ["text": "Zwei", "scope": "Gamma"])
             .revealing(privacy)
         XCTAssertEqual(found.values["text"] as? String, "Zwei", "a lookup is tried as shown first")
@@ -591,6 +591,14 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(try found.candidates("text"), ["Zwei", "Two"])
         let plain = BrowserToolSet.Arguments(tool: "browser_find", values: ["text": "One"]).revealing(privacy)
         XCTAssertEqual(try plain.candidates("text"), ["One"])
+    }
+
+    func testAMixedCaseRealWordIsRevealedAsWritten() {
+        let privacy = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(pairs: [
+            .init(alias: "Acme", real: "OpenAI"), .init(alias: "Bob", real: "Mike Fullerton")
+        ]))
+        XCTAssertEqual(privacy.revealing("Acme and Bob"), "OpenAI and Mike Fullerton")
+        XCTAssertEqual(privacy.revealing("https://github.com/Acme/repo"), "https://github.com/OpenAI/repo")
     }
 
     func testPageWordFilterScriptCarriesThePairsLongestFirst() throws {

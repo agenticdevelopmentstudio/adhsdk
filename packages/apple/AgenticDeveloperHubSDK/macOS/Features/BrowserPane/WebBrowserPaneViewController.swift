@@ -1058,7 +1058,7 @@ open class WebBrowserPaneViewController: NSViewController {
 
     @objc private func navigateToTypedAddress() {
         // The field shows the stand-ins, so what is sent is revealed first.
-        let typed = pageWordFilter?.revealing(addressField.stringValue, matchingCase: true) ?? addressField.stringValue
+        let typed = pageWordFilter?.revealing(addressField.stringValue) ?? addressField.stringValue
         guard let url = Self.resolveAddress(typed) else {
             // What was typed is the user's, and may be anything; it stays out
             // of the public log.
