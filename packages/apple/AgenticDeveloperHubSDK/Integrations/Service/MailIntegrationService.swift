@@ -1,3 +1,4 @@
+import AgenticDeveloperHubSDKCore
 import AIPluginKit
 import Foundation
 import os
@@ -787,7 +788,7 @@ public actor MailIntegrationService {
             id: message.id, gmailId: message.externalId, threadId: message.threadId, account: account,
             from: message.fromAddress, to: message.toAddresses, cc: message.ccAddresses,
             labels: message.labelIds, labelNames: message.labelIds.map { names[$0] ?? $0 },
-            subject: message.subject, snippet: MailHTMLText.decodeEntities(message.snippet),
+            subject: message.subject, snippet: HTMLText.decodeEntities(message.snippet),
             date: message.internalDate, mailClass: message.mailClass,
             bodyText: includeBodies ? bodyText(message) : nil, bodyHtml: includeBodies ? message.bodyHtml : nil,
             attachments: message.attachments)
@@ -799,7 +800,7 @@ public actor MailIntegrationService {
             return text
         }
         guard let html = message.bodyHtml else { return message.bodyText }
-        let converted = MailHTMLText.plainText(fromHTML: html)
+        let converted = HTMLText.plainText(fromHTML: html)
         return converted.isEmpty ? message.bodyText : converted
     }
 

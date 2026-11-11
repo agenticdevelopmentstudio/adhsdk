@@ -1,16 +1,16 @@
 import Foundation
 
-/// Reads HTML mail as plain text, and decodes the HTML entities Gmail leaves in snippets.
+/// Reads HTML as plain text, and decodes HTML entities in text (Gmail snippets, meta content).
 ///
 /// Deliberately small: no layout engine, no WebKit (which wants the main thread), just enough to
-/// make an HTML-only message readable in a terminal or to a model. `style`, `script`, `title`,
+/// make an HTML-only mail message readable in a terminal or to a model. `style`, `script`, `title`,
 /// `noscript` and comments are dropped; block elements and `<br>` become line breaks (a paragraph
 /// or heading a blank line); every other tag is removed; entities are decoded; whitespace is
 /// collapsed as a browser would, keeping the line breaks, except inside `<pre>`, which keeps it.
 ///
 /// The HTML is sender-controlled, so the conversion is one linear pass: nothing is rescanned, and
 /// an unclosed comment, tag or hidden element runs to the end of the input, as in a browser.
-public enum MailHTMLText {
+public enum HTMLText {
     /// The text of `html`.
     public static func plainText(fromHTML html: String) -> String {
         restorePreformatted(tidy(resolveBreaks(markup(Array(html.unicodeScalars)))))

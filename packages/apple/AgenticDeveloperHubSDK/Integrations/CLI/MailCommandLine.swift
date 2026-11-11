@@ -1,3 +1,4 @@
+import AgenticDeveloperHubSDKCore
 import Foundation
 
 /// The `mail …` command line: parses the arguments after `mail`, asks a `MailClient`, prints.
@@ -215,7 +216,7 @@ public enum MailCommandLine {
     }
 
     private static func htmlText(_ html: String?) -> String? {
-        guard let text = html.map(MailHTMLText.plainText(fromHTML:)), !text.isEmpty else { return nil }
+        guard let text = html.map(HTMLText.plainText(fromHTML:)), !text.isEmpty else { return nil }
         return text
     }
 

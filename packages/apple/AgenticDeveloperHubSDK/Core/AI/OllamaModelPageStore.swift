@@ -51,7 +51,7 @@ public enum OllamaModelPageStore {
             guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]),
                   let match = regex.firstMatch(in: html, range: NSRange(html.startIndex..., in: html)),
                   let range = Range(match.range(at: 1), in: html) else { continue }
-            let text = unescape(String(html[range])).trimmingCharacters(in: .whitespacesAndNewlines)
+            let text = HTMLText.decodeEntities(String(html[range])).trimmingCharacters(in: .whitespacesAndNewlines)
             if !text.isEmpty { return text }
         }
         return nil
@@ -90,16 +90,5 @@ public enum OllamaModelPageStore {
               let range = Range(match.range(at: 1), in: html) else { return nil }
         let text = String(html[range]).trimmingCharacters(in: .whitespacesAndNewlines)
         return text.isEmpty ? nil : text
-    }
-
-    /// Minimal entity decode for the handful HTML escapes in meta content.
-    /// `&amp;` goes last so `&amp;lt;` decodes to `&lt;`, not `<`.
-    private static func unescape(_ text: String) -> String {
-        text.replacingOccurrences(of: "&lt;", with: "<")
-            .replacingOccurrences(of: "&gt;", with: ">")
-            .replacingOccurrences(of: "&quot;", with: "\"")
-            .replacingOccurrences(of: "&#39;", with: "'")
-            .replacingOccurrences(of: "&apos;", with: "'")
-            .replacingOccurrences(of: "&amp;", with: "&")
     }
 }
