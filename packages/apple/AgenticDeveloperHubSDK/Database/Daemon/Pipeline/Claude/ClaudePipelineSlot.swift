@@ -97,6 +97,8 @@ public final class ClaudePipelineSlot: @unchecked Sendable {
 extension ClaudePipelineSlot: PipelineQuarantineControl {
     public func quarantinedCount() -> Int { current?.quarantinedCount() ?? 0 }
 
+    public func quarantinedErrors() -> [IngestionErrorDTO] { current?.quarantinedErrors() ?? [] }
+
     @discardableResult
     public func requeueAllQuarantined() -> Int { current?.requeueAllQuarantined() ?? 0 }
 
