@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
 /// An engine that renders nothing, for tests of the pane around it: its page
@@ -34,6 +35,8 @@ final class StubBrowserEngine: BrowserEngine {
     func stopLoading() {}
     func teardown() {}
     func setActivationShieldActive(_ active: Bool) {}
+    private(set) var pageWordFilter: TextSubstitutionFilter?
+    func setPageWordFilter(_ filter: TextSubstitutionFilter?) { pageWordFilter = filter }
     func applyCookiePolicy(acceptsCookies: Bool) {}
     func installAutomationRuntime() async throws {}
     func callAsyncFunction(

@@ -33,6 +33,8 @@ private final class ScriptedBrowserEngine: BrowserEngine {
     func stopLoading() {}
     func teardown() { isTornDown = true }
     func setActivationShieldActive(_ active: Bool) { isActivationShieldActive = active }
+    private(set) var pageWordFilter: TextSubstitutionFilter?
+    func setPageWordFilter(_ filter: TextSubstitutionFilter?) { pageWordFilter = filter }
     func applyCookiePolicy(acceptsCookies: Bool) {}
     func installAutomationRuntime() async throws {}
     func callAsyncFunction(body: String, arguments: [String: Any], world: BrowserScriptWorld) async throws -> Any? {
