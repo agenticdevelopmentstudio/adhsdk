@@ -109,15 +109,25 @@
     }
   }
 
+  // A walk never enters a skipped element or an editable region: neither
+  // their text nor their attributes are rewritten, however the subtree
+  // arrived (`skips` answers the same for a single node).
+  function walkFilter(node) {
+    if (node.nodeType === 1 && (SKIPPED[node.localName] || node.isContentEditable)) {
+      return NodeFilter.FILTER_REJECT;
+    }
+    return NodeFilter.FILTER_ACCEPT;
+  }
+
   function filterTree(root) {
     if (root.nodeType === 3) { filterText(root); return; }
     if (root.nodeType !== 1 && root.nodeType !== 9 && root.nodeType !== 11) { return; }
     if (root.nodeType === 1) {
-      if (SKIPPED[root.localName]) { return; }
+      if (skips(root)) { return; }
       filterAttributes(root);
       if (root.shadowRoot) { observe(root.shadowRoot); filterTree(root.shadowRoot); }
     }
-    var walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, walkFilter);
     for (var node = walker.nextNode(); node; node = walker.nextNode()) {
       if (node.nodeType === 3) { filterText(node); continue; }
       filterAttributes(node);
