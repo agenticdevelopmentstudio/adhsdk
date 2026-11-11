@@ -22,6 +22,12 @@ struct MailHTMLTextTests {
         #expect(MailHTMLText.decodeEntities("Hi&zwnj;&#847;&#8203; there\u{FEFF}") == "Hi there")
     }
 
+    @Test func decodesAReferenceFollowedByACombiningMark() {
+        #expect(MailHTMLText.decodeEntities("Preheader&nbsp;\u{034F}&nbsp;\u{034F}") == "Preheader\u{00A0}\u{00A0}")
+        #expect(MailHTMLText.decodeEntities("&quot;\u{200C}Hi&quot;") == "\"\u{200C}Hi\"")
+        #expect(MailHTMLText.plainText(fromHTML: "<p>Sale&nbsp;\u{034F}&nbsp;\u{034F}</p>") == "Sale")
+    }
+
     @Test func keepsJoinersThatJoinVisibleCharacters() {
         let coder = "👨\u{200D}💻"
         #expect(MailHTMLText.decodeEntities(coder) == coder)

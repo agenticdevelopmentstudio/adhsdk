@@ -75,31 +75,34 @@ public enum MailHTMLText {
     /// nothing) are dropped: marketing mail fills its preview text with them.
     public static func decodeEntities(_ text: String) -> String {
         guard text.contains("&") else { return stripInvisible(text) }
-        var result = ""
-        result.reserveCapacity(text.utf8.count)
-        var index = text.startIndex
-        while index < text.endIndex {
-            let char = text[index]
-            guard char == "&", let (decoded, end) = reference(in: text, at: index) else {
-                result.append(char)
-                index = text.index(after: index)
+        // Scalars, not Characters: a `;` or `&` followed by a combining mark or joiner (preview
+        // padding is often `&nbsp;` then U+034F) forms one Character with it.
+        let scalars = Array(text.unicodeScalars)
+        var result = String.UnicodeScalarView()
+        var index = 0
+        while index < scalars.count {
+            guard scalars[index] == "&", let (decoded, end) = reference(in: scalars, at: index) else {
+                result.append(scalars[index])
+                index += 1
                 continue
             }
-            result.append(decoded)
+            result.append(contentsOf: decoded.unicodeScalars)
             index = end
         }
-        return stripInvisible(result)
+        return stripInvisible(String(result))
     }
 
     // MARK: - Entities
 
     /// The character reference starting at `start` (an `&`) and the index just past its `;`.
-    private static func reference(in text: String, at start: String.Index) -> (String, String.Index)? {
-        let body = text.index(after: start)
+    private static func reference(in scalars: [Unicode.Scalar], at start: Int) -> (String, Int)? {
+        let body = start + 1
         // Names and numbers are short; looking further only finds the next sentence's `;`.
-        guard let semicolon = text[body...].prefix(12).firstIndex(of: ";") else { return nil }
-        let name = text[body..<semicolon]
-        let end = text.index(after: semicolon)
+        guard let semicolon = scalars[body..<min(scalars.count, body + 12)].firstIndex(of: ";") else { return nil }
+        var nameScalars = String.UnicodeScalarView()
+        nameScalars.append(contentsOf: scalars[body..<semicolon])
+        let name = String(nameScalars)
+        let end = semicolon + 1
         if name.hasPrefix("#") {
             let digits = name.dropFirst()
             let value: UInt32?
@@ -111,7 +114,7 @@ public enum MailHTMLText {
             guard let value, let scalar = Unicode.Scalar(value), value != 0 else { return nil }
             return (String(Character(scalar)), end)
         }
-        guard let decoded = named[String(name)] else { return nil }
+        guard let decoded = named[name] else { return nil }
         return (decoded, end)
     }
 
