@@ -127,4 +127,46 @@ final class BrowserPaneTabTests: XCTestCase {
         try frontEngine(of: pane).show(pageA, titled: "Ay")
         XCTAssertEqual(storedTabs.tabs.map(\.title), ["Ay", "B"])
     }
+
+    // MARK: - Only a window a page opened closes itself
+
+    func testAPageInATabTheUserOpenedCannotCloseIt() throws {
+        let pane = try makePane(storedTabs: StoredBrowserTabs(
+            tabs: [StoredBrowserTab(url: pageA.absoluteString, title: "A")], selectedIndex: 0))
+        let front = try frontEngine(of: pane)
+        front.show(pageA, titled: "Ay")
+
+        pane.browserEngineDidRequestClose(front)
+
+        XCTAssertFalse(front.isTornDown)
+        XCTAssertTrue(pane.engine === front)
+        XCTAssertEqual(storedTabs.tabs.map(\.url), [pageA.absoluteString])
+        XCTAssertEqual(storedTabs.tabs.map(\.title), ["Ay"])
+    }
+
+    func testAPageCannotCloseATabBehindTheFrontOneThatTheUserOpened() throws {
+        let pane = try makePane(storedTabs: twoStoredTabs)
+        engines[0].show(pageA, titled: "Ay")
+        pane.browserEngineDidRequestClose(engines[1])
+        XCTAssertFalse(engines[1].isTornDown)
+        XCTAssertEqual(storedTabs.tabs.count, 2)
+    }
+
+    func testAPopupClosesItselfAndItsOpenerComesForward() throws {
+        let pane = try makePane(storedTabs: StoredBrowserTabs(
+            tabs: [StoredBrowserTab(url: pageA.absoluteString, title: "A")], selectedIndex: 0))
+        let opener = try frontEngine(of: pane)
+        opener.show(pageA, titled: "Ay")
+        let popup = ScriptedBrowserEngine(consoleLog: BrowserConsoleLog())
+        XCTAssertTrue(pane.browserEngine(opener, didOpenPopup: popup))
+        XCTAssertTrue(pane.engine === popup)
+        popup.show(pageB, titled: "Sign in")
+        XCTAssertEqual(storedTabs.tabs.count, 2)
+
+        pane.browserEngineDidRequestClose(popup)
+
+        XCTAssertTrue(popup.isTornDown)
+        XCTAssertTrue(pane.engine === opener)
+        XCTAssertEqual(storedTabs.tabs.map(\.url), [pageA.absoluteString])
+    }
 }

@@ -1157,16 +1157,25 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         guard !isDiscarded, let opener = tab(for: engine) else { return false }
         let tab = addTab(engine: popup, after: opener, pendingURL: nil, openedByPage: true)
         tab.opener = opener
+        tab.openedByPage = true
         eventLog.record(channel: "navigation", event: "popup", decision: .info, detail: engine.url?.host ?? "")
         return true
     }
 
     /// The page closed its own window — a sign-in or 2FA window that has
     /// answered — so its tab goes, and the opener's tab is in front again
-    /// when it is the neighbour.
+    /// when it is the neighbour. Only a window a page opened may close
+    /// itself: a tab the person opened, or one restored at launch, is theirs
+    /// to close, and its page asking is refused, as a browser refuses
+    /// `window.close()` from a window a script did not open.
     public func browserEngineDidRequestClose(_ engine: BrowserEngine) {
         guard let tab = tab(for: engine) else { return }
-        eventLog.record(channel: "navigation", event: "close", decision: .info, detail: engine.url?.host ?? "")
+        let host = engine.url?.host ?? ""
+        guard tab.openedByPage else {
+            eventLog.record(channel: "navigation", event: "close-refused", decision: .withheld, detail: host)
+            return
+        }
+        eventLog.record(channel: "navigation", event: "close", decision: .info, detail: host)
         closeTab(tab, pageClosedItself: true)
     }
 
@@ -1482,6 +1491,10 @@ private final class BrowserTab {
     /// The tab whose page opened this one, which comes forward again when
     /// this one's page closes itself.
     weak var opener: BrowserTab?
+    /// Whether a page opened this tab, which is what lets its page close it
+    /// again; kept apart from `opener`, which lets go when the opener's tab
+    /// closes first.
+    var openedByPage = false
     /// The history row for the page on screen, so a title that arrives after
     /// the load is filed against it rather than lost.
     var currentVisitID: Int64?
