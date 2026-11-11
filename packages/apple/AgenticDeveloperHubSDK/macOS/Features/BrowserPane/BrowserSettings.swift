@@ -39,6 +39,36 @@ public enum BrowserHistoryRetention: String, Codable, Sendable, CaseIterable {
     }
 }
 
+/// How often Chrome asks the Chrome Web Store whether an installed extension
+/// has a newer version.
+public enum BrowserExtensionUpdateInterval: String, Codable, Sendable, CaseIterable {
+    case hourly
+    case everyFiveHours
+    case daily
+    case weekly
+
+    public var label: String {
+        switch self {
+        case .hourly: "Every hour"
+        case .everyFiveHours: "Every 5 hours"
+        case .daily: "Every day"
+        case .weekly: "Every week"
+        }
+    }
+
+    /// The period in seconds, the unit Chrome's `extensions-update-frequency`
+    /// switch takes. Five hours is Chrome's own default.
+    public var seconds: Int {
+        let hour = 60 * 60
+        switch self {
+        case .hourly: return hour
+        case .everyFiveHours: return 5 * hour
+        case .daily: return 24 * hour
+        case .weekly: return 7 * 24 * hour
+        }
+    }
+}
+
 /// What a page may do with the camera and microphone.
 public enum BrowserMediaCapturePolicy: String, Codable, Sendable, CaseIterable {
     case ask
@@ -243,6 +273,10 @@ extension UserSettings {
     public static let browserChromeHardwareAcceleration = UserSetting<Bool>(
         "browser.chrome.hardware_acceleration", default: true
     )
+    /// Chromium reads it once, when it starts.
+    public static let browserChromeExtensionUpdateInterval = UserSetting<BrowserExtensionUpdateInterval>(
+        "browser.chrome.extension_update_interval", default: .everyFiveHours
+    )
 
     // Automation
     public static let browserAutomationEnabled = UserSetting<Bool>("browser.automation.enabled", default: true)
@@ -276,6 +310,7 @@ public enum BrowserSettings {
         UserSettings.browserDownloadDirectory, UserSettings.browserAsksDownloadLocation,
         UserSettings.browserWebInspectorEnabled, UserSettings.browserChromeDevToolsEnabled,
         UserSettings.browserChromeRemoteDebuggingPort, UserSettings.browserChromeHardwareAcceleration,
+        UserSettings.browserChromeExtensionUpdateInterval,
         UserSettings.browserPrivacyKeyboard, UserSettings.browserPrivacyMouse,
         UserSettings.browserPrivacyPointerTracking, UserSettings.browserPrivacyDragAndDrop,
         UserSettings.browserPrivacyHideActivation, UserSettings.browserPrivacyAgentAccess,
@@ -307,12 +342,14 @@ public enum BrowserSettings {
     ]
 
     /// Cannot be overridden per pane, so it is only ever read from the global
-    /// settings. Chrome's remote debugging port and hardware acceleration are
-    /// fixed when Chromium starts, for every Chrome pane at once.
+    /// settings. Chrome's remote debugging port, hardware acceleration and
+    /// extension update interval are fixed when Chromium starts, for every
+    /// Chrome pane at once.
     public static let globalOnlyKeyNames: Set<String> = [
         UserSettings.browserPrivateBrowsing.name,
         UserSettings.browserChromeRemoteDebuggingPort.name,
-        UserSettings.browserChromeHardwareAcceleration.name
+        UserSettings.browserChromeHardwareAcceleration.name,
+        UserSettings.browserChromeExtensionUpdateInterval.name
     ]
 
     /// What `store` holds for every construction-time key, each described as

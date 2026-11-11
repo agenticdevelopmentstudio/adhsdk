@@ -48,6 +48,22 @@ final class TabBarView: NSView {
         didSet { applyEdgeInsets() }
     }
 
+    /// A control in front of the first tab — a + for a new tab, say — at
+    /// `startInset`, centred on the tabs across the bar, with the tabs
+    /// starting `itemSpacing` after it. Top and bottom bars only.
+    var leadingAccessory: NSView? {
+        didSet {
+            guard leadingAccessory !== oldValue else { return }
+            precondition(leadingAccessory == nil || !edge.isVertical, "a leading accessory needs a horizontal bar")
+            oldValue?.removeFromSuperview()
+            installLeadingAccessory()
+        }
+    }
+
+    private var stackLeading: NSLayoutConstraint?
+    private var accessoryConstraints: [NSLayoutConstraint] = []
+    private var accessoryLeading: NSLayoutConstraint?
+
     let edge: Edge
 
     // MARK: - Tab metadata
@@ -136,10 +152,12 @@ final class TabBarView: NSView {
 
         switch edge {
         case .top, .bottom:
+            let leading = stack.leadingAnchor.constraint(equalTo: leadingAnchor)
+            stackLeading = leading
             NSLayoutConstraint.activate([
                 makeThicknessConstraint(thickness),
                 stack.topAnchor.constraint(equalTo: topAnchor),
-                stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+                leading,
                 stack.trailingAnchor.constraint(equalTo: trailingAnchor),
                 stack.bottomAnchor.constraint(equalTo: bottomAnchor)
             ])
@@ -317,9 +335,43 @@ final class TabBarView: NSView {
     /// The stack's padding: `outerPadding` on the window side and none on the
     /// workspace side, `startInset` where the items begin and `endPadding`
     /// where they run out.
+    /// Puts the accessory at `startInset` and starts the tabs after it, or
+    /// gives the stack back the whole bar when there is none. The stack's
+    /// own start inset drops to zero while an accessory leads, since the
+    /// accessory has already taken that space.
+    private func installLeadingAccessory() {
+        NSLayoutConstraint.deactivate(accessoryConstraints)
+        accessoryConstraints = []
+        accessoryLeading = nil
+        stackLeading?.isActive = false
+        guard let accessory = leadingAccessory else {
+            stackLeading = stack.leadingAnchor.constraint(equalTo: leadingAnchor)
+            stackLeading?.isActive = true
+            applyEdgeInsets()
+            return
+        }
+        accessory.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(accessory)
+        // A tab spans the bar from its outer padding to the workspace side,
+        // so its centre sits half that padding off the bar's.
+        let offset = edge == .top ? Self.outerPadding / 2 : -Self.outerPadding / 2
+        let leading = stack.leadingAnchor.constraint(equalTo: accessory.trailingAnchor, constant: Self.itemSpacing)
+        stackLeading = leading
+        let pin = accessory.leadingAnchor.constraint(equalTo: leadingAnchor, constant: startInset)
+        accessoryLeading = pin
+        accessoryConstraints = [
+            pin,
+            accessory.centerYAnchor.constraint(equalTo: centerYAnchor, constant: offset),
+            leading
+        ]
+        NSLayoutConstraint.activate(accessoryConstraints)
+        applyEdgeInsets()
+    }
+
     private func applyEdgeInsets() {
+        accessoryLeading?.constant = startInset
         let outer = Self.outerPadding
-        let start = startInset
+        let start: CGFloat = leadingAccessory == nil ? startInset : 0
         let end = Self.endPadding
         switch edge {
         case .top:

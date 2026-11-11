@@ -19,6 +19,12 @@ extension ComposableSettings {
             case popUp
             /// A filled or hollow dot — a running timer, a connected server.
             case indicator
+            /// A small picture — an icon beside a name — from an `.image` value.
+            case image
+            /// A borderless button showing the SF Symbol `symbol`, the same in
+            /// every row and needing no cell value, reported through
+            /// `onButton`. `label` is its tooltip and accessibility label.
+            case button(symbol: String, label: String)
             /// A `yyyy-MM-dd` day, typed and read in the card's `timeZone`.
             /// Edits arrive through `onTypedEdit` as `.day`.
             case day
@@ -39,7 +45,7 @@ extension ComposableSettings {
             var isEditableText: Bool {
                 switch self {
                 case .text(let editable): editable
-                case .toggle, .indicator, .popUp: false
+                case .toggle, .indicator, .popUp, .image, .button: false
                 case .day, .time, .duration, .money: true
                 }
             }
@@ -119,6 +125,9 @@ extension ComposableSettings {
         case choice(selected: String?, choices: [EditableTableChoice])
         /// A dot, filled when true.
         case indicator(Bool)
+        /// An image's encoded bytes (PNG, JPEG, anything `NSImage` reads), for
+        /// an `.image` column; nil, or bytes that are no image, draw nothing.
+        case image(Data?)
         /// Greyed prompt text — a value not set yet, not a value that is empty.
         case placeholder(String)
         /// A `yyyy-MM-dd` day, for a `.day` column.
@@ -255,6 +264,10 @@ extension ComposableSettings {
         public var onChoose: ((_ rowID: String, _ columnID: String, _ choiceID: String) -> Void)?
         /// A sortable header was clicked. The card does not sort; the owner re-sorts and calls `setRows`.
         public var onSort: ((_ columnID: String, _ ascending: Bool) -> Void)?
+        /// A row was double-clicked (not its header, not the empty space below the rows).
+        public var onDoubleClick: ((_ rowID: String) -> Void)?
+        /// A button cell was pressed.
+        public var onButton: ((_ rowID: String, _ columnID: String) -> Void)?
 
         /// Asked whether the selected row may be removed; `−` is disabled when
         /// it answers false. Nil allows every row. A locked record answers
@@ -359,6 +372,8 @@ extension ComposableSettings {
         private static let popUpIdentifier = NSUserInterfaceItemIdentifier("editable-table-popup")
         private static let fittedPopUpIdentifier = NSUserInterfaceItemIdentifier("editable-table-fitted-popup")
         private static let indicatorIdentifier = NSUserInterfaceItemIdentifier("editable-table-indicator")
+        private static let imageIdentifier = NSUserInterfaceItemIdentifier("editable-table-image")
+        private static let buttonIdentifier = NSUserInterfaceItemIdentifier("editable-table-button")
         private static let rowViewIdentifier = NSUserInterfaceItemIdentifier("editable-table-row")
 
         /// - Parameters:
@@ -574,7 +589,7 @@ extension ComposableSettings {
                 guard let cents = MoneyFormatter(currency: currency).cents(parsing: text),
                       range.contains(cents) else { return nil }
                 return .money(cents)
-            case .text, .toggle, .indicator, .popUp:
+            case .text, .toggle, .indicator, .popUp, .image, .button:
                 return nil
             }
         }
@@ -683,6 +698,12 @@ extension ComposableSettings {
             finishEditing()
         }
 
+        @objc private func rowDoubleClicked(_ sender: Any?) {
+            let row = tableView.clickedRow
+            guard row >= 0, row < rows.count else { return }
+            onDoubleClick?(rows[row].id)
+        }
+
         // MARK: - Setup
 
         private func setUpTable(visibleRows: Int, accessibilityPrefix: String) {
@@ -691,6 +712,14 @@ extension ComposableSettings {
                 tableColumn.title = column.title
                 tableColumn.width = column.width
                 tableColumn.minWidth = min(column.width, 80)
+                if case .button = column.kind {
+                    // A button column stays its own size, so the width the
+                    // card hands out goes to the column before it and the
+                    // button keeps to the row's trailing edge.
+                    tableColumn.resizingMask = []
+                    tableColumn.minWidth = column.width
+                    tableColumn.maxWidth = column.width
+                }
                 tableColumn.headerToolTip = column.headerToolTip
                 if column.isSortable {
                     tableColumn.sortDescriptorPrototype =
@@ -713,6 +742,8 @@ extension ComposableSettings {
             // Room between rows, so a column of pop-ups does not read as one block.
             tableView.intercellSpacing.height = 8
             tableView.allowsMultipleSelection = false
+            tableView.target = self
+            tableView.doubleAction = #selector(rowDoubleClicked(_:))
             tableView.accessibilityID("\(accessibilityPrefix).table")
 
             scrollView.documentView = tableView
@@ -760,6 +791,13 @@ extension ComposableSettings {
                   let columnID = (sender as? EditableTableToggle)?.toggleColumnID,
                   rows[row].isEditable(columnID) else { return }
             onToggle?(rows[row].id, columnID, sender.state == .on)
+        }
+
+        @objc fileprivate func buttonPressed(_ sender: NSButton) {
+            let row = sender.tag
+            guard row >= 0, row < rows.count,
+                  let columnID = (sender as? EditableTableButton)?.buttonColumnID else { return }
+            onButton?(rows[row].id, columnID)
         }
 
         @objc fileprivate func popUpChosen(_ sender: NSPopUpButton) {
@@ -859,6 +897,24 @@ extension ComposableSettings.EditableTableCard: NSTableViewDelegate {
             }
             return label
 
+        case .image:
+            let imageView = reusableImage()
+            if case .image(let data?) = value {
+                imageView.image = NSImage(data: data)
+            } else {
+                imageView.image = nil
+            }
+            return imageView
+
+        case .button(let symbol, let label):
+            let button = reusableButton()
+            button.buttonColumnID = columnID
+            button.tag = row
+            button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
+            button.toolTip = label
+            button.setAccessibilityLabel(label)
+            return button
+
         case .text, .day, .time, .duration, .money:
             let field = reusableField()
             field.isEditable = column.kind.isEditableText && rows[row].isEditable(columnID)
@@ -890,7 +946,7 @@ extension ComposableSettings.EditableTableCard: NSTableViewDelegate {
         case .duration(let seconds): (DurationFormatter.decimalHours(seconds: seconds), nil)
         case .money(let cents, let currency, let placeholder):
             cents.map { (MoneyFormatter(currency: currency).editableString(cents: $0), nil) } ?? ("", placeholder)
-        case .toggle, .indicator, .choice, nil: ("", nil)
+        case .toggle, .indicator, .choice, .image, nil: ("", nil)
         }
     }
 
@@ -920,6 +976,21 @@ extension ComposableSettings.EditableTableCard: NSTableViewDelegate {
         let button = ComposableSettings.EditableTableToggle(
             checkboxWithTitle: "", target: self, action: #selector(togglePressed(_:)))
         button.identifier = Self.toggleIdentifier
+        return button
+    }
+
+    private func reusableButton() -> ComposableSettings.EditableTableButton {
+        if let reused = tableView.makeView(
+            withIdentifier: Self.buttonIdentifier, owner: self
+        ) as? ComposableSettings.EditableTableButton {
+            return reused
+        }
+        let button = ComposableSettings.EditableTableButton(
+            image: NSImage(), target: self, action: #selector(buttonPressed(_:)))
+        button.identifier = Self.buttonIdentifier
+        button.isBordered = false
+        button.imagePosition = .imageOnly
+        button.contentTintColor = .secondaryLabelColor
         return button
     }
 
@@ -968,6 +1039,19 @@ extension ComposableSettings.EditableTableCard: NSTableViewDelegate {
         let label = ThemedLabel(role: .primaryText, textRole: .body)
         label.identifier = Self.indicatorIdentifier
         return label
+    }
+
+    private func reusableImage() -> NSImageView {
+        if let reused = tableView.makeView(
+            withIdentifier: Self.imageIdentifier, owner: self
+        ) as? NSImageView {
+            return reused
+        }
+        let imageView = NSImageView()
+        imageView.identifier = Self.imageIdentifier
+        imageView.imageScaling = .scaleProportionallyUpOrDown
+        imageView.isEditable = false
+        return imageView
     }
 
     /// `NSTableViewDelegate`: a recycled `EditableTableRowView`, flagged per row.
@@ -1103,5 +1187,12 @@ extension ComposableSettings {
     public final class EditableTableToggle: NSButton {
         /// The id of the column this toggle was last filled for.
         public var toggleColumnID: String?
+    }
+
+    /// A button cell. Its `identifier` is the reuse identifier, so the column
+    /// it reports for is carried separately.
+    public final class EditableTableButton: NSButton {
+        /// The id of the column this button was last filled for.
+        public var buttonColumnID: String?
     }
 }

@@ -74,6 +74,8 @@ public enum ChromiumLauncher {
         let port = settings.get(UserSettings.browserChromeRemoteDebuggingPort)
         configuration.remoteDebuggingPort = BrowserSettings.chromeRemoteDebuggingPortRange.contains(port) ? port : 0
         configuration.hardwareAcceleration = settings.get(UserSettings.browserChromeHardwareAcceleration)
+        configuration.extensionUpdateFrequency =
+            settings.get(UserSettings.browserChromeExtensionUpdateInterval).seconds
         configuration.autoplayPolicy = autoplayPolicy(settings.get(UserSettings.browserAutoplay))
         #if DEBUG
         configuration.developmentMode = true
@@ -92,8 +94,15 @@ public enum ChromiumLauncher {
         }
     }
 
+    /// The home the profile root hangs off. The host sets it before the
+    /// first Chromium use, so a run under a scratch home (`APP_TEST_HOME`)
+    /// gets a scratch profile instead of the developer's own. It defaults to
+    /// the real home, which `homeDirectoryForCurrentUser` reads from the
+    /// password database rather than `$HOME`.
+    public static var homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+
     static func profileDirectory() -> URL {
-        var root = AppStorageLocation.directory(inHome: FileManager.default.homeDirectoryForCurrentUser)
+        var root = AppStorageLocation.directory(inHome: homeDirectory)
             .appendingPathComponent("Chromium")
         #if DEBUG
         let digest = SHA256.hash(data: Data(Bundle.main.bundlePath.utf8))
@@ -227,6 +236,45 @@ public final class ChromiumMaintenance: BrowserEngineMaintenance {
         guard ChromiumLauncher.start(settings: settings) == nil else { return }
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             ChromiumRuntime.shared.deleteAllCookies { continuation.resume() }
+        }
+    }
+
+    // MARK: Extensions
+
+    /// One hidden extensions page per profile for the whole process — every
+    /// pane's maintenance and the Settings window's share it — kept until the
+    /// last open topic closes, so a list followed by a toggle does not load
+    /// Chrome's page twice and two topics on one profile drive one page.
+    private static let extensionManagers = BrowserExtensionManagerCache<ChromiumExtensionManager>(
+        hasFailed: { $0.pageFailed }, close: { $0.close() })
+
+    public func extensions(in profile: BrowserExtensionProfile) async throws -> [BrowserExtension] {
+        try await extensionManager(for: profile).list()
+    }
+
+    public func setExtension(_ id: String, enabled: Bool, in profile: BrowserExtensionProfile) async throws {
+        try await extensionManager(for: profile).setEnabled(id, enabled: enabled)
+    }
+
+    public func removeExtension(_ id: String, in profile: BrowserExtensionProfile) async throws {
+        try await extensionManager(for: profile).remove(id)
+    }
+
+    public func checkForExtensionUpdates(in profile: BrowserExtensionProfile) async throws {
+        try await extensionManager(for: profile).updateAll()
+    }
+
+    /// This topic is done; the pages close once no other topic holds them.
+    public func endExtensionManagement() {
+        Self.extensionManagers.release(holder: self)
+    }
+
+    private func extensionManager(for profile: BrowserExtensionProfile) throws -> ChromiumExtensionManager {
+        try Self.extensionManagers.manager(for: profile, holder: self) {
+            if let error = ChromiumLauncher.start(settings: settings) {
+                throw BrowserExtensionError.unavailable(error.localizedDescription)
+            }
+            return try ChromiumExtensionManager(profile: profile)
         }
     }
 }

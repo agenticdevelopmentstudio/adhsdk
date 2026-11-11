@@ -298,6 +298,35 @@ struct EditableTableCardTests {
         #expect(card.rows.map(\.id) == ["r1", "r2"], "nothing is held after the close")
     }
 
+    // MARK: - Images
+
+    @Test("an image column draws the cell's image, and nothing for nil or bytes that are no image")
+    func imageColumnDrawsImage() throws {
+        let columns = [
+            Column(id: "icon", title: "", width: 24, kind: .image),
+            Column(id: "name", title: "Name", width: 200, kind: .text(editable: false))
+        ]
+        let card = Card(title: "Icons", columns: columns, emptyMessage: "", accessibilityPrefix: "icons")
+        card.frame = NSRect(x: 0, y: 0, width: 480, height: 320)
+        let bitmap = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: 2, pixelsHigh: 2, bitsPerSample: 8, samplesPerPixel: 4,
+            hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        let png = try #require(bitmap.representation(using: .png, properties: [:]))
+        card.setRows([
+            Row(id: "a", cells: ["icon": .image(png), "name": .text("A")]),
+            Row(id: "b", cells: ["icon": .image(nil), "name": .text("B")]),
+            Row(id: "c", cells: ["icon": .image(Data("not a png".utf8)), "name": .text("C")])
+        ])
+        let column = try #require(card.tableView.tableColumns.first { $0.identifier.rawValue == "icon" })
+        func image(at row: Int) -> NSImage? {
+            (card.tableView(card.tableView, viewFor: column, row: row) as? NSImageView)?.image
+        }
+        #expect(card.tableView(card.tableView, viewFor: column, row: 0) is NSImageView)
+        #expect(image(at: 0) != nil)
+        #expect(image(at: 1) == nil)
+        #expect(image(at: 2) == nil)
+    }
+
     // MARK: - Review V17-e: recycling
 
     @Test("row views and indicator cells are recycled while scrolling")

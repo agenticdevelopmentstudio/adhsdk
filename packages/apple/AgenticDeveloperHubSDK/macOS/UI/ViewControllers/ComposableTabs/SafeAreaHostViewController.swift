@@ -9,6 +9,17 @@ final class SafeAreaHostViewController: NSViewController {
     private let child: NSViewController
     private let pinsToSafeArea: Bool
 
+    /// How far the child is held off each edge (the top one measured from
+    /// the safe area when `pinsToSafeArea`). Zero by default.
+    var insets = NSEdgeInsetsZero {
+        didSet { applyInsets() }
+    }
+
+    private var leadingEdge: NSLayoutConstraint?
+    private var trailingEdge: NSLayoutConstraint?
+    private var topEdge: NSLayoutConstraint?
+    private var bottomEdge: NSLayoutConstraint?
+
     var backdropColor: NSColor = .clear {
         didSet { view.layer?.backgroundColor = backdropColor.cgColor }
     }
@@ -38,17 +49,23 @@ final class SafeAreaHostViewController: NSViewController {
         // The leading and trailing edges give below required, as the
         // Conversations shelf's do: a collapsing pane animates to zero width,
         // and a required edge is one AppKit has to break, loudly, to get there.
-        let horizontal = [
-            childView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            childView.trailingAnchor.constraint(equalTo: container.trailingAnchor)
-        ]
-        for constraint in horizontal { constraint.priority = .defaultHigh }
-
-        NSLayoutConstraint.activate(horizontal + [
-            childView.topAnchor.constraint(
-                equalTo: pinsToSafeArea ? container.safeAreaLayoutGuide.topAnchor : container.topAnchor),
-            childView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-        ])
+        let leading = childView.leadingAnchor.constraint(equalTo: container.leadingAnchor)
+        let trailing = childView.trailingAnchor.constraint(equalTo: container.trailingAnchor)
+        let top = childView.topAnchor.constraint(
+            equalTo: pinsToSafeArea ? container.safeAreaLayoutGuide.topAnchor : container.topAnchor)
+        let bottom = childView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        leading.priority = .defaultHigh
+        trailing.priority = .defaultHigh
+        NSLayoutConstraint.activate([leading, trailing, top, bottom])
+        (leadingEdge, trailingEdge, topEdge, bottomEdge) = (leading, trailing, top, bottom)
         self.view = container
+        applyInsets()
+    }
+
+    private func applyInsets() {
+        leadingEdge?.constant = insets.left
+        trailingEdge?.constant = -insets.right
+        topEdge?.constant = insets.top
+        bottomEdge?.constant = -insets.bottom
     }
 }

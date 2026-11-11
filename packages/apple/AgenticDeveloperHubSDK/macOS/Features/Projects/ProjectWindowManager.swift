@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import os
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 
 /// Keeps one window per project, keyed by `git_repo.id`.
 ///
@@ -209,7 +210,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// answers only for a window adopted for scripting, which belongs to no
     /// group.
     public var frontWindowController: ComposableTabsWindowController? {
-        if let key = NSApp.keyWindow?.windowController as? ComposableTabsWindowController {
+        if let key = NSApp.keyWindow?.commandOwner.windowController as? ComposableTabsWindowController {
             return key
         }
         // Visible only: a project window group keeps its other active
@@ -442,7 +443,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
     /// The group whose window is frontmost, or failing that the last made.
     private var frontGroup: ProjectWindowGroup? {
-        let windows = [NSApp.keyWindow].compactMap { $0 } + NSApp.orderedWindows.filter(\.isVisible)
+        let windows = [NSApp.keyWindow?.commandOwner].compactMap { $0 } + NSApp.orderedWindows.filter(\.isVisible)
         for window in windows {
             if let group = groups.first(where: { shownWindows[$0.id]?.window === window }) {
                 return group

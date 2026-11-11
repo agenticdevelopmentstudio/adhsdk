@@ -28,6 +28,8 @@ NS_SWIFT_NAME(ChromiumRuntimeConfiguration)
 /// 0 is off.
 @property (nonatomic) NSInteger remoteDebuggingPort;
 @property (nonatomic) BOOL hardwareAcceleration;
+/// Seconds between Chrome's checks for extension updates; 0 leaves Chrome's default.
+@property (nonatomic) NSInteger extensionUpdateFrequency;
 /// Chromium's `--autoplay-policy` value; empty keeps Chromium's default.
 @property (nonatomic, copy) NSString *autoplayPolicy;
 /// Debug builds: keep painting and running timers in a window the window

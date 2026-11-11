@@ -31,8 +31,11 @@
 #include <atomic>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "include/cef_app.h"
+#include "include/cef_client.h"
+#include "include/cef_life_span_handler.h"
 #include "include/cef_application_mac.h"
 #include "include/cef_cookie.h"
 #include "include/cef_request_context.h"
@@ -59,11 +62,208 @@ BOOL gHandlingSendEvent = NO;
 /// thread.
 std::atomic<bool> gAcceptsCookies{true};
 
+}  // namespace
+
+/// Keeps a parked browser's window, and every window Chrome attaches to it
+/// (the post-install bubble, a permission prompt), ordered out. Chrome creates
+/// the window after the browser and shows it later still, so the warden asks
+/// the browser for its view each time rather than holding a window: whenever
+/// any window comes on screen or becomes key, one that holds the view, or is a
+/// child of the one that does, goes straight back out and key returns to the
+/// frontmost other window.
+@interface ADHParkedWindowWarden : NSObject
+- (instancetype)initWithView:(NSView* _Nullable (^)(void))view;
+- (void)stop;
+@end
+
+@implementation ADHParkedWindowWarden {
+  NSView* _Nullable (^_view)(void);
+  NSMutableArray<id>* _observers;
+}
+
+- (instancetype)initWithView:(NSView* _Nullable (^)(void))view {
+  if ((self = [super init])) {
+    _view = [view copy];
+    _observers = [NSMutableArray array];
+    __weak ADHParkedWindowWarden* weakSelf = self;
+    for (NSNotificationName name in @[ NSWindowDidBecomeKeyNotification, NSWindowDidBecomeMainNotification,
+                                       NSWindowDidChangeOcclusionStateNotification ]) {
+      [_observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:name
+                                                                            object:nil
+                                                                             queue:nil
+                                                                        usingBlock:^(NSNotification* note) {
+                                                                          [weakSelf hide:note.object];
+                                                                        }]];
+    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+      ADHParkedWindowWarden* warden = weakSelf;
+      [warden hide:[warden parkedWindow]];
+    });
+  }
+  return self;
+}
+
+/// The window that holds the parked browser's view, once Chrome has made one.
+- (nullable NSWindow*)parkedWindow {
+  return _view ? _view().window : nil;
+}
+
+/// Whether `window` is the parked window or hangs off it.
+- (BOOL)isParked:(NSWindow*)window {
+  NSWindow* parked = [self parkedWindow];
+  for (NSWindow* w = window; parked && w; w = w.parentWindow) {
+    if (w == parked) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+- (void)hide:(NSWindow*)window {
+  if (![window isKindOfClass:NSWindow.class] || !window.isVisible || ![self isParked:window]) {
+    return;
+  }
+  NSWindow* parked = [self parkedWindow];
+  BOOL wasKey = NO;
+  for (NSWindow* w in NSApp.windows) {
+    if (w.isVisible && [self isParked:w]) {
+      wasKey = wasKey || w.isKeyWindow;
+    }
+  }
+  [parked orderOut:nil];
+  for (NSWindow* w in NSApp.windows) {
+    if (w.isVisible && [self isParked:w]) {
+      [w orderOut:nil];
+    }
+  }
+  if (!wasKey) {
+    return;
+  }
+  for (NSWindow* other in NSApp.orderedWindows) {
+    if (other.isVisible && other.canBecomeKeyWindow && ![self isParked:other]) {
+      [other makeKeyWindow];
+      return;
+    }
+  }
+}
+
+- (void)stop {
+  for (id observer in _observers) {
+    [NSNotificationCenter.defaultCenter removeObserver:observer];
+  }
+  [_observers removeAllObjects];
+  _view = nil;
+}
+
+@end
+
+namespace {
+
+/// The client of every browser Chrome creates on its own rather than through
+/// a pane. Each pane's browser carries its own client; one that arrives here
+/// would be a Chrome window outside every pane, so none is ever shown.
+///
+/// The first such browser in each profile is **parked**: kept alive, blank and
+/// ordered out, for the life of Chromium. Chrome needs a tabbed browser to
+/// exist — a pane's browser never counts as one, because CEF makes every
+/// browser hosted in a view a popup — and when it finds none it creates one
+/// and holds a raw pointer to it. Installing an extension does exactly that,
+/// then uses the pointer when the extension finishes loading, seconds later;
+/// a browser closed in between is a use after free. A parked browser is the
+/// tabbed browser Chrome finds from then on, so it creates no more.
+///
+/// Any further browser in a profile that already has a parked one (a restored
+/// session, an extension's `chrome.windows.create`) is closed as soon as it
+/// exists, and the closing is logged. Every browser here is counted while it
+/// lives, so shutdown waits for it like any other.
+class ADHUnmanagedBrowserClient : public CefClient, public CefLifeSpanHandler {
+ public:
+  CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }
+
+  void OnAfterCreated(CefRefPtr<CefBrowser> browser) override {
+    [ADHChromiumRuntime.shared browserDidOpen];
+    CefRefPtr<CefFrame> frame = browser->GetMainFrame();
+    NSString* address = frame ? @(frame->GetURL().ToString().c_str()) : @"";
+    if (ParkedIn(browser->GetHost()->GetRequestContext())) {
+      NSLog(@"Chromium: closing a browser Chrome opened outside every pane (%@)", address);
+      browser->GetHost()->CloseBrowser(true);
+      return;
+    }
+    NSLog(@"Chromium: parking the browser Chrome opened outside every pane (%@)", address);
+    if (frame && address.length > 0 && ![address isEqualToString:@"about:blank"]) {
+      frame->LoadURL("about:blank");
+    }
+    // Chrome has not made the browser's window yet; the warden asks again
+    // whenever a window appears.
+    CefRefPtr<CefBrowser> held = browser;
+    ADHParkedWindowWarden* warden = [[ADHParkedWindowWarden alloc] initWithView:^NSView* {
+      CefRefPtr<CefBrowserHost> host = held->GetHost();
+      return host ? (__bridge NSView*)host->GetWindowHandle() : nil;
+    }];
+    parked_.push_back({browser, warden});
+  }
+
+  bool DoClose(CefRefPtr<CefBrowser> /*browser*/) override { return false; }
+
+  void OnBeforeClose(CefRefPtr<CefBrowser> browser) override {
+    for (auto it = parked_.begin(); it != parked_.end(); ++it) {
+      if (it->browser->IsSame(browser)) {
+        [it->warden stop];
+        parked_.erase(it);
+        break;
+      }
+    }
+    [ADHChromiumRuntime.shared browserDidClose];
+  }
+
+  /// Closes every parked browser, for shutdown.
+  void CloseParked() {
+    for (const auto& entry : parked_) {
+      entry.browser->GetHost()->CloseBrowser(true);
+    }
+  }
+
+ private:
+  struct Parked {
+    CefRefPtr<CefBrowser> browser;
+    ADHParkedWindowWarden* warden;
+  };
+
+  bool ParkedIn(CefRefPtr<CefRequestContext> context) const {
+    for (const auto& entry : parked_) {
+      CefRefPtr<CefRequestContext> other = entry.browser->GetHost()->GetRequestContext();
+      if (context && other && (other->IsSame(context) || other->IsSharingWith(context))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  std::vector<Parked> parked_;
+  IMPLEMENT_REFCOUNTING(ADHUnmanagedBrowserClient);
+};
+
 class ADHCefApp : public CefApp, public CefBrowserProcessHandler {
  public:
   ADHCefApp(std::vector<std::pair<std::string, std::string>> switches) : switches_(std::move(switches)) {}
 
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
+
+  /// Chrome style asks for this for any browser it creates itself; without
+  /// one, such a browser would be a Chrome window nothing in the app owns.
+  CefRefPtr<CefClient> GetDefaultClient() override {
+    if (!unmanaged_) {
+      unmanaged_ = new ADHUnmanagedBrowserClient();
+    }
+    return unmanaged_;
+  }
+
+  /// Closes the browsers Chrome created on its own and the app parked.
+  void CloseParkedBrowsers() {
+    if (unmanaged_) {
+      unmanaged_->CloseParked();
+    }
+  }
 
   void OnContextInitialized() override {
     // The global context takes settings only once it exists.
@@ -95,6 +295,7 @@ class ADHCefApp : public CefApp, public CefBrowserProcessHandler {
 
  private:
   std::vector<std::pair<std::string, std::string>> switches_;
+  CefRefPtr<ADHUnmanagedBrowserClient> unmanaged_;
   IMPLEMENT_REFCOUNTING(ADHCefApp);
 };
 
@@ -206,6 +407,7 @@ CefRefPtr<CefRequestContext> ADHJarProfileContext(NSString* path) {
       !isDirectory) {
     return nullptr;
   }
+  ADHForgetChromeSessions(path);
   CefRequestContextSettings settings;
   CefString(&settings.cache_path) = std::string(path.fileSystemRepresentation);
   return CefRequestContext::CreateContext(settings, nullptr);
@@ -257,6 +459,19 @@ void ADHInstallApplicationProtocol(void) {
 }
 
 }  // namespace
+
+void ADHForgetChromeSessions(NSString* profilePath) {
+  NSCAssert(NSThread.isMainThread, @"ADHForgetChromeSessions is main thread only");
+  static NSMutableSet<NSString*>* forgotten = [NSMutableSet set];
+  NSString* key = profilePath.stringByStandardizingPath;
+  if ([forgotten containsObject:key]) {
+    return;
+  }
+  [forgotten addObject:key];
+  for (NSString* name in @[ @"Sessions", @"Sessions_Encrypted" ]) {
+    [NSFileManager.defaultManager removeItemAtPath:[key stringByAppendingPathComponent:name] error:nil];
+  }
+}
 
 void ADHApplyCookiePolicy(CefRefPtr<CefRequestContext> context, bool accepts) {
   if (!context) {
@@ -385,6 +600,7 @@ static void ADHPumpChromium(void) {
 
   NSString* root = configuration.cachePath.stringByDeletingLastPathComponent;
   [files createDirectoryAtPath:configuration.cachePath withIntermediateDirectories:YES attributes:nil error:nil];
+  ADHForgetChromeSessions(configuration.cachePath);
 
   CefSettings settings;
   settings.no_sandbox = false;
@@ -403,11 +619,17 @@ static void ADHPumpChromium(void) {
   }
 
   std::vector<std::pair<std::string, std::string>> switches;
+  // An unclean exit is not Chrome's to offer back: sessions are forgotten.
+  switches.emplace_back("hide-crash-restore-bubble", "");
   if (configuration.autoplayPolicy.length > 0) {
     switches.emplace_back("autoplay-policy", configuration.autoplayPolicy.UTF8String);
   }
   if (!configuration.hardwareAcceleration) {
     switches.emplace_back("disable-gpu", "");
+  }
+  if (configuration.extensionUpdateFrequency > 0) {
+    switches.emplace_back("extensions-update-frequency",
+                          std::to_string(static_cast<long>(configuration.extensionUpdateFrequency)));
   }
   if (configuration.developmentMode) {
     switches.emplace_back("use-mock-keychain", "");
@@ -459,6 +681,9 @@ static void ADHPumpChromium(void) {
     return;
   }
   [NSNotificationCenter.defaultCenter postNotificationName:ADHChromiumRuntimeWillShutdownNotification object:self];
+  if (_app) {
+    _app->CloseParkedBrowsers();
+  }
   // A browser closes over several turns of Chromium's own loop; give them
   // half a second, which is what a quitting app can spare.
   NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:0.5];

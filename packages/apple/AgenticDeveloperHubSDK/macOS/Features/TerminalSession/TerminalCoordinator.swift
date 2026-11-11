@@ -1,6 +1,7 @@
 import AppKit
 import OSLog
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 
 /// Owns the terminal-window subsystem: the live array of
 /// `TerminalSessionWindowController` instances, the lifecycle delegate that
@@ -80,7 +81,7 @@ public final class TerminalCoordinator: AppFeature, TerminalSessionWindowLifecyc
                 // type check against the key window's controller rather than
                 // an identity check against a captured controller.
                 claimsKeyWindow: {
-                    NSApp.keyWindow?.windowController is TerminalSessionWindowController
+                    NSApp.keyWindow?.commandOwner.windowController is TerminalSessionWindowController
                 },
                 title: { "New Terminal Session" },
                 action: { [weak self] in

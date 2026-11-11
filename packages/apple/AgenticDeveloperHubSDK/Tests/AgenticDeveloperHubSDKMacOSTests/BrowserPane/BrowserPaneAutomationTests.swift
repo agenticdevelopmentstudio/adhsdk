@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 import WebKit
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
@@ -219,5 +220,27 @@ final class BrowserPaneAutomationTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 100_000_000)
         let answer = try? await pane.webView.evaluateJavaScript("String(window.answer)") as? String
         XCTAssertEqual(answer, "false")
+    }
+
+    /// A Chrome pane's page is in a window of its own, so the pane's window
+    /// never sees its first responder: that window becoming key is what
+    /// makes the pane the focused one.
+    func test_pageWindowKeyMakesPaneFocused() {
+        let pageWindow = NSWindow()
+        let pane = WebBrowserPaneViewController(
+            makeEngine: { StubBrowserEngine(consoleLog: $0.consoleLog, pageWindow: pageWindow) },
+            engineKind: .chrome, minimizedSymbol: "globe", store: EphemeralPaneStateStore(),
+            settings: makeSettings(), history: nil, homeURL: WebBrowserPaneViewController.blankPage)
+        _ = pane.view
+        pane.viewDidAppear()
+        let other = makePane()
+        BrowserPaneFocus.shared.note(other)
+
+        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: NSWindow())
+        XCTAssertTrue(BrowserPaneFocus.shared.lastFocused === other, "another window going key is not the page")
+
+        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: pageWindow)
+        XCTAssertTrue(BrowserPaneFocus.shared.lastFocused === pane)
+        pane.viewDidDisappear()
     }
 }

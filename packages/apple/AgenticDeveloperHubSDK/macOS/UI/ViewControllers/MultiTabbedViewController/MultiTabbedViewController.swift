@@ -131,6 +131,13 @@ open class MultiTabbedViewController: NSViewController {
         applyStartInset(for: edge)
     }
 
+    /// Puts `view` in front of the first tab on a top or bottom bar, centred
+    /// on the tabs, with the tabs moved along to follow it; `nil` takes it
+    /// away. A side bar has no room in front of its first tab, so it traps.
+    public func setLeadingAccessory(_ view: NSView?, for edge: Edge) {
+        tabBars[edge]?.leadingAccessory = view
+    }
+
     public func tabStartInset(for edge: Edge) -> CGFloat {
         requestedStartInsets[edge] ?? TabBarView.endPadding
     }

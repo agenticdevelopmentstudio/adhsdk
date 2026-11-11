@@ -21,7 +21,7 @@ final class BrowserSettingsTests: XCTestCase {
 
     func testEveryBrowserKeyIsNamedUnderTheBrowserPrefix() {
         let names = BrowserSettings.allKeyNames
-        XCTAssertEqual(names.count, 32)
+        XCTAssertEqual(names.count, 33)
         XCTAssertEqual(Set(names).count, names.count, "no two settings share a key")
         for name in names {
             XCTAssertTrue(name.hasPrefix("browser."), "\(name) is not a browser key")

@@ -81,4 +81,64 @@ final class TabBarStartInsetTests: XCTestCase {
         // sits below every one of them and there is nothing to line up with.
         XCTAssertEqual(controller.tabStartInset(for: .top), TabBarView.endPadding)
     }
+
+    // MARK: - Leading accessory
+
+    private func accessory() -> NSButton {
+        let button = NSButton(title: "+", target: nil, action: nil)
+        button.bezelStyle = .texturedRounded
+        return button
+    }
+
+    /// The first tab, in the bar's coordinates.
+    private func firstTabFrame(in bar: TabBarView) -> NSRect {
+        guard let item = bar.subviews.first?.subviews.first else {
+            XCTFail("the bar laid out no tab")
+            return .zero
+        }
+        return bar.convert(item.frame, from: item.superview)
+    }
+
+    /// The accessory sits where the first tab would have, the tabs start
+    /// after it, and it is centred on them across the bar.
+    func testALeadingAccessoryLeadsTheTabsCentredOnThem() throws {
+        let controller = makeController()
+        controller.addTab(.init(item: .viewController(Item()), viewController: makeContent()), on: .top)
+        let plus = accessory()
+        controller.setLeadingAccessory(plus, for: .top)
+        controller.view.layoutSubtreeIfNeeded()
+
+        let bar = try XCTUnwrap(controller.tabBars[.top])
+        XCTAssertTrue(plus.superview === bar)
+        let tab = firstTabFrame(in: bar)
+        XCTAssertEqual(plus.frame.minX, TabBarView.endPadding, accuracy: 0.5)
+        XCTAssertEqual(tab.minX, plus.frame.maxX + TabBarView.itemSpacing, accuracy: 0.5)
+        XCTAssertEqual(plus.frame.midY, tab.midY, accuracy: 0.5)
+    }
+
+    func testTheStartInsetMovesTheAccessoryAndTheTabsWithIt() throws {
+        let controller = makeController()
+        controller.addTab(.init(item: .viewController(Item()), viewController: makeContent()), on: .top)
+        let plus = accessory()
+        controller.setLeadingAccessory(plus, for: .top)
+        controller.setTabStartInset(30, for: .top)
+        controller.view.layoutSubtreeIfNeeded()
+
+        let bar = try XCTUnwrap(controller.tabBars[.top])
+        XCTAssertEqual(plus.frame.minX, 30, accuracy: 0.5)
+        XCTAssertEqual(firstTabFrame(in: bar).minX, plus.frame.maxX + TabBarView.itemSpacing, accuracy: 0.5)
+    }
+
+    func testRemovingTheAccessoryGivesTheTabsTheirPlaceBack() throws {
+        let controller = makeController()
+        controller.addTab(.init(item: .viewController(Item()), viewController: makeContent()), on: .top)
+        let plus = accessory()
+        controller.setLeadingAccessory(plus, for: .top)
+        controller.setLeadingAccessory(nil, for: .top)
+        controller.view.layoutSubtreeIfNeeded()
+
+        let bar = try XCTUnwrap(controller.tabBars[.top])
+        XCTAssertNil(plus.superview)
+        XCTAssertEqual(firstTabFrame(in: bar).minX, TabBarView.endPadding, accuracy: 0.5)
+    }
 }

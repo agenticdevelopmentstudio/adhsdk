@@ -2,6 +2,7 @@ import AppKit
 import Carbon.HIToolbox
 @preconcurrency import KeyboardShortcuts
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 
 /// The list of bindable commands, what each is bound to, and the dispatch for
 /// both scopes.
@@ -270,8 +271,11 @@ public final class KeyCommandRegistry {
     /// inactive app (posted to its pid, as automation does), and then there is
     /// no key window at all, though the event still names the window it is
     /// for (`explicit-over-implicit`). Outside a dispatch, the key window.
+    /// A child window answers with the window it is attached to
+    /// (`commandOwner`): a Chrome pane's page window is key while the page
+    /// has the keys, and the command is the project window's.
     public var commandWindow: NSWindow? {
-        dispatchingEvent?.window ?? NSApp.keyWindow
+        (dispatchingEvent?.window ?? NSApp.keyWindow)?.commandOwner
     }
 
     /// Every app-scope command is performed from here: one local monitor for

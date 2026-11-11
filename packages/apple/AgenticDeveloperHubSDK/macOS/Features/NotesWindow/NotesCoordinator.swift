@@ -1,6 +1,7 @@
 import AppKit
 import OSLog
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKUI
 
 /// Owns the Notes feature stack — the storage-backed `NotesManager` plus the
@@ -214,7 +215,8 @@ public final class NotesCoordinator: AppFeature {
     /// search field), where "the notes view in this window" is still an
     /// unambiguous answer.
     private var activeNotesViewController: NotesSplitViewController? {
-        guard let window = NSApp.keyWindow else { return nil }
+        // A child window (a Chrome pane's page) is part of its parent.
+        guard let window = NSApp.keyWindow?.commandOwner else { return nil }
         if window === notesWindowController.window { return notesWindowController.viewController }
         var responder: NSResponder? = window.firstResponder
         while let current = responder {

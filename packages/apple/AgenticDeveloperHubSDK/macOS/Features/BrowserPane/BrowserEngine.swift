@@ -33,6 +33,9 @@ public protocol BrowserPageDriver: AnyObject {
     var isLoading: Bool { get }
     /// `true` when a load starts, `false` when it stops, each time.
     var loadingChanges: AnyPublisher<Bool, Never> { get }
+    /// The sentence for each main-frame navigation the engine refused, as
+    /// the pane shows it. A refused navigation leaves the page where it was.
+    var navigationRefusals: AnyPublisher<String, Never> { get }
     /// The view that shows the page; its window is the pane's window.
     var view: NSView { get }
     /// The visible viewport, in CSS pixels.
@@ -57,6 +60,11 @@ public protocol BrowserPageDriver: AnyObject {
 
     /// A real mouse click at a viewport point, in CSS pixels.
     func nativeClick(atViewportX viewportX: Double, viewportY: Double) async throws
+}
+
+extension BrowserPageDriver {
+    /// An engine that refuses nothing never sends.
+    public var navigationRefusals: AnyPublisher<String, Never> { Empty().eraseToAnyPublisher() }
 }
 
 /// What an engine tells the pane that hosts it. The pane owns everything an
@@ -89,6 +97,11 @@ public protocol BrowserEngineDelegate: AnyObject {
     /// through it). The host puts it in a tab and becomes its delegate, and
     /// answers `true`; `false` refuses it, and the engine tears it down.
     func browserEngine(_ engine: BrowserEngine, didOpenPopup popup: BrowserEngine) -> Bool
+    /// The person asked for `url` in a new tab or window (a link's context
+    /// menu, a middle- or Command-click) and the engine made nothing for it.
+    /// The host opens it as a tab of its own, behind the front one when
+    /// `inBackground`, and answers `true`; `false` drops it.
+    func browserEngine(_ engine: BrowserEngine, didRequestTabFor url: URL, inBackground: Bool) -> Bool
     /// The page closed its own window (`window.close()`); the engine has
     /// stopped. The host lets a popup's engine go; any other page's close is
     /// the host's to ignore (`BrowserEngine.isClosedByPage` says whether the
@@ -100,6 +113,9 @@ extension BrowserEngineDelegate {
     public func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error) {}
     public func browserEngine(_ engine: BrowserEngine, download event: String, host: String) {}
     public func browserEngine(_ engine: BrowserEngine, didOpenPopup popup: BrowserEngine) -> Bool { false }
+    public func browserEngine(_ engine: BrowserEngine, didRequestTabFor url: URL, inBackground: Bool) -> Bool {
+        false
+    }
     public func browserEngineDidRequestClose(_ engine: BrowserEngine) {}
 }
 
@@ -142,6 +158,19 @@ public protocol BrowserEngine: BrowserPageDriver {
     /// A load waiting for the Third-Party Content rules to land, so a rebuild
     /// carries where the pane was going; `nil` when none is held.
     var heldLoadURL: URL? { get }
+
+    // MARK: Hosting
+
+    /// The window the page lives in when it is not the pane's own: a Chrome
+    /// pane's page is in a child window kept over the pane, so focus and
+    /// events are that window's. `nil` when the page is in the pane's window.
+    var pageWindow: NSWindow? { get }
+    /// Whether the engine draws a toolbar of its own (Chrome's, with the
+    /// extension actions on it), so the pane's navigation bar steps aside.
+    var providesOwnToolbar: Bool { get }
+    /// Focuses the engine's own address bar, ready to type in; only an
+    /// engine that `providesOwnToolbar` has one.
+    func focusOwnAddressBar()
     /// Whether a page's `window.close()` has already destroyed the page, so
     /// a host that ignores the close must put a new engine in its place.
     /// WebKit only stops the page, which stays usable; Chromium closes it.
@@ -149,6 +178,9 @@ public protocol BrowserEngine: BrowserPageDriver {
 }
 
 extension BrowserEngine {
+    public var pageWindow: NSWindow? { nil }
+    public var providesOwnToolbar: Bool { false }
+    public func focusOwnAddressBar() {}
     public var isClosedByPage: Bool { false }
 }
 

@@ -45,6 +45,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     private let capturesConsole: Bool
     private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
     private let loadingSubject = PassthroughSubject<Bool, Never>()
+    private let refusalSubject = PassthroughSubject<String, Never>()
     private var cancellables: Set<AnyCancellable> = []
     private var zoom = 1.0
     private var appliedUserAgent: String?
@@ -97,6 +98,9 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         let settings = configuration.settings
         let options = ChromiumBrowserOptions()
         options.cachePath = Self.cachePath(for: configuration.jar)
+        // Private is the profile kept in memory, whatever put the pane there:
+        // nothing an extension installs into it would outlive the pane.
+        options.isPrivate = options.cachePath?.isEmpty == true
         // An ephemeral jar is one in-memory session for the pane's every tab,
         // not one per browser.
         if configuration.jar.isEphemeral, let session = configuration.jar.ephemeralSession {
@@ -117,6 +121,9 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     convenience init(popupOf opener: ChromiumBrowserEngine) {
         let options = ChromiumBrowserOptions()
         options.cachePath = opener.options.cachePath
+        // A private pane's popup is private too: it is in the same in-memory
+        // profile, so the Web Store is refused there as it is in its opener.
+        options.isPrivate = opener.options.isPrivate
         options.ephemeralSession = opener.options.ephemeralSession
         options.acceptsCookies = opener.browserView.acceptsCookies
         self.init(
@@ -143,6 +150,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
             ? ChromiumBrowserView(popupWithFrame: frame, options: options)
             : ChromiumBrowserView(frame: frame, options: options)
         super.init()
+        Self.observeArrangeMode
         browserView.delegate = self
         // Read when the browser is created, the first time the view is in a
         // window, so the latest palette is the one a blank page shows.
@@ -154,6 +162,29 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         observeSettings()
         installInputMonitor()
     }
+
+    /// Arrange mode draws its scrim and toolbar over the panes in the project
+    /// window, and Chrome's page is a window above it, so pages step out of
+    /// sight while their window arranges. Subscribed once, on the first engine,
+    /// which first takes every window's current state: a window already
+    /// arranging when the first Chrome pane is made posted its change before
+    /// anything listened, and that pane's page would sit over the scrim until
+    /// Arrange mode next changed.
+    private static let observeArrangeMode: Void = {
+        for window in NSApp.windows {
+            ChromiumBrowserView.setPagesCovered(
+                ComposableTabsArrangeMode.shared.isEnabled(in: window), in: window)
+        }
+        NotificationCenter.default.addObserver(
+            forName: ComposableTabsArrangeMode.didChangeNotification, object: nil, queue: .main
+        ) { notification in
+            guard let window = notification.object as? NSWindow else { return }
+            MainActor.assumeIsolated {
+                ChromiumBrowserView.setPagesCovered(
+                    ComposableTabsArrangeMode.shared.isEnabled(in: window), in: window)
+            }
+        }
+    }()
 
     /// Where a jar's session lives: the shared profile for the global jar, a
     /// store kept in memory for private browsing and for a jar that failed
@@ -175,12 +206,30 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     public var canGoBack: Bool { browserView.canGoBack }
     public var canGoForward: Bool { browserView.canGoForward }
     public var loadingChanges: AnyPublisher<Bool, Never> { loadingSubject.eraseToAnyPublisher() }
+    public var navigationRefusals: AnyPublisher<String, Never> { refusalSubject.eraseToAnyPublisher() }
 
+    /// The page's size in CSS pixels: the pane less Chrome's toolbar, which
+    /// sits above the page in the same window.
     public var viewportSize: CGSize {
-        CGSize(width: browserView.bounds.width / zoom, height: browserView.bounds.height / zoom)
+        let height = max(0, browserView.bounds.height - browserView.toolbarHeight)
+        return CGSize(width: browserView.bounds.width / zoom, height: height / zoom)
     }
 
-    public func load(_ url: URL) { browserView.loadAddress(url.absoluteString) }
+    public var pageWindow: NSWindow? { browserView.browserWindow }
+    public var providesOwnToolbar: Bool { true }
+    public func focusOwnAddressBar() { browserView.focusLocationBar() }
+
+    /// Loading from the moment the load is asked for, as WebKit's is.
+    /// Chromium's main-frame load start arrives only once the response
+    /// begins to commit — after the DNS, connection and request — so a
+    /// caller that asked for a page and looked a moment later would
+    /// otherwise see the old page, idle, and conclude nothing happened.
+    /// The flag ends the way any load does: at the load's end, its failure,
+    /// Chromium's loading state going idle, or a refusal.
+    public func load(_ url: URL) {
+        setMainFrameLoading(true)
+        browserView.loadAddress(url.absoluteString)
+    }
     public func goBack() { browserView.goBack() }
     public func goForward() { browserView.goForward() }
     public func reload() { browserView.reload() }
@@ -200,6 +249,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     /// Chromium could not start, so this pane has no page: it says why where
     /// the page would be.
     private func showFailure(_ error: Error) {
+        setMainFrameLoading(false)
         let label = NSTextField(wrappingLabelWithString: "Chrome could not start: \(error.localizedDescription)")
         label.translatesAutoresizingMaskIntoConstraints = false
         label.alignment = .center
@@ -251,30 +301,10 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
 
     // MARK: - DevTools protocol
 
-    /// A DevTools reply crossing from the bridge's completion block to the
-    /// awaiting caller. Its JSON is parsed fresh for each reply and never
-    /// shared, so handing it over is safe though `[String: Any]` is not
-    /// `Sendable`.
-    private struct DevToolsReply: @unchecked Sendable {
-        let value: [String: Any]
-    }
-
     /// How long a DevTools call may go unanswered. A browser that is never
     /// created — a pane with no window, Chromium gone — would otherwise leave
     /// the call, and the automation gate it holds, waiting forever.
     static let devToolsTimeout: TimeInterval = 30
-
-    /// Resumes its continuation once: with the reply, or with the timeout,
-    /// whichever comes first. Both arrive on the main thread.
-    @MainActor
-    private final class PendingReply {
-        private var continuation: CheckedContinuation<DevToolsReply, Error>?
-        init(_ continuation: CheckedContinuation<DevToolsReply, Error>) { self.continuation = continuation }
-        func finish(_ result: Result<DevToolsReply, Error>) {
-            continuation?.resume(with: result)
-            continuation = nil
-        }
-    }
 
     /// One DevTools call. `timeout` nil waits for the answer however long the
     /// browser takes to exist; closing the view still answers it.
@@ -284,26 +314,9 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         guard ChromiumRuntime.shared.isRunning else {
             throw BrowserAutomationError.script("Chrome is not running, so \(method) cannot be sent")
         }
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<DevToolsReply, Error>) in
-            let pending = PendingReply(continuation)
-            browserView.sendDevToolsMethod(method, params: params) { result, error in
-                MainActor.assumeIsolated {
-                    if let result {
-                        pending.finish(.success(DevToolsReply(value: result)))
-                    } else {
-                        let message = error?.localizedDescription ?? "\(method) failed"
-                        pending.finish(.failure(BrowserAutomationError.script(message)))
-                    }
-                }
-            }
-            guard let timeout else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
-                MainActor.assumeIsolated {
-                    pending.finish(.failure(BrowserAutomationError.script(
-                        "Chrome did not answer \(method) within \(Int(timeout)) seconds")))
-                }
-            }
-        }.value
+        return try await browserView.devToolsCall(method, params, timeout: timeout) {
+            BrowserAutomationError.script($0)
+        }
     }
 
     private func sendIgnoringResult(
@@ -314,7 +327,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
             if let error {
                 logger.error("\(method, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
             } else if let handle, let result {
-                let reply = DevToolsReply(value: result)
+                let reply = ChromiumDevToolsReply(value: result)
                 MainActor.assumeIsolated { handle(reply.value) }
             }
         }
@@ -493,6 +506,29 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
     }
 
     public func chromiumBrowserView(
+        _ view: ChromiumBrowserView, refusalForNavigationTo address: String
+    ) -> String? {
+        guard let url = URL(string: address),
+              let refusal = ChromeNavigationPolicy.refusal(for: url, isPrivate: options.isPrivate)
+        else { return nil }
+        // After the callback returns: Chromium is mid-navigation until then.
+        DispatchQueue.main.async { [weak self] in self?.showRefusal(refusal, address: address) }
+        return refusal
+    }
+
+    /// A refused navigation leaves the page where it was. The page is in
+    /// Chrome's own window, over this view, so the sentence is the pane's to
+    /// show, in its bar.
+    private func showRefusal(_ sentence: String, address: String) {
+        logger.info("chrome pane refused \(address, privacy: .public)")
+        // A refused load never starts, so nothing else ends `load(_:)`'s flag.
+        refusalSubject.send(sentence)
+        if !browserView.isLoading { setMainFrameLoading(false) }
+        let error = ChromeNavigationPolicy.refusalError(sentence, address: address)
+        delegate?.browserEngine(self, didFailNavigationWith: error)
+    }
+
+    public func chromiumBrowserView(
         _ view: ChromiumBrowserView, didFailLoadWithMessage message: String, address: String
     ) {
         setMainFrameLoading(false)
@@ -574,6 +610,17 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
             return nil
         }
         return popup.browserView
+    }
+
+    /// A link the person opened in a new tab or window goes to the host as a
+    /// tab of its own (not a popup: Chrome gives it no opener). With pop-ups
+    /// blocked, only one the person asked for opens.
+    public func chromiumBrowserView(
+        _ view: ChromiumBrowserView, openTabForAddress address: String, background: Bool, userGesture: Bool
+    ) {
+        if settings.get(UserSettings.browserBlocksPopups) && !userGesture { return }
+        guard let url = URL(string: address) else { return }
+        _ = delegate?.browserEngine(self, didRequestTabFor: url, inBackground: background)
     }
 
     /// The page closed its own window. Chromium's browser is gone with it, so
@@ -731,25 +778,44 @@ extension ChromiumBrowserEngine {
         return delivered
     }
 
-    /// The window is key and the first responder is in the page.
+    /// The page's window is key and its first responder is a view in it.
     private var pageHasFocus: Bool {
-        guard let window = browserView.window, window.isKeyWindow else { return false }
+        guard let window = browserView.browserWindow, window.isKeyWindow else { return false }
         return holdsFirstResponder
     }
 
+    /// The page holds the first responder: Chromium's render view or a view
+    /// inside it. Chrome's toolbar and omnibox are the pane's address bar
+    /// and chrome, which the gate leaves alone, so a key typed into them is
+    /// never the page's.
     private var holdsFirstResponder: Bool {
-        guard let responder = browserView.window?.firstResponder as? NSView else { return false }
-        return responder === browserView || responder.isDescendant(of: browserView)
+        guard let page = browserView.pageView,
+              let responder = browserView.browserWindow?.firstResponder as? NSView else { return false }
+        return responder.isDescendant(of: page)
     }
 
-    /// Whether the window's event at `event`'s location lands on the page:
-    /// the frontmost view under it is Chromium's, so a popover or sheet over
-    /// the page keeps its own clicks.
+    /// Whether `window` is Chrome's window or one stacked on it (an
+    /// extension popup, the omnibox dropdown), found through its
+    /// `parent` chain. A sheet or popover of the project window is in
+    /// none of them, so it keeps its own events.
+    private func isPageWindow(_ window: NSWindow?) -> Bool {
+        guard let page = browserView.browserWindow else { return false }
+        var next = window
+        while let candidate = next {
+            if candidate === page { return true }
+            next = candidate.parent
+        }
+        return false
+    }
+
+    /// Whether `event` lands on the page: in Chrome's window, inside the
+    /// render view's frame. Chrome's toolbar, its omnibox and the windows
+    /// stacked on Chrome's (the omnibox dropdown, an extension's popup) are
+    /// the pane's chrome, never gated, as the pane promises.
     private func isOverPage(_ event: NSEvent) -> Bool {
-        guard let window = browserView.window, event.window === window,
-              let frame = window.contentView?.superview ?? window.contentView,
-              let hit = frame.hitTest(event.locationInWindow) else { return false }
-        return hit === browserView || hit.isDescendant(of: browserView)
+        guard let window = browserView.browserWindow, event.window === window,
+              let page = browserView.pageView else { return false }
+        return page.convert(page.bounds, to: nil).contains(event.locationInWindow)
     }
 
     private static let monitoredEvents: NSEvent.EventTypeMask = [
@@ -778,7 +844,7 @@ extension ChromiumBrowserEngine {
     }
 
     private func filter(_ event: NSEvent) -> NSEvent? {
-        guard let window = browserView.window, event.window === window else { return event }
+        guard isPageWindow(event.window) else { return event }
         switch event.type {
         case .keyDown, .keyUp, .flagsChanged:
             return filterKey(event)
@@ -793,11 +859,7 @@ extension ChromiumBrowserEngine {
             return gateMouse(event, applies: applies)
         case .scrollWheel, .magnify, .rotate, .swipe, .smartMagnify, .pressure:
             return gateMouse(event, applies: isOverPage(event))
-        case .mouseEntered, .mouseExited:
-            guard let owner = event.trackingArea?.owner as? NSView,
-                  owner === browserView || owner.isDescendant(of: browserView) else { return event }
-            return decide(.pointer, Self.name(of: event), synthesized: false) ? event : nil
-        case .mouseMoved, .cursorUpdate:
+        case .mouseEntered, .mouseExited, .mouseMoved, .cursorUpdate:
             guard isOverPage(event) else { return event }
             return decide(.pointer, Self.name(of: event), synthesized: false) ? event : nil
         default:
@@ -823,7 +885,9 @@ extension ChromiumBrowserEngine {
             return event
         }
         if event.type == .keyDown, event.modifierFlags.contains(.command), !Self.isEditingShortcut(event) {
-            _ = NSApp.mainMenu?.performKeyEquivalent(with: event)
+            // The same path as Chrome's forwarded shortcuts: the project
+            // window is made key first, or Close Pane would miss the pane.
+            browserView.forwardShortcutToMenu(event)
         }
         return nil
     }

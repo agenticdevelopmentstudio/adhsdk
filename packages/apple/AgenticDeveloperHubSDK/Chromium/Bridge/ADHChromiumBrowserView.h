@@ -57,15 +57,28 @@ NS_SWIFT_NAME(ChromiumBrowserViewDelegate) NS_SWIFT_UI_ACTOR
                        camera:(BOOL)camera
                    microphone:(BOOL)microphone
                    completion:(void (^)(NSNumber *_Nullable allowed))completion;
+/// Why `address` may not load in the main frame, or nil to load it. Asked
+/// before every main-frame navigation, redirects too; a refusal cancels the
+/// navigation, and showing the sentence is the delegate's.
+- (nullable NSString *)chromiumBrowserView:(ADHChromiumBrowserView *)view
+                    refusalForNavigationTo:(NSString *)address;
 /// The page asked for a new window for `address` (empty for a script's
-/// blank `window.open()`). Answer a view made with `initPopupWithFrame:` —
-/// already in a window, or about to be, since CEF parents the popup's
-/// browser to it — and Chromium opens the popup into it, tied to this page
+/// blank `window.open()`). Answer a view made with `initPopupWithFrame:`
+/// and Chromium opens the popup into a Chrome window of that view's, kept
+/// over it like any pane's page, tied to this page
 /// so `window.opener` works and sharing its session. nil refuses the window.
 /// Asked synchronously, from inside Chromium's popup decision.
 - (nullable ADHChromiumBrowserView *)chromiumBrowserView:(ADHChromiumBrowserView *)view
                                      popupViewForAddress:(NSString *)address
                                              userGesture:(BOOL)userGesture;
+/// The person asked for `address` somewhere other than this page: Chrome's
+/// Open Link in New Tab or New Window, a middle- or Command-click.
+/// `background` is a tab that should not come forward. The browser makes
+/// no window of its own for it; a pane opens it as a tab, or drops it.
+- (void)chromiumBrowserView:(ADHChromiumBrowserView *)view
+         openTabForAddress:(NSString *)address
+                background:(BOOL)background
+               userGesture:(BOOL)userGesture;
 /// The page closed itself (`window.close()`); the browser is gone. Not sent
 /// for a `close` the host asked for.
 - (void)chromiumBrowserViewDidClose:(ADHChromiumBrowserView *)view;
@@ -105,19 +118,35 @@ NS_SWIFT_NAME(ChromiumBrowserOptions)
 /// With an empty `cachePath`, the in-memory store the browser shares with
 /// every other browser on the same session; nil gives it one of its own.
 @property (nonatomic, strong, nullable) ADHChromiumEphemeralSession *ephemeralSession;
-/// Whether cookies are sent and saved when the browser is created.
+/// Whether cookies are sent and saved when the browser is created. A
+/// shown browser also makes this its profile's store-wide cookie default; a
+/// `hidden` one applies it to its own requests only and leaves the
+/// profile's default alone.
 @property (nonatomic) BOOL acceptsCookies;
 /// Points; 0 keeps Chromium's own.
 @property (nonatomic) NSInteger minimumFontSize;
 /// The colour behind a page that paints none, so a blank page is the theme's.
 @property (nonatomic, copy, nullable) NSColor *backgroundColor;
+/// Whether Chrome's own toolbar (address bar, extension buttons, menu) sits
+/// above the page. YES by default.
+@property (nonatomic) BOOL showsToolbar;
+/// A private pane's browser: Chrome's extension menu items are hidden, since
+/// its in-memory profile has no extensions. NO by default.
+@property (nonatomic) BOOL isPrivate;
+/// A browser that is never shown: created without a window to sit in and
+/// never attached to one. For a page driven only through DevTools. NO by
+/// default.
+@property (nonatomic) BOOL hidden;
 @end
 
-/// An `NSView` holding one Chromium browser.
+/// An `NSView` standing in for one Chrome-style Chromium browser.
 ///
-/// The browser is created the first time the view is in a window, since CEF
-/// needs a real parent view; anything asked of it before then is queued
-/// (`load`) or answered from what is known (`address` is nil).
+/// The browser draws in a window of its own (`browserWindow`), which this
+/// view keeps exactly over itself as a child of its window, and out of sight
+/// whenever this view cannot be seen. It is created the first time the view
+/// is in a window (at once, for a `hidden` browser); anything asked of it
+/// before then is queued (`load`) or answered from what is known (`address`
+/// is nil).
 NS_SWIFT_NAME(ChromiumBrowserView) NS_SWIFT_UI_ACTOR
 @interface ADHChromiumBrowserView : NSView
 
@@ -138,6 +167,17 @@ NS_SWIFT_NAME(ChromiumBrowserView) NS_SWIFT_UI_ACTOR
 @property (nonatomic, readonly) BOOL canGoForward;
 /// Whether the browser exists yet.
 @property (nonatomic, readonly) BOOL hasBrowser;
+/// The Chrome window the page and Chrome's toolbar draw in: a frameless child
+/// of this view's window, kept over this view. nil before the browser exists.
+@property (nonatomic, readonly, nullable) NSWindow *browserWindow;
+/// Points from the top of `browserWindow` to the top of the page, which is
+/// the height of Chrome's toolbar; 0 before the browser exists.
+@property (nonatomic, readonly) CGFloat toolbarHeight;
+/// The view the page draws into and takes keys in: Chromium's render view in
+/// `browserWindow`, below Chrome's toolbar. Everything else in that window
+/// (the toolbar, the omnibox) is Chrome's, not the page's. nil before the
+/// browser exists.
+@property (nonatomic, readonly, nullable) NSView *pageView;
 
 - (void)loadAddress:(NSString *)address;
 - (void)goBack;
@@ -153,7 +193,8 @@ NS_SWIFT_NAME(ChromiumBrowserView) NS_SWIFT_UI_ACTOR
 /// request.
 @property (nonatomic) ADHChromiumThirdPartyBlocking thirdPartyBlocking;
 
-/// Whether the context menu offers Inspect Element.
+/// Whether DevTools can be opened: the context menu's Inspect and Chrome's
+/// DevTools menu items and shortcuts are there only while this is YES.
 @property (nonatomic) BOOL allowsDevTools;
 - (void)showDevTools;
 
@@ -173,8 +214,37 @@ NS_SWIFT_NAME(ChromiumBrowserView) NS_SWIFT_UI_ACTOR
                 completion:(void (^)(NSDictionary<NSString *, id> *_Nullable result,
                                      NSError *_Nullable error))completion;
 
+/// Accepts the first confirmation dialog Chrome opens over this browser
+/// within `timeout` seconds, pressing its accept button through
+/// accessibility (a never-shown dialog ignores keys). For a `hidden` browser
+/// only, whose dialogs nobody can see, and only after the person has been
+/// asked the same question: Chrome confirms every uninstall a page asks for,
+/// and has no way to skip that. Arming it again replaces the earlier one.
+- (void)acceptNextDialogWithin:(NSTimeInterval)timeout;
+/// Disarms `acceptNextDialogWithin:`: the call it was armed for is over,
+/// and whatever dialog opens next was never asked of the person.
+- (void)stopAcceptingDialogs;
+
 /// Closes the browser and drops every callback; the view is not used again.
 - (void)close;
+
+/// Focuses the pane with the keys in Chrome's address bar rather than the
+/// page: this view becomes its window's first responder, and the omnibox
+/// takes the focus once the page window can take the keys.
+- (void)focusLocationBar;
+
+/// Hands a Command shortcut to the main menu with the project window key
+/// first, so menu items that target the responder chain (Close Pane and the
+/// like) find the pane's window, not Chrome's. Never activates the app.
+- (void)forwardShortcutToMenu:(NSEvent *)event NS_SWIFT_NAME(forwardShortcutToMenu(_:));
+
+/// Says that the project window `window` is drawing something over its panes
+/// (Arrange mode), or has stopped. A page is a window of its own above the
+/// project window, so nothing the project window draws can cover it: while
+/// covered, every Chrome page over `window`'s panes steps out of sight, and
+/// a page that had the keys hands them back to `window`.
++ (void)setPagesCovered:(BOOL)covered inWindow:(NSWindow *)window
+    NS_SWIFT_NAME(setPagesCovered(_:in:));
 
 @end
 

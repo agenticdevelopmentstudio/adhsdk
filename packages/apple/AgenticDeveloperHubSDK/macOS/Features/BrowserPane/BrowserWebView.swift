@@ -23,6 +23,16 @@ public final class BrowserWebView: LiveResizingWebView {
     /// typed. The pane's event log (spec section 12) reads this.
     public var onInputDecision: ((BrowserInputChannel, String, Bool, Bool, String) -> Void)?
 
+    /// Offered every key equivalent the page could have, before WebKit: a
+    /// web extension's keyboard command (`commands` in its manifest) answers
+    /// true when it ran one. Set by a Safari pane with web extensions.
+    public var performsExtensionCommand: ((NSEvent) -> Bool)?
+
+    /// The page's context menu items web extensions add
+    /// (`contextMenus`/`menus`), appended under WebKit's own when the menu
+    /// opens. Set by a Safari pane with web extensions.
+    public var extensionMenuItems: (() -> [NSMenuItem])?
+
     private var automationDepth = 0
 
     /// Runs `body` with every event it delivers marked as the agent's.
@@ -83,7 +93,17 @@ public final class BrowserWebView: LiveResizingWebView {
     /// the rest go to WebKit untouched, as they would without this subclass.
     public override func performKeyEquivalent(with event: NSEvent) -> Bool {
         guard holdsFirstResponder else { return super.performKeyEquivalent(with: event) }
-        return allows("performKeyEquivalent", key: event) ? super.performKeyEquivalent(with: event) : false
+        guard allows("performKeyEquivalent", key: event) else { return false }
+        if performsExtensionCommand?(event) == true { return true }
+        return super.performKeyEquivalent(with: event)
+    }
+
+    /// WebKit's menu with the extensions' items after it, behind a separator.
+    public override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
+        super.willOpenMenu(menu, with: event)
+        guard let items = extensionMenuItems?(), !items.isEmpty else { return }
+        menu.addItem(.separator())
+        items.forEach(menu.addItem)
     }
 
     // MARK: - Mouse (back and forward swipes follow it)

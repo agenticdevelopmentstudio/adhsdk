@@ -115,6 +115,10 @@ open class WebBrowserPaneViewController: NSViewController {
     private var isInstallingTabs = false
 
     private let makeEngine: EngineFactory
+    /// Told about every tab the pane opens, brings forward, changes and
+    /// closes, so something that keeps its own list of the pane's tabs (the
+    /// Safari pane's web extensions) stays in step with the bar.
+    weak var tabObserver: BrowserPaneTabObserver?
     /// Told about each engine a rebuild makes, after the pane has wired it,
     /// so a subclass can carry its own per-engine state (a test seam) over.
     var onEngineMade: ((BrowserEngine) -> Void)?
@@ -132,6 +136,11 @@ open class WebBrowserPaneViewController: NSViewController {
     public let paneContext: BrowserPaneContext
     /// The pane's own layered settings, when the factory built it with one.
     public var paneSettings: LayeredSettingsStore? { settings as? LayeredSettingsStore }
+    /// The engine's own maintenance, which the pane's settings sheet hands
+    /// its engine topics: the Chrome pane sets it, so its sheet can show the
+    /// engine's version and manage its jar's extensions. `nil` for a Safari
+    /// pane, whose topics need none.
+    public var engineMaintenance: BrowserEngineMaintenance?
     /// Whether the user has paused this pane's events (Pause Events, spec
     /// section 7). Set only through `setEventsPaused(_:)`, so the gate, the
     /// shield and the badge always move with it. Not persisted: a relaunch
@@ -214,10 +223,25 @@ open class WebBrowserPaneViewController: NSViewController {
         return automation
     }
 
-    private weak var addressBar: NSView?
+    private(set) weak var addressBar: NSStackView?
+    /// The badges' `isHidden`, followed so a bar left with nothing to show
+    /// gives its space back (`refreshBarInsets`).
+    private var badgeObservations: [NSKeyValueObservation] = []
     let newTabButton = NSButton()
     let drivenBadge = BrowserDrivenBadge()
     let pausedBadge = BrowserPausedBadge()
+    /// Why the last navigation was refused, until the next one starts. A
+    /// refused navigation leaves the page as it was, so without it the
+    /// address the user typed would seem to have been ignored.
+    let refusalNotice: NSTextField = {
+        let label = NSTextField(labelWithString: "")
+        label.textColor = .secondaryLabelColor
+        label.lineBreakMode = .byTruncatingTail
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setAccessibilityIdentifier("browser.refusal")
+        label.isHidden = true
+        return label
+    }()
     let addressField = NSTextField()
     let backButton = NSButton()
     let forwardButton = NSButton()
@@ -231,6 +255,8 @@ open class WebBrowserPaneViewController: NSViewController {
     private var pageHeldFirstResponder: Bool?
     /// The pane's window's key and occlusion notifications, for the log.
     private var windowObservers: [NSObjectProtocol] = []
+    /// Key and resign-key of the engine's page window (`observePageWindow`).
+    private var pageWindowObservers: [NSObjectProtocol] = []
     /// The settings subscriptions; made again with every engine.
     private var cancellables: Set<AnyCancellable> = []
 
@@ -578,6 +604,7 @@ open class WebBrowserPaneViewController: NSViewController {
             // when capture is now off.
             let made = makeEngine(configuration(
                 consoleLog: capturesConsole ? consoleLogs[index] : BrowserConsoleLog()))
+            let old = tab.engine
             tab.engine = made
             tab.storedTitle = titles[index]
             tab.resetVisit()
@@ -585,6 +612,7 @@ open class WebBrowserPaneViewController: NSViewController {
             tab.openedByPage = false
             wireEngine(made)
             onEngineMade?(made)
+            tabObserver?.pane(self, didReplaceTab: old, with: made)
             tab.content.show(made.view)
             // The tab in front loads now (below); the others when brought
             // forward. A tab that was on nothing comes back on nothing.
@@ -662,6 +690,8 @@ open class WebBrowserPaneViewController: NSViewController {
         configureButton(reloadButton, symbol: "arrow.clockwise", label: "Reload", action: #selector(reload))
         configureButton(newTabButton, symbol: "plus", label: "New Tab", action: #selector(newTab(_:)))
         newTabButton.setAccessibilityIdentifier("browser.newtab")
+        // Among tabs, a bare glyph, as a browser draws its new-tab control.
+        newTabButton.isBordered = false
 
         addressField.placeholderString = "Enter an address"
         addressField.target = self
@@ -676,16 +706,24 @@ open class WebBrowserPaneViewController: NSViewController {
         addressField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         let bar = NSStackView(views: [
-            backButton, forwardButton, reloadButton, addressField, pausedBadge, drivenBadge, newTabButton
+            backButton, forwardButton, reloadButton, addressField, refusalNotice, pausedBadge, drivenBadge
         ])
         bar.orientation = .horizontal
         bar.alignment = .centerY
         bar.spacing = 4
-        bar.edgeInsets = NSEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
+        bar.edgeInsets = Self.barInsets
         bar.translatesAutoresizingMaskIntoConstraints = false
+        // A hidden control gives back its space, so a bar whose engine draws
+        // its own toolbar is only as wide and tall as the badges it shows.
+        bar.detachesHiddenViews = true
 
         root.addSubview(bar)
         addressBar = bar
+        badgeObservations = [pausedBadge, drivenBadge, refusalNotice].map { badge in
+            badge.observe(\.isHidden) { [weak self] _, _ in
+                MainActor.assumeIsolated { self?.refreshBarInsets() }
+            }
+        }
         NSLayoutConstraint.activate([
             bar.topAnchor.constraint(equalTo: root.topAnchor),
             bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
@@ -694,10 +732,36 @@ open class WebBrowserPaneViewController: NSViewController {
         installTabStrip(below: bar)
     }
 
+    /// Hides the pane's navigation controls when the engine draws its own
+    /// toolbar (Chrome's, with the extension actions on it): two address
+    /// bars would be one too many. The badges stay, since only the pane
+    /// knows it is paused or being driven.
+    private func applyToolbarOwnership() {
+        let hidden = engine.providesOwnToolbar
+        [backButton, forwardButton, reloadButton, addressField].forEach { $0.isHidden = hidden }
+        refreshBarInsets()
+    }
+
+    private static let barInsets = NSEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
+
+    /// A bar with nothing visible in it collapses to nothing, insets
+    /// included, so the page starts at the top of the pane.
+    private func refreshBarInsets() {
+        guard let bar = addressBar else { return }
+        let showsAnything = bar.arrangedSubviews.contains { !$0.isHidden }
+        bar.edgeInsets = showsAnything ? Self.barInsets : NSEdgeInsets()
+    }
+
     /// Puts the tab bar and the page area under the address bar, with every
     /// tab in it and the remembered one in front.
     private func installTabStrip(below bar: NSView) {
+        // Every tab's engine is the same kind, so whether the pane's own
+        // navigation controls show is decided once, here.
+        applyToolbarOwnership()
         addChild(tabStrip)
+        // The + leads the tab row, the way a browser's new-tab control sits
+        // with the tabs it adds to.
+        tabStrip.setLeadingAccessory(newTabButton, for: .top)
         let strip = tabStrip.view
         strip.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(strip)
@@ -739,6 +803,7 @@ open class WebBrowserPaneViewController: NSViewController {
         BrowserPaneFocus.shared.note(self)
         observeFirstResponder()
         observeWindow()
+        observePageWindow()
     }
 
     open override func viewDidDisappear() {
@@ -747,12 +812,46 @@ open class WebBrowserPaneViewController: NSViewController {
         pageHeldFirstResponder = nil
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
         windowObservers = []
+        pageWindowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        pageWindowObservers = []
     }
 
-    /// Whether `responder` is the page: the engine's view or a view inside it.
+    /// Whether `responder` is the page: the engine's view or a view inside it,
+    /// or, for an engine whose page has a window of its own, that window
+    /// being key, since its responders are never the pane window's.
     private func pageHolds(_ responder: NSResponder?) -> Bool {
+        if engine.pageWindow?.isKeyWindow == true { return true }
         guard let view = responder as? NSView else { return false }
         return view === engine.view || view.isDescendant(of: engine.view)
+    }
+
+    /// Follows the key-ness of the engine's own page window, when it has
+    /// one: clicking into a Chrome pane makes Chrome's window key, never the
+    /// pane window's first responder. Observed for every window and matched
+    /// on arrival, because the page window comes after the pane appears and
+    /// changes with each engine rebuild.
+    private func observePageWindow() {
+        pageWindowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        let center = NotificationCenter.default
+        pageWindowObservers = [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification].map { name in
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                let window = note.object as? NSWindow
+                MainActor.assumeIsolated {
+                    guard let self, let window, window === self.engine.pageWindow else { return }
+                    self.pageWindowKeyDidChange(isKey: name == NSWindow.didBecomeKeyNotification)
+                }
+            }
+        }
+    }
+
+    private func pageWindowKeyDidChange(isKey: Bool) {
+        if isKey != pageHeldFirstResponder {
+            pageHeldFirstResponder = isKey
+            eventLog.record(
+                channel: "window", event: "firstResponder", decision: .info,
+                detail: isKey ? "page" : "outside the page")
+        }
+        if isKey { BrowserPaneFocus.shared.note(self) }
     }
 
     private func observeFirstResponder() {
@@ -930,10 +1029,15 @@ open class WebBrowserPaneViewController: NSViewController {
         // screen (a popup brought forward from code). A click on the strip has
         // already taken the old page out of the window by the time this runs,
         // and AppKit hands the focus to the window itself — which is why a
-        // free focus also counts as the page's, below.
+        // free focus also counts as the page's, below. A Chrome page keeps
+        // its engine view the project window's first responder while it has
+        // the keys in its own window (`ADHChromeWindowTracker`), so the same
+        // two cases cover it.
         let responderWasInPage = pageHolds(viewIfLoaded?.window?.firstResponder)
+        let previous = activeTab === tab ? nil : activeTab.engine
         activeTab = tab
         engine = tab.engine
+        tabObserver?.pane(self, didActivateTab: tab.engine, previous: previous)
         builtAutomation?.retarget(to: engine, console: engine.consoleLog)
         // A half-typed address was meant for the tab being left — unless the
         // tab came forward by itself (a popup), when the typing stays.
@@ -970,10 +1074,12 @@ open class WebBrowserPaneViewController: NSViewController {
     }
 
     /// Adds a tab for `engine`, wired, after `opener`'s tab (else at the end),
-    /// and brings it forward. Returns the tab.
+    /// and brings it forward unless `inBackground`, where it waits with its
+    /// page pending until it is chosen. Returns the tab.
     @discardableResult
     private func addTab(
-        engine tabEngine: BrowserEngine, after opener: BrowserTab?, pendingURL: URL?, openedByPage: Bool = false
+        engine tabEngine: BrowserEngine, after opener: BrowserTab?, pendingURL: URL?,
+        inBackground: Bool = false, openedByPage: Bool = false
     ) -> BrowserTab {
         let tab = BrowserTab(engine: tabEngine, pendingURL: pendingURL, storedTitle: nil)
         wireEngine(tabEngine)
@@ -982,9 +1088,14 @@ open class WebBrowserPaneViewController: NSViewController {
         onEngineMade?(tabEngine)
         let index = opener.flatMap { opener in tabs.firstIndex { $0 === opener } }.map { $0 + 1 } ?? tabs.count
         tabs.insert(tab, at: index)
+        tabObserver?.pane(self, didAddTab: tabEngine)
         // The strip's tab order is the pane's: insert at the same place.
         tabStrip.insertTab(
             .init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content), at: index, on: .top)
+        if inBackground {
+            persistTabs()
+            return tab
+        }
         // The strip may call `activate` itself from `selectTab`; the flag
         // covers both routes in.
         isActivatingPopup = openedByPage
@@ -994,13 +1105,63 @@ open class WebBrowserPaneViewController: NSViewController {
         return tab
     }
 
-    /// A new tab on the Home Page, with the address field ready to type in.
-    /// The plus button and File > New Tab both land here.
+    /// A new tab on the Home Page, with the address field ready to type in:
+    /// the pane's own, or the engine's when it draws its own toolbar and the
+    /// pane's is hidden. The plus button and File > New Tab both land here.
     @objc public func newTab(_ sender: Any?) {
         guard !isDiscarded else { return }
         let home = BrowserSettings.homePage(in: settings) ?? fallbackHomeURL
         addTab(engine: makeEngine(currentConfiguration), after: nil, pendingURL: home)
-        view.window?.makeFirstResponder(addressField)
+        if engine.providesOwnToolbar {
+            engine.focusOwnAddressBar()
+        } else {
+            view.window?.makeFirstResponder(addressField)
+        }
+    }
+
+    /// Opens `url` in a new tab after the one in front and brings it forward,
+    /// leaving the page in front where it was: a host's page for a pane that
+    /// is already showing something of the person's.
+    public func openInNewTab(_ url: URL) {
+        guard !isDiscarded else { return }
+        addTab(engine: makeEngine(currentConfiguration), after: activeTab, pendingURL: url)
+    }
+
+    /// Every tab's engine, in bar order.
+    public var tabEngines: [BrowserEngine] { tabs.map(\.engine) }
+
+    /// Opens a tab on `url` (a blank page for nil) after the one in front,
+    /// in front unless `inBackground`, and returns its engine: what a web
+    /// extension's `tabs.create` gets back.
+    @discardableResult
+    public func openTab(_ url: URL?, inBackground: Bool) -> BrowserEngine? {
+        guard !isDiscarded else { return nil }
+        let tab = addTab(engine: makeEngine(currentConfiguration), after: activeTab,
+                         pendingURL: url ?? Self.blankPage, inBackground: inBackground)
+        return tab.engine
+    }
+
+    /// Brings the tab `engine` renders forward, through the strip, as a
+    /// click on it would.
+    public func activateTab(engine tabEngine: BrowserEngine) {
+        guard let tab = tab(for: tabEngine) else { return }
+        tabStrip.selectTab(id: tab.id, on: .top)
+        if activeTab !== tab { activate(tab) }
+    }
+
+    /// Closes the tab `engine` renders, as its close button would; the last
+    /// tab goes back to a blank page.
+    public func closeTab(engine tabEngine: BrowserEngine) {
+        guard let tab = tab(for: tabEngine) else { return }
+        closeTab(tab)
+    }
+
+    /// Puts `accessory` in the bar after the address field, ahead of the
+    /// badges: a Safari pane's extension buttons.
+    public func addToolbarAccessory(_ accessory: NSView) {
+        loadViewIfNeeded()
+        guard let bar = addressBar, let index = bar.arrangedSubviews.firstIndex(of: addressField) else { return }
+        bar.insertArrangedSubview(accessory, at: index + 1)
     }
 
     /// Closes `tab`. The last tab is never closed: it goes back to a blank
@@ -1028,6 +1189,7 @@ open class WebBrowserPaneViewController: NSViewController {
         if tab === activeTab, let opener = tab.opener, opener !== tab, tabs.contains(where: { $0 === opener }) {
             tabStrip.selectTab(id: opener.id, on: .top)
         }
+        tabObserver?.pane(self, willCloseTab: tab.engine)
         // Out of the list first, so any neighbour the strip brings forward is
         // activated with this one already gone.
         tabs.removeAll { $0 === tab }
@@ -1039,11 +1201,13 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// A fresh engine in `tab`, made and wired as every other is.
     private func replaceEngine(of tab: BrowserTab) {
+        let old = tab.engine
         tab.engine.delegate = nil
         tab.engine.teardown()
         tab.engine.view.removeFromSuperview()
         let made = makeEngine(currentConfiguration)
         tab.engine = made
+        tabObserver?.pane(self, didReplaceTab: old, with: made)
         tab.resetVisit()
         wireEngine(made)
         made.applyCookiePolicy(
@@ -1110,6 +1274,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     public func browserEngineTitleDidChange(_ engine: BrowserEngine) {
         guard let tab = tab(for: engine) else { return }
         retitle(tab)
+        tabObserver?.pane(self, tabDidChange: engine)
         if let visitID = tab.currentVisitID, let title = engine.title, !title.isEmpty {
             file(title, againstVisit: visitID)
         }
@@ -1119,6 +1284,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     }
 
     public func browserEngineAddressDidChange(_ engine: BrowserEngine) {
+        if tab(for: engine) != nil { tabObserver?.pane(self, tabDidChange: engine) }
         guard isFront(engine), let url = engine.url else { return }
         // A field being edited is the user's; overwriting it mid-keystroke
         // because a redirect landed would throw away what they typed. A field
@@ -1144,6 +1310,8 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     /// onto the previous page's row.
     public func browserEngineDidStartNavigation(_ engine: BrowserEngine) {
         tab(for: engine)?.currentVisitID = nil
+        if tab(for: engine) != nil { tabObserver?.pane(self, tabDidChange: engine) }
+        if isFront(engine) { refusalNotice.isHidden = true }
         recordNavigation("start", of: engine)
     }
 
@@ -1164,7 +1332,10 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     }
 
     public func browserEngineDidFinishNavigation(_ engine: BrowserEngine) {
-        if let tab = tab(for: engine) { recordVisit(in: tab) }
+        if let tab = tab(for: engine) {
+            recordVisit(in: tab)
+            tabObserver?.pane(self, tabDidChange: engine)
+        }
         recordNavigation("finish", of: engine)
         persistTabs()
         guard isFront(engine) else { return }
@@ -1172,6 +1343,10 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
     }
 
     public func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error) {
+        if isFront(engine), (error as NSError).domain == ChromeNavigationPolicy.errorDomain {
+            refusalNotice.stringValue = error.localizedDescription
+            refusalNotice.isHidden = false
+        }
         recordNavigation("fail", of: engine, error: error)
     }
 
@@ -1186,6 +1361,16 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         tab.opener = opener
         tab.openedByPage = true
         eventLog.record(channel: "navigation", event: "popup", decision: .info, detail: engine.url?.host ?? "")
+        return true
+    }
+
+    /// A link the person opened in a new tab or window: a tab of its own
+    /// beside the page's, on the pane's jar and privacy like the plus
+    /// button's, with no opener (Chrome gives the page none).
+    public func browserEngine(_ engine: BrowserEngine, didRequestTabFor url: URL, inBackground: Bool) -> Bool {
+        guard !isDiscarded, let opener = tab(for: engine) else { return false }
+        addTab(engine: makeEngine(currentConfiguration), after: opener, pendingURL: url, inBackground: inBackground)
+        eventLog.record(channel: "navigation", event: "new-tab", decision: .info, detail: url.host ?? "")
         return true
     }
 
@@ -1488,6 +1673,9 @@ extension WebBrowserPaneViewController: PaneContentTeardown {
         cancellables.removeAll()
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
         windowObservers = []
+        pageWindowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        pageWindowObservers = []
+        tabObserver?.paneWillBeDiscarded(self)
         for tab in tabs {
             tab.engine.delegate = nil
             tab.engine.teardown()
@@ -1626,4 +1814,22 @@ struct StoredBrowserTab: Codable, Equatable {
     /// `nil` for a blank page.
     var url: String?
     var title: String?
+}
+
+/// What `WebBrowserPaneViewController.tabObserver` is told: each change to
+/// the pane's tabs, by engine, as it happens.
+@MainActor
+protocol BrowserPaneTabObserver: AnyObject {
+    /// A tab was added to the list, before it is brought forward.
+    func pane(_ pane: WebBrowserPaneViewController, didAddTab engine: BrowserEngine)
+    /// A tab is about to leave the list.
+    func pane(_ pane: WebBrowserPaneViewController, willCloseTab engine: BrowserEngine)
+    /// The tab in front changed; `previous` is nil the first time.
+    func pane(_ pane: WebBrowserPaneViewController, didActivateTab engine: BrowserEngine, previous: BrowserEngine?)
+    /// A tab got a new engine (a jar change, a page that closed itself).
+    func pane(_ pane: WebBrowserPaneViewController, didReplaceTab old: BrowserEngine, with new: BrowserEngine)
+    /// A tab's title, address or loading state changed.
+    func pane(_ pane: WebBrowserPaneViewController, tabDidChange engine: BrowserEngine)
+    /// The pane is going away with every tab in it.
+    func paneWillBeDiscarded(_ pane: WebBrowserPaneViewController)
 }

@@ -58,6 +58,68 @@ public final class SafariBrowserPaneViewController: WebBrowserPaneViewController
 
     private let seams: Seams
 
+    // MARK: - Web extensions
+
+    /// The pane as its profile's extensions see it, and its buttons; nil
+    /// where extensions do not run (before macOS 15.4, a jar kept in memory).
+    private var extensionWindow: AnyObject?
+    private var extensionToolbar: NSView?
+    private var keyObserver: NSObjectProtocol?
+
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        attachExtensions()
+    }
+
+    public override func viewDidAppear() {
+        super.viewDidAppear()
+        if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
+        keyObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification, object: view.window, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.noteExtensionFocus() }
+        }
+        noteExtensionFocus()
+    }
+
+    public override func viewDidDisappear() {
+        super.viewDidDisappear()
+        if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
+        keyObserver = nil
+    }
+
+    private func noteExtensionFocus() {
+        guard #available(macOS 15.4, *), let window = extensionWindow as? SafariExtensionWindow else { return }
+        window.host?.noteFocus(window)
+    }
+
+    private func attachExtensions() {
+        guard #available(macOS 15.4, *), SafariExtensionSupport.isAvailable, !isDiscarded,
+              let host = SafariExtensionHost.runningHost(for: resolvedJar) else { return }
+        let window = SafariExtensionWindow(pane: self, host: host)
+        let toolbar = SafariExtensionToolbar(window: window, host: host)
+        window.toolbar = toolbar
+        window.onHostChange = { [weak self] in self?.reattachExtensions() }
+        tabObserver = window
+        host.register(window)
+        addToolbarAccessory(toolbar)
+        extensionWindow = window
+        extensionToolbar = toolbar
+    }
+
+    /// The pane moved to a jar on another profile: its pages now run that
+    /// profile's extensions, so its window moves to that profile's host.
+    private func reattachExtensions() {
+        if #available(macOS 15.4, *), let window = extensionWindow as? SafariExtensionWindow {
+            window.host?.unregister(window)
+        }
+        tabObserver = nil
+        extensionToolbar?.removeFromSuperview()
+        extensionWindow = nil
+        extensionToolbar = nil
+        attachExtensions()
+    }
+
     /// The WebKit engine under the page; replaced on a rebuild.
     var webKitEngine: WebKitBrowserEngine {
         guard let webKit = engine as? WebKitBrowserEngine else {

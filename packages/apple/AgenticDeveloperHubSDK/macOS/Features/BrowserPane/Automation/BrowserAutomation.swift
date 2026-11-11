@@ -23,9 +23,12 @@ public struct BrowserActionDelta: Sendable {
     public var changed = false
     public var focused: String?
     public var dialog: BrowserDialog?
+    /// The sentence the pane showed for a navigation it refused.
+    public var refusal: String?
 
     public func rendered() -> String {
         var lines: [String] = []
+        if let refusal { lines.append("navigation refused: \(refusal)") }
         if navigated {
             lines.append("navigated to \(url ?? "?") — \(title ?? "")")
         } else {
@@ -119,6 +122,8 @@ public final class BrowserAutomation: NSObject {
     private var driveDepth = 0
     private var pendingDialog: BrowserDialog?
     private var loadObservation: AnyCancellable?
+    private var refusalObservation: AnyCancellable?
+    private var lastRefusal: String?
     private var navigationsStarted = 0
     private var navigationsFinished = 0
 
@@ -149,6 +154,9 @@ public final class BrowserAutomation: NSObject {
                 guard let self else { return }
                 if started { self.navigationsStarted += 1 } else { self.navigationsFinished += 1 }
             }
+        }
+        refusalObservation = driver.navigationRefusals.sink { [weak self] sentence in
+            Task { @MainActor in self?.lastRefusal = sentence }
         }
     }
 
@@ -571,6 +579,7 @@ public final class BrowserAutomation: NSObject {
         let startedBefore = navigationsStarted, finishedBefore = navigationsFinished
         let mutationsBefore = (try? await call("mutations") as? Int) ?? 0
         pendingDialog = nil
+        lastRefusal = nil
         try await body()
         try await Task.sleep(nanoseconds: 300_000_000)
         var delta = BrowserActionDelta()
@@ -589,6 +598,13 @@ public final class BrowserAutomation: NSObject {
         // A #fragment navigation leaves `navigated` false; this URL diff still reports it.
         if currentURL != urlBefore { delta.url = currentURL }
         if currentTitle != titleBefore { delta.title = currentTitle }
+        // A refused navigation never left the page, however the engine's
+        // loading flag moved.
+        if let refusal = lastRefusal {
+            delta.refusal = refusal
+            delta.navigated = false
+            lastRefusal = nil
+        }
         if delta.navigated { delta.url = currentURL; delta.title = currentTitle }
         let mutationsAfter = (try? await call("mutations") as? Int) ?? mutationsBefore
         delta.changed = delta.navigated || mutationsAfter != mutationsBefore

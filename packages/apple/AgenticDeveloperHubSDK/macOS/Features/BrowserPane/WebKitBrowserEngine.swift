@@ -397,6 +397,13 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
             configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
         }
         configuration.websiteDataStore = jar.webKitDataStore
+        // The profile's web extensions run in every page on it. A web view
+        // cannot change controllers once made, so this is the one place.
+        // A private page gets the global profile's, which runs in it only
+        // the extensions allowed in private browsing.
+        if #available(macOS 15.4, *), let host = SafariExtensionHost.runningHost(for: jar) {
+            configuration.webExtensionController = host.controller
+        }
         configuration.upgradeKnownHostsToHTTPS = settings.get(UserSettings.browserUpgradesToHTTPS)
         configuration.allowsAirPlayForMediaPlayback = settings.get(UserSettings.browserAllowsAirPlay)
         configuration.mediaTypesRequiringUserActionForPlayback = switch settings.get(UserSettings.browserAutoplay) {

@@ -154,7 +154,9 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
             + SessionPrivacySettingsPanel.keywords + BrowserMediaPanel.keywords
             + BrowserDownloadsPanel.keywords
             + (showsSafariTopic ? SafariBrowserTopicPanel.keywords : [])
+            + safariExtensionsKeywords
             + (showsChromeTopic ? ChromeBrowserTopicPanel.keywords : [])
+            + (extensionsProfile != nil ? ChromeExtensionsTopicPanel.keywords : [])
             + BrowserResetPanel.keywords
     }
 
@@ -174,7 +176,15 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         if showsSafariTopic {
             addPanel(SafariBrowserTopicPanel(siteData: paneSiteData ?? siteData, binding: binding))
         }
+        if #available(macOS 15.4, *), safariExtensionsAvailable, let profile = safariExtensionsProfile,
+           let host = SafariExtensionHost.host(for: profile) {
+            addPanel(SafariExtensionsTopicPanel(host: host, destination: extensionsDestination, binding: binding))
+        }
         if showsChromeTopic { addPanel(ChromeBrowserTopicPanel(engine: chrome, binding: binding)) }
+        if let chrome, let extensionsProfile {
+            addPanel(ChromeExtensionsTopicPanel(
+                engine: chrome, profile: extensionsProfile, destination: extensionsDestination, binding: binding))
+        }
         addPanel(BrowserResetPanel(binding: binding))
     }
 
@@ -188,9 +198,47 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         return pane.engineKind == .safari
     }
 
+    /// The Safari Extensions topic shows wherever the Safari topic does,
+    /// once the app has said where extensions live, on macOS 15.4 and later.
+    var safariExtensionsAvailable: Bool {
+        showsSafariTopic && SafariExtensionSupport.isAvailable && safariExtensionsProfile != nil
+    }
+
+    private var safariExtensionsKeywords: [String] {
+        guard #available(macOS 15.4, *), safariExtensionsAvailable else { return [] }
+        return SafariExtensionsTopicPanel.keywords
+    }
+
+    /// The profile the Safari Extensions topic lists: the global jar's in the
+    /// Settings window, the pane's jar in its sheet; nil for a jar kept in
+    /// memory, which runs no extensions.
+    var safariExtensionsProfile: BrowserExtensionProfile? {
+        guard let pane = binding.pane else { return .global }
+        return BrowserExtensionProfile(pane.resolvedJar)
+    }
+
     var showsChromeTopic: Bool {
         guard let pane = binding.pane else { return chrome != nil }
         return pane.engineKind == .chrome
+    }
+
+    /// The profile the Extensions topic manages: the global jar's in the
+    /// Settings window, the pane's jar's in a Chrome pane's sheet. `nil`, and
+    /// no topic, without the Chromium engine's maintenance, or for a pane on
+    /// a jar kept in memory (private browsing), which has no extensions.
+    var extensionsProfile: BrowserExtensionProfile? {
+        guard chrome != nil, showsChromeTopic else { return nil }
+        guard let pane = binding.pane else { return .global }
+        return BrowserExtensionProfile(pane.resolvedJar)
+    }
+
+    /// The pane the Extensions topic opens a page (an extension's options,
+    /// the Web Store) beside when the pane is on a jar of its own: the pane
+    /// whose sheet it is. The Settings window lists the global jar, whose
+    /// pages open in the extensions window instead, so it has none.
+    private var extensionsDestination: () -> WebBrowserPaneViewController? {
+        guard let pane = binding.pane else { return { nil } }
+        return { [weak pane] in pane }
     }
 
     // MARK: Cookies and site data, by scope

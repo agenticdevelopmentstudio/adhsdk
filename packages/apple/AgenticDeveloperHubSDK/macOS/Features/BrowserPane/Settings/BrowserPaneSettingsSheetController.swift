@@ -43,7 +43,8 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
         self.panels = BrowserSettingsPanelViewController(
             history: history,
             settings: layered.fallback,
-            scope: .pane(layered, pane)
+            scope: .pane(layered, pane),
+            chrome: pane.engineMaintenance
         )
         super.init(nibName: nil, bundle: nil)
         self.title = Self.title(for: paneTitle)

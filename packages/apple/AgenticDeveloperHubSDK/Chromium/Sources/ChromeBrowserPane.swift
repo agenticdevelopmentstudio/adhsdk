@@ -39,6 +39,22 @@ public final class ChromeBrowserPaneViewController: WebBrowserPaneViewController
             homeURL: homeURL,
             context: context
         )
+        engineMaintenance = ChromiumMaintenance(settings: settings)
+    }
+
+    /// What a host gives `WebBrowserWindowController.makePane` so its
+    /// windows hold Chrome: a pane that belongs to no project, recording
+    /// visits in `history`.
+    public static func standaloneFactory(
+        history: BrowserHistoryStore?
+    ) -> (PaneStateStore, SettingsStore) -> WebBrowserPaneViewController {
+        { store, settings in
+            let pane = ChromeBrowserPaneViewController(store: store, settings: settings, history: history)
+            #if DEBUG
+            pane.onShowBrowserLog = { BrowserLogPaneViewController.show(for: $0) }
+            #endif
+            return pane
+        }
     }
 }
 

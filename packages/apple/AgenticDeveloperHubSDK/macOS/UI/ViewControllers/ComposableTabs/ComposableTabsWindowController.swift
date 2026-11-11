@@ -895,6 +895,25 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         adding viewID: ComposableTabsViewID,
         direction: ComposableTabsViewController.Direction
     ) -> ComposableTabsPaneViewController? {
+        guard let (root, split) = splitHolding(pane, adding: viewID) else { return nil }
+        let before = Set(root.allLeaves().map(\.nodeID))
+        split.split(pane, adding: viewID, direction: direction)
+        guard let added = root.allLeaves().first(where: { !before.contains($0.nodeID) }) else { return nil }
+        _ = added.view
+        return added
+    }
+
+    /// Whether `splitPane(_:adding:direction:)` would add `viewID` beside
+    /// `pane`: the pane is in one of this window's tabs and the spec has room.
+    public func canSplitPane(_ pane: ComposableTabsPaneViewController, adding viewID: ComposableTabsViewID) -> Bool {
+        splitHolding(pane, adding: viewID) != nil
+    }
+
+    /// The tab's root and the split holding `pane`, when the spec allows
+    /// `viewID` beside it.
+    private func splitHolding(
+        _ pane: ComposableTabsPaneViewController, adding viewID: ComposableTabsViewID
+    ) -> (root: ComposableTabsViewController, split: ComposableTabsViewController)? {
         guard let root = splitControllersByTabID.values.first(where: { controller in
             controller.allLeaves().contains { $0 === pane }
         }),
@@ -902,11 +921,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
                 ?? (pane.host as? ComposableTabsViewController),
             split.allowedInsertions(beside: pane).contains(where: { $0.viewID == viewID })
         else { return nil }
-        let before = Set(root.allLeaves().map(\.nodeID))
-        split.split(pane, adding: viewID, direction: direction)
-        guard let added = root.allLeaves().first(where: { !before.contains($0.nodeID) }) else { return nil }
-        _ = added.view
-        return added
+        return (root, split)
     }
 
     private func leaves(of group: ScriptingTab) -> [ComposableTabsPaneViewController] {
