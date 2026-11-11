@@ -72,6 +72,14 @@ public final class MarkdownEditorController: PlatformViewController {
     @discardableResult
     public func focusEditor() -> Bool { editorPane.focus() }
 
+    /// Forwarded to the editor pane, which is internal. See
+    /// `MarkdownTextPane.isEditable`. False leaves the text readable and
+    /// selectable but refuses edits — the Notations pane on a detached HEAD.
+    public var isEditable: Bool {
+        get { editorPane.isEditable }
+        set { editorPane.isEditable = newValue }
+    }
+
     public private(set) var availableModes: [MarkdownEditorMode] = MarkdownEditorMode.allCases
 
     /// The last mode chosen deliberately — via this setter or the toolbar's

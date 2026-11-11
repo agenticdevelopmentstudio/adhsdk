@@ -876,6 +876,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         }
     }
 
+    /// The working directory of the tab a pane is on — the project's own
+    /// directory for a tab with none of its own, a worktree's for a worktree
+    /// tab — or `nil` for a pane this window does not have. What a tool
+    /// called from a pane resolves "here" to (`notations_current`).
+    public func workingDirectory(ofTabContaining pane: ComposableTabsPaneViewController) -> URL? {
+        guard let group = tabGroup(containing: pane) else { return nil }
+        return tabGroups.first { $0.id == group.id }?.workingDirectory ?? project.directoryURL
+    }
+
     /// Splits `pane`, adding a pane that shows `viewID`, and returns the new
     /// pane. `nil` when `pane` is not in this window or the spec refuses.
     ///
