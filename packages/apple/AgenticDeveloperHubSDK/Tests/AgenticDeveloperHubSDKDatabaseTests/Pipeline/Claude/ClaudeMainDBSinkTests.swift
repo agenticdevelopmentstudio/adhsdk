@@ -343,6 +343,28 @@ final class ClaudeMainDBSinkTests: XCTestCase {
             try dump(split.database, table: "session_metrics"), try dump(whole.database, table: "session_metrics"))
     }
 
+    /// A transcript-only session drained a line at a time ends with the same last
+    /// activity, model and branch as one drained whole: the stub the first line
+    /// made is advanced by every later, newer line.
+    func testATranscriptStubAdvancesWithLaterBatches() throws {
+        let columns = """
+            SELECT cwd, model, started_at, last_activity_at, git_branch FROM sessions ORDER BY session_id
+            """
+        let whole = try makePipeline()
+        try whole.deliver(try transcriptRecords())
+
+        let split = try makePipeline()
+        for record in try transcriptRecords() {
+            try split.deliver([record])
+        }
+        XCTAssertEqual(try rows(split.database, columns), try rows(whole.database, columns))
+        XCTAssertEqual(try scalar(split.database, "SELECT model FROM sessions"), "claude-opus-4-1")
+
+        // An older line delivered again moves nothing back.
+        try split.deliver(try transcriptRecords(["user-string"]))
+        XCTAssertEqual(try rows(split.database, columns), try rows(whole.database, columns))
+    }
+
     // MARK: - Redelivery
 
     func testSecondDeliveryOfEveryBatchChangesNothing() throws {
