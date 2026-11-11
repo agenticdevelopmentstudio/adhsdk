@@ -444,20 +444,43 @@ extension EventStore {
                 try conn.execute(sql: "PRAGMA cache_size = \(cacheBefore)")
             }
         }
-        let freed = try Self.vacuumSteps(pagesPerStep: pagesPerStep, carry: &carry, until: end) { size in
-            try pool.writeWithoutTransaction(deadline: Self.vacuumStepDeadline) { conn -> (Int, Int) in
-                let before = try Int.fetchOne(conn, sql: "PRAGMA freelist_count") ?? 0
-                guard before > 0 else { return (0, 0) }
-                try conn.execute(sql: "PRAGMA incremental_vacuum(\(size))")
-                let after = try Int.fetchOne(conn, sql: "PRAGMA freelist_count") ?? 0
-                return (before - after, after)
+        return try Self.checkpointing({ committed in
+            try Self.vacuumSteps(pagesPerStep: pagesPerStep, carry: &carry, until: end) { size in
+                let step = try pool.writeWithoutTransaction(deadline: Self.vacuumStepDeadline) { conn -> (Int, Int) in
+                    let before = try Int.fetchOne(conn, sql: "PRAGMA freelist_count") ?? 0
+                    guard before > 0 else { return (0, 0) }
+                    try conn.execute(sql: "PRAGMA incremental_vacuum(\(size))")
+                    let after = try Int.fetchOne(conn, sql: "PRAGMA freelist_count") ?? 0
+                    return (before - after, after)
+                }
+                committed += step.0
+                return step
             }
-        }
-        if freed > 0 {
+        }, checkpoint: {
             try pool.writeWithoutTransaction(deadline: nil) { conn in
                 _ = try Row.fetchOne(conn, sql: "PRAGMA wal_checkpoint(TRUNCATE)")
             }
+        })
+    }
+
+    /// Runs `vacuum`, which adds the pages of each step it commits to its
+    /// argument, and returns what it freed; then runs `checkpoint` if any page
+    /// was freed. Also when `vacuum` throws after committing some steps (a step
+    /// at the minimum size ejected by the deadline): those pages are freed
+    /// either way, and without the checkpoint the WAL kept them at its
+    /// high-water size until a later pass. A failed checkpoint there is dropped
+    /// so the vacuum's own error is the one thrown.
+    static func checkpointing(_ vacuum: (inout Int) throws -> Int,
+                              checkpoint: () throws -> Void) throws -> Int {
+        var committed = 0
+        let freed: Int
+        do {
+            freed = try vacuum(&committed)
+        } catch {
+            if committed > 0 { try? checkpoint() }
+            throw error
         }
+        if freed > 0 { try checkpoint() }
         return freed
     }
 

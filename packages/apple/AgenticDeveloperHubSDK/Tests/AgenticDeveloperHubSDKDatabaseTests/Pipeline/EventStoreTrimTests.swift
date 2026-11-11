@@ -391,6 +391,30 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertEqual(tried, [256, 256, 128, 64, 32, EventStore.minimumVacuumStep])
     }
 
+    /// The WAL is checkpointed after any committed step, also when a later step
+    /// throws; a vacuum that freed nothing does not checkpoint.
+    func testAVacuumCheckpointsWhatItFreedEvenWhenAStepThrows() throws {
+        var checkpoints = 0
+        let deadline = BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 30_000)
+        XCTAssertThrowsError(try EventStore.checkpointing({ committed -> Int in
+            committed += 512
+            throw deadline
+        }, checkpoint: { checkpoints += 1 })) { error in
+            XCTAssertEqual(error as? BoundedDatabaseError, deadline)
+        }
+        XCTAssertEqual(checkpoints, 1)
+
+        XCTAssertThrowsError(try EventStore.checkpointing({ _ -> Int in throw deadline },
+                                                           checkpoint: { checkpoints += 1 }))
+        XCTAssertEqual(checkpoints, 1, "nothing committed: no checkpoint")
+
+        XCTAssertEqual(try EventStore.checkpointing({ committed in committed += 8; return 8 },
+                                                    checkpoint: { checkpoints += 1 }), 8)
+        XCTAssertEqual(checkpoints, 2)
+        XCTAssertEqual(try EventStore.checkpointing({ _ in 0 }, checkpoint: { checkpoints += 1 }), 0)
+        XCTAssertEqual(checkpoints, 2)
+    }
+
     /// A step that went through slowly halves the next before the deadline can eject
     /// it; a quick one doubles it; one in between keeps its size.
     func testTheNextVacuumStepFollowsTheTimeTheLastOneTook() {
