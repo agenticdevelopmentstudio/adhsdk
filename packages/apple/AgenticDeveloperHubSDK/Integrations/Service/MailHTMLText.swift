@@ -3,39 +3,186 @@ import Foundation
 /// Reads HTML mail as plain text, and decodes the HTML entities Gmail leaves in snippets.
 ///
 /// Deliberately small: no layout engine, no WebKit (which wants the main thread), just enough to
-/// make an HTML-only message readable in a terminal or to a model. `head`, `style`, `script`,
-/// `title` and comments are dropped; block elements and `<br>` become line breaks (a paragraph
+/// make an HTML-only message readable in a terminal or to a model. `style`, `script`, `title`,
+/// `noscript` and comments are dropped; block elements and `<br>` become line breaks (a paragraph
 /// or heading a blank line); every other tag is removed; entities are decoded; whitespace is
 /// collapsed as a browser would, keeping the line breaks.
+///
+/// The HTML is sender-controlled, so the conversion is one linear pass: nothing is rescanned, and
+/// an unclosed comment, tag or hidden element runs to the end of the input, as in a browser.
 public enum MailHTMLText {
     /// The text of `html`.
     public static func plainText(fromHTML html: String) -> String {
-        var text = html
-        // Whole elements whose content is never shown.
-        text = replace(#"<!--.*?-->"#, in: text, with: " ")
-        for element in ["head", "style", "script", "title", "noscript"] {
-            text = replace("<\(element)\\b[^>]*>.*?</\(element)\\s*>", in: text, with: " ")
-        }
-        // Source whitespace is insignificant in HTML: any run of it is one space.
-        text = replace(#"\s+"#, in: text, with: " ")
-        // `<br>` is a real line break; block boundaries are soft ones that merge with their
-        // neighbours, so `</div><div>` is one line break, not a blank line.
-        text = replace(#"<br\b[^>]*>"#, in: text, with: "\n")
-        text = replace(#"<li\b[^>]*>"#, in: text, with: "\(lineBreak)- ")
-        text = replace(#"</?(?:p|h[1-6]|blockquote|table|ul|ol|dl|pre|hr)\b[^>]*>"#, in: text, with: paragraphBreak)
-        text = replace("</?(?:\(lineElements.joined(separator: "|")))\\b[^>]*>", in: text, with: lineBreak)
-        text = replace(#"</?(?:td|th)\b[^>]*>"#, in: text, with: " ")
-        text = replace(#"<[^>]*>"#, in: text, with: "")
-        text = resolveBreaks(text)
-        text = decodeEntities(text)
-        return tidy(text)
+        tidy(decodeEntities(resolveBreaks(markup(Array(html.unicodeScalars)))))
     }
 
+    // MARK: - Tags
+
+    /// The text with source whitespace collapsed to single spaces, each tag replaced by its break
+    /// marker (or nothing), and hidden elements removed.
+    private static func markup(_ html: [Unicode.Scalar]) -> String {
+        var result = String.UnicodeScalarView()
+        var index = 0
+        while index < html.count {
+            let scalar = html[index]
+            if scalar == "<", index + 1 < html.count, opensTag(html[index + 1]) {
+                guard let tag = tag(in: html, at: index) else { break }
+                result.append(contentsOf: replacement(for: tag).unicodeScalars)
+                index = tag.end
+                if !tag.closing, hidden.contains(tag.name) {
+                    guard let after = endOfElement(tag.name, in: html, from: index) else { break }
+                    index = after
+                }
+                continue
+            }
+            index += 1
+            if isHTMLSpace(scalar) {
+                // Source whitespace is insignificant in HTML: any run of it is one space.
+                if result.last != " " { result.append(" ") }
+            } else if !isControl(scalar) {
+                // Controls are dropped here so a raw one can't pose as a break marker.
+                result.append(scalar)
+            }
+        }
+        return String(result)
+    }
+
+    /// A tag: its lowercased name (`!--` for a comment, `!` for any other `<!…>` or `<?…>`),
+    /// whether it is a closing one, and the index just past its `>`.
+    private struct Tag {
+        var name: String
+        var closing: Bool
+        var end: Int
+    }
+
+    /// What a browser starts a tag on: `<` then a letter, `/`, `!` or `?`. Any other `<` is text.
+    private static func opensTag(_ scalar: Unicode.Scalar) -> Bool {
+        isASCIILetter(scalar) || scalar == "/" || scalar == "!" || scalar == "?"
+    }
+
+    /// The tag starting at `start` (a `<`), or nil when it never closes.
+    private static func tag(in html: [Unicode.Scalar], at start: Int) -> Tag? {
+        var index = start + 1
+        if html[index] == "!" || html[index] == "?" {
+            if html[index] == "!", index + 2 < html.count, html[index + 1] == "-", html[index + 2] == "-" {
+                guard let end = find(["-", "-", ">"], in: html, from: index + 3) else { return nil }
+                return Tag(name: "!--", closing: false, end: end)
+            }
+            guard let end = find([">"], in: html, from: index) else { return nil }
+            return Tag(name: "!", closing: false, end: end)
+        }
+        let closing = html[index] == "/"
+        if closing { index += 1 }
+        var name = String.UnicodeScalarView()
+        while index < html.count, isNameScalar(html[index]) {
+            name.append(lowercased(html[index]))
+            index += 1
+        }
+        if name.isEmpty {
+            // `</` then something that isn't a name: a bogus comment, up to the next `>`.
+            guard let end = find([">"], in: html, from: index) else { return nil }
+            return Tag(name: "!", closing: false, end: end)
+        }
+        // Attributes, up to the `>`; a quoted value may hold a `>`.
+        var afterEquals = false
+        while index < html.count {
+            let scalar = html[index]
+            if scalar == ">" { return Tag(name: String(name), closing: closing, end: index + 1) }
+            if afterEquals, scalar == "\"" || scalar == "'" {
+                guard let end = find([scalar], in: html, from: index + 1) else { return nil }
+                index = end
+                afterEquals = false
+                continue
+            }
+            if scalar == "=" {
+                afterEquals = true
+            } else if !isHTMLSpace(scalar) {
+                afterEquals = false
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    /// The index just past the `</name …>` that closes a hidden element, or nil when none does.
+    private static func endOfElement(_ name: String, in html: [Unicode.Scalar], from start: Int) -> Int? {
+        let wanted = Array(name.unicodeScalars)
+        var index = start
+        while index + 1 < html.count {
+            guard html[index] == "<", html[index + 1] == "/" else {
+                index += 1
+                continue
+            }
+            var cursor = index + 2
+            var matched = 0
+            while matched < wanted.count, cursor < html.count, lowercased(html[cursor]) == wanted[matched] {
+                matched += 1
+                cursor += 1
+            }
+            if matched == wanted.count, cursor == html.count || !isNameScalar(html[cursor]) {
+                return find([">"], in: html, from: cursor)
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    /// The index just past the first `pattern` at or after `start`.
+    private static func find(_ pattern: [Unicode.Scalar], in html: [Unicode.Scalar], from start: Int) -> Int? {
+        var index = start
+        while index + pattern.count <= html.count {
+            if html[index] == pattern[0], html[index..<index + pattern.count].elementsEqual(pattern) {
+                return index + pattern.count
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    /// What a tag becomes in the text. `<br>` is a real line break; block boundaries are soft
+    /// ones that merge with their neighbours, so `</div><div>` is one line break, not a blank line.
+    private static func replacement(for tag: Tag) -> String {
+        switch tag.name {
+        case "!--": return " "
+        case "br" where !tag.closing: return "\n"
+        case "li" where !tag.closing: return "\(lineBreak)- "
+        case "td", "th": return " "
+        case _ where hidden.contains(tag.name): return tag.closing ? "" : " "
+        case _ where paragraphElements.contains(tag.name): return paragraphBreak
+        case _ where lineElements.contains(tag.name): return lineBreak
+        default: return ""
+        }
+    }
+
+    /// Elements whose content is never shown.
+    private static let hidden: Set<String> = ["style", "script", "title", "noscript"]
+
+    /// Block elements that stand apart from their neighbours by a blank line.
+    private static let paragraphElements: Set<String> = [
+        "p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "table", "ul", "ol", "dl", "pre", "hr"
+    ]
+
     /// Block elements that start and end a line.
-    private static let lineElements = [
+    private static let lineElements: Set<String> = [
         "div", "tr", "li", "dt", "dd", "section", "article", "header", "footer", "nav", "aside", "main",
         "address", "figure", "figcaption", "center", "form", "fieldset"
     ]
+
+    private static func isHTMLSpace(_ scalar: Unicode.Scalar) -> Bool {
+        scalar == " " || scalar == "\t" || scalar == "\n" || scalar == "\r" || scalar == "\u{0C}"
+    }
+
+    private static func isASCIILetter(_ scalar: Unicode.Scalar) -> Bool {
+        ("a"..."z").contains(scalar) || ("A"..."Z").contains(scalar)
+    }
+
+    private static func isNameScalar(_ scalar: Unicode.Scalar) -> Bool {
+        isASCIILetter(scalar) || ("0"..."9").contains(scalar) || scalar == "-" || scalar == ":"
+    }
+
+    private static func lowercased(_ scalar: Unicode.Scalar) -> Unicode.Scalar {
+        ("A"..."Z").contains(scalar) ? Unicode.Scalar(scalar.value + 32)! : scalar
+    }
 
     /// Soft break markers: control characters no mail body text carries.
     private static let lineBreak = "\u{1}"
@@ -212,15 +359,5 @@ public enum MailHTMLText {
         }
         while lines.last == "" { lines.removeLast() }
         return lines.joined(separator: "\n")
-    }
-
-    // MARK: - Regular expressions
-
-    private static func replace(_ pattern: String, in text: String, with template: String) -> String {
-        guard let regex = try? NSRegularExpression(
-            pattern: pattern, options: [.caseInsensitive, .dotMatchesLineSeparators]) else { return text }
-        let range = NSRange(text.startIndex..., in: text)
-        return regex.stringByReplacingMatches(
-            in: text, range: range, withTemplate: NSRegularExpression.escapedTemplate(for: template))
     }
 }

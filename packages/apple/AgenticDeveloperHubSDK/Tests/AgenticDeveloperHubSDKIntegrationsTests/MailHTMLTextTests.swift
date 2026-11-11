@@ -104,6 +104,38 @@ struct MailHTMLTextTests {
         #expect(MailHTMLText.plainText(fromHTML: html) == "Up\n\nDown")
     }
 
+    @Test func aBareLessThanIsTextAndAQuotedGreaterThanStaysInItsTag() {
+        #expect(MailHTMLText.plainText(fromHTML: "<p>I <3 you</p><p><a href=x>link</a></p>") == "I <3 you\n\nlink")
+        let html = #"<p>Hi Mike,</p><img alt="Shop now >" width="200"><p>Thanks</p>"#
+        #expect(MailHTMLText.plainText(fromHTML: html) == "Hi Mike,\n\nThanks")
+        #expect(MailHTMLText.plainText(fromHTML: "<p title='a > b'>x < y and y > z</p>") == "x < y and y > z")
+        #expect(MailHTMLText.plainText(fromHTML: "a < b\u{1}\u{2} c") == "a < b c")
+    }
+
+    @Test func anUnclosedCommentTagOrHiddenElementRunsToTheEnd() {
+        #expect(MailHTMLText.plainText(fromHTML: "<p>Shown</p><!-- never closed <p>gone</p>") == "Shown")
+        #expect(MailHTMLText.plainText(fromHTML: "<p>Shown</p><style>p{} <p>gone</p>") == "Shown")
+        #expect(MailHTMLText.plainText(fromHTML: "<p>Shown</p><img src=\"x") == "Shown")
+        #expect(MailHTMLText.plainText(fromHTML: "<script>if (a</b) {}</script>Shown") == "Shown")
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func hostileHTMLConvertsInLinearTime() {
+        let hostile = [
+            String(repeating: "<!--", count: 50_000),
+            "<p>x</p><style>" + String(repeating: "a{} ", count: 50_000),
+            String(repeating: "< ", count: 100_000) + "<p>end</p>",
+            String(repeating: "<a ", count: 50_000),
+            String(repeating: "</", count: 50_000)
+        ]
+        let clock = ContinuousClock()
+        let elapsed = clock.measure {
+            for html in hostile { _ = MailHTMLText.plainText(fromHTML: html) }
+        }
+        #expect(elapsed < .seconds(5), "took \(elapsed)")
+        #expect(MailHTMLText.plainText(fromHTML: hostile[1]) == "x")
+    }
+
     @Test func emptyOrInvisibleHTMLIsEmpty() {
         #expect(MailHTMLText.plainText(fromHTML: "") == "")
         #expect(MailHTMLText.plainText(fromHTML: "<html><head><style>a{}</style></head><body> </body></html>") == "")
