@@ -438,6 +438,17 @@ open class WebBrowserPaneViewController: NSViewController {
         pageWordFilter?.concealing(text, matchingCase: true) ?? text
     }
 
+    /// The page's title in the real words, for what is stored — history, the
+    /// tabs the pane reopens with, a jar's label. The page script has drawn
+    /// the title through the privacy words, so it is revealed back; the
+    /// stand-ins hold no real word (`BrowserAgentPrivacy.conflicting`), so
+    /// that gives back what the page wrote, unless the page itself used a
+    /// stand-in.
+    private func storedTitle(of engine: BrowserEngine) -> String? {
+        guard let title = engine.title else { return nil }
+        return pageWordFilter?.revealing(title) ?? title
+    }
+
     /// Puts `url` in the address field as the pane shows it; the blank page
     /// and no page at all leave it empty.
     private func showAddress(_ url: URL?) {
@@ -673,7 +684,8 @@ open class WebBrowserPaneViewController: NSViewController {
         // loads, and a tab behind the front one loads only when brought
         // forward, so without this it would be stored as New Tab.
         let titles = tabs.map { tab -> String? in
-            guard let title = tab.engine.title, !title.isEmpty, title != Self.blankPage.absoluteString else {
+            guard let title = self.storedTitle(of: tab.engine), !title.isEmpty,
+                  title != Self.blankPage.absoluteString else {
                 return tab.storedTitle
             }
             return title
@@ -754,7 +766,7 @@ open class WebBrowserPaneViewController: NSViewController {
     private func updateJarLabel(finished: Bool) {
         guard resolvedJar.jar == .pane, let jarID = resolvedJar.jarID, let jars = paneContext.jars else { return }
         guard let label = jarLabelGate.label(
-            pageTitle: engine.title, fallback: paneTitle, finished: finished, current: jarLabel
+            pageTitle: storedTitle(of: engine), fallback: paneTitle, finished: finished, current: jarLabel
         ) else { return }
         jarLabel = label
         jars.updateLabel(jarID: jarID, label: label)
@@ -1052,7 +1064,7 @@ open class WebBrowserPaneViewController: NSViewController {
         guard let history, settings.get(UserSettings.browserRecordsHistory),
               let url = engine.url, url != Self.blankPage else { return }
         let generation = tab.visitGeneration
-        let title = engine.title ?? ""
+        let title = storedTitle(of: engine) ?? ""
         Task { [weak self, weak tab, logger] in
             do {
                 let visitID = try await history.perform { try $0.record(url, title: title) }
@@ -1060,7 +1072,7 @@ open class WebBrowserPaneViewController: NSViewController {
                 tab.currentVisitID = visitID
                 // A title that arrived while the row was being written found
                 // no row to be filed against; file it now.
-                if let later = engine.title, !later.isEmpty, later != title {
+                if let later = self.storedTitle(of: engine), !later.isEmpty, later != title {
                     self.file(later, againstVisit: visitID)
                 }
             } catch {
@@ -1327,7 +1339,7 @@ open class WebBrowserPaneViewController: NSViewController {
             tabs: tabs.map { tab in
                 let url = [tab.engine.url, tab.requestedURL, tab.pendingURL].lazy
                     .compactMap { $0 }.first { $0 != Self.blankPage }?.absoluteString
-                let title = tab.engine.title.flatMap { $0.isEmpty ? nil : $0 } ?? tab.storedTitle
+                let title = storedTitle(of: tab.engine).flatMap { $0.isEmpty ? nil : $0 } ?? tab.storedTitle
                 return StoredBrowserTab(url: url, title: title)
             },
             selectedIndex: tabs.firstIndex { $0 === activeTab } ?? 0
@@ -1376,7 +1388,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         guard let tab = tab(for: engine) else { return }
         retitle(tab)
         tabObserver?.pane(self, tabDidChange: engine)
-        if let visitID = tab.currentVisitID, let title = engine.title, !title.isEmpty {
+        if let visitID = tab.currentVisitID, let title = storedTitle(of: engine), !title.isEmpty {
             file(title, againstVisit: visitID)
         }
         guard isFront(engine) else { return }
