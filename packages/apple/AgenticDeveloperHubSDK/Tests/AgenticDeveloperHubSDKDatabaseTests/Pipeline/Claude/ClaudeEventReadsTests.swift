@@ -271,6 +271,18 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(try database.lastEventType(sessionId: "none"), "")
     }
 
+    /// A title or agent dispatch read from the transcript after `Stop` is not a
+    /// hook: the session still reads as waiting at `Stop`.
+    func testLastEventTypeIgnoresTheTranscriptsOwnEvents() throws {
+        try harness.ingest(hook("Stop", "s1", "2026-06-01T12:05:00Z"))
+        try harness.ingestTranscript(
+            lines: [#"{"type":"custom-title","customTitle":"Fix the build","sessionId":"s1"}"#],
+            file: harness.transcriptFile(sessionId: "s1"))
+        XCTAssertEqual(try database.fetchEvents(sessionId: "s1").map(\.eventType).sorted(), ["Stop", "custom-title"])
+
+        XCTAssertEqual(try database.lastEventType(sessionId: "s1"), "Stop")
+    }
+
     func testToolUseCountsArePerSessionAndTool() throws {
         try harness.ingest([
             hook("PreToolUse", "s1", "2026-06-01T12:00:00Z", ["tool_name": "Read"]),

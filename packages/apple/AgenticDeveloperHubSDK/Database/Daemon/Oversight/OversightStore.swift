@@ -273,7 +273,7 @@ extension DaemonDatabase {
         return count
     }
 
-    /// The type of the session's most recent event, or "" if it has none. `Stop` means
+    /// The type of the session's most recent hook event, or "" if it has none. `Stop` means
     /// Claude finished a response and is waiting for the user (a safe breakpoint to inject
     /// `/compact`); anything else means it is mid-response. Read from the event store's
     /// `(provider, session_id, time)` index, so it touches one row. The `id DESC`
