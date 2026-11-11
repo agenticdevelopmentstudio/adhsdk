@@ -22,13 +22,18 @@ public struct ConversationMessageDTO: Codable, Sendable, Equatable {
     public let content: String
     /// ISO-8601, as written in the transcript.
     public let time: String
+    /// The subagent that said it, when it comes from one of the session's
+    /// subagents' transcripts (read only with work output); nil for the
+    /// session's own agent. Optional so a reader built before it still decodes.
+    public let agentId: String?
 
-    public init(id: Int, type: String, kind: String, content: String, time: String) {
+    public init(id: Int, type: String, kind: String, content: String, time: String, agentId: String? = nil) {
         self.id = id
         self.type = type
         self.kind = kind
         self.content = content
         self.time = time
+        self.agentId = agentId
     }
 
     /// A feed entry as a message: the one place the extractor's kinds fold into

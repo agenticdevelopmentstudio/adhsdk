@@ -227,6 +227,15 @@ public enum JSONLScanner {
             .contains("/subagents/")
     }
 
+    /// The subagent a transcript file belongs to — `agent-<id>.jsonl` under a
+    /// `subagents/` directory gives `<id>` — or nil for a session's own file.
+    public static func subagentId(ofPath path: String) -> String? {
+        guard isSubagentPath(path) else { return nil }
+        let stem = ((path as NSString).lastPathComponent as NSString).deletingPathExtension
+        let id = stem.hasPrefix("agent-") ? String(stem.dropFirst("agent-".count)) : stem
+        return id.isEmpty ? nil : id
+    }
+
     // MARK: - Auxiliary records (titles + subagent dispatches)
 
     /// ``parseExtras(_:)``'s prefilter needles, held as bytes so the per-line

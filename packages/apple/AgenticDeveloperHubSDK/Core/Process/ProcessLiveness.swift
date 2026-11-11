@@ -201,6 +201,31 @@ public enum ProcessLiveness {
         return pids.prefix(count).filter { $0 > 0 }
     }
 
+    /// Whether a process can be reached by typing into a terminal.
+    public enum TerminalAttachment: Sendable, Equatable {
+        /// It has a controlling terminal: keystrokes typed into that terminal reach it.
+        case attached
+        /// It has none — a headless `claude -p` started by a script, reading a pipe.
+        /// Nothing typed into any pane reaches it, even though it inherited the
+        /// pane's `TERM_SESSION_ID`.
+        case detached
+    }
+
+    /// Whether the `claude` process `pid` has a controlling terminal, or nil when
+    /// that can't be said: `pid` is not positive, is not a live Claude Code CLI (a
+    /// gone hook shell, a reused pid), or the kernel would not describe it. Callers
+    /// read nil as "might be attached", never as "detached".
+    public static func terminalAttachment(ofPid pid: pid_t) -> TerminalAttachment? {
+        guard pid > 0, isClaudeProcess(pid) else { return nil }
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, pid]
+        var info = kinfo_proc()
+        var size = MemoryLayout<kinfo_proc>.size
+        guard sysctl(&mib, 4, &info, &size, nil, 0) == 0, size == MemoryLayout<kinfo_proc>.size,
+              info.kp_proc.p_pid == pid else { return nil }
+        // `NODEV` (all bits set) is the kernel's "no controlling terminal".
+        return info.kp_eproc.e_tdev == dev_t(bitPattern: UInt32.max) ? .detached : .attached
+    }
+
     /// Whether `pid` is a Claude Code CLI process, by the path it was launched
     /// with (`KERN_PROCARGS2`, layout `[argc: Int32][exec_path NUL-terminated]…`).
     /// Matches basename `claude` (the CLI launcher `~/.local/bin/claude`) or any

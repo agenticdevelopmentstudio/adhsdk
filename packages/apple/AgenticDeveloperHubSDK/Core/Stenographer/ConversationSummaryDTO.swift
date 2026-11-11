@@ -145,7 +145,12 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
 
     /// - Parameter liveSessions: the active sessions, which ``canSend`` checks for
     ///   one sharing this session's pane.
-    public init(session: SessionDTO, liveSessions: [SessionDTO], homeDirectory: String = NSHomeDirectory()) {
+    /// - Parameter attachment: whether a session's process has a terminal
+    ///   (``ConversationSendability/refusal(for:liveSessions:attachment:)``).
+    public init(
+        session: SessionDTO, liveSessions: [SessionDTO], homeDirectory: String = NSHomeDirectory(),
+        attachment: ConversationSendability.AttachmentProbe = ConversationSendability.processAttachment
+    ) {
         let summary = ConversationSummaryDTO(session: session, homeDirectory: homeDirectory)
         id = summary.id
         agent = summary.agent
@@ -163,7 +168,8 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
         lastTool = session.lastTool
         self.summary = session.summary
         pid = session.pid
-        let refusal = ConversationSendability.refusal(for: session, liveSessions: liveSessions)
+        let refusal = ConversationSendability.refusal(
+            for: session, liveSessions: liveSessions, attachment: attachment)
         canSend = refusal == nil
         sendRefusal = refusal ?? ""
     }
@@ -185,7 +191,16 @@ public enum ConversationSendability {
     /// record names is the parent's: text meant for the child would be typed into the
     /// parent, which would act on it. Nothing recorded tells the two apart, so neither
     /// is sent to while both are live.
-    public static func refusal(for session: SessionDTO, liveSessions: [SessionDTO]) -> String? {
+    ///
+    /// The one exception is a sharer whose process `attachment` confirms has no
+    /// controlling terminal: a headless `claude -p` a script started (a review worker)
+    /// reads a pipe, so nothing typed into the pane can reach it, and the pane is the
+    /// interactive session's alone. Only a confirmed ``ProcessLiveness/TerminalAttachment/detached``
+    /// is excused; a process that can't be read still blocks. Such a headless session
+    /// is itself refused, since typing can never reach it.
+    public static func refusal(
+        for session: SessionDTO, liveSessions: [SessionDTO], attachment: AttachmentProbe = processAttachment
+    ) -> String? {
         let id = session.sessionId
         switch ConversationStatus(session: session) {
         case .ended:
@@ -201,18 +216,34 @@ public enum ConversationSendability {
             let term = session.termProgram.isEmpty ? "an unknown terminal" : session.termProgram
             return "typing into a conversation needs iTerm2 or Terminal.app; \(id) runs in \(term)."
         }
-        if let sharer = paneSharer(of: session, among: liveSessions) {
+        if attachment(session) == .detached {
+            return "conversation \(id) is a headless claude with no terminal (started by a script, reading "
+                + "a pipe), so nothing typed into a terminal pane can reach it."
+        }
+        if let sharer = paneSharer(of: session, among: liveSessions, attachment: attachment) {
             return "conversation \(sharer.sessionId) runs in the same terminal pane as \(id) (a nested or "
                 + "headless claude shares its parent's), so a message can't be aimed at \(id) alone."
         }
         return nil
     }
 
-    /// Another active session whose pane resolves to the same target as `session`'s.
-    private static func paneSharer(of session: SessionDTO, among liveSessions: [SessionDTO]) -> SessionDTO? {
+    /// Whether a session's process has a terminal; nil when that can't be read.
+    public typealias AttachmentProbe = @Sendable (SessionDTO) -> ProcessLiveness.TerminalAttachment?
+
+    /// The live answer: the session's recorded `pid`, asked of the kernel.
+    public static let processAttachment: AttachmentProbe = { session in
+        ProcessLiveness.terminalAttachment(ofPid: pid_t(clamping: session.pid))
+    }
+
+    /// Another active session whose pane resolves to the same target as `session`'s,
+    /// leaving out any confirmed to have no terminal (it can't receive keystrokes).
+    private static func paneSharer(
+        of session: SessionDTO, among liveSessions: [SessionDTO], attachment: AttachmentProbe
+    ) -> SessionDTO? {
         guard let pane = pane(of: session) else { return nil }
         return liveSessions.first {
-            $0.sessionId != session.sessionId && $0.status == SessionStatus.active.rawValue && self.pane(of: $0) == pane
+            $0.sessionId != session.sessionId && $0.status == SessionStatus.active.rawValue
+                && self.pane(of: $0) == pane && attachment($0) != .detached
         }
     }
 

@@ -90,6 +90,32 @@ final class ConversationMessagesTests: XCTestCase {
         XCTAssertTrue(try page(work: true).messages.map(\.content).contains("looking around"))
     }
 
+    /// A headless `claude -p` that hands its task to an agent: its own file
+    /// holds no dialogue, its subagent's file holds it all.
+    func testWorkOutputWeavesInTheSubagentsTranscripts() throws {
+        try database.insertTranscriptLines([
+            prompt(1, at: "2026-09-01T10:00:00Z", "review this")
+        ], filePath: "/tmp/\(session).jsonl")
+        var sub = reply(1, at: "2026-09-01T10:00:05Z", "found a bug")
+        sub = JSONLScanner.RawTranscriptLine(
+            lineNo: sub.lineNo, sessionId: session, entryUuid: sub.entryUuid, parentUuid: "",
+            entryType: sub.entryType, role: sub.role, timestamp: sub.timestamp, isSidechain: true,
+            rawJSON: sub.rawJSON, isQueuedPrompt: false)
+        try database.insertTranscriptLines([sub], filePath: "/tmp/\(session)/subagents/agent-a48.jsonl")
+
+        XCTAssertEqual(try page().messages.map(\.content), ["review this"], "the main agent alone")
+        let work = try page(work: true).messages
+        XCTAssertEqual(work.map(\.content), ["review this", "found a bug"])
+        XCTAssertEqual(work.map(\.agentId), [nil, "a48"])
+        // A subagent's message is a cursor like any other.
+        XCTAssertEqual(try page(after: work[0].id, work: true).messages.map(\.content), ["found a bug"])
+    }
+
+    func testSubagentIdComesFromItsFile() {
+        XCTAssertEqual(JSONLScanner.subagentId(ofPath: "/p/s1/subagents/agent-a4861c.jsonl"), "a4861c")
+        XCTAssertNil(JSONLScanner.subagentId(ofPath: "/p/s1.jsonl"))
+    }
+
     func testAfterIsExclusiveAndThroughIsInclusive() throws {
         try insertDialogue()
         let all = try page().messages

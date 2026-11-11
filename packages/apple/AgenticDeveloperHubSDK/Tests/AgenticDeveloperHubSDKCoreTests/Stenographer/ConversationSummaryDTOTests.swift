@@ -99,4 +99,27 @@ final class ConversationSummaryDTOTests: XCTestCase {
         XCTAssertTrue(info(parent, live: [parent, iTerm("child", pane: "P", status: "ended")]).canSend,
                       "an ended session shares nothing")
     }
+
+    /// A review worker (`claude -p` from a script) inherits the pane but reads a pipe:
+    /// nothing typed there reaches it, so it doesn't block its interactive parent —
+    /// and it is never a send target itself. A process that can't be read still blocks.
+    func testAHeadlessSharerWithNoTerminalLeavesThePaneToTheInteractiveSession() {
+        let parent = iTerm("parent", pane: "P")
+        let worker = iTerm("worker", pane: "P")
+        let live = [parent, worker]
+        let headlessWorker: ConversationSendability.AttachmentProbe = {
+            $0.sessionId == "worker" ? .detached : .attached
+        }
+        XCTAssertNil(ConversationSendability.refusal(for: parent, liveSessions: live, attachment: headlessWorker))
+        let toWorker = ConversationSendability.refusal(for: worker, liveSessions: live, attachment: headlessWorker)
+        XCTAssertTrue(toWorker?.contains("headless") ?? false, toWorker ?? "nil")
+        let unknown: ConversationSendability.AttachmentProbe = { _ in nil }
+        XCTAssertNotNil(ConversationSendability.refusal(for: parent, liveSessions: live, attachment: unknown),
+                        "an unreadable process might be on the pane")
+    }
+
+    func testTerminalAttachmentIsUnknownForAProcessThatIsNotClaude() {
+        XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: 0))
+        XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: getpid()), "the test runner is not claude")
+    }
 }
