@@ -43,11 +43,14 @@ public struct ClaudePipelineHandles: Sendable {
         self.spool = spool
         self.archive = archive
         self.store = store
-        let unreadableDrops = QuarantineService(
+        let dropQuarantine = QuarantineService(
             errorsDirectory: dropDirectory.appendingPathComponent("errors"), database: database)
-        self.hookSource = ClaudeHookDropSource(dropDirectory: dropDirectory) { moved, reason in
-            unreadableDrops.recordInitialQuarantine(eventURL: moved, reason: reason, code: nil, parsed: nil)
-        }
+        self.hookSource = ClaudeHookDropSource(
+            dropDirectory: dropDirectory,
+            onUnreadable: { moved, reason in
+                dropQuarantine.recordInitialQuarantine(eventURL: moved, reason: reason, code: nil, parsed: nil)
+            },
+            onLost: { fileName in dropQuarantine.recordLostEvent(filename: fileName) })
         self.transcriptSource = ClaudeTranscriptSource(projectsDirectory: projectsDirectory)
         self.drainer = try PipelineDrainer(
             spool: spool, archive: archive, normalizer: ClaudeNormalizer(), store: store,

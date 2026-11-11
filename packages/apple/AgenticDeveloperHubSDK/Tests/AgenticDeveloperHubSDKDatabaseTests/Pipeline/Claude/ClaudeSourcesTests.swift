@@ -166,6 +166,22 @@ final class ClaudeSourcesTests: XCTestCase {
         XCTAssertTrue(entries.first?.reason.hasPrefix("unreadable drop file: ") ?? false, "\(entries)")
     }
 
+    /// An empty or whitespace-only drop file is still appended, and its name is
+    /// reported as a lost event; a file with content is not.
+    func testAnEmptyDropFileIsAppendedAndReportedLost() throws {
+        try writeDrop("1793361600000-aaaaaaaa.json", Data())
+        try writeDrop("1793361601000-bbbbbbbb.json", Data(" \n".utf8))
+        try writeDrop("1793361602000-cccccccc.json", try Self.hookFixture("Stop"))
+
+        let reported = ReportedDrops()
+        let source = ClaudeHookDropSource(dropDirectory: dropDir, onLost: { name in
+            reported.append(name, "lost")
+        })
+        XCTAssertEqual(try source.poll(into: spool), 3)
+        XCTAssertEqual(reported.entries.map(\.name),
+                       ["1793361600000-aaaaaaaa.json", "1793361601000-bbbbbbbb.json"])
+    }
+
     /// Review Focus 4: no `session_id`, an empty body and invalid JSON are all archived
     /// (the backup keeps everything); only the invalid JSON is quarantined, bytes intact.
     func testMalformedDropFilesAreArchivedAndInvalidJSONIsQuarantined() throws {

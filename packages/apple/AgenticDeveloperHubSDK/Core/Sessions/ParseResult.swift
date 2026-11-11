@@ -22,6 +22,12 @@ public enum ParseResult: Sendable {
 
 extension ParseResult {
 
+    /// Whether a drop file's text is a lost event: empty, or only whitespace. The
+    /// one rule for "empty", shared by `parse` and the pipeline's drop source.
+    public static func isLostEvent(_ rawJson: String) -> Bool {
+        rawJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     /// Parses the envelope format:
     /// `{"event": "PreToolUse", "timestamp": "...", "hook_data": {...}, "context": {...}}`
     /// `context` is optional — present in v5+ drops, absent in legacy v4 drops or
@@ -33,9 +39,7 @@ extension ParseResult {
         // died between creating it and filling it, so whatever event it carried
         // is already gone. Deciding that here keeps the live scan and the
         // quarantine retry from drifting on what "empty" means.
-        guard !rawJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return .lostEvent
-        }
+        guard !isLostEvent(rawJson) else { return .lostEvent }
         guard let data = rawJson.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let eventType = json["event"] as? String,
