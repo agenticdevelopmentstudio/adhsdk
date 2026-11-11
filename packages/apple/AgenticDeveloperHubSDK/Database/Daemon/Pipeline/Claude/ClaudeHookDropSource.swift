@@ -18,7 +18,9 @@ import Foundation
 /// What reaches the spool is not judged here: an empty file, an envelope with no
 /// session and invalid JSON are all appended, so the raw archive keeps them, and
 /// the normalizer decides (invalid JSON is quarantined in the spool with its
-/// bytes). Only a file that cannot be read at all has no bytes to keep; it moves to
+/// bytes). An empty file is a lost event (`ParseResult.isLostEvent`): once the
+/// append holding it commits, its name goes to `onLost`, which logs the loss.
+/// Only a file that cannot be read at all has no bytes to keep; it moves to
 /// `<drop>/errors/error-<name>`, the name `EventIngestor` gives a quarantined drop,
 /// and is reported through `onUnreadable` so it gets a reason like any other
 /// quarantined file.
@@ -30,18 +32,23 @@ public final class ClaudeHookDropSource: IngestSource {
     public let minimumAge: TimeInterval
     private let faultInjector: (@Sendable (SourceStep) throws -> Void)?
     private let onUnreadable: (@Sendable (_ moved: URL, _ reason: String) -> Void)?
+    private let onLost: (@Sendable (_ fileName: String) -> Void)?
 
     /// - Parameters:
     ///   - onUnreadable: called with an unreadable drop file's new path in the errors
     ///     directory and why it could not be read, once it has been moved there. The
     ///     pipeline records it as a quarantine (sidecar and log row).
+    ///   - onLost: called with the name of each empty drop file (a lost event) once
+    ///     the append holding it has committed. The pipeline logs it as `lost`.
     ///   - faultInjector: for tests; fires around each batch's append (see `SourceStep`).
     public init(dropDirectory: URL, minimumAge: TimeInterval = 0.1,
                 onUnreadable: (@Sendable (_ moved: URL, _ reason: String) -> Void)? = nil,
+                onLost: (@Sendable (_ fileName: String) -> Void)? = nil,
                 faultInjector: (@Sendable (SourceStep) throws -> Void)? = nil) {
         self.dropDirectory = dropDirectory
         self.minimumAge = minimumAge
         self.onUnreadable = onUnreadable
+        self.onLost = onLost
         self.faultInjector = faultInjector
     }
 
@@ -65,6 +72,7 @@ public final class ClaudeHookDropSource: IngestSource {
             start = batch.endIndex
             var records: [RawRecord] = []
             var appendedFiles: [URL] = []
+            var lostFiles: [String] = []
             for (url, modified) in batch {
                 autoreleasepool {
                     let data: Data
@@ -73,6 +81,9 @@ public final class ClaudeHookDropSource: IngestSource {
                     } catch {
                         moveToErrors(url, reason: "unreadable drop file: \(error.localizedDescription)")
                         return
+                    }
+                    if String(bytes: data, encoding: .utf8).map(ParseResult.isLostEvent) ?? false {
+                        lostFiles.append(url.lastPathComponent)
                     }
                     records.append(RawRecord(
                         provider: provider, sourceKind: ClaudeProvider.hookKind,
@@ -86,6 +97,7 @@ public final class ClaudeHookDropSource: IngestSource {
             try spool.append(records)
             try faultInjector?(.afterAppend)
             appended += records.count
+            for name in lostFiles { onLost?(name) }
             for url in appendedFiles { try? FileManager.default.removeItem(at: url) }
         }
         return (appended, deferred)
