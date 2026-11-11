@@ -25,14 +25,15 @@ import OSLog
 /// and keeps its title, project, tokens and cost.
 ///
 /// **Chunked.** One ``runOnce()`` reaps at most `DaemonDatabase.emptySessionReapBatch`
-/// sessions and reports ``Outcome/rerun`` while more may remain.
+/// sessions and reports ``Outcome/rerun`` while more may remain: whenever it
+/// selected a full batch, even if the delete's re-check kept some of them.
 public struct RetentionService: Sendable {
 
     /// What a pass left behind.
     public enum Outcome: Sendable, Equatable {
         /// Nothing more to reap this cycle.
         case complete
-        /// A full batch was reaped; more may remain, so run again.
+        /// A full batch was selected; more may remain, so run again.
         case rerun
     }
 
@@ -50,10 +51,14 @@ public struct RetentionService: Sendable {
     /// One batch of empty ended sessions.
     public func runOnce() throws -> Outcome {
         do {
-            let reaped = try database.deleteEndedSessionsWithNoEvents(
+            let (selected, reaped) = try database.reapEndedSessionsWithNoEvents(
                 keepSessionTables: keepSessionTables, lastActivityBefore: lastActivityBefore)
-            if reaped >= DaemonDatabase.emptySessionReapBatch {
-                logger.debug("Reaped \(reaped) empty session(s); rescheduling")
+            // On the selection, not the deletions: one session the delete's
+            // re-check kept must not end the cycle with the rest of a full
+            // batch still waiting. A kept one is not selected again (it is no
+            // longer ended, or now has a row that keeps it), so this ends.
+            if selected >= DaemonDatabase.emptySessionReapBatch {
+                logger.debug("Reaped \(reaped) of \(selected) empty session(s); rescheduling")
                 return .rerun
             }
             logger.info("Empty-session reap complete — \(reaped) session(s)")
@@ -99,12 +104,28 @@ extension DaemonDatabase {
         keepSessionTables: [String] = [],
         lastActivityBefore: Double? = nil
     ) throws -> Int {
-        guard batchSize > 0, let store = eventReads else { return 0 }
+        try reapEndedSessionsWithNoEvents(
+            batchSize: batchSize, keepSessionTables: keepSessionTables,
+            lastActivityBefore: lastActivityBefore).deleted
+    }
+
+    /// ``deleteEndedSessionsWithNoEvents(batchSize:keepSessionTables:lastActivityBefore:)``,
+    /// also reporting how many sessions it selected: `selected == batchSize`
+    /// means more may remain, however many the delete's re-check kept.
+    ///
+    /// The selection already skips a session with legacy `event_log` rows, so
+    /// such sessions never fill a batch and starve the ones behind them.
+    public func reapEndedSessionsWithNoEvents(
+        batchSize: Int = DaemonDatabase.emptySessionReapBatch,
+        keepSessionTables: [String] = [],
+        lastActivityBefore: Double? = nil
+    ) throws -> (selected: Int, deleted: Int) {
+        guard batchSize > 0, let store = eventReads else { return (0, 0) }
         for table in keepSessionTables {
             let plain = !table.isEmpty && table.unicodeScalars.allSatisfy {
                 CharacterSet.alphanumerics.contains($0) && $0.isASCII || $0 == "_"
             }
-            guard plain, try tableHasColumn(table, "session_id") else { return 0 }
+            guard plain, try tableHasColumn(table, "session_id") else { return (0, 0) }
         }
         let page = Self.claudeReadChunk
         // julianday('') is NULL, so a session with no usable clock never passes this.
@@ -119,6 +140,9 @@ extension DaemonDatabase {
             try query("""
                 SELECT session_id FROM sessions
                 WHERE status = 'ended' AND session_id > ? \(before)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM event_log WHERE event_log.session_id = sessions.session_id
+                  )
                 ORDER BY session_id LIMIT ?
             """, params: [after] + beforeParams + [page]) { row in ids.append(row[0] ?? "") }
             guard let last = ids.last else { break }
@@ -130,11 +154,11 @@ extension DaemonDatabase {
             if ids.count < page { break }
         }
         doomed = Array(doomed.prefix(batchSize))
-        guard !doomed.isEmpty else { return 0 }
+        guard !doomed.isEmpty else { return (0, 0) }
         let keepClauses = keepSessionTables.map {
             "AND NOT EXISTS (SELECT 1 FROM \($0) k WHERE k.session_id = sessions.session_id)"
         }.joined(separator: "\n")
-        return try write { database in
+        let deleted: Int = try write { database in
             var deleted = 0
             for start in stride(from: 0, to: doomed.count, by: page) {
                 let chunk = Array(doomed[start..<min(start + page, doomed.count)])
@@ -151,6 +175,7 @@ extension DaemonDatabase {
             }
             return deleted
         }
+        return (doomed.count, deleted)
     }
 
     /// The ids among `sessionIds` (at most `claudeReadChunk`) with a row in any of `tables`.
