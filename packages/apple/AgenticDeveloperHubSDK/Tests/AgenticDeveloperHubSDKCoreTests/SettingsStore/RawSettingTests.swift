@@ -332,6 +332,58 @@ final class SettingsSnapshotPushTests: XCTestCase {
         push.stop()
     }
 
+    /// Review c33: a change the observer has not reported yet (it reports one
+    /// main-queue hop later) is still newer than a read that comes back first.
+    /// The read is not written over it; the change is sent.
+    func testAReadDoesNotOverwriteAChangeTheObserverHasNotReportedYet() async {
+        let received = Received(failures: 0)
+        let remote = Remote(30)
+        var local = 7
+        var changeDuringRead: Int?
+        let push = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            send: { await received.take($0) },
+            registerReconnect: { _ in },
+            pull: {
+                let value = remote.read()
+                if let change = changeDuringRead { local = change; changeDuringRead = nil }
+                return { local = value }
+            }
+        )
+        push.start(makeObservers: { _ in [] })
+        await settle(push)
+        XCTAssertEqual(local, 30)
+
+        // The first read.
+        let first = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            send: { await received.take($0) },
+            registerReconnect: { _ in },
+            pull: {
+                let value = remote.read()
+                if let change = changeDuringRead { local = change; changeDuringRead = nil }
+                return { local = value }
+            }
+        )
+        changeDuringRead = 14
+        first.start(makeObservers: { _ in [] })
+        await settle(first)
+        XCTAssertEqual(local, 14, "the first read did not undo the change")
+        first.stop()
+
+        // A later refresh.
+        changeDuringRead = 90
+        push.refresh()
+        await settle(push)
+        XCTAssertEqual(local, 90, "the refresh did not undo the change")
+        let bodies = await received.bodies
+        XCTAssertEqual(bodies, [Data(#"{"value":14}"#.utf8), Data(#"{"value":90}"#.utf8)],
+                       "each unreported change was sent")
+        push.stop()
+    }
+
     /// A receiver that can be down, and refuses one value while up.
     private final class Gate: @unchecked Sendable {
         private let lock = NSLock()
