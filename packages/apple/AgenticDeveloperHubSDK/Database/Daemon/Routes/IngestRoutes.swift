@@ -15,8 +15,10 @@ enum IngestRoutes {
             RouteTable.route("GET", where: { $0 == ["ingestion", "spool"] }) { _, _ in
                 spoolStatus(services.spool)
             },
+            // The file quarantine, then the provider spool's: every record the
+            // count below includes is listed with its reason.
             RouteTable.route("GET", where: { $0 == ["ingestion", "errors"] }) { _, _ in
-                .json(quarantine.list())
+                .json(quarantine.list() + (services.pipelineQuarantine?.quarantinedErrors() ?? []))
             },
             RouteTable.route("GET", where: { $0 == ["ingestion", "errors", "count"] }) { _, _ in
                 let counts = quarantine.counts()

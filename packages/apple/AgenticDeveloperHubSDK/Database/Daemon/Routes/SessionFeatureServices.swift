@@ -3,10 +3,18 @@ import AgenticDeveloperHubSDKCore
 import AIPluginKit
 import Foundation
 
+/// The most spool-quarantined records one ingestion-error list shows.
+public let pipelineQuarantineListLimit = 1000
+
 /// A provider pipeline's spool quarantine, as the ingestion-error routes drive it.
 public protocol PipelineQuarantineControl: Sendable {
     /// Records parked in quarantine; 0 when it cannot be read.
     func quarantinedCount() -> Int
+    /// The parked records as quarantine entries, oldest first, at most
+    /// `pipelineQuarantineListLimit`; empty when the quarantine cannot be read.
+    /// Each is out of retries (`exhausted`), the same as the count reports it, so
+    /// every record the badge counts has a line in the list with its reason.
+    func quarantinedErrors() -> [IngestionErrorDTO]
     /// Sends every quarantined record through the pipeline again and wakes its
     /// drainer. Returns how many were requeued.
     @discardableResult

@@ -235,6 +235,40 @@ extension ClaudePipelineHandles: PipelineQuarantineControl {
         (try? spool.quarantinedCount()) ?? 0
     }
 
+    /// The spool's quarantined records, keyed by their dedup key. A hook record
+    /// names its event and session when its envelope parses; any other record
+    /// (or an envelope that does not parse) shows its source kind and no session.
+    public func quarantinedErrors() -> [IngestionErrorDTO] {
+        let parked: [QuarantinedRecord]
+        do {
+            parked = try spool.quarantined(limit: pipelineQuarantineListLimit)
+        } catch {
+            Self.logger.error("Quarantine list failed: \(error.localizedDescription, privacy: .public)")
+            return []
+        }
+        let formatter = ISO8601DateFormatter()
+        return parked.map { entry in
+            let named = Self.hookEventAndSession(entry.record)
+            return IngestionErrorDTO(
+                filename: entry.record.dedupKey,
+                eventType: named?.event ?? entry.record.sourceKind,
+                sessionId: named?.session ?? "",
+                quarantinedAt: formatter.string(from: entry.quarantinedAt),
+                reason: entry.reason,
+                retryCount: ProviderSpool.maxAttempts,
+                exhausted: true)
+        }
+    }
+
+    /// A hook record's event type and session id, read from its envelope.
+    private static func hookEventAndSession(_ record: RawRecord) -> (event: String, session: String)? {
+        guard record.sourceKind == ClaudeProvider.hookKind,
+              let json = try? JSONSerialization.jsonObject(with: record.payload) as? [String: Any],
+              let event = json["event"] as? String, !event.isEmpty else { return nil }
+        let hookData = json["hook_data"] as? [String: Any]
+        return (event, hookData?["session_id"] as? String ?? "")
+    }
+
     @discardableResult
     public func requeueAllQuarantined() -> Int {
         do {

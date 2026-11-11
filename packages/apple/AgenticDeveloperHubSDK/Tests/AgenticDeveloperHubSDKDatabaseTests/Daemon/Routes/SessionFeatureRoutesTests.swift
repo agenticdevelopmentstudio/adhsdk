@@ -47,6 +47,13 @@ final class SessionFeatureRoutesTests: XCTestCase {
         init(parked: Int) { self.parked = parked }
         var log: [String] { lock.withLock { calls } }
         func quarantinedCount() -> Int { parked }
+        func quarantinedErrors() -> [IngestionErrorDTO] {
+            (0..<parked).map { index in
+                IngestionErrorDTO(filename: "parked-\(index)", eventType: "Stop", sessionId: "s",
+                                  quarantinedAt: "2026-11-10T00:00:00Z", reason: "unparseable",
+                                  retryCount: ProviderSpool.maxAttempts, exhausted: true)
+            }
+        }
         func requeueAllQuarantined() -> Int { lock.withLock { calls.append("requeue") }; return parked }
         func clearArchivedQuarantine() -> Int { lock.withLock { calls.append("clear") }; return 0 }
     }
@@ -241,6 +248,16 @@ final class SessionFeatureRoutesTests: XCTestCase {
         let body = try json(response)
         XCTAssertEqual(body["count"] as? Int, 3)
         XCTAssertEqual(body["exhausted"] as? Int, 3)
+    }
+
+    /// Every record the count includes is in the list, with its reason.
+    func testProviderQuarantineIsListed() async throws {
+        let fake = FakePipelineQuarantine(parked: 2)
+        let response = try await send(
+            "GET", "/ingestion/errors", services: try makeServices(pipelineQuarantine: fake))
+        let rows = try XCTUnwrap(JSONSerialization.jsonObject(with: response.body) as? [[String: Any]])
+        XCTAssertEqual(rows.compactMap { $0["filename"] as? String }, ["parked-0", "parked-1"])
+        XCTAssertEqual(rows.compactMap { $0["reason"] as? String }, ["unparseable", "unparseable"])
     }
 
     /// Review F1(c)(d): retry requeues the provider quarantine; clear asks it to
