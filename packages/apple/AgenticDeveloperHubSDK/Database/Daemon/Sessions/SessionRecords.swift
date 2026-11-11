@@ -42,6 +42,21 @@ extension DaemonDatabase {
         }
     }
 
+    /// Moves a session to `cwd` and records `gitBranch` as its branch, blank
+    /// included. Unlike ``updateSessionGitBranch(_:sessionId:)``, a blank here is
+    /// the truth: the old branch belonged to a directory the session is no longer
+    /// in, so keeping it would show a branch nothing is on.
+    public func relocateSession(sessionId: String, cwd: String, gitBranch: String) {
+        do {
+            try execute(
+                "UPDATE sessions SET cwd = ?, git_branch = ? WHERE session_id = ?",
+                params: [cwd, gitBranch, sessionId]
+            )
+        } catch {
+            logger.error("relocateSession failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     /// Writes the resolved `project_root` (possibly empty for a non-git cwd) and
     /// stamps the algorithm `version` that produced it, so the backfill won't
     /// recompute this row until the version advances.

@@ -79,6 +79,25 @@ public struct ConversationSummaryDTO: Codable, Sendable, Equatable {
         return names.contains { !$0.isEmpty && $0.lowercased().hasPrefix(wanted) }
     }
 
+    /// The branches a checkout sits on when nothing is in progress. `HEAD` is
+    /// what a detached checkout reports.
+    public static let baseBranches: Set<String> = ["", "main", "master", "HEAD"]
+
+    /// Whether the conversation is work in progress: its session is on a
+    /// feature branch (anything but ``baseBranches``) or runs inside a
+    /// worktree (a `.claude/worktrees/<name>` directory, at any depth).
+    public static func isWorkInProgress(session: SessionDTO) -> Bool {
+        !baseBranches.contains(session.gitBranch) || isInWorktree(session.cwd)
+    }
+
+    /// Whether `path` is inside a `.claude/worktrees/<name>` worktree.
+    public static func isInWorktree(_ path: String) -> Bool {
+        let segments = path.split(separator: "/")
+        return segments.indices.contains { index in
+            segments[index] == ".claude" && index + 2 < segments.count && segments[index + 1] == "worktrees"
+        }
+    }
+
     /// A `TERM_PROGRAM` as the terminal's name, or the raw value when unknown.
     public static func terminalName(_ termProgram: String) -> String {
         KnownTerminals.match(termProgram: termProgram)?.displayName ?? termProgram

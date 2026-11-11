@@ -68,6 +68,43 @@ public struct LivenessService: Sendable {
             database.updateSessionStatus(.ended, sessionId: session.sessionId)
             onStatusChange(session.sessionId, .ended)
         }
+
+        relocateStrandedSessions(shown: shown, processes: processes)
+    }
+
+    /// Moves every live, named session whose recorded `cwd` is gone from disk to the
+    /// directory its process is in now, and re-reads the branch there.
+    ///
+    /// A session's `cwd` is wherever its last hook ran. An agent that enters a
+    /// worktree, works there, leaves and deletes it (`/ship` does exactly this
+    /// with its docs worktree) fires no hook after the delete, so the row goes on
+    /// naming a directory and branch that no longer exist — for as long as the
+    /// session idles, which can be days. The process is still there, and it
+    /// is the one witness to where the session actually is.
+    ///
+    /// Only a *missing* directory is replaced. One that exists is left alone even
+    /// when it differs from the process's, since a session legitimately sits below
+    /// where its process runs (an agent `cd`s into a subdirectory).
+    func relocateStrandedSessions(
+        shown: [(sessionId: String, status: String, cwd: String)],
+        processes: [LiveClaudeProcess]
+    ) {
+        var processCwd: [String: String] = [:]
+        for process in processes where !process.cwd.isEmpty {
+            if let sessionId = process.sessionId { processCwd[sessionId] = process.cwd }
+        }
+        let fileManager = FileManager.default
+        for session in shown where !session.cwd.isEmpty {
+            guard let liveCwd = processCwd[session.sessionId], liveCwd != session.cwd,
+                  !fileManager.fileExists(atPath: session.cwd),
+                  fileManager.fileExists(atPath: liveCwd) else { continue }
+            let branch = SessionEnricher.gitBranch(at: liveCwd) ?? ""
+            logger.info("""
+                Session \(session.sessionId, privacy: .public) moved from deleted \
+                \(session.cwd, privacy: .public) to \(liveCwd, privacy: .public)
+                """)
+            database.relocateSession(sessionId: session.sessionId, cwd: liveCwd, gitBranch: branch)
+        }
     }
 
     /// The sessions backed by a live `claude` process.
