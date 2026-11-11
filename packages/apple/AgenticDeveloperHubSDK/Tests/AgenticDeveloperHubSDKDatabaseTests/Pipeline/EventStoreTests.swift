@@ -421,6 +421,29 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(try turnIds(path)["d"], 6)
     }
 
+    /// A store whose `trimmed_turn_keys` predates `folded` gets the column; its
+    /// keys stay, with no fields to correct against.
+    func testOpeningAStoreWhoseTrimmedKeysLackFoldedAddsTheColumn() throws {
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        do { _ = try makeStore() }
+        let queue = try DatabaseQueue(path: path)
+        try queue.write { conn in
+            try conn.execute(sql: "DROP TABLE trimmed_turn_keys")
+            try conn.execute(sql: """
+                CREATE TABLE trimmed_turn_keys (provider TEXT NOT NULL, dedup_key TEXT NOT NULL,
+                    PRIMARY KEY (provider, dedup_key)) WITHOUT ROWID
+                """)
+            try conn.execute(sql: "INSERT INTO trimmed_turn_keys VALUES ('mock', 'old')")
+        }
+        _ = try makeStore()
+        let rows = try queue.read { conn in
+            try Row.fetchAll(conn, sql: "SELECT dedup_key, folded FROM trimmed_turn_keys")
+        }
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertEqual(rows.first?["dedup_key"] as String?, "old")
+        XCTAssertNil(rows.first?["folded"] as String?)
+    }
+
     /// A store older than the trim has no `trimmed_turn_keys` either; the
     /// upgrade still opens it, seeding the sequence from the rows held.
     func testOpeningAPreTrimStoreWithoutTurnAutoincrementOpens() throws {
