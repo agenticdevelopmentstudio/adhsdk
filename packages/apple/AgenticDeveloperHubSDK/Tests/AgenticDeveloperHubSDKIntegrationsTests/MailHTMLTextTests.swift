@@ -14,8 +14,21 @@ struct MailHTMLTextTests {
     }
 
     @Test func leavesUnknownAndMalformedReferencesAlone() {
-        let text = "AT&T; R&D &bogus; &#; &#xZZ; &#0; 5 & 6; tom&jerry"
+        let text = "AT&T; R&D &bogus; &#; &#xZZ; &#0; &#+65; &#-65; &# 65; &#x+41; &#123456789; 5 & 6; tom&jerry"
         #expect(MailHTMLText.decodeEntities(text) == text)
+    }
+
+    @Test func readsTheC1RangeAsWindows1252() {
+        #expect(MailHTMLText.decodeEntities("don&#146;t &#147;quoted&#148; &#128;5&#133;") == "don’t “quoted” €5…")
+        #expect(MailHTMLText.decodeEntities("a&#x92;b") == "a’b")
+    }
+
+    @Test func dropsControlCharactersSoMailCantDriveTheTerminal() {
+        #expect(MailHTMLText.decodeEntities("&#27;[2J&#27;]0;title&#7;done") == "[2J]0;titledone")
+        #expect(MailHTMLText.decodeEntities("raw\u{1B}[31mred\u{7}\u{9B}") == "raw[31mred")
+        #expect(MailHTMLText.decodeEntities("tab&#9;and&#10;line") == "tab\tand\nline")
+        #expect(MailHTMLText.decodeEntities("&#129;&#157;x") == "x")
+        #expect(MailHTMLText.plainText(fromHTML: "<p>&#27;[2Jhi</p>") == "[2Jhi")
     }
 
     @Test func dropsInvisiblePaddingCharacters() {

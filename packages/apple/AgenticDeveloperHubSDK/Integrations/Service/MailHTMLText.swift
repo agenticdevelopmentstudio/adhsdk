@@ -70,7 +70,10 @@ public enum MailHTMLText {
     }
 
     /// `text` with its HTML character references decoded: the common named ones and every
-    /// numeric one (`&#39;`, `&#x27;`). One that is malformed or unknown is left as written.
+    /// numeric one (`&#39;`, `&#x27;`), reading `&#128;`–`&#159;` as windows-1252 the way
+    /// browsers do. One that is malformed or unknown is left as written. Control characters
+    /// other than tab and line breaks are dropped, decoded or raw, so mail can't write terminal
+    /// escape sequences.
     /// Invisible padding characters (zero-width spaces, soft hyphens, and joiners that join
     /// nothing) are dropped: marketing mail fills its preview text with them.
     public static func decodeEntities(_ text: String) -> String {
@@ -104,18 +107,42 @@ public enum MailHTMLText {
         let name = String(nameScalars)
         let end = semicolon + 1
         if name.hasPrefix("#") {
-            let digits = name.dropFirst()
-            let value: UInt32?
-            if digits.first == "x" || digits.first == "X" {
-                value = UInt32(digits.dropFirst(), radix: 16)
-            } else {
-                value = UInt32(digits, radix: 10)
-            }
-            guard let value, let scalar = Unicode.Scalar(value), value != 0 else { return nil }
-            return (String(Character(scalar)), end)
+            guard let value = numericValue(name.dropFirst()), value != 0 else { return nil }
+            if let mapped = windows1252[value] { return (String(mapped), end) }
+            guard let scalar = Unicode.Scalar(value) else { return nil }
+            return (isControl(scalar) ? "" : String(scalar), end)
         }
         guard let decoded = named[name] else { return nil }
         return (decoded, end)
+    }
+
+    /// The value of a numeric reference's digits (`39`, `x27`): ASCII digits only, so no sign
+    /// or space, and at most eight of them.
+    private static func numericValue(_ digits: Substring) -> UInt32? {
+        let hex = digits.first == "x" || digits.first == "X"
+        let number = hex ? digits.dropFirst() : digits
+        guard (1...8).contains(number.count),
+              number.unicodeScalars.allSatisfy({ hex ? $0.properties.isASCIIHexDigit : ("0"..."9").contains($0) })
+        else { return nil }
+        return UInt32(number, radix: hex ? 16 : 10)
+    }
+
+    /// What browsers show for `&#128;`–`&#159;`: the windows-1252 characters Word and Outlook
+    /// meant. The five codes windows-1252 leaves undefined stay controls (and are dropped).
+    private static let windows1252: [UInt32: Character] = [
+        0x80: "€", 0x82: "‚", 0x83: "ƒ", 0x84: "„", 0x85: "…", 0x86: "†", 0x87: "‡", 0x88: "ˆ",
+        0x89: "‰", 0x8A: "Š", 0x8B: "‹", 0x8C: "Œ", 0x8E: "Ž", 0x91: "‘", 0x92: "’", 0x93: "“",
+        0x94: "”", 0x95: "•", 0x96: "–", 0x97: "—", 0x98: "˜", 0x99: "™", 0x9A: "š", 0x9B: "›",
+        0x9C: "œ", 0x9E: "ž", 0x9F: "Ÿ"
+    ]
+
+    /// C0 controls other than tab, line feed and carriage return; DEL; C1 controls.
+    private static func isControl(_ scalar: Unicode.Scalar) -> Bool {
+        switch scalar.value {
+        case 0x09, 0x0A, 0x0D: return false
+        case 0x00...0x1F, 0x7F...0x9F: return true
+        default: return false
+        }
     }
 
     private static let named: [String: String] = [
@@ -145,11 +172,13 @@ public enum MailHTMLText {
 
     private static func stripInvisible(_ text: String) -> String {
         let scalars = Array(text.unicodeScalars)
-        guard scalars.contains(where: { invisible.contains($0) || joiners.contains($0) }) else { return text }
+        guard scalars.contains(where: { invisible.contains($0) || joiners.contains($0) || isControl($0) }) else {
+            return text
+        }
         var result = String.UnicodeScalarView()
-        for (index, scalar) in scalars.enumerated() where !invisible.contains(scalar) {
+        for (index, scalar) in scalars.enumerated() where !invisible.contains(scalar) && !isControl(scalar) {
             if joiners.contains(scalar) {
-                let next = scalars[(index + 1)...].first { !invisible.contains($0) }
+                let next = scalars[(index + 1)...].first { !invisible.contains($0) && !isControl($0) }
                 guard let previous = result.last, joinable(previous), let next, joinable(next) else { continue }
             }
             result.append(scalar)
