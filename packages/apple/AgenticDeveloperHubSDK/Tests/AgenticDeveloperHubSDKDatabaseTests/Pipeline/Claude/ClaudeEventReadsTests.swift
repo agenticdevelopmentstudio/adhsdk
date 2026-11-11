@@ -310,13 +310,15 @@ final class ClaudeEventReadsTests: XCTestCase {
     private func turn(
         _ key: String, _ session: String, _ stamp: String?, model: String? = "claude-sonnet-4-6",
         tool: String? = nil, agent: String? = nil, input: Int = 0, output: Int = 0, cacheRead: Int = 0,
-        cacheWrite: Int = 0, cache1h: Int = 0, kind: String = "assistant", subagent: Bool = false
+        cacheWrite: Int = 0, cache1h: Int = 0, kind: String = "assistant", subagent: Bool = false,
+        asOf: String? = nil
     ) throws {
         turnSeq += 1
         let time = try stamp.map { try XCTUnwrap(TimestampParsing.parse($0)) } ?? Date(timeIntervalSince1970: 0)
+        let observed = try asOf.map { try XCTUnwrap(TimestampParsing.parse($0)) }
         var batch = NormalizedBatch()
         batch.turns = [TurnRow(
-            dedupKey: key, sessionID: session, time: time, model: model, agent: agent, toolName: tool,
+            dedupKey: key, sessionID: session, time: time, asOf: observed, model: model, agent: agent, toolName: tool,
             inputTokens: input, outputTokens: output, cacheReadTokens: cacheRead, cacheWriteTokens: cacheWrite,
             attrs: ["kind": .string(kind), "cache_creation_1h_tokens": .number(Double(cache1h)),
                     "is_subagent": .bool(subagent)],
@@ -646,6 +648,51 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(try harness.store.trim(olderThan: cutoff, deadline: farFuture).turns, 1)
         XCTAssertEqual(try trimmedRows(), folded, "folding the same turn twice adds nothing")
         XCTAssertEqual(try totals("s1"), after)
+    }
+
+    /// A trimmed turn observed again later (its last streamed line arriving
+    /// after a trim folded the first) corrects the folded sums by the
+    /// difference; the same observation again, or an older one, changes nothing.
+    func testALaterObservationOfATrimmedTurnCorrectsTheFoldedSums() throws {
+        try seedForTrim()
+        _ = try harness.store.trim(olderThan: try epoch("2026-06-10T00:00:00Z"), deadline: farFuture)
+        let opus = "s1|claude-opus-4-1|n1|i7|o500|r0|w0|h0"
+        let other = "s2|claude-sonnet-4-6|n1|i0|o9|r0|w0|h0"
+
+        func later() throws {
+            try turn("a", "s1", "2026-06-01T12:00:00Z", input: 1000, output: 2500, cacheRead: 300, cacheWrite: 40,
+                     cache1h: 12, asOf: "2026-06-01T12:05:00Z")
+        }
+        try later()
+        let corrected = [opus, "s1|claude-sonnet-4-6|n1|i1000|o2500|r300|w40|h12", other]
+        XCTAssertEqual(try trimmedRows(), corrected)
+        XCTAssertEqual(try harness.store.read { conn in try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM turns") },
+                       1, "the trimmed turn is not stored again")
+        let s1Totals = try totals("s1")
+        XCTAssertTrue(s1Totals.contains(" o3013 "), s1Totals)
+
+        try later()
+        try turn("a", "s1", "2026-06-01T12:00:00Z", output: 99999, asOf: "2026-06-01T11:00:00Z")
+        XCTAssertEqual(try trimmedRows(), corrected, "a repeated or older observation changes nothing")
+
+        // A key recorded before its fields were kept has nothing to correct against.
+        try harness.store.pool.write { conn in
+            try conn.execute(sql: "UPDATE trimmed_turn_keys SET folded = NULL WHERE dedup_key = 'a'")
+        }
+        try turn("a", "s1", "2026-06-01T12:00:00Z", output: 7, asOf: "2026-06-02T00:00:00Z")
+        XCTAssertEqual(try trimmedRows(), corrected)
+    }
+
+    /// A trimmed turn whose model changes moves from its old (session, model)
+    /// row to the new one; a row left with no turns goes.
+    func testATrimmedTurnWhoseModelChangesMovesBetweenRows() throws {
+        try seedForTrim()
+        _ = try harness.store.trim(olderThan: try epoch("2026-06-10T00:00:00Z"), deadline: farFuture)
+
+        try turn("b", "s1", "2026-06-01T12:01:00Z", input: 7, output: 500, asOf: "2026-06-01T12:05:00Z")
+        XCTAssertEqual(try trimmedRows(), [
+            "s1|claude-sonnet-4-6|n2|i1007|o2500|r300|w40|h10", "s2|claude-sonnet-4-6|n1|i0|o9|r0|w0|h0"
+        ])
     }
 
     func testATurnsBatchThatFailsFoldsNothingAndTheRerunFoldsOnce() throws {
