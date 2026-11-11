@@ -20,6 +20,9 @@ public enum MailRequest: Codable, Sendable, Equatable {
     case getMessage(account: String, id: String)
     /// Messages by our id or Gmail's; labels by Gmail label id or exact name.
     case modifyLabels(account: String, messageIds: [String], add: [String], remove: [String])
+    /// Per message, one Gmail write that adds `destination` and removes whichever of `from`
+    /// the message carries; an empty `from` means INBOX. Ids and labels as for `modifyLabels`.
+    case moveMessages(account: String, messageIds: [String], destination: String, from: [String])
 
     /// True for the requests that read or label mail in accounts already signed in: everything
     /// `MailCommandLine` and `MailToolSource` send. False for the ones that administer the
@@ -27,7 +30,7 @@ public enum MailRequest: Codable, Sendable, Equatable {
     /// its own UI. The switch is exhaustive so a new request has to be placed on one side.
     public var isMailboxAccess: Bool {
         switch self {
-        case .listAccounts, .listLabels, .listMessages, .getMessage, .modifyLabels:
+        case .listAccounts, .listLabels, .listMessages, .getMessage, .modifyLabels, .moveMessages:
             return true
         case .providerStatus, .importOAuthClient, .removeProvider, .signIn, .cancelSignIn,
              .removeAccount, .updateSettings, .syncNow:
@@ -228,6 +231,20 @@ public struct MailMessagePage: Codable, Sendable, Equatable {
     }
 }
 
+/// One message a move changed: its refreshed copy and the names of the labels the move added
+/// and removed. `added` is empty when the message already carried the destination.
+public struct MailMoveResult: Codable, Sendable, Equatable {
+    public var message: MailMessage
+    public var added: [String]
+    public var removed: [String]
+
+    public init(message: MailMessage, added: [String], removed: [String]) {
+        self.message = message
+        self.added = added
+        self.removed = removed
+    }
+}
+
 public enum MailResponse: Codable, Sendable, Equatable {
     case providerStatus(MailProviderStatus)
     case accounts([MailAccount])
@@ -235,6 +252,7 @@ public enum MailResponse: Codable, Sendable, Equatable {
     case labels([MailLabel])
     case messages(MailMessagePage)
     case message(MailMessage)
+    case moved([MailMoveResult])
     // swiftlint:disable:next identifier_name
     case ok
     case failure(String)
@@ -306,6 +324,15 @@ public struct MailClient: Sendable {
         let request = MailRequest.modifyLabels(account: account, messageIds: messageIds, add: add, remove: remove)
         guard case .messages(let page) = try await send(request) else { throw Self.unexpected }
         return page.messages
+    }
+
+    public func moveMessages(
+        account: String, messageIds: [String], destination: String, from: [String]
+    ) async throws -> [MailMoveResult] {
+        let request = MailRequest.moveMessages(
+            account: account, messageIds: messageIds, destination: destination, from: from)
+        guard case .moved(let results) = try await send(request) else { throw Self.unexpected }
+        return results
     }
 
     private static let unexpected = MailClientError.remote("unexpected response from the mail service")

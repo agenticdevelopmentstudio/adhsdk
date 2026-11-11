@@ -52,7 +52,18 @@ public struct MailToolSource: ChatToolSource {
                         "message_ids": strings("The messages to change."),
                         "add": strings("Label ids or names to add."),
                         "remove": strings("Label ids or names to remove.")
-                    ], required: ["account", "message_ids"]))
+                    ], required: ["account", "message_ids"])),
+            ToolDefinition(
+                name: "mail_move_messages",
+                description: "Moves messages to a label, in Gmail: per message, one change that adds the label "
+                    + "and removes INBOX, or each of from that the message carries. Reports what each lost and gained.",
+                parametersJSONSchema: ToolJSONSchema.object(
+                    properties: [
+                        "account": account,
+                        "message_ids": strings("The messages to move."),
+                        "to": ToolJSONSchema.string("The label id or name to move them to."),
+                        "from": strings("Label ids or names to move them out of. Defaults to INBOX.")
+                    ], required: ["account", "message_ids", "to"]))
         ]
     }
 
@@ -83,6 +94,8 @@ public struct MailToolSource: ChatToolSource {
             return try MailJSON.encode(message)
         case "mail_modify_labels":
             return try MailJSON.encode(try await modify(arguments))
+        case "mail_move_messages":
+            return try MailJSON.encode(try await move(arguments))
         default:
             throw ArgumentError(message: "unknown tool \(name)")
         }
@@ -120,6 +133,15 @@ public struct MailToolSource: ChatToolSource {
             throw ArgumentError(message: "give at least one label in add or remove")
         }
         return try await client.modifyLabels(account: account, messageIds: ids, add: add, remove: remove)
+    }
+
+    private func move(_ arguments: [String: Any]) async throws -> [MailMoveResult] {
+        let account = try string("account", arguments)
+        let ids = try strings("message_ids", arguments)
+        let destination = try string("to", arguments)
+        let from = try strings("from", arguments)
+        guard !ids.isEmpty else { throw ArgumentError(message: "message_ids must not be empty") }
+        return try await client.moveMessages(account: account, messageIds: ids, destination: destination, from: from)
     }
 
     // MARK: - Arguments

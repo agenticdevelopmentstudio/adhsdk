@@ -120,6 +120,9 @@ public actor MailIntegrationService {
             let messages = try await modifyLabels(
                 connection: try connection(account), messageIds: messageIds, add: add, remove: remove)
             return .messages(MailMessagePage(messages: messages, nextCursor: nil))
+        case .moveMessages(let account, let messageIds, let destination, let from):
+            return .moved(try await moveMessages(
+                connection: try connection(account), messageIds: messageIds, destination: destination, from: from))
         }
     }
 
@@ -523,34 +526,106 @@ public actor MailIntegrationService {
         let labels = try store.labels(connectionId: connection.id)
         let addIds = try Self.resolveLabels(add, in: labels)
         let removeIds = try Self.resolveLabels(remove, in: labels)
-        let originals = try messageIds.map { id in
-            guard let message = try store.message(connectionId: connection.id, idOrExternalId: id) else {
-                throw IntegrationError.unknownMessage(id)
-            }
-            return message
-        }
+        let originals = try storedMessages(messageIds, connection: connection)
         let names = Self.labelNames(labels)
         let account = connection.externalAccountId
         guard !addIds.isEmpty || !removeIds.isEmpty, !originals.isEmpty else {
             return originals.map { Self.mailMessage($0, account: account, names: names, includeBodies: false) }
         }
+        let payload = ModifyPayload(messageIds: originals.map(\.externalId), add: addIds, remove: removeIds)
+        let fetched = try await writeLabels(
+            [LabelWrite(indices: Array(originals.indices), add: addIds, remove: removeIds)],
+            originals: originals, connection: connection, actionType: "modify_labels", payload: Self.json(payload))
+        return originals.indices.compactMap { fetched[$0] }.map {
+            Self.mailMessage($0, account: account, names: names, includeBodies: false)
+        }
+    }
 
-        let gmailIds = originals.map(\.externalId)
+    /// Adds `destination` to each message and removes whichever of `from` (INBOX when empty) it
+    /// carries, in one Gmail write per message: messages that lose the same labels share a
+    /// `batchModify`. A message Gmail no longer has when it is re-read is left out of the result.
+    private func moveMessages(
+        connection: IntegrationConnection, messageIds: [String], destination: String, from: [String]
+    ) async throws -> [MailMoveResult] {
+        let labels = try store.labels(connectionId: connection.id)
+        let destinationId = try Self.resolveLabels([destination], in: labels)[0]
+        let fromIds = try Self.resolveLabels(from.isEmpty ? ["INBOX"] : from, in: labels)
+        guard !fromIds.contains(destinationId) else {
+            throw RequestFailure("cannot move to \(destination): it is also a label to move from")
+        }
+        let originals = try storedMessages(messageIds, connection: connection)
+        guard !originals.isEmpty else { return [] }
+
+        let removals = originals.map { message in fromIds.filter(message.labelIds.contains) }
+        var writes: [LabelWrite] = []
+        for (index, remove) in removals.enumerated() {
+            if let existing = writes.firstIndex(where: { $0.remove == remove }) {
+                writes[existing].indices.append(index)
+            } else {
+                writes.append(LabelWrite(indices: [index], add: [destinationId], remove: remove))
+            }
+        }
+        let payload = MovePayload(destination: destinationId, from: fromIds, writes: writes.map { write in
+            ModifyPayload(messageIds: write.indices.map { originals[$0].externalId }, add: write.add,
+                          remove: write.remove)
+        })
+        let fetched = try await writeLabels(
+            writes, originals: originals, connection: connection, actionType: "move_messages",
+            payload: Self.json(payload))
+
+        let names = Self.labelNames(labels)
+        let account = connection.externalAccountId
+        return originals.indices.compactMap { index in
+            guard let message = fetched[index] else { return nil }
+            let added = originals[index].labelIds.contains(destinationId) ? [] : [destinationId]
+            return MailMoveResult(
+                message: Self.mailMessage(message, account: account, names: names, includeBodies: false),
+                added: added.map { names[$0] ?? $0 }, removed: removals[index].map { names[$0] ?? $0 })
+        }
+    }
+
+    /// The stored messages for `ids` (ours or Gmail's), in order; `unknownMessage` for the first
+    /// that matches none.
+    private func storedMessages(_ ids: [String], connection: IntegrationConnection) throws -> [EmailMessage] {
+        try ids.map { id in
+            guard let message = try store.message(connectionId: connection.id, idOrExternalId: id) else {
+                throw IntegrationError.unknownMessage(id)
+            }
+            return message
+        }
+    }
+
+    /// One label change for some of the messages: `indices` into the originals.
+    private struct LabelWrite {
+        var indices: [Int]
+        let add: [String]
+        let remove: [String]
+    }
+
+    /// Logs the action, writes each change to Gmail (`batchModify`, chunked at Gmail's limit),
+    /// then re-reads and stores the messages. Returns the re-read messages keyed by index into
+    /// `originals`; one Gmail no longer has is absent. A Gmail failure logs how many ids it had
+    /// already applied; a failure to re-read after the write still logs the action as done.
+    private func writeLabels(
+        _ writes: [LabelWrite], originals: [EmailMessage], connection: IntegrationConnection,
+        actionType: String, payload: String
+    ) async throws -> [Int: EmailMessage] {
         let logId = Self.newId()
-        let payload = ModifyPayload(messageIds: gmailIds, add: addIds, remove: removeIds)
         try store.insertActionLog(ActionLog(
-            id: logId, connectionId: connection.id, actionType: "modify_labels",
-            requestPayload: Self.json(payload)))
+            id: logId, connectionId: connection.id, actionType: actionType, requestPayload: payload))
 
-        // Write the change to Gmail. A failure logs how many ids Gmail had already applied.
         let api: any GmailAPI
         var applied = 0
         do {
             api = try gmailAPI(for: connection.id)
-            for start in stride(from: 0, to: gmailIds.count, by: GmailRESTClient.batchModifyLimit) {
-                let chunk = Array(gmailIds[start..<min(start + GmailRESTClient.batchModifyLimit, gmailIds.count)])
-                try await api.batchModify(ids: chunk, add: addIds, remove: removeIds)
-                applied += chunk.count
+            for write in writes {
+                let gmailIds = write.indices.map { originals[$0].externalId }
+                for start in stride(from: 0, to: gmailIds.count, by: GmailRESTClient.batchModifyLimit) {
+                    let end = min(start + GmailRESTClient.batchModifyLimit, gmailIds.count)
+                    let chunk = Array(gmailIds[start..<end])
+                    try await api.batchModify(ids: chunk, add: write.add, remove: write.remove)
+                    applied += chunk.count
+                }
             }
         } catch {
             try? store.finishActionLog(id: logId, status: "error", result: Self.json(["applied": applied]),
@@ -562,10 +637,10 @@ public actor MailIntegrationService {
         // The change is in Gmail now, so the action succeeded even if refreshing the local copies fails.
         do {
             let fetched = try await fetch(originals, api: api, connectionId: connection.id)
-            let refreshed = try storeRefetched(fetched, originals: originals, connectionId: connection.id)
+            try storeRefetched(fetched, originals: originals, connectionId: connection.id)
             try store.finishActionLog(
                 id: logId, status: "ok", result: Self.json(ModifyResult(modified: applied)), error: nil)
-            return refreshed.map { Self.mailMessage($0, account: account, names: names, includeBodies: false) }
+            return fetched
         } catch {
             let message = error.localizedDescription
             try? store.finishActionLog(
@@ -574,6 +649,12 @@ public actor MailIntegrationService {
             if (error as? IntegrationError) == .revoked { record(error, connectionId: connection.id) }
             throw RequestFailure("labels applied; refreshing messages failed: \(message)")
         }
+    }
+
+    private struct MovePayload: Encodable {
+        let destination: String
+        let from: [String]
+        let writes: [ModifyPayload]
     }
 
     private struct ModifyPayload: Encodable {
@@ -626,6 +707,7 @@ public actor MailIntegrationService {
     /// Synchronous on purpose: the connection is re-read here, after the fetch's awaits, so settings
     /// changed or an account removed meanwhile are honoured, and nothing can change it again before
     /// the writes. A removed account gets no writes at all.
+    @discardableResult
     private func storeRefetched(
         _ fetched: [Int: EmailMessage], originals: [EmailMessage], connectionId: String
     ) throws -> [EmailMessage] {

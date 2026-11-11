@@ -703,6 +703,96 @@ struct MailIntegrationServiceTests {
         #expect(page.messages.count == 2_500)
     }
 
+    @Test func moveAddsTheDestinationAndRemovesInboxInOneWritePerMessage() async throws {
+        let harness = try Harness()
+        harness.api.setMessage(harness.dto("m3", labels: ["Label_1"]))
+        let account = try await labelled(harness)
+        let local = try #require(try harness.store.message(connectionId: account.id, idOrExternalId: "m1"))
+
+        let response = await harness.service.handle(.moveMessages(
+            account: account.email, messageIds: [local.id, "m2", "m3"], destination: "Work/Projects", from: []))
+
+        // m3 is not in the inbox: it gains the label and loses nothing, in a write of its own.
+        #expect(harness.api.batchModifyCalls == [
+            FakeGmailAPI.BatchModifyCall(ids: ["m1", "m2"], add: ["Label_2"], remove: ["INBOX"]),
+            FakeGmailAPI.BatchModifyCall(ids: ["m3"], add: ["Label_2"], remove: [])
+        ])
+        guard case .moved(let results) = response else {
+            Issue.record("moveMessages returned \(response)")
+            return
+        }
+        #expect(results.map(\.message.gmailId) == ["m1", "m2", "m3"])
+        #expect(results[0].message.id == local.id)
+        #expect(results.map(\.added) == [["Work/Projects"], ["Work/Projects"], ["Work/Projects"]])
+        #expect(results.map(\.removed) == [["INBOX"], ["INBOX"], []])
+        #expect(results[1].message.labelNames == ["Work", "Work/Projects"])
+        let stored = try #require(try harness.store.message(connectionId: account.id, idOrExternalId: "m2"))
+        #expect(stored.labelIds == ["Label_1", "Label_2"])
+        let log = try #require(try harness.actionLogs().last)
+        #expect(log.actionType == "move_messages")
+        #expect(log.status == "ok")
+    }
+
+    @Test func moveRemovesOnlyTheFromLabelsEachMessageCarries() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1", "m2"], destination: "STARRED", from: ["Work", "INBOX"]))
+        #expect(harness.api.batchModifyCalls == [
+            FakeGmailAPI.BatchModifyCall(ids: ["m1"], add: ["STARRED"], remove: ["INBOX"]),
+            FakeGmailAPI.BatchModifyCall(ids: ["m2"], add: ["STARRED"], remove: ["Label_1", "INBOX"])
+        ])
+        guard case .moved(let results) = response else {
+            Issue.record("moveMessages returned \(response)")
+            return
+        }
+        #expect(results.map(\.removed) == [["INBOX"], ["Work", "INBOX"]])
+    }
+
+    @Test func moveToALabelTheMessageAlreadyHasAddsNothing() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m2"], destination: "Work", from: []))
+        guard case .moved(let results) = response else {
+            Issue.record("moveMessages returned \(response)")
+            return
+        }
+        #expect(results.first?.added == [])
+        #expect(results.first?.removed == ["INBOX"])
+        #expect(harness.api.batchModifyCalls.count == 1)
+    }
+
+    @Test func moveRejectsUnknownMessagesAndLabelsBeforeCallingGmail() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        #expect(await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1", "nope"], destination: "Work", from: []))
+            == .notFound("No message matches “nope”"))
+        #expect(await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1"], destination: "work", from: []))
+            == .failure("unknown label: work"))
+        #expect(await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1"], destination: "Work", from: ["Nope"]))
+            == .failure("unknown label: Nope"))
+        #expect(await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1"], destination: "INBOX", from: []))
+            == .failure("cannot move to INBOX: it is also a label to move from"))
+        #expect(harness.api.batchModifyCalls.isEmpty)
+    }
+
+    @Test func moveBatchFailureLogsAnError() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        harness.api.batchModifyError = IntegrationError.gmail(status: 500, message: "boom")
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m1"], destination: "Work", from: []))
+        #expect(response == .failure("Gmail returned 500: boom"))
+        let log = try #require(try harness.actionLogs().last)
+        #expect(log.actionType == "move_messages")
+        #expect(log.status == "error")
+    }
+
     @Test func modifyLabelsRevokedMarksAccountRevoked() async throws {
         let harness = try Harness()
         let account = try await labelled(harness)

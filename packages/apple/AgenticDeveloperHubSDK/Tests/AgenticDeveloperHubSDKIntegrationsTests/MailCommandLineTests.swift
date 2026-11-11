@@ -72,6 +72,64 @@ struct MailCommandLineTests {
         #expect(mail.requests == [.modifyLabels(account: "a", messageIds: ["m1"], add: [], remove: ["Work"])])
     }
 
+    @Test func moveBuildsMoveRequest() async {
+        let moved = MailMoveResult(message: ScriptedMail.message(), added: ["Work"], removed: ["INBOX"])
+        let mail = ScriptedMail(.moved([moved]))
+        let (code, _) = await run(["move", "a", "m1", "m2", "--to", "Work"], mail)
+        #expect(code == 0)
+        let (withFrom, _) = await run(
+            ["move", "a", "--from", "INBOX", "m1", "--to", "Job Search/01. Applied", "--from", "Job Search/00. Inbox"],
+            mail)
+        #expect(withFrom == 0)
+        #expect(mail.requests == [
+            .moveMessages(account: "a", messageIds: ["m1", "m2"], destination: "Work", from: []),
+            .moveMessages(account: "a", messageIds: ["m1"], destination: "Job Search/01. Applied",
+                          from: ["INBOX", "Job Search/00. Inbox"])
+        ])
+    }
+
+    @Test func moveNeedsExactlyOneDestinationAndAnId() async {
+        let mail = ScriptedMail(.moved([]))
+        for args in [["move", "a", "m1"], ["move", "a", "m1", "--to", "X", "--to", "Y"], ["move", "a", "--to", "X"],
+                     ["move", "a", "m1", "--to"], ["move", "a", "m1", "--to", "X", "--from"],
+                     ["move", "a", "m1", "--to", "X", "--bogus"]] {
+            let (code, out) = await run(args, mail)
+            #expect(code == 64, "\(args)")
+            #expect(out.stderr == [MailCommandLine.usage()], "\(args)")
+        }
+        #expect(mail.requests.isEmpty)
+    }
+
+    @Test func movePrintsWhatEachMessageGainedAndLost() async {
+        var second = ScriptedMail.message(labelNames: ["Work"])
+        second.id = "m2"
+        let mail = ScriptedMail(.moved([
+            MailMoveResult(message: ScriptedMail.message(labelNames: ["Work"]), added: ["Work"],
+                           removed: ["INBOX", "Later"]),
+            MailMoveResult(message: second, added: [], removed: [])
+        ]))
+        let (code, out) = await run(["move", "a", "m1", "m2", "--to", "Work"], mail)
+        #expect(code == 0)
+        #expect(out.stdout == [
+            "2026-01-02T03:04:05.000Z  m1  a@example.com  Hello  [Work]  +Work -INBOX -Later\n"
+                + "2026-01-02T03:04:05.000Z  m2  a@example.com  Hello  [Work]  (no change)"
+        ])
+    }
+
+    @Test func moveJSONIsTheResults() async throws {
+        let results = [MailMoveResult(message: ScriptedMail.message(), added: ["Work"], removed: ["INBOX"])]
+        let (code, out) = await run(["move", "a", "m1", "--to", "Work", "--json"], ScriptedMail(.moved(results)))
+        #expect(code == 0)
+        #expect(out.stdout == [try expectedJSON(results)])
+    }
+
+    @Test func moveOfAnUnknownMessageExits3() async {
+        let mail = ScriptedMail(.notFound("No message matches “zz”"))
+        let (code, out) = await run(["move", "a", "zz", "--to", "Work"], mail)
+        #expect(code == 3)
+        #expect(out.stderr == ["Error: No message matches “zz”"])
+    }
+
     @Test func labelWithoutIdsIsUsageError() async {
         let mail = ScriptedMail(.ok)
         let (code, out) = await run(["label", "add", "a", "Work"], mail)

@@ -9,12 +9,12 @@ struct MailToolSourceTests {
         await source.callTool(name: name, argumentsJSON: Data(json.utf8))
     }
 
-    @Test func listsFiveTools() async {
+    @Test func listsSixTools() async {
         let source = MailToolSource(client: ScriptedMail(.ok).client)
         let names = await source.toolDefinitions().map(\.name)
         #expect(names == [
             "mail_list_accounts", "mail_list_labels", "mail_list_messages", "mail_get_message",
-            "mail_modify_labels"
+            "mail_modify_labels", "mail_move_messages"
         ])
     }
 
@@ -119,6 +119,36 @@ struct MailToolSourceTests {
         let result = await call(MailToolSource(client: mail.client), "mail_get_message", #"{"account":"a","id":"zz"}"#)
         #expect(result.isError)
         #expect(result.content == "No message matches “zz”")
+    }
+
+    @Test func moveMapsArguments() async throws {
+        let results = [MailMoveResult(message: ScriptedMail.message(), added: ["Work"], removed: ["INBOX"])]
+        let mail = ScriptedMail(.moved(results))
+        let source = MailToolSource(client: mail.client)
+        let result = await call(source, "mail_move_messages", #"{"account":"a","message_ids":["m1"],"to":"Work"}"#)
+        #expect(!result.isError)
+        #expect(result.content == (try expectedJSON(results)))
+        _ = await call(source, "mail_move_messages",
+                       #"{"account":"a","message_ids":["m1","m2"],"to":"Work","from":["Later"]}"#)
+        #expect(mail.requests == [
+            .moveMessages(account: "a", messageIds: ["m1"], destination: "Work", from: []),
+            .moveMessages(account: "a", messageIds: ["m1", "m2"], destination: "Work", from: ["Later"])
+        ])
+    }
+
+    @Test func moveRejectsBadArguments() async {
+        let cases = [
+            (#"{"account":"a","message_ids":["m1"]}"#, "missing required argument: to"),
+            (#"{"account":"a","message_ids":[],"to":"Work"}"#, "message_ids must not be empty"),
+            (#"{"account":"a","message_ids":["m1"],"to":"Work","from":"INBOX"}"#, "from must be an array of strings")
+        ]
+        for (json, message) in cases {
+            let mail = ScriptedMail(.moved([]))
+            let result = await call(MailToolSource(client: mail.client), "mail_move_messages", json)
+            #expect(result.isError, "\(json)")
+            #expect(result.content == message, "\(json)")
+            #expect(mail.requests.isEmpty, "\(json)")
+        }
     }
 
     @Test func toolErrorSurfacesRemoteFailure() async {

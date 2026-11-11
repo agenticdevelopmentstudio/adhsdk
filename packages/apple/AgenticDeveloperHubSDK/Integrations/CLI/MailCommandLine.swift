@@ -13,15 +13,18 @@ public enum MailCommandLine {
           \(program) get <account> <id>
           \(program) label add <account> <label> <id>...
           \(program) label remove <account> <label> <id>...
+          \(program) move <account> <id>... --to <label> [--from <label>]...
         D is YYYY-MM-DD or an ISO-8601 timestamp. L is a label id or exact name. An id is our
         message id or Gmail's.
         list: a message must carry every --label (AND) and, if any are given, at least one
           --any-label (OR); the two combine.
+        move: adds the --to label and removes INBOX, or each --from label the message carries,
+          in one Gmail write per message.
         exit status: 0 success, 1 failure, \(notFoundStatus) a message id matches nothing, 64 usage error.
         """
     }
 
-    /// The exit status when a message id matches nothing (`get`, `label`).
+    /// The exit status when a message id matches nothing (`get`, `label`, `move`).
     public static let notFoundStatus: Int32 = 3
 
     /// 0 on success or when help was asked for (printed to stdout), 64 for a usage error (the
@@ -61,6 +64,7 @@ public enum MailCommandLine {
         case list(MailMessageFilter)
         case get(account: String, id: String)
         case modify(account: String, ids: [String], add: [String], remove: [String])
+        case move(account: String, ids: [String], destination: String, from: [String])
     }
 
     private typealias Parsed = (command: Command, json: Bool)
@@ -105,6 +109,7 @@ public enum MailCommandLine {
         case "get": return plain(rest, count: 2) { .get(account: $0[0], id: $0[1]) }
         case "list": return parseList(rest)
         case "label": return parseLabel(rest)
+        case "move": return parseMove(rest)
         default: return nil
         }
     }
@@ -150,6 +155,16 @@ public enum MailCommandLine {
         return (command, options.json)
     }
 
+    /// `move <account> <id>... --to <label> [--from <label>]...`: exactly one `--to`.
+    private static func parseMove(_ args: [String]) -> Parsed? {
+        guard let options = split(args, valued: ["--to", "--from"]), options.positionals.count >= 2,
+              let destinations = options.values["--to"], destinations.count == 1 else { return nil }
+        let command = Command.move(
+            account: options.positionals[0], ids: Array(options.positionals.dropFirst()),
+            destination: destinations[0], from: options.values["--from"] ?? [])
+        return (command, options.json)
+    }
+
     // MARK: - Running
 
     private static func execute(_ command: Command, json: Bool, client: MailClient) async throws -> String {
@@ -172,6 +187,10 @@ public enum MailCommandLine {
         case .modify(let account, let ids, let add, let remove):
             let messages = try await client.modifyLabels(account: account, messageIds: ids, add: add, remove: remove)
             return try json ? MailJSON.encode(messages) : messages.map(messageLine).joined(separator: "\n")
+        case .move(let account, let ids, let destination, let from):
+            let results = try await client.moveMessages(
+                account: account, messageIds: ids, destination: destination, from: from)
+            return try json ? MailJSON.encode(results) : results.map(moveLine).joined(separator: "\n")
         }
     }
 
@@ -186,6 +205,13 @@ public enum MailCommandLine {
     private static func messageLine(_ message: MailMessage) -> String {
         let labels = message.labelNames.joined(separator: ", ")
         return "\(message.date)  \(message.id)  \(message.from)  \(message.subject)  [\(labels)]"
+    }
+
+    /// The message line, then what changed: `+Added -Removed`, or `(no change)`.
+    private static func moveLine(_ result: MailMoveResult) -> String {
+        let changes = result.added.map { "+\($0)" } + result.removed.map { "-\($0)" }
+        let summary = changes.isEmpty ? "(no change)" : changes.joined(separator: " ")
+        return "\(messageLine(result.message))  \(summary)"
     }
 
     private static func detail(_ message: MailMessage) -> String {

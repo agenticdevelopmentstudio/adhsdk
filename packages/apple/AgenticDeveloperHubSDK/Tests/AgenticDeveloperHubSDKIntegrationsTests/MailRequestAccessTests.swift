@@ -23,6 +23,7 @@ struct MailRequestAccessTests {
             case .listAccounts: response = .accounts([])
             case .listLabels: response = .labels([])
             case .getMessage: response = .failure("none")
+            case .moveMessages: response = .moved([])
             default: response = .messages(MailMessagePage(messages: [], nextCursor: nil))
             }
             return try JSONEncoder().encode(response)
@@ -33,10 +34,11 @@ struct MailRequestAccessTests {
         let sent = Sent()
         let client = recordingClient(sent)
         for args in [["accounts"], ["labels", "a"], ["list", "a"], ["get", "a", "1"],
-                     ["label", "add", "a", "L", "1"], ["label", "remove", "a", "L", "1"]] {
+                     ["label", "add", "a", "L", "1"], ["label", "remove", "a", "L", "1"],
+                     ["move", "a", "1", "--to", "L"]] {
             _ = await MailCommandLine.run(args, client: client, stdout: { _ in }, stderr: { _ in })
         }
-        #expect(sent.all.count == 6)
+        #expect(sent.all.count == 7)
         #expect(sent.all.allSatisfy { $0.isMailboxAccess })
     }
 
