@@ -119,7 +119,7 @@ public final class ProjectsCoordinator: AppFeature {
 
         registry.register(AppCommand(
             id: CommandID.newProjectWindow,
-            title: "New Project Window",
+            title: "New Development Project Window",
             category: "Projects",
             run: { [weak self] in self?.openNewWindow() }
         ))

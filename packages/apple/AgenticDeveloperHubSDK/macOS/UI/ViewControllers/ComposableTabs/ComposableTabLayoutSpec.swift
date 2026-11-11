@@ -42,6 +42,7 @@ public enum ComposableTabLayoutSpecError: Error, CustomStringConvertible, Equata
     case invalidCardinality(ComposableTabsViewID, min: Int, max: Int)
     case initialViewNotAllowed(ComposableTabsViewID)
     case splitWithoutChildren
+    case retiredViewAllowed(ComposableTabsViewID)
 
     public var description: String {
         switch self {
@@ -55,6 +56,8 @@ public enum ComposableTabLayoutSpecError: Error, CustomStringConvertible, Equata
             return "layout spec starts a pane with \(id.rawValue), which that pane does not allow"
         case .splitWithoutChildren:
             return "layout spec has a split with no children"
+        case .retiredViewAllowed(let id):
+            return "layout spec retires \(id.rawValue) but still allows it"
         }
     }
 }
@@ -93,6 +96,14 @@ public struct ComposableTabLayoutSpec: Sendable {
     public var allows: [ComposableTabsViewAllowance]
     /// A region the user may neither remove nor split. Applies to descendants.
     public var isFixed: Bool
+    /// Views a stored layout may still name but this spec has dropped for
+    /// good. `reconcile(_:)` removes their leaves outright, collapsing the
+    /// split each one sat in, rather than demoting them to placeholders: a
+    /// pane type that is gone should leave no empty pane behind. Meaningful
+    /// on the root only, and never also allowed (`validate(against:)`).
+    /// A retired view needs no registration — its point is that nothing
+    /// builds it any more.
+    public var retiredViews: Set<ComposableTabsViewID> = []
 
     public init(
         kind: Kind,
@@ -136,7 +147,27 @@ public struct ComposableTabLayoutSpec: Sendable {
     /// user gesture that first consults it (`fail-fast`).
     @MainActor
     public func validate(against registry: ComposableTabsViewRegistry) throws {
+        if let retired = retiredViews.first(where: { names($0) }) {
+            throw ComposableTabLayoutSpecError.retiredViewAllowed(retired)
+        }
         try validate(against: registry, inherited: [:])
+    }
+
+    /// Whether this spec allows `viewID` anywhere, or starts a pane on it.
+    private func names(_ viewID: ComposableTabsViewID) -> Bool {
+        if allows.contains(where: { $0.viewID == viewID }) { return true }
+        switch kind {
+        case .pane(let initial): return initial == viewID
+        case .split(_, let children): return children.contains { $0.names(viewID) }
+        }
+    }
+
+    /// This spec with `viewIDs` retired: removed from any stored layout that
+    /// still names them — see `retiredViews`.
+    public func retiring(_ viewIDs: Set<ComposableTabsViewID>) -> Self {
+        var retired = self
+        retired.retiredViews.formUnion(viewIDs)
+        return retired
     }
 
     @MainActor
@@ -337,10 +368,28 @@ public struct ComposableTabLayoutSpec: Sendable {
     ///
     /// The repair runs both ways: a view the spec no longer allows is demoted,
     /// and a view it *requires* and the tree does not have is added.
+    ///
+    /// Retired views (`retiredViews`) are the exception to "demoted, not
+    /// deleted": their leaves are pruned first, and a tree that held nothing
+    /// else starts over from the blueprint.
     public func reconcile(_ tree: LayoutNode) -> LayoutNode {
+        let tree = pruningRetiredViews(from: tree)
         let demoted = demotedLeaves(in: tree)
         let trimmed = demoted.isEmpty ? tree : Self.demoting(tree, leaves: demoted)
         return addingRequiredViews(to: trimmed)
+    }
+
+    /// `tree` without the leaves of retired views, each one's split collapsed
+    /// into its sibling, which takes the whole of the room the split had.
+    private func pruningRetiredViews(from tree: LayoutNode) -> LayoutNode {
+        guard !retiredViews.isEmpty else { return tree }
+        var pruned: LayoutNode? = tree
+        for leaf in Self.leaves(in: tree) {
+            guard case .leaf(let contentType, _) = leaf.kind, retiredViews.contains(contentType),
+                  let remaining = pruned else { continue }
+            pruned = ComposableTabsMove.removing(leaf.id, from: remaining)
+        }
+        return pruned ?? blueprint()
     }
 
     /// The other half of the repair: a `min` the stored tree does not meet is

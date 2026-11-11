@@ -96,7 +96,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
                         + "browser setting from the Settings window, and a change made here "
                         + "applies to this pane alone. Pick a topic on the left."
                     : "The Safari Web Browser and Chrome Web Browser panes are web "
-                        + "browsers inside a project window: an address bar over a page, "
+                        + "browsers inside a Development Project window: an address bar over a page, "
                         + "drawn by WebKit or by Chromium. These topics decide how their pages "
                         + "load, what they remember about where you have been, what sites may "
                         + "keep and do, and where downloads land. Safari and Chrome hold what "

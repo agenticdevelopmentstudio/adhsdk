@@ -26,7 +26,7 @@ public final class ProjectDatabase {
     var database: OpaquePointer?
     public let databasePath: String
 
-    public static let currentSchemaVersion = 5
+    public static let currentSchemaVersion = 6
 
     /// `~/.<token>/Projects.db` — e.g. `~/.coffeegrinder/Projects.db`.
     ///
@@ -111,7 +111,17 @@ public final class ProjectDatabase {
     /// on every one after it, with every project, tab and pane state in the
     /// file unreachable. Rolled back, the file is exactly where it started
     /// and the next launch migrates it cleanly.
+    ///
+    /// Foreign keys are off for the length of the chain, because migration 6
+    /// rebuilds `git_repo` and SQLite's own procedure for that requires it:
+    /// with them on, `DROP TABLE git_repo` deletes every settings, tab and
+    /// layout row by cascade. The pragma is a no-op inside a transaction, so
+    /// it brackets the transaction rather than living in the migration, and
+    /// `PRAGMA foreign_key_check` before the commit is what proves nothing was
+    /// left dangling.
     private func runMigrations() throws {
+        try execute("PRAGMA foreign_keys=OFF")
+        defer { _ = try? execute("PRAGMA foreign_keys=ON") }
         try execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             try execute("""
@@ -135,6 +145,10 @@ public final class ProjectDatabase {
             if try schemaVersion() < 5 {
                 try migration005_browserJars()
             }
+            if try schemaVersion() < 6 {
+                try migration006_repoKind()
+            }
+            try checkForeignKeys()
             try execute("COMMIT")
         } catch {
             _ = try? execute("ROLLBACK")
@@ -389,15 +403,73 @@ public final class ProjectDatabase {
         try execute("INSERT INTO schema_migrations (version) VALUES (5)")
     }
 
+    /// Version 6: a row's kind, `project` or `fileBrowser`
+    /// (`GitRepo.Kind`), so a File Browser window's workspace can live in the
+    /// same table as the projects without being one.
+    ///
+    /// A rebuild rather than `ADD COLUMN`, because `path` was `UNIQUE` on its
+    /// own and a folder that is both a scanned project and open in a File
+    /// Browser window needs two rows; the constraint becomes
+    /// `UNIQUE(path, kind)`. This is SQLite's documented procedure: a new
+    /// table, the rows copied across, the old one dropped and the new one
+    /// renamed into its place, with foreign keys off (`runMigrations()`), so
+    /// the child tables' `REFERENCES git_repo(id)` resolve to the new table by
+    /// name. Every existing row is a project.
+    ///
+    /// Skipped when the column is already there, for the same reason the
+    /// other migrations check before they alter (`idempotency`).
+    private func migration006_repoKind() throws {
+        if try !columnExists("kind", in: "git_repo") {
+            try execute("DROP TABLE IF EXISTS git_repo_v6")
+            try execute("""
+                CREATE TABLE git_repo_v6 (
+                    id TEXT PRIMARY KEY,
+                    path TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    remote TEXT,
+                    first_seen REAL NOT NULL,
+                    last_seen REAL NOT NULL,
+                    last_opened REAL,
+                    kind TEXT NOT NULL DEFAULT 'project',
+                    UNIQUE(path, kind)
+                )
+            """)
+            try execute("""
+                INSERT INTO git_repo_v6 (id, path, name, remote, first_seen, last_seen, last_opened, kind)
+                SELECT id, path, name, remote, first_seen, last_seen, last_opened, 'project' FROM git_repo
+            """)
+            try execute("DROP TABLE git_repo")
+            try execute("ALTER TABLE git_repo_v6 RENAME TO git_repo")
+            try execute("CREATE INDEX IF NOT EXISTS idx_git_repo_name ON git_repo(name)")
+        }
+        try execute("INSERT INTO schema_migrations (version) VALUES (6)")
+    }
+
+    /// Fails the migration when any row points at a parent that is not
+    /// there — what a rebuild done wrong would leave behind.
+    private func checkForeignKeys() throws {
+        var stmt: OpaquePointer?
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_prepare_v2(database, "PRAGMA foreign_key_check", -1, &stmt, nil) == SQLITE_OK else {
+            throw ProjectDatabaseError.prepareFailed(lastErrorMessage)
+        }
+        if try stepRow(stmt) {
+            let table = columnText(stmt, 0) ?? "?"
+            throw ProjectDatabaseError.invalidSchema("foreign key check failed in \(table)")
+        }
+    }
+
     // MARK: - Repositories
 
     private static let repoColumns =
-        "id, path, name, remote, first_seen, last_seen, last_opened"
+        "id, path, name, remote, first_seen, last_seen, last_opened, kind"
 
-    /// Every known repository. They are all repositories the last scan found:
-    /// one it did not is deleted, not filtered out here.
+    /// Every known project. They are all repositories the last scan found:
+    /// one it did not is deleted, not filtered out here. File Browser rows
+    /// are not projects, and are never listed, scanned or reconciled.
     public func allRepos() throws -> [GitRepo] {
-        try queryRepos("SELECT \(Self.repoColumns) FROM git_repo ORDER BY name COLLATE NOCASE")
+        try queryRepos(
+            "SELECT \(Self.repoColumns) FROM git_repo WHERE kind = 'project' ORDER BY name COLLATE NOCASE")
     }
 
     public func repo(id: UUID) throws -> GitRepo? {
@@ -406,16 +478,19 @@ public final class ProjectDatabase {
         }.first
     }
 
-    public func repo(path: String) throws -> GitRepo? {
-        try queryRepos("SELECT \(Self.repoColumns) FROM git_repo WHERE path = ?") { stmt in
+    /// The row of `kind` at `path`. A folder can have a project row and a
+    /// File Browser row, so the kind is part of the key.
+    public func repo(path: String, kind: GitRepo.Kind = .project) throws -> GitRepo? {
+        try queryRepos("SELECT \(Self.repoColumns) FROM git_repo WHERE path = ? AND kind = ?") { stmt in
             self.bindText(stmt, 1, path)
+            self.bindText(stmt, 2, kind.rawValue)
         }.first
     }
 
     public func insert(_ repo: GitRepo) throws {
         try executeBound("""
             INSERT INTO git_repo (\(Self.repoColumns))
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """) { stmt in
             bindText(stmt, 1, repo.id.uuidString)
             bindText(stmt, 2, repo.path)
@@ -424,6 +499,7 @@ public final class ProjectDatabase {
             sqlite3_bind_double(stmt, 5, repo.firstSeen.timeIntervalSince1970)
             sqlite3_bind_double(stmt, 6, repo.lastSeen.timeIntervalSince1970)
             bindOptionalDate(stmt, 7, repo.lastOpened)
+            bindText(stmt, 8, repo.kind.rawValue)
         }
     }
 
@@ -485,7 +561,10 @@ public final class ProjectDatabase {
                 remote: columnText(stmt, 3),
                 firstSeen: Date(timeIntervalSince1970: sqlite3_column_double(stmt, 4)),
                 lastSeen: Date(timeIntervalSince1970: sqlite3_column_double(stmt, 5)),
-                lastOpened: columnDate(stmt, 6)
+                lastOpened: columnDate(stmt, 6),
+                // An unknown kind is a row a newer build wrote; it is not a
+                // project, so it is read as the kind that is never listed.
+                kind: columnText(stmt, 7).flatMap(GitRepo.Kind.init(rawValue:)) ?? .fileBrowser
             ))
         }
         return repos

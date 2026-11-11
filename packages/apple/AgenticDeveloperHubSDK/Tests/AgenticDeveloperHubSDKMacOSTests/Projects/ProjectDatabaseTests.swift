@@ -63,6 +63,21 @@ final class ProjectDatabaseTests: XCTestCase {
         XCTAssertThrowsError(try database.insert(GitRepo(path: "/tmp/alpha", name: "alpha again")))
     }
 
+    /// A folder can be a project and have a File Browser window: the kind is
+    /// part of the key, each lookup finds its own row, and the project list
+    /// never shows the File Browser one.
+    func testAFileBrowserRowSharesAPathWithAProjectButIsNeverListed() throws {
+        let database = try makeDatabase()
+        let project = GitRepo(path: "/tmp/alpha", name: "alpha")
+        let browser = GitRepo(path: "/tmp/alpha", name: "alpha", kind: .fileBrowser)
+        try database.insert(project)
+        try database.insert(browser)
+
+        XCTAssertEqual(try database.repo(path: "/tmp/alpha")?.id, project.id)
+        XCTAssertEqual(try database.repo(path: "/tmp/alpha", kind: .fileBrowser)?.id, browser.id)
+        XCTAssertEqual(try database.allRepos().map(\.id), [project.id])
+    }
+
     func testListingIsSortedByNameCaseInsensitively() throws {
         let database = try makeDatabase()
         try database.insert(GitRepo(path: "/tmp/one", name: "zebra"))

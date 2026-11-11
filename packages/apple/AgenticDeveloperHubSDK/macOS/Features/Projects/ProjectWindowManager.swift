@@ -389,6 +389,97 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         activateApp()
     }
 
+    // MARK: - File Browser windows
+
+    /// The File Browser windows this manager opened, by row id. A subset of
+    /// `controllers`, so scripting, the pane commands and the extension
+    /// placer see a File Browser window as the composable-tabs window it is;
+    /// this set is what keeps it out of everything that is a *project's*:
+    /// groups, the shelf, the persisted open flag and the arrangement the
+    /// next new project copies.
+    private var fileBrowserIDs: Set<UUID> = []
+
+    /// Whether `repoID` names an open File Browser window.
+    public func isFileBrowserWindow(_ repoID: UUID) -> Bool {
+        fileBrowserIDs.contains(repoID)
+    }
+
+    /// Opens a File Browser window over `repo` — a `.fileBrowser` row — or
+    /// brings forward the one already open on it.
+    ///
+    /// A composable-tabs window like a project's, but with its own `layout`,
+    /// no shelf, no group, no project controller (it is a folder, not a
+    /// repository: no checkout tabs, no branch commands), no persisted open
+    /// flag — its owner keeps its own list of what to reopen, told through
+    /// `onClose` — and no part in `UserSettings.lastActiveProjectWindow`,
+    /// so a new project is never arranged like a File Browser window.
+    ///
+    /// - Parameter onClose: called when the user closes the window, never for
+    ///   the closes AppKit makes on the way out of the app (quitting with a
+    ///   window open means it reopens).
+    /// - Parameter activates: false for launch restore, which reopens what
+    ///   was open without taking the foreground.
+    @discardableResult
+    public func openFileBrowserWindow(
+        _ repo: GitRepo,
+        layout: ComposableTabsLayout,
+        activates: Bool = true,
+        onClose: @escaping @MainActor (GitRepo) -> Void
+    ) -> ComposableTabsWindowController? {
+        if let existing = controllers[repo.id] {
+            existing.showWindow(nil)
+            existing.window?.makeKeyAndOrderFront(nil)
+            if activates { activateApp() }
+            return existing
+        }
+        guard let database else {
+            Self.logger.error(
+                "Cannot open a File Browser on \(repo.name, privacy: .public): no project database attached")
+            return nil
+        }
+        let languageServices = languageServicesFactory?(repo.url)
+        let workspace = ProjectWorkspace(
+            repo: repo,
+            database: database,
+            layout: layout,
+            languageServices: languageServices,
+            gitClient: gitClient,
+            arrangementSourceID: nil
+        )
+        languageServices?.start()
+        let controller = ComposableTabsWindowController(project: workspace)
+        controllers[repo.id] = controller
+        openOrder.append(repo.id)
+        fileBrowserIDs.insert(repo.id)
+        controller.loadWindow()
+        observeClose(of: controller, repoID: repo.id, recordsOpenState: false)
+        if let window = controller.window {
+            fileBrowserCloseObservers[repo.id] = NotificationCenter.default.addObserver(
+                forName: NSWindow.willCloseNotification,
+                object: window,
+                queue: nil
+            ) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.fileBrowserIDs.remove(repo.id)
+                    if let observer = self.fileBrowserCloseObservers.removeValue(forKey: repo.id) {
+                        NotificationCenter.default.removeObserver(observer)
+                    }
+                    if !WindowManager.shared.isTerminating { onClose(repo) }
+                }
+            }
+        }
+        refreshOpenWorkspaceIDs()
+        controller.showWindow(nil)
+        if activates {
+            controller.window?.makeKeyAndOrderFront(nil)
+            activateApp()
+        }
+        return controller
+    }
+
+    private var fileBrowserCloseObservers: [UUID: NSObjectProtocol] = [:]
+
     /// Puts `repoID`'s window on screen in its group, without asking for the
     /// foreground — for automation about to drive a pane in a project its
     /// group has ordered out, which a screenshot or a click cannot reach.

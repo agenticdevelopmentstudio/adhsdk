@@ -105,7 +105,7 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
                         + "panes, or this pane alone. "
                     : "Everything WebKit is keeping in the global jar, the one shared by "
                         + "every Safari pane that follows it; the jars of a worktree or a "
-                        + "single pane are listed in the project window's settings. ")
+                        + "single pane are listed in the Development Project window's settings. ")
                     + "One row per site: cookies, local storage, caches, service workers "
                     + "and the rest, named in the second column. Select a site and press "
                     + "− to remove what it kept, which signs you out of it. Remove All "

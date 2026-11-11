@@ -44,7 +44,7 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
         ComposableSettings.PanelHelp(topics: [
             .init(
                 title: "Active Pane",
-                body: "A project window is split into panes, and one of them is the one you "
+                body: "A Development Project window is split into panes, and one of them is the one you "
                     + "are working in. With this on, that pane is drawn with a border in a "
                     + "tone one step lighter than the others — enough to find it, not enough "
                     + "to compete with what is inside it."

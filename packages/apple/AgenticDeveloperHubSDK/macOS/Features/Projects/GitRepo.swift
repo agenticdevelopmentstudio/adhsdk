@@ -8,7 +8,21 @@ import Foundation
 /// path (`optimize-for-change`).
 public struct GitRepo: Sendable, Identifiable, Equatable {
 
+    /// What a row is for. A folder can have one row of each kind: a scanned
+    /// repository that is also open in a File Browser window keeps two rows,
+    /// two layouts and two windows, because the row is found by
+    /// `(path, kind)`, never by path alone.
+    public enum Kind: String, Sendable, CaseIterable {
+        /// A project the scan found, listed in the Project Browser.
+        case project
+        /// The workspace behind a File Browser window over one directory.
+        /// Never listed, scanned or reconciled as a project.
+        case fileBrowser
+    }
+
     public let id: UUID
+    /// Which kind of row this is. Fixed for the life of the row.
+    public let kind: Kind
     /// Absolute path to the working tree.
     public var path: String
     /// What to call it. Seeded from the directory name, then the user's to change.
@@ -27,9 +41,11 @@ public struct GitRepo: Sendable, Identifiable, Equatable {
         remote: String? = nil,
         firstSeen: Date = Date(),
         lastSeen: Date = Date(),
-        lastOpened: Date? = nil
+        lastOpened: Date? = nil,
+        kind: Kind = .project
     ) {
         self.id = id
+        self.kind = kind
         self.path = path
         self.name = name
         self.remote = remote
