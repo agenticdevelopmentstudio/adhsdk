@@ -4,18 +4,21 @@ import AgenticDeveloperHubSDKCore
 
 /// `ConversationStore.conversationMessages`: one session's messages, oldest
 /// first, paged by message id — the read behind `steno conversation fetch`.
+/// Every line goes in the way the daemon takes it: appended to a transcript
+/// file, read by the Claude pipeline's tailer, drained into `events.db`.
 final class ConversationMessagesTests: XCTestCase {
 
-    private var database: DaemonDatabase!
+    private var root: URL!
+    private var harness: ClaudePipelineTestHarness!
     private var store: ConversationStore!
-    private var tmpPath: String!
+    private var database: DaemonDatabase { harness.database }
     private var session = ""
 
     override func setUpWithError() throws {
-        let opened = try TestDaemonDatabase.makeSessionDatabase()
-        database = opened.db
-        tmpPath = opened.path
-        store = ConversationStore(database: opened.db)
+        root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("conversation-messages-\(UUID().uuidString)", isDirectory: true)
+        harness = try ClaudePipelineTestHarness(directory: root)
+        store = ConversationStore(database: harness.database)
         session = UUID().uuidString
         try database.createSessionStubIfMissing(
             sessionId: session, cwd: "/src/alpha", model: "claude-opus-5",
@@ -25,45 +28,50 @@ final class ConversationMessagesTests: XCTestCase {
 
     override func tearDownWithError() throws {
         store = nil
-        database = nil
-        TestDaemonDatabase.remove(path: tmpPath)
+        harness = nil
+        try? FileManager.default.removeItem(at: root)
     }
 
     // MARK: - Helpers
 
-    private func line(_ lineNo: Int, type: String, at timestamp: String, json: String)
-    -> JSONLScanner.RawTranscriptLine {
-        JSONLScanner.RawTranscriptLine(
-            lineNo: lineNo, sessionId: session, entryUuid: UUID().uuidString, parentUuid: "",
-            entryType: type, role: type, timestamp: timestamp, isSidechain: false, rawJSON: json,
-            isQueuedPrompt: QueuedPrompt.isQueuedPrompt(rawJSON: json))
+    /// One transcript line: `json` (an object starting `{"type":…`) with the
+    /// session, a fresh uuid and its time put in front, as Claude Code writes them.
+    private func line(at timestamp: String, json: String) -> String {
+        #"{"sessionId":"\#(session)","uuid":"\#(UUID().uuidString)","timestamp":"\#(timestamp)""#
+            + "," + json.dropFirst()
     }
 
-    private func prompt(_ lineNo: Int, at timestamp: String, _ text: String) -> JSONLScanner.RawTranscriptLine {
-        line(lineNo, type: "user", at: timestamp,
-             json: #"{"type":"user","message":{"role":"user","content":"\#(text)"}}"#)
+    private func prompt(at timestamp: String, _ text: String) -> String {
+        line(at: timestamp, json: #"{"type":"user","message":{"role":"user","content":"\#(text)"}}"#)
     }
 
-    private func reply(_ lineNo: Int, at timestamp: String, _ texts: String...) -> JSONLScanner.RawTranscriptLine {
+    private func reply(at timestamp: String, _ texts: String...) -> String {
         let blocks = texts.map { #"{"type":"text","text":"\#($0)"}"# }.joined(separator: ",")
-        return line(lineNo, type: "assistant", at: timestamp,
+        return line(at: timestamp,
                     json: #"{"type":"assistant","message":{"role":"assistant","stop_reason":"end_turn","#
                         + #""content":[\#(blocks)]}}"#)
     }
 
-    private func progress(_ lineNo: Int, at timestamp: String, _ text: String) -> JSONLScanner.RawTranscriptLine {
-        line(lineNo, type: "assistant", at: timestamp,
+    private func progress(at timestamp: String, _ text: String) -> String {
+        line(at: timestamp,
              json: #"{"type":"assistant","message":{"role":"assistant","stop_reason":"tool_use","#
                  + #""content":[{"type":"text","text":"\#(text)"}]}}"#)
     }
 
+    /// Appends to the session's transcript in `project` — a second project
+    /// folder is a second file, as a resumed session's is.
+    private func ingest(_ lines: [String], project: String = "-src-alpha") throws {
+        try harness.ingestTranscript(
+            lines: lines, file: harness.transcriptFile(sessionId: session, project: project))
+    }
+
     private func insertDialogue() throws {
-        try database.insertTranscriptLines([
-            prompt(1, at: "2026-09-01T10:00:00Z", "hello claude"),
-            progress(2, at: "2026-09-01T10:00:01Z", "looking around"),
-            reply(3, at: "2026-09-01T10:00:02Z", "hello", "how can I help"),
-            prompt(4, at: "2026-09-01T10:00:03Z", "thanks")
-        ], filePath: "/tmp/\(session).jsonl")
+        try ingest([
+            prompt(at: "2026-09-01T10:00:00Z", "hello claude"),
+            progress(at: "2026-09-01T10:00:01Z", "looking around"),
+            reply(at: "2026-09-01T10:00:02Z", "hello", "how can I help"),
+            prompt(at: "2026-09-01T10:00:03Z", "thanks")
+        ])
     }
 
     private func page(
@@ -94,17 +102,17 @@ final class ConversationMessagesTests: XCTestCase {
     /// holds no dialogue, its subagent's file holds it all — every line of it
     /// a sidechain, and script-driven (`sdk-cli`), as Claude Code writes them.
     func testWorkOutputWeavesInTheSubagentsTranscripts() throws {
-        try database.insertTranscriptLines([
-            prompt(1, at: "2026-09-01T10:00:00Z", "review this")
-        ], filePath: "/tmp/\(session).jsonl")
-        let sub = JSONLScanner.RawTranscriptLine(
-            lineNo: 1, sessionId: session, entryUuid: UUID().uuidString, parentUuid: "",
-            entryType: "assistant", role: "assistant", timestamp: "2026-09-01T10:00:05Z", isSidechain: true,
-            rawJSON: #"{"type":"assistant","isSidechain":true,"agentId":"a48","entrypoint":"sdk-cli","#
-                + #""message":{"role":"assistant","stop_reason":"end_turn","#
-                + #""content":[{"type":"text","text":"found a bug"}]}}"#,
-            isQueuedPrompt: false)
-        try database.insertTranscriptLines([sub], filePath: "/tmp/\(session)/subagents/agent-a48.jsonl")
+        try ingest([prompt(at: "2026-09-01T10:00:00Z", "review this")])
+        let subagentFile = harness.transcriptFile(sessionId: session, project: "-src-alpha")
+            .deletingPathExtension()
+            .appendingPathComponent("subagents", isDirectory: true)
+            .appendingPathComponent("agent-a48.jsonl")
+        try harness.ingestTranscript(lines: [
+            line(at: "2026-09-01T10:00:05Z",
+                 json: #"{"type":"assistant","isSidechain":true,"agentId":"a48","entrypoint":"sdk-cli","#
+                     + #""message":{"role":"assistant","stop_reason":"end_turn","#
+                     + #""content":[{"type":"text","text":"found a bug"}]}}"#)
+        ], file: subagentFile)
 
         XCTAssertEqual(try page().messages.map(\.content), ["review this"], "the main agent alone")
         let work = try page(work: true).messages
@@ -118,13 +126,13 @@ final class ConversationMessagesTests: XCTestCase {
     /// those (nobody typed them), but they are this session's own prompt and
     /// reply, so a plain read of the session shows them without `--work`.
     func testAHeadlessSessionsOwnDialogueNeedsNoWorkFlag() throws {
-        try database.insertTranscriptLines([
-            line(1, type: "user", at: "2026-09-01T10:00:00Z",
+        try ingest([
+            line(at: "2026-09-01T10:00:00Z",
                  json: #"{"type":"user","entrypoint":"sdk-cli","message":{"role":"user","content":"ping"}}"#),
-            line(2, type: "assistant", at: "2026-09-01T10:00:01Z",
+            line(at: "2026-09-01T10:00:01Z",
                  json: #"{"type":"assistant","entrypoint":"sdk-cli","message":{"role":"assistant","#
                      + #""stop_reason":"end_turn","content":[{"type":"text","text":"pong"}]}}"#)
-        ], filePath: "/tmp/\(session).jsonl")
+        ])
         XCTAssertEqual(try page().messages.map(\.content), ["ping", "pong"])
         XCTAssertEqual(try page(work: true).messages.map(\.content), ["ping", "pong"])
     }
@@ -175,13 +183,13 @@ final class ConversationMessagesTests: XCTestCase {
     /// must give back exactly the whole conversation and end complete.
     func testWalkingPageByPageGivesTheWholeConversation() throws {
         try insertDialogue()
-        try database.insertTranscriptLines([
-            progress(5, at: "2026-09-01T10:00:04Z", "working"),
-            progress(6, at: "2026-09-01T10:00:05Z", "still working"),
-            progress(7, at: "2026-09-01T10:00:06Z", "nearly"),
-            reply(8, at: "2026-09-01T10:00:07Z", "done"),
-            prompt(9, at: "2026-09-01T10:00:07Z", "same second")
-        ], filePath: "/tmp/\(session)-2.jsonl")
+        try ingest([
+            progress(at: "2026-09-01T10:00:04Z", "working"),
+            progress(at: "2026-09-01T10:00:05Z", "still working"),
+            progress(at: "2026-09-01T10:00:06Z", "nearly"),
+            reply(at: "2026-09-01T10:00:07Z", "done"),
+            prompt(at: "2026-09-01T10:00:07Z", "same second")
+        ], project: "-src-alpha-resumed")
         for work in [false, true] {
             let whole = try page(limit: 500, work: work)
             XCTAssertTrue(whole.isComplete)

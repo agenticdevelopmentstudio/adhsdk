@@ -65,6 +65,17 @@ public struct ClaudeMessageRow: Sendable, Equatable {
     /// (the stored double is a hair below it).
     public var timestamp: String { Self.timestamp(time) }
 
+    /// The subagent that wrote this message (`attrs.agent_id`, stored for a
+    /// line from a `subagents/agent-*.jsonl` file), or nil for the session's
+    /// own thread and for a message normalized before the id was kept.
+    public var agentId: String? {
+        guard attrs.contains("\"agent_id\""),
+              let object = try? JSONSerialization.jsonObject(with: Data(attrs.utf8)) as? [String: Any],
+              let id = object["agent_id"] as? String, !id.isEmpty
+        else { return nil }
+        return id
+    }
+
     public static func timestamp(_ time: Double) -> String {
         let millis = Int((time * 1000).rounded())
         let (seconds, fraction) = (millis >= 0 ? millis / 1000 : (millis - 999) / 1000, ((millis % 1000) + 1000) % 1000)
@@ -422,11 +433,78 @@ extension DaemonDatabase {
             LIMIT ?
             """
         return try withEventReads([]) { conn in
-            try Row.fetchAll(conn, sql: sql, arguments: StatementArguments(arguments)).map { row in
-                ClaudeMessageRow(
-                    id: row[0] ?? 0, sessionId: row[1] ?? "", role: row[2] ?? "", time: row[3] ?? 0,
-                    text: row[4] ?? "", attrs: row[5] ?? "{}")
-            }
+            try Row.fetchAll(conn, sql: sql, arguments: StatementArguments(arguments)).map(Self.claudeMessageRow)
+        }
+    }
+
+    /// The filter that makes a `messages` row part of a session's conversation,
+    /// the same one ``claudeConversationMessages(sessionId:before:limit:)``
+    /// applies: main thread, user or assistant, a known time. `sidechains`
+    /// adds the session's subagents' messages, which are stored under the
+    /// dispatching session's id. Arguments: provider, earliest time, session id.
+    private static func claudeSessionConversationFilter(sidechains: Bool) -> String {
+        "provider = ?\(sidechains ? "" : " AND is_sidechain = 0")"
+            + " AND role IN ('user', 'assistant') AND time >= ? AND session_id = ?"
+    }
+
+    private static func claudeMessageRow(_ row: Row) -> ClaudeMessageRow {
+        ClaudeMessageRow(
+            id: row[0] ?? 0, sessionId: row[1] ?? "", role: row[2] ?? "", time: row[3] ?? 0,
+            text: row[4] ?? "", attrs: row[5] ?? "{}")
+    }
+
+    /// One message of the session's conversation by id, or nil when the
+    /// session's conversation holds no such message — a keyed read that places
+    /// a range cursor without walking the session.
+    public func claudeConversationMessage(
+        sessionId: String, id: Int64, sidechains: Bool = false
+    ) throws -> ClaudeMessageRow? {
+        try withEventReads(nil) { conn in
+            try Row.fetchOne(conn, sql: """
+                SELECT id, session_id, role, time, COALESCE(text, ''), attrs FROM messages
+                WHERE id = ? AND \(Self.claudeSessionConversationFilter(sidechains: sidechains))
+                """, arguments: [id, ClaudeProvider.name, Self.claudeEarliestKnownEventTime, sessionId])
+                .map(Self.claudeMessageRow)
+        }
+    }
+
+    /// Up to `limit` of one session's conversation messages, oldest first by
+    /// `(time, id)` — a total order, the id breaking ties within a timestamp.
+    ///
+    /// - Parameters:
+    ///   - after: start past this position (or at it, when not `exclusive`);
+    ///     nil starts at the first message.
+    ///   - through: stop at this position (inclusive); nil runs to the newest.
+    ///   - sidechains: include the session's subagents' messages.
+    public func claudeConversationMessages(
+        sessionId: String,
+        after: (time: Double, id: Int64, exclusive: Bool)?,
+        through: (time: Double, id: Int64)?,
+        limit: Int,
+        sidechains: Bool = false
+    ) throws -> [ClaudeMessageRow] {
+        var conditions = [Self.claudeSessionConversationFilter(sidechains: sidechains)]
+        var arguments: [any DatabaseValueConvertible] = [
+            ClaudeProvider.name, Self.claudeEarliestKnownEventTime, sessionId]
+        if let after {
+            conditions.append(after.exclusive ? "(time, id) > (?, ?)" : "(time, id) >= (?, ?)")
+            arguments += [after.time, after.id]
+        }
+        if let through {
+            conditions.append("(time, id) <= (?, ?)")
+            arguments += [through.time, through.id]
+        }
+        arguments.append(max(limit, 0))
+        // `messages_session_time (provider, session_id, time)` answers it in
+        // order, so `LIMIT` stops the scan where the page does.
+        let sql = """
+            SELECT id, session_id, role, time, COALESCE(text, ''), attrs FROM messages
+            WHERE \(conditions.joined(separator: " AND "))
+            ORDER BY time, id
+            LIMIT ?
+            """
+        return try withEventReads([]) { conn in
+            try Row.fetchAll(conn, sql: sql, arguments: StatementArguments(arguments)).map(Self.claudeMessageRow)
         }
     }
 

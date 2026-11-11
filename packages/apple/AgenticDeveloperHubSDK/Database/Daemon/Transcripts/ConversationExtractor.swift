@@ -146,9 +146,12 @@ public enum ConversationExtractor {
     /// The transcript entry is put back together from those and judged by the
     /// same rules as ``extract(rawJSON:)``, so the two paths cannot disagree
     /// about a line. Content is the blocks when the line had an array, the
-    /// text when it had a string. A sidechain message never reaches here (the
-    /// feed's read leaves them out); unparseable `attrs` read as none.
-    public static func extract(role: String, text: String, attrsJSON: String) -> [Line] {
+    /// text when it had a string. Sidechain messages are chosen by the read
+    /// (the feed's leaves them out), not here; unparseable `attrs` read as none.
+    /// `includeScripted` is ``extract(rawJSON:includeSidechains:includeScripted:)``'s.
+    public static func extract(
+        role: String, text: String, attrsJSON: String, includeScripted: Bool = false
+    ) -> [Line] {
         let attrs = (try? JSONSerialization.jsonObject(with: Data(attrsJSON.utf8)) as? [String: Any]) ?? [:]
         let content: Any = attrs["blocks"] as? [Any] ?? text
         var entry: [String: Any] = [:]
@@ -161,13 +164,13 @@ public enum ConversationExtractor {
             entry["attachment"] = [
                 "type": "queued_command", "commandMode": "prompt", "prompt": content
             ] as [String: Any]
-            return extract(entry: entry)
+            return extract(entry: entry, includeScripted: includeScripted)
         }
         var message: [String: Any] = ["role": role, "content": content]
         if let stopReason = attrs["stop_reason"] as? String { message["stop_reason"] = stopReason }
         entry["type"] = role
         entry["message"] = message
-        return extract(entry: entry)
+        return extract(entry: entry, includeScripted: includeScripted)
     }
 
     private static func extract(

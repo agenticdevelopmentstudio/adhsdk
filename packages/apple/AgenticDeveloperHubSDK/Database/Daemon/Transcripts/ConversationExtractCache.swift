@@ -26,7 +26,7 @@ public final class ConversationExtractCache: Sendable {
             /// A `transcript_lines` row read with the given filters.
             case transcriptLine(lineId: Int, rawLength: Int, includeSidechains: Bool, includeScripted: Bool)
             /// An event-store `messages` row.
-            case message(messageId: Int64, textLength: Int, attrsLength: Int)
+            case message(messageId: Int64, textLength: Int, attrsLength: Int, includeScripted: Bool)
         }
 
         let source: Source
@@ -54,12 +54,17 @@ public final class ConversationExtractCache: Sendable {
         }
     }
 
-    /// The lines of one message — see ``ConversationExtractor/extract(role:text:attrsJSON:)``.
-    public func lines(messageId: Int64, role: String, text: String, attrsJSON: String) -> [ConversationExtractor.Line] {
+    /// The lines of one message — see
+    /// ``ConversationExtractor/extract(role:text:attrsJSON:includeScripted:)``.
+    public func lines(
+        messageId: Int64, role: String, text: String, attrsJSON: String, includeScripted: Bool = false
+    ) -> [ConversationExtractor.Line] {
         let key = Key(source: .message(
-            messageId: messageId, textLength: text.utf8.count, attrsLength: attrsJSON.utf8.count))
+            messageId: messageId, textLength: text.utf8.count, attrsLength: attrsJSON.utf8.count,
+            includeScripted: includeScripted))
         return cached(key) {
-            ConversationExtractor.extract(role: role, text: text, attrsJSON: attrsJSON)
+            ConversationExtractor.extract(
+                role: role, text: text, attrsJSON: attrsJSON, includeScripted: includeScripted)
         }
     }
 

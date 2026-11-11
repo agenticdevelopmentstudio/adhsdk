@@ -175,6 +175,11 @@ private struct Line {
         if let isCompactSummary = root["isCompactSummary"] as? Bool {
             attrs["is_compact_summary"] = .bool(isCompactSummary)
         }
+        // A subagent's own transcript (`subagents/agent-<id>.jsonl`) names the
+        // agent only in its path; a session's work output labels its lines by it.
+        if payload.subagentFile, let agentId = JSONLScanner.subagentId(ofPath: payload.file) {
+            attrs["agent_id"] = .string(agentId)
+        }
     }
 
     func appendDispatch(to batch: inout NormalizedBatch) {
