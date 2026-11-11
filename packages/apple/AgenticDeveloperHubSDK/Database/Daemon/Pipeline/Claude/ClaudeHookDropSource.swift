@@ -19,7 +19,9 @@ import Foundation
 /// session and invalid JSON are all appended, so the raw archive keeps them, and
 /// the normalizer decides (invalid JSON is quarantined in the spool with its
 /// bytes). Only a file that cannot be read at all has no bytes to keep; it moves to
-/// `<drop>/errors/error-<name>`, the name `EventIngestor` gives a quarantined drop.
+/// `<drop>/errors/error-<name>`, the name `EventIngestor` gives a quarantined drop,
+/// and is reported through `onUnreadable` so it gets a reason like any other
+/// quarantined file.
 public final class ClaudeHookDropSource: IngestSource {
     public static let batchSize = 200
 
@@ -27,12 +29,19 @@ public final class ClaudeHookDropSource: IngestSource {
     public let dropDirectory: URL
     public let minimumAge: TimeInterval
     private let faultInjector: (@Sendable (SourceStep) throws -> Void)?
+    private let onUnreadable: (@Sendable (_ moved: URL, _ reason: String) -> Void)?
 
-    /// `faultInjector` is for tests: it fires around each batch's append (see `SourceStep`).
+    /// - Parameters:
+    ///   - onUnreadable: called with an unreadable drop file's new path in the errors
+    ///     directory and why it could not be read, once it has been moved there. The
+    ///     pipeline records it as a quarantine (sidecar and log row).
+    ///   - faultInjector: for tests; fires around each batch's append (see `SourceStep`).
     public init(dropDirectory: URL, minimumAge: TimeInterval = 0.1,
+                onUnreadable: (@Sendable (_ moved: URL, _ reason: String) -> Void)? = nil,
                 faultInjector: (@Sendable (SourceStep) throws -> Void)? = nil) {
         self.dropDirectory = dropDirectory
         self.minimumAge = minimumAge
+        self.onUnreadable = onUnreadable
         self.faultInjector = faultInjector
     }
 
@@ -58,8 +67,11 @@ public final class ClaudeHookDropSource: IngestSource {
             var appendedFiles: [URL] = []
             for (url, modified) in batch {
                 autoreleasepool {
-                    guard let data = try? Data(contentsOf: url) else {
-                        moveToErrors(url)
+                    let data: Data
+                    do {
+                        data = try Data(contentsOf: url)
+                    } catch {
+                        moveToErrors(url, reason: "unreadable drop file: \(error.localizedDescription)")
                         return
                     }
                     records.append(RawRecord(
@@ -107,9 +119,9 @@ public final class ClaudeHookDropSource: IngestSource {
     }
 
     /// Moves an unreadable drop file out of the drop directory, so it is not retried
-    /// on every poll. If the move fails too the file stays and the next poll tries
-    /// again; nothing is deleted.
-    private func moveToErrors(_ url: URL) {
+    /// on every poll, and reports it to `onUnreadable`. If the move fails too the
+    /// file stays and the next poll tries again; nothing is deleted.
+    private func moveToErrors(_ url: URL, reason: String) {
         let fileManager = FileManager.default
         var destination = errorsDirectory.appendingPathComponent("error-\(url.lastPathComponent)")
         if fileManager.fileExists(atPath: destination.path) {
@@ -117,7 +129,8 @@ public final class ClaudeHookDropSource: IngestSource {
             destination = errorsDirectory.appendingPathComponent("error-\(stem)-\(UUID().uuidString).json")
         }
         try? fileManager.createDirectory(at: errorsDirectory, withIntermediateDirectories: true)
-        try? fileManager.moveItem(at: url, to: destination)
+        guard (try? fileManager.moveItem(at: url, to: destination)) != nil else { return }
+        onUnreadable?(destination, reason)
     }
 }
 #endif

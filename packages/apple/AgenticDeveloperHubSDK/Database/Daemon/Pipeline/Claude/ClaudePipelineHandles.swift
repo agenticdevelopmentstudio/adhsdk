@@ -43,7 +43,11 @@ public struct ClaudePipelineHandles: Sendable {
         self.spool = spool
         self.archive = archive
         self.store = store
-        self.hookSource = ClaudeHookDropSource(dropDirectory: dropDirectory)
+        let unreadableDrops = QuarantineService(
+            errorsDirectory: dropDirectory.appendingPathComponent("errors"), database: database)
+        self.hookSource = ClaudeHookDropSource(dropDirectory: dropDirectory) { moved, reason in
+            unreadableDrops.recordInitialQuarantine(eventURL: moved, reason: reason, code: nil, parsed: nil)
+        }
         self.transcriptSource = ClaudeTranscriptSource(projectsDirectory: projectsDirectory)
         self.drainer = try PipelineDrainer(
             spool: spool, archive: archive, normalizer: ClaudeNormalizer(), store: store,
@@ -151,8 +155,9 @@ public struct ClaudePipelineHandles: Sendable {
     /// by other bytes it throws, and the caller keeps the file. An empty file has
     /// nothing to keep and appends nothing.
     public func preserveQuarantinedFile(_ file: URL) throws {
-        let data = try Data(contentsOf: file)
-        guard !data.isEmpty else { return }
+        // A file whose bytes cannot be read (an unreadable drop file) has nothing
+        // to preserve, and holding it would keep it in quarantine forever.
+        guard let data = try? Data(contentsOf: file), !data.isEmpty else { return }
         let modified = (try? FileManager.default.attributesOfItem(atPath: file.path)[.modificationDate]) as? Date
         func record(_ key: String) -> RawRecord {
             RawRecord(
