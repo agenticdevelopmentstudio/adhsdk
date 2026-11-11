@@ -261,27 +261,42 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         }
     }
 
-    /// Runs `body` with `args` revealed, and conceals what it returns or
-    /// throws, when the pane's Agent Privacy is on. An error's sentence can
-    /// quote the page (a ref's name, a text not found), so it is concealed as
+    /// Runs `body` with `args` revealed when the pane's Agent Privacy is on,
+    /// and conceals what it returns or throws. An error's sentence can quote
+    /// the page (a ref's name, a text not found), so it is concealed as
     /// carefully as a reply. A cancellation passes through as it is: it says
     /// nothing about the page, and the caller must see it as one.
+    ///
+    /// What comes back is concealed with the pane's Agent Privacy as it
+    /// stands when the call returns, not only as it stood when it started: a
+    /// call can run for a minute (`browser_wait_for`), and the user may turn
+    /// the setting on or change the words meanwhile. If it was turned off
+    /// meanwhile, the words the call started with still apply.
     @MainActor
     private func concealed(
-        _ name: String, _ args: Arguments, _ privacy: BrowserAgentPrivacy,
+        _ name: String, _ args: Arguments, _ privacy: BrowserAgentPrivacy, paneID: String,
         _ body: (Arguments) async throws -> String
     ) async throws -> String {
-        guard privacy.isOn else { return try await body(args) }
+        let outcome: Result<String, Error>
         do {
-            return privacy.concealing(try await body(args.revealing(privacy)))
-        } catch let error as CancellationError {
-            throw error
-        } catch let error as BrowserAutomationError {
-            throw ToolError(sentence: privacy.concealing(error.description))
-        } catch let error as ToolError {
-            throw ToolError(sentence: privacy.concealing(error.sentence))
+            outcome = .success(try await body(privacy.isOn ? args.revealing(privacy) : args))
         } catch {
-            throw ToolError(sentence: privacy.concealing("\(name) failed: \(error.localizedDescription)"))
+            outcome = .failure(error)
+        }
+        let now = directory.browserPanes().first { $0.id == paneID }?.agentPrivacy ?? privacy
+        let shield = now.isOn ? now : privacy
+        guard shield.isOn else { return try outcome.get() }
+        switch outcome {
+        case .success(let reply):
+            return shield.concealing(reply)
+        case .failure(let error as CancellationError):
+            throw error
+        case .failure(let error as BrowserAutomationError):
+            throw ToolError(sentence: shield.concealing(error.description))
+        case .failure(let error as ToolError):
+            throw ToolError(sentence: shield.concealing(error.sentence))
+        case .failure(let error):
+            throw ToolError(sentence: shield.concealing("\(name) failed: \(error.localizedDescription)"))
         }
     }
 
@@ -324,7 +339,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
                 // A new pane starts with Agent Privacy off, but the check is
                 // the same as every other call's, so it can never be skipped.
                 let privacy = try self.requireSwitches(for: name, paneID: pane.id)
-                return try await self.concealed(name, args, privacy) { _ in
+                return try await self.concealed(name, args, privacy, paneID: pane.id) { _ in
                     let delta = try await pane.automation.navigate(to: url)
                     return "opened pane \(pane.id)\n" + delta.rendered()
                 }
@@ -340,7 +355,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let automation = pane.automation
         return try await automation.drive {
             let privacy = try self.requireSwitches(for: name, paneID: pane.id)
-            return try await self.concealed(name, args, privacy) { args in
+            return try await self.concealed(name, args, privacy, paneID: pane.id) { args in
                 if let reply = try await self.dispatchNavigation(name, args, automation) { return reply }
                 if let reply = try await self.dispatchReading(name, args, automation,
                                                               mayScroll: pane.access != .readOnly) { return reply }
