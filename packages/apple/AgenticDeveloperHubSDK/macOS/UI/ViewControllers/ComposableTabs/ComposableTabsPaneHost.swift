@@ -49,14 +49,20 @@ extension ComposableTabsViewController: PaneHost {
         // below, which is a wiring fact no button can predict. Arrange mode's
         // `confirmAndRemove()` beeps at exactly this refusal too.
         let root = rootSplit() ?? self
-        guard layoutChildren.contains(where: { $0.viewController === leaf }) else {
+        // A managed sibling goes where its primary goes, closing included; it
+        // is never handed to `onLastPaneCloseRequest` either, because closing
+        // it would not be closing the tab's content.
+        guard layoutChildren.contains(where: { $0.viewController === leaf }),
+              !root.isManagedSibling(leaf) else {
             RefusalFeedback.announce()
             return
         }
         if !root.canRemoveLeaf(leaf) {
             // The floor, handed to whoever declared they have one. A container
             // with no answer still beeps, which is what every other one wants.
-            guard let handler = root.onLastPaneCloseRequest, root.leafCount() == 1 else {
+            // A primary whose sibling is the only other pane counts as the
+            // last pane: closing it would remove both.
+            guard let handler = root.onLastPaneCloseRequest, root.closingEmptiesTab(leaf) else {
                 RefusalFeedback.announce()
                 return
             }
@@ -80,18 +86,21 @@ extension ComposableTabsViewController: PaneHost {
     public func canClose(_ pane: PaneViewController) -> Bool {
         guard let leaf = pane as? ComposableTabsPaneViewController else { return true }
         let root = rootSplit() ?? self
+        if root.isManagedSibling(leaf) { return false }
         if root.canRemoveLeaf(leaf) { return true }
         // A refusal `paneDidRequestClose` will not actually make. The two have to
         // agree — a grey button that would have worked is as much a lie as a live
-        // one that beeps — so both ask the same two questions in the same order.
-        return root.onLastPaneCloseRequest != nil && root.leafCount() == 1
+        // one that beeps — so both ask the same questions in the same order.
+        return root.onLastPaneCloseRequest != nil && root.closingEmptiesTab(leaf)
     }
 
     // MARK: - Minimizing
 
     public func availableMinimizeEdges(for pane: PaneViewController) -> Set<PaneEdge> {
+        // A managed sibling keeps the size its relationship gives it: minimized,
+        // it would leave its primary beside a rail it never asked for.
         guard let leaf = pane as? ComposableTabsPaneViewController,
-              let root = rootSplit() else { return [] }
+              let root = rootSplit(), !root.isManagedSibling(leaf) else { return [] }
         return PaneMinimizeGeometry.availableEdges(forNode: leaf.nodeID, in: root.snapshotNode())
     }
 
@@ -124,6 +133,9 @@ extension ComposableTabsViewController: PaneHost {
     public func paneDidRequestMinimize(_ pane: PaneViewController, to edge: PaneEdge) {
         guard let leaf = pane as? ComposableTabsPaneViewController,
               let root = rootSplit(),
+              // Refused here as well as greyed in the picker, for every request
+              // the picker never saw — a script, a stale control.
+              !root.isManagedSibling(leaf),
               // The arrow the user clicked chooses the axis; the tree chooses
               // the side, and refuses outright if the axis is not the one the
               // parent split is laid out along.
@@ -175,6 +187,13 @@ extension ComposableTabsViewController: PaneHost {
 
     public func paneDidRequestZoom(_ pane: PaneViewController) {
         guard let leaf = pane as? ComposableTabsPaneViewController else { return }
+        // A managed sibling never takes over the tab — it exists to sit beside
+        // its primary. Unzooming one that somehow is zoomed stays allowed, so
+        // nothing can be left stuck.
+        if !leaf.isZoomed, !canZoom(leaf) {
+            RefusalFeedback.announce()
+            return
+        }
         // Before the zoom goes up, for the same reason `paneDidRequestMinimize`
         // captures first: a divider dragged in the last 300ms is still sitting
         // in the debounce, and once `zoomedLeaf` is set the capture refuses to
@@ -193,6 +212,13 @@ extension ComposableTabsViewController: PaneHost {
         // A minimized pane that zoomed would take over the tab as a rail.
         if leaf.minimizedEdge != nil { paneDidRequestRestore(leaf) }
         setZoomedLeaf(leaf.isZoomed ? nil : leaf)
+    }
+
+    /// The rule `paneDidRequestZoom` refuses on, asked before the click so the
+    /// button is dim rather than live and beeping.
+    public func canZoom(_ pane: PaneViewController) -> Bool {
+        guard let leaf = pane as? ComposableTabsPaneViewController else { return true }
+        return !(rootSplit() ?? self).isManagedSibling(leaf)
     }
 
     /// Applies a zoom from the root, whichever split is asked: a zoomed pane
@@ -230,6 +256,64 @@ extension ComposableTabsViewController: PaneHost {
         if let leaf = child as? ComposableTabsPaneViewController { return leaf.nodeID == id }
         guard let split = child as? ComposableTabsViewController else { return false }
         return split.layoutChildren.contains { subtree($0, contains: id) }
+    }
+
+    // MARK: - Content-requested thickness
+
+    /// Sizes the pane — or the subtree holding it, when the pane sits in a
+    /// stack — to `thickness` along the nearest side-by-side split above it.
+    ///
+    /// Declined while anything is zoomed (every other item is collapsed, so
+    /// there is no divider that means anything), and for a pane or neighbour
+    /// that is pinned or collapsed: a minimized pane's width is its rail's.
+    /// The divider move reaches `splitViewDidResizeSubviews`, which persists
+    /// the new arrangement through the same debounce a drag uses.
+    public func paneDidRequestThickness(_ pane: PaneViewController, thickness: CGFloat) {
+        guard let leaf = pane as? ComposableTabsPaneViewController,
+              rootSplit()?.zoomedLeaf == nil,
+              leaf.minimizedEdge == nil else { return }
+        var child: NSViewController = leaf
+        var owner = owningSplit(of: leaf)
+        while let split = owner {
+            if split.isViewLoaded, split.splitView.isVertical {
+                split.setThickness(thickness, ofChild: child)
+                return
+            }
+            child = split
+            owner = split.enclosingSplit
+        }
+    }
+
+    /// Moves the one divider beside `child` so `child` is `thickness` wide:
+    /// the trailing divider when there is one, the leading one for the last
+    /// item. Clamped to the item's own minimum and to leaving the neighbour
+    /// its minimum; a change under half a point is not worth a layout pass.
+    private func setThickness(_ thickness: CGFloat, ofChild child: NSViewController) {
+        let items = splitViewItems
+        guard items.count > 1, splitView.bounds.width > 1,
+              let index = items.firstIndex(where: { $0.viewController === child }) else { return }
+        let item = items[index]
+        let isLast = index == items.count - 1
+        let neighbour = items[isLast ? index - 1 : index + 1]
+        let free = NSSplitViewItem.unspecifiedDimension
+        guard !item.isCollapsed, !neighbour.isCollapsed,
+              item.maximumThickness == free, neighbour.maximumThickness == free else { return }
+
+        let target = max(thickness, item.minimumThickness)
+        let frame = item.viewController.view.frame
+        let neighbourFrame = neighbour.viewController.view.frame
+        let divider = splitView.dividerThickness
+        if isLast {
+            let floor = neighbourFrame.minX + neighbour.minimumThickness
+            let position = max(frame.maxX - target - divider, floor)
+            guard abs(position - (frame.minX - divider)) >= 0.5 else { return }
+            splitView.setPosition(position, ofDividerAt: index - 1)
+        } else {
+            let ceiling = neighbourFrame.maxX - neighbour.minimumThickness - divider
+            let position = min(frame.minX + target, ceiling)
+            guard abs(position - frame.maxX) >= 0.5 else { return }
+            splitView.setPosition(position, ofDividerAt: index)
+        }
     }
 
     // MARK: - Re-applying what was persisted
@@ -271,7 +355,9 @@ extension ComposableTabsViewController: PaneHost {
             }
             paneDidRequestMinimize(leaf, to: edge)
         }
-        if let zoomed = leaves.first(where: { $0.persistedZoomed }) {
+        // A managed sibling's remembered zoom predates its relationship and is
+        // not re-applied; the user could not have asked for it today.
+        if let zoomed = leaves.first(where: { $0.persistedZoomed && !isManagedSibling($0) }) {
             setZoomedLeaf(zoomed)
         }
     }

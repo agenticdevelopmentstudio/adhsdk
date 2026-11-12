@@ -31,6 +31,15 @@ public final class DocumentEditorViewController: NSViewController {
     private let rootURL: URL
     private let breadcrumb: BreadcrumbView
 
+    /// Every file this editor has shown, for the `‹ ›` before the breadcrumb.
+    /// Per editor, because an editor is its tab's document: each open pushes,
+    /// and stepping back or forward moves along the trail without pushing.
+    private var history = NavigationHistory<URL>()
+
+    /// The `‹ ›` that walks `history`, first in the row above the editor.
+    /// Internal so a test can read its segments.
+    let backForward = BackForwardControl()
+
     /// Fires when the displayed file changes, so the tab bar can retitle.
     public var onTitleChange: (() -> Void)?
 
@@ -77,6 +86,10 @@ public final class DocumentEditorViewController: NSViewController {
         self.breadcrumb = BreadcrumbView(rootURL: rootURL)
         super.init(nibName: nil, bundle: nil)
         breadcrumb.onSelect = { [weak self] url in self?.onOpenRequest?(url) }
+        backForward.controlSize = .small
+        backForward.accessibilityID("document.back-forward")
+        backForward.onBack = { [weak self] in self?.goBack() }
+        backForward.onForward = { [weak self] in self?.goForward() }
         optionsObserver = options.objectWillChange.sink { [weak self] _ in
             self?.refreshOptionRows()
         }
@@ -100,7 +113,29 @@ public final class DocumentEditorViewController: NSViewController {
         show(url, persist: false)
     }
 
-    private func show(_ url: URL?, persist: Bool) {
+    /// Whether there is an earlier file in this editor's trail.
+    public var canGoBack: Bool { history.canGoBack }
+
+    /// Whether a back step has left a later file to return to.
+    public var canGoForward: Bool { history.canGoForward }
+
+    /// Shows the previous file in this editor's trail, without pushing it.
+    public func goBack() {
+        guard let url = history.goBack() else { return }
+        show(url, persist: true, recordsHistory: false)
+    }
+
+    /// Shows the next file in this editor's trail, without pushing it.
+    public func goForward() {
+        guard let url = history.goForward() else { return }
+        show(url, persist: true, recordsHistory: false)
+    }
+
+    /// `recordsHistory` is false only for a step along the trail itself; every
+    /// other way a file arrives — the tree, a breadcrumb, go-to-definition, a
+    /// restore — is a new place, and pushes. Emptying the editor pushes
+    /// nothing: there is nowhere to go back *to* in an empty editor.
+    private func show(_ url: URL?, persist: Bool, recordsHistory: Bool = true) {
         // Asked rather than asserted. Every caller here hands over a bare URL —
         // a restored path, a breadcrumb choice, a go-to-definition target, the
         // tree's own open request — and a directory is among the things they can
@@ -112,6 +147,11 @@ public final class DocumentEditorViewController: NSViewController {
             FileTreeNode(url: $0, isDirectory: Self.isDirectory($0))
         }
         breadcrumb.fileURL = url
+        if recordsHistory, let url {
+            history.record(url)
+        }
+        backForward.canGoBack = history.canGoBack
+        backForward.canGoForward = history.canGoForward
         if persist {
             store.setPaneStateValue(url?.path, forKey: Self.fileURLKey)
         }
@@ -144,16 +184,30 @@ public final class DocumentEditorViewController: NSViewController {
         // rewraps every line and rebuilds the find bar, which costs a slide
         // most of its frames.
         let editor = FrameHoldingView(content: hosting)
-        let stack = NSStackView(views: [breadcrumb, editor])
+        // Where a pane's title bar would be: back/forward, then the breadcrumb.
+        // The editor has no bar inside a Documents tab, so this row is its
+        // only chrome.
+        let navigationRow = NSStackView(views: [backForward, breadcrumb])
+        navigationRow.orientation = .horizontal
+        navigationRow.alignment = .centerY
+        navigationRow.spacing = 4
+        navigationRow.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
+        backForward.setContentHuggingPriority(.required, for: .horizontal)
+        backForward.setContentCompressionResistancePriority(.required, for: .horizontal)
+        breadcrumb.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let stack = NSStackView(views: [navigationRow, editor])
         stack.orientation = .vertical
         stack.spacing = 0
         stack.distribution = .fill
+        navigationRow.translatesAutoresizingMaskIntoConstraints = false
         breadcrumb.translatesAutoresizingMaskIntoConstraints = false
         editor.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            breadcrumb.heightAnchor.constraint(equalToConstant: 24),
-            breadcrumb.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
-            breadcrumb.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
+            navigationRow.heightAnchor.constraint(equalToConstant: 24),
+            breadcrumb.heightAnchor.constraint(equalTo: navigationRow.heightAnchor),
+            navigationRow.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
+            navigationRow.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
             editor.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
             editor.trailingAnchor.constraint(equalTo: stack.trailingAnchor)
         ])

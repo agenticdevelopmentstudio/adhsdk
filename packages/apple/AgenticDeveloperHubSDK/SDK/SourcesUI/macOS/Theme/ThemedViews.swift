@@ -754,8 +754,11 @@ public final class ThemedTableHeaderCell: NSTableHeaderCell {
 /// The outline counterpart of `ThemedTableView`, for the same reason it exists:
 /// an untinted outline paints the system's table background through whatever
 /// the theme put behind it.
+///
+/// Open so a list that needs its own key handling (the file browser's Return
+/// and Option-Return) can subclass it rather than rebuild the theming.
 @MainActor
-public final class ThemedOutlineView: NSOutlineView, Themeable {
+open class ThemedOutlineView: NSOutlineView, Themeable {
     public let role: ThemeRole
     private var observer: ThemePaletteObserver?
 

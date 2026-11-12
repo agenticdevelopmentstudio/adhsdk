@@ -28,6 +28,65 @@ final class DocumentEditorViewControllerTests: XCTestCase {
         XCTAssertEqual(controller.paneTitle, "Readme.md")
     }
 
+    // MARK: - Back and forward
+
+    func testAFreshEditorCanGoNowhere() {
+        let controller = makeController()
+        XCTAssertFalse(controller.canGoBack)
+        XCTAssertFalse(controller.canGoForward)
+        XCTAssertFalse(controller.backForward.canGoBack)
+        XCTAssertFalse(controller.backForward.canGoForward)
+    }
+
+    /// Two opens make a trail of two; back and forward walk it without adding
+    /// to it, and the control's segments follow every step.
+    func testBackAndForwardAfterTwoOpens() {
+        let store = EphemeralPaneStateStore()
+        let controller = makeController(store: store)
+        controller.fileURL = URL(fileURLWithPath: "/tmp/example/A.swift")
+        controller.fileURL = URL(fileURLWithPath: "/tmp/example/B.swift")
+        XCTAssertTrue(controller.backForward.canGoBack)
+        XCTAssertFalse(controller.backForward.canGoForward)
+
+        controller.goBack()
+        XCTAssertEqual(controller.fileURL?.lastPathComponent, "A.swift")
+        XCTAssertEqual(
+            store.paneStateValue(forKey: DocumentEditorViewController.fileURLKey),
+            "/tmp/example/A.swift", "a step is what the editor shows, so it is what it remembers")
+        XCTAssertFalse(controller.backForward.canGoBack)
+        XCTAssertTrue(controller.backForward.canGoForward)
+
+        controller.goForward()
+        XCTAssertEqual(controller.fileURL?.lastPathComponent, "B.swift")
+        XCTAssertTrue(controller.backForward.canGoBack)
+        XCTAssertFalse(controller.backForward.canGoForward, "stepping forward pushed nothing")
+    }
+
+    /// Opening a file after going back drops the files ahead, as a browser does.
+    func testOpeningAfterGoingBackDropsTheForwardTrail() {
+        let controller = makeController()
+        controller.fileURL = URL(fileURLWithPath: "/tmp/example/A.swift")
+        controller.fileURL = URL(fileURLWithPath: "/tmp/example/B.swift")
+        controller.goBack()
+
+        controller.fileURL = URL(fileURLWithPath: "/tmp/example/C.swift")
+
+        XCTAssertFalse(controller.canGoForward)
+        controller.goBack()
+        XCTAssertEqual(controller.fileURL?.lastPathComponent, "A.swift")
+    }
+
+    /// The control comes first in the row where a pane's title bar would be,
+    /// then the breadcrumb.
+    func testTheControlLeadsTheBreadcrumbRow() throws {
+        let controller = makeController()
+        controller.loadViewIfNeeded()
+        let row = try XCTUnwrap(controller.backForward.superview as? NSStackView)
+        XCTAssertEqual(row.orientation, .horizontal)
+        XCTAssertTrue(row.arrangedSubviews.first === controller.backForward)
+        XCTAssertTrue(row.arrangedSubviews.dropFirst().first is BreadcrumbView)
+    }
+
     func testSettingAFilePersistsIt() {
         let store = EphemeralPaneStateStore()
         let controller = makeController(store: store)

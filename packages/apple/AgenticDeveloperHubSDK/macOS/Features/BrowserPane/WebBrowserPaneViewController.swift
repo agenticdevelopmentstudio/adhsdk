@@ -824,19 +824,13 @@ open class WebBrowserPaneViewController: NSViewController {
         // its own toolbar is only as wide and tall as the badges it shows.
         bar.detachesHiddenViews = true
 
-        root.addSubview(bar)
         addressBar = bar
         badgeObservations = [pausedBadge, drivenBadge, refusalNotice].map { badge in
             badge.observe(\.isHidden) { [weak self] _, _ in
                 MainActor.assumeIsolated { self?.refreshBarInsets() }
             }
         }
-        NSLayoutConstraint.activate([
-            bar.topAnchor.constraint(equalTo: root.topAnchor),
-            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            bar.trailingAnchor.constraint(equalTo: root.trailingAnchor)
-        ])
-        installTabStrip(below: bar)
+        installTabStrip(addressBar: bar)
     }
 
     /// Hides the pane's navigation controls when the engine draws its own
@@ -852,16 +846,19 @@ open class WebBrowserPaneViewController: NSViewController {
     private static let barInsets = NSEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
 
     /// A bar with nothing visible in it collapses to nothing, insets
-    /// included, so the page starts at the top of the pane.
+    /// included, so the page starts right under the tabs.
     private func refreshBarInsets() {
         guard let bar = addressBar else { return }
         let showsAnything = bar.arrangedSubviews.contains { !$0.isHidden }
         bar.edgeInsets = showsAnything ? Self.barInsets : NSEdgeInsets()
     }
 
-    /// Puts the tab bar and the page area under the address bar, with every
-    /// tab in it and the remembered one in front.
-    private func installTabStrip(below bar: NSView) {
+    /// Fills the pane with the tab strip, with every tab in it and the
+    /// remembered one in front, and the address bar in the strip's slot
+    /// between its tabs and the page: tabs, then address bar, then page, as a
+    /// browser stacks them. The strip holds the bar strongly from here on;
+    /// `addressBar` is only this pane's weak handle on it.
+    private func installTabStrip(addressBar bar: NSView) {
         // Every tab's engine is the same kind, so whether the pane's own
         // navigation controls show is decided once, here.
         applyToolbarOwnership()
@@ -869,11 +866,12 @@ open class WebBrowserPaneViewController: NSViewController {
         // The + leads the tab row, the way a browser's new-tab control sits
         // with the tabs it adds to.
         tabStrip.setLeadingAccessory(newTabButton, for: .top)
+        tabStrip.setAccessoryBelowBar(bar, for: .top)
         let strip = tabStrip.view
         strip.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(strip)
         NSLayoutConstraint.activate([
-            strip.topAnchor.constraint(equalTo: bar.bottomAnchor),
+            strip.topAnchor.constraint(equalTo: view.topAnchor),
             strip.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             strip.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             strip.bottomAnchor.constraint(equalTo: view.bottomAnchor)

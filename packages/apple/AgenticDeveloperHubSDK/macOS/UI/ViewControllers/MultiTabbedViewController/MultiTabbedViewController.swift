@@ -9,6 +9,7 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// Layout (when all four edges enabled):
 /// ```
 ///           [ top tab bar ]
+///           [ accessory   ]   (optional; `setAccessoryBelowBar(_:for: .top)`)
 /// [left bar][   content   ][right bar]
 ///           [ bottom bar  ]
 /// ```
@@ -138,6 +139,69 @@ open class MultiTabbedViewController: NSViewController {
         tabBars[edge]?.leadingAccessory = view
     }
 
+    /// Puts `view` between the bar on `edge` and the content — a full-width
+    /// row at the top of the centre, above whatever the centre shows (the
+    /// active tab, the overlay, or the main content), with that content moved
+    /// down to start under it; `nil` takes it away. A browser's address bar
+    /// sits here, under its tabs and over its page.
+    ///
+    /// Only the top edge has this slot, and any other edge traps: the one
+    /// caller is a top tab strip, and a row below a side bar would be a column
+    /// whose shape nobody has asked for yet. The slot is inside the centre, so
+    /// it is framed by the centre's outline together with the content and the
+    /// selected tab reads as joined to it; `contentInsets.top` is the gap
+    /// between it and the content.
+    ///
+    /// The view's height is its own (its intrinsic or fitting height). A view
+    /// that collapses to zero height — a stack whose controls are all hidden —
+    /// gives the content the whole centre back.
+    public func setAccessoryBelowBar(_ view: NSView?, for edge: Edge) {
+        precondition(edge == .top, "only the top edge has a slot below its bar")
+        guard accessoryBelowTopBar !== view else { return }
+        accessoryBelowTopBar?.removeFromSuperview()
+        accessoryBelowTopBar = view
+        guard isViewLoaded else { return }
+        installAccessoryBelowTopBar()
+        repinCenterContentTop()
+    }
+
+    /// The view `setAccessoryBelowBar(_:for:)` was last given for `edge`.
+    public func accessoryBelowBar(for edge: Edge) -> NSView? {
+        edge == .top ? accessoryBelowTopBar : nil
+    }
+
+    /// The row between the top bar and the content, if a host gave one.
+    private var accessoryBelowTopBar: NSView?
+
+    /// Adds the accessory to the top of the centre, spanning its width.
+    private func installAccessoryBelowTopBar() {
+        guard let accessory = accessoryBelowTopBar else { return }
+        accessory.translatesAutoresizingMaskIntoConstraints = false
+        centerContainer.addSubview(accessory)
+        NSLayoutConstraint.activate([
+            accessory.topAnchor.constraint(equalTo: centerContainer.topAnchor),
+            accessory.leadingAnchor.constraint(equalTo: centerContainer.leadingAnchor),
+            accessory.trailingAnchor.constraint(equalTo: centerContainer.trailingAnchor)
+        ])
+    }
+
+    /// Where the centre's content starts: under the accessory when there is
+    /// one, at the top of the centre when not.
+    private var centerContentTopAnchor: NSLayoutYAxisAnchor {
+        accessoryBelowTopBar?.bottomAnchor ?? centerContainer.topAnchor
+    }
+
+    /// Re-pins the mounted content's top after the accessory changed, keeping
+    /// the other three pins and the inset it already had.
+    private func repinCenterContentTop() {
+        guard centerContentConstraints.count == 4, let mounted = mountedCenterController else { return }
+        centerContentConstraints[0].isActive = false
+        let top = mounted.view.topAnchor.constraint(equalTo: centerContentTopAnchor)
+        centerContentConstraints[0] = top
+        top.isActive = true
+        applyContentInsets()
+    }
+
     public func tabStartInset(for edge: Edge) -> CGFloat {
         requestedStartInsets[edge] ?? TabBarView.endPadding
     }
@@ -229,6 +293,7 @@ open class MultiTabbedViewController: NSViewController {
             self?.applyCenterOutline(palette)
         }
         root.addSubview(centerContainer)
+        installAccessoryBelowTopBar()
         for edge in Edge.allCases {
             guard let bar = tabBars[edge] else { continue }
             bar.isHidden = !isEdgeEnabled(edge)
@@ -547,7 +612,7 @@ open class MultiTabbedViewController: NSViewController {
         target.view.translatesAutoresizingMaskIntoConstraints = false
         centerContainer.addSubview(target.view)
         centerContentConstraints = [
-            target.view.topAnchor.constraint(equalTo: centerContainer.topAnchor),
+            target.view.topAnchor.constraint(equalTo: centerContentTopAnchor),
             target.view.leadingAnchor.constraint(equalTo: centerContainer.leadingAnchor),
             target.view.trailingAnchor.constraint(equalTo: centerContainer.trailingAnchor),
             target.view.bottomAnchor.constraint(equalTo: centerContainer.bottomAnchor)

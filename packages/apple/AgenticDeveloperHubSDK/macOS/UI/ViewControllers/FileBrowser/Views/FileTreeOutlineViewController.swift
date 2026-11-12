@@ -22,8 +22,8 @@ final class FileTreeOutlineViewController: NSViewController {
     /// The roots to draw, in display order.
     private let roots: FileBrowserRootsModel
 
-    /// Which root the enclosing pane's `+`/`−` act on. Clicking anything in a
-    /// tree — a header or a file — says which root the user means.
+    /// The browser's roots, and which one the user means. Clicking anything in
+    /// a tree — a header or a file — says which root that is.
     private let directories: FileBrowserDirectories
 
     /// What the user has clicked.
@@ -38,15 +38,41 @@ final class FileTreeOutlineViewController: NSViewController {
     private let documentStore: TextDocumentStore
 
     /// Where a file the user picked should be shown. Plain selection cannot
-    /// carry this — it says *what*, never *where* — so the three verbs travel
-    /// as their own request: a plain click or "Open" sends `.current`, and the
-    /// other two context-menu items send the destination they name.
+    /// carry this — it says *what*, never *where* — so the verbs travel as
+    /// their own request: a single click, Return or "Open" sends `.current`,
+    /// a double click or Option-Return sends `.newTab`, and the other
+    /// context-menu items send the destination they name.
     var onOpenRequest: ((URL, DocumentDestination) -> Void)?
+
+    /// Called whenever the rows drawn may have changed — a reload, an expand
+    /// or collapse, a directory's contents arriving, the filter changing — so
+    /// the enclosing pane can re-measure its width. Called often and in
+    /// bursts; the receiver coalesces.
+    var onRowsChanged: (() -> Void)?
+
+    /// The click waiting out the double-click interval before it opens its
+    /// file in the current tab. A double click cancels it, so opening in a new
+    /// tab does not first replace the current tab's file.
+    private var pendingClickOpen: DispatchWorkItem?
+
+    /// The filter, as typed (trimmed). Empty means no filter.
+    private(set) var filterQuery = ""
+
+    /// The ids of the loaded nodes whose names match the filter.
+    private var filterMatchIDs: Set<String> = []
+
+    /// The matches plus every ancestor of one: what a filtered tree draws
+    /// outside a matched directory. A node *inside* a matched directory is in
+    /// neither set — reaching it at all means a matched ancestor let it
+    /// through, and everything under a match is shown.
+    private var filterVisibleIDs: Set<String> = []
+
+    private var isFiltering: Bool { !filterQuery.isEmpty }
 
     /// Keeps the `documentStore` subscription below alive; dropped in `deinit`.
     private var documentStoreObservation: TextDocumentStoreObservation?
 
-    private let outline = ThemedOutlineView(role: .windowBackground)
+    private let outline = FileTreeOutlineView()
     private let scrollView = ThemedScrollView()
 
     /// One placeholder row per empty root, kept rather than rebuilt so the
@@ -86,10 +112,6 @@ final class FileTreeOutlineViewController: NSViewController {
     /// been drawn yet. Cleared the moment it is found — a restore happens once,
     /// and after that the selection is the user's.
     private var pendingSelectionPath: String?
-
-    /// One-shot, so the "a lone root opens showing its contents" default cannot
-    /// re-open a root the user has deliberately collapsed.
-    private var hasAppliedDefaultExpansion = false
 
     /// Path -> row index for the rows currently drawn, built lazily and
     /// dropped whenever rows can have moved (a reload, an expand, a collapse).
@@ -137,7 +159,9 @@ final class FileTreeOutlineViewController: NSViewController {
         outline.dataSource = self
         outline.delegate = self
         outline.target = self
+        outline.action = #selector(rowClicked(_:))
         outline.doubleAction = #selector(rowDoubleClicked(_:))
+        outline.onActivate = { [weak self] inNewTab in self?.activateSelectedRow(inNewTab: inNewTab) }
         outline.autoresizesOutlineColumn = false
         outline.accessibilityID("file-browser.tree")
 
@@ -160,7 +184,7 @@ final class FileTreeOutlineViewController: NSViewController {
             .sink { [weak self] managers in self?.observe(managers) }
             .store(in: &cancellables)
 
-        // A root's header says which one the footer will act on, so it redraws
+        // A root's header says whether it is the root the user means, so it redraws
         // when that changes — including when a click on a *file* moved it.
         //
         // `removeDuplicates` is load-bearing, not an optimisation. Clicking a
@@ -271,6 +295,13 @@ final class FileTreeOutlineViewController: NSViewController {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
+                // New contents can add matches anywhere above them, which
+                // changes which ancestors are drawn — so a filtered tree is
+                // re-filtered whole rather than patched one directory deep.
+                if self.isFiltering {
+                    self.reloadPreservingSelection()
+                    return
+                }
                 let wasExpanded = self.outline.isItemExpanded(node)
                 let selected = self.outline.item(atRow: self.outline.selectedRow)
                 // Same reason as `reloadPreservingSelection`: reloading rows
@@ -286,6 +317,7 @@ final class FileTreeOutlineViewController: NSViewController {
                 // waiting for — this is where a deep restore takes its next
                 // step down the tree.
                 self.restoreDisclosure()
+                self.onRowsChanged?()
             }
         childWatchers[node.id] = ChildWatcher(node: node, subscription: subscription)
     }
@@ -301,24 +333,129 @@ final class FileTreeOutlineViewController: NSViewController {
     private func reloadPreservingSelection() {
         let selected = outline.item(atRow: outline.selectedRow)
         isSyncingSelection = true
+        if isFiltering { recomputeFilter() }
         outline.reloadData()
-        // A single root shows its contents straight away: a tree that opens
-        // onto one collapsed header makes the user click to see anything.
-        //
-        // Only for a browser with nothing stored, and only once: a default is
-        // what fills in for an answer, never what overrules one.
-        if !hasAppliedDefaultExpansion {
-            hasAppliedDefaultExpansion = true
-            if restoration.expandedPaths.isEmpty,
-               roots.managers.count == 1,
-               let only = roots.managers.first {
-                outline.expandItem(only)
-            }
-        }
+        // A root is not disclosable: it is always open, whatever was stored.
+        expandRoots()
+        if isFiltering { expandFilteredAncestors() }
         invalidateRowIndex()
         reselect(selected)
         isSyncingSelection = false
-        restoreDisclosure()
+        // A filtered tree's disclosure is the filter's; what the user had open
+        // comes back when the filter is cleared (`setFilter`).
+        if !isFiltering { restoreDisclosure() }
+        onRowsChanged?()
+    }
+
+    /// Opens every root. Under `isSyncingExpansion`: a root being open is not
+    /// something the user chose, so it is not recorded as disclosed.
+    private func expandRoots() {
+        isSyncingExpansion = true
+        for manager in roots.managers where !outline.isItemExpanded(manager) {
+            outline.expandItem(manager)
+        }
+        isSyncingExpansion = false
+    }
+
+    /// Collapses every open row below the roots, deepest first, without
+    /// recording any of it — the roots themselves refuse to collapse.
+    private func collapseAllBelowRoots() {
+        isSyncingExpansion = true
+        for row in (0..<outline.numberOfRows).reversed() {
+            guard let item = outline.item(atRow: row),
+                  !(item is FileTreeManager),
+                  outline.isItemExpanded(item) else { continue }
+            outline.collapseItem(item)
+        }
+        isSyncingExpansion = false
+        invalidateRowIndex()
+    }
+
+    // MARK: - Filtering
+
+    /// Shows only the loaded rows whose names contain `query` (case-insensitive),
+    /// with their ancestors, expanded. An empty query restores the tree as the
+    /// user had it: the folders they had open, and the selection revealed.
+    ///
+    /// The filter's own expansions are never recorded as disclosure, so
+    /// clearing it gives back exactly the folders that were open before.
+    func setFilter(_ query: String) {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed != filterQuery else { return }
+        filterQuery = trimmed
+        // Each query starts from closed folders, so the previous query's
+        // ancestors do not stay open around this one's results.
+        collapseAllBelowRoots()
+        if isFiltering {
+            reloadPreservingSelection()
+            return
+        }
+        filterMatchIDs = []
+        filterVisibleIDs = []
+        reloadPreservingSelection()
+        if let node = selection.selectedNode {
+            expandAncestors(of: node.url)
+            showSelection(node)
+        }
+        onRowsChanged?()
+    }
+
+    /// Rebuilds the two filter sets from the loaded tree. Unread directories
+    /// have `[]` children and so contribute nothing until they are read.
+    private func recomputeFilter() {
+        var matches: Set<String> = []
+        var visible: Set<String> = []
+        let query = filterQuery
+        func walk(_ node: FileTreeNode) -> Bool {
+            if node.name.localizedCaseInsensitiveContains(query) {
+                matches.insert(node.id)
+                visible.insert(node.id)
+                // Everything under a match is shown, so nothing below it is
+                // recorded — see `filterVisibleIDs`.
+                return true
+            }
+            var anyVisible = false
+            for child in node.children ?? [] where walk(child) {
+                anyVisible = true
+            }
+            if anyVisible { visible.insert(node.id) }
+            return anyVisible
+        }
+        for manager in roots.managers {
+            for child in manager.rootNode?.children ?? [] {
+                _ = walk(child)
+            }
+        }
+        filterMatchIDs = matches
+        filterVisibleIDs = visible
+    }
+
+    /// Opens every drawn ancestor of a match, top down, without recording it.
+    /// A matched directory itself stays as it is: it is a result, not a path
+    /// to one.
+    private func expandFilteredAncestors() {
+        isSyncingExpansion = true
+        var row = 0
+        while row < outline.numberOfRows {
+            if let node = outline.item(atRow: row) as? FileTreeNode,
+               filterVisibleIDs.contains(node.id),
+               !filterMatchIDs.contains(node.id),
+               !outline.isItemExpanded(node) {
+                outline.expandItem(node)
+            }
+            row += 1
+        }
+        isSyncingExpansion = false
+        invalidateRowIndex()
+    }
+
+    /// The children a filtered tree draws under a node it has drawn.
+    private func filtered(_ children: [FileTreeNode], under node: FileTreeNode?) -> [FileTreeNode] {
+        guard isFiltering else { return children }
+        if let node, !filterVisibleIDs.contains(node.id) || filterMatchIDs.contains(node.id) {
+            return children
+        }
+        return children.filter { filterVisibleIDs.contains($0.id) }
     }
 
     /// Re-opens the folders that were open, and re-selects the file that was
@@ -401,9 +538,10 @@ final class FileTreeOutlineViewController: NSViewController {
     }
 
     /// Puts the outline back on `item` after a reload, if it is still drawn.
-    /// A file that has been deleted or filtered away is a selection the model
-    /// should lose too, so that case clears it rather than leaving the viewer
-    /// showing a file the tree no longer lists (`fail-fast`).
+    /// A file that has been deleted is a selection the model should lose too,
+    /// so that case clears it rather than leaving the viewer showing a file
+    /// the tree no longer lists (`fail-fast`). A file the *filter* hides is
+    /// still there, and keeps its selection for when the filter is cleared.
     private func reselect(_ item: Any?) {
         guard let item else { return }
         var row = outline.row(forItem: item)
@@ -417,7 +555,7 @@ final class FileTreeOutlineViewController: NSViewController {
         }
         if row >= 0 {
             outline.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-        } else if item is FileTreeNode {
+        } else if item is FileTreeNode, !isFiltering {
             selection.selectedNode = nil
         }
     }
@@ -579,31 +717,91 @@ final class FileTreeOutlineViewController: NSViewController {
     /// Collapses every row, the way a browser nobody has touched yet looks —
     /// used to pin that `reveal(_:)` can open collapsed ancestors back up.
     func collapseAllForTesting() {
-        isSyncingExpansion = true
-        outline.collapseItem(nil, collapseChildren: true)
-        invalidateRowIndex()
-        isSyncingExpansion = false
+        collapseAllBelowRoots()
+    }
+
+    /// Whether `item`'s row would show a disclosure triangle — asked of the
+    /// delegate exactly as the outline asks it.
+    func showsOutlineCellForTesting(_ item: Any) -> Bool {
+        outlineView(outline, shouldShowOutlineCellForItem: item)
+    }
+
+    /// Whether `item` is drawn and open.
+    func isExpandedForTesting(_ item: Any) -> Bool { outline.isItemExpanded(item) }
+
+    /// The paths of every drawn row, top to bottom; roots by their directory.
+    var drawnPathsForTesting: [String] {
+        (0..<outline.numberOfRows).compactMap { outline.item(atRow: $0).flatMap(path(of:)) }
+    }
+
+    // MARK: - Focus
+
+    /// The outline itself, for the pane's key-view loop.
+    var listView: NSView { outline }
+
+    /// Puts the keyboard in the list — ↓ from the filter field. With nothing
+    /// selected, the first file row is selected so the arrow keys have
+    /// somewhere to start; selecting opens nothing.
+    func focusList() {
+        guard let window = view.window else { return }
+        if outline.selectedRow < 0,
+           let first = (0..<outline.numberOfRows).first(where: { outline.item(atRow: $0) is FileTreeNode }) {
+            outline.selectRowIndexes(IndexSet(integer: first), byExtendingSelection: false)
+            outline.scrollRowToVisible(first)
+        }
+        window.makeFirstResponder(outline)
     }
 
     // MARK: - Activation
 
-    @objc private func rowDoubleClicked(_ sender: Any?) {
-        let item = outline.item(atRow: outline.selectedRow)
-        if let manager = item as? FileTreeManager {
-            toggle(manager)
-            return
+    /// A single click on a file opens it in the current tab once the
+    /// double-click interval has passed without a second click.
+    ///
+    /// The wait is what lets a double click mean "new tab" without first
+    /// replacing the current tab's file. The second click of a double click
+    /// also arrives here (with a click count of two); it is ignored, and
+    /// `rowDoubleClicked` cancels the first.
+    @objc private func rowClicked(_ sender: Any?) {
+        pendingClickOpen?.cancel()
+        pendingClickOpen = nil
+        guard (NSApp.currentEvent?.clickCount ?? 1) <= 1 else { return }
+        let row = outline.clickedRow
+        guard row >= 0, let node = outline.item(atRow: row) as? FileTreeNode,
+              Self.isOpenable(node) else { return }
+        let work = DispatchWorkItem { [weak self] in
+            self?.pendingClickOpen = nil
+            self?.openIfFile(node, in: .current)
         }
-        guard let node = item as? FileTreeNode else { return }
-        // A directory has nothing to open, so a double-click means what it
-        // means everywhere else: show me what is inside, or stop showing me.
-        // Anything else — a file, or a childless package — is `openIfFile`'s
-        // own case, the same one a plain click already reaches: shown in the
-        // Document pane, never handed off to whatever app claims the
-        // extension.
+        pendingClickOpen = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + NSEvent.doubleClickInterval, execute: work)
+    }
+
+    /// A double click opens a file in a new tab and toggles a directory. A
+    /// root's row ignores it: a root is always open.
+    @objc private func rowDoubleClicked(_ sender: Any?) {
+        pendingClickOpen?.cancel()
+        pendingClickOpen = nil
+        let row = outline.clickedRow >= 0 ? outline.clickedRow : outline.selectedRow
+        guard let node = outline.item(atRow: row) as? FileTreeNode else { return }
+        activate(node, destination: .newTab)
+    }
+
+    /// Return (`.current`) or Option-Return (`.newTab`) on the selected row.
+    func activateSelectedRow(inNewTab: Bool) {
+        guard let node = outline.item(atRow: outline.selectedRow) as? FileTreeNode else { return }
+        activate(node, destination: inNewTab ? .newTab : .current)
+    }
+
+    /// A directory has nothing to open, so activating one means what it means
+    /// everywhere else: show me what is inside, or stop showing me. Anything
+    /// else — a file, or a childless package — is `openIfFile`'s own case:
+    /// shown in the Document pane, never handed off to whatever app claims
+    /// the extension.
+    private func activate(_ node: FileTreeNode, destination: DocumentDestination) {
         if node.children != nil {
             toggle(node)
         } else {
-            openIfFile(node)
+            openIfFile(node, in: destination)
         }
     }
 
@@ -744,9 +942,12 @@ final class FileTreeOutlineViewController: NSViewController {
             return roots.managers
         case let manager as FileTreeManager:
             let children = manager.rootNode?.children ?? []
+            // A filtered root with no matches is simply empty: "Empty" would
+            // say something about the directory that is not true.
+            if isFiltering { return filtered(children, under: nil) }
             return children.isEmpty ? [placeholder(for: manager)] : children
         case let node as FileTreeNode:
-            return node.children ?? []
+            return filtered(node.children ?? [], under: node)
         default:
             return []
         }
@@ -821,6 +1022,7 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
     func outlineViewItemDidExpand(_ notification: Notification) {
         // Rows moved, whoever caused it — the cached path->row map is stale.
         invalidateRowIndex()
+        onRowsChanged?()
         guard !isSyncingExpansion,
               let item = notification.userInfo?["NSObject"],
               let path = path(of: item) else { return }
@@ -829,6 +1031,7 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
 
     func outlineViewItemDidCollapse(_ notification: Notification) {
         invalidateRowIndex()
+        onRowsChanged?()
         guard let item = notification.userInfo?["NSObject"],
               let path = path(of: item) else { return }
         // A closed folder draws no rows, so nothing needs redrawing when its
@@ -837,6 +1040,16 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
         if let node = item as? FileTreeNode { childWatchers[node.id] = nil }
         guard !isSyncingExpansion else { return }
         restoration.setExpanded(false, path: path)
+    }
+
+    /// A root is not disclosable — it is always open — so it has no triangle.
+    func outlineView(_ outlineView: NSOutlineView, shouldShowOutlineCellForItem item: Any) -> Bool {
+        !(item is FileTreeManager)
+    }
+
+    /// Refused for roots, whoever asks: the left arrow, Option-click, a script.
+    func outlineView(_ outlineView: NSOutlineView, shouldCollapseItem item: Any) -> Bool {
+        !(item is FileTreeManager)
     }
 
     func outlineView(_ outlineView: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView? {
@@ -862,7 +1075,18 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
                 textRole: .caption
             )
             label.toolTip = manager.repoRootURL.path
-            return FileTreeRowView(content: label, palette: palette)
+            let icon = NSImageView(image: NSImage(
+                systemSymbolName: "folder",
+                accessibilityDescription: "Folder"
+            ) ?? NSImage())
+            icon.contentTintColor = palette.nsColor(.accent)
+            icon.setContentHuggingPriority(.required, for: .horizontal)
+            let stack = NSStackView(views: [icon, label])
+            stack.orientation = .horizontal
+            stack.alignment = .centerY
+            stack.spacing = FileTreeRowMetrics.spacing
+            icon.widthAnchor.constraint(equalToConstant: FileTreeRowMetrics.iconWidth).isActive = true
+            return FileTreeRowView(content: stack, palette: palette)
         case let placeholder as Placeholder:
             return FileTreeRowView(
                 content: ThemedLabel(string: placeholder.text, role: .tertiaryText, textRole: .caption),
@@ -895,15 +1119,19 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
         let node = item as? FileTreeNode
         selection.selectedNode = node
         // Clicking a file is also how you say which directory you mean, so the
-        // footer's target follows the tree rather than needing its own click.
+        // root follows the tree rather than needing its own click.
         if let url = node?.url, let root = directories.root(containing: url) {
             selection.selectedRoot = root
         }
-        openIfFile(node)
+        // Selecting opens nothing: an arrow key walking the list must not
+        // replace the current tab's file at every step. A click opens through
+        // `rowClicked`, Return through `activateSelectedRow`.
     }
 
-    /// A plain click says *what*; showing it is `.current`, the same
-    /// destination "Open" on the context menu sends.
+    /// Opens `node` at `destination` if it is something the Document pane
+    /// shows. A single click and Return send `.current` (the destination
+    /// "Open" on the context menu sends); a double click and Option-Return
+    /// send `.newTab`.
     ///
     /// Asked of the node itself rather than of its children. `children == nil`
     /// reads as "nothing to disclose", which is true of a file and of a package
@@ -913,9 +1141,136 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
     /// as a document. A package still goes: the tree shows it as one item, so a
     /// click on it is a request to show something, and the editor's own
     /// placeholder is the honest answer.
-    func openIfFile(_ node: FileTreeNode?) {
-        guard let node, !node.isDirectory || node.isPackage else { return }
-        onOpenRequest?(node.url, .current)
+    func openIfFile(_ node: FileTreeNode?, in destination: DocumentDestination = .current) {
+        guard let node, Self.isOpenable(node) else { return }
+        onOpenRequest?(node.url, destination)
+    }
+
+    /// A file, or a package (which the tree shows as one item).
+    static func isOpenable(_ node: FileTreeNode) -> Bool {
+        !node.isDirectory || node.isPackage
+    }
+}
+
+// MARK: - Width
+
+extension FileTreeOutlineViewController {
+
+    /// The trailing margin a content-sized pane keeps past its widest row.
+    static let contentWidthMargin: CGFloat = 32
+
+    /// The width the drawn rows need: the widest row's indent, icon, name,
+    /// unsaved-changes dot and git badge, plus `contentWidthMargin`.
+    ///
+    /// Measured from text metrics in the theme's fonts rather than by laying
+    /// out row views, so it costs one string measurement per drawn row and
+    /// builds nothing.
+    func preferredContentWidth() -> CGFloat {
+        let palette = view.resolvedThemeScope.palette
+        let fonts = RowFonts(
+            body: palette.font(.body), caption: palette.font(.caption), code: palette.font(.code))
+        var widest: CGFloat = 0
+        for row in 0..<outline.numberOfRows {
+            guard let item = outline.item(atRow: row) else { continue }
+            let leading = outline.frameOfCell(atColumn: 0, row: row).minX
+            widest = max(widest, leading + rowContentWidth(of: item, fonts: fonts))
+        }
+        return ceil(widest + Self.contentWidthMargin)
+    }
+
+    private struct RowFonts {
+        let body: NSFont
+        let caption: NSFont
+        let code: NSFont
+    }
+
+    /// One row's content, laid out as `FileTreeRowView` and
+    /// `FileTreeNodeRowView` lay it out, from `FileTreeRowMetrics`.
+    private func rowContentWidth(of item: Any, fonts: RowFonts) -> CGFloat {
+        typealias Metrics = FileTreeRowMetrics
+        let frame = Metrics.leadingInset + Metrics.trailingInset
+        switch item {
+        case let manager as FileTreeManager:
+            let name = Metrics.labelWidth(manager.repoRootURL.lastPathComponent, font: fonts.caption)
+            return frame + Metrics.iconWidth + Metrics.spacing + name
+        case let placeholder as Placeholder:
+            return frame + Metrics.labelWidth(placeholder.text, font: fonts.caption)
+        case let node as FileTreeNode:
+            var width = frame + Metrics.iconWidth + Metrics.spacing
+                + Metrics.labelWidth(node.name, font: fonts.body)
+            if documentStore.document(for: node.url.documentUri)?.isDirty ?? false {
+                width += Metrics.spacing + Metrics.dirtyMarkerWidth
+            }
+            if let status = node.gitStatus {
+                // The flexible spacer before the badge is a zero-width view,
+                // but the stack still puts its spacing on both sides of it.
+                width += Metrics.spacing * 2 + Metrics.labelWidth(status.displayCharacter, font: fonts.code)
+            }
+            return width
+        default:
+            return 0
+        }
+    }
+}
+
+// MARK: - Key handling
+
+/// The tree's outline, with Return and Option-Return as its own keys: Return
+/// opens the selected file in the current tab (or toggles a folder),
+/// Option-Return opens it in a new tab. Every other key is the outline's.
+@MainActor
+private final class FileTreeOutlineView: ThemedOutlineView {
+
+    /// Called with `true` for Option-Return.
+    var onActivate: ((_ inNewTab: Bool) -> Void)?
+
+    private static let returnKeyCode: UInt16 = 36
+    private static let keypadEnterKeyCode: UInt16 = 76
+
+    init() {
+        super.init(role: .windowBackground)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func keyDown(with event: NSEvent) {
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        let isReturn = event.keyCode == Self.returnKeyCode || event.keyCode == Self.keypadEnterKeyCode
+        let others = modifiers.subtracting([.option, .numericPad, .function, .capsLock])
+        if isReturn, others.isEmpty, let onActivate {
+            onActivate(modifiers.contains(.option))
+            return
+        }
+        super.keyDown(with: event)
+    }
+}
+
+// MARK: - Row metrics
+
+/// The row layout's numbers, in one place: the row views lay out with them and
+/// `preferredContentWidth()` measures with them, so the two cannot drift (`dry`).
+@MainActor
+private enum FileTreeRowMetrics {
+    static let leadingInset: CGFloat = 2
+    static let trailingInset: CGFloat = 6
+    static let spacing: CGFloat = 5
+    static let iconWidth: CGFloat = 16
+    static let dirtyMarkerPointSize: CGFloat = 6
+
+    /// What an `NSTextField` adds around its text: the cell's two-point inset
+    /// on each side.
+    static let labelPadding: CGFloat = 4
+
+    static let dirtyMarkerImage: NSImage = NSImage(
+        systemSymbolName: "circle.fill",
+        accessibilityDescription: "Unsaved changes"
+    )?.withSymbolConfiguration(.init(pointSize: dirtyMarkerPointSize, weight: .regular)) ?? NSImage()
+
+    static var dirtyMarkerWidth: CGFloat { dirtyMarkerImage.size.width }
+
+    static func labelWidth(_ text: String, font: NSFont) -> CGFloat {
+        ceil((text as NSString).size(withAttributes: [.font: font]).width) + labelPadding
     }
 }
 
@@ -931,8 +1286,9 @@ private class FileTreeRowView: NSView {
         content.translatesAutoresizingMaskIntoConstraints = false
         addSubview(content)
         NSLayoutConstraint.activate([
-            content.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 2),
-            content.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -6),
+            content.leadingAnchor.constraint(equalTo: leadingAnchor, constant: FileTreeRowMetrics.leadingInset),
+            content.trailingAnchor.constraint(
+                lessThanOrEqualTo: trailingAnchor, constant: -FileTreeRowMetrics.trailingInset),
             content.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
@@ -978,10 +1334,7 @@ private final class FileTreeNodeRowView: FileTreeRowView {
         // changes — so it takes its color from the theme rather than a fixed
         // one, the same way everything else in this row that is not git's own
         // signal does.
-        let dot = NSImageView(image: NSImage(
-            systemSymbolName: "circle.fill",
-            accessibilityDescription: "Unsaved changes"
-        )?.withSymbolConfiguration(.init(pointSize: 6, weight: .regular)) ?? NSImage())
+        let dot = NSImageView(image: FileTreeRowMetrics.dirtyMarkerImage)
         dot.contentTintColor = palette.nsColor(.warning)
         dot.setContentHuggingPriority(.required, for: .horizontal)
         dot.accessibilityID("whippet.filebrowser.dirty-indicator")
@@ -999,13 +1352,13 @@ private final class FileTreeNodeRowView: FileTreeRowView {
         let stack = NSStackView(views: views)
         stack.orientation = .horizontal
         stack.alignment = .centerY
-        stack.spacing = 5
+        stack.spacing = FileTreeRowMetrics.spacing
 
         super.init(content: stack, palette: palette)
 
         NSLayoutConstraint.activate([
-            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
-            icon.widthAnchor.constraint(equalToConstant: 16)
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -FileTreeRowMetrics.trailingInset),
+            icon.widthAnchor.constraint(equalToConstant: FileTreeRowMetrics.iconWidth)
         ])
     }
 

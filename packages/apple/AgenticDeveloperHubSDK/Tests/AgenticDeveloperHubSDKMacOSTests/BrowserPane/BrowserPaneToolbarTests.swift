@@ -64,6 +64,24 @@ final class BrowserPaneToolbarTests: XCTestCase {
         }
     }
 
+    /// Tabs, then the address bar, then the page, top to bottom — the bar sits
+    /// in the tab strip's slot below its tabs rather than above the strip.
+    func test_addressBarSitsBetweenTheTabRowAndThePage() throws {
+        let pane = makePane(ownToolbar: false)
+        pane.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+        pane.view.layoutSubtreeIfNeeded()
+        let bar = try XCTUnwrap(pane.addressBar)
+        let row = try XCTUnwrap(pane.newTabButton.superview as? TabBarView)
+        // The pane's root is not flipped: a greater y is higher on screen.
+        let rowFrame = pane.view.convert(row.bounds, from: row)
+        let barFrame = pane.view.convert(bar.bounds, from: bar)
+        let pageFrame = pane.view.convert(pane.engine.view.bounds, from: pane.engine.view)
+
+        XCTAssertGreaterThan(barFrame.height, 0)
+        XCTAssertLessThanOrEqual(barFrame.maxY, rowFrame.minY + 0.5, "the bar is under the tab row")
+        XCTAssertLessThanOrEqual(pageFrame.maxY, barFrame.minY + 0.5, "the page is under the bar")
+    }
+
     func test_refusalShowsInBarUntilNextNavigation() throws {
         let pane = makePane(ownToolbar: true)
         let bar = try XCTUnwrap(pane.addressBar)

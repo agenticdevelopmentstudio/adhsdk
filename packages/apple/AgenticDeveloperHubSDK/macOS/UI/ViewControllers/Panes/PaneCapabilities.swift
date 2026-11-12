@@ -98,3 +98,14 @@ public protocol PaneSelectionDescribing: AnyObject {
     /// differently.
     var onPaneSelectionChange: (() -> Void)? { get set }
 }
+
+/// Content that knows how wide (or tall) it would like its pane to be — a file
+/// browser sizing itself to its widest row. The content reports the length its
+/// own content needs; the pane adds its border and spacing and passes the sum
+/// to its host, which decides what to do with it.
+@MainActor
+public protocol PanePreferredThicknessProviding: AnyObject {
+    /// Called by the content with the length its content needs across the
+    /// split's axis, excluding the pane's own insets.
+    var onPreferredThicknessChange: ((CGFloat) -> Void)? { get set }
+}

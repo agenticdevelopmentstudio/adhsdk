@@ -219,6 +219,47 @@ final class DocumentTabsViewControllerTests: XCTestCase {
         XCTAssertEqual(controller.tabs(on: .top).count, 1)
     }
 
+    /// The tab names the document, and each editor carries its own back/forward
+    /// and breadcrumb row, so no editor pane in a Documents tab shows a title
+    /// bar — including ones added later by a side-open (a split) or a new tab.
+    func testEditorPanesHaveNoVisibleTitleBar() throws {
+        let controller = try makeController()
+        controller.loadViewIfNeeded()
+        controller.openToTheSide(URL(fileURLWithPath: "/tmp/example/Side.swift"))
+        controller.openInNewTab(URL(fileURLWithPath: "/tmp/example/Second.swift"))
+
+        let panes = controller.panes(inTabAt: 0) + controller.panes(inTabAt: 1)
+        XCTAssertEqual(panes.count, 3)
+        for pane in panes {
+            pane.loadViewIfNeeded()
+            XCTAssertFalse(pane.showsTitleBar)
+            XCTAssertTrue(pane.titleBar.isHidden)
+        }
+    }
+
+    /// Back and forward walk the files one editor has shown, and stepping
+    /// along the trail does not itself add to it.
+    func testAnEditorGoesBackAndForwardThroughItsFiles() throws {
+        let controller = try makeController()
+        controller.loadViewIfNeeded()
+        controller.openInSelectedPane(URL(fileURLWithPath: "/tmp/example/A.swift"))
+        controller.openInSelectedPane(URL(fileURLWithPath: "/tmp/example/B.swift"))
+        let editor = try XCTUnwrap(controller.focusedEditor)
+        XCTAssertTrue(editor.canGoBack)
+        XCTAssertFalse(editor.canGoForward)
+
+        editor.goBack()
+        XCTAssertEqual(editor.fileURL?.lastPathComponent, "A.swift")
+        XCTAssertEqual(controller.tabs(on: .top).first?.title, "A.swift", "the tab follows the step")
+        XCTAssertFalse(editor.canGoBack)
+        XCTAssertTrue(editor.canGoForward)
+
+        editor.goForward()
+        XCTAssertEqual(editor.fileURL?.lastPathComponent, "B.swift")
+        XCTAssertTrue(editor.canGoBack)
+        XCTAssertFalse(editor.canGoForward)
+    }
+
     /// The spec: "all the tabs and panes are closable until there is only one
     /// left if it's the last pane in the last tab, clicking the close box
     /// removes the document from display but does not remove the tab". So the

@@ -188,6 +188,10 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
         // The Document pane's width belongs to the window's tree, not to how
         // many editors this tab happens to hold — see `clampsToContainer`.
         root.clampsToContainer = true
+        // The tab names the document, and each editor carries its own
+        // back/forward and breadcrumb row, so the editors have no pane title
+        // bar (and so no gear) of their own.
+        root.showsPaneTitleBars = false
         // These editors are not layout nodes: they exist only inside this
         // pane's own stored layout, so what they remember has to be filed
         // against the node the window *does* know, or the next `saveTabs`

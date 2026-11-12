@@ -156,6 +156,20 @@ public final class ComposableTabsPaneViewController: PaneViewController {
 
         titleBar.centersTitle = true
         arrange.attach(to: view)
+        wirePreferredThickness()
+    }
+
+    /// Passes a content's preferred width on to the host, plus what this pane
+    /// puts around the content: the border inset on both sides and the
+    /// spacing insets. The content measures only itself (`separation-of-concerns`).
+    private func wirePreferredThickness() {
+        guard let provider = contentViewController as? PanePreferredThicknessProviding else { return }
+        provider.onPreferredThicknessChange = { [weak self] contentWidth in
+            guard let self else { return }
+            let insets = self.contentSpacingInsets
+            let thickness = contentWidth + self.contentInset * 2 + insets.left + insets.right
+            self.host?.paneDidRequestThickness(self, thickness: thickness)
+        }
     }
 
     public override func viewDidAppear() {

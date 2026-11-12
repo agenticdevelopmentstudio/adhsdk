@@ -104,6 +104,16 @@ public struct ComposableTabLayoutSpec: Sendable {
     /// A retired view needs no registration — its point is that nothing
     /// builds it any more.
     public var retiredViews: Set<ComposableTabsViewID> = []
+    /// Pairs of pane types kept together wherever the primary is — see
+    /// `ComposableTabsPaneRelationship`. Declared on the spec rather than
+    /// stored per tree, so they hold in every tab built from it. Meaningful on
+    /// the root only.
+    public var relationships: [ComposableTabsPaneRelationship] = []
+
+    /// `relationships` with the arithmetic that keeps a tree true to them.
+    public var paneRelationships: ComposableTabsPaneRelationships {
+        ComposableTabsPaneRelationships(relationships)
+    }
 
     public init(
         kind: Kind,
@@ -168,6 +178,13 @@ public struct ComposableTabLayoutSpec: Sendable {
         var retired = self
         retired.retiredViews.formUnion(viewIDs)
         return retired
+    }
+
+    /// This spec with `relationships` added — see `relationships`.
+    public func relating(_ relationships: [ComposableTabsPaneRelationship]) -> Self {
+        var related = self
+        related.relationships += relationships
+        return related
     }
 
     @MainActor
@@ -305,8 +322,13 @@ public struct ComposableTabLayoutSpec: Sendable {
         guard let chain = resolution.chain(forLeaf: leafID), !resolution.isFixed(leaf: leafID) else {
             return []
         }
+        let relationships = paneRelationships
         return resolution.effectiveAllowances(for: chain)
             .filter { path, allowance in
+                // A managed sibling is placed by its relationship, never by
+                // hand: added anywhere else, normalization would move it away
+                // or remove it the moment it appeared.
+                guard !relationships.isManagedSibling(allowance.viewID) else { return false }
                 guard let max = allowance.max else { return true }
                 return resolution.count(allowance.viewID, under: path, in: tree) < max
             }
@@ -339,7 +361,24 @@ public struct ComposableTabLayoutSpec: Sendable {
 
     /// False when the leaf or an ancestor is fixed, when it is the tab's last
     /// pane, or when removing it would drop a view below its `min`.
+    ///
+    /// Relationships add two rules. A managed sibling is never removed on its
+    /// own — it goes with its primary. And a primary goes only if its sibling
+    /// could go after it, because closing the one removes both; when the two
+    /// are the whole tab that is a refusal like the last pane's.
     public func canRemove(_ leafID: UUID, from tree: LayoutNode) -> Bool {
+        let relationships = paneRelationships
+        if let viewID = Self.viewID(ofLeaf: leafID, in: tree), relationships.isManagedSibling(viewID) {
+            return false
+        }
+        guard canRemoveAlone(leafID, from: tree) else { return false }
+        guard let siblingID = relationships.sibling(of: leafID, in: tree) else { return true }
+        guard let without = ComposableTabsMove.removing(leafID, from: tree) else { return false }
+        return canRemoveAlone(siblingID, from: without)
+    }
+
+    /// `canRemove(_:from:)` without the relationship rules.
+    private func canRemoveAlone(_ leafID: UUID, from tree: LayoutNode) -> Bool {
         let resolution = Resolution(spec: self, tree: tree)
         guard let chain = resolution.chain(forLeaf: leafID), !resolution.isFixed(leaf: leafID) else {
             return false
@@ -376,7 +415,8 @@ public struct ComposableTabLayoutSpec: Sendable {
         let tree = pruningRetiredViews(from: tree)
         let demoted = demotedLeaves(in: tree)
         let trimmed = demoted.isEmpty ? tree : Self.demoting(tree, leaves: demoted)
-        return addingRequiredViews(to: trimmed)
+        // Last, so a sibling is placed against the tree the other repairs left.
+        return paneRelationships.normalized(addingRequiredViews(to: trimmed), spec: self)
     }
 
     /// `tree` without the leaves of retired views, each one's split collapsed
@@ -473,7 +513,8 @@ public struct ComposableTabLayoutSpec: Sendable {
         segments.reduce(0) { $0 + leafViewIDs(in: $1).filter { $0 == viewID }.count }
     }
 
-    /// Whether there is nothing in `tree` for `reconcile(_:)` to demote.
+    /// Whether there is nothing in `tree` for `reconcile(_:)` to demote, and
+    /// every relationship holds.
     ///
     /// The question a rearrangement has to ask before it commits: moving a pane
     /// can land it in a region whose spec does not allow that view, and a tree
@@ -484,7 +525,17 @@ public struct ComposableTabLayoutSpec: Sendable {
     /// pane from one slot to another and changes no count, so a tree that met
     /// every `min` before a move still meets it after — the only way to fail
     /// one is to remove a pane, which `canRemove(_:from:)` already refuses.
+    ///
+    /// Relationships are checked here so every path that already asks the spec
+    /// (`move`, `rebuild`) refuses a tree that breaks a pin.
     public func allows(_ tree: LayoutNode) -> Bool {
+        admitsEveryLeaf(tree) && paneRelationships.satisfies(tree)
+    }
+
+    /// Whether `reconcile(_:)` would demote nothing — `allows(_:)` without the
+    /// relationships, which is what normalization asks before adding a
+    /// sibling, so the sibling's `max` still applies.
+    func admitsEveryLeaf(_ tree: LayoutNode) -> Bool {
         demotedLeaves(in: tree).isEmpty
     }
 

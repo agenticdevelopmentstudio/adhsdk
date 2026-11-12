@@ -13,7 +13,7 @@ import AgenticDeveloperHubSDK
 /// It reports and does not decide. Closing a pane, working out where it may
 /// shrink to, and knowing whether it is currently zoomed all belong to whatever
 /// is hosting it; this view is told, through `isZoomed`, `isMinimized`,
-/// `canMinimize` and `canClose`, and it renders that.
+/// `canMinimize`, `canClose` and `canZoom`, and it renders that.
 ///
 /// Four closures rather than a delegate: there are four events, the host is
 /// always exactly one object, and a protocol would make it declare conformance
@@ -62,6 +62,12 @@ public final class PaneControlCluster: NSStackView {
     /// a broken pane; a dim one reads as a protected pane, which is what it is
     /// (`principle-of-least-astonishment`).
     public var canClose: Bool = true { didSet { applyState() } }
+
+    /// False for a pane its host will not zoom — one a layout relationship
+    /// keeps beside another pane, which never takes over the tab. Dim for the
+    /// same reason as `canClose`. Ignored while zoomed, so unzooming stays
+    /// reachable whatever changed underneath.
+    public var canZoom: Bool = true { didSet { applyState() } }
 
     public init() {
         super.init(frame: .zero)
@@ -126,7 +132,7 @@ public final class PaneControlCluster: NSStackView {
         palette.nsColor(button.isEnabled ? .secondaryText : .tertiaryText)
     }
 
-    /// One place that turns the three flags into what the buttons look like.
+    /// One place that turns the flags into what the buttons look like.
     /// Spreading it across the three `didSet`s would make the middle button's
     /// appearance depend on the order the flags were assigned in.
     private func applyState() {
@@ -160,6 +166,9 @@ public final class PaneControlCluster: NSStackView {
         zoomButton.toolTip = zoomTitle
         zoomButton.image = NSImage(systemSymbolName: zoomSymbol, accessibilityDescription: zoomTitle)
         zoomButton.accessibilityID("pane.zoom")
+        zoomButton.isEnabled = canZoom || isZoomed
+        zoomButton.contentTintColor = Self.tint(
+            for: zoomButton, in: resolvedThemeScope.palette)
 
         moveButton.isEnabled = canMove
         moveButton.contentTintColor = Self.tint(

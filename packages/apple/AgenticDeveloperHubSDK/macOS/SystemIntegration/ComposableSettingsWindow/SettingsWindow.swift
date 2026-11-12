@@ -103,20 +103,12 @@ extension ComposableSettings {
 
         // MARK: - Toolbar
 
-        /// The `‹ ›` control. A momentary two-segment control rather than two
-        /// buttons: it is one control with one meaning — where in the trail you
-        /// are — and the shared bezel is how System Settings says so.
-        private lazy var navigationControl: NSSegmentedControl = {
-            let control = NSSegmentedControl(
-                images: [
-                    NSImage(systemSymbolName: "chevron.backward", accessibilityDescription: "Back"),
-                    NSImage(systemSymbolName: "chevron.forward", accessibilityDescription: "Forward")
-                ].compactMap { $0 },
-                trackingMode: .momentary,
-                target: self,
-                action: #selector(navigationClicked(_:)))
-            control.segmentStyle = .separated
-            control.setAccessibilityLabel("Back and forward")
+        /// The `‹ ›` control, the shared `BackForwardControl`: one control with
+        /// one meaning — where in the trail you are.
+        private lazy var navigationControl: BackForwardControl = {
+            let control = BackForwardControl()
+            control.onBack = { [weak self] in self?.viewController?.goBack() }
+            control.onForward = { [weak self] in self?.viewController?.goForward() }
             return control
         }()
 
@@ -186,8 +178,8 @@ extension ComposableSettings {
             guard let split = viewController else { return }
             // A custom-view toolbar item never gets AppKit's validation pass, so
             // the arrows are enabled here, from the same trail that answers them.
-            navigationControl.setEnabled(split.canGoBack, forSegment: 0)
-            navigationControl.setEnabled(split.canGoForward, forSegment: 1)
+            navigationControl.canGoBack = split.canGoBack
+            navigationControl.canGoForward = split.canGoForward
             panelTitleLabel.stringValue = toolbarTitle(forPanel: split.currentPanelTitle)
             updateHelpButton()
         }
@@ -215,17 +207,6 @@ extension ComposableSettings {
 
         @objc private func helpClicked(_ sender: NSButton) {
             viewController?.toggleHelp()
-        }
-
-        @objc private func navigationClicked(_ sender: NSSegmentedControl) {
-            // Named segments, not "0 or anything else": `selectedSegment` is -1
-            // when the control has no selection, and a bare `else` turned that
-            // into a forward step nobody asked for.
-            switch sender.selectedSegment {
-            case 0: viewController?.goBack()
-            case 1: viewController?.goForward()
-            default: break
-            }
         }
 
         // The flexible space is what right-justifies the `?`: everything before

@@ -6,9 +6,10 @@ import XCTest
 /// `FileBrowserSelection.selectedNode` — nothing routed that pick to the
 /// Document pane, and a double-click on a leaf handed the file to whatever
 /// app claimed its extension (Xcode, for source files) instead of showing it
-/// in the app at all. `openIfFile` is the one place both a plain click
-/// (`outlineViewSelectionDidChange`) and a double-click's leaf case
-/// (`rowDoubleClicked`) now go through, so these pin its routing directly.
+/// in the app at all. `openIfFile` is the one place a single click
+/// (`rowClicked`), Return and a double click's leaf case (`rowDoubleClicked`)
+/// all go through, so these pin its routing directly. Its default destination
+/// is the current tab; the new-tab routes are `FileTreeBrowsingTests`'.
 @MainActor
 final class FileTreeOpenOnSelectionTests: XCTestCase {
 
@@ -75,7 +76,7 @@ final class FileTreeOpenOnSelectionTests: XCTestCase {
         XCTAssertTrue(received.isEmpty)
     }
 
-    /// `rowDoubleClicked`'s leaf branch and a plain click's selection handler
+    /// `rowDoubleClicked`'s leaf branch and a single click's delayed open
     /// both call `openIfFile` — this is the seam that used to end in
     /// `NSWorkspace.shared.open(node.url)`, handing the file to another app.
     /// Pinning that the leaf case is `openIfFile`'s case (not `toggle`'s) is

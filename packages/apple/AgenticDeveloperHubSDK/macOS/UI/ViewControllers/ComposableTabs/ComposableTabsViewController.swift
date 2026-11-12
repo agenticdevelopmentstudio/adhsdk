@@ -230,6 +230,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
                 pane.layoutOverride = layoutOverride
                 pane.stateOwnerNodeID = stateOwnerNodeID
                 pane.clampsToContainer = clampsToContainer
+                pane.showsTitleBar = showsPaneTitleBars
             }
             if let split = child as? ComposableTabsViewController {
                 split.layoutParent = self
@@ -237,6 +238,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
                 split.layoutOverride = layoutOverride
                 split.stateOwnerNodeID = stateOwnerNodeID
                 split.clampsToContainer = clampsToContainer
+                split.showsPaneTitleBars = showsPaneTitleBars
             }
         }
     }
@@ -366,6 +368,18 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// Stamped down the subtree like the two above, and for the same reason —
     /// onto panes as well as nested splits, since the chrome is theirs.
     public var clampsToContainer: Bool = false {
+        didSet { stampOwnershipOnChildren() }
+    }
+
+    /// Whether the panes in this tree show their title bars. Off for a tree
+    /// whose container already names what it holds — the editors inside a
+    /// Documents tab, where the tab is the document and each editor carries
+    /// its own navigation row instead of a bar and a gear.
+    ///
+    /// Stamped down the subtree like `clampsToContainer`, onto panes and
+    /// nested splits alike, so a pane added later by a split or a rebuild
+    /// inherits it the moment it joins the tree.
+    public var showsPaneTitleBars: Bool = true {
         didSet { stampOwnershipOnChildren() }
     }
 
@@ -853,11 +867,27 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         inner.layoutOverride = layoutOverride
         inner.stateOwnerNodeID = stateOwnerNodeID
         inner.clampsToContainer = clampsToContainer
+        inner.showsPaneTitleBars = showsPaneTitleBars
 
         layoutChildren[index] = inner
         if isViewLoaded {
             insertSplitViewItem(makeItem(for: inner), at: index)
             hasAppliedPreferredThicknesses = false
+        }
+
+        // An insertion is where a relationship can break: a pane split off a
+        // primary lands between it and its sibling, and a new primary has no
+        // sibling yet. Normalizing here re-attaches the sibling against the
+        // primary, so the new pane ends up after the pair, never inside it.
+        // `rebuild(from:)` persists, so it replaces the two calls below.
+        if let root = rootSplit() {
+            let tree = root.snapshotNode()
+            let spec = root.layout.spec
+            let normalized = spec.paneRelationships.normalized(tree, spec: spec)
+            if !normalized.hasSameStructure(as: tree) {
+                root.rebuild(from: normalized)
+                return
+            }
         }
 
         // Propagate to root, which persists the full tree.
@@ -897,6 +927,23 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         // screen while the arrangement they describe is still on it.
         root?.captureThicknessFractions()
         let hadFocus = child.containsFirstResponder
+
+        // A primary takes its sibling with it, and the two can sit in
+        // different splits, so the pair goes as one tree rewrite from the root
+        // rather than as two removals — `canRemoveLeaf` above has already asked
+        // whether both may go. `rebuild(from:)` tells each dropped pane it is
+        // gone and persists.
+        let tabRoot = root ?? self
+        let tree = tabRoot.snapshotNode()
+        let relationships = tabRoot.layout.spec.paneRelationships
+        if relationships.sibling(of: child.nodeID, in: tree) != nil,
+           let remaining = relationships.removing(child.nodeID, from: tree) {
+            tabRoot.rebuild(from: remaining)
+            if hadFocus, let leaf = tabRoot.firstLeaf() {
+                tabRoot.view.window?.makeFirstResponder(leaf.view)
+            }
+            return
+        }
 
         layoutChildren.remove(at: index)
         if isViewLoaded, let item = splitViewItems.first(where: { $0.viewController === child }) {
@@ -964,13 +1011,23 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     ) -> Set<Direction> {
         guard let root = rootSplit() else { return [] }
         let tree = root.snapshotNode()
-        return ComposableTabsMove.availableDirections(for: leaf.nodeID, in: tree)
+        let relationships = moveRelationships
+        return relationships.availableDirections(for: leaf.nodeID, in: tree)
             .filter { direction in
-                guard let moved = ComposableTabsMove.moving(leaf.nodeID, direction, in: tree) else {
+                guard let moved = relationships.moving(leaf.nodeID, direction, in: tree) else {
                     return false
                 }
                 return allowsBySpec(moved)
             }
+    }
+
+    /// The relationships a move has to keep, from the same spec `allowsBySpec`
+    /// asks. A move goes through `ComposableTabsPaneRelationships.moving`
+    /// rather than `ComposableTabsMove.moving`, so a primary carries its
+    /// sibling, a managed sibling stays put, and other panes move around the
+    /// pair; with no relationships it is exactly `ComposableTabsMove`.
+    private var moveRelationships: ComposableTabsPaneRelationships {
+        (rootSplit()?.project ?? project)?.layout.spec.paneRelationships ?? ComposableTabsPaneRelationships([])
     }
 
     /// Whether the layout would keep every pane it has if it were arranged like
@@ -995,7 +1052,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     @discardableResult
     public func move(_ leaf: ComposableTabsPaneViewController, _ direction: Direction) -> Bool {
         guard let root = rootSplit(),
-              let moved = ComposableTabsMove.moving(
+              let moved = moveRelationships.moving(
                 leaf.nodeID, direction, in: root.snapshotNode()),
               allowsBySpec(moved) else { return false }
         root.rebuild(from: moved)
@@ -1146,6 +1203,24 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     public func canRemoveLeaf(_ leaf: ComposableTabsPaneViewController) -> Bool {
         guard let root = rootSplit() else { return false }
         return layout.spec.canRemove(leaf.nodeID, from: root.snapshotNode())
+    }
+
+    /// Whether `leaf` is placed by a relationship — the pane whose close,
+    /// minimize, zoom and move are refused, because it goes where its primary
+    /// goes.
+    public func isManagedSibling(_ leaf: ComposableTabsPaneViewController) -> Bool {
+        layout.spec.paneRelationships.isManagedSibling(leaf.viewID)
+    }
+
+    /// Whether closing `leaf` would empty the tab: it is the last pane, or a
+    /// primary whose sibling is the only other one (closing a primary removes
+    /// both). Such a close goes to `onLastPaneCloseRequest`.
+    func closingEmptiesTab(_ leaf: ComposableTabsPaneViewController) -> Bool {
+        guard let root = rootSplit() else { return false }
+        let count = root.leafCount()
+        if count == 1 { return true }
+        return count == 2
+            && layout.spec.paneRelationships.sibling(of: leaf.nodeID, in: root.snapshotNode()) != nil
     }
 
     // MARK: - Tree walking
