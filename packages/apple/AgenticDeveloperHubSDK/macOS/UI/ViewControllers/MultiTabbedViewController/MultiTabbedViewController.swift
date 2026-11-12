@@ -139,6 +139,13 @@ open class MultiTabbedViewController: NSViewController {
         tabBars[edge]?.leadingAccessory = view
     }
 
+    /// Puts `view` right after the last tab on a top or bottom bar, centred
+    /// on the tabs and following the row as it grows and shrinks; `nil` takes
+    /// it away. A side bar has no room after its last tab, so it traps.
+    public func setTrailingAccessory(_ view: NSView?, for edge: Edge) {
+        tabBars[edge]?.trailingAccessory = view
+    }
+
     /// Puts `view` between the bar on `edge` and the content — a full-width
     /// row at the top of the centre, above whatever the centre shows (the
     /// active tab, the overlay, or the main content), with that content moved

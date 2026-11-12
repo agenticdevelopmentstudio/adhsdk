@@ -1072,7 +1072,7 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
             let label = ThemedLabel(
                 string: manager.repoRootURL.lastPathComponent,
                 role: isTarget ? .primaryText : .secondaryText,
-                textRole: .caption
+                textRole: .body
             )
             label.toolTip = manager.repoRootURL.path
             let icon = NSImageView(image: NSImage(
@@ -1191,7 +1191,7 @@ extension FileTreeOutlineViewController {
         let frame = Metrics.leadingInset + Metrics.trailingInset
         switch item {
         case let manager as FileTreeManager:
-            let name = Metrics.labelWidth(manager.repoRootURL.lastPathComponent, font: fonts.caption)
+            let name = Metrics.labelWidth(manager.repoRootURL.lastPathComponent, font: fonts.body)
             return frame + Metrics.iconWidth + Metrics.spacing + name
         case let placeholder as Placeholder:
             return frame + Metrics.labelWidth(placeholder.text, font: fonts.caption)

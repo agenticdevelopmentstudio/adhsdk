@@ -199,6 +199,23 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// Project-level tabs, in creation order.
     private var tabGroups: [TabGroup] = []
 
+    /// The path of the directory the window is working in, drawn under the
+    /// title in the toolbar: `~ › Development › app`. It is chrome, not a pane
+    /// strip, so it has no border of its own.
+    private lazy var titleBreadcrumb: BreadcrumbView = {
+        let crumbs = BreadcrumbView(rootURL: project.directoryURL, style: .homeRelative)
+        crumbs.isBordered = false
+        crumbs.translatesAutoresizingMaskIntoConstraints = false
+        crumbs.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        crumbs.setAccessibilityIdentifier("project.title.breadcrumb")
+        crumbs.onSelect = { [weak self] url in self?.openFromTitleBreadcrumb(url) }
+        return crumbs
+    }()
+
+    /// The directory the branch in the title was last read for, so a refresh
+    /// that changes nothing does not run git again.
+    private var titleDirectory: URL?
+
     /// Set for the duration of `reloadTabs()`'s removal loop. `removeTab`
     /// fires `didSelectTab` for whichever member it activates next, and none
     /// of that callback's duties are meaningful mid-loop: `persistAllTabs()`
@@ -453,6 +470,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     @available(macOS, deprecated: 10.13, message: "Builds the NSDrawer-backed help presenter")
     public override func configureWindow(_ window: NSWindow) {
         super.configureWindow(window)
+        if shelf != nil {
+            toolbarDelegate.titleAccessory = titleBreadcrumb
+        }
         window.toolbar = toolbarDelegate.makeToolbar(identifier: "project.toolbar")
         // Settings' seamless titlebar, shared with the Coding Partner window.
         // The title stays — see above.
@@ -484,6 +504,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         super.showWindow(sender)
         installFirstResponderObserverIfNeeded()
         installTitlebarAccessoryIfNeeded()
+        installTitlebarBorderIfNeeded()
         restoreFocusedLeafForActiveTab(unlessShelfHasFocus: true)
         refreshActivePaneChrome()
         refreshHelpButtonAppearance()
@@ -556,6 +577,32 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// settings. Which tab bars a window shows moved into those settings — it
     /// is a property of the project, not a thing to flick on and off from the
     /// titlebar while working.
+    /// A one-point line under the title bar, so the title and its controls
+    /// read as a bar of their own above the panes. A view, not
+    /// `titlebarSeparatorStyle`: a transparent titlebar over full-size content
+    /// draws no separator at all.
+    private var titlebarBorder: NSView?
+
+    private func installTitlebarBorderIfNeeded() {
+        guard titlebarBorder == nil, let window, let content = window.contentView,
+              let guide = window.contentLayoutGuide as? NSLayoutGuide else { return }
+        let border = NSView()
+        border.wantsLayer = true
+        border.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(border, positioned: .above, relativeTo: nil)
+        border.observeTheme { border, palette in
+            border.layer?.backgroundColor = palette.nsColor(.outline).cgColor
+        }
+        NSLayoutConstraint.activate([
+            border.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            border.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            border.topAnchor.constraint(equalTo: guide.topAnchor),
+            border.heightAnchor.constraint(equalToConstant: 1)
+        ])
+        border.setAccessibilityIdentifier("project-window.titlebar-border")
+        titlebarBorder = border
+    }
+
     private func installTitlebarAccessoryIfNeeded() {
         guard titlebarAccessory == nil, let window else { return }
 
@@ -1282,6 +1329,67 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     func refreshActivePaneChrome() {
         refreshFooterStatus()
         refreshSearchAvailability()
+        refreshTitle()
+    }
+
+    // MARK: - Title
+
+    /// The directory of the tab in front — a worktree tab's own checkout, else
+    /// the project's.
+    var activeWorkingDirectory: URL {
+        guard let activeTabID = tabbed.activeTabID else { return project.directoryURL }
+        return tabGroups.first { $0.members.values.contains(activeTabID) }?.workingDirectory
+            ?? project.directoryURL
+    }
+
+    /// `project → branch` over the active directory's path. The branch is read
+    /// off the main thread (it runs git); until it arrives the title is the
+    /// project's name alone.
+    private func refreshTitle() {
+        let directory = activeWorkingDirectory
+        titleBreadcrumb.fileURL = directory
+        guard directory != titleDirectory else { return }
+        titleDirectory = directory
+        let name = project.displayName
+        windowTitle = name
+        window?.title = name
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let branch = GitProjectRoot.currentBranchName(at: directory.path)
+            await MainActor.run {
+                guard let self, self.titleDirectory == directory else { return }
+                let title = Self.title(project: name, branch: branch)
+                self.windowTitle = title
+                self.window?.title = title
+            }
+        }
+    }
+
+    /// `adkitchen → main`, or the name alone outside a repository.
+    nonisolated static func title(project: String, branch: String?) -> String {
+        guard let branch, !branch.isEmpty else { return project }
+        return "\(project) \u{2192} \(branch)"
+    }
+
+    /// A file chosen in the title's breadcrumb opens in the active tab's
+    /// document view when it has one, as choosing it in a file tree would;
+    /// otherwise in the app the system assigns to it.
+    private func openFromTitleBreadcrumb(_ url: URL) {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              !isDirectory.boolValue else { return }
+        if let documents = activeSplit.flatMap({ Self.firstDocumentTabs(in: $0) }) {
+            documents.openInSelectedPane(url)
+        } else {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    private static func firstDocumentTabs(in controller: NSViewController) -> DocumentTabsViewController? {
+        if let documents = controller as? DocumentTabsViewController { return documents }
+        for child in controller.children {
+            if let found = firstDocumentTabs(in: child) { return found }
+        }
+        return nil
     }
 
     /// The field means "search *this* pane": it is disabled over a pane that

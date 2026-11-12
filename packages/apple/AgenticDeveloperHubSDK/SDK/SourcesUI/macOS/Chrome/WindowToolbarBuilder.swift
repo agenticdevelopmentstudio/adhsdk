@@ -248,6 +248,10 @@ extension WindowToolbarBuilder {
 
         private var titleLabel: ThemedLabel?
 
+        /// A view drawn under the title in a `.windowTitle` slot — the project
+        /// window's path breadcrumb. Set it before the toolbar builds the slot.
+        public var titleAccessory: NSView?
+
         /// Key-value observation rather than a Cocoa binding: a programmatic
         /// binding retains the object it observes, and the window owns the
         /// toolbar that owns this label, so a binding kept every closed window
@@ -334,6 +338,14 @@ extension WindowToolbarBuilder {
                 // Only the item going into the toolbar is the live one; see
                 // `SettingsWindow`'s help button for the same rule.
                 guard flag else { return item }
+                if let titleAccessory {
+                    label.textRole = .body
+                    let stack = NSStackView(views: [label, titleAccessory])
+                    stack.orientation = .vertical
+                    stack.alignment = .leading
+                    stack.spacing = 0
+                    item.view = stack
+                }
                 titleLabel = label
                 observeTitle()
                 return item

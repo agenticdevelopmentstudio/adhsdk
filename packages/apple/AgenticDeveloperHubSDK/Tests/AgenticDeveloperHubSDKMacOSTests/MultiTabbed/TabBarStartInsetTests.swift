@@ -141,4 +141,25 @@ final class TabBarStartInsetTests: XCTestCase {
         XCTAssertNil(plus.superview)
         XCTAssertEqual(firstTabFrame(in: bar).minX, TabBarView.endPadding, accuracy: 0.5)
     }
+
+    /// A browser's +: right after the last tab, centred on it, and still
+    /// after the last one when another tab is added.
+    func testATrailingAccessoryFollowsTheLastTab() throws {
+        let controller = makeController()
+        controller.addTab(.init(item: .viewController(Item()), viewController: makeContent()), on: .top)
+        let plus = accessory()
+        controller.setTrailingAccessory(plus, for: .top)
+        controller.view.layoutSubtreeIfNeeded()
+
+        let bar = try XCTUnwrap(controller.tabBars[.top])
+        XCTAssertTrue(plus.superview === bar)
+        let tab = firstTabFrame(in: bar)
+        XCTAssertEqual(tab.minX, TabBarView.endPadding, accuracy: 0.5)
+        XCTAssertEqual(plus.frame.minX, tab.maxX + TabBarView.itemSpacing, accuracy: 0.5)
+        XCTAssertEqual(plus.frame.midY, tab.midY, accuracy: 0.5)
+
+        controller.addTab(.init(item: .viewController(Item()), viewController: makeContent()), on: .top)
+        controller.view.layoutSubtreeIfNeeded()
+        XCTAssertGreaterThan(plus.frame.minX, tab.maxX + TabBarView.itemSpacing)
+    }
 }

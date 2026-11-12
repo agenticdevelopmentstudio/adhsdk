@@ -60,6 +60,26 @@ final class TabBarView: NSView {
         }
     }
 
+    /// A control right after the last tab — a browser's + — centred on the
+    /// tabs across the bar and following the row as tabs come and go. Top and
+    /// bottom bars only. The tabs stop short of the bar's end by its width, so
+    /// a crowded row never runs underneath it.
+    var trailingAccessory: NSView? {
+        didSet {
+            guard trailingAccessory !== oldValue else { return }
+            precondition(trailingAccessory == nil || !edge.isVertical, "a trailing accessory needs a horizontal bar")
+            oldValue?.removeFromSuperview()
+            if let accessory = trailingAccessory {
+                accessory.translatesAutoresizingMaskIntoConstraints = false
+                addSubview(accessory)
+            }
+            pinTrailingAccessory()
+            applyEdgeInsets()
+        }
+    }
+
+    private var trailingAccessoryConstraints: [NSLayoutConstraint] = []
+
     private var stackLeading: NSLayoutConstraint?
     private var accessoryConstraints: [NSLayoutConstraint] = []
     private var accessoryLeading: NSLayoutConstraint?
@@ -330,6 +350,31 @@ final class TabBarView: NSView {
         }
         applyStackOrder()
         updateThickness()
+        pinTrailingAccessory()
+    }
+
+    /// Hangs the trailing accessory off the last tab, or off the start of
+    /// the row when there are no tabs. Re-run after every rebuild, because the
+    /// last tab is a different view each time.
+    private func pinTrailingAccessory() {
+        NSLayoutConstraint.deactivate(trailingAccessoryConstraints)
+        trailingAccessoryConstraints = []
+        guard let accessory = trailingAccessory else { return }
+        let offset = edge == .top ? Self.outerPadding / 2 : -Self.outerPadding / 2
+        let leading: NSLayoutConstraint
+        if let last = stack.arrangedSubviews.last {
+            leading = accessory.leadingAnchor.constraint(equalTo: last.trailingAnchor, constant: Self.itemSpacing)
+        } else if let lead = leadingAccessory {
+            leading = accessory.leadingAnchor.constraint(equalTo: lead.trailingAnchor, constant: Self.itemSpacing)
+        } else {
+            leading = accessory.leadingAnchor.constraint(equalTo: leadingAnchor, constant: startInset)
+        }
+        trailingAccessoryConstraints = [
+            leading,
+            accessory.centerYAnchor.constraint(equalTo: centerYAnchor, constant: offset),
+            accessory.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Self.endPadding)
+        ]
+        NSLayoutConstraint.activate(trailingAccessoryConstraints)
     }
 
     /// The stack's padding: `outerPadding` on the window side and none on the
@@ -372,7 +417,8 @@ final class TabBarView: NSView {
         accessoryLeading?.constant = startInset
         let outer = Self.outerPadding
         let start: CGFloat = leadingAccessory == nil ? startInset : 0
-        let end = Self.endPadding
+        let accessoryRoom = trailingAccessory.map { $0.fittingSize.width + Self.itemSpacing } ?? 0
+        let end = Self.endPadding + accessoryRoom
         switch edge {
         case .top:
             stack.edgeInsets = NSEdgeInsets(top: outer, left: start, bottom: 0, right: end)

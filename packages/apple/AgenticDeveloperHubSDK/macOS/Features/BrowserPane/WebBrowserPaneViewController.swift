@@ -873,9 +873,8 @@ open class WebBrowserPaneViewController: NSViewController {
         // navigation controls show is decided once, here.
         applyToolbarOwnership()
         addChild(tabStrip)
-        // The + leads the tab row, the way a browser's new-tab control sits
-        // with the tabs it adds to.
-        tabStrip.setLeadingAccessory(newTabButton, for: .top)
+        // The + follows the last tab, where a browser's new-tab control sits.
+        tabStrip.setTrailingAccessory(newTabButton, for: .top)
         tabStrip.setAccessoryBelowBar(bar, for: .top)
         let strip = tabStrip.view
         strip.translatesAutoresizingMaskIntoConstraints = false
