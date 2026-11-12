@@ -247,7 +247,8 @@ public final class JSONLImporter {
         func accumulate(
             _ turns: [JSONLScanner.ParsedTurn],
             _ chunkTitles: [JSONLScanner.ParsedTitle] = [],
-            _ chunkDispatches: [JSONLScanner.AgentDispatch] = []
+            _ chunkDispatches: [JSONLScanner.AgentDispatch] = [],
+            fromSubagent: Bool = false
         ) {
             for title in chunkTitles
             where title.source == .custom || titles[title.sessionId]?.source != .custom {
@@ -260,7 +261,8 @@ public final class JSONLImporter {
                 turnsSeen += 1
                 var bucket = buckets[turn.sessionId] ?? Bucket()
                 bucket.turns += 1
-                if !turn.model.isEmpty { bucket.model = turn.model }
+                // A subagent may run another model; the session's is its own.
+                if !turn.model.isEmpty, !fromSubagent { bucket.model = turn.model }
                 if !turn.cwd.isEmpty { bucket.cwd = turn.cwd }
                 if !turn.gitBranch.isEmpty { bucket.gitBranch = turn.gitBranch }
                 if bucket.firstTs.isEmpty
@@ -378,7 +380,8 @@ public final class JSONLImporter {
                 // A dry run writes nothing at all, so there is no rollback to
                 // survive: the summary is a forecast, and it folds in every turn.
                 guard !options.dryRun else {
-                    return accumulate(pendingTurns, pendingTitles, pendingDispatches)
+                    return accumulate(
+                        pendingTurns, pendingTitles, pendingDispatches, fromSubagent: isSubagentFile)
                 }
                 // Staged, not incremented in place: the closure below runs inside a
                 // transaction that is rolled back WHOLE on any throw, but Swift locals
@@ -430,7 +433,7 @@ public final class JSONLImporter {
                     eventsInserted += batchEventsInserted
                     eventsSkipped += batchEventsSkipped
                     linesInserted += batchLinesInserted
-                    accumulate(pendingTurns, pendingTitles, pendingDispatches)
+                    accumulate(pendingTurns, pendingTitles, pendingDispatches, fromSubagent: isSubagentFile)
                 } catch {
                     // The whole chunk is rolled back together, so the staged counts
                     // are dropped with it. The byte cursor is not advanced for a
@@ -548,6 +551,9 @@ public final class JSONLImporter {
                         authMethod: "unknown"
                     )
                     if created { sessionsCreated += 1 }
+                    // An existing row whose hooks named no model (a headless
+                    // `claude -p` sends none) takes the transcript's.
+                    try database.fillSessionModelIfEmpty(bucket.model, sessionId: sessionId)
 
                     // Source metrics from the persisted, deduplicated
                     // transcript_turns rather than this chunk's in-memory

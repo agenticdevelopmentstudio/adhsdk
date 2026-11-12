@@ -42,6 +42,20 @@ extension DaemonDatabase {
         }
     }
 
+    /// Records `model` as the session's model when none is recorded yet.
+    ///
+    /// A hook's `model` is the usual source, but a headless `claude -p` sends none
+    /// in any hook, so its row stayed blank for its whole run while its transcript
+    /// already named the model on every reply. The transcript fills the gap and
+    /// never overrides a model a hook reported.
+    public func fillSessionModelIfEmpty(_ model: String, sessionId: String) throws {
+        guard !model.isEmpty else { return }
+        try execute(
+            "UPDATE sessions SET model = ? WHERE session_id = ? AND model = ''",
+            params: [model, sessionId]
+        )
+    }
+
     /// Moves a session to `cwd` and records `gitBranch` as its branch, blank
     /// included. Unlike ``updateSessionGitBranch(_:sessionId:)``, a blank here is
     /// the truth: the old branch belonged to a directory the session is no longer

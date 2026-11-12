@@ -43,6 +43,11 @@ public enum ProcessEnv {
         procArgs(forPid: pid)?.env
     }
 
+    /// The argv `pid` was exec'd with (argv[0] first), or nil.
+    public static func arguments(forPid pid: Int32) -> [String]? {
+        procArgs(forPid: pid)?.argv
+    }
+
     /// The executable path, argv and environment `pid` was exec'd with, or nil.
     private static func procArgs(forPid pid: Int32)
         -> (execPath: String, argv: [String], env: [String: String])? {

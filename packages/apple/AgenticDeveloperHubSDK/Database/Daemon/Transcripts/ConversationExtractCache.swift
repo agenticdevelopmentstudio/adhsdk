@@ -20,7 +20,8 @@ public final class ConversationExtractCache: Sendable {
     private struct Key: Hashable, Sendable {
         let lineId: Int
         let rawLength: Int
-        let includeMachinery: Bool
+        let includeSidechains: Bool
+        let includeScripted: Bool
     }
 
     private let cache: LRUCache<Key, [ConversationExtractor.Line]>
@@ -32,13 +33,16 @@ public final class ConversationExtractCache: Sendable {
     public var capacity: Int { cache.capacity }
 
     public func lines(
-        lineId: Int, rawJSON: String, includeMachinery: Bool = false
+        lineId: Int, rawJSON: String, includeSidechains: Bool = false, includeScripted: Bool = false
     ) -> [ConversationExtractor.Line] {
-        let key = Key(lineId: lineId, rawLength: rawJSON.utf8.count, includeMachinery: includeMachinery)
+        let key = Key(
+            lineId: lineId, rawLength: rawJSON.utf8.count,
+            includeSidechains: includeSidechains, includeScripted: includeScripted)
         if let hit = cache.value(for: key) { return hit }
         // Parsed outside any lock: concurrent feed reads must not queue behind
         // one another's JSON.
-        let parsed = ConversationExtractor.extract(rawJSON: rawJSON, includeMachinery: includeMachinery)
+        let parsed = ConversationExtractor.extract(
+            rawJSON: rawJSON, includeSidechains: includeSidechains, includeScripted: includeScripted)
         cache.set(parsed, for: key)
         return parsed
     }

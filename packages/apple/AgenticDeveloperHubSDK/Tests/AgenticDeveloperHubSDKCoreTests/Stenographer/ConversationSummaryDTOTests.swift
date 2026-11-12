@@ -122,4 +122,23 @@ final class ConversationSummaryDTOTests: XCTestCase {
         XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: 0))
         XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: getpid()), "the test runner is not claude")
     }
+
+    /// A `claude -p` started from an interactive shell has that shell's tty, so the
+    /// terminal check alone took it for a pane sharer. Its session file and its
+    /// arguments both say it is headless.
+    func testAScriptedClaudeIsHeadlessEvenWithATerminal() {
+        func file(_ entrypoint: String) -> Data {
+            Data(#"{"pid":1,"sessionId":"s","kind":"interactive","entrypoint":"\#(entrypoint)"}"#.utf8)
+        }
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: file("sdk-cli")))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: file("cli")))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "-p", "x"], sessionFile: file("cli")),
+                       "the session file outranks the arguments")
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["claude", "-p", "ping"], sessionFile: nil))
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["node", "cli.js", "--print", "ping"], sessionFile: nil))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "--", "-p"], sessionFile: nil),
+                       "after -- it is the prompt, not a switch")
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: nil))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: nil, sessionFile: nil))
+    }
 }

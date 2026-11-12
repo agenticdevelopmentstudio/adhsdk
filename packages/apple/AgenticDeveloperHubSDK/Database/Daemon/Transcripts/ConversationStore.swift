@@ -331,9 +331,9 @@ public struct ConversationStore: Sendable {
     ///   - includeWorkOutput: include `progress` and `thinking` lines, the
     ///     session's subagents' own transcripts (`subagents/agent-*.jsonl`),
     ///     woven in by time with each message's ``ConversationMessageDTO/agentId``
-    ///     set, and a script-driven session's lines (the extractor's
-    ///     `includeMachinery`). A headless `claude -p` that hands its task to an
-    ///     agent writes almost nothing else, so without them it reads as empty.
+    ///     set. A headless `claude -p` that hands its task to an agent writes
+    ///     little else. Its own script-driven prompt and reply are shown either
+    ///     way: they are this session's conversation, not side work.
     /// - Throws: ``ConversationRangeError/unknownMessageId(_:)`` for a cursor
     ///   that names no line of the session.
     public func conversationMessages(
@@ -379,8 +379,12 @@ public struct ConversationStore: Sendable {
                 let agentId = JSONLScanner.subagentId(ofPath: filePath)
                 // Offsets are taken before any filter, as the feed takes
                 // them, so a message's id never depends on what was asked.
+                // A scripted line is this session's own conversation (a headless
+                // `claude -p` writes nothing else), so it is always kept; only a
+                // sub-agent's sidechain waits for the work output.
                 let shown = self.extractCache.lines(
-                    lineId: lineId, rawJSON: rawJSON, includeMachinery: includeWorkOutput)
+                    lineId: lineId, rawJSON: rawJSON,
+                    includeSidechains: includeWorkOutput, includeScripted: true)
                     .enumerated()
                     .prefix(stride)
                     .filter { includeWorkOutput || !$0.element.kind.isWorkOutput }

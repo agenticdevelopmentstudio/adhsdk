@@ -126,6 +126,27 @@ final class JSONLImporterTests: XCTestCase {
         XCTAssertEqual(metrics.totalCostUsd, 0.006, accuracy: 0.0001)
     }
 
+    /// A headless `claude -p` names its model in no hook, so its live row is blank
+    /// until the transcript fills it. A model a hook did report is never replaced,
+    /// and a subagent's model is not the session's.
+    func testTheTranscriptFillsAModelNoHookReported() throws {
+        for (id, model) in [("blank", ""), ("named", "claude-from-hook")] {
+            _ = try database.createSessionStubIfMissing(
+                sessionId: id, cwd: "/work/test", model: model, startedAt: "2026-04-14T09:00:00Z",
+                lastActivityAt: "2026-04-14T09:00:00Z", gitBranch: "main", accountEmail: "")
+        }
+        try writeJSONL([assistantLine(session: "blank", messageId: "m1", model: "claude-opus-5-5")],
+                       at: "blank.jsonl")
+        try writeJSONL([assistantLine(session: "blank", messageId: "m2", model: "claude-haiku-5-5")],
+                       at: "blank/subagents/agent-a1.jsonl")
+        try writeJSONL([assistantLine(session: "named", messageId: "m3", model: "claude-opus-5-5")],
+                       at: "named.jsonl")
+        _ = try runImport()
+        let models = Dictionary(uniqueKeysWithValues: try database.fetchSessions().map { ($0.sessionId, $0.model) })
+        XCTAssertEqual(models["blank"], "claude-opus-5-5")
+        XCTAssertEqual(models["named"], "claude-from-hook")
+    }
+
     func testImportIsIdempotent() throws {
         try writeJSONL([
             userLine(session: "s1"),

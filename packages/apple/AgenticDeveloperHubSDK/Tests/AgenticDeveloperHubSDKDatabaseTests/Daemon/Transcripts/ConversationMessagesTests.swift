@@ -114,6 +114,21 @@ final class ConversationMessagesTests: XCTestCase {
         XCTAssertEqual(try page(after: work[0].id, work: true).messages.map(\.content), ["found a bug"])
     }
 
+    /// A headless `claude -p` writes every line `sdk-cli`. The merged feed drops
+    /// those (nobody typed them), but they are this session's own prompt and
+    /// reply, so a plain read of the session shows them without `--work`.
+    func testAHeadlessSessionsOwnDialogueNeedsNoWorkFlag() throws {
+        try database.insertTranscriptLines([
+            line(1, type: "user", at: "2026-09-01T10:00:00Z",
+                 json: #"{"type":"user","entrypoint":"sdk-cli","message":{"role":"user","content":"ping"}}"#),
+            line(2, type: "assistant", at: "2026-09-01T10:00:01Z",
+                 json: #"{"type":"assistant","entrypoint":"sdk-cli","message":{"role":"assistant","#
+                     + #""stop_reason":"end_turn","content":[{"type":"text","text":"pong"}]}}"#)
+        ], filePath: "/tmp/\(session).jsonl")
+        XCTAssertEqual(try page().messages.map(\.content), ["ping", "pong"])
+        XCTAssertEqual(try page(work: true).messages.map(\.content), ["ping", "pong"])
+    }
+
     func testSubagentIdComesFromItsFile() {
         XCTAssertEqual(JSONLScanner.subagentId(ofPath: "/p/s1/subagents/agent-a4861c.jsonl"), "a4861c")
         XCTAssertNil(JSONLScanner.subagentId(ofPath: "/p/s1.jsonl"))

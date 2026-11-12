@@ -85,13 +85,37 @@ public enum ProcessLiveness {
     /// Nil when there is no file (the CLI's helper processes write none) or it doesn't
     /// read as this pid's — a file left by a dead process whose pid was reused.
     public static func currentSessionId(ofPid pid: pid_t, environment: [String: String]?) -> String? {
+        guard let data = sessionFileData(ofPid: pid, environment: environment) else { return nil }
+        return sessionId(fromSessionFile: data, pid: pid)
+    }
+
+    /// The raw bytes of `pid`'s CLI session file, or nil when it has none.
+    private static func sessionFileData(ofPid pid: pid_t, environment: [String: String]?) -> Data? {
         let configured = environment?["CLAUDE_CONFIG_DIR"] ?? ""
         let configDir = configured.isEmpty
             ? (NSHomeDirectory() as NSString).appendingPathComponent(".claude")
             : configured
         let file = URL(fileURLWithPath: configDir).appendingPathComponent("sessions/\(pid).json")
-        guard let data = try? Data(contentsOf: file) else { return nil }
-        return sessionId(fromSessionFile: data, pid: pid)
+        return try? Data(contentsOf: file)
+    }
+
+    /// Whether a `claude` process is a headless, scripted run rather than one a
+    /// person types into.
+    ///
+    /// The session file says so first. The CLI records how it was entered, and every
+    /// scripted entry starts with `sdk` (`claude -p` is `sdk-cli`), where a terminal
+    /// session is `cli`. Its `kind` reads `interactive` for both, so it says nothing.
+    /// Without an entrypoint (an older CLI, or the moment before it writes the file)
+    /// the arguments decide: `-p` / `--print` is the headless switch.
+    public static func isHeadless(argv: [String]?, sessionFile: Data?) -> Bool {
+        if let sessionFile,
+           let json = (try? JSONSerialization.jsonObject(with: sessionFile)) as? [String: Any],
+           let entrypoint = json["entrypoint"] as? String, !entrypoint.isEmpty {
+            return entrypoint.hasPrefix("sdk")
+        }
+        guard let argv else { return false }
+        let options = argv.dropFirst().prefix { $0 != "--" }
+        return options.contains("-p") || options.contains("--print")
     }
 
     /// The `sessionId` of a CLI session file, provided the file's own `pid` is `pid`.
@@ -215,8 +239,18 @@ public enum ProcessLiveness {
     /// that can't be said: `pid` is not positive, is not a live Claude Code CLI (a
     /// gone hook shell, a reused pid), or the kernel would not describe it. Callers
     /// read nil as "might be attached", never as "detached".
+    ///
+    /// A headless `claude -p` is `.detached` whether or not it has a terminal. One
+    /// started from an interactive shell inherits that shell's tty, yet it takes its
+    /// prompt from argv, never the keyboard, so keystrokes typed into the pane reach
+    /// the shell, or another claude in the same pane, and never it. See
+    /// ``isHeadless(argv:sessionFile:)``.
     public static func terminalAttachment(ofPid pid: pid_t) -> TerminalAttachment? {
         guard pid > 0, isClaudeProcess(pid) else { return nil }
+        let sessionFile = sessionFileData(ofPid: pid, environment: ProcessEnv.environment(forPid: pid))
+        if isHeadless(argv: ProcessEnv.arguments(forPid: pid), sessionFile: sessionFile) {
+            return .detached
+        }
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, pid]
         var info = kinfo_proc()
         var size = MemoryLayout<kinfo_proc>.size

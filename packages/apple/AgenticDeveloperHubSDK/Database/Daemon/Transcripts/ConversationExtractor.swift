@@ -120,20 +120,25 @@ public enum ConversationExtractor {
     /// silently skips a line it can't read is right, and one that surfaces
     /// `{"type":…` at the human is not.
     ///
-    /// - Parameter includeMachinery: keep a sub-agent's sidechain and a
-    ///   script-driven (``isSDKDriven(_:)``) entry. The merged feed leaves them
-    ///   out; a reader that asks one session for its work output wants exactly
-    ///   them — a headless `claude -p` worker has nothing else.
-    public static func extract(rawJSON: String, includeMachinery: Bool = false) -> [Line] {
+    /// - Parameters:
+    ///   - includeSidechains: keep a sub-agent's sidechain. The merged feed and a
+    ///     plain read of one session leave it out; a reader asking one session for
+    ///     its work output wants it.
+    ///   - includeScripted: keep a script-driven (``isSDKDriven(_:)``) entry. The
+    ///     merged feed leaves it out, since nobody typed it; a read of one session
+    ///     keeps it, because for a headless `claude -p` that *is* the conversation.
+    public static func extract(
+        rawJSON: String, includeSidechains: Bool = false, includeScripted: Bool = false
+    ) -> [Line] {
         guard let data = rawJSON.data(using: .utf8),
               let entry = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return [] }
 
         // Sub-agent traffic is a different conversation, and meta entries are
         // the harness talking to itself.
-        if !includeMachinery, entry["isSidechain"] as? Bool == true { return [] }
+        if !includeSidechains, entry["isSidechain"] as? Bool == true { return [] }
         if entry["isMeta"] as? Bool == true { return [] }
-        if !includeMachinery, isSDKDriven(entry) { return [] }
+        if !includeScripted, isSDKDriven(entry) { return [] }
 
         // The harness says what it wrote, where it says so. `turnOrigin` and
         // `isCompactSummary` are the entry's own account of not being typed by
