@@ -319,6 +319,13 @@ public final class FileBrowserViewController: NSViewController {
 
     public override func viewDidLoad() {
         super.viewDidLoad()
+        // Read when the view is built, not when it first appears: a project
+        // window is built hidden and shown once it is ready, and a tree read
+        // only on appearing arrived after the window was on screen, so its
+        // rows — and a content-sized pane's width — landed a moment late and
+        // the window jumped. `loadInitial()` runs once; a tab switch does not
+        // re-read it.
+        loadRootsOnce()
 
         // The breadcrumb names the selected node, and choosing in it is the
         // same as a click in the tree (`dry`). The hop lets `@Published`'s
@@ -347,6 +354,9 @@ public final class FileBrowserViewController: NSViewController {
             .store(in: &cancellables)
 
         tree.onRowsChanged = { [weak self] in self?.scheduleWidthUpdate() }
+        // The user may drag the divider wherever they like; choosing another
+        // row puts the content width back.
+        tree.onSelectionChanged = { [weak self] in self?.scheduleWidthUpdate() }
         widthSettingObserver.onChange = { [weak self] _ in self?.scheduleWidthUpdate() }
         // The rows' fonts come from the palette, so a text-size change is a
         // width change.
@@ -404,19 +414,23 @@ public final class FileBrowserViewController: NSViewController {
             guard let self else { return }
             self.isWidthUpdateScheduled = false
             guard self.widthSettingObserver.value, self.isViewLoaded, self.view.window != nil else { return }
-            self.onPreferredThicknessChange?(self.tree.preferredContentWidth())
+            // The tree measures its own view; the strips and bars beside it in
+            // this one are added on top.
+            let chrome = max(0, self.view.bounds.width - self.tree.view.frame.width)
+            self.onPreferredThicknessChange?(self.tree.preferredContentWidth() + chrome)
         }
     }
 
     public override func viewWillAppear() {
         super.viewWillAppear()
-        // `loadInitial()` reads each root's top level; doing it once keeps a
-        // tab switch from re-reading it.
-        if !hasLoaded {
-            hasLoaded = true
-            managersByRoot.values.forEach { $0.loadInitial() }
-        }
+        loadRootsOnce()
         startWatching()
+    }
+
+    private func loadRootsOnce() {
+        guard !hasLoaded else { return }
+        hasLoaded = true
+        managersByRoot.values.forEach { $0.loadInitial() }
     }
 
     public override func viewDidDisappear() {

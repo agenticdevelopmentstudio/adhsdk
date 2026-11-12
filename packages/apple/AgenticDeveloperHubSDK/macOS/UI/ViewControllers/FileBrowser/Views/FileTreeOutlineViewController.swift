@@ -50,6 +50,10 @@ final class FileTreeOutlineViewController: NSViewController {
     /// bursts; the receiver coalesces.
     var onRowsChanged: (() -> Void)?
 
+    /// Called when the user chooses a different row, so a content-sized pane
+    /// can return to the width its rows need after the user dragged it.
+    var onSelectionChanged: (() -> Void)?
+
     /// The click waiting out the double-click interval before it opens its
     /// file in the current tab. A double click cancels it, so opening in a new
     /// tab does not first replace the current tab's file.
@@ -107,6 +111,12 @@ final class FileTreeOutlineViewController: NSViewController {
     /// restore what was stored must not be reported back as the user opening a
     /// folder.
     private var isSyncingExpansion = false
+
+    /// The roots the user has closed since the pane was last shown. Held in
+    /// memory only, never stored: a root is open every time the pane appears,
+    /// and closed only for as long as the user keeps it closed — a reload (a
+    /// git-status refresh runs one every few seconds) must not reopen it.
+    private var collapsedRoots = Set<ObjectIdentifier>()
 
     /// The file still waiting to be selected, if the row it lives on has not
     /// been drawn yet. Cleared the moment it is found — a restore happens once,
@@ -174,6 +184,15 @@ final class FileTreeOutlineViewController: NSViewController {
         scrollView.autohidesScrollers = true
 
         view = scrollView
+    }
+
+    /// Every root opens when the pane is shown, whatever the user closed last
+    /// time it was on screen.
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        collapsedRoots.removeAll()
+        expandRoots()
+        invalidateRowIndex()
     }
 
     override func viewDidLoad() {
@@ -335,7 +354,8 @@ final class FileTreeOutlineViewController: NSViewController {
         isSyncingSelection = true
         if isFiltering { recomputeFilter() }
         outline.reloadData()
-        // A root is not disclosable: it is always open, whatever was stored.
+        // A root's disclosure is never stored: open unless the user has closed
+        // it since the pane was shown.
         expandRoots()
         if isFiltering { expandFilteredAncestors() }
         invalidateRowIndex()
@@ -347,18 +367,20 @@ final class FileTreeOutlineViewController: NSViewController {
         onRowsChanged?()
     }
 
-    /// Opens every root. Under `isSyncingExpansion`: a root being open is not
-    /// something the user chose, so it is not recorded as disclosed.
+    /// Opens every root the user has not closed since the pane was shown.
+    /// Under `isSyncingExpansion`: a root being open is not something the user
+    /// chose, so it is not recorded as disclosed.
     private func expandRoots() {
         isSyncingExpansion = true
-        for manager in roots.managers where !outline.isItemExpanded(manager) {
+        for manager in roots.managers
+        where !outline.isItemExpanded(manager) && !collapsedRoots.contains(ObjectIdentifier(manager)) {
             outline.expandItem(manager)
         }
         isSyncingExpansion = false
     }
 
     /// Collapses every open row below the roots, deepest first, without
-    /// recording any of it — the roots themselves refuse to collapse.
+    /// recording any of it — the roots themselves stay open.
     private func collapseAllBelowRoots() {
         isSyncingExpansion = true
         for row in (0..<outline.numberOfRows).reversed() {
@@ -1023,6 +1045,12 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
         // Rows moved, whoever caused it — the cached path->row map is stale.
         invalidateRowIndex()
         onRowsChanged?()
+        if let manager = notification.userInfo?["NSObject"] as? FileTreeManager {
+            // A root's disclosure lasts until the pane is next shown; it is
+            // never stored.
+            collapsedRoots.remove(ObjectIdentifier(manager))
+            return
+        }
         guard !isSyncingExpansion,
               let item = notification.userInfo?["NSObject"],
               let path = path(of: item) else { return }
@@ -1032,6 +1060,10 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
     func outlineViewItemDidCollapse(_ notification: Notification) {
         invalidateRowIndex()
         onRowsChanged?()
+        if let manager = notification.userInfo?["NSObject"] as? FileTreeManager {
+            if !isSyncingExpansion { collapsedRoots.insert(ObjectIdentifier(manager)) }
+            return
+        }
         guard let item = notification.userInfo?["NSObject"],
               let path = path(of: item) else { return }
         // A closed folder draws no rows, so nothing needs redrawing when its
@@ -1042,14 +1074,10 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
         restoration.setExpanded(false, path: path)
     }
 
-    /// A root is not disclosable — it is always open — so it has no triangle.
+    /// Every expandable row has its triangle, roots included: Option-clicking
+    /// a root's triangle is how the whole tree is closed at once.
     func outlineView(_ outlineView: NSOutlineView, shouldShowOutlineCellForItem item: Any) -> Bool {
-        !(item is FileTreeManager)
-    }
-
-    /// Refused for roots, whoever asks: the left arrow, Option-click, a script.
-    func outlineView(_ outlineView: NSOutlineView, shouldCollapseItem item: Any) -> Bool {
-        !(item is FileTreeManager)
+        true
     }
 
     func outlineView(_ outlineView: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView? {
@@ -1109,6 +1137,7 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
         // root, held that suppression for the life of the pane: every file
         // chosen after it was highlighted and then forgotten at quit.
         pendingSelectionPath = nil
+        onSelectionChanged?()
         let item = outline.item(atRow: outline.selectedRow)
 
         if let manager = item as? FileTreeManager {
@@ -1156,26 +1185,33 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
 
 extension FileTreeOutlineViewController {
 
-    /// The trailing margin a content-sized pane keeps past its widest row.
-    static let contentWidthMargin: CGFloat = 32
+    /// A little air past the widest row, so its last glyph never touches the
+    /// pane's edge.
+    static let contentWidthMargin: CGFloat = 8
 
-    /// The width the drawn rows need: the widest row's indent, icon, name,
-    /// unsaved-changes dot and git badge, plus `contentWidthMargin`.
+    /// The width this controller's view needs so the widest drawn row shows
+    /// whole: the row's indent, icon, name, unsaved-changes dot and git badge,
+    /// plus whatever the outline draws around its cells.
     ///
-    /// Measured from text metrics in the theme's fonts rather than by laying
-    /// out row views, so it costs one string measurement per drawn row and
-    /// builds nothing.
+    /// The outline's own chrome — the inset style's padding on both sides, the
+    /// scroller when one takes room, the scroll view's position in this view —
+    /// is measured off the laid-out geometry rather than guessed: a fixed
+    /// allowance for it was too small, and every pane cut its longest names
+    /// short. Text is measured from the theme's fonts rather than by laying out
+    /// row views, so this costs one string measurement per drawn row.
     func preferredContentWidth() -> CGFloat {
         let palette = view.resolvedThemeScope.palette
         let fonts = RowFonts(
             body: palette.font(.body), caption: palette.font(.caption), code: palette.font(.code))
         var widest: CGFloat = 0
+        var trailing: CGFloat = 0
         for row in 0..<outline.numberOfRows {
             guard let item = outline.item(atRow: row) else { continue }
-            let leading = outline.frameOfCell(atColumn: 0, row: row).minX
-            widest = max(widest, leading + rowContentWidth(of: item, fonts: fonts))
+            let cell = view.convert(outline.frameOfCell(atColumn: 0, row: row), from: outline)
+            trailing = max(trailing, view.bounds.width - cell.maxX)
+            widest = max(widest, cell.minX + rowContentWidth(of: item, fonts: fonts))
         }
-        return ceil(widest + Self.contentWidthMargin)
+        return ceil(widest + trailing + Self.contentWidthMargin)
     }
 
     private struct RowFonts {

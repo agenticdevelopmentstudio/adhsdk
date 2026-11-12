@@ -216,6 +216,12 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// that changes nothing does not run git again.
     private var titleDirectory: URL?
 
+    /// The branch last read for each directory the title has named, so the
+    /// title is drawn whole at once rather than as the name alone and then the
+    /// name and branch a moment later. `.some(nil)` is a directory outside any
+    /// repository.
+    private var branchNames: [URL: String?] = [:]
+
     /// Set for the duration of `reloadTabs()`'s removal loop. `removeTab`
     /// fires `didSelectTab` for whichever member it activates next, and none
     /// of that callback's duties are meaningful mid-loop: `persistAllTabs()`
@@ -1351,17 +1357,39 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         guard directory != titleDirectory else { return }
         titleDirectory = directory
         let name = project.displayName
-        windowTitle = name
-        window?.title = name
+        setTitle(Self.title(project: name, branch: branchNames[directory] ?? nil))
+        // Read again even when known: the checkout may have switched branch.
         Task.detached(priority: .userInitiated) { [weak self] in
             let branch = GitProjectRoot.currentBranchName(at: directory.path)
             await MainActor.run {
-                guard let self, self.titleDirectory == directory else { return }
-                let title = Self.title(project: name, branch: branch)
-                self.windowTitle = title
-                self.window?.title = title
+                guard let self else { return }
+                self.branchNames[directory] = .some(branch)
+                guard self.titleDirectory == directory else { return }
+                self.setTitle(Self.title(project: name, branch: branch))
             }
         }
+    }
+
+    private func setTitle(_ title: String) {
+        guard windowTitle != title || window?.title != title else { return }
+        windowTitle = title
+        window?.title = title
+    }
+
+    /// Everything the window needs before it is put on screen: the branch the
+    /// title names, read off the main thread, and a layout pass at the frame
+    /// it will show at — so it appears finished instead of filling in and
+    /// resizing in front of the user.
+    public func prepareForDisplay() async {
+        if window == nil { loadWindow() }
+        let directory = activeWorkingDirectory
+        let branch = await Task.detached(priority: .userInitiated) {
+            GitProjectRoot.currentBranchName(at: directory.path)
+        }.value
+        branchNames[directory] = .some(branch)
+        titleDirectory = nil
+        refreshTitle()
+        window?.contentView?.layoutSubtreeIfNeeded()
     }
 
     /// `adkitchen → main`, or the name alone outside a repository.

@@ -81,11 +81,11 @@ final class FileTreeBrowsingTests: XCTestCase {
 
     // MARK: - Root rows
 
-    func testARootShowsNoDisclosureTriangleAndStaysOpen() throws {
+    func testARootShowsADisclosureTriangleAndStartsOpen() throws {
         let fixture = try makeFixture()
 
-        XCTAssertFalse(fixture.controller.showsOutlineCellForTesting(fixture.manager),
-                       "a root is always open, so it has nothing to disclose")
+        XCTAssertTrue(fixture.controller.showsOutlineCellForTesting(fixture.manager),
+                      "Option-clicking a root's triangle closes the whole tree")
         XCTAssertTrue(fixture.controller.isExpandedForTesting(fixture.manager))
         XCTAssertTrue(fixture.controller.showsOutlineCellForTesting(fixture.subNode),
                       "a folder below the root keeps its triangle")

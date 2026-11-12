@@ -26,6 +26,16 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
     private var controllers: [UUID: ComposableTabsWindowController] = [:]
 
+    /// The checkout scan each newly built project window starts, kept until it
+    /// finishes so `load` can show the window only once its branch tabs are in.
+    private var openTasks: [UUID: Task<Void, Never>] = [:]
+
+    /// Projects whose window is built and being readied by `load`. Asked for
+    /// again meanwhile, they are already on their way: the window belongs to
+    /// no group yet, and raising it as an ungrouped window would put it on
+    /// screen beside its group's.
+    private var pendingLoads: Set<UUID> = []
+
     /// Language-service shutdowns started by a window close, still running.
     /// The controller is out of `controllers` by then, so
     /// `shutdownAllLanguageServices()` cannot find it there; this is the
@@ -332,6 +342,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// Anything else becomes an active project of the frontmost window — or of
     /// a new one, when there is no project window at all.
     public func openProject(_ repo: GitRepo) {
+        guard !pendingLoads.contains(repo.id) else { return }
         if let group = group(containing: repo.id), let existing = controllers[repo.id] {
             existing.project.update(repo: repo)
             present(repo.id, in: group)
@@ -359,6 +370,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// put on screen there instead, since one project has one set of panes.
     public func loadProject(_ repo: GitRepo, into group: ProjectWindowGroup) {
         coordinator?.recordOpened(repo)
+        guard !pendingLoads.contains(repo.id) else { return }
         if group.contains(repo.id) {
             present(repo.id, in: group)
             return
@@ -591,9 +603,25 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     }
 
     /// Builds `repo`'s window hidden, makes it one of `group`'s active
-    /// projects and puts it on screen.
+    /// projects and puts it on screen — once its checkout scan has put in the
+    /// branch tabs and the window has laid itself out, so it appears whole
+    /// instead of rebuilding its tabs and resizing its panes in front of the
+    /// user.
     private func load(_ repo: GitRepo, into group: ProjectWindowGroup) {
-        guard makeProjectWindow(repo, in: group) != nil else { return }
+        guard let controller = makeProjectWindow(repo, in: group) else { return }
+        let scan = openTasks[repo.id]
+        pendingLoads.insert(repo.id)
+        Task { [weak self, weak group] in
+            await scan?.value
+            await controller.prepareForDisplay()
+            self?.pendingLoads.remove(repo.id)
+            // The user may have closed the project, or its window, meanwhile.
+            guard let self, let group, self.controllers[repo.id] === controller else { return }
+            self.show(repo, in: group)
+        }
+    }
+
+    private func show(_ repo: GitRepo, in group: ProjectWindowGroup) {
         group.activate(repo.id)
         present(repo.id, in: group)
         activateApp()
@@ -659,6 +687,9 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         if let outgoingFrame {
             incoming.window?.setFrame(outgoingFrame, display: false)
         }
+        // Laid out at that frame while still off screen, so the panes are
+        // already their final sizes on the first frame drawn.
+        incoming.window?.contentView?.layoutSubtreeIfNeeded()
         incoming.showWindow(nil)
         // After `showWindow` too: showing restores the window's own saved
         // frame, which would undo the hand-off and make the group jump.
@@ -811,7 +842,10 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // is a project whose checkouts have not changed since last time, and
         // it threw away the pane tree the window had just built, and every
         // shell and file-system watcher living in it, to build an identical one.
-        Task { await projectController.open() }
+        openTasks[repo.id] = Task { [weak self] in
+            await projectController.open()
+            self?.openTasks[repo.id] = nil
+        }
         setWindowOpen(true, repoID: repo.id)
         return controller
     }
