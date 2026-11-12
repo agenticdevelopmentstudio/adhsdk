@@ -217,8 +217,8 @@ public enum ConversationSendability {
             return "typing into a conversation needs iTerm2 or Terminal.app; \(id) runs in \(term)."
         }
         if attachment(session) == .detached {
-            return "conversation \(id) is a headless claude with no terminal (started by a script, reading "
-                + "a pipe), so nothing typed into a terminal pane can reach it."
+            return "conversation \(id) is a headless claude (claude -p, run by a script or shell), "
+                + "which reads its prompt once and never a terminal, so nothing typed into a pane can reach it."
         }
         if let sharer = paneSharer(of: session, among: liveSessions, attachment: attachment) {
             return "conversation \(sharer.sessionId) runs in the same terminal pane as \(id) (a nested or "

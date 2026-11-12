@@ -229,7 +229,7 @@ public enum ProcessLiveness {
     public enum TerminalAttachment: Sendable, Equatable {
         /// It has a controlling terminal: keystrokes typed into that terminal reach it.
         case attached
-        /// It has none — a headless `claude -p` started by a script, reading a pipe.
+        /// It has none — a headless `claude -p` (from a script, or a shell whose tty it ignores).
         /// Nothing typed into any pane reaches it, even though it inherited the
         /// pane's `TERM_SESSION_ID`.
         case detached
