@@ -231,7 +231,11 @@ public final class PreferencesService: @unchecked Sendable {
     public func setTracking(enabled: Bool) throws -> TrackingPreferenceResponse {
         guard managesHooks else { throw PreferencesError.passiveInstance }
         let outcome: String
-        if enabled {
+        if enabled, SessionDaemonRuntime.ingestionSwitchedOff(in: database) {
+            // The database's switch outranks a request: installing now would
+            // capture into a daemon that drops everything until its next start.
+            outcome = "ingestion_disabled"
+        } else if enabled {
             switch hookInstaller.installHooks() {
             case .installed: outcome = "installed"
             case .alreadyInstalled: outcome = "already_installed"

@@ -206,7 +206,9 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     public var spool: IngestSpool { requireOpened("spool").spool }
     /// Valid after ``openPhaseA()``.
     public var pipeline: IngestionPipeline { requireOpened("pipeline").pipeline }
-    /// Whether the user had turned tracking off when the runtime opened.
+    /// Whether the user had turned tracking off when the runtime opened: the
+    /// installer's marker file, or ``ingestionEnabledKey`` set to `false` in the
+    /// daemon's own database.
     public var hookDisabled: Bool { requireOpened("hookDisabled").hookDisabled }
     /// The Claude provider pipeline (spool, archive, event store, drainer and
     /// sources), or nil while it is not open: before ``openPhaseA()``, and while
@@ -219,6 +221,25 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// The Claude pipeline as it is at call time: what the drop-directory wake,
     /// the transcript sweep, the import route and the quarantine routes read.
     public var claudePipelineSlot: ClaudePipelineSlot { claudeSlot }
+
+    /// The `settings` row that switches session and status-line ingestion off
+    /// for this daemon: `"false"` keeps the hooks and the status-line tap
+    /// uninstalled, binds no capture socket and drops anything posted to
+    /// `/hook`, on every start, until it is set to `"true"` (or deleted, which
+    /// leaves the choice to the marker file alone). Read at open, so a change
+    /// takes effect on the next start.
+    public static let ingestionEnabledKey = "ingestion_enabled"
+
+    /// Whether ``ingestionEnabledKey`` is `"false"` in `database`. Read before
+    /// the migration, so a database with no `settings` table yet reads as on.
+    public static func ingestionSwitchedOff(in database: DaemonDatabase) -> Bool {
+        ((try? database.setting(for: ingestionEnabledKey)) ?? nil) == "false"
+    }
+
+    /// Whether ``ingestionEnabledKey`` is explicitly `"true"`.
+    private static func ingestionSwitchedOn(in database: DaemonDatabase) -> Bool {
+        ((try? database.setting(for: ingestionEnabledKey)) ?? nil) == "true"
+    }
 
     /// The conversations feed over the runtime's database.
     public var conversations: ConversationStore { ConversationStore(database: database) }
@@ -265,7 +286,9 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             parseQuarantinedEvent: wiring.parseQuarantinedEvent,
             retryIngest: opened.pipeline.retryIngest,
             buildHookEvent: wiring.buildHookEvent,
-            captureHook: opened.pipeline.capture,
+            // Switched off, a post from a session that still has the hooks
+            // loaded is accepted and dropped, so Claude Code sees no error.
+            captureHook: opened.hookDisabled ? { @Sendable _ in } : opened.pipeline.capture,
             runImport: wiring.runImport,
             pluginRuntime: pluginRuntime,
             pipelineQuarantine: claudeSlot,
@@ -312,7 +335,22 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
 
         let spool = try await spoolTask
         let database = try await dbTask
-        let hookDisabled = await hookDisabledTask
+        let markerDisabled = await hookDisabledTask
+        // The database's switch is the source of truth when it says anything,
+        // and the marker file follows it, because the marker is what the
+        // installer's other paths (the status-line display, `/preferences`)
+        // consult. A switch that says nothing leaves the marker alone.
+        let hookDisabled: Bool
+        if Self.ingestionSwitchedOff(in: database) {
+            hookDisabled = true
+            if !markerDisabled { Self.syncMarker(installer: installer, disabled: true) }
+            Self.logger.info("Ingestion switched off in the database; capture stays off")
+        } else if Self.ingestionSwitchedOn(in: database) {
+            hookDisabled = false
+            if markerDisabled { Self.syncMarker(installer: installer, disabled: false) }
+        } else {
+            hookDisabled = markerDisabled
+        }
 
         var claude: ClaudePipelineHandles?
         do {
@@ -397,6 +435,7 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         let managesHooks = configuration.managesHooks
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
+                guard !opened.hookDisabled else { return }
                 do { try opened.pipeline.startAcceptingCaptures() } catch {
                     Self.logger.error(
                         "Ingest socket failed to start: \(error.localizedDescription, privacy: .public)"
@@ -651,6 +690,12 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
 
     private static func checkHookDisabled(installer: ClaudeHookInstaller) -> Bool {
         installer.isTrackingDisabled()
+    }
+
+    private static func syncMarker(installer: ClaudeHookInstaller, disabled: Bool) {
+        do { try installer.setTrackingDisabled(disabled) } catch {
+            logger.error("Tracking marker not updated: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// Reconciles `settings.json` with the user's tracking choice: uninstall
