@@ -169,18 +169,25 @@ open class WebBrowserPaneViewController: NSViewController {
     }
     /// Follows the vault's words, so an edit redraws a private pane's page.
     private var privacyWordsObservation: AnyCancellable?
-    /// Whether this pane's Agent Privacy switch is on. Per pane only: read
-    /// from the pane's own override, never from the global settings.
-    public var isAgentPrivacyOn: Bool { BrowserSettings.isAgentPrivacyOn(in: paneSettings) }
+    /// Whether Agent Privacy is on for this pane: the global switch, or the
+    /// pane's own override of it.
+    public var isAgentPrivacyOn: Bool { BrowserSettings.isAgentPrivacyOn(in: settings) }
+    /// The id the pane's own privacy words are filed under
+    /// (``PrivacyWord/paneID``): its layout node, which survives a relaunch.
+    /// `nil` for a pane with no node, which has the global words alone.
+    public var privacyWordsPaneID: String? { paneContext.paneNodeID?.uuidString }
 
     /// What Agent Privacy means for a model tool call on this pane right now.
-    /// Reads the words without prompting; words that cannot be read that way
-    /// make the pane `unavailable`, which the tools refuse.
+    /// The words are the enabled global words and this pane's own enabled
+    /// words (`PrivacyWordsVault.filter(forPane:)`). Reads them without
+    /// prompting; words that cannot be read that way make the pane
+    /// `unavailable`, which the tools refuse.
     public func agentPrivacy() -> BrowserAgentPrivacy {
         guard isAgentPrivacyOn else { return .off }
         guard let privacyVault else { return .unavailable }
         do {
-            guard try privacyVault.load(), let filter = privacyVault.filter else { return .unavailable }
+            guard try privacyVault.load(), let filter = privacyVault.filter(forPane: privacyWordsPaneID)
+            else { return .unavailable }
             return .checking(filter)
         } catch {
             logger.error(
@@ -470,7 +477,10 @@ open class WebBrowserPaneViewController: NSViewController {
     private var shownAddress: (text: String, url: URL)?
 
     private func observePrivacyWords() {
-        privacyWordsObservation = privacyVault?.$filter
+        // `words`, not `filter`: a pane also uses its own words, which
+        // `filter` (the global words) does not change for. Received on the
+        // main queue, so by the time it runs the vault holds the new words.
+        privacyWordsObservation = privacyVault?.$words
             .dropFirst()
             .removeDuplicates()
             .receive(on: DispatchQueue.main)

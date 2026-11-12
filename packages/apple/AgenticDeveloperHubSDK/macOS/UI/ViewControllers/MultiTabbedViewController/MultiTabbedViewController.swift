@@ -217,6 +217,22 @@ open class MultiTabbedViewController: NSViewController {
     /// and must give this controller its whole height. A side bar's first tab
     /// still lines up with the centre's top: its start inset is measured from
     /// there, and the title bar's height is added to it here.
+    /// Whether any tab bar is shown. A window with a single fixed
+    /// arrangement (the File Browser window) turns them all off: its tabs
+    /// still exist and still mount, but nothing offers to switch, add or move
+    /// them, and the centre takes the whole view.
+    public var showsTabBars = true {
+        didSet {
+            guard showsTabBars != oldValue, isViewLoaded else { return }
+            for edge in Edge.allCases { tabBars[edge]?.isHidden = !showsBar(edge) }
+            rebuildEdgeConstraints()
+        }
+    }
+
+    private func showsBar(_ edge: Edge) -> Bool {
+        showsTabBars && isEdgeEnabled(edge)
+    }
+
     public var sideBarsRunUnderTitlebar = false {
         didSet {
             guard sideBarsRunUnderTitlebar != oldValue, isViewLoaded else { return }
@@ -296,7 +312,7 @@ open class MultiTabbedViewController: NSViewController {
         installAccessoryBelowTopBar()
         for edge in Edge.allCases {
             guard let bar = tabBars[edge] else { continue }
-            bar.isHidden = !isEdgeEnabled(edge)
+            bar.isHidden = !showsBar(edge)
             root.addSubview(bar)
         }
 
@@ -339,7 +355,7 @@ open class MultiTabbedViewController: NSViewController {
             activateFallbackTab()
         }
         guard isViewLoaded else { return }
-        tabBars[edge]?.isHidden = !enabled
+        tabBars[edge]?.isHidden = !showsBar(edge)
         rebuildEdgeConstraints()
     }
 
@@ -493,10 +509,10 @@ open class MultiTabbedViewController: NSViewController {
     private func rebuildEdgeConstraints() {
         NSLayoutConstraint.deactivate(edgeConstraints)
 
-        let topBar = isEdgeEnabled(.top) ? tabBars[.top] : nil
-        let bottomBar = isEdgeEnabled(.bottom) ? tabBars[.bottom] : nil
-        let leftBar = isEdgeEnabled(.left) ? tabBars[.left] : nil
-        let rightBar = isEdgeEnabled(.right) ? tabBars[.right] : nil
+        let topBar = showsBar(.top) ? tabBars[.top] : nil
+        let bottomBar = showsBar(.bottom) ? tabBars[.bottom] : nil
+        let leftBar = showsBar(.left) ? tabBars[.left] : nil
+        let rightBar = showsBar(.right) ? tabBars[.right] : nil
 
         // Below the title bar when the side bars run up behind it.
         let top = sideBarsRunUnderTitlebar ? view.safeAreaLayoutGuide.topAnchor : view.topAnchor

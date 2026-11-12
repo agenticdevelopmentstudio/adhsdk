@@ -7,10 +7,13 @@ import AppKit
 
 import AgenticDeveloperHubSDKCore
 
-/// The Browser panel's Session Privacy topic (spec section 10): what a page
-/// can learn of the person using it — keyboard, mouse, pointer, drags, focus
-/// and visibility — what the agent may do with the pane, which cookie jar it
-/// keeps, and which third-party scripts it runs.
+/// The Browser panel's Privacy topic: what a page can learn of the person
+/// using it — keyboard, mouse, pointer, drags, focus and visibility (spec
+/// section 10's Session Privacy) — what the agent may do with the pane and
+/// whether models see it through the privacy words (Agent Privacy, built by
+/// `AgentPrivacySettingsGroup`), which cookie jar it keeps, and which
+/// third-party scripts it runs. Session Privacy and Agent Privacy were two
+/// topics; they are one, and the rows keep their accessibility identifiers.
 ///
 /// Every row binds through the panel's `BrowserSettingsBinding`, so the same
 /// topic is the Settings window's global one and a pane's own in its sheet
@@ -19,92 +22,99 @@ import AgenticDeveloperHubSDKCore
 /// anyway — screenshots — rather than a switch that would protect nothing
 /// (`principle-of-least-astonishment`).
 @MainActor
-final class SessionPrivacySettingsPanel: BrowserTopicPanel {
+final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
+
+    /// Builds the Agent Privacy group and opens the words editor from it.
+    private lazy var agentPrivacy = AgentPrivacySettingsGroup(binding: binding) { [weak self] in
+        self?.view.window
+    }
 
     init(binding: BrowserSettingsBinding) {
-        super.init(title: "Session Privacy", symbol: "hand.raised", binding: binding)
+        super.init(title: "Privacy", symbol: "hand.raised", binding: binding)
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Input",
-                body: "Keyboard and Mouse and scrolling decide whether the page receives "
-                    + "what you type and click. Blocked, the pane drops the event before "
-                    + "the browser engine sees it, so the page never learns it happened; menu "
-                    + "shortcuts still reach the menu bar, and the address bar and the "
-                    + "back, forward and reload buttons still work. Pointer tracking "
-                    + "decides when the page is told where the pointer is — hover, "
-                    + "movement, entering and leaving — and Drag and drop whether a drag "
-                    + "from outside may enter the page. All four are enforced natively. "
-                    + "The agent's own clicks and keys pass, unless the pane is paused "
-                    + "and Agent while paused says the agent pauses too."
-            ),
-            .init(
-                title: "Focus and Visibility",
-                body: "Hide focus and visibility changes makes the page see a document that "
-                    + "is always focused and visible, so it cannot tell when you switch to "
-                    + "another window or app. It is best-effort: a script installed before "
-                    + "the page's own answers the page's questions about focus and "
-                    + "visibility and swallows the window-level events, and a determined "
-                    + "page can still detect it. It cannot stop the blur and focusout "
-                    + "events of a single element on the page — when a field loses focus, "
-                    + "the page can still see that. The script applies from the next page "
-                    + "load; the native part, which keeps the page painting while its "
-                    + "window is covered, applies at once."
-            ),
-            .init(
-                title: "Agent Partner",
-                body: "Agent access decides how much of this browser the agent sees: hidden "
-                    + "leaves the pane out of its list altogether, read only lets it read "
-                    + "the page, its text, its console and screenshots but not click, type "
-                    + "or navigate, and full control lets it drive. Agent while paused "
-                    + "decides whether the agent keeps driving a pane you have paused from "
-                    + "its gear menu. Both narrow what the master switches allow; the "
-                    + "master switches themselves live in the Automation settings and "
-                    + "apply to every pane."
-            ),
-            .init(
-                title: "Storage",
-                body: "The cookie and storage jar is where a pane keeps cookies, local "
-                    + "storage and caches — what keeps you signed in. There are three: "
-                    + "one shared by all browser panes; one shared within this worktree, "
-                    + "which every browser pane opened on the same worktree folder uses, "
-                    + "whatever the window; and one for this pane alone. A jar is deleted "
-                    + "when the panes using it are removed: a pane's own jar when that "
-                    + "pane is removed, a worktree's when the last pane on it is. "
-                    + "Closing a window deletes nothing. Changing the jar reloads the "
-                    + "page in the new jar, signed out of whatever the old one held. "
-                    + "Accept cookies and Private browsing are in Cookies and Site Data."
-            ),
-            .init(
-                title: "Scripts",
-                body: "Third-party content blocks scripts, or everything, a page loads from "
-                    + "a site other than its own — the usual carrier of trackers — and "
-                    + "applies at once. Capture page console lets the agent read what the "
-                    + "page logs. It works by adding a small hook to the page's own "
-                    + "console, which page scripts can see. JavaScript and Lockdown Mode "
-                    + "are in General and in Privacy and Security."
-            ),
-            .init(
-                title: "Screenshots",
-                body: "A screenshot of a pane, taken by you or the agent, reads the pixels "
-                    + "the page has already drawn. The page cannot observe it, so there is "
-                    + "nothing to hide and no setting for it."
-            ),
-            .init(
-                title: "Chrome Panes",
-                body: "Every setting here applies to Chrome panes as well as Safari ones, "
-                    + "with one difference: Chrome does not honour Autoplay set to Never."
-            )
-        ])
+        ComposableSettings.PanelHelp(topics: Self.sessionHelpTopics + AgentPrivacySettingsGroup.helpTopics)
     }
 
+    private static let sessionHelpTopics: [ComposableSettings.PanelHelp.Topic] = [
+        .init(
+            title: "Input",
+            body: "Keyboard and Mouse and scrolling decide whether the page receives "
+                + "what you type and click. Blocked, the pane drops the event before "
+                + "the browser engine sees it, so the page never learns it happened; menu "
+                + "shortcuts still reach the menu bar, and the address bar and the "
+                + "back, forward and reload buttons still work. Pointer tracking "
+                + "decides when the page is told where the pointer is — hover, "
+                + "movement, entering and leaving — and Drag and drop whether a drag "
+                + "from outside may enter the page. All four are enforced natively. "
+                + "The agent's own clicks and keys pass, unless the pane is paused "
+                + "and Agent while paused says the agent pauses too."
+        ),
+        .init(
+            title: "Focus and Visibility",
+            body: "Hide focus and visibility changes makes the page see a document that "
+                + "is always focused and visible, so it cannot tell when you switch to "
+                + "another window or app. It is best-effort: a script installed before "
+                + "the page's own answers the page's questions about focus and "
+                + "visibility and swallows the window-level events, and a determined "
+                + "page can still detect it. It cannot stop the blur and focusout "
+                + "events of a single element on the page — when a field loses focus, "
+                + "the page can still see that. The script applies from the next page "
+                + "load; the native part, which keeps the page painting while its "
+                + "window is covered, applies at once."
+        ),
+        .init(
+            title: "Agent Partner",
+            body: "Agent access decides how much of this browser the agent sees: hidden "
+                + "leaves the pane out of its list altogether, read only lets it read "
+                + "the page, its text, its console and screenshots but not click, type "
+                + "or navigate, and full control lets it drive. Agent while paused "
+                + "decides whether the agent keeps driving a pane you have paused from "
+                + "its gear menu. Both narrow what the master switches allow; the "
+                + "master switches themselves live in the Automation settings and "
+                + "apply to every pane."
+        ),
+        .init(
+            title: "Storage",
+            body: "The cookie and storage jar is where a pane keeps cookies, local "
+                + "storage and caches — what keeps you signed in. There are three: "
+                + "one shared by all browser panes; one shared within this worktree, "
+                + "which every browser pane opened on the same worktree folder uses, "
+                + "whatever the window; and one for this pane alone. A jar is deleted "
+                + "when the panes using it are removed: a pane's own jar when that "
+                + "pane is removed, a worktree's when the last pane on it is. "
+                + "Closing a window deletes nothing. Changing the jar reloads the "
+                + "page in the new jar, signed out of whatever the old one held. "
+                + "Accept cookies and Private browsing are in Cookies and Site Data."
+        ),
+        .init(
+            title: "Scripts",
+            body: "Third-party content blocks scripts, or everything, a page loads from "
+                + "a site other than its own — the usual carrier of trackers — and "
+                + "applies at once. Capture page console lets the agent read what the "
+                + "page logs. It works by adding a small hook to the page's own "
+                + "console, which page scripts can see. JavaScript and Lockdown Mode "
+                + "are in General and in Privacy and Security."
+        ),
+        .init(
+            title: "Screenshots",
+            body: "A screenshot of a pane, taken by you or the agent, reads the pixels "
+                + "the page has already drawn. The page cannot observe it, so there is "
+                + "nothing to hide and no setting for it."
+        ),
+        .init(
+            title: "Chrome Panes",
+            body: "Every setting here applies to Chrome panes as well as Safari ones, "
+                + "with one difference: Chrome does not honour Autoplay set to Never."
+        )
+    ]
+
     static let keywords: [String] = [
-        "session privacy", "keyboard", "mouse", "scrolling", "pointer", "hover", "drag and drop",
+        "privacy", "session privacy", "keyboard", "mouse", "scrolling", "pointer", "hover", "drag and drop",
         "focus", "visibility", "agent", "agent access", "jar", "storage", "third-party", "trackers",
         "console", "screenshots", "chrome"
-    ]
+    ] + AgentPrivacySettingsGroup.keywords.filter { $0 != "agent" }
 
     override var searchKeywords: [String] { Self.keywords }
 
@@ -113,6 +123,7 @@ final class SessionPrivacySettingsPanel: BrowserTopicPanel {
         settingsView.addGroup(makeInputGroup())
         settingsView.addGroup(makeFocusGroup())
         settingsView.addGroup(makeAgentGroup())
+        settingsView.addGroup(agentPrivacy.makeGroup())
         settingsView.addGroup(makeStorageGroup())
         settingsView.addGroup(makeScriptsGroup())
     }

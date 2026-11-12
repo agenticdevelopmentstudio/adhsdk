@@ -447,7 +447,8 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             arrangementSourceID: nil
         )
         languageServices?.start()
-        let controller = ComposableTabsWindowController(project: workspace)
+        // No top-level tabs: a File Browser window is one fixed arrangement.
+        let controller = ComposableTabsWindowController(project: workspace, showsTabBars: false)
         controllers[repo.id] = controller
         openOrder.append(repo.id)
         fileBrowserIDs.insert(repo.id)

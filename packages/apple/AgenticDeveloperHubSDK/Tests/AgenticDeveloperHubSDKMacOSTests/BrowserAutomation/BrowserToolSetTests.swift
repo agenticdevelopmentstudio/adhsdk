@@ -375,13 +375,13 @@ final class BrowserToolSetTests: XCTestCase {
         ] {
             let reply = await call(tool, args.merging(["pane_id": "A"]) { $1 })
             XCTAssertTrue(reply.isError, tool)
-            XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).", tool)
+            XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).", tool)
         }
         store.set(true, for: UserSettings.browserAutomationEvaluate)
         let evaluate = await call("browser_evaluate", ["pane_id": "A", "expression": "1+1"])
-        XCTAssertEqual(evaluate.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).")
+        XCTAssertEqual(evaluate.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).")
         let other = await call("browser_click", ["pane_id": "B", "ref": "e1", "generation": 99])
-        XCTAssertNotEqual(other.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).")
+        XCTAssertNotEqual(other.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).")
     }
 
     func testReadOnlyPaneAllowsSnapshot() async {
@@ -431,7 +431,7 @@ final class BrowserToolSetTests: XCTestCase {
         _ = try await held.value
         let reply = await click.value
         XCTAssertTrue(reply.isError)
-        XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Session Privacy > Agent access).")
+        XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).")
         XCTAssertEqual(directory.revealed, ["A"], "revealed once, when the click passed the check before the queue")
     }
 
@@ -643,14 +643,34 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertTrue(script.contains(#"[["Beta Max","Gamma"],["Two","Zwei"]]"#), script)
     }
 
-    func testAgentPrivacyIsReadFromThePaneAlone() {
+    func testAgentPrivacyFollowsTheGlobalSwitchUnlessThePaneOverridesIt() {
         let layered = LayeredSettingsStore(overrides: InMemorySettingsStorageProvider(), fallback: store)
-        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered))
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered), "off by default")
         store.set(true, for: UserSettings.browserAgentPrivacy)
-        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered), "a global value must not turn it on")
-        layered.set(true, for: UserSettings.browserAgentPrivacy)
-        XCTAssertTrue(BrowserSettings.isAgentPrivacyOn(in: layered))
+        XCTAssertTrue(BrowserSettings.isAgentPrivacyOn(in: layered), "the global switch turns it on")
+        XCTAssertTrue(BrowserSettings.isAgentPrivacyOn(in: store))
+        layered.set(false, for: UserSettings.browserAgentPrivacy)
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered), "the pane's override wins")
         XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: nil))
+    }
+
+    func testAPaneUsesTheGlobalWordsAndItsOwn() {
+        let words = [
+            PrivacyWord(alias: "G", real: "Global"),
+            PrivacyWord(alias: "O", real: "Off", isEnabled: false),
+            PrivacyWord(alias: "A", real: "PaneA", isGlobal: false, paneID: "a"),
+            PrivacyWord(alias: "B", real: "PaneB", isGlobal: false, paneID: "b"),
+            PrivacyWord(alias: "C", real: "GlobalFromC", isGlobal: true, paneID: "c")
+        ]
+        XCTAssertEqual(words.filter(forPane: "a").pairs.map(\.real).sorted(), ["Global", "GlobalFromC", "PaneA"])
+        XCTAssertEqual(words.filter(forPane: nil).pairs.map(\.real).sorted(), ["Global", "GlobalFromC"],
+                       "no pane: the enabled global words alone")
+    }
+
+    func testWordsSavedBeforeTheFlagsDecodeAsEnabledAndGlobal() throws {
+        let old = Data(#"[{"alias":"Alex","real":"Mike"}]"#.utf8)
+        let words = try JSONDecoder().decode([PrivacyWord].self, from: old)
+        XCTAssertEqual(words, [PrivacyWord(alias: "Alex", real: "Mike", isEnabled: true, isGlobal: true, paneID: nil)])
     }
 }
 // swiftlint:enable line_length force_try force_cast

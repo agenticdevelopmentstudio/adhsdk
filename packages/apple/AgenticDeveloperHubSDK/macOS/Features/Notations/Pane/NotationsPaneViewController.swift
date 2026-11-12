@@ -7,12 +7,22 @@ import AgenticDeveloperHubSDKCoreMacOS
 import AgenticDeveloperHubSDKUI
 
 /// The Notations pane: the notes of the branch its tab's working directory
-/// has checked out, in the Notes markdown editor.
+/// has checked out, as two panes — Markdown, the editable source, and
+/// Preview, its rendering — each framed by a tab bar the way the Document
+/// pane frames its editors.
+///
+/// The header holds two icon-only groups. The first picks the layout: one
+/// pane at a time, both as tabs of one frame, or both side by side, each in
+/// a frame of its own. The second picks which pane a single-pane layout
+/// shows; it and the tabs are the same choice, so either moves the other.
+/// It is disabled side by side, where both are showing. Both choices start
+/// as Markdown in a single pane and are remembered in
+/// `UserSettings.notationsPaneLayout` and `.notationsPaneContent`.
 ///
 /// It follows HEAD: switching branches in a terminal beside it switches the
 /// notes. Nothing is written until the first edit, so opening a project on a
 /// branch nobody has written about leaves no row behind. On a detached HEAD
-/// there is no branch to keep notes for, and the editor is read-only.
+/// there is no branch to keep notes for, and the source is read-only.
 ///
 /// Git and the store are only ever touched off the main thread; the pane
 /// hands results back to the main actor to show.
@@ -29,8 +39,44 @@ public final class NotationsPaneViewController: NSViewController {
     private let projectPath: String
     private let workingDirectory: URL
 
-    private let header = ThemedLabel(role: .secondaryText, textRole: .caption)
-    private let editorController = MarkdownEditorController(palette: ThemeScope.app.palette)
+    private let layoutBar = IconTabBar(
+        items: [
+            .init(id: NotationsPaneLayout.singlePane.rawValue, symbol: "square", title: "Single Pane"),
+            .init(id: NotationsPaneLayout.sideBySide.rawValue, symbol: "square.split.2x1", title: "Side by Side")
+        ],
+        accessibilityID: "notations-pane.layout")
+    private let contentBar = IconTabBar(
+        items: [
+            .init(id: NotationsPaneContent.markdown.rawValue, symbol: "pencil",
+                  title: NotationsPaneContent.markdown.title),
+            .init(id: NotationsPaneContent.preview.rawValue, symbol: "eye",
+                  title: NotationsPaneContent.preview.title)
+        ],
+        accessibilityID: "notations-pane.content")
+
+    private let source = NotationsSourceViewController()
+    private let preview = MarkdownViewerController(palette: ThemeScope.app.palette)
+
+    /// Single pane: one frame holding both panes as tabs.
+    private let singleFrame = MultiTabbedViewController()
+    /// Side by side: a frame per pane, each with its one tab.
+    private let markdownFrame = MultiTabbedViewController()
+    private let previewFrame = MultiTabbedViewController()
+    private let splitView = ThemedSplitView(frame: .zero)
+
+    /// The tab ids, the same in whichever frame a pane is in.
+    private let markdownTabID = UUID()
+    private let previewTabID = UUID()
+
+    private var layout: NotationsPaneLayout = UserSettings.notationsPaneLayout.value
+    private var shownContent: NotationsPaneContent = UserSettings.notationsPaneContent.value
+
+    /// True while the panes are being moved between frames, whose removals
+    /// and insertions report tab selections that are not the user's.
+    private var isRearranging = false
+    /// Set when the split view is shown, so the next layout pass with a real
+    /// width gives the two frames half each.
+    private var needsSplitEqualized = false
 
     /// The branch being shown, once resolved.
     private var key: NotationKey?
@@ -39,6 +85,7 @@ public final class NotationsPaneViewController: NSViewController {
     private var pendingSave: DispatchWorkItem?
     private var pendingContent: String?
     private var savesInFlight = 0
+    private var pendingRender: DispatchWorkItem?
     private var resolveTask: Task<Void, Never>?
     private var resolveGeneration = 0
     private var watcher: FileSystemWatcher?
@@ -73,6 +120,7 @@ public final class NotationsPaneViewController: NSViewController {
         resolveTask?.cancel()
         watcher?.stop()
         pendingSave?.cancel()
+        pendingRender?.cancel()
         // No `self` past this point: a weak reference cannot be formed to an
         // object being deallocated, so the last edit is saved without one.
         if let content = pendingContent, let key {
@@ -89,40 +137,66 @@ public final class NotationsPaneViewController: NSViewController {
     public override func loadView() {
         let container = ThemedBackgroundView(role: .windowBackground)
 
-        header.lineBreakMode = .byTruncatingMiddle
-        header.cell?.usesSingleLineMode = true
+        layoutBar.onSelect = { [weak self] id in
+            guard let self, let layout = NotationsPaneLayout(rawValue: id) else { return }
+            self.choose(layout: layout)
+        }
+        contentBar.onSelect = { [weak self] id in
+            guard let self, let content = NotationsPaneContent(rawValue: id) else { return }
+            self.choose(content: content)
+        }
+
+        let header = NSStackView(views: [layoutBar, contentBar])
+        header.orientation = .horizontal
+        header.alignment = .centerY
+        header.spacing = 8
         header.translatesAutoresizingMaskIntoConstraints = false
-        header.accessibilityID("notations-pane.branch")
 
-        editorController.showsHelpButton = false
-        editorController.showsImportButton = false
-        editorController.isEditable = false
-        addChild(editorController)
-        let editorView = editorController.view
-        editorView.translatesAutoresizingMaskIntoConstraints = false
+        source.pane.isEditable = false
 
+        for frame in [singleFrame, markdownFrame, previewFrame] {
+            frame.delegate = self
+            addChild(frame)
+        }
+        splitView.dividerStyle = .thin
+        splitView.addArrangedSubview(markdownFrame.view)
+        splitView.addArrangedSubview(previewFrame.view)
+
+        let contentViews: [NSView] = [singleFrame.view, splitView]
+        for content in contentViews {
+            content.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(content)
+        }
         container.addSubview(header)
-        container.addSubview(editorView)
-        NSLayoutConstraint.activate([
+
+        var constraints = [
             header.topAnchor.constraint(equalTo: container.topAnchor, constant: 6),
             header.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
-            header.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -10),
-
-            editorView.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 4),
-            editorView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            editorView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            editorView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-        ])
+            header.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -10)
+        ]
+        for content in contentViews {
+            constraints += [
+                content.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 6),
+                content.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                content.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                content.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            ]
+        }
+        NSLayoutConstraint.activate(constraints)
         view = container
+        applyArrangement()
     }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        editorController.onContentChange = { [weak self] content in
-            self?.contentChanged(content)
+        source.pane.onTextChange = { [weak self] text in
+            self?.scheduleRender()
+            self?.contentChanged(text)
         }
-        editorController.view.observeTheme { [weak editorController] _, palette in
-            editorController?.palette = palette
+        source.pane.applyTheme(ThemeScope.app.palette)
+        view.observeTheme { [weak self] _, palette in
+            self?.source.pane.applyTheme(palette)
+            self?.preview.palette = palette
         }
         changesSubscription = store.changes
             .receive(on: DispatchQueue.main)
@@ -131,6 +205,114 @@ public final class NotationsPaneViewController: NSViewController {
             }
         refresh()
         startWatchingHead()
+    }
+
+    public override func viewDidLayout() {
+        super.viewDidLayout()
+        guard needsSplitEqualized, !splitView.isHidden, splitView.bounds.width > 0 else { return }
+        needsSplitEqualized = false
+        splitView.setPosition((splitView.bounds.width - splitView.dividerThickness) / 2, ofDividerAt: 0)
+    }
+
+    // MARK: - Layout and content
+
+    private func choose(layout: NotationsPaneLayout) {
+        guard layout != self.layout else {
+            syncHeader()
+            return
+        }
+        self.layout = layout
+        UserSettings.notationsPaneLayout.value = layout
+        applyArrangement()
+    }
+
+    private func choose(content: NotationsPaneContent) {
+        guard content != shownContent else {
+            syncHeader()
+            return
+        }
+        shownContent = content
+        UserSettings.notationsPaneContent.value = content
+        if layout == .singlePane {
+            isRearranging = true
+            singleFrame.selectTab(id: tabID(for: content), on: .top)
+            isRearranging = false
+        }
+        syncHeader()
+        if content == .preview { flushPendingRender() }
+    }
+
+    /// Puts the two panes in the frames `layout` calls for and shows those
+    /// frames. Every tab is taken down first, so a pane is only ever in one
+    /// frame and the frame it leaves unmounts it.
+    private func applyArrangement() {
+        isRearranging = true
+        for frame in [singleFrame, markdownFrame, previewFrame] {
+            for tab in frame.tabs(on: .top) { frame.removeTab(id: tab.id) }
+        }
+        let markdownTab = MultiTabbedViewController.Tab(
+            id: markdownTabID, title: NotationsPaneContent.markdown.title, viewController: source)
+        let previewTab = MultiTabbedViewController.Tab(
+            id: previewTabID, title: NotationsPaneContent.preview.title, viewController: preview)
+        switch layout {
+        case .singlePane:
+            singleFrame.addTab(markdownTab, on: .top)
+            singleFrame.addTab(previewTab, on: .top)
+            singleFrame.selectTab(id: tabID(for: shownContent), on: .top)
+        case .sideBySide:
+            markdownFrame.addTab(markdownTab, on: .top)
+            previewFrame.addTab(previewTab, on: .top)
+            needsSplitEqualized = true
+        }
+        singleFrame.view.isHidden = layout != .singlePane
+        splitView.isHidden = layout != .sideBySide
+        isRearranging = false
+        syncHeader()
+        flushPendingRender()
+        view.needsLayout = true
+    }
+
+    private func syncHeader() {
+        layoutBar.selectedID = layout.rawValue
+        contentBar.selectedID = shownContent.rawValue
+        contentBar.isEnabled = layout == .singlePane
+    }
+
+    private func tabID(for content: NotationsPaneContent) -> UUID {
+        content == .markdown ? markdownTabID : previewTabID
+    }
+
+    private func content(forTabID id: UUID) -> NotationsPaneContent? {
+        switch id {
+        case markdownTabID: return .markdown
+        case previewTabID: return .preview
+        default: return nil
+        }
+    }
+
+    /// Shows `text` in both panes, now. For text that did not come from
+    /// typing, which `MarkdownTextPane` does not report.
+    private func show(_ text: String) {
+        source.pane.text = text
+        flushPendingRender()
+    }
+
+    /// Debounced like `MarkdownEditorController`'s preview, and for the same
+    /// reason: a rendering that repaints on every character makes typing
+    /// feel slow.
+    private func scheduleRender() {
+        pendingRender?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated { self?.flushPendingRender() }
+        }
+        pendingRender = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + MarkdownEditorController.renderDebounce, execute: work)
+    }
+
+    private func flushPendingRender() {
+        pendingRender?.cancel()
+        pendingRender = nil
+        preview.content = source.pane.text
     }
 
     // MARK: - Branch
@@ -161,21 +343,13 @@ public final class NotationsPaneViewController: NSViewController {
         case .branch(let key, let notation):
             self.key = key
             notationID = notation?.id
-            header.stringValue = key.branch
-            editorController.content = notation?.content ?? ""
-            editorController.isEditable = true
-        case .detached:
+            show(notation?.content ?? "")
+            source.pane.isEditable = true
+        case .detached, .unavailable:
             key = nil
             notationID = nil
-            header.stringValue = "Detached HEAD"
-            editorController.content = ""
-            editorController.isEditable = false
-        case .unavailable:
-            key = nil
-            notationID = nil
-            header.stringValue = "No branch"
-            editorController.content = ""
-            editorController.isEditable = false
+            show("")
+            source.pane.isEditable = false
         }
     }
 
@@ -271,8 +445,70 @@ public final class NotationsPaneViewController: NSViewController {
             guard let self, self.pendingContent == nil, self.savesInFlight == 0, self.key == key else { return }
             self.notationID = current?.id
             let content = current?.content ?? ""
-            if self.editorController.content != content { self.editorController.content = content }
+            if self.source.pane.text != content { self.show(content) }
         }
+    }
+}
+
+extension NotationsPaneViewController: MultiTabbedViewControllerDelegate {
+
+    /// A tab click in the single-pane frame is the same choice as the
+    /// header's second group.
+    public func multiTabbedViewController(
+        _ controller: MultiTabbedViewController,
+        didSelectTab id: UUID,
+        on edge: Edge
+    ) {
+        guard !isRearranging, controller === singleFrame, let content = content(forTabID: id) else { return }
+        choose(content: content)
+    }
+
+    /// Neither pane is ever closed. Closing one of two side-by-side frames
+    /// leaves the other, so the pane becomes a single pane showing what is
+    /// left; in a single pane, where both are tabs of one frame, the close
+    /// is refused.
+    public func multiTabbedViewController(
+        _ controller: MultiTabbedViewController,
+        didRequestCloseTab id: UUID,
+        on edge: Edge
+    ) {
+        guard layout == .sideBySide, let closed = content(forTabID: id) else { return }
+        shownContent = closed == .markdown ? .preview : .markdown
+        UserSettings.notationsPaneContent.value = shownContent
+        choose(layout: .singlePane)
+    }
+
+    /// File > New Tab reaches these frames first whenever the keyboard is in
+    /// the pane, and they have no tabs to add: hand it on to the nearest
+    /// enclosing tabbed container, the project window's.
+    public func multiTabbedViewControllerNeedsNewTab(_ controller: MultiTabbedViewController) {
+        var ancestor = parent
+        while let candidate = ancestor {
+            if let tabbed = candidate as? MultiTabbedViewController {
+                tabbed.newTab(nil)
+                return
+            }
+            ancestor = candidate.parent
+        }
+    }
+}
+
+/// The Markdown pane: the notation's source in a `MarkdownTextPane`, as a
+/// view controller so a tab can hold it.
+@MainActor
+private final class NotationsSourceViewController: NSViewController {
+
+    let pane = MarkdownTextPane(editable: true)
+
+    init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func loadView() {
+        view = pane
     }
 }
 

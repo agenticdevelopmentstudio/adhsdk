@@ -262,7 +262,8 @@ extension UserSettings {
     )
     public static let browserPrivacyConsoleCapture = UserSetting<Bool>("browser.privacy.console_capture", default: true)
 
-    // Agent Privacy. Per pane only: see `BrowserSettings.paneOnlyKeyNames`.
+    // Agent Privacy: set globally, overridable per pane like any other.
+    // Kept by a global reset: see `BrowserSettings.keptByResetNames`.
     public static let browserAgentPrivacy = UserSetting<Bool>("browser.agent_privacy.enabled", default: false)
 
     // Developer
@@ -323,7 +324,8 @@ public enum BrowserSettings {
         UserSettings.browserPrivacyPointerTracking, UserSettings.browserPrivacyDragAndDrop,
         UserSettings.browserPrivacyHideActivation, UserSettings.browserPrivacyAgentAccess,
         UserSettings.browserPrivacyAgentWhilePaused, UserSettings.browserPrivacyStorageJar,
-        UserSettings.browserPrivacyThirdPartyContent, UserSettings.browserPrivacyConsoleCapture
+        UserSettings.browserPrivacyThirdPartyContent, UserSettings.browserPrivacyConsoleCapture,
+        UserSettings.browserAgentPrivacy
     ]
 
     /// The remote-debugging ports the Chrome topic accepts; 0 is off.
@@ -360,20 +362,11 @@ public enum BrowserSettings {
         UserSettings.browserChromeExtensionUpdateInterval.name
     ]
 
-    /// Set only on one pane, never globally: the pane reads it from its own
-    /// override and nowhere else, so a pane without one is off whatever the
-    /// global settings hold. Not in `allKeys` — the global reset has nothing
-    /// of it to forget — and kept by the pane's "Use Global Settings", since
-    /// there is no global value to fall back to.
-    public static let paneOnlyKeyNames: Set<String> = [
-        UserSettings.browserAgentPrivacy.name
-    ]
-
-    /// Whether Agent Privacy is on for the pane whose settings are `paneSettings`.
-    /// `nil` (a pane with no settings layer of its own) is off.
-    public static func isAgentPrivacyOn(in paneSettings: LayeredSettingsStore?) -> Bool {
-        guard let paneSettings, paneSettings.hasOverride(UserSettings.browserAgentPrivacy) else { return false }
-        return paneSettings.get(UserSettings.browserAgentPrivacy)
+    /// Whether Agent Privacy is on for a pane reading `settings` — its own
+    /// layer, whose override wins over the global value it otherwise
+    /// follows, or the shared store for a pane with no layer. `nil` is off.
+    public static func isAgentPrivacyOn(in settings: SettingsStore?) -> Bool {
+        settings?.get(UserSettings.browserAgentPrivacy) ?? false
     }
 
     /// What `store` holds for every construction-time key, each described as
@@ -390,13 +383,15 @@ public enum BrowserSettings {
 
     /// Browser keys a reset leaves as they are, for the automation switches'
     /// reason: agent access and agent-while-paused would hand a pane the
-    /// user hid or made read only back to the model, and the storage jar
+    /// user hid or made read only back to the model, Agent Privacy would
+    /// hand the privacy words back to models, and the storage jar
     /// would move panes off their worktree jar, which the reconciler then
     /// deletes — site data the reset promises not to touch.
     public static let keptByResetNames: Set<String> = [
         UserSettings.browserPrivacyAgentAccess.name,
         UserSettings.browserPrivacyAgentWhilePaused.name,
-        UserSettings.browserPrivacyStorageJar.name
+        UserSettings.browserPrivacyStorageJar.name,
+        UserSettings.browserAgentPrivacy.name
     ]
 
     /// Puts every browser setting but `keptByResetNames` back to its default

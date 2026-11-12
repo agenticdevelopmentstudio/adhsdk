@@ -120,7 +120,7 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
                     + "Passwords are not saved by the browser pane; the system keychain "
                     + "is not involved. What a page can see of you (keyboard, mouse, "
                     + "focus, the agent, cookie jars and third-party scripts) is in "
-                    + "Session Privacy."
+                    + "Privacy."
             )
         ])
     }
@@ -309,7 +309,7 @@ final class ChromeBrowserTopicPanel: BrowserTopicPanel {
                     + "chrome://inspect, Playwright, Puppeteer) attach to Chrome panes "
                     + "over the DevTools protocol on that port of this Mac. Zero is off, "
                     + "the default, because anything on this Mac that can reach the port "
-                    + "can read and drive every Chrome pane, whatever Session Privacy "
+                    + "can read and drive every Chrome pane, whatever Privacy "
                     + "says. The port is read when Chromium starts, so a change applies "
                     + "the next time the app opens, and it is one setting for every "
                     + "Chrome pane."

@@ -1076,7 +1076,7 @@ extension FileTreeOutlineViewController: NSOutlineViewDataSource, NSOutlineViewD
             )
             label.toolTip = manager.repoRootURL.path
             let icon = NSImageView(image: NSImage(
-                systemSymbolName: "folder",
+                systemSymbolName: "folder.fill",
                 accessibilityDescription: "Folder"
             ) ?? NSImage())
             icon.contentTintColor = palette.nsColor(.accent)
@@ -1313,7 +1313,7 @@ private final class FileTreeNodeRowView: FileTreeRowView {
             systemSymbolName: node.systemImageName,
             accessibilityDescription: node.isDirectory ? "Folder" : "File"
         ) ?? NSImage())
-        icon.contentTintColor = Self.iconColor(for: node, palette: palette)
+        icon.contentTintColor = node.iconColor(palette: palette)
         icon.setContentHuggingPriority(.required, for: .horizontal)
 
         // The status colors are git's own vocabulary, not app chrome, so they
@@ -1374,18 +1374,4 @@ private final class FileTreeNodeRowView: FileTreeRowView {
 
     /// The palette has no per-language "brand color" role, so these map onto the
     /// nearest status role the same way `SwiftUIPalette.color(named:)` does.
-    private static func iconColor(for node: FileTreeNode, palette: SemanticPalette) -> NSColor {
-        if node.isPackage { return palette.nsColor(.warning) }
-        if node.isDirectory {
-            return palette.nsColor(node.name == ".claude" ? .info : .accent)
-        }
-        switch node.url.pathExtension.lowercased() {
-        case "swift", "json":
-            return palette.nsColor(.warning)
-        case "md", "markdown":
-            return palette.nsColor(.accent)
-        default:
-            return palette.nsColor(.secondaryText)
-        }
-    }
 }

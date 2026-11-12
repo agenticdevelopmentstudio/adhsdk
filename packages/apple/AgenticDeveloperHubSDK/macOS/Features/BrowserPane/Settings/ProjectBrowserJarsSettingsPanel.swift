@@ -186,7 +186,7 @@ final class ProjectBrowserJarsSettingsPanel: ComposableSettings.SettingsPanelVie
                     + "the page that pane last showed and its worktree. The global jar, "
                     + "shared by every browser pane in every project, is listed in the "
                     + "Settings window under Browser > Global Cookies and Site Data. Which "
-                    + "jar a pane uses is its Cookie jar setting, under Session Privacy."
+                    + "jar a pane uses is its Cookie jar setting, under Privacy."
             ),
             .init(
                 title: "Sites",

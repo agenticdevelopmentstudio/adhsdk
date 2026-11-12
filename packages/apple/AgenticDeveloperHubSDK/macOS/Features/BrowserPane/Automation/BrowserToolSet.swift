@@ -21,7 +21,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     ]
 
     static let readOnlyRefusal =
-        "This browser pane is read only for the agent (Settings > Session Privacy > Agent access)."
+        "This browser pane is read only for the agent (Settings > Privacy > Agent access)."
     static let pausedRefusal = "This browser pane's events are paused, and its settings pause the agent too."
 
     private let directory: any BrowserPaneDirectory

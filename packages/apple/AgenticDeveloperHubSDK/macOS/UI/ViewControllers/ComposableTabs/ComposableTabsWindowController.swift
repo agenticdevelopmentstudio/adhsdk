@@ -296,16 +296,20 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     ///   none.
     /// - Parameter shelf: The project shelf, wired by the caller. With none,
     ///   the window has no shelf and no toggle for one.
+    /// - Parameter showsTabBars: false for a window with one fixed
+    ///   arrangement and no top-level tabs to switch (the File Browser window).
     public init(
         project: ProjectWorkspace,
         tabItemDataSource: ComposableTabsTabItemDataSource? = nil,
-        shelf: ProjectShelfViewController? = nil
+        shelf: ProjectShelfViewController? = nil,
+        showsTabBars: Bool = true
     ) {
         self.project = project
         self.shelf = shelf
         // Locals first: a stored property cannot be read back before
         // `super.init`, and the host needs the tab controller to wrap.
         let tabbed = MultiTabbedViewController()
+        tabbed.showsTabBars = showsTabBars
         let content = WindowFooterContentViewController(
             contentViewController: tabbed,
             accessibilityPrefix: "project.footer"

@@ -104,8 +104,16 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertTrue(javaScript.row.isEnabled)
         XCTAssertNil(javaScript.row.marker, "global rows carry no override marker")
         XCTAssertTrue(
-            panel.panels.contains { $0.descriptor.title == "Session Privacy" },
-            "the Session Privacy topic is listed"
+            panel.panels.contains { $0.descriptor.title == "Privacy" },
+            "the Privacy topic is listed"
+        )
+        XCTAssertFalse(
+            panel.panels.contains { $0.descriptor.title == "Agent Privacy" },
+            "Agent Privacy is a group of the Privacy topic, not a topic of its own"
+        )
+        XCTAssertEqual(
+            panel.binding.rows(named: UserSettings.browserAgentPrivacy.name).count, 1,
+            "the Agent Privacy switch is shown globally too"
         )
     }
 
@@ -269,7 +277,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertTrue(titles.contains("Global Cookies"))
         XCTAssertFalse(titles.contains("Cookies"))
         let cookies = try XCTUnwrap(titles.firstIndex(of: "Global Cookies"))
-        XCTAssertEqual(titles[cookies + 1], "Session Privacy", "Session Privacy follows Cookies")
+        XCTAssertEqual(titles[cookies + 1], "Privacy", "Privacy follows Cookies")
     }
 
     // MARK: - The sheet's open and close
@@ -390,7 +398,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         sheet.finish()
     }
 
-    // MARK: - Session Privacy
+    // MARK: - Privacy
 
     func testSessionPrivacyGroupsAndRows() throws {
         let panel = makePanel(settings: makeSettings())

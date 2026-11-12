@@ -116,8 +116,9 @@ public final class FileBrowserViewController: NSViewController {
         documentStore: documentStore
     )
 
-    /// The path of the selected node, under the pane's title bar.
-    private lazy var breadcrumb = BreadcrumbView(rootURL: directories.primary)
+    /// The path of the selected node, under the pane's title bar, spelled
+    /// from `~` so it says where the file is on disk, not only in the project.
+    private lazy var breadcrumb = BreadcrumbView(rootURL: directories.primary, style: .homeRelative)
 
     /// Narrows the tree to the names that contain what is typed.
     private let filterField = ThemedSearchField(placeholder: "Filter")
@@ -327,6 +328,15 @@ public final class FileBrowserViewController: NSViewController {
             .sink { [weak self] node in self?.breadcrumb.fileURL = node?.url }
             .store(in: &cancellables)
         breadcrumb.onSelect = { [weak self] url in self?.tree.onOpenRequest?(url, .current) }
+        // The crumb menus leave out what the tree leaves out, Hide Excluded
+        // Content included, anchored at the root the file sits under.
+        breadcrumb.filter = { [weak self] in
+            guard let self else { return .none }
+            let file = self.selection.selectedNode?.url.standardizedFileURL.path ?? ""
+            let root = ([self.directories.primary] + self.directories.additional)
+                .first { file.hasPrefix($0.standardizedFileURL.path + "/") } ?? self.directories.primary
+            return FileTreeFilter(rootURL: root, matcher: self.exclusions)
+        }
 
         // Synchronous on purpose: the active pane posts from its mouse-down
         // monitor *before* the click is delivered, and `NSApp.currentEvent` is

@@ -21,7 +21,7 @@ public enum BrowserSettingsScope {
 }
 
 /// Settings panel for the browser panes: a topic list on the left — General,
-/// History, Cookies, Session Privacy, Media and Permissions, Downloads,
+/// History, Cookies, Privacy, Media and Permissions, Downloads,
 /// Safari, Chrome, Reset — and the chosen topic's controls on the right, the
 /// shape the Language Servers panel has. Safari and Chrome hold what only that
 /// engine has; every other topic applies to both. In a pane's sheet only the
@@ -65,17 +65,23 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     ///     it; `nil` leaves the Chrome topic out of the Settings window. A
     ///     Chrome pane's sheet lists the topic either way, without the
     ///     version row when there is none.
+    ///   - privacyVault: the app's one privacy words vault, which Privacy's
+    ///     Edit Privacy Words… opens in global scope; `nil` leaves the button
+    ///     out there. Pane scope uses the pane's own vault, so it need not be
+    ///     passed. It must be the instance the panes and private terminals
+    ///     share: a vault ignores its own process's change notification.
     public init(
         history: BrowserHistoryStore?,
         siteData: BrowserSiteData = BrowserSiteData(),
         settings: SettingsStore = UserSettings.shared,
         scope: BrowserSettingsScope = .global,
-        chrome: BrowserEngineMaintenance? = nil
+        chrome: BrowserEngineMaintenance? = nil,
+        privacyVault: PrivacyWordsVault? = nil
     ) {
         self.history = history
         self.siteData = siteData
         self.chrome = chrome
-        self.binding = BrowserSettingsBinding(settings: settings, scope: scope)
+        self.binding = BrowserSettingsBinding(settings: settings, scope: scope, privacyVault: privacyVault)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Web Browser",
             icon: NSImage(systemSymbolName: "globe", accessibilityDescription: nil)
@@ -151,13 +157,12 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     /// use (`dry`).
     public override var searchKeywords: [String] {
         BrowserGeneralPanel.keywords + BrowserHistoryPanel.keywords + BrowserCookiesPanel.keywords
-            + SessionPrivacySettingsPanel.keywords + BrowserMediaPanel.keywords
+            + BrowserPrivacySettingsPanel.keywords + BrowserMediaPanel.keywords
             + BrowserDownloadsPanel.keywords
             + (showsSafariTopic ? SafariBrowserTopicPanel.keywords : [])
             + safariExtensionsKeywords
             + (showsChromeTopic ? ChromeBrowserTopicPanel.keywords : [])
             + (extensionsProfile != nil ? ChromeExtensionsTopicPanel.keywords : [])
-            + (binding.isPaneScope ? AgentPrivacySettingsPanel.keywords : [])
             + BrowserResetPanel.keywords
     }
 
@@ -171,9 +176,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         addPanel(BrowserGeneralPanel(binding: binding))
         addPanel(BrowserHistoryPanel(history: history, binding: binding))
         addPanel(BrowserCookiesPanel(title: cookiesTitle, binding: binding))
-        addPanel(SessionPrivacySettingsPanel(binding: binding))
-        // Per pane only: there is no global Agent Privacy to set.
-        if binding.isPaneScope { addPanel(AgentPrivacySettingsPanel(binding: binding)) }
+        addPanel(BrowserPrivacySettingsPanel(binding: binding))
         addPanel(BrowserMediaPanel(binding: binding))
         addPanel(BrowserDownloadsPanel(binding: binding))
         if showsSafariTopic {
@@ -339,15 +342,23 @@ final class BrowserSettingsBinding {
     /// Buttons by accessibility identifier, so a test can press one.
     private(set) var buttons: [String: ComposableSettings.ButtonViewModel] = [:]
     private var cancellables: Set<AnyCancellable> = []
+    /// The vault handed to the panel, for global scope.
+    private let globalPrivacyVault: PrivacyWordsVault?
 
-    init(settings: SettingsStore, scope: BrowserSettingsScope) {
+    init(settings: SettingsStore, scope: BrowserSettingsScope, privacyVault: PrivacyWordsVault? = nil) {
         self.scope = scope
+        self.globalPrivacyVault = privacyVault
         switch scope {
         case .global: store = settings
         case .pane(let layered, _): store = layered
         }
         observeChanges()
     }
+
+    /// The privacy words the Agent Privacy group edits: the pane's vault in
+    /// pane scope (falling back to the one handed in), the one handed in
+    /// globally. `nil` hides Edit Privacy Words….
+    var privacyVault: PrivacyWordsVault? { pane?.privacyVault ?? globalPrivacyVault }
 
     var layered: LayeredSettingsStore? {
         if case .pane(let layered, _) = scope { return layered }
@@ -498,11 +509,9 @@ final class BrowserSettingsBinding {
         let locked = isLocked(name)
         if locked { Self.setControls(enabled: false, in: view) }
         var marker: OverrideMarker?
-        // A global-only row is locked for good and carries no marker, and a
-        // pane-only row has no global value to go back to; any other row in
-        // pane scope does, hidden while it is locked.
-        if isPaneScope, !BrowserSettings.globalOnlyKeyNames.contains(name),
-           !BrowserSettings.paneOnlyKeyNames.contains(name) {
+        // A global-only row is locked for good and carries no marker; any
+        // other row in pane scope does, hidden while it is locked.
+        if isPaneScope, !BrowserSettings.globalOnlyKeyNames.contains(name) {
             let dot = OverrideMarker(revert: revert)
             group.setRowDecoration(leadingAccessory: dot, contextMenu: dot.rowMenu, for: view)
             marker = dot
@@ -576,7 +585,7 @@ final class BrowserSettingsBinding {
 /// One topic of the Browser panel. Every topic is listed by a title and a
 /// symbol, binds through the panel's `BrowserSettingsBinding` and is never
 /// made from a coder, so that is said once here rather than over and over
-/// (`dry`). Internal so the Session Privacy and engine topics can live in
+/// (`dry`). Internal so the Privacy and engine topics can live in
 /// their own files.
 @MainActor
 class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController {
@@ -1220,8 +1229,8 @@ private final class BrowserResetPanel: BrowserTopicPanel {
                         + "then on. Overrides fixed when the pane's page is made — the jar, "
                         + "console capture and, in a Safari pane, the HTTPS upgrade, autoplay "
                         + "and AirPlay — take effect when this sheet closes, by rebuilding the "
-                        + "pane. Agent Privacy is kept: it is set per pane only, with no global "
-                        + "value to go back to."
+                        + "pane. Agent Privacy goes back to the global switch too; the pane's "
+                        + "own privacy words are kept."
                 )
                 : .init(
                     title: "Reset",
@@ -1230,7 +1239,10 @@ private final class BrowserResetPanel: BrowserTopicPanel {
                         + "value each control shows on a fresh install. Settings only: "
                         + "history and site data are kept, and are cleared from their own "
                         + "topics. Open browser panes pick up the defaults the same way they "
-                        + "pick up any other change; a pane's own overrides are kept."
+                        + "pick up any other change; a pane's own overrides are kept. Agent "
+                        + "access, Agent while paused, the cookie and storage jar and Agent "
+                        + "Privacy are kept as they are, so a reset never hands a page or the "
+                        + "privacy words back to models, nor deletes site data."
                 )
         ])
     }
@@ -1246,13 +1258,7 @@ private final class BrowserResetPanel: BrowserTopicPanel {
             // Nothing is lost that the Settings window does not still hold,
             // so this one does not ask first.
             let useGlobal = ComposableSettings.ButtonViewModel(title: "Use Global Settings for This Pane") {
-                // Agent Privacy has no global value to go back to, so it is
-                // kept: dropping it would quietly hand the pane's words to
-                // models again.
-                let privacy = UserSettings.browserAgentPrivacy
-                let keptPrivacy = layered.hasOverride(privacy) ? layered.get(privacy) : nil
                 layered.removeAllOverrides(withPrefix: "browser.")
-                if let keptPrivacy { layered.set(keptPrivacy, for: privacy) }
             }
             let useGlobalView = ComposableSettings.ButtonView(viewModel: useGlobal, placement: .leading)
             _ = useGlobalView.button.accessibilityID(Self.useGlobalIdentifier)
@@ -1273,7 +1279,7 @@ private final class BrowserResetPanel: BrowserTopicPanel {
     private func confirmReset() {
         ComposableSettings.Alerts.confirmDestructive(
             "Reset all Browser settings?",
-            detail: "Every Browser setting returns to its default, except agent access and storage. "
+            detail: "Every Browser setting returns to its default, except agent access, Agent Privacy and storage. "
                 + "History and site data are not affected.",
             actionTitle: "Reset",
             on: view.window
