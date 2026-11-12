@@ -18,6 +18,9 @@ public enum MailRequest: Codable, Sendable, Equatable {
     case listMessages(MailMessageFilter)
     /// `id` is our id or Gmail's.
     case getMessage(account: String, id: String)
+    /// The whole conversation, read from Gmail, oldest message first. `id` is a Gmail thread id,
+    /// or a message id (ours or Gmail's) that stands for the thread it is in.
+    case getThread(account: String, id: String, includeBodies: Bool)
     /// Messages by our id or Gmail's; labels by Gmail label id or exact name.
     case modifyLabels(account: String, messageIds: [String], add: [String], remove: [String])
     /// Adds `destination` and removes every label in `from`. A `nil` `from` means INBOX, or
@@ -31,7 +34,7 @@ public enum MailRequest: Codable, Sendable, Equatable {
     /// its own UI. The switch is exhaustive so a new request has to be placed on one side.
     public var isMailboxAccess: Bool {
         switch self {
-        case .listAccounts, .listLabels, .listMessages, .getMessage, .modifyLabels, .moveMessages:
+        case .listAccounts, .listLabels, .listMessages, .getMessage, .getThread, .modifyLabels, .moveMessages:
             return true
         case .providerStatus, .importOAuthClient, .removeProvider, .signIn, .cancelSignIn,
              .removeAccount, .updateSettings, .syncNow:
@@ -43,6 +46,11 @@ public enum MailRequest: Codable, Sendable, Equatable {
 /// Which messages to list. `since`/`until` are inclusive ISO-8601 strings; labels are ids or
 /// names: a message must carry every one of `labels` (AND) and, when `anyLabels` is not empty,
 /// at least one of `anyLabels` (OR). `cursor` is the `nextCursor` of the previous page.
+///
+/// With a `query`, the messages come from a Gmail search instead of the synced copy, so they
+/// reach past the sync window and the synced classes. The query is Gmail's search syntax
+/// (`from:greenhouse`); `since`, `until` and `labels` narrow it, and `anyLabels` is refused (write
+/// `{label:a label:b}` in the query instead).
 public struct MailMessageFilter: Codable, Sendable, Equatable {
     public static let limitRange = 1...500
     public static let defaultLimit = 50
@@ -57,11 +65,12 @@ public struct MailMessageFilter: Codable, Sendable, Equatable {
     }
     public var cursor: String?
     public var includeBodies: Bool
+    public var query: String?
 
     public init(
         account: String, since: String? = nil, until: String? = nil, labels: [String] = [],
         anyLabels: [String] = [], limit: Int = MailMessageFilter.defaultLimit, cursor: String? = nil,
-        includeBodies: Bool = false
+        includeBodies: Bool = false, query: String? = nil
     ) {
         self.account = account
         self.since = since
@@ -71,10 +80,11 @@ public struct MailMessageFilter: Codable, Sendable, Equatable {
         self.limit = Self.clamp(limit)
         self.cursor = cursor
         self.includeBodies = includeBodies
+        self.query = query
     }
 
     private enum CodingKeys: String, CodingKey {
-        case account, since, until, labels, anyLabels, limit, cursor, includeBodies
+        case account, since, until, labels, anyLabels, limit, cursor, includeBodies, query
     }
 
     /// Lenient: only `account` is required; the rest take their defaults.
@@ -88,7 +98,16 @@ public struct MailMessageFilter: Codable, Sendable, Equatable {
             anyLabels: try container.decodeIfPresent([String].self, forKey: .anyLabels) ?? [],
             limit: try container.decodeIfPresent(Int.self, forKey: .limit) ?? Self.defaultLimit,
             cursor: try container.decodeIfPresent(String.self, forKey: .cursor),
-            includeBodies: try container.decodeIfPresent(Bool.self, forKey: .includeBodies) ?? false)
+            includeBodies: try container.decodeIfPresent(Bool.self, forKey: .includeBodies) ?? false,
+            query: try container.decodeIfPresent(String.self, forKey: .query))
+    }
+
+    /// The query with its surrounding whitespace trimmed; `nil` when there is none to run.
+    public var searchQuery: String? {
+        guard let trimmed = query?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
     }
 
     static func clamp(_ limit: Int) -> Int {
@@ -223,21 +242,28 @@ public struct MailMessage: Codable, Sendable, Equatable {
 
 public struct MailMessagePage: Codable, Sendable, Equatable {
     public var messages: [MailMessage]
-    /// The next offset as a decimal string; `nil` on the last page.
+    /// Opaque; pass it back as the filter's `cursor` for the next page. `nil` on the last page.
     public var nextCursor: String?
     /// True when the service applied the filter's `anyLabels`. A service built before that
     /// field decodes the filter without it and lists everything, and its reply leaves this out
     /// (so it decodes as false), which lets `MailClient.messages` refuse the page.
     public var appliedAnyLabels: Bool
+    /// True when the page is the result of the filter's `query`, searched in Gmail. A service
+    /// built before queries ignores one and lists the synced copy; this then decodes as false
+    /// and `MailClient.messages` refuses the page.
+    public var appliedQuery: Bool
 
-    public init(messages: [MailMessage], nextCursor: String?, appliedAnyLabels: Bool = false) {
+    public init(
+        messages: [MailMessage], nextCursor: String?, appliedAnyLabels: Bool = false, appliedQuery: Bool = false
+    ) {
         self.messages = messages
         self.nextCursor = nextCursor
         self.appliedAnyLabels = appliedAnyLabels
+        self.appliedQuery = appliedQuery
     }
 
     private enum CodingKeys: String, CodingKey {
-        case messages, nextCursor, appliedAnyLabels
+        case messages, nextCursor, appliedAnyLabels, appliedQuery
     }
 
     public init(from decoder: any Decoder) throws {
@@ -245,7 +271,21 @@ public struct MailMessagePage: Codable, Sendable, Equatable {
         self.init(
             messages: try container.decode([MailMessage].self, forKey: .messages),
             nextCursor: try container.decodeIfPresent(String.self, forKey: .nextCursor),
-            appliedAnyLabels: try container.decodeIfPresent(Bool.self, forKey: .appliedAnyLabels) ?? false)
+            appliedAnyLabels: try container.decodeIfPresent(Bool.self, forKey: .appliedAnyLabels) ?? false,
+            appliedQuery: try container.decodeIfPresent(Bool.self, forKey: .appliedQuery) ?? false)
+    }
+}
+
+/// A conversation as Gmail holds it now, oldest message first. A message carrying `SENT` is one
+/// the account wrote.
+public struct MailThread: Codable, Sendable, Equatable {
+    /// Gmail's thread id.
+    public var id: String
+    public var messages: [MailMessage]
+
+    public init(id: String, messages: [MailMessage]) {
+        self.id = id
+        self.messages = messages
     }
 }
 
@@ -271,6 +311,7 @@ public enum MailResponse: Codable, Sendable, Equatable {
     case labels([MailLabel])
     case messages(MailMessagePage)
     case message(MailMessage)
+    case thread(MailThread)
     case moved([MailMoveResult])
     // swiftlint:disable:next identifier_name
     case ok
@@ -330,11 +371,25 @@ public struct MailClient: Sendable {
         return labels
     }
 
-    /// Throws rather than return a page the service didn't filter by `anyLabels`.
+    /// Throws rather than return a page the service didn't filter by `anyLabels` or `query`.
     public func messages(_ filter: MailMessageFilter) async throws -> MailMessagePage {
         guard case .messages(let page) = try await send(.listMessages(filter)) else { throw Self.unexpected }
+        if filter.searchQuery != nil && !page.appliedQuery { throw Self.queryIgnored }
         if !filter.anyLabels.isEmpty && !page.appliedAnyLabels { throw Self.anyLabelsIgnored }
         return page
+    }
+
+    /// A service built before threads can't decode the request and answers "bad request"; that
+    /// is reported as a service too old to show threads.
+    public func thread(account: String, id: String, includeBodies: Bool = false) async throws -> MailThread {
+        let response: MailResponse
+        do {
+            response = try await send(.getThread(account: account, id: id, includeBodies: includeBodies))
+        } catch MailClientError.remote(Self.badRequest) {
+            throw Self.threadsUnsupported
+        }
+        guard case .thread(let thread) = response else { throw Self.unexpected }
+        return thread
     }
 
     public func message(account: String, id: String) async throws -> MailMessage {
@@ -364,4 +419,10 @@ public struct MailClient: Sendable {
     private static let unexpected = MailClientError.remote("unexpected response from the mail service")
     static let anyLabelsIgnored = MailClientError.remote(
         "The mail service is too old to filter by any of several labels; restart it and try again.")
+    static let queryIgnored = MailClientError.remote(
+        "The mail service is too old to search Gmail; restart it and try again.")
+    static let threadsUnsupported = MailClientError.remote(
+        "The mail service is too old to show threads; restart it and try again.")
+    /// What `MailIntegrationService` answers to a request it can't decode.
+    static let badRequest = "bad request"
 }

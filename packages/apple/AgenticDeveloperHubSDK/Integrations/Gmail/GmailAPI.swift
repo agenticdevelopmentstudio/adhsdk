@@ -4,6 +4,13 @@ import Foundation
 public protocol GmailAPI: Sendable {
     func profile() async throws -> GmailProfile
     func listMessageIds(query: String, includeSpamTrash: Bool, pageToken: String?) async throws -> GmailIdPage
+    /// One page of a Gmail search, newest first: messages matching `query` (Gmail's search
+    /// syntax) that carry every label in `labelIds`. Spam and Trash only when the query asks.
+    func searchMessageIds(
+        query: String, labelIds: [String], maxResults: Int, pageToken: String?
+    ) async throws -> GmailIdPage
+    /// A conversation and every message in it, oldest first (`threads.get`, format full).
+    func thread(id: String) async throws -> GmailThreadDTO
     func message(id: String) async throws -> GmailMessageDTO
     func history(startHistoryId: String, pageToken: String?) async throws -> GmailHistoryPage
     func labels() async throws -> [GmailLabelDTO]
@@ -32,6 +39,26 @@ public struct GmailIdPage: Sendable {
     public init(ids: [String], nextPageToken: String?) {
         self.ids = ids
         self.nextPageToken = nextPageToken
+    }
+}
+
+public struct GmailThreadDTO: Decodable, Sendable {
+    public let id: String
+    public let messages: [GmailMessageDTO]
+
+    public init(id: String, messages: [GmailMessageDTO]) {
+        self.id = id
+        self.messages = messages
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, messages }
+
+    /// Gmail leaves `messages` out of a thread with none it will show.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(String.self, forKey: .id),
+            messages: try container.decodeIfPresent([GmailMessageDTO].self, forKey: .messages) ?? [])
     }
 }
 

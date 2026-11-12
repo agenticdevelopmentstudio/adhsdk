@@ -9,12 +9,12 @@ struct MailToolSourceTests {
         await source.callTool(name: name, argumentsJSON: Data(json.utf8))
     }
 
-    @Test func listsSixTools() async {
+    @Test func listsSevenTools() async {
         let source = MailToolSource(client: ScriptedMail(.ok).client)
         let names = await source.toolDefinitions().map(\.name)
         #expect(names == [
             "mail_list_accounts", "mail_list_labels", "mail_list_messages", "mail_get_message",
-            "mail_modify_labels", "mail_move_messages"
+            "mail_get_thread", "mail_modify_labels", "mail_move_messages"
         ])
     }
 
@@ -42,6 +42,35 @@ struct MailToolSourceTests {
                              #"{"account":"a","any_labels":"INBOX"}"#)
         #expect(bad.isError)
         #expect(bad.content == "any_labels must be an array of strings")
+    }
+
+    @Test func listMessagesMapsQuery() async {
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil, appliedQuery: true)))
+        let result = await call(MailToolSource(client: mail.client), "mail_list_messages",
+                                #"{"account":"a","query":"from:greenhouse"}"#)
+        #expect(!result.isError)
+        #expect(mail.requests == [.listMessages(MailMessageFilter(account: "a", query: "from:greenhouse"))])
+        let blank = await call(MailToolSource(client: mail.client), "mail_list_messages",
+                               #"{"account":"a","query":"  "}"#)
+        #expect(blank.isError)
+        #expect(blank.content == "query must not be empty")
+    }
+
+    @Test func getThreadMapsArguments() async throws {
+        let thread = MailThread(id: "t1", messages: [ScriptedMail.message()])
+        let mail = ScriptedMail(.thread(thread))
+        let source = MailToolSource(client: mail.client)
+        let result = await call(source, "mail_get_thread", #"{"account":"a","id":"m1"}"#)
+        #expect(!result.isError)
+        #expect(result.content == (try expectedJSON(thread)))
+        _ = await call(source, "mail_get_thread", #"{"account":"a","id":"t1","include_bodies":true}"#)
+        #expect(mail.requests == [
+            .getThread(account: "a", id: "m1", includeBodies: false),
+            .getThread(account: "a", id: "t1", includeBodies: true)
+        ])
+        let missing = await call(source, "mail_get_thread", #"{"account":"a"}"#)
+        #expect(missing.isError)
+        #expect(missing.content == "missing required argument: id")
     }
 
     @Test func resultsArePrettySortedJSON() async throws {

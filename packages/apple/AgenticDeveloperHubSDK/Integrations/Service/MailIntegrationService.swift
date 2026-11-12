@@ -79,7 +79,7 @@ public actor MailIntegrationService {
         if let request = try? JSONDecoder().decode(MailRequest.self, from: requestData) {
             response = await handle(request)
         } else {
-            response = .failure("bad request")
+            response = .failure(MailClient.badRequest)
         }
         return (try? JSONEncoder().encode(response)) ?? Data(#"{"failure":{"_0":"encoding failed"}}"#.utf8)
     }
@@ -110,11 +110,13 @@ public actor MailIntegrationService {
         case .listLabels(let account):
             return .labels(try store.labels(connectionId: try connection(account).id).map(Self.label))
         case .listMessages(let filter):
-            return .messages(try listMessages(filter))
+            return .messages(try await listMessages(filter))
         case .getMessage(let account, let id):
             let owner = try connection(account)
             let message = try await resolveMessages([id], connection: owner)[0]
             return .message(try mailMessage(message, connection: owner, includeBodies: true))
+        case .getThread(let account, let id, let includeBodies):
+            return .thread(try await thread(connection: try connection(account), id: id, includeBodies: includeBodies))
         case .modifyLabels(let account, let messageIds, let add, let remove):
             let messages = try await modifyLabels(
                 connection: try connection(account), messageIds: messageIds, add: add, remove: remove)
@@ -484,11 +486,12 @@ public actor MailIntegrationService {
 
     // MARK: - Messages and labels
 
-    private func listMessages(_ filter: MailMessageFilter) throws -> MailMessagePage {
+    private func listMessages(_ filter: MailMessageFilter) async throws -> MailMessagePage {
         let owner = try connection(filter.account)
+        if let query = filter.searchQuery { return try await searchMessages(filter, query: query, owner: owner) }
         let after = try filter.cursor.map(Self.decodeCursor)
         let limit = MailMessageFilter.clamp(filter.limit)
-        let labels = try store.labels(connectionId: owner.id)
+        let labels = try await self.labels(owner, resolving: filter.labels + filter.anyLabels)
         let labelIds = try Self.resolveLabels(filter.labels, in: labels)
         let anyLabelIds = try Self.resolveLabels(filter.anyLabels, in: labels)
         // One extra row tells whether another page follows.
@@ -503,6 +506,152 @@ public actor MailIntegrationService {
         let last = rows.count > limit ? rows.prefix(limit).last : nil
         return MailMessagePage(
             messages: messages, nextCursor: last.map(Self.encodeCursor), appliedAnyLabels: !anyLabelIds.isEmpty)
+    }
+
+    /// One page of a Gmail search for `query`, narrowed by the filter's dates and labels, in
+    /// Gmail's order (newest first). The messages are read from Gmail and not stored: a search
+    /// reaches past what the connection mirrors.
+    private func searchMessages(
+        _ filter: MailMessageFilter, query: String, owner: IntegrationConnection
+    ) async throws -> MailMessagePage {
+        guard filter.anyLabels.isEmpty else {
+            throw RequestFailure("a query can't be combined with any-label; write {label:a label:b} in the query")
+        }
+        let pageToken = try filter.cursor.map(Self.decodeSearchCursor)
+        let gmailQuery = try Self.gmailQuery(query, since: filter.since, until: filter.until)
+        let labels = try await self.labels(owner, resolving: filter.labels)
+        let labelIds = try Self.resolveLabels(filter.labels, in: labels)
+        let page: GmailIdPage
+        let found: [Int: EmailMessage]
+        do {
+            let api = try gmailAPI(for: owner.id)
+            page = try await api.searchMessageIds(
+                query: gmailQuery, labelIds: labelIds, maxResults: MailMessageFilter.clamp(filter.limit),
+                pageToken: pageToken)
+            let refs = try page.ids.map { MessageRef(gmailId: $0, existingId: try existingId(gmailId: $0, owner)) }
+            found = try await fetch(refs, api: api, connectionId: owner.id)
+        } catch {
+            if (error as? IntegrationError) == .revoked { record(error, connectionId: owner.id) }
+            throw error
+        }
+        let names = Self.labelNames(labels)
+        let messages = page.ids.indices.compactMap { found[$0] }.map {
+            Self.mailMessage($0, account: owner.externalAccountId, names: names, includeBodies: filter.includeBodies)
+        }
+        return MailMessagePage(
+            messages: messages, nextCursor: page.nextPageToken.map { Self.searchCursorPrefix + $0 },
+            appliedQuery: true)
+    }
+
+    /// Marks a search cursor (Gmail's page token), so one from the synced list is refused rather
+    /// than sent to Gmail, and the other way round.
+    static let searchCursorPrefix = "gmail:"
+
+    static func decodeSearchCursor(_ cursor: String) throws -> String {
+        guard cursor.hasPrefix(searchCursorPrefix), cursor.count > searchCursorPrefix.count else {
+            throw RequestFailure("invalid cursor: \(cursor)")
+        }
+        return String(cursor.dropFirst(searchCursorPrefix.count))
+    }
+
+    /// `query` with the inclusive `since`/`until` bounds added as Gmail's `after:`/`before:`, in
+    /// epoch seconds (Gmail's finest grain). The query is parenthesised so a top-level `OR` in it
+    /// stays inside the bounds.
+    static func gmailQuery(_ query: String, since: String?, until: String?) throws -> String {
+        var bounds: [String] = []
+        if let since {
+            bounds.append("after:\(Int(try epoch(since, name: "since").rounded(.down)))")
+        }
+        if let until {
+            bounds.append("before:\(Int(try epoch(until, name: "until").rounded(.down)) + 1)")
+        }
+        return bounds.isEmpty ? query : (["(\(query))"] + bounds).joined(separator: " ")
+    }
+
+    private static func epoch(_ text: String, name: String) throws -> TimeInterval {
+        for options: ISO8601DateFormatter.Options in [
+            [.withInternetDateTime, .withFractionalSeconds], [.withInternetDateTime]
+        ] {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = options
+            if let date = formatter.date(from: text) { return date.timeIntervalSince1970 }
+        }
+        throw RequestFailure("invalid \(name): \(text)")
+    }
+
+    /// Our id for the message with this Gmail id, live or tombstoned, if we have ever stored it.
+    private func existingId(gmailId: String, _ connection: IntegrationConnection) throws -> String? {
+        try store.message(connectionId: connection.id, idOrExternalId: gmailId, includingDeleted: true)?.id
+    }
+
+    /// The conversation `id` stands for, read from Gmail: a message we know (by our id or Gmail's)
+    /// stands for its thread; any other id is tried as a thread id, then as a Gmail message id.
+    /// Nothing is stored.
+    private func thread(connection: IntegrationConnection, id: String, includeBodies: Bool) async throws -> MailThread {
+        let known = try store.message(connectionId: connection.id, idOrExternalId: id, includingDeleted: true)
+        let dto: GmailThreadDTO
+        do {
+            let api = try gmailAPI(for: connection.id)
+            if let known {
+                dto = try await api.thread(id: known.threadId)
+            } else {
+                dto = try await Self.thread(unknownId: id, api: api)
+            }
+        } catch IntegrationError.gmail(status: 404, message: _) {
+            // A message we stored whose thread Gmail no longer has.
+            throw IntegrationError.unknownMessage(id)
+        } catch {
+            if (error as? IntegrationError) == .revoked { record(error, connectionId: connection.id) }
+            throw error
+        }
+        let names = Self.labelNames(try store.labels(connectionId: connection.id))
+        let now = now()
+        let messages = try dto.messages.map { message in
+            let parsed = GmailMessageParser.parse(
+                message, connectionId: connection.id, existingId: try existingId(gmailId: message.id, connection),
+                now: now)
+            return Self.mailMessage(
+                parsed, account: connection.externalAccountId, names: names, includeBodies: includeBodies)
+        }
+        return MailThread(id: dto.id, messages: messages)
+    }
+
+    /// `id` as a Gmail thread id, else as a Gmail message id whose thread is read. 400 means
+    /// not even shaped like a Gmail id.
+    private static func thread(unknownId id: String, api: any GmailAPI) async throws -> GmailThreadDTO {
+        do {
+            return try await api.thread(id: id)
+        } catch IntegrationError.gmail(status: 400, message: _), IntegrationError.gmail(status: 404, message: _) {
+            // Not a thread id; try it as a message id.
+        }
+        do {
+            let message = try await api.message(id: id)
+            return try await api.thread(id: message.threadId)
+        } catch IntegrationError.gmail(status: 400, message: _), IntegrationError.gmail(status: 404, message: _) {
+            throw IntegrationError.unknownMessage(id)
+        }
+    }
+
+    /// The connection's labels. When one of `values` names none of the stored ones, they are
+    /// re-read from Gmail and stored first, so a label made in Gmail since the last sync resolves
+    /// instead of failing as unknown. A value Gmail doesn't have either still fails, in
+    /// `resolveLabels`.
+    private func labels(_ connection: IntegrationConnection, resolving values: [String]) async throws -> [EmailLabel] {
+        let stored = try store.labels(connectionId: connection.id)
+        guard values.contains(where: { Self.label(named: $0, in: stored) == nil }) else { return stored }
+        let fresh: [GmailLabelDTO]
+        do {
+            fresh = try await gmailAPI(for: connection.id).labels()
+        } catch {
+            if (error as? IntegrationError) == .revoked { record(error, connectionId: connection.id) }
+            throw error
+        }
+        // Re-read after the await: an account removed meanwhile gets no writes.
+        guard try store.connection(idOrEmail: connection.id) != nil else {
+            throw RequestFailure("account \(connection.externalAccountId) was removed")
+        }
+        try GmailSyncWorker.storeLabels(fresh, connectionId: connection.id, in: store)
+        return try store.labels(connectionId: connection.id)
     }
 
     /// A page cursor names the last row it returned, not a count of rows to skip: a sync or a
@@ -523,7 +672,7 @@ public actor MailIntegrationService {
     private func modifyLabels(
         connection: IntegrationConnection, messageIds: [String], add: [String], remove: [String]
     ) async throws -> [MailMessage] {
-        let labels = try store.labels(connectionId: connection.id)
+        let labels = try await self.labels(connection, resolving: add + remove)
         let addIds = try Self.resolveLabels(add, in: labels)
         let removeIds = try Self.resolveLabels(remove, in: labels)
         let originals = try await resolveMessages(messageIds, connection: connection)
@@ -547,11 +696,12 @@ public actor MailIntegrationService {
     /// which can be up to a sync interval old. The messages are read from Gmail first, so
     /// `added`/`removed` say what each one really gained and lost, and one that already has the
     /// destination and none of `from` is not written. A message Gmail no longer has is left out
-    /// of the result.
+    /// of the result. A label name the synced labels don't know (made in Gmail since the last
+    /// sync) is looked up in Gmail before the move is refused.
     private func moveMessages(
         connection: IntegrationConnection, messageIds: [String], destination: String, from: [String]?
     ) async throws -> [MailMoveResult] {
-        let labels = try store.labels(connectionId: connection.id)
+        let labels = try await self.labels(connection, resolving: [destination] + (from ?? []))
         let destinationId = try Self.resolveLabels([destination], in: labels)[0]
         let fromIds = try Self.resolveLabels(from ?? Self.defaultMoveSources(to: destinationId), in: labels)
         guard !fromIds.contains(destinationId) else {
@@ -698,27 +848,42 @@ public actor MailIntegrationService {
         var refreshError: String?
     }
 
-    /// Re-reads the messages at `indices` (every one when nil) from Gmail, `refetchConcurrency`
-    /// at a time. The result is keyed by index into `originals`; a message Gmail no longer has
-    /// (404) is absent.
+    /// Re-reads the messages at `indices` (every one when nil) from Gmail. The result is keyed by
+    /// index into `originals`; a message Gmail no longer has (404) is absent.
     private func fetch(
         _ originals: [EmailMessage], indices: [Int]? = nil, api: any GmailAPI, connectionId: String
     ) async throws -> [Int: EmailMessage] {
+        let wanted = indices ?? Array(originals.indices)
+        let refs = wanted.map { MessageRef(gmailId: originals[$0].externalId, existingId: originals[$0].id) }
+        let fetched = try await fetch(refs, api: api, connectionId: connectionId)
+        return Dictionary(uniqueKeysWithValues: fetched.map { (wanted[$0.key], $0.value) })
+    }
+
+    /// A message to read from Gmail, and our id for it when we have one.
+    private struct MessageRef: Sendable {
+        let gmailId: String
+        let existingId: String?
+    }
+
+    /// Reads `refs` from Gmail, `refetchConcurrency` at a time, keyed by index into `refs`; a
+    /// message Gmail no longer has (404) is absent.
+    private func fetch(
+        _ refs: [MessageRef], api: any GmailAPI, connectionId: String
+    ) async throws -> [Int: EmailMessage] {
         var fetched: [Int: EmailMessage] = [:]
         let now = now()
-        let wanted = indices ?? Array(originals.indices)
         try await withThrowingTaskGroup(of: (Int, EmailMessage?).self) { group in
             var next = 0
             func addNext() {
-                guard next < wanted.count else { return }
-                let index = wanted[next]
-                let original = originals[index]
+                guard next < refs.count else { return }
+                let index = next
+                let ref = refs[index]
                 next += 1
                 group.addTask {
                     do {
-                        let dto = try await api.message(id: original.externalId)
+                        let dto = try await api.message(id: ref.gmailId)
                         return (index, GmailMessageParser.parse(dto, connectionId: connectionId,
-                                                                existingId: original.id, now: now))
+                                                                existingId: ref.existingId, now: now))
                     } catch IntegrationError.gmail(status: 404, message: _) {
                         return (index, nil)
                     }
@@ -769,12 +934,16 @@ public actor MailIntegrationService {
     private static func resolveLabels(_ values: [String], in labels: [EmailLabel]) throws -> [String] {
         var seen = Set<String>()
         return try values.compactMap { value in
-            guard let id = labels.first(where: { $0.externalId == value })?.externalId
-                    ?? labels.first(where: { $0.name == value })?.externalId else {
+            guard let id = label(named: value, in: labels)?.externalId else {
                 throw RequestFailure("unknown label: \(value)")
             }
             return seen.insert(id).inserted ? id : nil
         }
+    }
+
+    /// The label `value` names: an exact label id, else an exact (case-sensitive) name.
+    private static func label(named value: String, in labels: [EmailLabel]) -> EmailLabel? {
+        labels.first(where: { $0.externalId == value }) ?? labels.first(where: { $0.name == value })
     }
 
     private static func labelNames(_ labels: [EmailLabel]) -> [String: String] {

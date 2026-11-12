@@ -53,15 +53,20 @@ public struct GmailSyncWorker: Sendable {
     // MARK: - Labels
 
     private func syncLabels(connection: IntegrationConnection) async throws {
-        let labels = try await api.labels().map { dto in
+        try Self.storeLabels(try await api.labels(), connectionId: connection.id, in: store)
+    }
+
+    /// Replaces the connection's stored labels with Gmail's list. The store keeps the local id of
+    /// a label that is already present and tombstones one Gmail no longer lists.
+    static func storeLabels(_ dtos: [GmailLabelDTO], connectionId: String, in store: IntegrationsStore) throws {
+        let labels = dtos.map { dto in
             EmailLabel(
-                id: UUID().uuidString.lowercased(), connectionId: connection.id, externalId: dto.id,
-                name: dto.name, parentName: Self.parentName(of: dto.name),
+                id: UUID().uuidString.lowercased(), connectionId: connectionId, externalId: dto.id,
+                name: dto.name, parentName: parentName(of: dto.name),
                 type: dto.type == "system" ? "system" : "user", color: dto.color,
                 messagesTotal: dto.messagesTotal, messagesUnread: dto.messagesUnread)
         }
-        // The store keeps the local id of a label that is already present.
-        try store.replaceLabels(connectionId: connection.id, with: labels)
+        try store.replaceLabels(connectionId: connectionId, with: labels)
     }
 
     private static func parentName(of name: String) -> String? {

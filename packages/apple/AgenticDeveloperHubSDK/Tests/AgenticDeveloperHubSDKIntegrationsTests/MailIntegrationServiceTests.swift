@@ -101,6 +101,12 @@ private struct ProfileGatedAPI: GmailAPI {
     func listMessageIds(query: String, includeSpamTrash: Bool, pageToken: String?) async throws -> GmailIdPage {
         try await inner.listMessageIds(query: query, includeSpamTrash: includeSpamTrash, pageToken: pageToken)
     }
+    func searchMessageIds(
+        query: String, labelIds: [String], maxResults: Int, pageToken: String?
+    ) async throws -> GmailIdPage {
+        try await inner.searchMessageIds(query: query, labelIds: labelIds, maxResults: maxResults, pageToken: pageToken)
+    }
+    func thread(id: String) async throws -> GmailThreadDTO { try await inner.thread(id: id) }
     func message(id: String) async throws -> GmailMessageDTO { try await inner.message(id: id) }
     func history(startHistoryId: String, pageToken: String?) async throws -> GmailHistoryPage {
         try await inner.history(startHistoryId: startHistoryId, pageToken: pageToken)
@@ -211,6 +217,17 @@ private struct TokenCheckingAPI: GmailAPI {
     func listMessageIds(query: String, includeSpamTrash: Bool, pageToken: String?) async throws -> GmailIdPage {
         _ = try await accessToken()
         return try await inner.listMessageIds(query: query, includeSpamTrash: includeSpamTrash, pageToken: pageToken)
+    }
+    func searchMessageIds(
+        query: String, labelIds: [String], maxResults: Int, pageToken: String?
+    ) async throws -> GmailIdPage {
+        _ = try await accessToken()
+        return try await inner.searchMessageIds(
+            query: query, labelIds: labelIds, maxResults: maxResults, pageToken: pageToken)
+    }
+    func thread(id: String) async throws -> GmailThreadDTO {
+        _ = try await accessToken()
+        return try await inner.thread(id: id)
     }
     func message(id: String) async throws -> GmailMessageDTO {
         _ = try await accessToken()
@@ -1414,6 +1431,162 @@ struct MailIntegrationServiceTests {
             return
         }
         #expect(page.messages.map(\.gmailId) == ["m2"])
+    }
+
+    // MARK: - Search, threads and labels made in Gmail
+
+    @Test func aQuerySearchesGmailWithItsDatesAndLabelsAndPagesByGmailsToken() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        harness.api.setMessage(harness.dto("old", labels: ["Label_1"], ageDays: 4_000))
+        harness.api.searchPages = [["m2", "old"], ["m1"]]
+        let local = try #require(try harness.store.message(connectionId: account.id, idOrExternalId: "m2"))
+        var filter = MailMessageFilter(
+            account: account.id, since: "2026-01-01T00:00:00.000Z", until: "2026-01-31T23:59:59.999Z",
+            labels: ["Work"], limit: 2, query: " from:sender OR from:other ")
+
+        guard case .messages(let first) = await harness.service.handle(.listMessages(filter)) else {
+            Issue.record("search failed")
+            return
+        }
+        #expect(harness.api.searchCalls == [FakeGmailAPI.SearchCall(
+            query: "(from:sender OR from:other) after:1767225600 before:1769904000", labelIds: ["Label_1"],
+            maxResults: 2, pageToken: nil)])
+        #expect(first.appliedQuery)
+        #expect(first.messages.map(\.gmailId) == ["m2", "old"])
+        #expect(first.messages[0].id == local.id)
+        #expect(first.messages[1].labelNames == ["Work"])
+        #expect(first.nextCursor == "gmail:p1")
+        // A search reads Gmail; it doesn't add what it found to the synced copy.
+        #expect(try !harness.liveIds(account.id).contains("old"))
+
+        filter.cursor = first.nextCursor
+        guard case .messages(let second) = await harness.service.handle(.listMessages(filter)) else {
+            Issue.record("second search page failed")
+            return
+        }
+        #expect(harness.api.searchCalls.last?.pageToken == "p1")
+        #expect(second.messages.map(\.gmailId) == ["m1"])
+        #expect(second.nextCursor == nil)
+    }
+
+    @Test func aQueryWithNoBoundsIsSentAsWritten() throws {
+        #expect(try MailIntegrationService.gmailQuery("from:a OR from:b", since: nil, until: nil) == "from:a OR from:b")
+        #expect(throws: (any Error).self) {
+            try MailIntegrationService.gmailQuery("x", since: "yesterday", until: nil)
+        }
+    }
+
+    @Test func aQueryRefusesAnyLabelsAndCursorsFromTheOtherKindOfList() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        let anyLabels = MailMessageFilter(account: account.id, anyLabels: ["Work"], query: "from:x")
+        #expect(await harness.service.handle(.listMessages(anyLabels))
+            == .failure("a query can't be combined with any-label; write {label:a label:b} in the query"))
+        let storeCursor = MailMessageFilter(account: account.id, cursor: "123|abc", query: "from:x")
+        #expect(await harness.service.handle(.listMessages(storeCursor)) == .failure("invalid cursor: 123|abc"))
+        let searchCursor = MailMessageFilter(account: account.id, cursor: "gmail:p1")
+        #expect(await harness.service.handle(.listMessages(searchCursor)) == .failure("invalid cursor: gmail:p1"))
+        #expect(harness.api.searchCalls.isEmpty)
+    }
+
+    @Test func aBlankQueryListsTheSyncedMail() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        guard case .messages(let page) = await harness.service.handle(
+            .listMessages(MailMessageFilter(account: account.id, query: "  "))) else {
+            Issue.record("listMessages failed")
+            return
+        }
+        #expect(!page.appliedQuery)
+        #expect(Set(page.messages.map(\.gmailId)) == ["m1", "m2"])
+        #expect(harness.api.searchCalls.isEmpty)
+    }
+
+    private func reply(_ id: String, thread: String, labels: [String], ageDays: Double, harness: Harness)
+        -> GmailMessageDTO {
+        let base = harness.dto(id, labels: labels, ageDays: ageDays)
+        return GmailMessageDTO(
+            id: id, threadId: thread, labelIds: labels, snippet: base.snippet, historyId: base.historyId,
+            internalDate: base.internalDate, payload: base.payload)
+    }
+
+    @Test func aThreadComesFromGmailOldestFirstWhicheverIdNamesIt() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        harness.api.setMessage(reply("r1", thread: "t-m2", labels: ["SENT"], ageDays: 0.5, harness: harness))
+        let local = try #require(try harness.store.message(connectionId: account.id, idOrExternalId: "m2"))
+
+        for id in [local.id, "m2", "t-m2"] {
+            guard case .thread(let thread) = await harness.service.handle(
+                .getThread(account: account.email, id: id, includeBodies: false)) else {
+                Issue.record("getThread(\(id)) failed")
+                return
+            }
+            #expect(thread.id == "t-m2")
+            #expect(thread.messages.map(\.gmailId) == ["m2", "r1"])
+            #expect(thread.messages[0].id == local.id)
+            #expect(thread.messages[1].labels == ["SENT"])
+            #expect(thread.messages.allSatisfy { $0.bodyText == nil })
+        }
+        guard case .thread(let withBodies) = await harness.service.handle(
+            .getThread(account: account.id, id: "m2", includeBodies: true)) else {
+            Issue.record("getThread with bodies failed")
+            return
+        }
+        #expect(withBodies.messages.first?.bodyText == "hello")
+        #expect(try !harness.liveIds(account.id).contains("r1"))
+    }
+
+    @Test func aThreadByAnUnsyncedMessageIdIsFoundAndAMissingOneIsNotFound() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        harness.api.setMessage(harness.dto("old", labels: ["Label_1"], ageDays: 4_000))
+        guard case .thread(let thread) = await harness.service.handle(
+            .getThread(account: account.id, id: "old", includeBodies: false)) else {
+            Issue.record("getThread of an unsynced message failed")
+            return
+        }
+        #expect(thread.id == "t-old")
+        #expect(harness.api.threadCalls == ["old", "t-old"])
+        #expect(await harness.service.handle(.getThread(account: account.id, id: "nope", includeBodies: false))
+            == .notFound("No message matches “nope”"))
+    }
+
+    @Test func aLabelMadeInGmailSinceTheLastSyncIsFoundForAMove() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        let reads = harness.api.labelsCalls
+        _ = await harness.service.handle(.modifyLabels(
+            account: account.id, messageIds: ["m1"], add: ["Work"], remove: []))
+        #expect(harness.api.labelsCalls == reads, "a known label needs no fresh read")
+
+        harness.api.labels.append(GmailLabelDTO(id: "Label_9", name: "Applied", type: "user"))
+        let response = await harness.service.handle(.moveMessages(
+            account: account.id, messageIds: ["m2"], destination: "Applied", from: nil))
+        guard case .moved(let results) = response else {
+            Issue.record("move to a new label returned \(response)")
+            return
+        }
+        #expect(harness.api.labelsCalls == reads + 1)
+        #expect(harness.api.batchModifyCalls.last?.add == ["Label_9"])
+        #expect(results.first?.added == ["Applied"])
+        #expect(try harness.store.labels(connectionId: account.id).contains { $0.name == "Applied" })
+    }
+
+    @Test func aPageFromAServiceThatIgnoredTheQueryIsRefused() async throws {
+        let old = Data(#"{"messages":{"_0":{"messages":[],"appliedAnyLabels":false}}}"#.utf8)
+        let client = MailClient { _ in old }
+        await #expect(throws: MailClient.queryIgnored) {
+            try await client.messages(MailMessageFilter(account: "a", query: "from:x"))
+        }
+    }
+
+    @Test func aThreadFromAServiceThatCantDecodeItSaysTheServiceIsTooOld() async throws {
+        let client = MailClient { _ in try JSONEncoder().encode(MailResponse.failure("bad request")) }
+        await #expect(throws: MailClient.threadsUnsupported) {
+            try await client.thread(account: "a", id: "t")
+        }
     }
 
     @Test func modifyLabelsRefetchFailureLogsOkAndReportsAppliedLabels() async throws {

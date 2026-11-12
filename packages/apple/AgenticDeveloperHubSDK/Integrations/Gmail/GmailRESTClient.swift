@@ -58,6 +58,26 @@ public final class GmailRESTClient: GmailAPI {
         return GmailIdPage(ids: Self.unique((wire.messages ?? []).map(\.id)), nextPageToken: wire.nextPageToken)
     }
 
+    public func searchMessageIds(
+        query: String, labelIds: [String], maxResults: Int, pageToken: String?
+    ) async throws -> GmailIdPage {
+        struct Wire: Decodable {
+            struct Item: Decodable { let id: String }
+            let messages: [Item]?
+            let nextPageToken: String?
+        }
+        var items = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "maxResults", value: String(maxResults))]
+        items += labelIds.map { URLQueryItem(name: "labelIds", value: $0) }
+        if let pageToken { items.append(URLQueryItem(name: "pageToken", value: pageToken)) }
+        let wire = try await get("messages", items, cost: GmailQuotaCost.messagesList, Wire.self)
+        return GmailIdPage(ids: Self.unique((wire.messages ?? []).map(\.id)), nextPageToken: wire.nextPageToken)
+    }
+
+    public func thread(id: String) async throws -> GmailThreadDTO {
+        try await get("threads/\(id)", [URLQueryItem(name: "format", value: "full")],
+                      cost: GmailQuotaCost.threadsGet, GmailThreadDTO.self)
+    }
+
     public func message(id: String) async throws -> GmailMessageDTO {
         try await get("messages/\(id)", [URLQueryItem(name: "format", value: "full")],
                       cost: GmailQuotaCost.messagesGet, GmailMessageDTO.self)

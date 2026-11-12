@@ -15,6 +15,13 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         var includeSpamTrash: Bool
     }
 
+    struct SearchCall: Equatable {
+        var query: String
+        var labelIds: [String]
+        var maxResults: Int
+        var pageToken: String?
+    }
+
     private let lock = NSLock()
     private var state = State()
 
@@ -36,6 +43,10 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         var messageGate: (@Sendable (String) async -> Void)?
         var onListMessageIds: (@Sendable (FakeGmailAPI) -> Void)?
         var listCalls: [ListCall] = []
+        var searchPages: [[String]] = []
+        var searchError: (any Error)?
+        var searchCalls: [SearchCall] = []
+        var threadCalls: [String] = []
         var historyCalls: [String] = []
         var batchModifyCalls: [BatchModifyCall] = []
         var profileCalls = 0
@@ -125,7 +136,22 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         set { with { $0.onListMessageIds = newValue } }
     }
 
+    /// Pages `searchMessageIds` returns, whatever the query; page tokens are "p1", "p2", ….
+    var searchPages: [[String]] {
+        get { with { $0.searchPages } }
+        set { with { $0.searchPages = newValue } }
+    }
+    /// Thrown by `searchMessageIds` when set.
+    var searchError: (any Error)? {
+        get { with { $0.searchError } }
+        set { with { $0.searchError = newValue } }
+    }
+
     // MARK: Recorded calls
+
+    var searchCalls: [SearchCall] { with { $0.searchCalls } }
+    /// Ids passed to `thread`, in call order.
+    var threadCalls: [String] { with { $0.threadCalls } }
 
     var listCalls: [ListCall] { with { $0.listCalls } }
     var historyCalls: [String] { with { $0.historyCalls } }
@@ -162,6 +188,31 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         let index = pageToken.flatMap(Int.init) ?? 0
         guard index < pages.count else { return GmailIdPage(ids: [], nextPageToken: nil) }
         return GmailIdPage(ids: pages[index], nextPageToken: index + 1 < pages.count ? String(index + 1) : nil)
+    }
+
+    func searchMessageIds(
+        query: String, labelIds: [String], maxResults: Int, pageToken: String?
+    ) async throws -> GmailIdPage {
+        let (pages, error) = with { state -> ([[String]], (any Error)?) in
+            state.searchCalls.append(
+                SearchCall(query: query, labelIds: labelIds, maxResults: maxResults, pageToken: pageToken))
+            return (state.searchPages, state.searchError)
+        }
+        if let error { throw error }
+        let index = pageToken.flatMap { Int($0.dropFirst()) } ?? 0
+        guard index < pages.count else { return GmailIdPage(ids: [], nextPageToken: nil) }
+        return GmailIdPage(ids: pages[index], nextPageToken: index + 1 < pages.count ? "p\(index + 1)" : nil)
+    }
+
+    /// Every stored message with that thread id, by `internalDate`; 404 when there are none.
+    func thread(id: String) async throws -> GmailThreadDTO {
+        let messages = with { state -> [GmailMessageDTO] in
+            state.threadCalls.append(id)
+            return state.messages.values.filter { $0.threadId == id }
+                .sorted { Int($0.internalDate ?? "") ?? 0 < Int($1.internalDate ?? "") ?? 0 }
+        }
+        guard !messages.isEmpty else { throw IntegrationError.gmail(status: 404, message: "Not Found") }
+        return GmailThreadDTO(id: id, messages: messages)
     }
 
     func message(id: String) async throws -> GmailMessageDTO {

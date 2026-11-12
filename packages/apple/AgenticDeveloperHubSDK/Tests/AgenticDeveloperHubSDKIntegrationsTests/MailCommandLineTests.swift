@@ -57,6 +57,97 @@ struct MailCommandLineTests {
         #expect(usage.contains("at least one\n  --any-label (OR)"))
     }
 
+    @Test func listPassesQueryToTheService() async {
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [], nextCursor: nil, appliedQuery: true)))
+        let (code, _) = await run(["list", "a", "--query", "from:greenhouse", "--label", "INBOX"], mail)
+        #expect(code == 0)
+        #expect(mail.requests == [.listMessages(MailMessageFilter(
+            account: "a", labels: ["INBOX"], query: "from:greenhouse"))])
+    }
+
+    @Test func blankQueryIsUsageError() async {
+        let mail = ScriptedMail(.ok)
+        for query in ["", "   "] {
+            let (code, _) = await run(["list", "a", "--query", query], mail)
+            #expect(code == 64, "\(query)")
+        }
+        #expect(mail.requests.isEmpty)
+    }
+
+    @Test func queryFromAServiceThatIgnoresItFails() async {
+        let mail = ScriptedMail(.messages(MailMessagePage(messages: [ScriptedMail.message()], nextCursor: nil)))
+        let (code, out) = await run(["list", "a", "--query", "from:x"], mail)
+        #expect(code == 1)
+        #expect(out.stdout.isEmpty)
+    }
+
+    private func reply(_ id: String, labels: [String]) -> MailMessage {
+        var message = ScriptedMail.message()
+        message.id = id
+        message.labels = labels
+        message.bodyText = "body \(id)"
+        return message
+    }
+
+    @Test func threadMarksTheMessagesYouSent() async {
+        let thread = MailThread(id: "t1", messages: [reply("m1", labels: ["INBOX"]), reply("m2", labels: ["SENT"])])
+        let mail = ScriptedMail(.thread(thread))
+        let (code, out) = await run(["thread", "a", "m1"], mail)
+        #expect(code == 0)
+        #expect(mail.requests == [.getThread(account: "a", id: "m1", includeBodies: false)])
+        #expect(out.stdout == [
+            "thread t1  2 messages\n"
+                + "2026-01-02T03:04:05.000Z  m1  a@example.com  Hello  [Inbox, Work]\n"
+                + "2026-01-02T03:04:05.000Z  m2  a@example.com  Hello  [Inbox, Work]  (you)"
+        ])
+    }
+
+    @Test func threadWithBodiesPrintsEachMessageInFull() async {
+        let thread = MailThread(id: "t1", messages: [reply("m1", labels: ["INBOX"]), reply("m2", labels: ["SENT"])])
+        let mail = ScriptedMail(.thread(thread))
+        let (code, out) = await run(["thread", "a", "t1", "--bodies"], mail)
+        #expect(code == 0)
+        #expect(mail.requests == [.getThread(account: "a", id: "t1", includeBodies: true)])
+        let blocks = out.stdout[0].components(separatedBy: "\n\n----\n\n")
+        #expect(blocks.count == 3)
+        #expect(blocks[0] == "thread t1  2 messages")
+        #expect(blocks[1].hasPrefix("From: a@example.com") && blocks[1].hasSuffix("body m1"))
+        #expect(blocks[2].hasPrefix("(you)\nFrom: a@example.com") && blocks[2].hasSuffix("body m2"))
+    }
+
+    @Test func threadOfOneSaysMessage() async {
+        let mail = ScriptedMail(.thread(MailThread(id: "t1", messages: [reply("m1", labels: ["INBOX"])])))
+        let (_, out) = await run(["thread", "a", "m1"], mail)
+        #expect(out.stdout[0].hasPrefix("thread t1  1 message\n"))
+    }
+
+    @Test func threadJSONIsTheThread() async throws {
+        let thread = MailThread(id: "t1", messages: [reply("m1", labels: ["INBOX"])])
+        let (code, out) = await run(["thread", "a", "m1", "--json"], ScriptedMail(.thread(thread)))
+        #expect(code == 0)
+        #expect(out.stdout == [try expectedJSON(thread)])
+    }
+
+    @Test func threadNeedsAnAccountAndOneId() async {
+        let mail = ScriptedMail(.ok)
+        for args in [["thread", "a"], ["thread", "a", "1", "2"], ["thread", "a", "1", "--limit", "2"]] {
+            let (code, _) = await run(args, mail)
+            #expect(code == 64, "\(args)")
+        }
+        #expect(mail.requests.isEmpty)
+    }
+
+    @Test func threadOfAnUnknownMessageExits3() async {
+        let (code, _) = await run(["thread", "a", "zz"], ScriptedMail(.notFound("No message matches “zz”")))
+        #expect(code == MailCommandLine.notFoundStatus)
+    }
+
+    @Test func usageDocumentsThreadAndQuery() {
+        let usage = MailCommandLine.usage()
+        #expect(usage.contains("[--query Q]"))
+        #expect(usage.contains("thread <account> <id> [--bodies]"))
+    }
+
     @Test func listPrintsMessagesAndNextCursor() async {
         let page = MailMessagePage(messages: [ScriptedMail.message()], nextCursor: "50")
         let (code, out) = await run(["list", "a"], ScriptedMail(.messages(page)))
@@ -311,7 +402,7 @@ struct MailCommandLineTests {
     }
 
     @Test func optionMissingValueIsUsageError() async {
-        for option in ["--since", "--until", "--label", "--any-label", "--limit", "--cursor"] {
+        for option in ["--since", "--until", "--label", "--any-label", "--limit", "--cursor", "--query"] {
             let (code, _) = await run(["list", "a", option], ScriptedMail(.ok))
             #expect(code == 64, "\(option)")
         }

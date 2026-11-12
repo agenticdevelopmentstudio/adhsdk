@@ -53,5 +53,6 @@ enum GmailQuotaCost {
     static let historyList = 2
     static let messagesList = 5
     static let messagesGet = 5
+    static let threadsGet = 10
     static let messagesBatchModify = 50
 }

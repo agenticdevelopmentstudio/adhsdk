@@ -111,6 +111,41 @@ private let unavailable = StubURLProtocol.Reply.http(
         #expect(!second.contains { $0.name == "pageToken" })
     }
 
+    @Test func searchSendsTheQueryEachLabelAndThePageSize() async throws {
+        let subject = Subject(body: Data(#"{"messages":[{"id":"x"},{"id":"y"}],"nextPageToken":"n"}"#.utf8))
+        defer { subject.stub.unregister() }
+        let page = try await subject.api.searchMessageIds(
+            query: "from:greenhouse", labelIds: ["INBOX", "Label_1"], maxResults: 25, pageToken: "p")
+        #expect(page.ids == ["x", "y"])
+        #expect(page.nextPageToken == "n")
+        let url = try #require(subject.requests.first?.url)
+        #expect(url.path == "/gmail/v1/users/me/messages")
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(items.first { $0.name == "q" }?.value == "from:greenhouse")
+        #expect(items.filter { $0.name == "labelIds" }.compactMap(\.value) == ["INBOX", "Label_1"])
+        #expect(items.first { $0.name == "maxResults" }?.value == "25")
+        #expect(items.first { $0.name == "pageToken" }?.value == "p")
+    }
+
+    @Test func threadAsksForEveryMessageInFull() async throws {
+        let body = #"{"id":"t1","messages":[{"id":"a","threadId":"t1"},{"id":"b","threadId":"t1"}]}"#
+        let subject = Subject(body: Data(body.utf8))
+        defer { subject.stub.unregister() }
+        let thread = try await subject.api.thread(id: "t1")
+        #expect(thread.id == "t1")
+        #expect(thread.messages.map(\.id) == ["a", "b"])
+        let url = try #require(subject.requests.first?.url)
+        #expect(url.path == "/gmail/v1/users/me/threads/t1")
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(items.first { $0.name == "format" }?.value == "full")
+    }
+
+    @Test func aThreadWithNoMessagesDecodesEmpty() async throws {
+        let subject = Subject(body: Data(#"{"id":"t1"}"#.utf8))
+        defer { subject.stub.unregister() }
+        #expect(try await subject.api.thread(id: "t1").messages.isEmpty)
+    }
+
     @Test func batchModifyPostsBody() async throws {
         let subject = Subject(body: Data())
         defer { subject.stub.unregister() }

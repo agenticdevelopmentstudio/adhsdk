@@ -10,8 +10,9 @@ public enum MailCommandLine {
           \(program) accounts
           \(program) labels <account>
           \(program) list <account> [--since D] [--until D] [--label L]... [--any-label L]... [--limit N]
-              [--cursor C] [--bodies]
+              [--cursor C] [--bodies] [--query Q]
           \(program) get <account> <id>
+          \(program) thread <account> <id> [--bodies]
           \(program) label add <account> <label> <id>...
           \(program) label remove <account> <label> <id>...
           \(program) move <account> <id>... --to <label> [--from <label>]...
@@ -19,13 +20,18 @@ public enum MailCommandLine {
         message id or Gmail's.
         list: a message must carry every --label (AND) and, if any are given, at least one
           --any-label (OR); the two combine.
+        list --query: searches Gmail itself with Q in Gmail's search syntax ("from:greenhouse"),
+          beyond the synced mail; --since, --until and --label narrow it, --any-label is refused
+          (write {label:a label:b} in Q).
+        thread: the whole conversation from Gmail, oldest first; <id> is a thread id or the id of
+          any message in it. A message you sent is marked (you).
         move: adds the --to label and removes every --from label, in one Gmail write. With no
           --from it removes INBOX (nothing for --to INBOX).
         exit status: 0 success, 1 failure, \(notFoundStatus) a message id matches nothing, 64 usage error.
         """
     }
 
-    /// The exit status when a message id matches nothing (`get`, `label`, `move`).
+    /// The exit status when a message id matches nothing (`get`, `thread`, `label`, `move`).
     public static let notFoundStatus: Int32 = 3
 
     /// 0 on success or when help was asked for (printed to stdout), 64 for a usage error (the
@@ -64,6 +70,7 @@ public enum MailCommandLine {
         case labels(account: String)
         case list(MailMessageFilter)
         case get(account: String, id: String)
+        case thread(account: String, id: String, includeBodies: Bool)
         case modify(account: String, ids: [String], add: [String], remove: [String])
         case move(account: String, ids: [String], destination: String, from: [String]?)
     }
@@ -109,6 +116,7 @@ public enum MailCommandLine {
         case "labels": return plain(rest, count: 1) { .labels(account: $0[0]) }
         case "get": return plain(rest, count: 2) { .get(account: $0[0], id: $0[1]) }
         case "list": return parseList(rest)
+        case "thread": return parseThread(rest)
         case "label": return parseLabel(rest)
         case "move": return parseMove(rest)
         default: return nil
@@ -122,7 +130,7 @@ public enum MailCommandLine {
 
     private static func parseList(_ args: [String]) -> Parsed? {
         guard let options = split(
-            args, valued: ["--since", "--until", "--label", "--any-label", "--limit", "--cursor"],
+            args, valued: ["--since", "--until", "--label", "--any-label", "--limit", "--cursor", "--query"],
             boolean: ["--bodies"]),
             options.positionals.count == 1 else { return nil }
         var filter = MailMessageFilter(account: options.positionals[0])
@@ -142,7 +150,20 @@ public enum MailCommandLine {
         filter.anyLabels = options.values["--any-label"] ?? []
         filter.cursor = options.values["--cursor"]?.last
         filter.includeBodies = options.flags.contains("--bodies")
+        if let query = options.values["--query"]?.last {
+            // An empty query would quietly list the synced mail instead of searching.
+            guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+            filter.query = query
+        }
         return (.list(filter), options.json)
+    }
+
+    private static func parseThread(_ args: [String]) -> Parsed? {
+        guard let options = split(args, boolean: ["--bodies"]), options.positionals.count == 2 else { return nil }
+        let command = Command.thread(
+            account: options.positionals[0], id: options.positionals[1],
+            includeBodies: options.flags.contains("--bodies"))
+        return (command, options.json)
     }
 
     private static func parseLabel(_ args: [String]) -> Parsed? {
@@ -185,6 +206,9 @@ public enum MailCommandLine {
         case .get(let account, let id):
             let message = try await client.message(account: account, id: id)
             return try json ? MailJSON.encode(message) : detail(message)
+        case .thread(let account, let id, let includeBodies):
+            let thread = try await client.thread(account: account, id: id, includeBodies: includeBodies)
+            return try json ? MailJSON.encode(thread) : threadText(thread, includeBodies: includeBodies)
         case .modify(let account, let ids, let add, let remove):
             let messages = try await client.modifyLabels(account: account, messageIds: ids, add: add, remove: remove)
             return try json ? MailJSON.encode(messages) : messages.map(messageLine).joined(separator: "\n")
@@ -213,6 +237,26 @@ public enum MailCommandLine {
         let changes = result.added.map { "+\($0)" } + result.removed.map { "-\($0)" }
         let summary = changes.isEmpty ? "(no change)" : changes.joined(separator: " ")
         return "\(messageLine(result.message))  \(summary)"
+    }
+
+    /// Gmail's label on every message the account sent.
+    private static let sentLabel = "SENT"
+
+    /// One line per message, oldest first, `(you)` on the ones the account sent; with bodies,
+    /// each message in full, separated by a rule.
+    private static func threadText(_ thread: MailThread, includeBodies: Bool) -> String {
+        func mine(_ message: MailMessage) -> String {
+            message.labels.contains(sentLabel) ? "  (you)" : ""
+        }
+        let count = thread.messages.count
+        let header = "thread \(thread.id)  \(count) message\(count == 1 ? "" : "s")"
+        guard includeBodies else {
+            return ([header] + thread.messages.map { messageLine($0) + mine($0) }).joined(separator: "\n")
+        }
+        let blocks = thread.messages.map { message in
+            (message.labels.contains(sentLabel) ? "(you)\n" : "") + detail(message)
+        }
+        return ([header] + blocks).joined(separator: "\n\n----\n\n")
     }
 
     private static func htmlText(_ html: String?) -> String? {

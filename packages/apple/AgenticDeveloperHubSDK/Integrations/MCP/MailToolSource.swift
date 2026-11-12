@@ -25,7 +25,8 @@ public struct MailToolSource: ChatToolSource {
                     properties: ["account": account], required: ["account"])),
             ToolDefinition(
                 name: "mail_list_messages",
-                description: "Lists an account's synced messages, newest first, one page at a time.",
+                description: "Lists an account's synced messages, newest first, one page at a time. With query, "
+                    + "searches Gmail itself instead, beyond the synced mail.",
                 parametersJSONSchema: ToolJSONSchema.object(
                     properties: [
                         "account": account,
@@ -36,13 +37,26 @@ public struct MailToolSource: ChatToolSource {
                             "Label ids or names; a message must carry at least one of them. Combines with labels."),
                         "limit": ToolJSONSchema.integer("Page size, 1 to 500. Defaults to 50."),
                         "cursor": ToolJSONSchema.string("The nextCursor of the previous page."),
-                        "include_bodies": ToolJSONSchema.boolean("Include message bodies.")
+                        "include_bodies": ToolJSONSchema.boolean("Include message bodies."),
+                        "query": ToolJSONSchema.string(
+                            "A Gmail search, in Gmail's syntax (from:greenhouse). since, until and labels narrow "
+                            + "it; any_labels can't be combined with it (write {label:a label:b} in the query).")
                     ], required: ["account"])),
             ToolDefinition(
                 name: "mail_get_message", description: "Gets one message, with its body.",
                 parametersJSONSchema: ToolJSONSchema.object(
                     properties: ["account": account, "id": ToolJSONSchema.string("The message id.")],
                     required: ["account", "id"])),
+            ToolDefinition(
+                name: "mail_get_thread",
+                description: "Gets a whole conversation from Gmail, oldest message first. A message labelled SENT "
+                    + "is one the account wrote.",
+                parametersJSONSchema: ToolJSONSchema.object(
+                    properties: [
+                        "account": account,
+                        "id": ToolJSONSchema.string("A thread id, or the id of any message in the thread."),
+                        "include_bodies": ToolJSONSchema.boolean("Include message bodies.")
+                    ], required: ["account", "id"])),
             ToolDefinition(
                 name: "mail_modify_labels",
                 description: "Adds and removes labels on messages, in Gmail. Give at least one of add or remove.",
@@ -93,6 +107,11 @@ public struct MailToolSource: ChatToolSource {
             let message = try await client.message(
                 account: try string("account", arguments), id: try string("id", arguments))
             return try MailJSON.encode(message)
+        case "mail_get_thread":
+            let thread = try await client.thread(
+                account: try string("account", arguments), id: try string("id", arguments),
+                includeBodies: try includeBodies(arguments))
+            return try MailJSON.encode(thread)
         case "mail_modify_labels":
             return try MailJSON.encode(try await modify(arguments))
         case "mail_move_messages":
@@ -115,13 +134,20 @@ public struct MailToolSource: ChatToolSource {
             filter.limit = value
         }
         filter.cursor = try optionalString("cursor", arguments)
-        if let bodies = arguments["include_bodies"] {
-            guard let value = Self.boolean(bodies) else {
-                throw ArgumentError(message: "include_bodies must be a boolean")
+        filter.includeBodies = try includeBodies(arguments)
+        if let query = try optionalString("query", arguments) {
+            guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw ArgumentError(message: "query must not be empty")
             }
-            filter.includeBodies = value
+            filter.query = query
         }
         return filter
+    }
+
+    private func includeBodies(_ arguments: [String: Any]) throws -> Bool {
+        guard let raw = arguments["include_bodies"] else { return false }
+        guard let value = Self.boolean(raw) else { throw ArgumentError(message: "include_bodies must be a boolean") }
+        return value
     }
 
     private func modify(_ arguments: [String: Any]) async throws -> [MailMessage] {
