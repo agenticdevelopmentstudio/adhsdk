@@ -83,7 +83,7 @@ public final class DocumentEditorViewController: NSViewController {
         self.saveScheduler = saveScheduler
         self.languageServices = languageServices
         self.rootURL = rootURL
-        self.breadcrumb = BreadcrumbView(rootURL: rootURL)
+        self.breadcrumb = BreadcrumbView(rootURL: rootURL, style: .homeRelative)
         super.init(nibName: nil, bundle: nil)
         breadcrumb.onSelect = { [weak self] url in self?.onOpenRequest?(url) }
         backForward.controlSize = .small
@@ -196,18 +196,40 @@ public final class DocumentEditorViewController: NSViewController {
         backForward.setContentCompressionResistancePriority(.required, for: .horizontal)
         breadcrumb.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-        let stack = NSStackView(views: [navigationRow, editor])
+        // The bar the row sits in: the pane's full width, no fill of its own,
+        // and a one-point line under it where the editor starts.
+        let navigationBar = NSView()
+        let barBorder = NSView()
+        barBorder.wantsLayer = true
+        barBorder.observeTheme { border, palette in
+            border.layer?.backgroundColor = palette.nsColor(.outline).cgColor
+        }
+        for subview in [navigationRow, barBorder] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+            navigationBar.addSubview(subview)
+        }
+        navigationBar.setAccessibilityIdentifier("document-editor.navigation-bar")
+
+        let stack = NSStackView(views: [navigationBar, editor])
         stack.orientation = .vertical
         stack.spacing = 0
         stack.distribution = .fill
-        navigationRow.translatesAutoresizingMaskIntoConstraints = false
+        navigationBar.translatesAutoresizingMaskIntoConstraints = false
         breadcrumb.translatesAutoresizingMaskIntoConstraints = false
         editor.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
+            navigationRow.topAnchor.constraint(equalTo: navigationBar.topAnchor),
+            navigationRow.leadingAnchor.constraint(equalTo: navigationBar.leadingAnchor),
+            navigationRow.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor),
             navigationRow.heightAnchor.constraint(equalToConstant: 24),
+            barBorder.topAnchor.constraint(equalTo: navigationRow.bottomAnchor),
+            barBorder.leadingAnchor.constraint(equalTo: navigationBar.leadingAnchor),
+            barBorder.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor),
+            barBorder.bottomAnchor.constraint(equalTo: navigationBar.bottomAnchor),
+            barBorder.heightAnchor.constraint(equalToConstant: 1),
             breadcrumb.heightAnchor.constraint(equalTo: navigationRow.heightAnchor),
-            navigationRow.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
-            navigationRow.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
+            navigationBar.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
+            navigationBar.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
             editor.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
             editor.trailingAnchor.constraint(equalTo: stack.trailingAnchor)
         ])

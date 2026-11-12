@@ -334,6 +334,9 @@ extension WindowToolbarBuilder {
                 item.label = "Title"
                 item.paletteLabel = item.label
                 item.view = label
+                // The title is text, not a control: no glass capsule behind it
+                // (macOS 26 draws one around a bordered custom-view item).
+                item.isBordered = false
                 item.visibilityPriority = .high
                 // Only the item going into the toolbar is the live one; see
                 // `SettingsWindow`'s help button for the same rule.

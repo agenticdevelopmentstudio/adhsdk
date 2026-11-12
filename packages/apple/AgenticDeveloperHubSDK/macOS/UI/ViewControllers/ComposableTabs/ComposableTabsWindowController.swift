@@ -204,7 +204,6 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// strip, so it has no border of its own.
     private lazy var titleBreadcrumb: BreadcrumbView = {
         let crumbs = BreadcrumbView(rootURL: project.directoryURL, style: .homeRelative)
-        crumbs.isBordered = false
         crumbs.translatesAutoresizingMaskIntoConstraints = false
         crumbs.heightAnchor.constraint(equalToConstant: 18).isActive = true
         crumbs.setAccessibilityIdentifier("project.title.breadcrumb")

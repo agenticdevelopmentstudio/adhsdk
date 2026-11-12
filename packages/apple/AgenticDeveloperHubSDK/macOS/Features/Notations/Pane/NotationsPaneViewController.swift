@@ -11,12 +11,11 @@ import AgenticDeveloperHubSDKUI
 /// Preview, its rendering — each framed by a tab bar the way the Document
 /// pane frames its editors.
 ///
-/// The header holds two icon-only groups. The first picks the layout: one
-/// pane at a time, both as tabs of one frame, or both side by side, each in
-/// a frame of its own. The second picks which pane a single-pane layout
-/// shows; it and the tabs are the same choice, so either moves the other.
-/// It is disabled side by side, where both are showing. Both choices start
-/// as Markdown in a single pane and are remembered in
+/// The layout control sits right-justified in the pane's title bar
+/// (`PaneAccessoryProviding`): both panes as tabs of one frame, or side by
+/// side, each in a frame of its own. In a single pane the tabs pick which
+/// pane shows. The tabs have no close buttons; neither pane is ever closed.
+/// Both choices start as Markdown in a single pane and are remembered in
 /// `UserSettings.notationsPaneLayout` and `.notationsPaneContent`.
 ///
 /// It follows HEAD: switching branches in a terminal beside it switches the
@@ -45,14 +44,6 @@ public final class NotationsPaneViewController: NSViewController {
             .init(id: NotationsPaneLayout.sideBySide.rawValue, symbol: "square.split.2x1", title: "Side by Side")
         ],
         accessibilityID: "notations-pane.layout")
-    private let contentBar = IconTabBar(
-        items: [
-            .init(id: NotationsPaneContent.markdown.rawValue, symbol: "pencil",
-                  title: NotationsPaneContent.markdown.title),
-            .init(id: NotationsPaneContent.preview.rawValue, symbol: "eye",
-                  title: NotationsPaneContent.preview.title)
-        ],
-        accessibilityID: "notations-pane.content")
 
     private let source = NotationsSourceViewController()
     private let preview = MarkdownViewerController(palette: ThemeScope.app.palette)
@@ -141,21 +132,12 @@ public final class NotationsPaneViewController: NSViewController {
             guard let self, let layout = NotationsPaneLayout(rawValue: id) else { return }
             self.choose(layout: layout)
         }
-        contentBar.onSelect = { [weak self] id in
-            guard let self, let content = NotationsPaneContent(rawValue: id) else { return }
-            self.choose(content: content)
-        }
-
-        let header = NSStackView(views: [layoutBar, contentBar])
-        header.orientation = .horizontal
-        header.alignment = .centerY
-        header.spacing = 8
-        header.translatesAutoresizingMaskIntoConstraints = false
 
         source.pane.isEditable = false
 
         for frame in [singleFrame, markdownFrame, previewFrame] {
             frame.delegate = self
+            frame.showsCloseButtons = false
             addChild(frame)
         }
         splitView.dividerStyle = .thin
@@ -167,16 +149,11 @@ public final class NotationsPaneViewController: NSViewController {
             content.translatesAutoresizingMaskIntoConstraints = false
             container.addSubview(content)
         }
-        container.addSubview(header)
 
-        var constraints = [
-            header.topAnchor.constraint(equalTo: container.topAnchor, constant: 6),
-            header.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
-            header.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -10)
-        ]
+        var constraints: [NSLayoutConstraint] = []
         for content in contentViews {
             constraints += [
-                content.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 6),
+                content.topAnchor.constraint(equalTo: container.topAnchor),
                 content.leadingAnchor.constraint(equalTo: container.leadingAnchor),
                 content.trailingAnchor.constraint(equalTo: container.trailingAnchor),
                 content.bottomAnchor.constraint(equalTo: container.bottomAnchor)
@@ -274,8 +251,6 @@ public final class NotationsPaneViewController: NSViewController {
 
     private func syncHeader() {
         layoutBar.selectedID = layout.rawValue
-        contentBar.selectedID = shownContent.rawValue
-        contentBar.isEnabled = layout == .singlePane
     }
 
     private func tabID(for content: NotationsPaneContent) -> UUID {
@@ -452,8 +427,7 @@ public final class NotationsPaneViewController: NSViewController {
 
 extension NotationsPaneViewController: MultiTabbedViewControllerDelegate {
 
-    /// A tab click in the single-pane frame is the same choice as the
-    /// header's second group.
+    /// A tab click in the single-pane frame picks which pane shows.
     public func multiTabbedViewController(
         _ controller: MultiTabbedViewController,
         didSelectTab id: UUID,
@@ -463,10 +437,10 @@ extension NotationsPaneViewController: MultiTabbedViewControllerDelegate {
         choose(content: content)
     }
 
-    /// Neither pane is ever closed. Closing one of two side-by-side frames
-    /// leaves the other, so the pane becomes a single pane showing what is
-    /// left; in a single pane, where both are tabs of one frame, the close
-    /// is refused.
+    /// Neither pane is ever closed, and the tabs carry no close button. A
+    /// close that arrives anyway (a menu or a key) on one of two side-by-side
+    /// frames leaves the other, so the pane becomes a single pane showing
+    /// what is left; in a single pane the close is refused.
     public func multiTabbedViewController(
         _ controller: MultiTabbedViewController,
         didRequestCloseTab id: UUID,
@@ -509,6 +483,14 @@ private final class NotationsSourceViewController: NSViewController {
 
     override func loadView() {
         view = pane
+    }
+}
+
+extension NotationsPaneViewController: PaneAccessoryProviding {
+
+    /// The layout control, right-justified in the pane's title bar.
+    public func makePaneAccessoryViews() -> [NSView] {
+        [layoutBar]
     }
 }
 

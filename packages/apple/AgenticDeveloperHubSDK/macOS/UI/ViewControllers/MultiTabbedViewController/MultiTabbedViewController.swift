@@ -132,6 +132,14 @@ open class MultiTabbedViewController: NSViewController {
         applyStartInset(for: edge)
     }
 
+    /// Whether title tabs carry a close button, on every bar. Turn it off when
+    /// the tabs are fixed views the user switches between, never closes.
+    public var showsCloseButtons = true {
+        didSet {
+            for bar in tabBars.values { bar.showsCloseButtons = showsCloseButtons }
+        }
+    }
+
     /// Puts `view` in front of the first tab on a top or bottom bar, centred
     /// on the tabs, with the tabs moved along to follow it; `nil` takes it
     /// away. A side bar has no room in front of its first tab, so it traps.

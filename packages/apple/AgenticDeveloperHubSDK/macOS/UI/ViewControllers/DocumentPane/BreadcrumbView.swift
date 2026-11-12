@@ -30,13 +30,6 @@ public final class BreadcrumbView: NSView {
     private let style: Style
     private let homeURL: URL
     private let stack = NSStackView()
-    private let bar = NSView()
-
-    /// Whether the crumbs sit in a bordered bar, as they do over a pane. Off
-    /// where the strip is part of other chrome (the project window's title).
-    public var isBordered = true {
-        didSet { bar.isHidden = !isBordered }
-    }
 
     /// The file the strip currently describes. `nil` clears the strip.
     public var fileURL: URL? {
@@ -82,21 +75,6 @@ public final class BreadcrumbView: NSView {
         self.style = style
         self.homeURL = homeURL
         super.init(frame: .zero)
-        bar.wantsLayer = true
-        bar.layer?.cornerRadius = 5
-        bar.layer?.borderWidth = 1
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(bar)
-        bar.observeTheme { bar, palette in
-            bar.layer?.borderColor = palette.nsColor(.outline).cgColor
-            bar.layer?.backgroundColor = palette.nsColor(.controlBackground).cgColor
-        }
-        NSLayoutConstraint.activate([
-            bar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
-            bar.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
-            bar.topAnchor.constraint(equalTo: topAnchor, constant: 2),
-            bar.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -2)
-        ])
         stack.orientation = .horizontal
         stack.spacing = 2
         stack.alignment = .centerY

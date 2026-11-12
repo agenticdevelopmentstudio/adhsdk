@@ -48,6 +48,16 @@ final class TabBarView: NSView {
         didSet { applyEdgeInsets() }
     }
 
+    /// Whether title tabs carry a close button. Off for a bar whose tabs are
+    /// fixed views of one thing (a source and its preview) rather than
+    /// documents that come and go.
+    var showsCloseButtons = true {
+        didSet {
+            guard showsCloseButtons != oldValue else { return }
+            rebuildButtons()
+        }
+    }
+
     /// A control in front of the first tab — a + for a new tab, say — at
     /// `startInset`, centred on the tabs across the bar, with the tabs
     /// starting `itemSpacing` after it. Top and bottom bars only.
@@ -312,7 +322,7 @@ final class TabBarView: NSView {
             let view: NSView
             switch item.item {
             case let .title(title):
-                let button = TabButton(id: item.id, title: title)
+                let button = TabButton(id: item.id, title: title, showsCloseButton: showsCloseButtons)
                 button.isHighlighted = (item.id == selectedID)
                 button.onSelect = { [weak self] id in self?.onSelect?(id) }
                 button.onClose = { [weak self] id in self?.onClose?(id) }
@@ -550,8 +560,11 @@ private final class TabButton: NSView {
     private let closeButton = NSButton()
     private let backgroundView = NSView()
 
-    init(id: UUID, title: String) {
+    private let showsCloseButton: Bool
+
+    init(id: UUID, title: String, showsCloseButton: Bool = true) {
         self.id = id
+        self.showsCloseButton = showsCloseButton
         self.title = title
         super.init(frame: .zero)
 
@@ -597,7 +610,7 @@ private final class TabButton: NSView {
 
         addSubview(backgroundView)
         backgroundView.addSubview(titleLabel)
-        backgroundView.addSubview(closeButton)
+        if showsCloseButton { backgroundView.addSubview(closeButton) }
 
         NSLayoutConstraint.activate([
             backgroundView.topAnchor.constraint(equalTo: topAnchor, constant: 2),
@@ -610,14 +623,19 @@ private final class TabButton: NSView {
             // collapse buttons on the vertical bars.
             titleLabel.leadingAnchor.constraint(equalTo: backgroundView.leadingAnchor, constant: 10),
             titleLabel.topAnchor.constraint(equalTo: backgroundView.topAnchor, constant: 4),
-            titleLabel.bottomAnchor.constraint(equalTo: backgroundView.bottomAnchor, constant: -4),
-
-            closeButton.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 6),
-            closeButton.trailingAnchor.constraint(equalTo: backgroundView.trailingAnchor, constant: -6),
-            closeButton.centerYAnchor.constraint(equalTo: backgroundView.centerYAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 14),
-            closeButton.heightAnchor.constraint(equalToConstant: 14)
+            titleLabel.bottomAnchor.constraint(equalTo: backgroundView.bottomAnchor, constant: -4)
         ])
+        if showsCloseButton {
+            NSLayoutConstraint.activate([
+                closeButton.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 6),
+                closeButton.trailingAnchor.constraint(equalTo: backgroundView.trailingAnchor, constant: -6),
+                closeButton.centerYAnchor.constraint(equalTo: backgroundView.centerYAnchor),
+                closeButton.widthAnchor.constraint(equalToConstant: 14),
+                closeButton.heightAnchor.constraint(equalToConstant: 14)
+            ])
+        } else {
+            titleLabel.trailingAnchor.constraint(equalTo: backgroundView.trailingAnchor, constant: -10).isActive = true
+        }
 
         observeTheme { tab, _ in tab.updateAppearance() }
     }
@@ -626,7 +644,7 @@ private final class TabButton: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        if closeButton.frame.contains(convert(point, to: backgroundView)) {
+        if showsCloseButton, closeButton.frame.contains(convert(point, to: backgroundView)) {
             super.mouseDown(with: event)
             return
         }
@@ -644,7 +662,7 @@ private final class TabButton: NSView {
     /// this view became an element of its own. `tab-bar.close.<id>` is an
     /// address other code already uses; becoming addressable must not cost it.
     override func accessibilityChildren() -> [Any]? {
-        [closeButton]
+        showsCloseButton ? [closeButton] : []
     }
 
     @objc private func closeAction(_ sender: NSButton) {
