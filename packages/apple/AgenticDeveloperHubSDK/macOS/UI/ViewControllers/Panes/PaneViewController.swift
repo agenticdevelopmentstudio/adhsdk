@@ -176,6 +176,16 @@ open class PaneViewController: NSViewController {
         (contentViewController as? PaneMenuProviding)?.makePaneMenuItems() ?? []
     }
 
+    /// What the title bar's Move button drops down: the directions this pane
+    /// may move in, each enabled against the layout at the click. Empty — the
+    /// default — hides the button, for a pane whose host cannot rearrange.
+    open func makeMoveMenuItems() -> [NSMenuItem] { [] }
+
+    /// Whether this pane offers Move at all. Asked once, at load, to decide
+    /// whether the button is shown; which directions are open is asked per
+    /// click, through `makeMoveMenuItems()`.
+    open var offersMove: Bool { false }
+
     // MARK: - Loading
 
     open override func loadView() {
@@ -254,6 +264,21 @@ open class PaneViewController: NSViewController {
         titleBar.controls.onMinimize = { [weak self] anchor in
             self?.presentMinimizePicker(from: anchor)
         }
+        if offersMove {
+            titleBar.controls.onMove = { [weak self] anchor in
+                self?.presentMoveMenu(from: anchor)
+            }
+        }
+    }
+
+    /// Drops the directions below the button, the way a pull-down does.
+    /// `autoenablesItems` is off for the same reason as the gear's menu.
+    private func presentMoveMenu(from anchor: NSButton) {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        for item in makeMoveMenuItems() { menu.addItem(item) }
+        guard !menu.items.isEmpty else { return }
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchor.bounds.maxY + 2), in: anchor)
     }
 
     /// The two capabilities that push rather than being pulled. Both are
@@ -455,6 +480,12 @@ open class PaneViewController: NSViewController {
         let edges = host?.availableMinimizeEdges(for: self) ?? []
         titleBar.controls.canMinimize = !edges.isEmpty
         titleBar.controls.canClose = host?.canClose(self) ?? true
+        if offersMove {
+            // A pane not yet on screen cannot ask its split, and answers no
+            // directions; leave the button live until it can really ask.
+            let items = makeMoveMenuItems()
+            titleBar.controls.canMove = items.isEmpty || items.contains { $0.isEnabled }
+        }
         refreshGearVisibility()
     }
 

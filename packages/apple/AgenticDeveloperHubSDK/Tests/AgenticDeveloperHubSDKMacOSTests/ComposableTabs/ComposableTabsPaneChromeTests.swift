@@ -83,39 +83,37 @@ final class ComposableTabsPaneChromeTests: XCTestCase {
         XCTAssertNotNil(pane.titleBar.gearView)
     }
 
-    // MARK: - The gear menu
+    // MARK: - The Move button
 
-    /// `Move` is always in the menu, always with all four directions under it.
-    /// A plain view has no option rows, so there is no `Settings…` after it.
-    /// Which of them are lit is the tree's business, re-read at every click; the
-    /// menu's *shape* never changes, so the user learns one menu.
-    func testTheGearMenuOffersMoveInEveryDirection() throws {
+    /// Move is a title-bar button beside zoom, always with all four
+    /// directions in the menu it drops; the gear no longer carries it, so a
+    /// plain view with no option rows has an empty gear menu.
+    func testTheMoveButtonOffersEveryDirectionAndTheGearDoesNot() throws {
         let pane = try makePane(plain)
 
-        let menu = pane.makeOptionsMenu()
-        XCTAssertEqual(menu.items.map(\.title), ["Move"])
+        XCTAssertFalse(pane.titleBar.controls.moveButton.isHidden)
+        XCTAssertEqual(pane.makeOptionsMenu().items.map(\.title), [])
 
-        let move = try XCTUnwrap(menu.items.first)
-        XCTAssertEqual(move.submenu?.items.map(\.title), ["Left", "Right", "Up", "Down"])
+        let items = pane.makeMoveMenuItems()
+        XCTAssertEqual(items.map(\.title), ["Left", "Right", "Up", "Down"])
         XCTAssertEqual(
-            move.submenu?.items.map { $0.accessibilityIdentifier() },
-            ["pane.options.move.left", "pane.options.move.right",
-             "pane.options.move.up", "pane.options.move.down"]
+            items.map { $0.accessibilityIdentifier() },
+            ["pane.move.left", "pane.move.right", "pane.move.up", "pane.move.down"]
         )
     }
 
-    /// A pane that is not in a split has nowhere to go. `Move` stays in the
-    /// menu — the shape is fixed — but it is greyed out rather than opening
-    /// onto four dead items.
+    /// A pane that is not in a split has nowhere to go: all four are dim.
     func testMoveIsDisabledForAPaneWithNoSplitAroundIt() throws {
         let pane = try makePane(plain)
-
-        let move = try XCTUnwrap(pane.makeOptionsMenu().items.first)
-        XCTAssertFalse(move.isEnabled)
-        XCTAssertEqual(move.submenu?.items.filter(\.isEnabled).count, 0)
+        XCTAssertEqual(pane.makeMoveMenuItems().filter(\.isEnabled).count, 0)
     }
 
-    /// The overlay's pull-down and the gear menu are the same four items from
+    /// A project pane centers its title, as a window does.
+    func testAProjectPaneCentersItsTitle() throws {
+        XCTAssertTrue(try makePane(plain).titleBar.centersTitle)
+    }
+
+    /// The overlay's pull-down and the Move button are the same four items from
     /// the same builder; only the identifiers differ, because a UI test
     /// addresses two different surfaces.
     func testTheMoveItemsComeFromOneBuilder() {

@@ -13,8 +13,8 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// active-pane outline, and what arrange mode does over the top.
 ///
 /// The layout can be rearranged two ways, and they answer different needs. The
-/// gear menu carries `Move` always, for the user who knows exactly which pane
-/// goes where. Arrange mode dims the content and puts the same four directions
+/// title bar's Move button, beside zoom, drops the four directions down for the
+/// user who knows exactly which pane goes where. Arrange mode dims the content and puts the same four directions
 /// in a toolbar in the middle of the pane, for the user who is looking at the
 /// window deciding — which is why it can also add and remove, and why the
 /// affordance is big and central rather than a corner pull-down. Both ask
@@ -35,7 +35,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
 
     private lazy var arrange: PaneArrangeOverlayController = makeArrangeController()
 
-    /// The four directions, for the gear menu. Held rather than made per click
+    /// The four directions, for the Move button. Held rather than made per click
     /// because `NSMenuItem` keeps its target unowned — the items would fire
     /// into nothing if the thing that made them died with the call.
     private lazy var moveMenu: ComposableTabsMoveMenu = {
@@ -154,6 +154,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
+        titleBar.centersTitle = true
         arrange.attach(to: view)
     }
 
@@ -162,6 +163,8 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         // Also the re-entry point after a move: `rebuild(from:)` re-hosts this
         // controller, and the pane has to come back with the scrim it left with.
         arrange.update()
+        // Now the split is `parent`, Move can say which ways are open.
+        refreshControlAvailability()
     }
 
     /// The active-pane border is drawn on the backdrop's own layer, so the
@@ -240,26 +243,14 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         }
     }
 
-    // MARK: - The gear menu
+    // MARK: - The Move button
 
-    /// `Move ▸`, above the pane's `Settings…`.
-    ///
-    /// Built fresh with the menu that holds it, so the four items are enabled
-    /// against the tree as it stands at the click — and the parent is disabled
-    /// outright when this pane is the only one there is, rather than opening
-    /// onto four dead items.
-    public override func makeMenuItems() -> [NSMenuItem] {
-        let items = moveMenu.makeItems(accessibilityPrefix: "pane.options.move")
+    public override var offersMove: Bool { true }
 
-        let submenu = NSMenu()
-        submenu.autoenablesItems = false
-        for item in items { submenu.addItem(item) }
-
-        let move = NSMenuItem(title: "Move", action: nil, keyEquivalent: "")
-        move.submenu = submenu
-        move.isEnabled = items.contains { $0.isEnabled }
-        move.accessibilityID("pane.options.move")
-        return [move] + super.makeMenuItems()
+    /// Built fresh per click, so the four items are enabled against the tree
+    /// as it stands then.
+    public override func makeMoveMenuItems() -> [NSMenuItem] {
+        moveMenu.makeItems(accessibilityPrefix: "pane.move")
     }
 
     /// The distinct views the spec will let this pane sit beside, named for the

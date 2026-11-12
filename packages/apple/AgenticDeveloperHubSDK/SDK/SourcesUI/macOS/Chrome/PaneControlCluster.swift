@@ -1,7 +1,8 @@
 import AppKit
 import AgenticDeveloperHubSDK
 
-/// The close / minimize / zoom row at the leading edge of a pane's title bar.
+/// The close / minimize / zoom row at the leading edge of a pane's title bar,
+/// and a fourth, Move, for a host that can rearrange its panes.
 ///
 /// Deliberately in the same left-to-right order, and with the same meanings, as
 /// the three buttons at the leading edge of a window's title bar. A pane is a
@@ -23,6 +24,9 @@ public final class PaneControlCluster: NSStackView {
     public let closeButton = NSButton()
     public let minimizeButton = NSButton()
     public let zoomButton = NSButton()
+    /// Hidden until a host sets `onMove`: only a host that can rearrange its
+    /// panes has anything to put in the menu it raises.
+    public let moveButton = NSButton()
 
     public var onClose: (() -> Void)?
     /// Handed the minimize button, because that button is the anchor the
@@ -31,6 +35,14 @@ public final class PaneControlCluster: NSStackView {
     public var onMinimize: ((NSButton) -> Void)?
     public var onRestore: (() -> Void)?
     public var onZoom: (() -> Void)?
+    /// Handed the move button, the anchor its directions menu drops from.
+    /// Setting it shows the button; `nil` hides it again.
+    public var onMove: ((NSButton) -> Void)? {
+        didSet { moveButton.isHidden = onMove == nil }
+    }
+
+    /// False when the pane has nowhere to go — the only pane in its tab.
+    public var canMove: Bool = true { didSet { applyState() } }
 
     /// Flips the zoom glyph and its tooltip. Set by the host; this view never
     /// infers it from a click, because a host is free to refuse.
@@ -62,13 +74,24 @@ public final class PaneControlCluster: NSStackView {
         configure(closeButton, action: #selector(closeTapped))
         configure(minimizeButton, action: #selector(minimizeTapped))
         configure(zoomButton, action: #selector(zoomTapped))
+        configure(moveButton, action: #selector(moveTapped))
 
         closeButton.accessibilityID("pane.close")
         closeButton.setAccessibilityLabel("Close Pane")
         closeButton.toolTip = "Close Pane"
         closeButton.image = NSImage(systemSymbolName: "xmark", accessibilityDescription: "Close Pane")
 
-        for button in [closeButton, minimizeButton, zoomButton] {
+        moveButton.accessibilityID("pane.move")
+        moveButton.setAccessibilityLabel("Move Pane")
+        moveButton.toolTip = "Move Pane"
+        moveButton.image = NSImage(
+            systemSymbolName: "arrow.up.and.down.and.arrow.left.and.right",
+            accessibilityDescription: "Move Pane")
+        moveButton.isHidden = true
+
+        // A hidden arranged view is detached, so a pane with no Move keeps
+        // the three-button row it always had.
+        for button in [closeButton, minimizeButton, zoomButton, moveButton] {
             addArrangedSubview(button)
         }
 
@@ -137,10 +160,15 @@ public final class PaneControlCluster: NSStackView {
         zoomButton.toolTip = zoomTitle
         zoomButton.image = NSImage(systemSymbolName: zoomSymbol, accessibilityDescription: zoomTitle)
         zoomButton.accessibilityID("pane.zoom")
+
+        moveButton.isEnabled = canMove
+        moveButton.contentTintColor = Self.tint(
+            for: moveButton, in: resolvedThemeScope.palette)
     }
 
     @objc private func closeTapped() { onClose?() }
     @objc private func zoomTapped() { onZoom?() }
+    @objc private func moveTapped() { onMove?(moveButton) }
 
     @objc private func minimizeTapped() {
         if isMinimized {
