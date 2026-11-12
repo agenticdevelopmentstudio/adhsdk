@@ -34,13 +34,13 @@ public final class WebBrowserWindowsFeature: AppFeature {
         ))
         menuContributions = [
             MenuContribution(
-                slot: .fileNew, title: "New Web Browser Window",
+                slot: .fileNew, title: "New Web Browser",
                 commandID: CommandID.newWindow, registry: registry,
                 order: 20,
                 isHidden: { !WebBrowserWindowController.canOpen }
             ),
             MenuContribution(
-                slot: .fileNew, title: "New Private Web Browser Window",
+                slot: .fileNew, title: "New Private Web Browser",
                 commandID: CommandID.newPrivateWindow, registry: registry,
                 order: 21,
                 isHidden: { !WebBrowserWindowController.canOpen }

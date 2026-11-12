@@ -51,7 +51,7 @@ public final class FileBrowserWindowsFeature: AppFeature {
         ))
         menuContributions = [
             MenuContribution(
-                slot: .fileNew, title: "New File Browser Window…",
+                slot: .fileNew, title: "New File Browser…",
                 commandID: CommandID.newWindow, registry: registry,
                 order: 40
             )

@@ -54,7 +54,7 @@ public final class TerminalCoordinator: AppFeature, TerminalSessionWindowLifecyc
             // ⌘T is File ▸ New Tab's, and a new session in the key terminal
             // window is that window's New (⌘N, through `newItemProviders`).
             MenuContribution(
-                slot: .fileNew, title: "New Terminal Window",
+                slot: .fileNew, title: "New Terminal",
                 commandID: CommandID.newWindow, registry: registry,
                 order: 30
             ),
