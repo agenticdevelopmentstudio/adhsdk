@@ -49,8 +49,11 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWordDiff.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitBlame.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPathUnquoting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitDiffTarget.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientHistoryTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitTestRepository.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitCommandLogTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitStatusParserTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitBranchParserTests.swift (adhsdk)
@@ -116,6 +119,70 @@ picker) is a consumer of this contract, not part of it.
   `git config --global --unset <key>` and MUST surface git's exit status 5
   (key was not set) as an ordinary command-failed outcome, not as a
   distinct outcome.
+
+### Read verbs (history, refs, diff, blame, contents)
+
+- **accepted-exit-codes**: The private execution step MUST take the set of
+  exit statuses that count as success (by default only 0) and MUST surface
+  any other status as command-failed; it MUST also take `-c key=value`
+  overrides, which go before the verb on the command line and at the front
+  of the logged arguments.
+- **top-level**: The top-level verb MUST invoke `git rev-parse
+  --show-toplevel`, drop only the trailing newline (a top-level path may end
+  in whitespace), and return it as a standardized file location.
+- **log-command**: The log verb MUST invoke `git log` with exactly the log
+  request's arguments and MUST parse the output with the commit parsing rule.
+- **log-unborn-head**: When the log verb fails with exit status 128 and HEAD
+  does not resolve to a commit, it MUST NOT throw: a follow-mode request
+  returns no commits, and any other request is retried without the `HEAD`
+  revision when other revisions remain, or returns no commits when none do.
+- **refs-command**: The refs verb MUST invoke `git for-each-ref` with the
+  ref format string against `refs/heads`, `refs/remotes` and `refs/tags`,
+  and MUST parse the output with the ref parsing rule.
+- **stashes-command**: The stashes verb MUST invoke `git stash list -z
+  --no-show-signature` with the stash format string and MUST parse the
+  output with the stash parsing rule.
+- **submodules-command**: The submodules verb MUST invoke `git -c
+  core.quotePath=false submodule status`, and MUST return no submodules for
+  a repository without `.gitmodules`.
+- **diff-flags**: Every diff MUST run as `git -c core.quotePath=false -c
+  diff.suppressBlankEmpty=false diff` with `--no-color`, `--no-ext-diff`,
+  `--no-textconv`, `--no-relative`, `--src-prefix=a/`, `--dst-prefix=b/`,
+  `--find-renames` and `-U<context lines>`, plus `-w` when whitespace is
+  ignored, so neither a user's configuration nor an external diff tool can
+  reshape the patch the parser reads. It MUST NOT request combined output
+  (`--cc`) for any target.
+- **diff-paths**: A diff's paths MUST be relative to the working tree's top
+  level and MUST follow `--` as `:(top,literal)<path>` pathspecs, so a path
+  is never read as a glob, an option or relative to the calling directory.
+- **diff-targets**: The unstaged target MUST compare the index with the
+  working tree (no revision); the staged target MUST pass `--cached` (git
+  itself treats an unborn HEAD as the empty tree); the range target MUST
+  pass `--end-of-options <from> <to>`; the commit target MUST pass
+  `--end-of-options <first parent> <commit>`, where the first parent is
+  `<commit>^1` resolved to a commit — so a merge and a stash diff against
+  their first parent — and a root commit uses the empty tree, computed with
+  `git hash-object -t tree /dev/null` rather than spelled, so the repository's
+  hash algorithm decides it.
+- **diff-untracked**: The untracked target MUST run `git diff --no-index --
+  /dev/null <path>` in the top level, accepting exit statuses 0 and 1
+  (`--no-index` exits 1 when the files differ); an exit status of 1 with no
+  output (git could not read the file) MUST surface as command-failed.
+- **blame-command**: The blame verb MUST run `git -c core.quotePath=false
+  blame --porcelain [<commit>] -- <path>` in the top level, omitting the
+  commit to blame the working tree, and MUST parse the output with the
+  blame parsing rule. `git blame` does not accept `--end-of-options`, so a
+  revision MUST first be resolved to a commit hash (which can never read as
+  an option); a revision naming no commit MUST surface as command-failed
+  with exit status 128.
+- **file-contents**: The file-contents verb MUST return raw bytes, never
+  decoded text. With no revision it MUST read the working file at the top
+  level joined with the path, returning nothing when it does not exist.
+  With a revision it MUST name the object `<revision>:<path>` (so the
+  revision `:0` names the index entry `:0:<path>`), return nothing when
+  `git rev-parse --verify --quiet` reports it absent (exit status 1,
+  including on an unborn HEAD), and otherwise return the output of `git
+  cat-file blob <object id>`.
 
 ### Execution, configuration and attribution
 
@@ -826,4 +893,4 @@ one.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
-| 1.2.0 | 2026-11-13 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting. |
+| 1.2.0 | 2026-11-13 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. |
