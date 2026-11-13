@@ -4,7 +4,7 @@
     "id": "0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6",
     "title": "Theme Engine",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ff0b0a26a9e4e779",
+  "synced": "9fa734f6ee7ac30a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

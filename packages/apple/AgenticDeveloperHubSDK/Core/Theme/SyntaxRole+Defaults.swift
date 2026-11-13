@@ -33,6 +33,39 @@ extension SyntaxRole {
         }
     }
 
+    /// The TextMate selectors a rule *painting* this role is written over.
+    ///
+    /// Not `textMateScopes`: those are the narrow scopes the importer *asks* a
+    /// theme about, chosen because a theme's answer for them is reliable. A
+    /// rule written over them alone would leave most of a file unpainted —
+    /// across the 218 bundled grammars `keyword.operator` (140),
+    /// `comment.block` (134), `string.quoted.single` (110), `storage.type`
+    /// (110), `keyword.other` (107) and `storage.modifier` (78) all fall
+    /// outside them. So these are the broad roots of the TextMate scope
+    /// conventions, which a selector matches by dot-separated prefix: `string`
+    /// paints every string, `comment` every comment.
+    ///
+    /// Each covers its role's query scopes, and no selector belongs to two
+    /// roles. Where roots nest across roles the more specific one wins, as the
+    /// highlighter resolves it: `constant.character.escape` inside a string is
+    /// a character, not a string.
+    public var textMateRuleScopes: [String] {
+        switch self {
+        // `storage` is where most grammars put `func`, `class`, `let`, `public`.
+        case .keywords: ["keyword", "storage.type", "storage.modifier"]
+        case .commands: ["entity.name.function", "support.function"]
+        case .types: ["entity.name.type", "entity.name.class", "support.type", "support.class"]
+        case .attributes: ["entity.other.attribute-name"]
+        case .variables: ["variable"]
+        case .values: ["constant.language", "support.constant"]
+        case .numbers: ["constant.numeric"]
+        case .strings: ["string"]
+        case .characters: ["constant.character"]
+        // The `//` and `/*` themselves are scoped as punctuation, not comment.
+        case .comments: ["comment", "punctuation.definition.comment"]
+        }
+    }
+
     /// How a role is painted when the theme states no syntax style for it.
     public struct DefaultStyle: Sendable {
         /// The ANSI slot the colour comes from, or `nil` to use `fallback`

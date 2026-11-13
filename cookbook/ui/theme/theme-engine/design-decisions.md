@@ -7,6 +7,10 @@
 
 **Rationale**: One table of default slots and emphasis (`SyntaxRole.defaultStyle`) keeps the diff viewer and the source editor painting a terminal-derived theme alike.
 
+**Decision**: Synthesized rules are written over broad TextMate roots (`SyntaxRole.textMateRuleScopes`), not over the importer's query scopes.
+
+**Rationale**: The query scopes are narrow on purpose — a theme's answer for `comment.line` is reliable — but rules written over them leave `comment.block`, `string.quoted.single`, `storage.type` and `keyword.operator` unpainted in most of the 218 bundled grammars. Reading and writing are different questions, so they get different tables.
+
 **Decision**: Syntax styles are stored inside `ColorTheme.roleOverrides` under a `syntax.` key namespace instead of a separate field or side store.
 **Rationale**: Per the `syntaxStyles` doc comment, `ColorTheme` is the unit that travels, and `ColorTheme.init(from:)` decodes a fixed key list, so anything stored beside it is silently dropped by `exportJSON(_:)` and `duplicate(_:)`; duplicating an imported theme would then repaint the editor. `SemanticPalette` looks roles up by `ThemeRole.rawValue`, so the extra keys are invisible to it.
 **Approved**: pending
