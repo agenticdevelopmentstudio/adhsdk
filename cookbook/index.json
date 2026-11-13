@@ -7729,6 +7729,31 @@
       "path": "status/service/monitor/overview",
       "rdid": "adhsdk.ingredient.status.service.monitor.overview"
     },
+    "add92e9b-94e5-412c-970f-5ea8e2eb9eed": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:cd1e54d2b8a3a5c6e26fdac4cc3b7b494290d61a710e61766a56b29711471cc5",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "tools/apple/textmate/",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Resources/TextMate/",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/language/textmate-resources",
+      "rdid": "adhsdk.ingredient.foundation.language.textmate-resources"
+    },
     "ae0932d6-572f-4173-ba49-df68f4039ba4": {
       "implementations": [],
       "kind": "ingredient",
