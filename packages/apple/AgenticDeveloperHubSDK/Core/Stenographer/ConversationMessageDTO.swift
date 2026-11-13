@@ -99,10 +99,14 @@ public struct ConversationMessagesQueryDTO: Codable, Sendable, Equatable {
 public enum ConversationRangeError: Error, LocalizedError, Equatable {
     /// A cursor id that names no message of the session.
     case unknownMessageId(Int)
+    /// The event store holding the messages is not open (the Claude pipeline
+    /// is unavailable and retrying), so nothing can be said about the range.
+    case eventStoreUnavailable
 
     public var errorDescription: String? {
         switch self {
         case .unknownMessageId(let id): "No message \(id) in this conversation."
+        case .eventStoreUnavailable: "Conversation messages are unavailable until the Claude pipeline opens."
         }
     }
 }

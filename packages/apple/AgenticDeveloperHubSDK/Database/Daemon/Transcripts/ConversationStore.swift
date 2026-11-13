@@ -242,7 +242,9 @@ public struct ConversationStore: Sendable {
     ///     little else. Its own script-driven prompt and reply are shown either
     ///     way: they are this session's conversation, not side work.
     /// - Throws: ``ConversationRangeError/unknownMessageId(_:)`` for a cursor
-    ///   that names no message of the session.
+    ///   that names no message of the session, and
+    ///   ``ConversationRangeError/eventStoreUnavailable`` while no event store
+    ///   is attached — never an empty, complete page or a missing cursor then.
     public func conversationMessages(
         sessionId: String,
         afterId: Int?,
@@ -250,6 +252,7 @@ public struct ConversationStore: Sendable {
         limit: Int,
         includeWorkOutput: Bool
     ) throws -> ConversationMessagesPageDTO {
+        guard database.eventReads != nil else { throw ConversationRangeError.eventStoreUnavailable }
         let stride = Self.maxLinesPerConversationEntry
         let limit = max(limit, 1)
         // A session's work output includes its subagents' messages, which are

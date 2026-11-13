@@ -178,6 +178,20 @@ final class ConversationMessagesTests: XCTestCase {
         }
     }
 
+    /// Without an event store (the Claude pipeline is retrying its open) the
+    /// read says so, rather than handing back an empty, complete page.
+    func testNoEventStoreIsUnavailableNotAnEmptyPage() throws {
+        let bare = try DaemonDatabase(
+            path: root.appendingPathComponent("bare.db").path,
+            accountResolver: AccountResolver(claudeJSONPath: root.appendingPathComponent("none.json").path),
+            migrations: SessionSchema.migrations,
+            postMigration: SessionSchema.postMigration)
+        XCTAssertThrowsError(try ConversationStore(database: bare).conversationMessages(
+            sessionId: session, afterId: nil, throughId: nil, limit: 50, includeWorkOutput: false)) { error in
+            XCTAssertEqual(error as? ConversationRangeError, .eventStoreUnavailable)
+        }
+    }
+
     /// A page reads its lines a chunk at a time, seeking on from the last — so
     /// walking page by page, across skipped work output and a shared timestamp,
     /// must give back exactly the whole conversation and end complete.

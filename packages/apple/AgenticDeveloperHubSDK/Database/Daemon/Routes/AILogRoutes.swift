@@ -92,6 +92,8 @@ enum AILogRoutes {
                             includeWorkOutput: request.query("work") == "true"
                         )
                     )
+                } catch ConversationRangeError.eventStoreUnavailable {
+                    return .error(ConversationRangeError.eventStoreUnavailable.localizedDescription, status: 503)
                 } catch let error as ConversationRangeError {
                     return .notFound(error.localizedDescription)
                 } catch {
