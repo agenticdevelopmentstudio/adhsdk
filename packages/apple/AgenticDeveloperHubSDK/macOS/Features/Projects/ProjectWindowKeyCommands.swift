@@ -14,7 +14,7 @@ public enum ProjectWindowKeyCommands {
     public static let toggleBrowserID = "projects.toggleBrowser"
     public static let toggleActiveProjectsID = "projects.toggleActiveProjects"
 
-    public static let sectionTitle = "Development Project Window"
+    public static let sectionTitle = "Coding Project Window"
 
     public static func section() -> KeyCommandSection {
         KeyCommandSection(

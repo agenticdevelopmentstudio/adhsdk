@@ -40,7 +40,7 @@ final class ThemeProjectTopicPanel: ThemeTopicPanel {
             ),
             .init(
                 title: "The Active Pane",
-                body: "A Development Project window splits into panes, and one of them has the keyboard. "
+                body: "A Coding Project window splits into panes, and one of them has the keyboard. "
                     + "The outline is how you can tell which. A theme sets its own outline "
                     + "color because the color that reads clearly against a dark theme "
                     + "disappears against a light one — which is the whole reason this is a "

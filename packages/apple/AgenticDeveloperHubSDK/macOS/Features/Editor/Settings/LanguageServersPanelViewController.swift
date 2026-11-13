@@ -97,7 +97,7 @@ public final class LanguageServersPanelViewController: ComposableSettings.Settin
         .init(
             title: "Status",
             body: "Language servers run per project, so the status beneath each row is "
-                + "one line per open project — and with no Development Project window open there is "
+                + "one line per open project — and with no Coding Project window open there is "
                 + "nothing to run and nothing to report. A line reads idle before the "
                 + "server has been asked to start, starting during its handshake, "
                 + "running once the handshake finished and the editor can use it, "

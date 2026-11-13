@@ -156,7 +156,11 @@ public final class WebBrowserWindowController: SingleWindowController {
 
     private func refreshTitle() {
         titleAccessory.icon = pane.paneIcon
-        titleAccessory.text = pane.paneTitle
+        let site = pane.engine.url?.host.map { $0.hasPrefix("www.") ? String($0.dropFirst(4)) : $0 }
+        let prefix = purpose == .privateBrowsing ? "Private Web" : "Web"
+        let text = "\(prefix): \(site ?? pane.paneTitle)"
+        titleAccessory.text = text
+        window?.title = text
     }
 
     public override func configureWindow(_ window: NSWindow) {

@@ -1359,6 +1359,12 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         titleBreadcrumb.fileURL = directory
         guard directory != titleDirectory else { return }
         titleDirectory = directory
+        // A File Browser window (no top-level tabs) names its folder; a
+        // project window names its project and branch.
+        guard tabbed.showsTabBars else {
+            setTitle("Files: \(directory.lastPathComponent)")
+            return
+        }
         let name = project.displayName
         setTitle(Self.title(project: name, branch: branchNames[directory] ?? nil))
         // Read again even when known: the checkout may have switched branch.
@@ -1397,8 +1403,8 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     /// `adkitchen → main`, or the name alone outside a repository.
     nonisolated static func title(project: String, branch: String?) -> String {
-        guard let branch, !branch.isEmpty else { return project }
-        return "\(project) \u{2192} \(branch)"
+        guard let branch, !branch.isEmpty else { return "Code: \(project)" }
+        return "Code: \(project) \u{2192} \(branch)"
     }
 
     /// A file chosen in the title's breadcrumb opens in the active tab's

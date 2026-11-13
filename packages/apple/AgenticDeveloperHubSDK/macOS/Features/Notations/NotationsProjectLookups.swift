@@ -39,7 +39,7 @@ public enum NotationsProjectLookups {
                               workingDirectory: URL(fileURLWithPath: target))
     }
 
-    /// The project a Development Project window shows; `nil` for any other
+    /// The project a Coding Project window shows; `nil` for any other
     /// window, a File Browser window included.
     public static func projectID(for window: NSWindow) -> UUID? {
         guard let controller = window.windowController as? ComposableTabsWindowController else { return nil }

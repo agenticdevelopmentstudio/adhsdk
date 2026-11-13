@@ -44,14 +44,14 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
         ComposableSettings.PanelHelp(topics: [
             .init(
                 title: "“New” Opens Tabs",
-                body: "File ▸ New (⌘N) over a Development Project window normally opens another "
-                    + "Development Project window, and over a File Browser window asks for a folder "
+                body: "File ▸ New (⌘N) over a Coding Project window normally opens another "
+                    + "Coding Project window, and over a File Browser window asks for a folder "
                     + "to open in a new one. With this on, it opens a new tab in the window in "
                     + "front instead, as File ▸ New Tab does."
             ),
             .init(
                 title: "Active Pane",
-                body: "A Development Project window is split into panes, and one of them is the one you "
+                body: "A Coding Project window is split into panes, and one of them is the one you "
                     + "are working in. With this on, that pane is drawn with a border in a "
                     + "tone one step lighter than the others — enough to find it, not enough "
                     + "to compete with what is inside it."

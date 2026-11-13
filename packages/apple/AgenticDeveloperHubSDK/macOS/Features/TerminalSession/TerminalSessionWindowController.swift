@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import os
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
@@ -21,6 +22,9 @@ public final class TerminalSessionWindowController: WindowController<TerminalSes
 
     public static let windowID = "terminal"
 
+    private var selectionObserver: AnyCancellable?
+    private var directoryObserver: AnyCancellable?
+
     public init() {
         let manager = TerminalSessionManager()
         self.sessionManager = manager
@@ -36,6 +40,27 @@ public final class TerminalSessionWindowController: WindowController<TerminalSes
         )
         self.windowTitle = "Terminal"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
+        selectionObserver = manager.$selectedSessionID
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.observeSelectedDirectory() }
+    }
+
+    /// `Terminal: <directory>` for the selected session, home written `~`.
+    private func observeSelectedDirectory() {
+        guard let session = sessionManager.selectedSession else {
+            directoryObserver = nil
+            setTitle(nil)
+            return
+        }
+        directoryObserver = session.$currentDirectory
+            .receive(on: RunLoop.main)
+            .sink { [weak self, weak session] _ in self?.setTitle(session?.tildeAbbreviatedDirectory) }
+    }
+
+    private func setTitle(_ directory: String?) {
+        let title = directory.map { "Terminal: \($0)" } ?? "Terminal"
+        windowTitle = title
+        window?.title = title
     }
 
     public override func showWindow(_ sender: Any?) {

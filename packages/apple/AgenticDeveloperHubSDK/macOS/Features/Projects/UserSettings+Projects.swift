@@ -85,7 +85,7 @@ extension UserSettings {
     /// not exist.
     static public var projectWindows = UserSetting<[ProjectWindowState]>("project_windows", default: [])
 
-    /// File ▸ New (⌘N) over a Development Project or File Browser window
+    /// File ▸ New (⌘N) over a Coding Project or File Browser window
     /// opens a new tab in it rather than a new window. Settings > Projects >
     /// Windows.
     static public var projectsNewOpensTabs = UserSetting<Bool>("projects.new_opens_tabs", default: false)

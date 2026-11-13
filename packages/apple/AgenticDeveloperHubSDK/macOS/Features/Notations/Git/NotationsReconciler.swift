@@ -33,7 +33,7 @@ public actor NotationsReconciler {
         self.fileExists = fileExists
     }
 
-    /// One pass. `projectID` limits it to one project (a Development Project
+    /// One pass. `projectID` limits it to one project (a Coding Project
     /// window became key); `nil` covers every notation. A pass that arrives
     /// while one is running is dropped: the running one covers it.
     @discardableResult

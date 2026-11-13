@@ -21,7 +21,7 @@ public final class NotationsSettingsPanelViewController: ComposableSettings.Sett
         ComposableSettings.PanelHelp(topics: [
             .init(title: "Notations",
                   body: "A notation is the notes of one branch of one project, written in the Notations pane of a "
-                      + "Development Project window and listed in Notes ▸ Notations."),
+                      + "Coding Project window and listed in Notes ▸ Notations."),
             .init(title: "Archiving",
                   body: "A notation is archived when its branch is deleted, or when the branch's commits have "
                       + "been merged into the default branch. A branch with no commits of its own stays active."),

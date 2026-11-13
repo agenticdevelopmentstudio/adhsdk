@@ -182,7 +182,7 @@ public final class NotationsToolSource: ChatToolSource, @unchecked Sendable {
         guard let caller else { throw ToolFailure(message: "the calling pane is unknown") }
         let lookup = callerPlace
         guard let place = await MainActor.run(body: { lookup(caller) }) else {
-            throw ToolFailure(message: "the calling pane is not in a Development Project window")
+            throw ToolFailure(message: "the calling pane is not in a Coding Project window")
         }
         let resolution = await resolver.resolve(
             projectID: place.projectID, projectName: place.projectName, projectPath: place.projectPath,

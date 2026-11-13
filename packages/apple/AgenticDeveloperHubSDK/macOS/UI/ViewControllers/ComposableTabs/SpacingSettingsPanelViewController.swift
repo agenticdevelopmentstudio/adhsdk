@@ -64,7 +64,7 @@ public final class SpacingSettingsPanelViewController: ComposableSettings.Settin
             ),
             .init(
                 title: "Everywhere",
-                body: "Spacing belongs to the app, not to a window: every Development Project window, the "
+                body: "Spacing belongs to the app, not to a window: every Coding Project window, the "
                     + "Coding Partner window and every terminal use these numbers, and "
                     + "changes apply to all of them as you make them."
             )

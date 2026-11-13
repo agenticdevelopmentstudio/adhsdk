@@ -158,7 +158,7 @@ private final class ProjectTabsSettingsPanel: ComposableSettings.SettingsPanelVi
             .init(
                 title: "This Project Only",
                 body: "These edges belong to this project, not to the app — another "
-                    + "Development Project window keeps whatever edges it was given. Changes apply "
+                    + "Coding Project window keeps whatever edges it was given. Changes apply "
                     + "as you make them and are saved with the project. Spacing is the "
                     + "opposite: it belongs to every window, and is set under Settings > "
                     + "Appearance > Spacing."

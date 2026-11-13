@@ -119,7 +119,7 @@ public final class ProjectsCoordinator: AppFeature {
 
         registry.register(AppCommand(
             id: CommandID.newProjectWindow,
-            title: "New Development Project Window",
+            title: "New Coding Project Window",
             category: "Projects",
             run: { [weak self] in self?.openNewWindow() }
         ))
@@ -141,7 +141,7 @@ public final class ProjectsCoordinator: AppFeature {
         self.menuContributions = [
             MenuContribution(
                 slot: .projects,
-                title: "New Development Project Window",
+                title: "New Coding Project Window",
                 commandID: CommandID.newProjectWindow,
                 registry: registry,
                 order: 0

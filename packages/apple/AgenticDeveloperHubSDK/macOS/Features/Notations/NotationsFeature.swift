@@ -39,7 +39,7 @@ public final class NotationsFeature: AppFeature {
     ///     this id, for the tools that act on "this branch".
     ///   - projectAtPath: The project a directory belongs to.
     ///   - projectIDForWindow: The project a window shows, or `nil` for a
-    ///     window that is not a Development Project window.
+    ///     window that is not a Coding Project window.
     ///   - goToProject: Brings the notation's project window forward,
     ///     opening it if needed.
     public init(
