@@ -1,7 +1,8 @@
 import AppKit
 
-/// The strip across the bottom of a document window: a hairline along its top
-/// edge, a status string at the leading edge, and a trailing slot that starts
+/// The strip across the bottom of a document window: a themed background with
+/// a one-pixel border along its top edge, an optional leading accessory, a
+/// status string after it, and a trailing slot that starts
 /// empty.
 ///
 /// It takes a string. It does not know what a pane is, what a selection is, or
@@ -45,6 +46,24 @@ public final class WindowFooterBar: NSView {
         }
     }
 
+    /// A view pinned to the leading edge, ahead of the status text — the
+    /// project window's path breadcrumb. `nil` leaves the status text flush
+    /// against the edge.
+    public var leadingAccessory: NSView? {
+        didSet {
+            oldValue?.removeFromSuperview()
+            if let accessory = leadingAccessory {
+                accessory.translatesAutoresizingMaskIntoConstraints = false
+                leadingStack.addArrangedSubview(accessory)
+            }
+            statusLeadingGap.constant = leadingAccessory == nil ? 0 : 12
+        }
+    }
+
+    private let leadingStack = NSStackView()
+    private lazy var statusLeadingGap = statusLabel.leadingAnchor.constraint(
+        equalTo: leadingStack.trailingAnchor)
+
     private let background = ThemedBackgroundView(role: .elevatedSurface)
     private let hairline = ThemedSeparatorView(role: .border)
     private let trailingStack = NSStackView()
@@ -62,13 +81,17 @@ public final class WindowFooterBar: NSView {
         statusLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         statusLabel.accessibilityID("\(accessibilityPrefix).status")
 
+        leadingStack.orientation = .horizontal
+        leadingStack.alignment = .centerY
+        leadingStack.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+
         trailingStack.orientation = .horizontal
         trailingStack.spacing = 6
         trailingStack.alignment = .centerY
         trailingStack.translatesAutoresizingMaskIntoConstraints = false
         trailingStack.setContentHuggingPriority(.required, for: .horizontal)
 
-        for child in [background, hairline, statusLabel, trailingStack] {
+        for child in [background, hairline, leadingStack, statusLabel, trailingStack] {
             child.translatesAutoresizingMaskIntoConstraints = false
             addSubview(child)
         }
@@ -85,7 +108,11 @@ public final class WindowFooterBar: NSView {
             hairline.trailingAnchor.constraint(equalTo: trailingAnchor),
             hairline.topAnchor.constraint(equalTo: topAnchor),
 
-            statusLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+            leadingStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+            leadingStack.centerYAnchor.constraint(equalTo: centerYAnchor),
+            leadingStack.heightAnchor.constraint(lessThanOrEqualTo: heightAnchor, constant: -2),
+
+            statusLeadingGap,
             statusLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
 
             trailingStack.leadingAnchor.constraint(

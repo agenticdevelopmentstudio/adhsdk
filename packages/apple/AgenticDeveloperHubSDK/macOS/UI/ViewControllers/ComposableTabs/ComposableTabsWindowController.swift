@@ -199,9 +199,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// Project-level tabs, in creation order.
     private var tabGroups: [TabGroup] = []
 
-    /// The path of the directory the window is working in, drawn under the
-    /// title in the toolbar: `~ › Development › app`. It is chrome, not a pane
-    /// strip, so it has no border of its own.
+    /// The path of the directory the window is working in, drawn at the
+    /// leading edge of the footer: `~ › Development › app`. It is chrome, not
+    /// a pane strip, so it has no border of its own.
     private lazy var titleBreadcrumb: BreadcrumbView = {
         let crumbs = BreadcrumbView(rootURL: project.directoryURL, style: .homeRelative)
         crumbs.translatesAutoresizingMaskIntoConstraints = false
@@ -354,6 +354,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             persistsFrame: true
         )
         self.windowTitle = project.displayName
+        self.windowTitleSymbolName = "folder"
         // Full-size content: the panes' backdrop runs up behind a clear
         // titlebar, as Settings' does — see `configureWindow(_:)`.
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
@@ -481,8 +482,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     public override func configureWindow(_ window: NSWindow) {
         super.configureWindow(window)
         if shelf != nil {
-            toolbarDelegate.titleAccessory = titleBreadcrumb
+            footer.leadingAccessory = titleBreadcrumb
         }
+        toolbarDelegate.titleSymbolName = windowTitleSymbolName
         window.toolbar = toolbarDelegate.makeToolbar(identifier: "project.toolbar")
         // Settings' seamless titlebar, shared with the Coding Partner window.
         // The title stays — see above.

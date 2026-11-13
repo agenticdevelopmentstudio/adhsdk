@@ -252,6 +252,10 @@ extension WindowToolbarBuilder {
         /// window's path breadcrumb. Set it before the toolbar builds the slot.
         public var titleAccessory: NSView?
 
+        /// The SF Symbol drawn before the title in a `.windowTitle` slot — a
+        /// folder for a project. Set it before the toolbar builds the slot.
+        public var titleSymbolName: String?
+
         /// Key-value observation rather than a Cocoa binding: a programmatic
         /// binding retains the object it observes, and the window owns the
         /// toolbar that owns this label, so a binding kept every closed window
@@ -348,6 +352,9 @@ extension WindowToolbarBuilder {
                     stack.alignment = .leading
                     stack.spacing = 0
                     item.view = stack
+                }
+                if let view = item.view {
+                    item.view = ThemedSymbolImageView.leading(titleSymbolName, before: view)
                 }
                 titleLabel = label
                 observeTitle()

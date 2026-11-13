@@ -53,6 +53,7 @@ public final class LLMChatWindowController: SingleWindowController {
         self.content = content
         super.init(windowID: Self.windowID, contentViewController: content)
         self.windowTitle = "LLM Chat"
+        self.windowTitleSymbolName = "bubble.left.and.bubble.right"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
         self.windowSpec = WindowSpec(
             defaultSize: content.initialContentSize,

@@ -734,9 +734,6 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         let focus = outgoing?.projectShelf?.focus ?? .elsewhere
         if incoming.window == nil { incoming.loadWindow() }
         let outgoingFrame = outgoing?.window?.frame
-        if let outgoing {
-            incoming.adoptShelfLayout(outgoing.shelfLayout)
-        }
         incoming.window?.isExcludedFromWindowsMenu = false
         // Two windows standing in for one: neither may play AppKit's order-in
         // or order-out animation, which scales a document window down and
@@ -745,8 +742,13 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         outgoing?.window?.animationBehavior = .none
         // Before showing as well as after: a window ordered in at its own
         // stale frame and then resized is the same bounce by another route.
-        if let outgoingFrame {
+        if let outgoingFrame, incoming.window?.frame != outgoingFrame {
             incoming.window?.setFrame(outgoingFrame, display: false)
+        }
+        // The shelf after the frame: a frame change after it would share the
+        // room out again and move the divider the reader sees.
+        if let outgoing {
+            incoming.adoptShelfLayout(outgoing.shelfLayout)
         }
         // Laid out at that frame while still off screen, so the panes are
         // already their final sizes on the first frame drawn.
@@ -899,6 +901,8 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // its window, its panes and its sessions, so switching to it is an
         // order-in rather than a build. Out of the Window menu until it is the
         // one on screen — there, the group is one window.
+        // Built at the frame it will be swapped in at, laid out once.
+        controller.preferredInitialFrame = shownWindows[group.id]?.window?.frame
         controller.loadWindow()
         controller.window?.isExcludedFromWindowsMenu = true
         observeClose(of: controller, repoID: repo.id, recordsOpenState: true)

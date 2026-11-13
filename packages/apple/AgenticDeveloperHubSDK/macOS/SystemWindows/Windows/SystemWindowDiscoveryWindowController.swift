@@ -31,6 +31,7 @@ public final class SystemWindowDiscoveryWindowController: SingleWindowController
             behavior: .persistsFrame
         )
         self.windowTitle = "Discover Windows"
+        self.windowTitleSymbolName = "macwindow.on.rectangle"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
         // Single source of truth for the minimum size: track the spec rather than
         // repeating the literal.

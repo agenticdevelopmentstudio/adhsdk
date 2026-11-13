@@ -21,6 +21,7 @@ open class LogWindowController: WindowController<LogViewController> {
         super.init(windowID: windowID, contentViewController: LogViewController(controller: controller))
 
         self.windowTitle = "Log"
+        self.windowTitleSymbolName = "doc.plaintext"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
 
         self.windowSpec = WindowSpec(

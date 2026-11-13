@@ -87,6 +87,7 @@ public final class PartnerWindowController: SingleWindowController {
                    contentViewController: SafeAreaHostViewController(child: split, pinsToSafeArea: false))
 
         self.windowTitle = "Coding Partner"
+        self.windowTitleSymbolName = "person.2"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 1100, height: 720),

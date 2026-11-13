@@ -39,6 +39,7 @@ public final class OversightFindingsWindowController: SingleWindowController {
         super.init(windowID: "oversight-findings",
                    contentViewController: OversightHostViewController(service: service))
         self.windowTitle = "Stenographer — AI Oversight"
+        self.windowTitleSymbolName = "eye"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 760, height: 460),

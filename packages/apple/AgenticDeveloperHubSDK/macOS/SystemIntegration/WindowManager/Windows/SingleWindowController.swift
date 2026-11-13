@@ -83,6 +83,15 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
     /// Title shown in the window's title bar.
     open var windowTitle: String = ""
 
+    /// SF Symbol drawn before the title in the window's title bar — a folder
+    /// for a project, a terminal for a terminal. Set before the window is
+    /// built; `nil` leaves AppKit's plain title. A window that hides its
+    /// title in `configureWindow(_:)` (drawing its own) gets no icon here.
+    public var windowTitleSymbolName: String?
+
+    /// The title accessory carrying `windowTitleSymbolName`, once installed.
+    public private(set) var titlebarTitle: WindowTitlebarTitle?
+
     /// Initial content rect used when the window is first created. Frame
     /// persistence via `WindowManager` may override size/position on
     /// subsequent launches if a saved frame exists for `windowID`.
@@ -131,6 +140,13 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
     /// than exactly on top of one.
     open func placeWindowWithoutSavedFrame(_ window: NSWindow) {}
 
+    /// The frame the window will be shown at, when the caller already knows
+    /// it — a project window built to replace the one on screen takes that
+    /// window's frame. Set before `loadWindow`, it replaces restoring and
+    /// placing, each of which laid the whole content out at a frame nobody
+    /// ever saw (about 300 ms of main thread per project window).
+    public var preferredInitialFrame: NSRect?
+
     // MARK: - NSWindowController lazy-load hook
 
     open override func loadWindow() {
@@ -156,6 +172,10 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
             newWindow.minSize = minSize
         }
 
+        if let preferredInitialFrame {
+            // Before the content arrives, so its first layout is at this size.
+            newWindow.setFrame(preferredInitialFrame, display: false)
+        }
         newWindow.contentViewController = contentViewController
 
         self.window = newWindow
@@ -173,6 +193,7 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
             applyHUDChrome(hudConfiguration, to: newWindow)
         }
         configureWindow(newWindow)
+        installTitleSymbolIfNeeded(in: newWindow)
         if let accessibilityIdentifier {
             newWindow.setAccessibilityIdentifier(accessibilityIdentifier)
         }
@@ -182,7 +203,12 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
         // spec → geometric center fallback. A post-call `window.center()`
         // here would override that with AppKit's upper-center (y ≈ 1/3
         // from top), which is what it does despite the misleading name.
-        if !WindowManager.shared.frames.restoreFrame(for: newWindow, id: windowID) {
+        if let preferredInitialFrame {
+            // Again after the chrome, which may have grown the frame.
+            if newWindow.frame != preferredInitialFrame {
+                newWindow.setFrame(preferredInitialFrame, display: false)
+            }
+        } else if !WindowManager.shared.frames.restoreFrame(for: newWindow, id: windowID) {
             placeWindowWithoutSavedFrame(newWindow)
         }
         // Wire the delegate last — setting `contentViewController` above
@@ -193,6 +219,17 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
         // state (and then `restoreFrame` would read back that just-written
         // default frame instead of the spec's geometric center).
         newWindow.delegate = self
+    }
+
+    /// Puts `windowTitleSymbolName` before the title, through the shared
+    /// `WindowTitlebarTitle`, which keeps following the window's `title`.
+    private func installTitleSymbolIfNeeded(in window: NSWindow) {
+        guard titlebarTitle == nil, let windowTitleSymbolName,
+              window.titleVisibility == .visible, window.styleMask.contains(.titled) else { return }
+        let title = WindowTitlebarTitle()
+        title.setSymbol(windowTitleSymbolName)
+        title.install(in: window)
+        titlebarTitle = title
     }
 
     // MARK: - Public API

@@ -105,7 +105,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
             // is one.
             let width = shelfHost.view.widthAnchor.constraint(
                 equalToConstant: CGFloat(UserSettings.projectShelfWidth.value))
-            width.priority = .defaultLow
+            width.priority = Self.restingWidthPriority
             width.isActive = true
             shelfWidth = width
 
@@ -342,6 +342,11 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
     /// Above every holding priority and the reader's drag, below required so
     /// the content's minimum width still wins.
     private static let slidingWidthPriority = NSLayoutConstraint.Priority(999)
+    /// The shelf's width at rest: above the split's holding priorities and the
+    /// panes' hugging, so panes filling in after the window is shown cannot
+    /// squeeze the Project Browser narrower, and below a divider drag (490),
+    /// so the reader's own drag still wins.
+    private static let restingWidthPriority = NSLayoutConstraint.Priority(480)
     private var shelfSlide: ShelfSlide?
 
     /// The width the shelf opens to: the one the reader last gave it, within
@@ -382,7 +387,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
         item.minimumThickness = Self.shelfMinimumWidth
         // Back to the width the shelf opens at, at the priority a drag beats.
         shelfWidth?.constant = Self.openShelfWidth
-        shelfWidth?.priority = .defaultLow
+        shelfWidth?.priority = Self.restingWidthPriority
         releaseWindowWidth()
         splitView.layoutSubtreeIfNeeded()
         content.view.endAnimatedResize()
@@ -470,6 +475,12 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
 
     /// Writes down the shelf's width whenever the reader drags the divider.
     private func rememberShelfWidth() {
+        // Only the reader's own drag: the divider moving while the split keeps
+        // its width, in a window on screen. Every other pass — a window being
+        // built off screen, a swap handing its frame over, the panes settling
+        // — gave the shelf whatever room was left, and writing that down made
+        // clicking a project resize the Project Browser.
+        guard isShelfMoving, !holdsSharesFromBeforeSlide, view.window?.isVisible == true else { return }
         guard !isAnimatingShelf, let item = shelfItem, !item.isCollapsed else { return }
         let width = item.viewController.view.frame.width
         // Zero while the window is still being put together, before the

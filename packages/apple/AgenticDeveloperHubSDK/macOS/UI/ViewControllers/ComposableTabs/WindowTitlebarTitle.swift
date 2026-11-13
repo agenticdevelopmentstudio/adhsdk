@@ -24,6 +24,9 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
     public let titleLabel = NSTextField(labelWithString: "")
     private let stack: NSStackView
     nonisolated(unsafe) private var resizeObserver: NSObjectProtocol?
+    /// Follows the window's `title`, so code that retitles the window
+    /// directly (a project window naming its branch) still shows here.
+    private var titleObservation: NSKeyValueObservation?
 
     public init() {
         stack = NSStackView(views: [iconView, titleLabel])
@@ -31,6 +34,9 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
         layoutAttribute = .leading
 
         iconView.imageScaling = .scaleProportionallyUpOrDown
+        // A template symbol takes the title's colour, which follows the
+        // window's (themed) appearance.
+        iconView.contentTintColor = .labelColor
         iconView.setAccessibilityElement(false)
         iconView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -66,12 +72,20 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
         }
     }
 
+    /// Sets `icon` to the SF Symbol `name`, sized for the title bar.
+    public func setSymbol(_ name: String?, accessibilityDescription: String? = nil) {
+        icon = name.flatMap {
+            NSImage(systemSymbolName: $0, accessibilityDescription: accessibilityDescription)?
+                .withSymbolConfiguration(.init(pointSize: Self.iconSize - 2, weight: .regular))
+        }
+    }
+
     /// The name shown, which is also the window's `title`.
     public var text: String {
         get { titleLabel.stringValue }
         set {
             titleLabel.stringValue = newValue
-            view.window?.title = newValue
+            if view.window?.title != newValue { view.window?.title = newValue }
             resize()
         }
     }
@@ -80,7 +94,18 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
     public func install(in window: NSWindow) {
         window.titleVisibility = .hidden
         window.addTitlebarAccessoryViewController(self)
-        window.title = text
+        if text.isEmpty {
+            titleLabel.stringValue = window.title
+        } else {
+            window.title = text
+        }
+        titleObservation = window.observe(\.title, options: [.new]) { [weak self] window, _ in
+            MainActor.assumeIsolated {
+                guard let self, self.titleLabel.stringValue != window.title else { return }
+                self.titleLabel.stringValue = window.title
+                self.resize()
+            }
+        }
         resizeObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didResizeNotification, object: window, queue: .main
         ) { [weak self] _ in

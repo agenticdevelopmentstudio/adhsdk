@@ -107,6 +107,68 @@ public final class ThemedLabel: NSTextField, Themeable {
     }
 }
 
+/// An SF Symbol tinted with a `ThemeRole`, the icon that goes in front of a
+/// title (a window's name in its title bar or toolbar). Repaints live on theme
+/// change, so it always matches the `ThemedLabel` beside it.
+@MainActor
+public final class ThemedSymbolImageView: NSImageView, Themeable {
+    public var role: ThemeRole { didSet { applyTheme(resolvedThemeScope.palette) } }
+    private var observer: ThemePaletteObserver?
+
+    /// - Parameters:
+    ///   - symbolName: the SF Symbol; `nil` shows nothing and hides the view.
+    ///   - pointSize: the symbol's size, and the view's side.
+    public init(symbolName: String?, role: ThemeRole = .primaryText, pointSize: CGFloat = 13) {
+        self.role = role
+        super.init(frame: .zero)
+        imageScaling = .scaleProportionallyUpOrDown
+        setAccessibilityElement(false)
+        translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalToConstant: pointSize + 2),
+            heightAnchor.constraint(equalToConstant: pointSize + 2)
+        ])
+        setContentHuggingPriority(.required, for: .horizontal)
+        setContentCompressionResistancePriority(.required, for: .horizontal)
+        self.symbolName = symbolName
+        self.pointSize = pointSize
+        // Set in the initializer, so neither `didSet` above ran.
+        reloadImage()
+        observer = ThemePaletteObserver(host: self) { [weak self] palette in self?.applyTheme(palette) }
+    }
+
+    @available(*, unavailable)
+    public required init?(coder: NSCoder) { fatalError() }
+
+    private var pointSize: CGFloat = 13 { didSet { reloadImage() } }
+
+    /// The SF Symbol shown.
+    public var symbolName: String? { didSet { reloadImage() } }
+
+    private func reloadImage() {
+        image = symbolName.flatMap {
+            NSImage(systemSymbolName: $0, accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: pointSize, weight: .regular))
+        }
+        isHidden = image == nil
+    }
+
+    public func applyTheme(_ palette: SemanticPalette) {
+        contentTintColor = palette.nsColor(role)
+    }
+
+    /// `view` with a symbol before it — or `view` alone when there is no symbol.
+    public static func leading(_ symbolName: String?, before view: NSView,
+                               role: ThemeRole = .primaryText) -> NSView {
+        guard let symbolName else { return view }
+        let stack = NSStackView(views: [ThemedSymbolImageView(symbolName: symbolName, role: role), view])
+        stack.orientation = .horizontal
+        stack.alignment = .centerY
+        stack.spacing = 5
+        return stack
+    }
+}
+
 /// A label that emphasises the characters a filter matched.
 ///
 /// The ranges are handed in rather than worked out here: what counts as a match

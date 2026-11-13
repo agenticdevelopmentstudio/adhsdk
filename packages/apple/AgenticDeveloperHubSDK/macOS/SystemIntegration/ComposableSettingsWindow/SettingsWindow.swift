@@ -33,6 +33,7 @@ extension ComposableSettings {
         public init(windowID: String = "settings", split: SplitViewController = SplitViewController()) {
             super.init(windowID: windowID, contentViewController: split)
             self.windowTitle = "Settings"
+            self.windowTitleSymbolName = "gearshape"
             // `.fullSizeContentView` is what lets the sidebar run the *whole*
             // height of the window, with the close/minimise/zoom buttons sitting
             // on top of it — the shape System Settings has. Without it the
@@ -255,7 +256,7 @@ extension ComposableSettings {
                 let item = NSToolbarItem(itemIdentifier: itemIdentifier)
                 item.label = "Panel"
                 item.paletteLabel = item.label
-                item.view = panelTitleLabel
+                item.view = ThemedSymbolImageView.leading(windowTitleSymbolName, before: panelTitleLabel)
                 item.visibilityPriority = .high
                 return item
 

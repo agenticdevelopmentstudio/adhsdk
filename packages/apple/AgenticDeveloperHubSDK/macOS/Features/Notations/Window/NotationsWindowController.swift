@@ -46,6 +46,7 @@ public final class NotationsWindowController: SingleWindowController {
         super.init(windowID: Self.windowID,
                    contentViewController: SafeAreaHostViewController(child: host, pinsToSafeArea: true))
         self.windowTitle = "Notations"
+        self.windowTitleSymbolName = "text.bubble"
         self.accessibilityIdentifier = "notations-window"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
         self.windowSpec = WindowSpec(

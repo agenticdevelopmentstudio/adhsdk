@@ -27,6 +27,7 @@ public final class AIChatWindowController: WindowController<WindowContentViewCon
             persistsFrame: true
         )
         self.windowTitle = "AI Chat"
+        self.windowTitleSymbolName = "bubble.left"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
     }
 }

@@ -39,6 +39,7 @@ public final class TerminalSessionWindowController: WindowController<TerminalSes
             persistsFrame: true
         )
         self.windowTitle = "Terminal"
+        self.windowTitleSymbolName = "terminal"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
         selectionObserver = manager.$selectedSessionID
             .receive(on: RunLoop.main)

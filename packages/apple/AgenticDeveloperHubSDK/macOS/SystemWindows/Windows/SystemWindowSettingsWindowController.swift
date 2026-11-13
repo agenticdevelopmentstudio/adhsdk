@@ -30,6 +30,7 @@ public final class SystemWindowSettingsWindowController: SingleWindowController 
             behavior: .persistsFrame
         )
         self.windowTitle = "\(model.contextNounPlural) Settings"
+        self.windowTitleSymbolName = "gearshape"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
         // Single source of truth for the minimum size: track the spec rather than
         // repeating the literal.
