@@ -23,94 +23,40 @@
       "mail-sync",
       "persistence"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "888b7ba2-61f6-4251-88df-3586c5c86b1f",
+      "351e3bf8-b137-4f59-94de-c769aa8b0666"
+    ],
     "related": [
-      "1157bca1-0d27-49e9-a989-d637505ba5f1"
+      "1157bca1-0d27-49e9-a989-d637505ba5f1",
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a",
+      "39a27113-5478-468c-8417-a291d587aab6"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3872c3c580a50d7f",
+  "synced": "3043348c42a47df3",
   "parts": [
-    {
-      "part": "intro"
-    },
-    {
-      "part": "overview",
-      "heading": "Overview"
-    },
-    {
-      "part": "behavioral-requirements",
-      "heading": "Behavioral Requirements"
-    },
-    {
-      "part": "appearance",
-      "heading": "Appearance"
-    },
-    {
-      "part": "states",
-      "heading": "States"
-    },
-    {
-      "part": "accessibility",
-      "heading": "Accessibility"
-    },
-    {
-      "part": "conformance-test-vectors",
-      "heading": "Conformance Test Vectors"
-    },
-    {
-      "part": "edge-cases",
-      "heading": "Edge Cases"
-    },
-    {
-      "part": "configuration",
-      "heading": "Configuration"
-    },
-    {
-      "part": "deep-linking",
-      "heading": "Deep Linking"
-    },
-    {
-      "part": "localization",
-      "heading": "Localization"
-    },
-    {
-      "part": "accessibility-options",
-      "heading": "Accessibility Options"
-    },
-    {
-      "part": "feature-flags",
-      "heading": "Feature Flags"
-    },
-    {
-      "part": "analytics",
-      "heading": "Analytics"
-    },
-    {
-      "part": "privacy",
-      "heading": "Privacy"
-    },
-    {
-      "part": "logging",
-      "heading": "Logging"
-    },
-    {
-      "part": "platform-notes",
-      "heading": "Platform Notes"
-    },
-    {
-      "part": "design-decisions",
-      "heading": "Design Decisions"
-    },
-    {
-      "part": "compliance",
-      "heading": "Compliance"
-    },
-    {
-      "part": "history",
-      "heading": "Change History"
-    }
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
   ]
 }

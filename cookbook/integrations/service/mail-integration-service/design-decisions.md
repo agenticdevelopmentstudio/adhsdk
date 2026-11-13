@@ -47,11 +47,11 @@
 **Rationale**: The comment says a sync stuck in a call that ignores cancellation must not hold up shutdown. The cost is that such a sync is left running when `stop` returns.
 **Approved**: pending
 
-**Decision**: Technical debt: several store failures are swallowed with `try?`.
-**Rationale**: `startDueSyncs` reads connections with `try?`, `performSync` skips when the connection read fails, and `record` writes status with `try?`. A store outage therefore appears as no sync and no status change, not as an error. A port should keep the behavior or log it as a deliberate change.
+**Decision**: Accept swallowed store failures on background paths for now, instead of logging or signalling them.
+**Rationale**: `startDueSyncs` reads connections with `try?`, `performSync` skips when the connection read fails, and `record` writes status with `try?`. A store outage therefore appears as no sync and no status change, not as an error. Revisit when a store failure needs to be visible to a user; until then a port should keep the behavior or log it as a deliberate change.
 **Approved**: pending
 
-**Decision**: Technical debt: a Gmail profile failure during sign-in does not revoke the issued grant.
-**Rationale**: Only the provider-removed paths revoke the discarded credential; a profile error (`revokedProfileAtSignInFails`) leaves the grant at Google. This is source behavior a port must either match or change deliberately.
+**Decision**: Accept that a Gmail profile failure during sign-in leaves the issued grant unrevoked, instead of revoking it.
+**Rationale**: Only the provider-removed paths revoke the discarded credential; a profile error (`sign-in-profile-failure-no-revoke`) leaves the grant at Google. Revisit when sign-in failures are reported to users; until then a port must either match this or change it deliberately.
 **Approved**: pending
 

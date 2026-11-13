@@ -9,6 +9,7 @@
 - **Empty id arrays**: `message_ids` empty MUST be rejected for both write tools; an `add` or `remove` array containing empty strings is not checked here.
 - **Both change lists empty**: `mail_modify_labels` with empty `add` and empty `remove` MUST be rejected.
 - **Unknown or extra input**: An unknown tool name MUST be an error result; extra arguments MUST be ignored.
+- **Unencodable result**: A result the encoder cannot encode, or whose bytes are not UTF-8, is thrown by the encoder and comes back as an error result with its description. No test double can produce one, so no vector covers it.
 - **Error flow**: A service failure, a not-found reply, a thread request to an older service, a reply of the wrong shape or a query or `any_labels` the service ignored all arrive as a thrown `MailClientError` and MUST come back as an error result carrying its description.
 - **Unreachable or slow service**: A transport failure surfaces as an error result with the transport error's `localizedDescription`; the component sets no timeout and does not retry. Offline behavior belongs to the transport.
 - **Concurrent calls**: Calls are independent and unserialised. Two writes to the same message have whatever outcome the service gives them; this component adds no ordering rule.

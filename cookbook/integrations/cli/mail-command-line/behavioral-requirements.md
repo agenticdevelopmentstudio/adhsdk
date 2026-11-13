@@ -1,7 +1,7 @@
 
 ### Entry points and exit statuses
 
-- **usage-text**: `usage(program:)` MUST return the usage text with every occurrence of the command name replaced by `program`, defaulting to `mail` (a host passes `temporal mail`).
+- **usage-text**: `usage(program:)` MUST return the usage text with every occurrence of the command name replaced by `program`, defaulting to `mail` (a host passes `{{app_name_lower}} mail`).
 - **usage-lists-commands**: The usage text MUST list the commands `accounts`, `labels`, `list`, `get`, `thread`, `label add`, `label remove` and `move` with their options, and the `[--json]` flag.
 - **usage-documents-exit-statuses**: The usage text MUST state the exit statuses: 0 success, 1 failure, `notFoundStatus` (3) a message id matches nothing, 64 usage error.
 - **usage-documents-label-combination**: The usage text MUST state that `list` requires a message to carry every `--label` (AND) and, if any `--any-label` is given, at least one of them (OR), and that the two combine.
@@ -24,7 +24,7 @@
 - **value-required**: A value-taking option appearing as the last argument MUST be a usage error.
 - **value-consumption**: A value-taking option MUST consume the next argument as its value whatever that argument looks like, so `--limit -3` reaches the limit check as the value `-3`.
 - **single-dash-positional**: An argument that does not begin with `--` and is not a consumed value MUST be a positional, including a single-dash token other than `-h`.
-- **positional-count-fixed**: `accounts` MUST take exactly 0 positionals, `labels` exactly 1 (account), `get` exactly 2 (account, id), `thread` exactly 2 (account, id) and `list` exactly 1 (account); any other count MUST be a usage error.
+- **positional-count-fixed**: `accounts` MUST take exactly 0 positionals, `labels` exactly 1 (account), `get` exactly 2 (account, id), `thread` exactly 2 (account, id) and `list` exactly 1 (account); any other count MUST be a usage error. `label` and `move` take their counts from **label-arity** and **move-arity**.
 - **repeated-option-last-wins**: When `--since`, `--until`, `--limit`, `--cursor` or `--query` is given more than once, the last occurrence MUST be used.
 
 ### accounts and labels
@@ -35,6 +35,8 @@
 - **labels-text**: In text mode each label MUST print as one line `<name>  <id>  <type>`, separated by two spaces.
 
 ### list
+
+- **message-line**: Every command that prints a message in text mode (`list`, `thread` without `--bodies`, `label add`, `label remove`, `move`) MUST use one message line: `<date>  <id>  <from>  <subject>  [<label names joined by ", ">]`, with fields separated by two spaces, `date` printed exactly as the message's `date` field was received, and the label names always inside square brackets (`[]` when there are none).
 
 - **list-call**: `list <account>` MUST build a `MailMessageFilter` for the account and call `client.messages` with it.
 - **list-label-options**: Each `--label` MUST be appended to the filter's `labels` and each `--any-label` to its `anyLabels`, in the order given.
@@ -47,18 +49,18 @@
 - **list-query-valid**: `--query` MUST be passed to the filter's `query` unmodified.
 - **list-query-blank**: A `--query` value that is empty or only whitespace and newlines MUST be a usage error, because an empty query would quietly list synced mail instead of searching.
 - **list-any-label-with-query**: The command line MUST NOT itself reject `--any-label` combined with `--query`; it forwards both and the mail service refuses the combination.
-- **list-text**: In text mode each message MUST print as `<date>  <id>  <from>  <subject>  [<label names joined by ", ">]`, and when the page has a `nextCursor` a final line `next cursor: <cursor>` MUST follow the message lines.
+- **list-text**: In text mode each message MUST print as a message line, and when the page has a `nextCursor` a final line `next cursor: <cursor>` MUST follow the message lines.
 - **list-json**: In JSON mode the whole `MailMessagePage` MUST be encoded, including `nextCursor`.
 - **list-ignored-filter**: When the client throws because the service ignored `--any-label` or `--query` (`MailClient` rejects a page whose `appliedAnyLabels` or `appliedQuery` is false), `run` MUST treat it as an ordinary failure: status 1, the message on `stderr`, nothing on `stdout`.
 
 ### get and thread
 
 - **get-call**: `get <account> <id>` MUST call `client.message(account:id:)`.
-- **get-text**: In text mode `get` MUST print the header lines `From:`, `To:` (recipients joined by ", "), `Date:`, `Subject:` and `Labels:` (label names joined by ", "), a blank line, then the body.
+- **get-text**: In text mode `get` MUST print the header lines `From:`, `To:` (recipients joined by ", "), `Date:` (the message's `date` field, as received), `Subject:` and `Labels:` (label names joined by ", "), a blank line, then the body.
 - **body-fallback**: The body MUST be `bodyText` when present; otherwise the plain text converted from `bodyHtml` by `HTMLText.plainText(fromHTML:)` when that is non-empty; otherwise the `snippet`.
 - **html-without-text**: HTML that converts to the empty string (an image-only message) MUST fall through to the snippet.
 - **thread-call**: `thread <account> <id> [--bodies]` MUST call `client.thread(account:id:includeBodies:)`, where `id` is a thread id or the id of any message in the thread.
-- **thread-text-summary**: Without `--bodies`, text mode MUST print a header `thread <thread id>  <n> message` (`messages` when n is not 1) followed by one message line per message in the order the client returned them.
+- **thread-text-summary**: Without `--bodies`, text mode MUST print a header `thread <thread id>  <n> message` (`messages` when n is not 1) followed by one message line (see **message-line**) per message in the order the client returned them.
 - **thread-sent-marker**: A message whose `labels` contain `SENT` MUST be marked `(you)`: appended after two spaces on its message line without `--bodies`, and as a `(you)` line before its detail block with `--bodies`.
 - **thread-text-bodies**: With `--bodies`, text mode MUST print the header and then each message's `get` detail block, with the blocks separated by a blank line, a line of four hyphens and a blank line.
 - **thread-json**: In JSON mode the whole `MailThread` MUST be encoded.
@@ -70,12 +72,12 @@
 - **label-arity**: `label add` and `label remove` MUST require at least three positionals after the verb (account, label, and one or more ids), otherwise a usage error.
 - **label-call**: `label add` MUST call `client.modifyLabels` with the label as the only `add` entry and no `remove`; `label remove` MUST do the reverse; both MUST pass all ids in the order given.
 - **label-options**: `label add` and `label remove` MUST accept only `--json` as an option; any other `--` option MUST be a usage error.
-- **label-text**: In text mode `label add` and `label remove` MUST print one message line per returned message.
+- **label-text**: In text mode `label add` and `label remove` MUST print one message line (see **message-line**) per returned message.
 - **move-arity**: `move` MUST require at least two positionals (account and one or more ids) and exactly one `--to`, otherwise a usage error; zero or two `--to` are both usage errors.
 - **move-from**: Each `--from` MUST be collected in order; with no `--from` the `from` argument MUST be nil (not an empty list) so the service applies its default of removing INBOX.
 - **move-call**: `move` MUST call `client.moveMessages` with the account, the ids in the order given, the single `--to` value as `destination` and the collected `from`.
 - **move-position-free**: `--to`, `--from` and ids MAY appear in any order after the account.
-- **move-text**: In text mode `move` MUST print one line per `MailMoveResult`: the message line, two spaces, then each added label as `+<name>` followed by each removed label as `-<name>`, separated by single spaces, or `(no change)` when both are empty.
+- **move-text**: In text mode `move` MUST print one line per `MailMoveResult`: the message line (see **message-line**), two spaces, then each added label as `+<name>` followed by each removed label as `-<name>`, separated by single spaces, or `(no change)` when both are empty.
 - **move-json**: In JSON mode the array of `MailMoveResult` values MUST be encoded.
 
 ### Output encoding and concurrency

@@ -27,7 +27,15 @@
 **Rationale**: Display names such as `"Doe, Jane"` contain commas, so a plain comma split is wrong. The splitter keeps each mailbox as raw text and leaves interpretation to callers. Unbalanced quotes are not repaired.
 **Approved**: pending
 
-**Decision**: Technical debt: undecodable body data is dropped without a signal, and recursion is unbounded.
-**Rationale**: These affect behavioral correctness for malformed or hostile input, so a port must either copy the silence or add a deliberate signal. The open question on `undecodable-body-data` records the first.
+**Decision**: Deliberate prudent debt: undecodable body data is dropped without a signal, and recursion over parts has no depth limit.
+**Rationale**: Both affect malformed or hostile input only, and the source handles neither. Revisit the silent drop when the sync worker needs to show or count messages whose body failed to decode; revisit the depth limit when the parser reads messages from a source other than the Gmail API, or when a crash from a deeply nested message is reported. Until then a port copies both behaviors, or adds a deliberate signal or limit and says so.
+**Approved**: pending
+
+**Decision**: Whether a dropped body should be surfaced is open: today `undecodable-body-data` yields nil with no log, error or flag.
+**Rationale**: Settling it needs the Gmail API contract for `data` and a decision from the owner of the sync worker. The recipe states the current behavior as a MUST until then.
+**Approved**: pending
+
+**Decision**: The parser is not pure: it keeps no shared state, but `createdAt`, `updatedAt` and the generated id read the wall clock and a random UUID inside `parse`, and `now` feeds only the date fallback.
+**Rationale**: `EmailMessage` initializer defaults supply `createdAt` and `updatedAt`, and `UUID()` supplies the id, so none of them is injectable. The cost is that `record-defaults` and `generated-id` can only be asserted loosely. Feeding `now` into both timestamps and injecting an id generator would make them exact; revisit when a test needs exact values.
 **Approved**: pending
 

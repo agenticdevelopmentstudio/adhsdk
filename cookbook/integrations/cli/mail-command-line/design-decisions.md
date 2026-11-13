@@ -1,6 +1,6 @@
 
 **Decision**: The command line never contacts a service directly; it takes an injected `MailClient` and two output closures instead of reading process streams.
-**Rationale**: This keeps parsing and formatting testable with a scripted client and lets one parser serve any host that spells the command differently (`program`), such as `temporal mail`.
+**Rationale**: This keeps parsing and formatting testable with a scripted client and lets one parser serve any host that spells the command differently (`program`), such as `{{app_name_lower}} mail`.
 **Approved**: pending
 
 **Decision**: A blank `--query` is a usage error rather than being forwarded.

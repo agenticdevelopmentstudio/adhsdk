@@ -7,5 +7,5 @@
 - `MailAccount`, `MailProviderStatus`, `MailLabel`, `MailMessage`, `MailMessagePage`, `MailThread` and `MailMoveResult` are the records the replies carry.
 - `MailClient` is the caller's side: it encodes a request to JSON, decodes the reply, throws `MailClientError` for a `.failure`, refuses a page that an older service answered without honoring the filter, and reports a thread request that an older service cannot decode as a service too old to show threads.
 
-The service side (`MailIntegrationService`) is outside this file and answers these requests; the transport is injected, so the same client works over XPC, a socket or in-process.
+The service side ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) is outside this file and answers these requests; the transport is injected, so the same client works over XPC, a socket or in-process.
 

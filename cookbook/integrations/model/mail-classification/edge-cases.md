@@ -1,13 +1,13 @@
 
-- **Empty array**: `classify(labelIds: [])` MUST return `.archived`. No label means no filing label and no user label, so the message is not filed; the test suite pins this.
-- **Only attribute labels**: A message with only `UNREAD`, `IMPORTANT`, `CHAT` and `CATEGORY_*` labels MUST return `.archived`.
-- **Conflicting labels**: `TRASH` together with `SPAM`, `INBOX` or a user label MUST return `.trash`; `SPAM` together with `INBOX` MUST return `.spam`. `TRASH` with `SPAM` or a user label is pinned by the test suite (`["TRASH", "SPAM"]`, `["TRASH", "Label_9"]`), as is `SPAM` with `INBOX`; `TRASH` with `INBOX` follows from the same rule but has no test case.
-- **Duplicate ids**: Repeated ids MUST NOT change the result.
-- **Unknown or future system label**: A Gmail label id outside `systemLabelIds` and without the `CATEGORY_` prefix MUST be treated as a user label and classify as `.filed`. The classifier cannot tell it from a user label.
-- **Empty or whitespace id**: An empty string, or an id with surrounding whitespace, is not special-cased and is treated as a user label.
-- **Case**: Matching is case-sensitive; a lowercase variant of a system id is a user label.
+- **Empty array**: See #requirements/archived-otherwise. No label means no filing label and no user label; the test suite pins this.
+- **Only attribute labels**: See #requirements/attribute-labels-not-filing and #requirements/archived-otherwise.
+- **Conflicting labels**: See #requirements/trash-first and #requirements/spam-second. `["TRASH", "SPAM"]`, `["TRASH", "Label_9"]` and `["SPAM", "INBOX"]` are pinned by the test suite; `TRASH` with `INBOX` follows from the same rule but has no test case.
+- **Duplicate ids**: See #requirements/label-order-independent.
+- **Unknown or future system label**: See #requirements/filed-by-user-label. The classifier cannot tell it from a user label.
+- **Empty or whitespace id**: See #requirements/no-validation. An id with surrounding whitespace is likewise a user label.
+- **Case**: See #requirements/label-match-exact.
 - **Very large arrays**: The cost is linear in the number of labels; there is no cap.
-- **Concurrent access**: Not a concern. The function reads only immutable static sets and its argument, and `MailClass` is `Sendable`, so concurrent calls need no ordering rule.
+- **Concurrent access**: See #requirements/classify-pure; no ordering rule is needed.
 - **Error states, network and offline**: Not applicable. The function does no I/O, takes no dependency that can fail, and never throws.
 - **Stale classification**: The class is computed from the label ids at the moment of the call. This file does not recompute it when labels change; a caller that re-fetches a message gets a new result by calling again.
-
+- **Test gap**: `MailClassificationTests` covers vectors 001-010 only. Cases for `CHAT`, `inbox`, `category_updates`, `""`, `["INBOX", "TRASH"]` and `MailClass` coding and `allCases` do not exist yet.

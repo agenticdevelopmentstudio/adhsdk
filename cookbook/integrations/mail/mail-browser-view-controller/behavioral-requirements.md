@@ -2,7 +2,7 @@
 - **client-only-dependency**: The component MUST be constructible from a mail client alone, with no other required argument.
 - **model-owned**: The component MUST create one model from the supplied client at construction and expose it as a public `model`.
 - **shared-model**: The component MUST give that same model instance to the sidebar, the message list and the reader.
-- **no-coder-init**: The component MUST NOT support construction from an archive; `init(coder:)` MUST trap with the message "init(coder:) has not been implemented".
+- **no-coder-init**: The component does not support construction from an archive; in the macOS source `init(coder:)` traps with the message "init(coder:) has not been implemented", and a port MAY trap or fail the same way (see the design decision on technical debt).
 - **pane-order**: The component MUST lay out the panes in this order: mailbox sidebar, message list, reader.
 - **sidebar-width**: The sidebar pane MUST be between 180 and 320 points wide.
 - **list-min-width**: The message list pane MUST be at least 280 points wide.
@@ -12,7 +12,7 @@
 - **poll-start**: The component MUST start a repeating refresh task each time the view appears, cancelling any task already running first.
 - **poll-interval**: The refresh task MUST wait one refresh interval before each refresh, so the first refresh follows the appearance by one full interval.
 - **poll-default-interval**: The refresh interval MUST default to 30 seconds and MAY be set at construction.
-- **poll-action**: Each tick MUST call the model's refresh-if-synced action, which reads the local store and never calls Gmail.
+- **poll-action**: Each tick MUST call the model's refresh-if-synced action, which reads the local store and never calls the remote mail provider.
 - **poll-stop**: The component MUST cancel the refresh task and drop it when the view disappears.
 - **poll-cancel-exit**: The refresh task MUST end without calling the model when it was cancelled during its wait.
 - **poll-no-retain**: The refresh task MUST hold the controller weakly while it waits; if the controller is gone when a wait ends, the task MUST end. (It holds the controller strongly only for the duration of one refresh call.)

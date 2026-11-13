@@ -25,7 +25,7 @@
 | mail-reader-view-controller-022 | load-remote-no-message | Source behavior: activate "Load Remote Images" with the model's open message nil | Nothing changes |
 | mail-reader-view-controller-023 | stale-load-guard | Source behavior: message `m1` opens, and `m2` opens before the rule list finishes compiling | Only `m2`'s body is loaded |
 | mail-reader-view-controller-024 | rule-list-failure-tolerated | Source behavior: rule-list compilation returns nil | The body loads with the blocking policy prefix and no rule list |
-| mail-reader-view-controller-025 | no-coder-init | Source behavior: construct from an archive | `init(coder:)` traps with "init(coder:) has not been implemented" |
+| mail-reader-view-controller-025 | no-coder-init | Source behavior: construct from an archive | `init(coder:)` traps |
 | mail-reader-view-controller-026 | scripts-off | Source behavior: a message whose HTML body contains a script that writes to the page | The script does not run |
 | mail-reader-view-controller-027 | rule-list-applied | Source behavior: blocking on, rule list compiled, HTML with `<img src="http://t.example/p.gif">` | The image request is blocked by the rule list |
 | mail-reader-view-controller-028 | date-line | Source behavior: message date "not-a-date" | The date line shows "not-a-date" |

@@ -5,7 +5,7 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 
 - **total-function**: `parse` MUST return an `EmailMessage` for every input and MUST NOT throw or return an optional.
 - **existing-id-kept**: The record `id` MUST equal `existingId` when `existingId` is non-nil.
-- **generated-id**: The record `id` MUST be a newly generated UUID string in lowercase when `existingId` is nil.
+- **generated-id**: The record `id` MUST be a newly generated UUID string in lowercase when `existingId` is nil. The generator is `UUID()` called inside `parse`, not an injected dependency, so the id cannot be fixed by a caller.
 - **connection-id-passthrough**: The record `connectionId` MUST equal the `connectionId` argument.
 - **external-id-passthrough**: The record `externalId` MUST equal the message `id` and `threadId` MUST equal the message `threadId`.
 - **provider-default**: The record `provider` MUST be `gmail`, because the parser does not pass a provider and the `EmailMessage` initializer defaults it.
@@ -13,7 +13,7 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 - **snippet-default**: The record `snippet` MUST equal the message `snippet`, or the empty string when it is absent.
 - **label-ids-passthrough**: The record `labelIds` MUST equal the message `labelIds`, or an empty list when they are absent.
 - **history-id-passthrough**: The record `historyId` MUST equal the message `historyId` and stay nil when it is absent.
-- **mail-class-derived**: The record `mailClass` MUST be the result of `MailClassifier.classify` applied to the same label ids that populate `labelIds`.
+- **mail-class-derived**: The record `mailClass` MUST be the result of `MailClassifier.classify` (cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43) applied to the same label ids that populate `labelIds`.
 
 ### Headers and addresses
 
@@ -31,7 +31,7 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 
 - **date-from-internal-date**: The record `internalDate` MUST be derived from the message `internalDate` read as a decimal number of epoch milliseconds when that value parses as a number.
 - **date-from-header**: When the message `internalDate` is absent or does not parse as a number, the record `internalDate` MUST be derived from the `Date` header.
-- **date-header-formats**: The `Date` header MUST be read with the POSIX English locale in exactly three layouts, in this order: weekday, day, month, year, hours, minutes, seconds, zone; day, month, year, hours, minutes, seconds, zone; weekday, day, month, year, hours, minutes, zone.
+- **date-header-formats**: The `Date` header MUST be read with the POSIX English locale (`en_US_POSIX`) in exactly three layouts, tried in this order: `EEE, d MMM yyyy HH:mm:ss Z`, `d MMM yyyy HH:mm:ss Z` and `EEE, d MMM yyyy HH:mm Z` (Unicode date-format pattern letters; `Z` accepts a numeric zone such as `+0000`).
 - **date-header-comment**: Everything from the first opening parenthesis of the `Date` header onward MUST be ignored before parsing, and surrounding spaces MUST be trimmed.
 - **date-now-fallback**: When neither source yields a date, the record `internalDate` MUST be derived from the `now` argument, so the message sorts as new and not as 1970.
 - **date-output-format**: The record `internalDate` MUST be an ISO 8601 string in UTC with fractional seconds to three digits, produced by `IntegrationClock.string(from:)`.
@@ -58,10 +58,10 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 - **charset-declared**: Body bytes MUST be decoded with the charset named by the `charset` parameter of that part's own `Content-Type` header when the name is a recognised IANA charset and the bytes are valid in it.
 - **charset-parameter-parsing**: The `charset` parameter name MUST be matched case-insensitively, and its value MUST have surrounding spaces and surrounding single or double quotes removed.
 - **charset-fallback**: When no usable charset is declared, or decoding with it fails, the bytes MUST be decoded as UTF-8, and when that fails as ISO Latin-1.
-- **undecodable-body-data**: NEEDS REVIEW: Not implemented in source. A part whose `body.data` is not valid base64url yields a nil body for that part with no log, error or flag, and a later part of the same type then fills the body instead. Evidence that would settle it: the Gmail API contract for `data` and a decision from the owner of the sync worker on whether a dropped body should be surfaced.
+- **undecodable-body-data**: A part whose `body.data` is not valid base64url MUST yield a nil body for that part with no log, error or flag, and a later part of the same type MUST then fill the body instead. Whether a dropped body should be surfaced is a pending Design Decision.
 
 ### Concurrency and side effects
 
-- **pure-and-reentrant**: The parser MUST NOT read or write shared mutable state, so concurrent calls on different inputs are independent; the only environmental reads are the current time for `now`, `createdAt` and `updatedAt`, and a random UUID for the generated id.
+- **no-shared-state**: The parser MUST NOT read or write shared mutable state, so concurrent calls on different inputs are independent. It is not referentially transparent: the environmental reads are the current time for the `now` default, `createdAt` and `updatedAt`, and a random UUID for the generated id.
 - **no-io**: The parser MUST NOT perform file, network, process or notification side effects and MUST NOT log.
 

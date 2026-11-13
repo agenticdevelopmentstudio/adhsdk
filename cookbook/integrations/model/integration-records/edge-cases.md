@@ -8,5 +8,6 @@
 - **Concurrent access**: records are `Sendable` value types with no shared mutable state, so concurrent use needs no ordering rule; serialisation of database writes belongs to the store.
 - **Offline or network failure**: not applicable; the records never touch the network.
 - **Boundary values**: `size`, `messagesTotal` and `messagesUnread` are unbounded `Int`s with no range check; range limits for sync settings belong to `MailSyncSettings`.
+- **Timestamp text order**: timestamps sort and compare as text only because the clock always emits exactly three fractional digits (**clock-format**); a string with seven digits or none would break the order.
 - **Clock sampling**: default timestamps are read at each initializer call, so two records built in quick succession can differ in the fractional digits.
 

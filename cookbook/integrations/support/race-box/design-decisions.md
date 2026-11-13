@@ -18,12 +18,3 @@
 **Decision**: `value()` does not respond to cancellation of the caller.
 **Rationale**: Cancellation is the caller's job, so the sign-in race wires it to `finish` through `withTaskCancellationHandler`. This keeps the box a pure race cell with no knowledge of tasks.
 **Approved**: pending
-
-**Decision**: There is no test file for `RaceBox`.
-**Rationale**: None is given in the source. It is covered indirectly by the deadline tests in `GoogleOAuthTests.swift` and the stop-bound test in `MailIntegrationServiceTests.swift`, and the compliance table records the gap under unit-test-coverage.
-**Approved**: pending
-
-**Decision**: The recipe marks nothing as an open question.
-**Rationale**: The one hazard, a box that is never finished leaving its waiters suspended, is a declared absence of a timeout and every caller supplies a timer, so it is stated as a fact.
-**Approved**: pending
-

@@ -23,91 +23,38 @@
       "errors"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a",
+      "c448c9f4-195d-4625-a49d-22dd5468a914",
+      "238f4d91-4a22-4a0d-ae4b-b4070d02b357",
+      "df121975-deb8-49a9-b023-0aadcb0923d8",
+      "c19280fd-b80c-46f3-a6a7-0b60a0c90d91"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7db648b0437d816b",
+  "synced": "22bd37e593d92b67",
   "parts": [
-    {
-      "part": "intro"
-    },
-    {
-      "part": "overview",
-      "heading": "Overview"
-    },
-    {
-      "part": "behavioral-requirements",
-      "heading": "Behavioral Requirements"
-    },
-    {
-      "part": "appearance",
-      "heading": "Appearance"
-    },
-    {
-      "part": "states",
-      "heading": "States"
-    },
-    {
-      "part": "accessibility",
-      "heading": "Accessibility"
-    },
-    {
-      "part": "conformance-test-vectors",
-      "heading": "Conformance Test Vectors"
-    },
-    {
-      "part": "edge-cases",
-      "heading": "Edge Cases"
-    },
-    {
-      "part": "configuration",
-      "heading": "Configuration"
-    },
-    {
-      "part": "deep-linking",
-      "heading": "Deep Linking"
-    },
-    {
-      "part": "localization",
-      "heading": "Localization"
-    },
-    {
-      "part": "accessibility-options",
-      "heading": "Accessibility Options"
-    },
-    {
-      "part": "feature-flags",
-      "heading": "Feature Flags"
-    },
-    {
-      "part": "analytics",
-      "heading": "Analytics"
-    },
-    {
-      "part": "privacy",
-      "heading": "Privacy"
-    },
-    {
-      "part": "logging",
-      "heading": "Logging"
-    },
-    {
-      "part": "platform-notes",
-      "heading": "Platform Notes"
-    },
-    {
-      "part": "design-decisions",
-      "heading": "Design Decisions"
-    },
-    {
-      "part": "compliance",
-      "heading": "Compliance"
-    },
-    {
-      "part": "history",
-      "heading": "Change History"
-    }
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
   ]
 }

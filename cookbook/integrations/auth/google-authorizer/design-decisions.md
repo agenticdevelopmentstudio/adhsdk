@@ -43,3 +43,14 @@
 **Rationale**: The source states it is verified manually because the browser round trip cannot run headless; only `credential` and `withSignInDeadline` are unit tested. The requirements for the flow are traced to the code, not to a test.
 **Approved**: pending
 
+**Decision**: The authorizer is Gmail-only on purpose: the scope `gmail.modify` and the Keychain keys `integrations.gmail.*` are fixed, not configuration options.
+**Rationale**: The component is the Google layer of the Gmail integration and the source hard-codes both. A general Google authorizer would take scopes and a key prefix as inputs; this one does not, and a port for another Google API must change the constants.
+**Approved**: pending
+
+**Decision**: The logging subsystem `com.agenticdeveloperhub.integrations` is a literal, not a template variable.
+**Rationale**: The source logs under the SDK's own subsystem, shared by every integration type, so the value belongs to the SDK and not to the host app's bundle id. A port keeps the SDK's subsystem rather than substituting an app id.
+**Approved**: pending
+
+**Decision**: PKCE and `state` are left to AppAuth's defaults rather than set explicitly.
+**Rationale**: `OIDAuthorizationRequest` generates an S256 code challenge and a random `state` and checks the returned `state`, so the source never mentions them. `signin-pkce` and `signin-state` state them explicitly because a port without AppAuth would otherwise omit them.
+**Approved**: pending

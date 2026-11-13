@@ -31,11 +31,22 @@
 **Rationale**: The source applies `unique` without saying why, and test `listMessageIdsDedupesAndToleratesEmpty` fixes the behavior; a port must keep it. The reason is not recorded in the source.
 **Approved**: pending
 
-**Decision**: A decode failure, a non-HTTP response and a URL failure are not retried, and the first is thrown as a `DecodingError` rather than an `IntegrationError`.
-**Rationale**: Only a failure that a later attempt could change is retried. The inconsistent error type is what the code does, so a caller catching only `IntegrationError` misses a malformed success body.
+**Decision**: A decode failure, a non-HTTP response and a URL failure are not retried. Technical debt: a decode failure is thrown as a `DecodingError` rather than an `IntegrationError`.
+**Rationale**: Only a failure that a later attempt could change is retried. The inconsistent error type is what the code does, so a caller catching only `IntegrationError` misses a malformed success body. A port should wrap it as `IntegrationError.gmail(status: <code>, ...)` so one catch covers every failure.
 **Approved**: pending
 
 **Decision**: The client sets no timeout and has no cancellation handling beyond `Task.sleep` and the `URLSession` default.
 **Rationale**: Nothing in the source configures a `timeoutInterval`, so timeouts come from the injected session and surface as retried `timedOut` errors. Behavior on a stalled connection is the session's.
 **Approved**: pending
 
+**Decision**: `batchModify` is retried like every other call, although it is a POST with no idempotency key.
+**Rationale**: Adding or removing a label that is already in that state changes nothing in Gmail, so a repeat after a lost reply or a 5xx leaves the same end state as one application. The code retries on 429, 5xx, rate-limit 403 and the four transient network errors without a separate rule for this call. An operation that is not idempotent in a port must be excluded from network-error retries.
+**Approved**: pending
+
+**Decision**: Ids interpolated into `threads/<id>` and `messages/<id>` are not validated or percent-encoded.
+**Rationale**: The ids come from Gmail's own listing and history responses, which are opaque hexadecimal strings, so the source trusts them; an id such as `a/b` would change the route instead of failing. Input sanitization is therefore partial in Compliance. A port may encode the segment, at no cost to ids Gmail issues.
+**Approved**: pending
+
+**Decision**: The client never logs and offers no retry or backoff hook.
+**Rationale**: The source has no log call and no callback, so a stalled call of up to about 63 seconds of backoff shows nothing to an observer, and the token and query cannot leak into a log. Anyone who needs visibility injects a `sleep` closure that records each wait, which is how the tests observe retries. A port that adds a retry event must leave out the token and the query.
+**Approved**: pending

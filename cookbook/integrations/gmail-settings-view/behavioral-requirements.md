@@ -10,8 +10,8 @@
 - **client-heading-and-text**: The OAuth Client section MUST show the heading "OAuth Client" followed by the model's `oauthClientText`, wrapping onto as many lines as it needs.
 - **current-client-readout**: When the model reports both a current client ID and a masked client secret, the view MUST show them as a two-row grid labelled "Current client ID" and "Current secret"; when either is nil the grid MUST be absent.
 - **client-id-selectable**: The current client ID MUST be shown in full, in a monospaced face, and MUST be selectable text.
-- **secret-never-revealed**: The current secret MUST be shown only as the model's `maskedClientSecret`, in a monospaced face, and MUST NOT be selectable.
-- **client-form-fields**: The view MUST show a "Client ID" text field with the prompt "….apps.googleusercontent.com" bound to the model's `clientIdDraft`, and a "Client secret" secure field bound to `clientSecretDraft`, in a form no wider than 460 pt.
+- **secret-never-revealed**: The current secret row MUST use a monospaced face and MUST NOT be selectable; what it shows is governed by #requirements/secret-masked-readout.
+- **client-form-fields**: The view MUST show a "Client ID" text field with the prompt "….apps.googleusercontent.com" bound to the model's `clientIdDraft`, and a "Client secret" field bound to `clientSecretDraft` that conceals input (see #requirements/secret-entry-concealed), in a form no wider than 460 pt.
 - **save-client-button**: The view MUST show a button titled "Save Client" when no client is imported and "Replace Client" when one is, and pressing it MUST call the model's `saveClientDraft`.
 - **save-client-enablement**: The save-client button MUST be disabled while the model is busy or while `canSaveClientDraft` is false.
 - **import-json-button**: The view MUST show a button titled "Import Client JSON…" when no client is imported and "Replace from JSON…" when one is, separated from the save button by the secondary-styled word "or".
@@ -19,7 +19,7 @@
 - **import-json-panel**: Pressing the import button MUST open a modal file-open panel that allows only JSON files, a single selection, and no directories.
 - **import-json-cancel**: If the file panel is dismissed without choosing a file, the view MUST make no model call.
 - **import-json-call**: If a file is chosen, the view MUST call the model's `importClientJSON(from:)` with its URL.
-- **reconnect-hint**: When a client is imported and at least one account exists, the view MUST show the caption "Accounts signed in with a replaced client need Reconnect."
+- **reconnect-hint**: When a client is imported and at least one account exists, the view MUST show the caption "Accounts signed in with a replaced client need Reconnect." The condition is deliberately broad: see the design decision on the reconnect hint.
 
 ### Accounts section
 
@@ -31,7 +31,7 @@
 - **remove-button**: The view MUST show a "Remove" button, MUST disable it while no account is selected or the model is busy, and on press MUST ask for confirmation for the selected account instead of removing it.
 - **remove-confirmation**: The removal confirmation MUST be titled "Remove <email>?", MUST say it signs the account out of Google, removes its stored sign-in and deletes its mail from this Mac, and MUST offer an action titled "Remove".
 - **remove-safe-default**: The removal confirmation MUST make Cancel the default response to Return, and Esc MUST decline.
-- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines or when there is no key window to attach the confirmation to.
+- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines or when there is no key window to attach the confirmation to; the shared confirmation helper answers no without a window, so unlike alerts the confirmation has no app-modal fallback.
 - **sign-in-progress**: While the model's `signingIn` is true, the view MUST show a small spinner, the caption "Waiting for Google sign-in in your browser…" and a "Cancel" button beside the Add Account and Remove buttons.
 - **cancel-sign-in**: The "Cancel" button MUST call the model's `cancelSignIn` and MUST NOT be disabled by the model's busy state.
 
@@ -59,5 +59,5 @@
 ### Security
 
 - **secret-entry-concealed**: The client secret entry field MUST conceal what is typed.
-- **secret-masked-readout**: The view MUST NOT display the stored client secret in any form other than the model's masked value.
+- **secret-masked-readout**: The view MUST display the stored client secret only as the model's `maskedClientSecret`, never in any other form.
 

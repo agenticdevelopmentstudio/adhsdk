@@ -67,12 +67,13 @@
 - **query-scope**: `messages(_:)` MUST return only live messages whose `connection_id` equals `query.connectionId`.
 - **query-since**: When `since` is set, `messages(_:)` MUST return only messages whose `internal_date` is greater than or equal to it.
 - **query-until**: When `until` is set, `messages(_:)` MUST return only messages whose `internal_date` is less than or equal to it.
-- **query-date-compare**: `messages(_:)` MUST compare `internal_date`, `since` and `until` as strings, so correct ranges depend on the ISO-8601 format that `IntegrationClock` writes.
+- **query-date-compare**: `messages(_:)` MUST compare `internal_date`, `since`, `until` and `after.internalDate` as strings without parsing or validating them, so correct ranges depend on the ISO-8601 format that `IntegrationClock` writes.
 - **query-labels-all**: `messages(_:)` MUST return only messages whose `label_ids` contain every id in `labelIds`.
 - **query-labels-any**: When `anyLabelIds` is not empty, `messages(_:)` MUST return only messages whose `label_ids` contain at least one id in `anyLabelIds`.
 - **query-labels-combine**: `messages(_:)` MUST apply `labelIds` and `anyLabelIds` together, so a message must satisfy both.
 - **query-order**: `messages(_:)` MUST order results by `internal_date` descending, then `id` ascending.
 - **query-after**: When `after` is set, `messages(_:)` MUST return only messages that follow that key in the query order: `internal_date` less than `after.internalDate`, or equal to it with `id` greater than `after.id`.
+- **message-upsert-batch-last-wins**: When one `upsertMessages(_:)` call holds two messages with the same `externalId`, the later one MUST be the stored row, and one row remains.
 - **query-after-stable**: A page resumed with `after` set to the last row of the previous page MUST NOT skip or repeat rows when rows ahead of that key are tombstoned or removed from the filter.
 - **query-limit**: `messages(_:)` MUST return at most `max(limit, 0)` rows.
 - **query-offset**: `messages(_:)` MUST skip `max(offset, 0)` rows of the ordered result before it returns any.
@@ -99,7 +100,7 @@
 
 - **isolation-by-connection**: A message, label or tombstone operation scoped to one `connectionId` MUST NOT change rows of any other connection.
 - **sendable**: `IntegrationsStore` MUST be `Sendable` and MUST hold no mutable state of its own; it MAY be called from any thread.
-- **writes-serialised**: Writes MUST run through `BoundedDatabase.write`, which runs them one at a time on the single writer connection.
-- **reads-parallel**: Reads MUST run through `BoundedDatabase.read`, which runs on a pooled reader connection and does not wait for the writer on a file database.
+- **writes-serialised**: The store MUST route every write through `BoundedDatabase.write`, which runs writes one at a time on the single writer connection.
+- **reads-parallel**: The store MUST route every read through `BoundedDatabase.read`, which runs on a pooled reader connection and does not wait for the writer on a file database.
 - **errors-unwrapped**: The store MUST let database errors and `BoundedDatabaseError.deadlineExceeded` reach the caller unchanged; it does not wrap, retry or log them.
 

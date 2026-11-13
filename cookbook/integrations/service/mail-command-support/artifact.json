@@ -17,93 +17,46 @@
       "swift",
       "macos"
     ],
-    "tags": [],
-    "depends-on": [],
-    "related": [],
+    "tags": [
+      "mail",
+      "json",
+      "date-parsing",
+      "cli",
+      "mcp"
+    ],
+    "depends-on": [
+      "888b7ba2-61f6-4251-88df-3586c5c86b1f"
+    ],
+    "related": [
+      "be4db0fe-628d-41f8-9fdf-25a6d46844cf",
+      "cbee8b02-9456-4d9b-942a-51f8a9c074fc",
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9af4d38ecbf94dba",
+  "synced": "57d45478ac08379c",
   "parts": [
-    {
-      "part": "intro"
-    },
-    {
-      "part": "overview",
-      "heading": "Overview"
-    },
-    {
-      "part": "behavioral-requirements",
-      "heading": "Behavioral Requirements"
-    },
-    {
-      "part": "appearance",
-      "heading": "Appearance"
-    },
-    {
-      "part": "states",
-      "heading": "States"
-    },
-    {
-      "part": "accessibility",
-      "heading": "Accessibility"
-    },
-    {
-      "part": "conformance-test-vectors",
-      "heading": "Conformance Test Vectors"
-    },
-    {
-      "part": "edge-cases",
-      "heading": "Edge Cases"
-    },
-    {
-      "part": "configuration",
-      "heading": "Configuration"
-    },
-    {
-      "part": "deep-linking",
-      "heading": "Deep Linking"
-    },
-    {
-      "part": "localization",
-      "heading": "Localization"
-    },
-    {
-      "part": "accessibility-options",
-      "heading": "Accessibility Options"
-    },
-    {
-      "part": "feature-flags",
-      "heading": "Feature Flags"
-    },
-    {
-      "part": "analytics",
-      "heading": "Analytics"
-    },
-    {
-      "part": "privacy",
-      "heading": "Privacy"
-    },
-    {
-      "part": "logging",
-      "heading": "Logging"
-    },
-    {
-      "part": "platform-notes",
-      "heading": "Platform Notes"
-    },
-    {
-      "part": "design-decisions",
-      "heading": "Design Decisions"
-    },
-    {
-      "part": "compliance",
-      "heading": "Compliance"
-    },
-    {
-      "part": "history",
-      "heading": "Change History"
-    }
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
   ]
 }

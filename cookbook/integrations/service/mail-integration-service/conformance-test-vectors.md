@@ -66,4 +66,5 @@ Vectors are drawn from `MailIntegrationServiceTests` (the test name is given) an
 | mail-service-061 | move-empty | Derived: `.moveMessages` with an empty `messageIds` | `.moved([])` |
 | mail-service-062 | encoding-fallback | Derived: a response that fails to encode in `handle(requestData:)` | The bytes of `{"failure":{"_0":"encoding failed"}}` |
 | mail-service-063 | search-bounds | Derived: `gmailQuery("x", since: "2026-01-01T00:00:00Z", until: "2026-01-02T00:00:00Z")` | `(x) after:1767225600 before:1767312001` |
+| mail-service-064 | sign-in-profile-failure-no-revoke | The Gmail profile call throws `revoked` during `.signIn` (`revokedProfileAtSignInFails`) | `.failure("Google access was revoked — sign in again")`; no connection is stored; the grant is not revoked at Google |
 

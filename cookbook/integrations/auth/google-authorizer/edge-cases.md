@@ -6,11 +6,11 @@
 - **Corrupt stored credential**: Stored text that does not decode as `GoogleCredential` MUST read as absent and surface as `revoked`, prompting sign-in again; the decode failure is not logged or reported separately.
 - **Keychain read failure versus absence**: A throwing read MUST surface as `keychain` and never as `revoked`.
 - **Keychain write failure on refresh**: The refreshed credential MUST stay usable from memory; the in-memory copy is lost on restart, and the Keychain keeps the stale credential.
-- **Waiters on a refresh whose save failed**: Only the first caller to settle (the one that persists) sees the save error; other callers sharing that refresh return the refreshed access token without error.
+- **Waiters on a refresh whose save failed**: See `provider-save-error-to-owner`: only the persisting caller sees the save error; the other callers return the refreshed access token.
 - **Concurrent access**: Same-connection refreshes MUST coalesce; different connections MUST refresh independently because the in-flight table and generation counters are keyed by `connectionId`.
 - **Re-entrancy after supersede**: A superseded refresh MUST re-read the current credential through `accessToken` rather than return its own result.
 - **Revoked grant**: `invalid_grant` on refresh MUST surface `revoked` but MUST NOT delete the stored credential; the caller decides whether to `forget`.
-- **Revoke with no credential or unreadable Keychain**: `revoke` MUST return silently when nothing is stored, and after logging when the Keychain cannot be read.
+- **Revoke with no credential or unreadable Keychain**: `revoke` MUST return silently when nothing is stored, and after logging when the Keychain cannot be read (see `provider-revoke-best-effort`).
 - **Timeout during browser wait**: Expiry of the 300-second default MUST cancel AppAuth's flow and the listener, and throw `signInFailed("Sign-in timed out")`.
 - **User closes the browser or denies consent**: AppAuth's user-canceled code maps to `signInCancelled`; whether AppAuth detects a closed browser tab is AppAuth's behavior, and the source adds no handling.
 - **Network unavailable**: A transport failure on refresh or revoke propagates as the URL session's error; there is no retry, backoff, timeout override or offline queue in this component, so `accessToken` fails and the next call refreshes again.

@@ -25,9 +25,15 @@
 | gmail-settings-022 | account-error-new-message, account-error-after-recovery | Account's error message changes; and an account recovers then fails with the same message (tests `aDifferentErrorIsAlertedAgain`, `theSameErrorAfterARecoveryIsAlertedAgain`) | Each case raises a new alert |
 | gmail-settings-023 | dismiss-account-error, account-error-one-at-a-time | Two failing accounts; dismiss the first alert (test `dismissingRaisesTheNextFailingAccount`) | The second account's alert appears after the dismiss, not before |
 | gmail-settings-024 | show-error, show-error-marks-alerted | `showError` on a failing account, and on a healthy one (tests `showErrorReopensItWithoutRepeatingAfterwards`, `showErrorIgnoresAHealthyAccount`) | The failing account's alert reopens and is not repeated after the next reload; the healthy account raises nothing |
-| gmail-settings-025 | cancel-sign-in, cancel-sign-in-no-reload | `cancelSignIn` while signing in (test `cancelSignInSendsCancelWhileSigningIn`) | A cancel-sign-in request is sent |
+| gmail-settings-025 | cancel-sign-in, cancel-sign-in-no-reload | `cancelSignIn` while signing in (test `cancelSignInSendsCancelWhileSigningIn`) | A cancel-sign-in request is sent; no reload request follows the cancel and `busy` does not change (the test asserts only that the request is sent) |
 | gmail-settings-026 | remove-account, sync-now, remove-integration | `remove`, `syncNow`, `removeIntegration` (tests `removeSendsRemoveAccount`, `syncNowSendsSyncNow`, `removeIntegrationClearsAccounts`) | The matching request is sent and the reloaded accounts reflect the service |
-| gmail-settings-027 | selection-kept-when-valid, selected-account | Select an existing account, then reload | `selectedAccountId` is unchanged and `selectedAccount` is that account |
+| gmail-settings-027 | selection-kept-when-valid, selected-account | Select an existing account, then reload (no test asserts this yet) | `selectedAccountId` is unchanged and `selectedAccount` is that account |
+| gmail-settings-028 | reload-failure-reported-if-none, reload-failure-keeps-first-error | Provider read fails, with `errorMessage` nil; then an action fails and the provider read fails again (no test asserts this yet) | The first case sets `errorMessage` to the reload failure's text; the second keeps the action's message |
+| gmail-settings-029 | cancel-sign-in-error | The cancel request fails with "no sign-in" (no test asserts this yet) | `errorMessage` is "no sign-in" and no reload request follows |
+| gmail-settings-030 | shared-tracker-default | Two models created without a tracker; each calls `addAccount` in turn (no test asserts this yet) | The second model's ticket supersedes the first, so only the second reports `startedLatestSignIn` |
+| gmail-settings-031 | reconnect-is-add-account | An account in `revoked` state; `addAccount` (no test asserts this yet) | A sign-in request is sent, with no separate reconnect request |
+| gmail-settings-032 | last-synced-defaults | `lastSyncedText` with only a timestamp one hour in the past (no test asserts this yet) | "Last synced " followed by the relative date in the current locale |
+| gmail-settings-033 | account-error-alert | Two accounts in error, listed `b1` then `a1`; `reload` (no test asserts this yet) | The alert is for `b1`, the first in list order |
 
-This recipe has no SHOULD requirements, so no omission needs a rationale.
+This ingredient has no SHOULD requirements, so no omission needs a rationale.
 

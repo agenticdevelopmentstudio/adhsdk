@@ -19,7 +19,10 @@
 **Rationale**: The MCP tools can name the argument and the accepted forms in an `ArgumentError`; the command-line parser only returns no result, so the offending value is not named. This is a difference between callers, not between the helpers.
 **Approved**: pending
 
-**Decision**: There is no test file for these helpers.
-**Rationale**: None is given in the source. The vectors above are derived from the code and its comments, and the compliance table records the gap under unit-test-coverage.
+**Decision**: `MailJSON.encode` builds a fresh `JSONEncoder` per call and keeps a `not UTF-8` guard.
+**Rationale**: A fresh encoder shares no state between calls. The guard turns a failed `String(bytes:encoding:)` into `EncodingError.invalidValue`; it is unreachable with the standard encoder, so ports are not required to reproduce either.
 **Approved**: pending
 
+**Decision**: The `\/` slash escaping is a Foundation detail, not part of the contract.
+**Rationale**: Consumers parse the JSON, so only valid, sorted, deterministic output matters; this keeps ports free to use their platform's serializer.
+**Approved**: pending

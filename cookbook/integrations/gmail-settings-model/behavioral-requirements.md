@@ -27,7 +27,7 @@
 - **reconnect-is-add-account**: Reconnecting an account MUST use `addAccount`; the service matches the account by email and reuses it.
 - **cancel-sign-in**: `cancelSignIn` MUST send a cancel-sign-in request.
 - **cancel-sign-in-error**: When the cancel request fails, `cancelSignIn` MUST set `errorMessage` to the failure's `localizedDescription`.
-- **cancel-sign-in-no-reload**: `cancelSignIn` MUST NOT reload and MUST NOT change `busy`; the pending `addAccount` call reports its own failure ("Sign-in was cancelled" per the source comment) and reloads.
+- **cancel-sign-in-no-reload**: `cancelSignIn` MUST NOT reload and MUST NOT change `busy`; the pending `addAccount` call fails with "Sign-in was cancelled", reports that failure and reloads.
 - **remove-account**: `remove(accountId:)` MUST send a remove-account request for that account.
 - **sync-now**: `syncNow(accountId:)` MUST send a sync-now request for that account.
 - **remove-integration**: `removeIntegration` MUST send a remove-provider request.

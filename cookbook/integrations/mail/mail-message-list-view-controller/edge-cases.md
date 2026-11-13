@@ -5,7 +5,7 @@
 - **Unparseable date**: A date the model cannot parse MUST show as the original text (mail-list-008).
 - **Selected id not listed**: When the selected id is not in `messages`, or is nil, the list MUST clear the table selection (mail-list-021).
 - **Selection echo**: The list MUST suppress the selection callback while it applies the model's selection, so the model is not called back (mail-list-020).
-- **Selection out of range**: In the selection callback, a selected row index outside `messages` MUST be sent to the model as no message.
+- **Selection out of range**: In the selection callback, a selected row index outside `messages` MUST be sent to the model as no message (mail-list-034).
 - **Repeated last-row display**: The list calls `loadMore()` every time the last row is shown while `hasMore` is true and does not guard against repeats itself; the model's `loadMore()` is a no-op while a page is loading and on the last page. The list SHOULD keep relying on that guard.
 - **Load-more failure**: The list does nothing on a failed page load; the model sets `errorMessage`, and this controller shows no error of its own. The error is surfaced elsewhere in the mail window.
 - **Boundary, one message**: With a single message, that row is both first and last, so showing it loads the next page when `hasMore` is true.

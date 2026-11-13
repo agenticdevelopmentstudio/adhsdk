@@ -1,6 +1,6 @@
 
 - **model-required**: The component MUST be constructed from a mail browser model and MUST read the open message from that model.
-- **no-coder-init**: The component MUST NOT support construction from an archive; `init(coder:)` MUST trap with the message "init(coder:) has not been implemented".
+- **no-coder-init**: The component MUST NOT support construction from an archive; `init(coder:)` MUST trap.
 - **observe-open-message**: The component MUST react on the main queue to every value the model publishes for its open message, including the value already present when the view loads.
 - **none-hides-message-views**: When the open message is nil, the component MUST hide the header, the separator and the body view and MUST show the placeholder.
 - **none-placeholder-text**: The placeholder MUST read "No message selected".
@@ -35,10 +35,10 @@
 - **link-opens-externally**: A link activation, or a request with no target frame, to a URL whose scheme is `http`, `https` or `mailto` (compared case-insensitively) MUST open in the system's default handler for that URL.
 - **link-never-in-reader**: A link activation, or a request with no target frame, MUST NOT navigate the reader, whatever its scheme, except the in-frame fragment link of fragment-in-place.
 - **link-other-schemes-dropped**: A link to any other scheme (`smb`, `vnc`, `ssh` or an app's own) MUST be cancelled and MUST NOT be opened.
-- **fragment-in-place**: A link within the same frame to the reader's own page that carries a fragment MUST be allowed so the message scrolls in place.
+- **fragment-in-place**: A link within the same frame (the target frame is not nil) to the reader's own page, meaning an `about:` URL, that carries a non-empty fragment MUST be allowed so the message scrolls in place.
 - **own-page-only**: Any navigation that is not a link activation and has a target frame MUST be allowed only when its URL scheme is `about` (compared case-insensitively) and MUST be cancelled otherwise.
 - **navigation-without-url**: A navigation request with no URL MUST be cancelled.
 - **body-accessibility-id**: The body view MUST carry the accessibility identifier "mail.reader.body".
 - **header-selectable**: The subject, sender, recipients and date text MUST be selectable.
-- **header-truncation**: The sender, recipients and date lines MUST truncate at the tail when too long and MUST yield width before other content.
+- **header-truncation**: The sender, recipients and date lines MUST truncate at the tail when too long. They MUST yield width first: each sets a low horizontal content compression resistance priority (`defaultLow`), so they compress before the subject and the remote-content bar.
 

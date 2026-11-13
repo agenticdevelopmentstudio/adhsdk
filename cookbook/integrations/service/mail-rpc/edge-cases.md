@@ -16,5 +16,5 @@
 - **Cancellation and timeout**: The client has no cancellation or timeout logic of its own; a cancelled task behaves as the transport does.
 - **Offline or unreachable service**: Surfaces as the transport's thrown error; there is no cached or degraded answer.
 - **Idempotency**: Each call sends one request with no idempotency key; whether a repeated `modifyLabels`, `moveMessages` or `syncNow` is safe is decided by the service, not by this file.
-- **Unvalidated dates**: `since` and `until` pass through as text; the command-line and MCP front ends validate them before building a filter (see the `MailCommandSupport` recipe).
+- **Unvalidated dates**: `since` and `until` pass through as text; the command-line and MCP front ends validate them before building a filter (see the [MailCommandSupport](cookbook:3d12c073-edc3-44fb-a988-5edec20575e0) recipe).
 

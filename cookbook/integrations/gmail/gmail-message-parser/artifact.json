@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Pure function that turns a Gmail format=full message into an EmailMessage: headers, addresses, bodies, attachments, charsets and dates.",
+    "summary": "Turns a Gmail format=full message into an EmailMessage: headers, addresses, bodies, attachments, charsets and dates.",
     "platforms": [
       "swift",
       "macos",
@@ -24,92 +24,38 @@
       "mime",
       "parser"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "888b7ba2-61f6-4251-88df-3586c5c86b1f",
+      "ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43"
+    ],
+    "related": [
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d0b98717c1a1be8a",
+  "synced": "63bf87ef372ce101",
   "parts": [
-    {
-      "part": "intro"
-    },
-    {
-      "part": "overview",
-      "heading": "Overview"
-    },
-    {
-      "part": "behavioral-requirements",
-      "heading": "Behavioral Requirements"
-    },
-    {
-      "part": "appearance",
-      "heading": "Appearance"
-    },
-    {
-      "part": "states",
-      "heading": "States"
-    },
-    {
-      "part": "accessibility",
-      "heading": "Accessibility"
-    },
-    {
-      "part": "conformance-test-vectors",
-      "heading": "Conformance Test Vectors"
-    },
-    {
-      "part": "edge-cases",
-      "heading": "Edge Cases"
-    },
-    {
-      "part": "configuration",
-      "heading": "Configuration"
-    },
-    {
-      "part": "deep-linking",
-      "heading": "Deep Linking"
-    },
-    {
-      "part": "localization",
-      "heading": "Localization"
-    },
-    {
-      "part": "accessibility-options",
-      "heading": "Accessibility Options"
-    },
-    {
-      "part": "feature-flags",
-      "heading": "Feature Flags"
-    },
-    {
-      "part": "analytics",
-      "heading": "Analytics"
-    },
-    {
-      "part": "privacy",
-      "heading": "Privacy"
-    },
-    {
-      "part": "logging",
-      "heading": "Logging"
-    },
-    {
-      "part": "platform-notes",
-      "heading": "Platform Notes"
-    },
-    {
-      "part": "design-decisions",
-      "heading": "Design Decisions"
-    },
-    {
-      "part": "compliance",
-      "heading": "Compliance"
-    },
-    {
-      "part": "history",
-      "heading": "Change History"
-    }
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
   ]
 }

@@ -1,5 +1,5 @@
 
-The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Integrations/GmailSettingsModelTests.swift`). The view has no test beside it, so vectors marked "(view)" are derived from the view source; those naming a test assert the model behavior the view relies on.
+The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Integrations/GmailSettingsModelTests.swift`). The view has no test beside it, so vectors marked "(view)" are derived from the view source; those naming a test assert the model behavior the view relies on. View-level tests are a known gap: tests should be added for `choices(_:including:)` (gmail-033, gmail-034), the busy gating of Save Client, Import, Add Account, Remove, Reconnect and Sync Now (gmail-006, gmail-019, gmail-024) and the alert wiring (gmail-035 to gmail-037).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

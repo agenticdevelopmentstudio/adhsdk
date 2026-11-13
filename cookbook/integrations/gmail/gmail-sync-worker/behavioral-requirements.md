@@ -44,8 +44,7 @@ Contract: `public struct GmailSyncWorker: Sendable` with `public init(api: any G
 
 ### Incremental sync
 
-- **history-all-pages**: The incremental pass MUST call `history(startHistoryId:pageToken:)` with the original cursor on every call, following `nextPageToken` until it is nil.
-- **history-start-fixed**: The incremental pass MUST send the cursor it started with as `startHistoryId` on every history call, not the page's newer `historyId`.
+- **history-all-pages**: The incremental pass MUST call `history(startHistoryId:pageToken:)` following `nextPageToken` until it is nil, and MUST send the cursor it started with as `startHistoryId` on every call, not the page's newer `historyId`.
 - **cursor-latest-page**: The cursor an incremental pass returns MUST be the `historyId` of the last history page.
 - **deleted-first**: The incremental pass MUST tombstone the ids Gmail reported as deleted before it fetches any changed message.
 - **deleted-not-fetched**: The incremental pass MUST NOT fetch a changed id that also appears among the deleted ids.
@@ -64,12 +63,12 @@ Contract: `public struct GmailSyncWorker: Sendable` with `public init(api: any G
 - **fetch-handler-serial**: The fetch MUST call its handler one batch at a time from the parent task, so the handler's captured sets and counters are never mutated concurrently.
 - **fetch-404-nil**: The fetch MUST turn `IntegrationError.gmail(status: 404, message: _)` from `message(id:)` into a nil message for that id.
 - **fetch-error-fails**: Any other error from `message(id:)` MUST fail the fetch, and the batches already handed over MUST stay stored.
-- **fetch-parse**: Each fetched DTO MUST be parsed with `GmailMessageParser.parse` using the connection's id, a nil `existingId` and the clock value read once at the start of the fetch.
+- **fetch-parse**: Each fetched DTO MUST be parsed with `GmailMessageParser.parse` using the connection's id, the `existingId` set by **local-id-kept** and the clock value read once at the start of the fetch.
 - **local-id-kept**: The worker MUST pass a nil `existingId`, and relies on `store.upsertMessages` to keep the local id and `createdAt` of a row already stored for the same connection and `externalId`.
 
 ### Ordering and concurrency
 
 - **struct-sendable**: `GmailSyncWorker` MUST be `Sendable`, and its collaborators `GmailAPI` and the clock closure MUST be `Sendable`.
 - **no-self-serialisation**: The worker MUST NOT guard against two overlapping `sync` calls on the same connection; `MailIntegrationService` serialises them per connection.
-- **clock-reads**: The worker MUST read the injected clock separately for the query, the window start, the fetch and the stored `lastSyncAt`, so a moving clock gives each read a different value.
+- **clock-reads**: The worker MAY read the injected clock separately for the query, the window start, the fetch and the stored `lastSyncAt`, so a moving clock gives each read a different value; a port MAY read it once per run (see the last Design Decision).
 

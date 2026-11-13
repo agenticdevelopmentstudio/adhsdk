@@ -34,6 +34,9 @@ Vectors named for a test come from `IntegrationsStoreTests`, which runs the stor
 | store-029 | timestamp-format, config-upsert-stamps, connection-upsert-stamps | Derived: upsert a config whose `updatedAt` is "x" and `deletedAt` is "y" | The stored `updatedAt` is a fractional-second ISO-8601 UTC string and `deletedAt` is nil |
 | store-030 | transaction-per-call, message-upsert-batch | Derived: inside `database.write`, call `store.upsertMessages` with two messages and `store.deleteConnection(id: "c1")`, then throw from the outer closure | The outer call rethrows; neither message is stored and `c1`, its messages and its labels are still live |
 | store-031 | log-finish-unknown | Derived: `finishActionLog(id: "nope", status: "ok", result: nil, error: nil)` on an empty log | Returns without throwing and changes no row |
-| store-032 | errors-unwrapped, writes-serialised, reads-parallel | Derived: run a store write on a database built with a write deadline shorter than the statement needs | The call throws `BoundedDatabaseError.deadlineExceeded` with lane "write", unwrapped |
-| store-033 | sendable, tombstone-fields | Derived: compile a use of the store from two tasks; tombstone with the store and read `deleted_at` and `updated_at` | The code compiles without a concurrency diagnostic; the two columns hold the same string |
+| store-032 | errors-unwrapped | Derived: run a store write on a database built with a write deadline shorter than the statement needs | The call throws `BoundedDatabaseError.deadlineExceeded` with lane "write", unwrapped |
+| store-033 | sendable | Derived: compile a use of the store from two tasks | The code compiles without a concurrency diagnostic |
+| store-034 | tombstone-fields | Derived: tombstone a message with the store, then read its `deleted_at` and `updated_at` | `is_deleted` is 1 and the two columns hold the same string |
+| store-035 | writes-serialised, reads-parallel | Derived: open a file database, start a store write that holds the writer, and call a store read from another thread | The read returns the last committed state without waiting for the write; a second write waits for the first |
+| store-036 | message-upsert-batch-last-wins | Derived: `upsertMessages` with two messages of external id `e1`, subjects "first" and "second" | One row exists for `e1` and its subject is "second" |
 

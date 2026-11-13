@@ -8,7 +8,6 @@
 - **Empty daemon name**: Not validated; the name is interpolated as given into every sentence.
 - **Empty or unusual `unreachable` detail**: Interpolated as given; an empty detail yields `cannot reach <daemonName>: `.
 - **Cancellation**: No cancellation handling in the source; a `CancellationError` thrown by `call` goes through `onFailure` and `classify` like any other error, and the host's `classify` decides what it becomes.
-- **Error from `classify` itself**: `classify` is a non-throwing closure, so none arises.
 - **Concurrent calls**: The transport holds no state, so concurrent `send` calls run independently; ordering and serialisation are the host's `call` closure's concern.
 - **Offline or daemon not running**: Surfaces as `connectionDropped` or `unreachable` once classified, and then as the sentence above. There is no queueing and no retry.
 - **Retry after failure**: Never. A repeated attempt is the caller's decision.

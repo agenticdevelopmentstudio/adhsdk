@@ -11,3 +11,4 @@
 
 The controller only displays model state and forwards two calls, so separation of concerns passes. Unit-test coverage is partial: the model's helpers and paging have tests, while the controller and its row view have none. Screen-reader support is partial because rows have a label of sender and subject but no unread state. Keyboard navigation passes through the native table, with no custom handling. String externalization fails because the empty-label text and the no-subject text are code literals. It uses `NSTableView` with system fonts and colors, and it requests pages as the last row appears.
 
+Known gaps: the empty-label and no-subject strings are code literals with no string catalog, and the view controller has no test of its own; coverage comes from the model's tests of its display helpers and paging.

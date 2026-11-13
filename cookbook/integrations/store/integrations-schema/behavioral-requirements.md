@@ -9,7 +9,7 @@
 - **migrate-idempotent**: Calling `migrate` again on a database that already ran `integrations-v1` MUST NOT recreate tables or change data, because GRDB records the applied migration by name and skips it.
 - **migrate-propagates-errors**: `migrate` MUST declare `throws` and MUST let any GRDB or SQLite error propagate to the caller unchanged; it has no catch and no recovery path.
 - **no-foreign-keys**: The DDL MUST NOT declare foreign key constraints; `connection_id` columns are plain `TEXT NOT NULL` references that SQLite does not enforce.
-- **no-drop-or-alter**: The migrator MUST NOT register any migration that drops or alters a table. A later schema change needs a new migration name.
+- **no-drop-or-alter**: The `integrations-v1` migration MUST NOT drop or alter a table. A later schema change MUST use a new migration name.
 
 ### Column conventions
 
@@ -55,7 +55,7 @@
 
 ### Concurrency and side effects
 
-- **writer-serialised**: `migrate` MUST be a synchronous call that blocks until the migration finishes; ordering against other writes is the serialisation GRDB's writer provides (a serial `DatabaseQueue` in memory, a `DatabasePool` writer for a file).
+- **writer-serialised**: The Swift `migrate` is a synchronous call that blocks until the migration finishes, and a port MUST complete the migration before its store accepts writes; ordering against other writes is the serialisation GRDB's writer provides (a serial `DatabaseQueue` in memory, a `DatabasePool` writer for a file).
 - **only-side-effect**: The only side effect of `migrate` MUST be the schema change and GRDB's own migration bookkeeping in the target database; it does no logging, network call or file access of its own.
 - **migrator-internal**: `migrator()` MUST stay internal (not public), so only `migrate` and `@testable` tests can build it.
 

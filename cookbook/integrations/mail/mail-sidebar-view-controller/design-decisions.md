@@ -16,11 +16,11 @@
 **Approved**: pending
 
 **Decision**: When the model's selection matches no row, the sidebar leaves the outline selection as it is.
-**Rationale**: The source returns early rather than clearing the selection; this keeps the previous row highlighted until the model selects a listed mailbox, which is observable behavior implementations must copy.
+**Rationale**: The source returns early rather than clearing the selection; this keeps the previous row highlighted until the model selects a listed mailbox, which is intended, observable behavior that implementations copy.
 **Approved**: pending
 
 **Decision**: Each rebuild expands all account groups, discarding any collapse by the user.
-**Rationale**: The source expands every root after each reload and tracks no expansion state, so a group the user collapsed re-expands when the model changes. This is a quirk of the source, recorded so other platforms match or knowingly diverge.
+**Rationale**: The source expands every root after each reload and tracks no expansion state, so a group the user collapsed re-expands when the model changes. This is intended behavior of the sidebar, so every port copies it.
 **Approved**: pending
 
 **Decision**: Mailbox rows indent by 14 points times depth inside the cell, not through the outline's own indentation.

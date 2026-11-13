@@ -19,4 +19,8 @@ No test in the repository references `MailJSON` or `MailDateBound`; every vector
 | mail-command-support-014 | json-encoder-errors | `encode` of a value whose `encode(to:)` throws | the same error is thrown |
 | mail-command-support-015 | bound-mcp-rejection | MCP argument `since` = `"2026-13-01"` | `ArgumentError` with `since must be YYYY-MM-DD or an ISO-8601 timestamp` |
 | mail-command-support-016 | bound-cli-rejection, bound-cli-edges | CLI `list <account> --since 2026-02-30` | parse fails; no command runs |
+| mail-command-support-017 | bound-date-shape, bound-reject-other | `normalize(" 2026-11-13", edge: .start)` (leading space) | nil |
+| mail-command-support-018 | bound-date-shape, bound-reject-other | `normalize("2026/11/13", edge: .start)` | nil |
+| mail-command-support-019 | bound-date-reality | `normalize("2026-00-10", edge: .start)` | nil |
+| mail-command-support-020 | bound-timestamp-utc | `normalize("2026-11-13T10:30:00.1234Z", edge: .start)` | `"2026-11-13T10:30:00.123Z"` |
 

@@ -8,7 +8,7 @@
 - **reload-mailboxes-per-account**: `reload` MUST read the labels of every loaded account and replace `mailboxes` with one list per account id.
 - **reload-loading-flag**: `loading` MUST be true from the start of `reload` until it returns, including when it fails.
 - **reload-failure-reported**: When the status, account or label read fails during `reload`, the model MUST set `errorMessage` to the failure's `localizedDescription` and MUST still continue to the selection step.
-- **reload-keeps-valid-selection**: When `selectedMailbox` still matches a mailbox after `reload`, the model MUST keep it and MUST reload its first page without closing the open message, except that the open message closes when the refreshed list no longer holds it.
+- **reload-keeps-valid-selection**: When `selectedMailbox` still matches a mailbox after `reload`, the model MUST keep it and MUST reload its first page without closing the open message (the open message still closes when the refreshed list lacks it, as `#requirements/first-page-drops-missing-selection` says).
 - **reload-default-selection**: When nothing is selected, or the selection no longer matches a mailbox, `reload` MUST select the first account's Inbox, or its first mailbox when it has no Inbox, or All Mail when that account has no mailboxes loaded.
 - **reload-no-accounts**: When `reload` finds no accounts and nothing valid is selected, the model MUST set `selectedMailbox` to nil and MUST clear the list and the open message.
 - **mailbox-order**: The mailboxes for an account MUST be ordered Inbox, Starred, Important, Sent, Drafts, then All Mail, then user labels, then Spam, then Trash.
@@ -26,7 +26,7 @@
 - **mailbox-label-filter**: Listing any other mailbox MUST send a message filter with that mailbox's label id as its only label.
 - **filter-account**: Every list request MUST name the selected mailbox's account id.
 - **first-page-limit**: A first page loaded by selecting a mailbox MUST request `pageSize` messages.
-- **refresh-keeps-row-count**: A first page loaded while keeping the selection MUST request the larger of `pageSize` and the number of messages showing.
+- **refresh-keeps-row-count**: A first page loaded by `reload` while `selectedMailbox` still matches a mailbox MUST request the larger of `pageSize` and the number of messages showing.
 - **first-page-replaces**: A loaded first page MUST replace `messages`, `nextCursor` and `hasMore`, with `hasMore` true only when the page has a next cursor.
 - **first-page-drops-missing-selection**: When the open message's id is not in a refreshed list, the model MUST close the open message.
 - **first-page-failure**: When the first page fails, the model MUST set `errorMessage` to the failure's `localizedDescription`.
@@ -34,7 +34,7 @@
 - **load-more-appends**: `loadMore` MUST request the page named by the stored cursor and append its messages to `messages`.
 - **load-more-dedupes**: `loadMore` MUST NOT append a message whose id is already in `messages`.
 - **load-more-cursor**: After `loadMore`, `hasMore` MUST be true only when the page has a next cursor.
-- **load-more-noop**: `loadMore` MUST do nothing when `hasMore` is false, when a `loadMore` is already running, when no mailbox is selected, when there is no cursor, or when the account is not loaded.
+- **load-more-noop**: `loadMore` MUST do nothing when `hasMore` is false, when a `loadMore` is already running, when no mailbox is selected, when there is no cursor, or when no account in `accounts` has the selected mailbox's account id.
 - **load-more-failure**: When the next page fails and the list is unchanged, `loadMore` MUST set `errorMessage` to the failure's `localizedDescription`.
 - **select-message-noop**: `select(messageId:)` MUST do nothing when the id equals `selectedMessageId`.
 - **select-message-clears-open**: `select(messageId:)` MUST set `selectedMessageId` and set `openedMessage` to nil before loading.
@@ -49,6 +49,7 @@
 - **mark-read-lowers-counts**: After marking read, the model MUST lower by one the unread count of each of the account's mailboxes whose label id is among the opened message's labels.
 - **unread-count-floor**: A lowered unread count MUST NOT go below zero.
 - **unread-count-nil-untouched**: A mailbox with a nil label id (All Mail) or a nil unread count MUST be left unchanged when counts are lowered.
+- **mark-read-superseded**: A modify-labels answer that arrives after another message was opened MUST still be copied onto the matching message in `messages` and lowered into the counts, and MUST be copied onto `openedMessage` only when that is the same message. A failure of that request MUST still set `errorMessage`, because the mark-read call carries no generation check.
 - **mark-read-failure**: When the modify-labels request fails, the model MUST set `errorMessage` to the failure's `localizedDescription` and MUST keep the message open.
 - **refresh-if-synced**: `refreshIfSynced` MUST call `reload` when any account's `lastSyncAt`, or the set of account ids, differs from the values recorded by the last `reload`.
 - **refresh-if-synced-unchanged**: `refreshIfSynced` MUST NOT call `reload` when every account's `lastSyncAt` and the set of account ids match the recorded values.
@@ -58,12 +59,13 @@
 - **selected-account**: `selectedAccount` MUST return the account whose id equals the selected mailbox's account id, or nil when none matches.
 - **sender-name**: `senderName` MUST return the display name before the last "<", trimmed of whitespace and surrounding double quotes.
 - **sender-name-address-only**: `senderName` MUST return the address inside the angle brackets when the display name is empty, and the trimmed input when it has no "<".
+- **sender-name-unclosed**: `senderName` MUST return the text after the last "<" with ">" and spaces trimmed from both ends when the display name before it is empty, whether or not a closing bracket follows.
 - **list-date-today**: `listDate` MUST show only the hour and minute for a date on the same calendar day as now.
 - **list-date-this-year**: `listDate` MUST show the abbreviated month and day for a date in the same year as now but a different day.
 - **list-date-older**: `listDate` MUST show the year, abbreviated month and day for a date in a different year from now (earlier or later).
 - **list-date-locale**: `listDate` MUST format with the calendar's time zone and the given locale.
 - **date-parse-fractional**: The date helpers MUST accept ISO 8601 text with or without fractional seconds.
 - **date-unparseable**: `listDate` and `fullDate` MUST return the input text unchanged when it is not ISO 8601.
-- **full-date**: `fullDate` MUST return the complete date with the short time.
+- **full-date**: `fullDate` MUST return the complete date with the short time (`Date.FormatStyle` date `.complete`, time `.shortened`). It takes no locale or calendar and uses the current ones, so unlike `listDate` it cannot be tested deterministically.
 - **is-unread**: `isUnread` MUST be true only when the message's labels contain `UNREAD`.
 

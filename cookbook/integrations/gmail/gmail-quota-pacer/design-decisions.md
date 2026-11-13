@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: The shared instance runs at 200 units a second with a 200-unit burst, not Google's 250.
-**Rationale**: The doc comment on `shared` says the figure is "below Google's 250 units a second, leaving room for clock drift and other clients." The burst equals one second of rate. The 200 and 250 values are the source's choices; whether 200 leaves enough headroom for other clients is outside the source.
+**Rationale**: The doc comment on `shared` says the figure is "below Google's 250 units a second, leaving room for ... other clients" (the comment also says clock drift, which does not apply to the monotonic `ContinuousClock`). The burst equals one second of rate. The cited Google figure is on its [quota page](https://developers.google.com/workspace/gmail/api/reference/quota). The 200 and 250 values are the source's choices; whether 200 leaves enough headroom for other clients is outside the source.
 **Approved**: pending
 
 **Decision**: One pacer is shared by every account in the process.
@@ -23,11 +23,14 @@
 **Rationale**: A bad rate is a programming error in code that passes constants, and a throwing initializer would force `shared` to be a throwing or optional value. The cost is that the check disappears under unchecked optimisation, and an overflowing duration is not checked at all.
 **Approved**: pending
 
-**Decision**: Technical debt: `reserve` does not validate the sign of `units`.
-**Rationale**: A negative reservation refunds quota already counted, which is behavior the source does not intend and its callers do not use. The open question on `units-nonnegative` records it so a port either copies or rejects it deliberately.
+**Decision**: `reserve` takes a signed `Int` and does not validate its sign.
+**Rationale**: A negative reservation shortens the backlog, which is behavior the source does not intend and its callers do not use. The open question on `units-nonnegative` records it so a port either copies or rejects it deliberately. It is settled when the owner decides whether to trap, clamp or accept it.
 **Approved**: pending
 
 **Decision**: The cost table is a set of `Int` constants in the same file, from Google's published table.
 **Rationale**: The doc comment cites developers.google.com/workspace/gmail/api/reference/quota. Keeping costs beside the pacer keeps the unit scale and the rate in one place. The table covers only the calls `GmailRESTClient` makes; other Gmail methods have no entry.
 **Approved**: pending
 
+**Decision**: `shared` and `reserve` are public while `GmailQuotaCost` is internal.
+**Rationale**: In the source only code inside the SDK module reserves quota, and it uses the cost constants. An outside caller of `shared` cannot name the costs and must supply its own unit counts; the source has no public cost table. This is what the code does, not a designed extension point.
+**Approved**: pending

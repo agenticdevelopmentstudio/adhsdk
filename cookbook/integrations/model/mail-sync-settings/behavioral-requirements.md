@@ -11,8 +11,9 @@
 
 - **decode-keys**: Decoding MUST read the five keys `includeArchived`, `includeSpam`, `includeTrash`, `windowDays` and `pollIntervalMinutes`, spelled exactly so, and the encoded form MUST use the same five keys.
 - **decode-lenient**: Decoding MUST take the value from `default` for each key that is absent, so an empty JSON object decodes to `default`.
-- **decode-null-key**: Decoding MUST treat a key present with a JSON null the same as an absent key, because the source reads each key with `decodeIfPresent`.
+- **decode-null-key**: Decoding MUST treat a key present with a JSON null the same as an absent key, so a stored row whose field was cleared still loads instead of failing.
 - **decode-partial**: Decoding MUST keep the keys that are present and default only the missing ones.
+- **decode-ignore-unknown**: Decoding MUST ignore keys other than the five, so a stored row carrying extra keys still loads and decodes to the same values.
 - **decode-wrong-type**: Decoding MUST propagate the decoder's error when a present key has the wrong type (for example a string for `windowDays`); the source does not catch it.
 - **decode-no-range-check**: Decoding MUST NOT validate ranges, so an out-of-range number decodes unchanged and is rejected only when `validated()` is called.
 - **init-no-range-check**: The memberwise initializer MUST NOT validate ranges.
@@ -30,17 +31,12 @@
 - **validated-returns-self**: `validated()` MUST return the unchanged instance when both numbers are in range, accepting the boundary values 1 and 3650 for `windowDays` and 1 and 1440 for `pollIntervalMinutes`.
 - **validated-no-clamp**: `validated()` MUST NOT clamp or repair a bad value; it only accepts or throws.
 
-### Use by the integration service
-
-- **service-validates-first**: The mail integration service calls `validated()` as the first step of its settings update, so an invalid value is rejected before any stored data changes. This is the caller's contract and is not enforced by this type.
-- **service-reads-settings**: The service reads `allows(_:)` to decide which message classes to keep or tombstone, `windowDays` to compute the look-back start and tombstone older rows, and `pollIntervalMinutes` as the minimum time between sync attempts per connection (`pollIntervalMinutes` times 60 seconds).
-
 ### Ordering and concurrency
 
-- **no-shared-state**: MailSyncSettings has no shared mutable state; it is a `Sendable` value, so copies move freely between threads and the type adds no ordering rule.
+- **no-shared-state**: MailSyncSettings MUST hold no shared mutable state; as a `Sendable` value its copies move freely between threads and the type adds no ordering rule.
 
 ### Persistence and side effects
 
 - **no-side-effects**: Every operation MUST be a pure function of the instance fields; none touches files, the network, processes or notifications.
-- **persisted-as-json**: The type is persisted by its `Codable` conformance as a JSON text column inside the connection record, as the sibling records recipe describes.
+- **persisted-as-json**: MailSyncSettings MUST be persisted through its `Codable` conformance as JSON text, which the connection record stores in a column (cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f).
 

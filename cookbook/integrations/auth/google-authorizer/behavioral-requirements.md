@@ -11,6 +11,8 @@
 - **signin-scopes**: `AppAuthGoogleSignIn` MUST request exactly the scopes `openid`, `email` and `https://www.googleapis.com/auth/gmail.modify`.
 - **signin-offline-consent**: The authorization request MUST carry the additional parameters `access_type=offline` and `prompt=consent`, so Google issues a refresh token on every sign-in.
 - **signin-response-type**: The authorization request MUST use the authorization-code response type and send `clientId` and `clientSecret` from the config.
+- **signin-pkce**: The authorization request MUST carry an S256 `code_challenge` (RFC 7636) and the token exchange MUST send the matching `code_verifier`. The source does not set these; AppAuth's `OIDAuthorizationRequest` generates them by default, so a port that does not use AppAuth must add them.
+- **signin-state**: The authorization request MUST carry a random `state`, and a redirect whose `state` does not match MUST fail the flow rather than be exchanged (RFC 8252). The source relies on AppAuth for both the value and the check.
 - **signin-loopback-redirect**: The redirect URL MUST come from a local HTTP listener started on the loopback interface for the duration of the flow.
 - **signin-listener-failure**: If the local listener cannot be started, `signIn` MUST throw `IntegrationError.signInFailed("Could not start the local sign-in listener")` before opening a browser.
 - **signin-listener-teardown**: The local listener MUST be cancelled when the flow finishes, whether it succeeds, fails or is cancelled.
@@ -22,7 +24,7 @@
 - **signin-missing-refresh-token**: A token response with a nil or empty refresh token MUST throw `IntegrationError.signInFailed("Google returned no refresh token")`; the access-token check runs first.
 - **signin-expiry-fallback**: When the token response carries no expiry date, `expiresAt` MUST be the injected clock's `now` plus 3600 seconds.
 - **signin-error-mapping**: An AppAuth error in the general error domain with code user-canceled or program-canceled MUST map to `IntegrationError.signInCancelled`; every other error MUST map to `IntegrationError.signInFailed` carrying the error's localized description, and a nil error MUST map to `signInFailed("unknown error")`.
-- **signin-main-actor**: The AppAuth flow, the loopback handler and the cancellation handle MUST be used on the main actor.
+- **signin-main-actor**: The UI and the listener (the browser launch, the AppAuth flow, the loopback handler and the cancellation handle) MUST be touched only on the UI thread; cancellation from the deadline helper MUST hop to that thread before tearing the flow down.
 - **signin-default-timeout**: `AppAuthGoogleSignIn` MUST default its timeout to 300 seconds, with `successURL` defaulting to nil and the clock to `Date.init`.
 
 ### Sign-in deadline
@@ -59,6 +61,8 @@
 - **provider-refresh-result**: A refresh MUST produce a credential with the new access token, the unchanged refresh token and `expiresAt` of `now` plus the reply's `expiresIn`, and MUST persist it before returning the token.
 - **provider-coalesce**: Concurrent `accessToken` callers for one connection MUST share a single in-flight refresh and receive the same outcome.
 - **provider-owner-persists**: Only the first caller to settle a refresh MUST persist the result and clear the in-flight entry.
+- **provider-save-error-to-owner**: When that save fails, only the persisting (first-to-settle) caller MUST receive the save error; every other caller sharing the refresh MUST return the refreshed access token without error.
+- **provider-propagates-endpoint-error**: An error thrown by the endpoint's `refresh` MUST propagate unchanged from `accessToken` to every caller sharing that refresh, and MUST NOT be persisted or change the stored credential.
 - **provider-failed-not-reused**: A failed refresh MUST be dropped from the in-flight table so the next call starts a new refresh.
 - **provider-missing-credential**: A missing credential, or one stored but not decodable as `GoogleCredential`, MUST throw `IntegrationError.revoked` from `accessToken`.
 - **provider-keychain-read-error**: A secret store that throws on read MUST surface `IntegrationError.keychain("Could not read the Google credential: <description>")`, MUST NOT report `revoked` and MUST NOT call the endpoint.
@@ -69,7 +73,7 @@
 - **provider-supersede**: A refresh superseded by `store` or `forget` while in flight MUST have its result discarded, whether it succeeded or failed, and the current credential MUST be re-read, so a stale `invalid_grant` never reports `revoked` after a fresh sign-in.
 - **provider-unsaved-fallback**: A refreshed credential the Keychain refused to save MUST be kept in memory and used by later `accessToken` calls instead of refreshing again, and the original save error MUST still be thrown to the caller that triggered the refresh.
 - **provider-unsaved-clear**: The in-memory unsaved credential MUST be cleared by a later successful save, a `store`, or a `forget`.
-- **provider-revoke-best-effort**: `revoke(connectionId:)` MUST send the stored refresh token (not the access token) to the endpoint and MUST NOT throw: an unreadable Keychain, a missing credential or a failed request ends the call, with the first and last logged.
+- **provider-revoke-best-effort**: `revoke(connectionId:)` MUST send the stored refresh token (not the access token) to the endpoint and MUST NOT throw: an unreadable Keychain and a failed request are logged, and a missing credential returns silently.
 - **provider-revoke-keeps-credential**: `revoke` MUST NOT delete the local credential; removal is `forget`.
 - **provider-injected-clock**: The provider and the sign-in MUST read time only through the injected `now` closure.
 

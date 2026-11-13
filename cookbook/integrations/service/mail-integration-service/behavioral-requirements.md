@@ -38,7 +38,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **status-unconfigured**: `providerStatus` MUST report `configured: false` and a nil `clientId` when the provider config row or the Keychain client secret is missing.
 - **status-configured**: `providerStatus` MUST report `configured: true`, the stored `clientId` and `clientSecretSuffix` from `MailProviderStatus.visibleSuffix(ofSecret:)` when both exist.
 - **secret-suffix-rule**: `visibleSuffix(ofSecret:)` MUST return the last 5 characters (`secretSuffixLength`) of the secret only when the secret has at least 15 characters (three times that length), else nil.
-- **secret-never-leaves**: No response MUST contain the client secret beyond that suffix.
+- **secret-never-leaves**: A response MUST NOT contain the client secret beyond that suffix.
 - **import-parses-json**: Importing an OAuth client MUST parse the JSON with `GoogleOAuthClientConfig.parse(json:)` and surface its parse error when the JSON is not a valid client.
 - **import-saves-secret-first**: Importing MUST write the client secret to the secret store under `GoogleTokenProvider.clientSecretKey` before it writes the provider config row.
 - **import-keychain-failure**: When the secret store refuses the write, the import MUST fail with `Could not save the OAuth client secret to the Keychain` and MUST NOT write the provider config.
@@ -61,6 +61,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **sign-in-connection-fields**: Sign-in MUST upsert the connection with status `.active`, `displayName` equal to the email, nil `lastError`, `scopes` equal to the service scopes, and `lastSyncAt`, `syncCursor` and `syncSettings` carried over from an existing connection (defaulting settings to `MailSyncSettings.default`).
 - **sign-in-rereads-state**: Sign-in MUST re-read the existing connection after the credential save, so sync state written meanwhile is not rolled back.
 - **sign-in-provider-removed**: When `providerGeneration` changed during sign-in, sign-in MUST fail with `signInCancelled` and MUST revoke what it obtained: the raw credential before it is stored, or the stored credential (revoked then forgotten) after.
+- **sign-in-profile-failure-no-revoke**: When the Gmail profile call fails after Google issued a grant, sign-in MUST fail with that error, MUST create no connection and MUST NOT revoke the grant at Google; only `sign-in-provider-removed` and the removal paths revoke it.
 - **sign-in-starts-sync**: A successful sign-in MUST start a sync for the account without awaiting it and MUST answer with the account read back from the store.
 - **discarded-revoke-logged**: Revoking a never-stored credential MUST be best effort, and a failure MUST be logged at error level and not thrown.
 
@@ -68,7 +69,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 
 - **remove-account-order**: `removeAccount` MUST stop the account's sync and wait for it, revoke the grant at Google, forget the credential, delete the connection, and clear its `lastAttempt` entry, in that order.
 - **remove-account-dedupe**: A removal of an account already being removed MUST return at once without a second removal.
-- **remove-account-no-sync**: No sync MUST start for an account while its removal runs.
+- **remove-account-no-sync**: A sync MUST NOT start for an account while its removal runs.
 - **remove-account-revoke-best-effort**: A failure to revoke at Google MUST NOT fail the removal.
 - **remove-account-keychain-failure**: A credential the secret store will not remove MUST fail the removal and leave the connection in place.
 - **settings-validated**: `updateSettings` MUST validate the settings first and fail with `IntegrationError.invalidSettings` unless `windowDays` is in 1...3650 and `pollIntervalMinutes` is in 1...1440.
@@ -97,8 +98,8 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **record-cancellation**: A sync that fails by cancellation MUST record nothing.
 - **record-revoked**: A sync that fails with `IntegrationError.revoked` MUST set the connection status to `revoked`.
 - **record-error**: Any other sync failure MUST set status `error` with the error's `localizedDescription` as `lastError`, preserving the stored cursor and `lastSyncAt`.
-- **status-write-errors**: NEEDS REVIEW: Not implemented in source. The status write in `record` uses `try?`, so a store failure while recording `error` or `revoked` vanishes with no log and no signal; settle by deciding whether a failed status write needs a log line or a retry.
-- **scheduler-store-read**: NEEDS REVIEW: Not implemented in source. `startDueSyncs` reads connections with `try?` and starts nothing when the read fails, with no log and no signal; settle by deciding whether a failed read on a tick needs a log line.
+- **status-write-errors**: The status write in `record` MUST swallow a store failure: a failure while recording `error` or `revoked` is neither logged nor signalled (see the Design Decision on swallowed store failures).
+- **scheduler-store-read**: `startDueSyncs` MUST start nothing when reading connections fails, without a log or signal (see the Design Decision on swallowed store failures).
 - **sync-now-targets**: `syncNow(account:)` MUST target the named account, or every syncable `gmail` connection when `account` is nil.
 - **sync-now-bypasses-due**: `syncNow` MUST start syncs regardless of due-ness.
 - **sync-now-joins**: When a sync is already running for a target, `syncNow` MUST notify the observer with `.joinedRunningSync(id)` and wait for that sync rather than start another.
@@ -118,7 +119,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **label-refresh**: When a value matches no stored label, the service MUST re-read the labels from Gmail and store them before resolving, and MUST fail with `account <email> was removed` instead of storing when the account vanished during the read.
 - **message-mapping**: A `MailMessage` MUST carry the Gmail id, thread id, account email, from, to, cc, label ids, label names (the id when a name is unknown), subject, snippet with HTML entities decoded, `internalDate` as `date`, mail class and attachments; bodies only when requested.
 - **body-text-fallback**: `bodyText` MUST be the `text/plain` part unless it is missing or blank after trimming whitespace, in which case it MUST be the HTML part converted to plain text, falling back to the original text when the conversion is empty.
-- **since-until-unvalidated**: NEEDS REVIEW: Not implemented in source. A mirror listing passes `since` and `until` to the store as given and never checks that they are ISO 8601 timestamps, while a search validates them; settle by confirming the store's string comparison contract for these bounds.
+- **since-until-unvalidated**: A mirror listing MUST pass `since` and `until` to the store as given, without checking that they are ISO 8601 timestamps; only a search validates them (`search-bound-invalid`).
 
 ### Searching Gmail
 

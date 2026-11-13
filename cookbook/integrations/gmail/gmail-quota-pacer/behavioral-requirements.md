@@ -4,14 +4,12 @@ Contract: `public actor GmailQuotaPacer` with `public init(unitsPerSecond: Doubl
 ### Reservation
 
 - **reserve-returns-wait**: `reserve(_:)` MUST return a `Duration` that is the time the caller has to wait before sending the call whose cost is `units`.
-- **wait-never-negative**: `reserve(_:)` MUST NOT return a negative `Duration`; a call that owes no wait returns `.zero`.
 - **no-sleep**: `reserve(_:)` MUST return without suspending or sleeping; waiting is left to the caller.
-- **burst-allowance-free**: From an idle pacer, reservations whose units total no more than `burstUnits` MUST each return `.zero`.
-- **wait-formula**: When the reservation takes the cumulative units past the burst allowance, `reserve(_:)` MUST return the instant `drainedAt` has after this reservation, minus the current time, minus `burstUnits / unitsPerSecond` seconds.
+- **wait-formula**: `reserve(_:)` MUST return `max(.zero, drainedAt' - now - burstUnits / unitsPerSecond)`, where `drainedAt'` is the value set by this reservation and `now` is the single clock read. It therefore never returns a negative `Duration`, and reservations that total no more than `burstUnits` from an idle pacer each return `.zero`.
 - **drain-advance**: Each reservation MUST set `drainedAt` to `max(previous drainedAt, current time)` plus `units / unitsPerSecond` seconds, where a nil `drainedAt` counts as the current time.
 - **idle-credit-capped**: Time spent idle MUST NOT build up credit beyond the burst allowance, because a `drainedAt` already in the past is replaced by the current time on the next reservation.
 - **zero-units**: Reserving 0 units MUST leave `drainedAt` unchanged when it is at or after the current time, and MUST return the wait that backlog still implies.
-- **nanosecond-rounding**: Each conversion of units, or of the burst allowance, to a `Duration` MUST round to the nearest whole nanosecond.
+- **nanosecond-rounding**: Each conversion of units, or of the burst allowance, to a `Duration` MUST round to the nearest whole unit of the platform's `Duration` resolution (a whole nanosecond in Swift).
 - **units-nonnegative**: NEEDS REVIEW: Not implemented in source. `reserve(_:)` takes an `Int` and never checks its sign, so a negative `units` moves `drainedAt` earlier and shortens the backlog; the only callers pass `GmailQuotaCost` constants, which are all positive. Settling it needs a decision whether a negative reservation is a caller error to trap, clamp or accept as a refund.
 - **reservation-final**: The pacer MUST offer no cancel or release operation, so a call that fails, is retried, or is cancelled while its caller sleeps keeps the units it reserved. A negative `units` is not a designed release; see the open question on `units-nonnegative`.
 - **serialised-reservations**: Concurrent `reserve(_:)` calls MUST be serialised by the actor so each one reads and updates `drainedAt` as a single step and no two calls read the same prior value.
@@ -26,13 +24,13 @@ Contract: `public actor GmailQuotaPacer` with `public init(unitsPerSecond: Doubl
 
 ### Shared instance
 
-- **shared-defaults**: `GmailQuotaPacer.shared` MUST be created with `unitsPerSecond` 200 and `burstUnits` 200, below Google's 250 units a second to leave room for clock drift and other clients.
+- **shared-defaults**: `GmailQuotaPacer.shared` MUST be created with `unitsPerSecond` 200 and `burstUnits` 200, below Google's 250 units a second ([quota page](https://developers.google.com/workspace/gmail/api/reference/quota)) to leave room for other clients.
 - **shared-process-wide**: `shared` MUST be one instance for the whole process, so every account paced through it shares one `drainedAt`.
 - **in-memory-only**: The pacer MUST keep `drainedAt` in memory only; nothing is persisted, so a new process starts idle and processes do not coordinate.
 
 ### Quota costs
 
-- **cost-table**: `GmailQuotaCost` MUST define these unit costs: `profile` 1, `labelsList` 1, `historyList` 2, `messagesList` 5, `messagesGet` 5, `threadsGet` 10, `messagesBatchModify` 50.
+- **cost-table**: `GmailQuotaCost` MUST define these unit costs, taken from [Google's quota table](https://developers.google.com/workspace/gmail/api/reference/quota): `profile` 1, `labelsList` 1, `historyList` 2, `messagesList` 5, `messagesGet` 5, `threadsGet` 10, `messagesBatchModify` 50.
 - **cost-type**: Each `GmailQuotaCost` constant MUST be an `Int`, so it can be passed directly to `reserve(_:)`.
 - **cost-visibility**: `GmailQuotaCost` MUST be module-internal; only code inside the SDK module names it.
 

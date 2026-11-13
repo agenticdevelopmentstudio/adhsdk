@@ -4,7 +4,7 @@
 - **list-message-ids**: `listMessageIds(query:includeSpamTrash:pageToken:)` MUST return a `GmailIdPage` of message ids plus an optional `nextPageToken`.
 - **list-spam-trash-flag**: `listMessageIds` MUST take `includeSpamTrash` from its caller; `GmailQuery.fullSync` supplies the value to pass.
 - **search-message-ids**: `searchMessageIds(query:labelIds:maxResults:pageToken:)` MUST return one page of a Gmail search, newest first, of messages matching `query` (Gmail's search syntax) that carry every label in `labelIds`.
-- **search-spam-trash**: `searchMessageIds` MUST include Spam and Trash messages only when the query asks for them.
+- **search-spam-trash**: `searchMessageIds` MUST include Spam and Trash messages only when the query asks for them, through `in:spam` or `in:trash` terms in `query`; the method has no `includeSpamTrash` parameter.
 - **thread-fetch**: `thread(id:)` MUST return a `GmailThreadDTO` holding the conversation and every message in it, oldest first (`threads.get`, format full).
 - **thread-messages-optional**: `GmailThreadDTO` MUST decode to an empty `messages` array when the wire object has no `messages` key, because "Gmail leaves `messages` out of a thread with none it will show."
 - **thread-id-required**: `GmailThreadDTO` decoding MUST fail when `id` is absent.
@@ -23,7 +23,7 @@
 - **batch-modify-limits**: A conforming REST client MUST reject an empty `ids` list and a list longer than `GmailRESTClient.batchModifyLimit` (1000) with an `IntegrationError`, without calling Gmail. The protocol does not state this limit; `GmailRESTClient` enforces it and its tests assert it.
 - **full-sync-after**: `GmailQuery.fullSync(settings:now:)` MUST start the query with `after:` followed by the whole-second epoch of `now` minus `settings.windowDays` days (86,400 seconds each).
 - **full-sync-class-filter**: When `settings.includeArchived` is false, `fullSync` MUST append the space-joined terms `in:inbox in:sent in:drafts is:starred has:userlabels` inside braces, which Gmail reads as OR.
-- **full-sync-spam-trash-terms**: When `includeArchived` is false, `fullSync` MUST add `in:spam` after the base terms when `includeSpam` is true and `in:trash` after that when `includeTrash` is true.
+- **full-sync-spam-trash-terms**: When `includeArchived` is false, `fullSync` MUST add `in:spam` inside the braces, after `has:userlabels`, when `includeSpam` is true and `in:trash` after that when `includeTrash` is true.
 - **full-sync-archived**: When `settings.includeArchived` is true, `fullSync` MUST return only the `after:` term, with no class filter and no `in:spam` or `in:trash` terms.
 - **full-sync-include-flag**: `fullSync` MUST return `includeSpamTrash` equal to `settings.includeSpam || settings.includeTrash`, whether or not `includeArchived` is set.
 - **query-narrows-only**: `GmailQuery` output MUST be treated as a fetch narrowing only; `MailClassifier` stays the authority on what is mirrored (the type's own comment).

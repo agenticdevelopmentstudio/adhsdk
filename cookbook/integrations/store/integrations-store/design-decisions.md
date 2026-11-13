@@ -44,6 +44,18 @@
 **Approved**: pending
 
 **Decision**: `replaceLabels` binds every kept external id in one `NOT IN` list without chunking.
-**Rationale**: Technical debt that affects behavior: unlike the message tombstone, it relies on a mailbox having far fewer labels than SQLite's variable limit. The source has no comment on it.
+**Rationale**: Technical debt that affects behavior: unlike the message tombstone, it relies on a mailbox having far fewer labels than SQLite's variable limit. The source has no comment on it. A port should chunk this list at `inListChunkSize` once a mailbox can carry more labels than SQLite binds in one statement.
+**Approved**: pending
+
+**Decision**: Compare dates as raw strings and validate none of them.
+**Rationale**: `IntegrationClock` writes one fixed-width ISO-8601 UTC format, so string order is time order and SQLite can compare without parsing. The store takes `since`, `until`, `cutoff` and `after.internalDate` as `String` and rejects a malformed value nowhere; the source states no reason, and a differently formatted value gives an order that does not follow time.
+**Approved**: pending
+
+**Decision**: `connection(idOrEmail:)` ignores provider.
+**Rationale**: The lookup takes one string that is either a local id or an account address, so it has no provider to filter on. The same address signed in under two providers has two rows, and the lookup returns the earliest-created. Callers that know the provider use `connections(provider:)`. The source states no reason.
+**Approved**: pending
+
+**Decision**: The store has no purge or hard delete; erasing tombstoned content belongs to whoever owns the database file.
+**Rationale**: Every delete is a tombstone (see the first decision), so message bodies and addresses stay on disk, including after `deleteConnection`. No store method removes them, and the source names no owner for erasure.
 **Approved**: pending
 

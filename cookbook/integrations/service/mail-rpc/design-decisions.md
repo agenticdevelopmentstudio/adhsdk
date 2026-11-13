@@ -28,6 +28,13 @@
 **Approved**: pending
 
 **Decision**: The client sets no timeout, retry or cancellation, and signs no request.
-**Rationale**: The transport is injected and may be XPC, a socket or in-process, so these concerns stay with the transport; the source leaves them out, and this recipe records that as the contract.
+**Rationale**: The transport is injected and may be XPC, a socket or in-process, so these concerns stay with the transport; the source leaves them out, and this ingredient records that as the contract.
 **Approved**: pending
 
+**Decision**: `since` and `until` are plain `String` values, not `Date`.
+**Rationale**: The filter is wire data that an older service must still decode, and the front ends (`MailCommandLine`, `MailToolSource`) validate the text before building a filter (see the `MailCommandSupport` recipe); the service owns parsing it. The ISO-8601 form is therefore a documented convention, not something this file enforces.
+**Approved**: pending
+
+**Decision**: `.failure` carries no error code, so the client recognizes an old service by the text `bad request`, held in `MailClient.badRequest`.
+**Rationale**: Adding a code would be another field an older service does not send. The client and `MailIntegrationService` agree on the text by convention; no test ties `MailClient.badRequest` to the service's own constant, and vector 028 shows the service answering that text.
+**Approved**: pending

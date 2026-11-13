@@ -9,7 +9,6 @@ Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every
 - **token-failure-propagates**: An error thrown by the `accessToken` closure MUST propagate unchanged to the caller, and no HTTP request MUST be sent.
 - **invalid-url-error**: When the base URL plus path cannot form a valid URL, the operation MUST throw `IntegrationError.gmail(status: 0, message: "Invalid URL for <path>")` and MUST NOT send a request.
 - **query-only-when-present**: The query string MUST be set only when the operation supplies at least one query item; `profile` and `labels` send none.
-- **path-id-unvalidated**: NEEDS REVIEW: Not implemented in source. `thread(id:)` and `message(id:)` interpolate `id` into the URL path with no validation or percent-encoding, so an id containing `/`, `?` or `#` changes the route or query instead of failing; the `invalid-url-error` guard catches only strings URL parsing rejects. Evidence that would settle it: a statement that ids always come from Gmail responses (opaque hexadecimal) and so are trusted, or a test of an id such as `a/b`.
 
 ### Operations
 
@@ -30,7 +29,7 @@ Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every
 - **history-deleted-ids**: `GmailHistoryPage.deletedIds` MUST list the message ids from every entry's `messagesDeleted`, with duplicates removed in first-seen order.
 - **history-passthrough**: `GmailHistoryPage.historyId` and `nextPageToken` MUST equal the response `historyId` and `nextPageToken`, and an absent `history` array MUST yield empty `changedIds` and `deletedIds`.
 - **history-cursor-expired**: When the `history` call fails with `IntegrationError.gmail(status: 404, ...)`, the client MUST throw `GmailCursorExpired` instead, and MUST NOT retry the 404.
-- **batch-modify-bounds**: `batchModify(ids:add:remove:)` MUST throw `IntegrationError.gmail(status: 0, message: "batchModify takes 1–1000 ids, got <count>")` when `ids.count` is outside 1 through 1000, and MUST NOT send a request or reserve quota in that case.
+- **batch-modify-bounds**: `batchModify(ids:add:remove:)` MUST throw `IntegrationError.gmail(status: 0, message: "batchModify takes 1–1000 ids, got <count>")` when `ids.count` is outside 1 through 1000, and MUST NOT send a request or reserve quota in that case. The check runs before the request is built, so the token closure is not awaited either.
 - **batch-modify-limit**: The public constant `GmailRESTClient.batchModifyLimit` MUST equal `1000`, Gmail's own limit on ids per `messages/batchModify` call.
 - **batch-modify-request**: `batchModify` MUST send `POST messages/batchModify` with `Content-Type: application/json`, a pacer cost of 50, and a JSON body of `ids`, `addLabelIds` and `removeLabelIds` taken from the arguments.
 - **batch-modify-result**: `batchModify` MUST return no value and MUST ignore the response body of a 2xx reply.
@@ -40,7 +39,7 @@ Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every
 
 - **reserve-before-each-attempt**: Every attempt, including each retry, MUST call `pacer.reserve(cost)` before sending, and MUST sleep for the returned duration through the injected `sleep` when that duration is greater than zero.
 - **quota-costs**: The reserved cost MUST be 1 for `profile` and `labels`, 2 for `history`, 5 for `listMessageIds`, `searchMessageIds` and `message`, 10 for `thread`, and 50 for `batchModify`, from Google's published quota table.
-- **pacer-injectable**: The `sleep` closure and the `pacer` MUST be constructor parameters, defaulting to `Task.sleep(for:)` and `GmailQuotaPacer.shared`, so a test records delays instead of sleeping.
+- **pacer-injectable**: The `sleep` closure and the `pacer` MUST be constructor parameters, defaulting to `Task.sleep(for:)` and `GmailQuotaPacer.shared`, so a test records delays instead of sleeping. The `pacer` is the concrete `GmailQuotaPacer` actor, not a protocol, so a test cannot count reservations directly; it observes them through the recorded sleeps of a pacer built with a low rate, zero burst and a stopped `now` clock, where each reservation adds its cost divided by the rate to the next wait.
 
 ### Retry and failure
 
@@ -62,7 +61,7 @@ Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every
 - **rate-limit-body-undecodable**: `isRateLimited` MUST return false for a 403 whose body is not decodable as that envelope, and for every status other than 403.
 - **error-mapping**: A thrown HTTP failure MUST be `IntegrationError.gmail(status: <code>, message: <text>)`, where the text is `error.message` from the JSON body, or `HTTPURLResponse.localizedString(forStatusCode:)` when the body has no readable `error.message`.
 - **non-http-response**: A response that is not an `HTTPURLResponse` MUST be treated as status 0, which is not retried, and MUST throw `IntegrationError.gmail(status: 0, ...)`.
-- **decode-failure**: A 2xx body that does not decode into the operation's wire type MUST propagate the `DecodingError` unchanged, and MUST NOT be retried.
+- **decode-failure**: A 2xx body that does not decode into the operation's wire type MUST propagate the `DecodingError` unchanged, and MUST NOT be retried. This is recorded as technical debt in Design Decisions: the error is not an `IntegrationError`.
 
 ### Concurrency and cancellation
 

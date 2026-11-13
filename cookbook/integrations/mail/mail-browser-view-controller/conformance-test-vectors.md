@@ -4,7 +4,7 @@ The model contract the controller relies on is covered by `MailBrowserModelTests
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | mail-browser-vc-001 | client-only-dependency, model-owned | Construct with a client and no interval. | The controller exists and its `model` is non-nil. |
-| mail-browser-vc-002 | shared-model | Construct, load the view, make the model change (for example set an error or select a mailbox). | All three panes (which hold the model privately) show the change made on the controller's `model`. |
+| mail-browser-vc-002 | shared-model | Construct, load the view, then on the controller's `model` select the "Sent" mailbox and then one message in it. | The sidebar highlights "Sent", the message list shows the Sent messages, and the reader shows the selected message's body (the panes hold the model privately, so only the shared instance can drive all three). |
 | mail-browser-vc-003 | no-coder-init | Decode the controller from an archive. | The process traps with "init(coder:) has not been implemented". |
 | mail-browser-vc-004 | pane-order | Load the view. | Items are, in order: sidebar, message list, reader. |
 | mail-browser-vc-005 | sidebar-width, list-min-width, reader-min-width | Drag each divider to its extremes. | Sidebar stays within 180 to 320 points; list never below 280; reader never below 360. |
@@ -18,4 +18,4 @@ The model contract the controller relies on is covered by `MailBrowserModelTests
 | mail-browser-vc-013 | error-nil-ignored | Model's error message goes from a message to nil via dismiss. | No second alert appears. |
 | mail-browser-vc-014 | poll-default-interval | Construct without an interval. | Refreshes occur every 30 seconds while on screen. |
 | mail-browser-vc-015 | poll-no-retain | Release the controller while a refresh task is waiting. | When the wait ends the task exits and makes no model call. |
-
+| mail-browser-vc-016 | poll-interval, poll-action, poll-stop, poll-cancel-exit, poll-no-retain | Construct with `refreshInterval` of 100 ms and a scripted client whose account sync time changes once; appear, wait 250 ms, then disappear and wait 250 ms more; repeat, releasing the controller instead of disappearing. | No refresh before 100 ms; the refresh after the sync change reloads the list; no model call follows the disappearance or the release. Runs in milliseconds, with no 30 s wait; vectors 008, 009, 014 and 015 use the same check with the default interval. |

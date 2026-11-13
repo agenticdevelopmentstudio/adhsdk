@@ -1,7 +1,7 @@
 
 - **Empty object**: `{}` MUST decode to `default`; the doc comment says a missing key takes its default.
 - **Null key**: A key set to null MUST take the default, the same as a missing key.
-- **Unknown extra keys**: Keys other than the five MUST be ignored, because the decoder reads only the declared keys.
+- **Unknown extra keys**: Keys other than the five MUST be ignored (decode-ignore-unknown).
 - **Wrong-typed value**: A key with the wrong JSON type MUST make decoding throw; leniency covers absent keys only.
 - **Boundary values**: `windowDays` of 1 and 3650 and `pollIntervalMinutes` of 1 and 1440 MUST pass validation; 0, 3651 and 1441 MUST fail.
 - **Negative numbers**: A negative `windowDays` or `pollIntervalMinutes` is outside its range and MUST fail validation with the offending value in the message.
