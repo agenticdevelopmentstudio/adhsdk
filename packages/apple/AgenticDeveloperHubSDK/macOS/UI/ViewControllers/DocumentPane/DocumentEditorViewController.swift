@@ -65,8 +65,20 @@ public final class DocumentEditorViewController: NSViewController {
     /// selection is the one place that decides what is open.
     public var onOpenRequest: ((URL) -> Void)?
 
+    /// The file shown, whichever editor shows it: the code editor reads
+    /// `selection`, the Markdown editor does not, so neither alone is the answer.
+    private var displayedURL: URL?
+
+    /// Markdown files open in the Markdown editor/viewer rather than the code
+    /// editor. Created on first use; hidden while any other file is shown.
+    private var markdownEditor: MarkdownEditorController?
+    private var markdownDocument: TextDocument?
+    private var markdownLoad: Task<Void, Never>?
+    private weak var codeEditorView: NSView?
+    private weak var editorContainer: NSView?
+
     public var fileURL: URL? {
-        get { selection.selectedNode?.url }
+        get { displayedURL }
         set { show(newValue, persist: true) }
     }
 
@@ -143,9 +155,12 @@ public final class DocumentEditorViewController: NSViewController {
         // item, and so is a folder chosen from a breadcrumb's popover. Told it
         // was a file, `FileEditorView.openableNode` let it through and the
         // editor read a directory off disk.
-        selection.selectedNode = url.map {
+        displayedURL = url
+        let isMarkdown = url.map { !Self.isDirectory($0) && Self.isMarkdown($0) } ?? false
+        selection.selectedNode = isMarkdown ? nil : url.map {
             FileTreeNode(url: $0, isDirectory: Self.isDirectory($0))
         }
+        showMarkdown(isMarkdown ? url : nil)
         breadcrumb.fileURL = url
         if recordsHistory, let url {
             history.record(url)
@@ -156,6 +171,74 @@ public final class DocumentEditorViewController: NSViewController {
             store.setPaneStateValue(url?.path, forKey: Self.fileURLKey)
         }
         onTitleChange?()
+    }
+
+    private static func isMarkdown(_ url: URL) -> Bool {
+        ["md", "markdown"].contains(url.pathExtension.lowercased())
+    }
+
+    /// Shows `url` in the Markdown editor, or hides it for nil. The outgoing
+    /// Markdown document's pending save is flushed before it is closed, the
+    /// same order `FileEditorState` keeps for the code editor.
+    private func showMarkdown(_ url: URL?) {
+        markdownLoad?.cancel()
+        let outgoing = markdownDocument
+        markdownDocument = nil
+        if let outgoing {
+            let scheduler = saveScheduler
+            let store = documentStore
+            let uri = outgoing.uri
+            Task { @MainActor in
+                await scheduler.flushPendingSave(uri: uri)
+                store.close(uri: uri)
+            }
+        }
+        // Before the view exists (a restore from init), `loadView` calls back.
+        guard isViewLoaded else { return }
+        codeEditorView?.isHidden = url != nil
+        guard let url else {
+            markdownEditor?.view.isHidden = true
+            return
+        }
+        let editor = ensureMarkdownEditor()
+        editor.view.isHidden = false
+        editor.content = ""
+        markdownLoad = Task { @MainActor [weak self] in
+            let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+            guard let self, !Task.isCancelled, self.displayedURL == url else { return }
+            let language = LanguageDetection.language(for: url)
+            let document = self.documentStore.open(
+                uri: url.documentUri,
+                languageId: LanguageDetection.lspLanguageId(for: language),
+                text: text
+            )
+            self.markdownDocument = document
+            editor.content = document.text
+        }
+    }
+
+    private func ensureMarkdownEditor() -> MarkdownEditorController {
+        if let markdownEditor { return markdownEditor }
+        let editor = MarkdownEditorController(palette: ThemeScope.app.palette)
+        editor.onContentChange = { [weak self] text in
+            guard let self, let document = self.markdownDocument, document.text != text else { return }
+            document.replaceAll(with: text)
+            self.saveScheduler.schedule(document)
+        }
+        addChild(editor)
+        if let container = editorContainer {
+            let editorView = editor.view
+            editorView.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(editorView)
+            NSLayoutConstraint.activate([
+                editorView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                editorView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                editorView.topAnchor.constraint(equalTo: container.topAnchor),
+                editorView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            ])
+        }
+        markdownEditor = editor
+        return editor
     }
 
     private static func isDirectory(_ url: URL) -> Bool {
@@ -183,7 +266,20 @@ public final class DocumentEditorViewController: NSViewController {
         // Held still while a shelf slides beside the pane: every new width
         // rewraps every line and rebuilds the find bar, which costs a slide
         // most of its frames.
-        let editor = FrameHoldingView(content: hosting)
+        let codeEditor = FrameHoldingView(content: hosting)
+        // The code editor and, for Markdown files, the Markdown editor share
+        // this one slot; exactly one of them is visible.
+        let editor = NSView()
+        codeEditor.translatesAutoresizingMaskIntoConstraints = false
+        editor.addSubview(codeEditor)
+        NSLayoutConstraint.activate([
+            codeEditor.leadingAnchor.constraint(equalTo: editor.leadingAnchor),
+            codeEditor.trailingAnchor.constraint(equalTo: editor.trailingAnchor),
+            codeEditor.topAnchor.constraint(equalTo: editor.topAnchor),
+            codeEditor.bottomAnchor.constraint(equalTo: editor.bottomAnchor)
+        ])
+        codeEditorView = codeEditor
+        editorContainer = editor
         // Where a pane's title bar would be: back/forward, then the breadcrumb.
         // The editor has no bar inside a Documents tab, so this row is its
         // only chrome.
@@ -244,6 +340,9 @@ public final class DocumentEditorViewController: NSViewController {
             stack.bottomAnchor.constraint(equalTo: root.bottomAnchor)
         ])
         view = root
+        if displayedURL.map(Self.isMarkdown) ?? false {
+            showMarkdown(displayedURL)
+        }
     }
 }
 

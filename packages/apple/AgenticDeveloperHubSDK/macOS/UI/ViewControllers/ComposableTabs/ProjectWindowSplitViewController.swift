@@ -185,6 +185,9 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
         let spinner = NSProgressIndicator()
         spinner.style = .spinning
         spinner.controlSize = .regular
+        // Spins off the main thread, so it keeps turning while the new
+        // project's window is built.
+        spinner.usesThreadedAnimation = true
         spinner.translatesAutoresizingMaskIntoConstraints = false
         overlay.addSubview(spinner)
         contentView.addSubview(overlay, positioned: .above, relativeTo: nil)

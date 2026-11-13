@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import os
+import QuartzCore
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 
@@ -613,9 +614,28 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // so a click is answered at once even when the load takes a moment.
         let busyWindow = shownWindows[group.id]
         busyWindow?.setProjectAreaBusy(true)
-        // Drawn now: building the window below holds the main thread, and an
-        // overlay added but not yet displayed would only appear after it.
+        pendingLoads.insert(repo.id)
+        // Laid out, drawn and committed before the build: building the window
+        // holds the main thread, and an overlay only added (zero-sized until
+        // layout) would appear after it, if at all. The build waits one turn
+        // of the run loop so the window server shows that frame first.
+        busyWindow?.window?.layoutIfNeeded()
         busyWindow?.window?.displayIfNeeded()
+        CATransaction.flush()
+        DispatchQueue.main.async { [weak self, weak group] in
+            guard let self, let group else {
+                busyWindow?.setProjectAreaBusy(false)
+                return
+            }
+            self.pendingLoads.remove(repo.id)
+            self.build(repo, into: group, busyWindow: busyWindow, timing: timing)
+        }
+    }
+
+    private func build(
+        _ repo: GitRepo, into group: ProjectWindowGroup,
+        busyWindow: (NSWindowController & ProjectShelfWindow)?, timing: ProjectLoadTiming
+    ) {
         guard let controller = makeProjectWindow(repo, in: group) else {
             busyWindow?.setProjectAreaBusy(false)
             return
