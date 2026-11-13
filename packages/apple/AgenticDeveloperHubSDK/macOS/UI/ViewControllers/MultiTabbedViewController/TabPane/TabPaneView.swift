@@ -358,7 +358,9 @@ final class TabPaneView: NSView {
 
     private func recession(atDepth depth: Int) -> CGFloat {
         guard depth > 0 else { return 0 }
-        let steps = edge.isVertical ? min(depth, Self.maxStackDepth) : 1
+        // One step on every edge: vertical cards are spaced like horizontal
+        // ones now, not fanned as an overlapping deck.
+        let steps = 1
         return CGFloat(steps) * Self.inactiveInset
     }
 

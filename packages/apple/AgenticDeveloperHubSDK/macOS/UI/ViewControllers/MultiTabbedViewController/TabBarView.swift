@@ -162,7 +162,7 @@ final class TabBarView: NSView {
             stack.alignment = .leading
         }
         applyEdgeInsets()
-        stack.spacing = edge.isVertical ? -Self.cardOverlap : Self.itemSpacing
+        stack.spacing = Self.itemSpacing
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         wantsLayer = true
@@ -561,6 +561,13 @@ private final class TabButton: NSView {
     private let backgroundView = NSView()
 
     private let showsCloseButton: Bool
+    private var cornerObserver: UserSettingObserver<Bool>?
+
+    /// A title tab's own slight rounding, or the app's tab radius when
+    /// Appearance > General prefers rounded corners.
+    private static var cornerRadius: CGFloat {
+        CornerStyle.prefersRounded ? CornerStyle.tabRadius : 4
+    }
 
     init(id: UUID, title: String, showsCloseButton: Bool = true) {
         self.id = id
@@ -572,7 +579,11 @@ private final class TabButton: NSView {
         wantsLayer = true
 
         backgroundView.wantsLayer = true
-        backgroundView.layer?.cornerRadius = 4
+        backgroundView.layer?.cornerRadius = Self.cornerRadius
+        backgroundView.layer?.cornerCurve = .continuous
+        cornerObserver = UserSettingObserver(UserSettings.preferRoundedCorners) { [weak self] _ in
+            self?.backgroundView.layer?.cornerRadius = Self.cornerRadius
+        }
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
 
         titleLabel.stringValue = title

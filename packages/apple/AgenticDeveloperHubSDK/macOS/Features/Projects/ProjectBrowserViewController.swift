@@ -261,7 +261,19 @@ public final class ProjectBrowserViewController: NSViewController {
     public func selectRepo(id: GitRepo.ID) {
         let projects = roots.flatMap { $0.repositoriesInDisplayOrder }
         guard let node = projects.first(where: { $0.repo?.id == id }) else { return }
+        // A project inside a collapsed folder has no row; open the folders
+        // above it so it can be selected and scrolled to.
+        for ancestor in Self.ancestors(of: node, in: roots) { outline.expandItem(ancestor) }
         select(node)
+    }
+
+    private static func ancestors(of target: ProjectTreeNode, in nodes: [ProjectTreeNode]) -> [ProjectTreeNode] {
+        for node in nodes {
+            if node === target { return [] }
+            let below = ancestors(of: target, in: node.children)
+            if !below.isEmpty || node.children.contains(where: { $0 === target }) { return [node] + below }
+        }
+        return []
     }
 
     // MARK: - Return in the list

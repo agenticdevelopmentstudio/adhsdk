@@ -52,9 +52,10 @@ public final class BreadcrumbView: NSView {
         )
     }
 
-    /// Directories the strip may not leave: a crumb above the one of these
-    /// that holds the file is disabled, so a project's breadcrumb only moves
-    /// within the project. Empty (the default) leaves every crumb enabled.
+    /// Directories the strip may not leave: crumbs above the one of these
+    /// that holds the file are not shown, so a project's breadcrumb starts at
+    /// the project and only moves within it. Empty (the default) shows the
+    /// whole path.
     public var confiningRoots: [URL] = [] {
         didSet { rebuild() }
     }
@@ -63,6 +64,10 @@ public final class BreadcrumbView: NSView {
     /// its directory here — a File Browser window switching to another folder.
     /// Nil (the default) leaves directories as places to walk through only.
     public var onSelectDirectory: ((URL) -> Void)?
+
+    /// The verb on that item: "Browse" moves a window, "Select" picks the
+    /// folder in a project's tree.
+    public var directoryActionTitle = "Browse"
 
     /// The crumb labels, first to last. Empty when there is no file.
     public private(set) var crumbTitles: [String] = []
@@ -133,6 +138,7 @@ public final class BreadcrumbView: NSView {
             self?.onSelect?(url)
         }
         if let onSelectDirectory {
+            builder.chooseDirectoryTitle = directoryActionTitle
             builder.onChooseDirectory = { [weak self] url in
                 self?.dismissExpansion()
                 onSelectDirectory(url)
@@ -145,7 +151,8 @@ public final class BreadcrumbView: NSView {
     // MARK: - Layout
 
     private func rebuild() {
-        let path = Self.path(for: fileURL, rootURL: rootURL, style: style, homeURL: homeURL)
+        var path = Self.path(for: fileURL, rootURL: rootURL, style: style, homeURL: homeURL)
+        path.removeAll { isOutsideConfiningRoot($0.url) }
         crumbTitles = path.map(\.title)
         crumbURLs = path.map(\.url)
         crumbDirectories = path.indices.map { index in
@@ -163,7 +170,6 @@ public final class BreadcrumbView: NSView {
                 stack.addArrangedSubview(Self.chevron())
             }
             let button = crumbButton(index: index, isLast: index == path.count - 1)
-            button.isEnabled = !isOutsideConfiningRoot(path[index].url)
             crumbButtons.append(button)
             stack.addArrangedSubview(button)
         }
@@ -228,6 +234,7 @@ public final class BreadcrumbView: NSView {
         copy.filter = filter
         copy.confiningRoots = confiningRoots
         copy.onSelectDirectory = onSelectDirectory
+        copy.directoryActionTitle = directoryActionTitle
         copy.onSelect = { [weak self] url in
             self?.dismissExpansion()
             self?.onSelect?(url)
@@ -244,9 +251,35 @@ public final class BreadcrumbView: NSView {
         }
         window.addChildWindow(panel, ordered: .above)
         expansion = panel
+        startExpansionWatch()
+    }
+
+    /// The panel's own `mouseExited` is missed when the pointer leaves while a
+    /// crumb menu is tracking, or before the panel's tracking area exists, and
+    /// the expansion then stays up. A poll on the pointer closes it whenever
+    /// the pointer is over neither the strip nor the panel. The timer runs in
+    /// the default mode only, so it never fires while a menu is open.
+    private var expansionWatch: Timer?
+
+    private func startExpansionWatch() {
+        expansionWatch?.invalidate()
+        expansionWatch = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.checkExpansionPointer() }
+        }
+    }
+
+    private func checkExpansionPointer() {
+        guard let expansion, let window, window.isVisible else { dismissExpansion(); return }
+        let pointer = NSEvent.mouseLocation
+        let strip = window.convertToScreen(convert(bounds, to: nil))
+        if !expansion.frame.contains(pointer) && !strip.contains(pointer) {
+            dismissExpansion()
+        }
     }
 
     private func dismissExpansion() {
+        expansionWatch?.invalidate()
+        expansionWatch = nil
         guard let expansion else { return }
         expansion.parent?.removeChildWindow(expansion)
         expansion.orderOut(nil)
@@ -381,11 +414,12 @@ final class BreadcrumbMenu: NSObject, NSMenuDelegate {
 
     /// Set to offer each directory menu's own folder as a choice ("Browse").
     var onChooseDirectory: ((URL) -> Void)?
+    var chooseDirectoryTitle = "Browse"
 
     private func fill(_ menu: NSMenu, with directory: URL, marking marked: URL?) {
         if onChooseDirectory != nil {
             let browse = NSMenuItem(
-                title: "Browse “\(directory.lastPathComponent)”",
+                title: "\(chooseDirectoryTitle) “\(directory.lastPathComponent)”",
                 action: #selector(chooseDirectory(_:)), keyEquivalent: "")
             browse.target = self
             browse.representedObject = directory

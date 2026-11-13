@@ -129,6 +129,12 @@ public final class FileBrowserViewController: NSViewController {
 
     /// Keeps the breadcrumb inside the browser's own roots: crumbs above them
     /// are disabled. A project's browser sets it; a File Browser window does not.
+    /// The verb on the breadcrumb's directory item; see `BreadcrumbView`.
+    public var breadcrumbDirectoryActionTitle: String {
+        get { breadcrumb.directoryActionTitle }
+        set { breadcrumb.directoryActionTitle = newValue }
+    }
+
     public var confinesBreadcrumbToRoots = false {
         didSet { updateBreadcrumbConfinement() }
     }

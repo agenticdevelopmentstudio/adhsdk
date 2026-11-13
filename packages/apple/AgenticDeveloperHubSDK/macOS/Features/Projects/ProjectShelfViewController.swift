@@ -180,6 +180,7 @@ public final class ProjectShelfViewController: NSViewController {
             .sink { [weak self] ids in
                 guard let self, self.group.panel == .activeProjects else { return }
                 self.browser.setOnlyRepoIDs(Set(ids))
+                self.reapplyReveal()
             }
             .store(in: &cancellables)
         group.$filterText
@@ -228,6 +229,18 @@ public final class ProjectShelfViewController: NSViewController {
         if searchField.stringValue != text { searchField.stringValue = text }
         panelBar.selectedID = panel.rawValue
         if keysInList { focusList() }
+        reapplyReveal()
+    }
+
+    /// The project the window is showing. Every refilter of the list (a panel
+    /// switch, a change to the active set) clears the outline's selection, so
+    /// it is selected again, and scrolled to, after each one.
+    private var revealedRepoID: UUID?
+
+    private func reapplyReveal() {
+        guard let id = revealedRepoID ?? group.selectedRepoID else { return }
+        browser.selectRepo(id: id)
+        activeProjects.highlight(repoID: id)
     }
 
     // MARK: - Filter
@@ -299,8 +312,8 @@ public final class ProjectShelfViewController: NSViewController {
     /// Highlights `repoID` in both panels without choosing it: the window
     /// saying which project it is showing.
     public func reveal(repoID: UUID) {
-        browser.selectRepo(id: repoID)
-        activeProjects.highlight(repoID: repoID)
+        revealedRepoID = repoID
+        reapplyReveal()
     }
 }
 

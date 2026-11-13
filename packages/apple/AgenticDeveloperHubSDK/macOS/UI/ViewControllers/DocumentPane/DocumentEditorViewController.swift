@@ -69,17 +69,25 @@ public final class DocumentEditorViewController: NSViewController {
     /// `selection`, the Markdown editor does not, so neither alone is the answer.
     private var displayedURL: URL?
 
-    /// Markdown files open in the Markdown editor/viewer rather than the code
-    /// editor. Created on first use; hidden while any other file is shown.
-    private var markdownEditor: MarkdownEditorController?
+    /// Markdown files open in the app's Markdown editor — the same one
+    /// Notations uses — rather than the code editor. Created on first use;
+    /// hidden while any other file is shown.
+    private var markdownEditor: MarkdownPaneViewController?
     private var markdownDocument: TextDocument?
     private var markdownLoad: Task<Void, Never>?
     private weak var codeEditorView: NSView?
     private weak var editorContainer: NSView?
+    /// The bar row; the Markdown editor's layout control joins it, at the end.
+    private weak var navigationRow: NSStackView?
 
     public var fileURL: URL? {
         get { displayedURL }
         set { show(newValue, persist: true) }
+    }
+
+    /// Keeps the breadcrumb inside `rootURL`, as a project's editor does.
+    public var confinesBreadcrumbToRoot = false {
+        didSet { breadcrumb.confiningRoots = confinesBreadcrumbToRoot ? [rootURL] : [] }
     }
 
     public init(
@@ -198,11 +206,13 @@ public final class DocumentEditorViewController: NSViewController {
         codeEditorView?.isHidden = url != nil
         guard let url else {
             markdownEditor?.view.isHidden = true
+            markdownEditor?.layoutControl.isHidden = true
             return
         }
         let editor = ensureMarkdownEditor()
         editor.view.isHidden = false
-        editor.content = ""
+        editor.layoutControl.isHidden = false
+        editor.text = ""
         markdownLoad = Task { @MainActor [weak self] in
             let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
             guard let self, !Task.isCancelled, self.displayedURL == url else { return }
@@ -213,14 +223,14 @@ public final class DocumentEditorViewController: NSViewController {
                 text: text
             )
             self.markdownDocument = document
-            editor.content = document.text
+            editor.text = document.text
         }
     }
 
-    private func ensureMarkdownEditor() -> MarkdownEditorController {
+    private func ensureMarkdownEditor() -> MarkdownPaneViewController {
         if let markdownEditor { return markdownEditor }
-        let editor = MarkdownEditorController(palette: ThemeScope.app.palette)
-        editor.onContentChange = { [weak self] text in
+        let editor = MarkdownPaneViewController(accessibilityID: "document.markdown-layout")
+        editor.onTextChange = { [weak self] text in
             guard let self, let document = self.markdownDocument, document.text != text else { return }
             document.replaceAll(with: text)
             self.saveScheduler.schedule(document)
@@ -236,6 +246,10 @@ public final class DocumentEditorViewController: NSViewController {
                 editorView.topAnchor.constraint(equalTo: container.topAnchor),
                 editorView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
             ])
+        }
+        if let navigationRow {
+            editor.layoutControl.setContentHuggingPriority(.required, for: .horizontal)
+            navigationRow.addArrangedSubview(editor.layoutControl)
         }
         markdownEditor = editor
         return editor
@@ -287,7 +301,8 @@ public final class DocumentEditorViewController: NSViewController {
         navigationRow.orientation = .horizontal
         navigationRow.alignment = .centerY
         navigationRow.spacing = 4
-        navigationRow.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
+        navigationRow.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
+        self.navigationRow = navigationRow
         backForward.setContentHuggingPriority(.required, for: .horizontal)
         backForward.setContentCompressionResistancePriority(.required, for: .horizontal)
         breadcrumb.setContentHuggingPriority(.defaultLow, for: .horizontal)

@@ -1843,6 +1843,7 @@
 		6F995CFADC27754B940B671C /* SafariBrowserPaneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EE33B9833A422A81DA38583 /* SafariBrowserPaneViewController.swift */; };
 		6FA282FD52A248F38DDC83B9 /* AgenticDeveloperHubSDK-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74A8C8CA2D090E5DA642E5A4 /* AgenticDeveloperHubSDK-macOS.framework */; };
 		6FAF3F3B29057F9B4C38AAE8 /* WebAuthnJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87FBE7B0DFCB1F4B1C6BC238 /* WebAuthnJSON.swift */; };
+		6FB8C2EE83986831DE8E87EE /* MarkdownPaneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8E4B999DC2BCCBF6F84504E /* MarkdownPaneViewController.swift */; };
 		6FBA712B27AD0EF9A30270E4 /* Orchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8138075F19A84DD5500D08 /* Orchestrator.swift */; };
 		6FD4A5949698B7981863DA8D /* ApplicationsAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DBEBBAF6BF6DE11F6BFC6A /* ApplicationsAdapterTests.swift */; };
 		6FDB50151D1A94DE77AD0998 /* assistant-repeat.jsonl in Resources */ = {isa = PBXBuildFile; fileRef = 1A5292062859BFAB930D008B /* assistant-repeat.jsonl */; };
@@ -9717,6 +9718,7 @@
 		E8C9C6818066EAE71E505513 /* WebStoreExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebStoreExtension.swift; sourceTree = "<group>"; };
 		E8CA3352DEFA4632A2B7C318 /* ChatFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatFixtures.swift; sourceTree = "<group>"; };
 		E8DB03C241AECFD5B23C1606 /* HookCaptureCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookCaptureCommand.swift; sourceTree = "<group>"; };
+		E8E4B999DC2BCCBF6F84504E /* MarkdownPaneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPaneViewController.swift; sourceTree = "<group>"; };
 		E8ECE8662EA237236EE39911 /* InputActivityTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputActivityTrigger.swift; sourceTree = "<group>"; };
 		E904291106FB8BE145111B77 /* ThemeScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeScope.swift; sourceTree = "<group>"; };
 		E933B9E52301E7DB8DB3E7D5 /* ChromiumLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromiumLauncher.swift; sourceTree = "<group>"; };
@@ -11109,6 +11111,14 @@
 				A9D26C5E39D31E5EEF4DC331 /* NotationsWindowController.swift */,
 			);
 			path = Window;
+			sourceTree = "<group>";
+		};
+		108F5FFAE668104F9AD3F170 /* MarkdownPane */ = {
+			isa = PBXGroup;
+			children = (
+				E8E4B999DC2BCCBF6F84504E /* MarkdownPaneViewController.swift */,
+			);
+			path = MarkdownPane;
 			sourceTree = "<group>";
 		};
 		11C3565AA41F5EE3EC909DB5 /* Pipeline */ = {
@@ -16547,6 +16557,7 @@
 				E4ED03538052FFB82D2C57F9 /* ComposableTabs */,
 				A4028AEC1AB96A2F625648F1 /* DocumentPane */,
 				1607F2091022A84426D4411C /* FileBrowser */,
+				108F5FFAE668104F9AD3F170 /* MarkdownPane */,
 				2C0160AFD782461099ED4200 /* MultiTabbedViewController */,
 				C1A4267842F6B27A1A5A213E /* Panes */,
 				9DACB69E5655285DE7A4F095 /* TopicListViewController.swift */,
@@ -23204,6 +23215,7 @@
 				9251C8DB798E8E61A8DC1E14 /* MainThreadWindow.swift in Sources */,
 				B3157204F73BFC59661676AB /* MainThreadWorkspace.swift in Sources */,
 				0C4AE721644CBC31AE80871B /* MarkdownNoteStorage.swift in Sources */,
+				6FB8C2EE83986831DE8E87EE /* MarkdownPaneViewController.swift in Sources */,
 				1A653AE81431A1B836440766 /* MenuContribution.swift in Sources */,
 				7C8CA45DD11B946A43734619 /* MenuContributionCommands.swift in Sources */,
 				E0AF792B2C6E4202AC2500AA /* ModelChooserContent.swift in Sources */,
