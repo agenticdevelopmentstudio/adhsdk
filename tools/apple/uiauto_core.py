@@ -146,11 +146,10 @@ def parse_ps(output: str, executable_prefix: str) -> list[int]:
 def executable_prefixes(app: Path) -> list[str]:
     """Every spelling of this bundle's executable directory `ps` might report.
 
-    Both spellings, because this project's DerivedData directory is a symlink
-    onto an external volume: a caller names the bundle through
-    `~/Library/Developer/Xcode/DerivedData/...`, and `ps` reports the resolved
-    `/Volumes/Xcode-artifacts/...` the kernel actually exec'd. Matching only the
-    caller's spelling finds no process at all — the app looks like it never
+    Both spellings, because a DerivedData directory may be a symlink onto
+    another volume: a caller names the bundle through the symlinked path, and
+    `ps` reports the resolved path the kernel actually exec'd. Matching only
+    the caller's spelling finds no process at all — the app looks like it never
     started when it is running perfectly well.
     """
     prefixes: list[str] = []
