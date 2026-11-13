@@ -163,18 +163,70 @@ struct GitDiffParserTests {
             diff --git a/run.sh b/run.sh
             old mode 100644
             new mode 100755
-            diff --git a/link b/link
-            old mode 100644
-            new mode 120000
 
             """
         let files = GitDiff.parse(patch: patch).files
-        try #require(files.count == 2)
+        try #require(files.count == 1)
         #expect(files[0].change == .modified)
         #expect(files[0].hunks.isEmpty)
         #expect(!files[0].isBinary)
         #expect(files[0].path == "run.sh")
-        #expect(files[1].change == .typeChanged)
+    }
+
+    @Test("a type change (deleted then added, same path) is one type-changed file")
+    func mergesTypeChange() throws {
+        // Captured from git 2.x: `link` committed as a file, then replaced by a symlink,
+        // `git diff --src-prefix=a/ --dst-prefix=b/ -c core.quotePath=false --no-color HEAD`.
+        let patch = #"""
+            diff --git a/link b/link
+            deleted file mode 100644
+            index 94954ab..0000000
+            --- a/link
+            +++ /dev/null
+            @@ -1,2 +0,0 @@
+            -hello
+            -world
+            diff --git a/link b/link
+            new file mode 120000
+            index 0000000..4cbb553
+            --- /dev/null
+            +++ b/link
+            @@ -0,0 +1 @@
+            +target.txt
+            \ No newline at end of file
+            diff --git a/gone b/gone
+            deleted file mode 100644
+            index 94954ab..0000000
+            --- a/gone
+            +++ /dev/null
+            @@ -1 +0,0 @@
+            -x
+            diff --git a/new b/new
+            new file mode 100644
+            index 0000000..94954ab
+            --- /dev/null
+            +++ b/new
+            @@ -0,0 +1 @@
+            +x
+
+            """#
+        let files = GitDiff.parse(patch: patch).files
+        try #require(files.count == 3)
+        let link = files[0]
+        #expect(link.change == .typeChanged)
+        #expect(link.id == "link")
+        #expect(link.oldPath == "link")
+        #expect(link.newPath == "link")
+        #expect(!link.isBinary)
+        try #require(link.hunks.count == 2)
+        #expect(link.hunks[0].lines.map(\.text) == ["hello", "world"])
+        #expect(link.hunks[1].lines.map(\.kind) == [.added, .noNewlineAtEnd])
+        #expect(link.hunks[1].lines[0].text == "target.txt")
+        // A deletion followed by an addition of a different path stays two files.
+        #expect(files[1].change == .deleted)
+        #expect(files[1].path == "gone")
+        #expect(files[2].change == .added)
+        #expect(files[2].path == "new")
     }
 
     @Test("a copy carries its similarity; empty input has no files")
