@@ -3226,6 +3226,7 @@
 		D0E8DC6F18CAE793BD95ED9E /* ThemeScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA903ECAB3D12F5E139C69 /* ThemeScopeTests.swift */; };
 		D0F705A0B8EB92D12EBB1B20 /* AgenticDeveloperHubSDKDisplays.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C658A5AEADB99D9B61900608 /* AgenticDeveloperHubSDKDisplays.framework */; };
 		D0F833F76DF087432DF1829B /* CommandResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9FE614BF8D8CCA801830E61 /* CommandResult.swift */; };
+		D1092AEE714653F33183A8FF /* FolderDisclosureMemoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 866188AF5927AC731C91F7CD /* FolderDisclosureMemoryTests.swift */; };
 		D1097E0DF701F18160F8EAD8 /* EcosystemsAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C1E5D4C5ED883EF8B41C11C /* EcosystemsAdapterTests.swift */; };
 		D1133DB02F1EF77CC486294E /* ThemeColorsTopicPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D479ECFFC2C1D96DD1BEAB /* ThemeColorsTopicPanel.swift */; };
 		D1213CA9D7C6FC7C5737C503 /* AgenticDeveloperHubSDK-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74A8C8CA2D090E5DA642E5A4 /* AgenticDeveloperHubSDK-macOS.framework */; };
@@ -3277,6 +3278,7 @@
 		D43A682ACD6754A307E5D6C1 /* IdleMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4BE19C199628D1871A6D233 /* IdleMonitorTests.swift */; };
 		D44226D6D2D0C29572BA2137 /* LanguageServersPanelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F4720DF13108E22A40AF1 /* LanguageServersPanelViewController.swift */; };
 		D452B97F6CA67BB25D270091 /* AgenticDeveloperHubSDK-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74A8C8CA2D090E5DA642E5A4 /* AgenticDeveloperHubSDK-macOS.framework */; };
+		D471D46B32EDDD9876F43EE3 /* FolderDisclosureMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C3D1407651C226AFA78E25 /* FolderDisclosureMemory.swift */; };
 		D47B9B472CB81568D54070D8 /* AIPluginKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1CB5D9EF0940BC9BAD22EB0F /* AIPluginKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D47F45E0B8B9C102DB7F671E /* ProviderSpoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26880AFD92D03A0B211D6654 /* ProviderSpoolTests.swift */; };
 		D49ABADA5B4702104FFBB0D4 /* AgenticDeveloperHubSDKDatabase.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 978D961A54851BA0015BC41C /* AgenticDeveloperHubSDKDatabase.framework */; };
@@ -8664,6 +8666,7 @@
 		862B36E74F1E27A0D9027FC3 /* SessionActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActivity.swift; sourceTree = "<group>"; };
 		8640F9C4AEF7325B1E13A978 /* ProjectTabReconcilerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectTabReconcilerTests.swift; sourceTree = "<group>"; };
 		865231DF942331839E1B6314 /* ProjectScriptingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectScriptingTests.swift; sourceTree = "<group>"; };
+		866188AF5927AC731C91F7CD /* FolderDisclosureMemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderDisclosureMemoryTests.swift; sourceTree = "<group>"; };
 		867494B8581456FA8A9BC308 /* AIPluginsCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPluginsCoordinator.swift; sourceTree = "<group>"; };
 		867C2ED3449B5D6DE2EAC223 /* ScreenSetStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSetStorage.swift; sourceTree = "<group>"; };
 		86835D1792974F3D3B301CEA /* FontChooserButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontChooserButton.swift; sourceTree = "<group>"; };
@@ -9217,6 +9220,7 @@
 		B6AB7FD41F32643782FDBE03 /* CommandRunning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRunning.swift; sourceTree = "<group>"; };
 		B6BF604A508DE2F8376555F3 /* MockProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockProvider.swift; sourceTree = "<group>"; };
 		B6C0852586ABB526EA1B6B12 /* IngestSpoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngestSpoolTests.swift; sourceTree = "<group>"; };
+		B6C3D1407651C226AFA78E25 /* FolderDisclosureMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderDisclosureMemory.swift; sourceTree = "<group>"; };
 		B6E05481D089F114E57EA076 /* MonitorGaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorGaugeView.swift; sourceTree = "<group>"; };
 		B6F340CE1E594DA3AAD588EC /* ScriptAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptAnalyzerTests.swift; sourceTree = "<group>"; };
 		B70EE87D8EFE90BAB54E0832 /* ADKDIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADKDIdentifiers.swift; sourceTree = "<group>"; };
@@ -16880,6 +16884,7 @@
 			isa = PBXGroup;
 			children = (
 				8A013BF366A446D5C61B844A /* BranchControllerTests.swift */,
+				866188AF5927AC731C91F7CD /* FolderDisclosureMemoryTests.swift */,
 				5EBE34916D4021440F14FAB6 /* GitRepoScannerTests.swift */,
 				58B5F01C892AEE9DD68CC89E /* ProjectCheckoutTests.swift */,
 				162924D138B7C915AA73F5A7 /* ProjectControllerTests.swift */,
@@ -17323,6 +17328,7 @@
 				942F82C5A5EF24B7F024DF34 /* Settings */,
 				859F4977C522F31972F9FE65 /* ActiveProjectsViewController.swift */,
 				5886317AB0F8FBA4D2998BD0 /* BranchController.swift */,
+				B6C3D1407651C226AFA78E25 /* FolderDisclosureMemory.swift */,
 				819D4FDB50C256F4C44D4054 /* GitRepo.swift */,
 				F11D1958AD7250CE9166720F /* GitRepoScanner.swift */,
 				E88F98842508CD39226A6A4F /* ProjectBrowserViewController.swift */,
@@ -21154,6 +21160,7 @@
 				508A3EE1BA613619B6797DC8 /* FileTreeManagerInjectedProviderTests.swift in Sources */,
 				7E7EFB71CF782E0B78045224 /* FileTreeNodeTests.swift in Sources */,
 				9AE7640BA0C54A984D1A53AB /* FileTreeOpenOnSelectionTests.swift in Sources */,
+				D1092AEE714653F33183A8FF /* FolderDisclosureMemoryTests.swift in Sources */,
 				52729A67030071C0715667DE /* FontChooserButtonTests.swift in Sources */,
 				02E4859E57E1FC5FD3F4A9E7 /* FrameCalculatorTests.swift in Sources */,
 				CBC667A2025320F074E44679 /* GitGlobalConfigTableViewTests.swift in Sources */,
@@ -23134,6 +23141,7 @@
 				BE7BDD7F0A31E9F3952D000C /* FileTypesSettingsPanelViewController.swift in Sources */,
 				A31D7096208040419AF55E2F /* FileTypesSettingsView.swift in Sources */,
 				48E02128F9873F84BE956211 /* FloatingChooserPanelController.swift in Sources */,
+				D471D46B32EDDD9876F43EE3 /* FolderDisclosureMemory.swift in Sources */,
 				E767CA81CCFE0A3E4AFF1993 /* FontChooserButton.swift in Sources */,
 				DB1F1B6B8A5BCE513D1D8748 /* FontPickerView.swift in Sources */,
 				AAE8B7B63A88446E5502375A /* FontViewModel.swift in Sources */,

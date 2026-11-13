@@ -55,12 +55,21 @@ public final class ProjectBrowserViewController: NSViewController {
     /// button filtering the one list rather than showing another.
     private var onlyRepoIDs: Set<UUID>?
 
+    /// Which folders the user has closed; put back after every rebuild.
+    private let disclosure: FolderDisclosureMemory
+    /// True while the outline is being opened and closed to match
+    /// `disclosure`, whose expand and collapse notifications are not the
+    /// user's.
+    private var isRestoringDisclosure = false
+
     public init(
         coordinator: ProjectsCoordinator,
         mode: ProjectBrowserMode = .browser,
-        showsFilterField: Bool = true
+        showsFilterField: Bool = true,
+        disclosure: FolderDisclosureMemory = FolderDisclosureMemory()
     ) {
         self.coordinator = coordinator
+        self.disclosure = disclosure
         self.mode = mode
         self.showsFilterField = showsFilterField
         super.init(nibName: nil, bundle: nil)
@@ -263,8 +272,29 @@ public final class ProjectBrowserViewController: NSViewController {
         guard let node = projects.first(where: { $0.repo?.id == id }) else { return }
         // A project inside a collapsed folder has no row; open the folders
         // above it so it can be selected and scrolled to.
-        for ancestor in Self.ancestors(of: node, in: roots) { outline.expandItem(ancestor) }
+        let ancestors = Self.ancestors(of: node, in: roots)
+        disclosure.reveal(ancestors.map(\.path))
+        for ancestor in ancestors { outline.expandItem(ancestor) }
         select(node)
+    }
+
+    /// Opens every folder the user has not closed. The tree is what the user
+    /// came to read, so a folder starts open; one the user closed stays closed
+    /// through every rebuild until they open it or a project inside it is
+    /// selected. While a filter is typed every folder opens, without changing
+    /// what is remembered: the matches are what the filter is asking to see.
+    private func restoreDisclosure() {
+        isRestoringDisclosure = true
+        defer { isRestoringDisclosure = false }
+        outline.expandItem(nil, expandChildren: true)
+        guard query.isEmpty else { return }
+        func collapse(_ nodes: [ProjectTreeNode]) {
+            for node in nodes where node.isFolder {
+                collapse(node.children)
+                if disclosure.isCollapsed(node.path) { outline.collapseItem(node) }
+            }
+        }
+        collapse(roots)
     }
 
     private static func ancestors(of target: ProjectTreeNode, in nodes: [ProjectTreeNode]) -> [ProjectTreeNode] {
@@ -316,10 +346,7 @@ public final class ProjectBrowserViewController: NSViewController {
         }
         roots = ProjectTree.build(from: matching)
         outline.reloadData()
-        // Opened all the way down. The tree is what the user came to read, and
-        // a chooser that hides every project behind a disclosure triangle
-        // answers the question with more questions.
-        outline.expandItem(nil, expandChildren: true)
+        restoreDisclosure()
 
         emptyLabel.isHidden = !matching.isEmpty
         if matching.isEmpty {
@@ -449,6 +476,22 @@ extension ProjectBrowserViewController: NSOutlineViewDataSource, NSOutlineViewDe
     public func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
         guard let node = item as? ProjectTreeNode else { return false }
         return !node.children.isEmpty
+    }
+
+    public func outlineViewItemDidExpand(_ notification: Notification) {
+        noteDisclosure(notification, collapsed: false)
+    }
+
+    public func outlineViewItemDidCollapse(_ notification: Notification) {
+        noteDisclosure(notification, collapsed: true)
+    }
+
+    /// A user's open or close, remembered; ours (restoring) and a filter's
+    /// open-everything are not.
+    private func noteDisclosure(_ notification: Notification, collapsed: Bool) {
+        guard !isRestoringDisclosure, query.isEmpty,
+              let node = notification.userInfo?["NSObject"] as? ProjectTreeNode, node.isFolder else { return }
+        disclosure.note(node.path, collapsed: collapsed)
     }
 
     public func outlineView(_ outlineView: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView? {
