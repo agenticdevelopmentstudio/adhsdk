@@ -176,6 +176,8 @@ public final class BreadcrumbView: NSView {
             let collapsed = index < count
             let title = collapsed ? "…" : crumbTitles[index]
             if button.title != title { button.title = title }
+            // The whole collapsed run is the first crumb's one "…".
+            button.isHidden = collapsed && index > 0
             let isLast = index == crumbButtons.count - 1
             let isDirectory = !isLast || (fileURL.map(Self.isDirectory) ?? false)
             button.image = collapsed ? nil : BreadcrumbMenu.icon(

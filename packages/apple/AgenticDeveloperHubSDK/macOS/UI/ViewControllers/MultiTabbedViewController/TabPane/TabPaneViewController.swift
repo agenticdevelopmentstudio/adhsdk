@@ -69,15 +69,22 @@ public final class TabPaneViewController: NSViewController, TabBarStackedItem {
         let model = dataSource.tabPaneModelName(self)
         paneView.agentLabel.stringValue = model.map { "\(agent) · \($0)" } ?? agent
         paneView.setStatusSymbols(dataSource.tabPaneStatusSymbols(self))
+        paneView.setActivitySymbol(dataSource.tabPaneActivitySymbol(self))
+        let details = dataSource.tabPaneShowsDetails(self)
+        paneView.showsDetails = details
         paneView.sessionLabel.stringValue = dataSource.tabPaneSessionName(self)
+        paneView.sessionLabel.isHidden = !details
         paneView.directoryLabel.stringValue = Self.abbreviate(dataSource.tabPaneWorkingDirectory(self))
-        let branch = dataSource.tabPaneBranch(self)
+        paneView.directoryLabel.isHidden = !details
+        let branch = details ? dataSource.tabPaneBranch(self) : nil
         paneView.branchLabel.stringValue = branch ?? ""
         paneView.branchLabel.isHidden = branch == nil
         let summary = dataSource.tabPaneSummary(self)
-        paneView.summaryLabel.stringValue = summary ?? ""
+        // An empty summary is a placeholder: the two lines are held open for
+        // the summary still to come.
+        paneView.summaryLabel.stringValue = summary.map { $0.isEmpty ? " \n " : $0 } ?? ""
         paneView.summaryLabel.isHidden = summary == nil
-        title = paneView.sessionLabel.stringValue
+        title = details ? paneView.sessionLabel.stringValue : paneView.agentLabel.stringValue
         preferredContentSize = paneView.contentSize
     }
 

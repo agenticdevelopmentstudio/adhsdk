@@ -77,6 +77,11 @@ final class TabPaneView: NSView {
     let summaryLabel = ThemedLabel(role: .secondaryText, textRole: .caption)
     let closeButton = NSButton()
     let statusStack = NSStackView()
+    let activityView = NSImageView()
+
+    /// A card that is only its top line and summary is as tall as those
+    /// lines, not `minHeight`.
+    var showsDetails = true
 
     var onClose: (() -> Void)?
     var contextMenuProvider: ((NSEvent) -> NSMenu?)?
@@ -119,6 +124,7 @@ final class TabPaneView: NSView {
         directoryLabel.accessibilityID("tab-pane.directory.\(tabID.uuidString)")
         branchLabel.accessibilityID("tab-pane.branch.\(tabID.uuidString)")
         summaryLabel.accessibilityID("tab-pane.summary.\(tabID.uuidString)")
+        activityView.accessibilityID("tab-pane.activity.\(tabID.uuidString)")
         closeButton.accessibilityID("tab-pane.close.\(tabID.uuidString)")
         setUp()
     }
@@ -145,6 +151,14 @@ final class TabPaneView: NSView {
         }
     }
 
+    func setActivitySymbol(_ symbol: TabPaneStatusSymbol?) {
+        activityView.isHidden = symbol == nil
+        guard let symbol else { return }
+        activityView.image = NSImage(
+            systemSymbolName: symbol.symbolName, accessibilityDescription: symbol.accessibilityLabel)
+        activityView.setAccessibilityLabel(symbol.accessibilityLabel)
+    }
+
     /// The size the card wants for its current content. The same measurement
     /// on every edge, because the arrangement is the same on every edge: a
     /// width held between `minWidth` and `maxWidth`, and a height that starts
@@ -167,7 +181,7 @@ final class TabPaneView: NSView {
         let slack = 2 * deepestRecession
         return NSSize(
             width: min(Self.maxWidth, max(Self.minWidth, fitting.width + slack)),
-            height: max(Self.minHeight, fitting.height + slack)
+            height: showsDetails ? max(Self.minHeight, fitting.height + slack) : fitting.height + slack
         )
     }
 
@@ -215,6 +229,14 @@ final class TabPaneView: NSView {
         }
         directoryLabel.lineBreakMode = .byTruncatingHead
         summaryLabel.lineBreakMode = .byTruncatingTail
+        summaryLabel.maximumNumberOfLines = 2
+        summaryLabel.cell?.wraps = true
+        summaryLabel.cell?.truncatesLastVisibleLine = true
+        summaryLabel.preferredMaxLayoutWidth = Self.maxWidth - Self.padding.left - Self.padding.right
+        activityView.symbolConfiguration = .init(pointSize: 11, weight: .regular)
+        activityView.isHidden = true
+        activityView.widthAnchor.constraint(equalToConstant: 14).isActive = true
+        activityView.heightAnchor.constraint(equalToConstant: 14).isActive = true
         summaryLabel.isHidden = true
 
         statusStack.orientation = .horizontal
@@ -286,7 +308,7 @@ final class TabPaneView: NSView {
         let gap = NSView()
         gap.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
         gap.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(1), for: .horizontal)
-        let body = [agentLabel, statusStack, gap] as [NSView]
+        let body = [statusStack, agentLabel, gap, activityView] as [NSView]
         let header = NSStackView(views: edge == .left ? [closeButton] + body : body + [closeButton])
         header.orientation = .horizontal
         header.alignment = .centerY
@@ -364,6 +386,7 @@ final class TabPaneView: NSView {
         branchLabel.role = isFrontCard ? .secondaryText : .tertiaryText
         summaryLabel.role = isFrontCard ? .secondaryText : .tertiaryText
         closeButton.contentTintColor = palette.nsColor(isFrontCard ? .secondaryText : .tertiaryText)
+        activityView.contentTintColor = palette.nsColor(isFrontCard ? .accent : .secondaryText)
     }
 
     /// Puts the card where this depth wants it: pulled in by `recession` on

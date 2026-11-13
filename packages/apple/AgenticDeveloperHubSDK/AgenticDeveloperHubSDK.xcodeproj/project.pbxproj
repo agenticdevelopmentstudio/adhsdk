@@ -3402,6 +3402,7 @@
 		DD4EAF9A61EBF613D36431CA /* WorkTrackingXPCClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9294B9FBEF51A0397FBB68 /* WorkTrackingXPCClientTests.swift */; };
 		DD582E337576FB8B8A38F990 /* empty.json in Resources */ = {isa = PBXBuildFile; fileRef = 41A5D8C747A629977133B18B /* empty.json */; };
 		DD584ABB022F26B8B28ACFAF /* RepoLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E5150119C7C9C026CEA256 /* RepoLocator.swift */; };
+		DD66A4F505774493335B8AC9 /* ProjectSessionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E850935512732E2A177FD1E6 /* ProjectSessionMonitor.swift */; };
 		DD6D51F6341AD433A46B7440 /* AgenticDeveloperHubSDKSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA0DB6D4238ACD85E05AD70 /* AgenticDeveloperHubSDKSync.framework */; };
 		DD9A80321F4343679018D3C2 /* AgenticDeveloperHubSDKScripting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1E3EE3BC1EDECAC2C5B417 /* AgenticDeveloperHubSDKScripting.framework */; };
 		DDA855D3DCA63A56C19FEBFE /* PartnerModelChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA51BC53C6A85231607275DD /* PartnerModelChoice.swift */; };
@@ -9700,6 +9701,7 @@
 		E8089E6D3440E694A0599539 /* DaemonAIGuardChokepointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonAIGuardChokepointTests.swift; sourceTree = "<group>"; };
 		E8370EC83B964C354BC9B91E /* ExtensionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionEvent.swift; sourceTree = "<group>"; };
 		E84113E9F94B6E0D602E824E /* EcosystemConfigAdaptersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcosystemConfigAdaptersTests.swift; sourceTree = "<group>"; };
+		E850935512732E2A177FD1E6 /* ProjectSessionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSessionMonitor.swift; sourceTree = "<group>"; };
 		E85456AF7586A5144ABD8389 /* FocusTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTracker.swift; sourceTree = "<group>"; };
 		E87606933E6EDB0066A554BD /* VSCodeThemeImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VSCodeThemeImporterTests.swift; sourceTree = "<group>"; };
 		E8800515A4F32E528D4A1B0B /* PersonaChatCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonaChatCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -17307,6 +17309,7 @@
 				0119D7499D8D5259ECE8C186 /* ProjectReconciler.swift */,
 				32EC724260298E720C766EA6 /* ProjectScanProgressWindow.swift */,
 				2E44A1B1A99543208A8F91DE /* ProjectsCoordinator.swift */,
+				E850935512732E2A177FD1E6 /* ProjectSessionMonitor.swift */,
 				75EE82458D1DE749934FEFA9 /* ProjectShelfViewController.swift */,
 				A021D289B868BE1E43541D38 /* ProjectTabReconciler.swift */,
 				41FC31E5D52CEE6054E39071 /* ProjectTree.swift */,
@@ -23319,6 +23322,7 @@
 				644C022180EBDE6D77746B83 /* ProjectPaneStateStore.swift in Sources */,
 				1724F212122C5C4473A11A15 /* ProjectReconciler.swift in Sources */,
 				6E62150DBDEEFAF42AFF24B6 /* ProjectScanProgressWindow.swift in Sources */,
+				DD66A4F505774493335B8AC9 /* ProjectSessionMonitor.swift in Sources */,
 				A6EE1FF79455114CC3AF9228 /* ProjectShelfViewController.swift in Sources */,
 				FFEED2A9E70F8741426ED45D /* ProjectTabReconciler.swift in Sources */,
 				EB7E0CA1A6FB5AC108FDA4A0 /* ProjectTree.swift in Sources */,

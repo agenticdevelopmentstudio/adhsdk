@@ -46,6 +46,9 @@ public final class SessionsCoordinator: AppFeature {
         // Registered unopened so the toolkit's restore-on-launch can reopen it.
         SessionsWindowController.ensureCurrent(service: service)
         StenographerSummaryPrefsPush.startObserving(service: service)
+        ProjectSessionMonitor.shared.attach(
+            StenographerSessionListSource(service: service),
+            summariesEnabled: { UserSettings.stenographerAISummariesEnabled.value })
     }
 
     /// The AI Summaries settings pane, for the host's settings window.

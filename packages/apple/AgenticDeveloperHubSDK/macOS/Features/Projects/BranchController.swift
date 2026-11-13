@@ -13,6 +13,11 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
 
     private let gitClient: GitClient
     private let panes = NSHashTable<TabPaneViewController>.weakObjects()
+    private var statusObservation: GitStatusObservation?
+    private var sessionObserver: NSObjectProtocol?
+    private var settingsObserver: NSObjectProtocol?
+    /// `nil` until the first status arrives, and when git could not answer.
+    private var isClean: Bool?
 
     /// The provider is handed in, not built here (`dependency-injection`). A
     /// checkout's panes are built before this controller exists — the window
@@ -27,6 +32,34 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
         self.gitClient = gitClient
         self.statusProvider = statusProvider
         self.currentBranch = checkout.branch
+        statusObservation = statusProvider.observe { [weak self] result in
+            guard let self else { return }
+            if case .status(let status) = result {
+                self.isClean = status.files.isEmpty
+            } else {
+                self.isClean = nil
+            }
+            self.reloadPanes()
+        }
+        statusProvider.refresh()
+        sessionObserver = NotificationCenter.default.addObserver(
+            forName: ProjectSessionMonitor.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reloadPanes() }
+        }
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reloadPanes() }
+        }
+    }
+
+    private func reloadPanes() {
+        for pane in panes.allObjects { pane.reload() }
+    }
+
+    private var session: SessionWatcher.SessionWatcherSession? {
+        ProjectSessionMonitor.shared.session(forDirectory: checkout.directory)
     }
 
     // MARK: Panes
@@ -53,6 +86,7 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
         let pane = TabPaneViewController(edge: edge, tabID: tabID)
         pane.dataSource = self
         pane.delegate = self
+        pane.showsCloseButton = false
         panes.add(pane)
         pane.reload()
         return pane
@@ -151,13 +185,39 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
     /// Placeholders until an agent is attached to the tab: the design names
     /// "Claude", no model, and an idle moon. Real values arrive with the
     /// document-model work that follows the vsc-plugins branch.
-    public func tabPaneAgentName(_ pane: TabPaneViewController) -> String { "Claude" }
+    /// `<branch> (<session name>)`, the parentheses only for a named session.
+    public func tabPaneAgentName(_ pane: TabPaneViewController) -> String {
+        guard let name = session?.sessionName, !name.isEmpty else { return displayName }
+        return "\(displayName) (\(name))"
+    }
     public func tabPaneModelName(_ pane: TabPaneViewController) -> String? { nil }
-    public func tabPaneStatusSymbols(_ pane: TabPaneViewController) -> [TabPaneStatusSymbol] { [.idle] }
+    /// The checkout's state: clean, modified, or not yet known.
+    public func tabPaneStatusSymbols(_ pane: TabPaneViewController) -> [TabPaneStatusSymbol] {
+        switch isClean {
+        case true?: [TabPaneStatusSymbol(symbolName: "checkmark.circle", accessibilityLabel: "Clean")]
+        case false?: [TabPaneStatusSymbol(symbolName: "pencil.circle", accessibilityLabel: "Modified")]
+        case nil: [TabPaneStatusSymbol(symbolName: "circle.dashed", accessibilityLabel: "Status Unknown")]
+        }
+    }
+    public func tabPaneActivitySymbol(_ pane: TabPaneViewController) -> TabPaneStatusSymbol? {
+        guard let session else { return nil }
+        switch session.activity {
+        case .working: return TabPaneStatusSymbol(symbolName: "bolt.fill", accessibilityLabel: "Working")
+        case .waiting:
+            return TabPaneStatusSymbol(symbolName: "exclamationmark.bubble.fill", accessibilityLabel: "Waiting")
+        case .idle: return .idle
+        }
+    }
+    public func tabPaneShowsDetails(_ pane: TabPaneViewController) -> Bool { false }
     public func tabPaneSessionName(_ pane: TabPaneViewController) -> String { displayName }
     public func tabPaneWorkingDirectory(_ pane: TabPaneViewController) -> URL { checkout.directory }
     public func tabPaneBranch(_ pane: TabPaneViewController) -> String? { currentBranch }
-    public func tabPaneSummary(_ pane: TabPaneViewController) -> String? { nil }
+    /// The session's AI summary, or an empty placeholder until it has one —
+    /// only while summaries are on and there is a session to summarize.
+    public func tabPaneSummary(_ pane: TabPaneViewController) -> String? {
+        guard let session, ProjectSessionMonitor.shared.summariesEnabled() else { return nil }
+        return session.summary
+    }
 
     // MARK: TabPaneDelegate
 
