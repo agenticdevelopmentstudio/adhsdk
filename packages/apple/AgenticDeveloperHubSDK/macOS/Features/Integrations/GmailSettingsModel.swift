@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKIntegrations
 
 /// Orders the Gmail sign-ins started in this app, so the surface that started the latest
@@ -267,10 +268,8 @@ public final class GmailSettingsModel: ObservableObject {
     /// The clock and locale are fixed by tests.
     static func lastSyncedText(_ lastSyncAt: String?, now: Date, locale: Locale) -> String {
         guard let lastSyncAt, let date = parse(lastSyncAt) else { return "Never synced" }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        formatter.locale = locale
-        return "Last synced " + formatter.localizedString(for: date, relativeTo: now)
+        return "Last synced " + RelativeDateFormatting.string(for: date, relativeTo: now, style: .full,
+                                                              locale: locale, absoluteAfter: nil)
     }
 
     private static func parse(_ text: String) -> Date? {

@@ -1,0 +1,7 @@
+
+- **SwiftUI**: The source file imports only `Foundation`, so a SwiftUI view or model calls `RelativeDateFormatting.string(for:)` unchanged. The relative form is `RelativeDateTimeFormatter.localizedString(for:relativeTo:)` with the given `unitsStyle` and `locale`; the absolute form is `Date.FormatStyle.dateTime.year().month(.abbreviated).day()` with the same locale.
+- **Compose**: `DateUtils.getRelativeTimeSpanString(time, now, minResolution, FORMAT_ABBREV_RELATIVE)` gives the relative form; `DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)` gives the absolute form; compare the interval against the cutoff first.
+- **React/Web**: `Intl.RelativeTimeFormat` (with `style: 'short'` or `'long'`) for the relative form, choosing the largest whole unit yourself, and `Intl.DateTimeFormat(locale, { year: 'numeric', month: 'short', day: 'numeric' })` for the absolute form.
+- **AppKit / UIKit**: Identical to the SwiftUI note. Call sites in the toolkit: the notes list's cell (`NoteListCellView`) shows a note's modified date with the abbreviated style and no cutoff, and the Gmail settings model's `lastSyncedText` uses the full style and no cutoff, both keeping the output they had before this formatter existed.
+- **WinUI 3**: No built-in relative formatter; pick the largest whole unit from the `TimeSpan` and format it through localized resources, and use `DateTimeFormatter("shortdate")` or `ToString("MMM d, yyyy", culture)` for the absolute form.
+

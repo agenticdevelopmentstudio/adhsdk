@@ -4,11 +4,11 @@
     "id": "d46b3e1c-9cd9-41b6-bdd2-524ece5e294b",
     "title": "Notes Model",
     "type": "ingredient",
-    "version": "1.1.3",
+    "version": "1.1.4",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-13",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -41,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5e4c1485e602fe41",
+  "synced": "3fd6fc3a4492d549",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

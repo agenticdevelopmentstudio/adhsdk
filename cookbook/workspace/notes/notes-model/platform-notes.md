@@ -45,7 +45,10 @@
   AppKit-specific — they import only `Foundation`, `os`,
   `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMarkdown`, and
   `AgenticDeveloperHubSDKDatabase` — so the same files would compile unchanged
-  into a UIKit iOS target.
+  into a UIKit iOS target. The notes list beside these types shows each
+  note's `modifiedDate` through the shared
+  [adhsdk.ingredient.foundation.formatting.relative-date](cookbook:873f79b1-444d-4c2c-8a5f-4fc01cd9022e)
+  formatter (abbreviated, no cutoff), never a formatter of its own.
 - **WinUI 3**: `Note`/`NoteFolder` become a `record`/`class` pair (or a
   lightweight `INotifyPropertyChanged` model if the folder tree needs to
   bind directly to a `TreeView`). `NoteStorage` becomes an interface

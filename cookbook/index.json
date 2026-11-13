@@ -5919,6 +5919,22 @@
       "path": "status/service/monitor/issue-sources",
       "rdid": "adhsdk.ingredient.status.service.monitor.issue-sources"
     },
+    "873f79b1-444d-4c2c-8a5f-4fc01cd9022e": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:b50215c79ef23ca6523332d76c1ba52d59743e560462a914ba4690bfd9454bf8",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Formatting/RelativeDateFormatting.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/formatting/relative-date",
+      "rdid": "adhsdk.ingredient.foundation.formatting.relative-date"
+    },
     "87ca0139-6cd0-46dd-a9fb-40ad3406f175": {
       "implementations": [
         {

@@ -2,11 +2,11 @@
 id: d46b3e1c-9cd9-41b6-bdd2-524ece5e294b
 title: "Notes Model"
 type: ingredient
-version: 1.1.3
+version: 1.1.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -493,7 +493,10 @@ factory) | Category: the manager's name
   AppKit-specific — they import only `Foundation`, `os`,
   `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMarkdown`, and
   `AgenticDeveloperHubSDKDatabase` — so the same files would compile unchanged
-  into a UIKit iOS target.
+  into a UIKit iOS target. The notes list beside these types shows each
+  note's `modifiedDate` through the shared
+  [adhsdk.ingredient.foundation.formatting.relative-date](cookbook:873f79b1-444d-4c2c-8a5f-4fc01cd9022e)
+  formatter (abbreviated, no cutoff), never a formatter of its own.
 - **WinUI 3**: `Note`/`NoteFolder` become a `record`/`class` pair (or a
   lightweight `INotifyPropertyChanged` model if the folder tree needs to
   bind directly to a `TreeView`). `NoteStorage` becomes an interface
@@ -559,6 +562,7 @@ Separation of concerns holds structurally: `NoteStorage` is a narrow, four-metho
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.4 | 2026-11-13 | Mike Fullerton | The notes list shows modified dates through the shared relative-date formatter. |
 | 1.1.3 | 2026-10-04 | Mike Fullerton | Dropped the stray reference to the hub's notes client from the overview. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Removed the upward dependency on adh/hub/content/markdown-store (frontmatter depends-on and in-text links); the document store is described in plain terms. |
