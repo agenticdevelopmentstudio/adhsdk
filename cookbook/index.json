@@ -9754,9 +9754,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c34dcf5f4569d22c4fd076c8b7c51236920806e0a885aebe1178025ccce98796",
+            "hash": "sha256:95bfe9c3576fd241fc3453984da868a9cdb36344e20560a4eb7d610095f31933",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/",
           "platform": "apple"
