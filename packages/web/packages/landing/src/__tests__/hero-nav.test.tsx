@@ -3,9 +3,10 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 
-const lens = vi.hoisted(() => ({ calls: [] as { selector: string; fromColor?: string; toColor?: string }[] }))
+type LensCall = { selector: string; fromColor?: string; toColor?: string; startDelay?: number; duration?: number; dwell?: number; margin?: number }
+const lens = vi.hoisted(() => ({ calls: [] as LensCall[] }))
 vi.mock('@adh-sdk/textlens', () => ({
-  useTextLens: (_ref: unknown, options: { selector: string; fromColor?: string; toColor?: string }): void => {
+  useTextLens: (_ref: unknown, options: LensCall): void => {
     lens.calls.push(options)
   },
 }))
@@ -51,6 +52,23 @@ describe('HeroNav', () => {
     render(<HeroNav rows={rows} label="Sections" />)
     expect(lens.calls.at(-1)).toMatchObject({
       selector: '.lp-hero-nav__link',
+      fromColor: '--lp-ink-dim',
+      toColor: '--lp-accent-bright',
+    })
+  })
+
+  it('waits 2s before the first sweep and leaves the rest of the timing to the lens by default', () => {
+    render(<HeroNav rows={rows} label="Sections" />)
+    expect(lens.calls.at(-1)).toMatchObject({ startDelay: 2000, duration: undefined, dwell: undefined, margin: undefined })
+  })
+
+  it("hands a host's lens timing through, keeping its own colours", () => {
+    render(<HeroNav rows={rows} label="Sections" lens={{ startDelay: 0, duration: 5000, dwell: 1000, margin: 0 }} />)
+    expect(lens.calls.at(-1)).toMatchObject({
+      startDelay: 0,
+      duration: 5000,
+      dwell: 1000,
+      margin: 0,
       fromColor: '--lp-ink-dim',
       toColor: '--lp-accent-bright',
     })

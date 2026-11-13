@@ -14,6 +14,32 @@ function stubFrames() {
   return { raf, caf }
 }
 
+/**
+ * Lay the glyphs of `element` out 10px apart (centres at 10, 20, 30, ...), pin
+ * the clock at 0, and hand back a way to run the frame at any time `t` and read
+ * which glyphs the lens is enlarging.
+ */
+function driveFrames(element: HTMLElement) {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    const index = [...(this.parentElement?.children ?? [])].indexOf(this)
+    return new DOMRect(5 + index * 10, 0, 10, 10)
+  })
+  vi.spyOn(performance, 'now').mockReturnValue(0)
+  let step: FrameRequestCallback | null = null
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+    step = callback
+    return 7
+  })
+  vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+  const enlargedAt = (t: number): string[] => {
+    step?.(t)
+    return [...element.querySelectorAll('span')]
+      .filter((span) => span.style.transform !== '' && span.style.transform !== 'scale(1.000)')
+      .map((span) => span.textContent ?? '')
+  }
+  return { enlargedAt }
+}
+
 afterEach(() => {
   vi.restoreAllMocks()
   document.body.innerHTML = ''
@@ -43,6 +69,42 @@ describe('createLens', () => {
     createLens([element])
 
     expect([...element.querySelectorAll('span')].map((span) => span.style.width)).toEqual(['', '', '', '', ''])
+  })
+
+  it('travels a radius past the outer glyphs by default, so it starts off the text', () => {
+    const element = mount('abc')
+    const { enlargedAt } = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000 }).start()
+
+    expect(enlargedAt(0)).toEqual([])
+  })
+
+  it('turns round on the outer glyphs with no margin, so the text is never without it', () => {
+    const element = mount('abc')
+    const { enlargedAt } = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000, margin: 0 }).start()
+
+    expect(enlargedAt(0)).toEqual(['a'])
+    expect(enlargedAt(1000)).toEqual(['c'])
+  })
+
+  it('holds at each end for the dwell before it turns back', () => {
+    const element = mount('abc')
+    const { enlargedAt } = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000, dwell: 1000, margin: 0 }).start()
+
+    expect(enlargedAt(1500)).toEqual(['c'])
+    expect(enlargedAt(2500)).toEqual(['b'])
+    expect(enlargedAt(3500)).toEqual(['a'])
+    expect(enlargedAt(4500)).toEqual(['b'])
+  })
+
+  it('turns back the instant it arrives with no dwell', () => {
+    const element = mount('abc')
+    const { enlargedAt } = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000, margin: 0 }).start()
+
+    expect(enlargedAt(1500)).toEqual(['b'])
   })
 
   it('leaves an already-split element alone', () => {

@@ -6,6 +6,18 @@ export interface LensOptions {
   radius?: number
   /** Milliseconds for one pass across the text. The return trip takes the same. */
   duration?: number
+  /**
+   * Milliseconds the lens holds still at each end before it turns back. `0`
+   * (the default) turns it round the instant it arrives.
+   */
+  dwell?: number
+  /**
+   * How far past the first and last glyph centres the lens travels, in CSS
+   * pixels. Defaults to `radius`, which carries the lens fully off the text at
+   * each end so the line rests between passes; `0` turns it round on the outer
+   * glyphs, so some part of the text is always under it.
+   */
+  margin?: number
   /** Extra scale at the centre of the lens — `0.25` means 125%. */
   scale?: number
   /** Blur in pixels at the centre of the lens. `0` disables it. */
@@ -133,6 +145,8 @@ function resolveRamp(
 export function createLens(elements: readonly HTMLElement[], options: LensOptions = {}): Lens {
   const radius = options.radius ?? DEFAULT_RADIUS
   const duration = options.duration ?? DEFAULT_DURATION
+  const dwell = options.dwell ?? 0
+  const margin = options.margin ?? radius
   const scaleDepth = options.scale ?? DEFAULT_SCALE
   const blurDepth = options.blur ?? DEFAULT_BLUR
   const respectReducedMotion = options.respectReducedMotion ?? true
@@ -210,8 +224,8 @@ export function createLens(elements: readonly HTMLElement[], options: LensOption
 
     ramp = resolveRamp(options, first.el)
 
-    const leftEdge = first.cx - radius
-    const rightEdge = last.cx + radius
+    const leftEdge = first.cx - margin
+    const rightEdge = last.cx + margin
     const span = rightEdge - leftEdge
     const startedAt = performance.now()
 
@@ -226,9 +240,12 @@ export function createLens(elements: readonly HTMLElement[], options: LensOption
         return
       }
 
+      // Each leg is one pass of `duration` followed by a hold of `dwell` at the
+      // far end, where progress stays pinned at 1.
       const elapsed = now - startedAt
-      const leg = Math.floor(elapsed / duration)
-      const progress = (elapsed % duration) / duration
+      const legLength = duration + dwell
+      const leg = Math.floor(elapsed / legLength)
+      const progress = Math.min((elapsed % legLength) / duration, 1)
 
       // Cubic ease in/out, so the lens slows at each end rather than bouncing.
       const eased =
