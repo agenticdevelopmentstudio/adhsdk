@@ -1,0 +1,23 @@
+
+- **Null and empty input**: A DTO with no payload yields empty `fromAddress`, `subject`, address lists and attachments, and nil bodies. The parse MUST still return a record.
+- **Empty address header**: A `To` header that is empty or only commas and spaces yields an empty list. This MUST hold.
+- **Missing label ids**: Absent `labelIds` become an empty list, and the classifier decides the class from that empty list. This MUST hold.
+- **Malformed numeric date**: An `internalDate` that is not a number, such as `not-a-number`, falls through to the `Date` header and then to `now`. This MUST hold.
+- **Unreadable Date header**: A header that matches none of the three layouts, or that is empty after trimming, falls through to `now`. This MUST hold. Layouts without a zone, or without a weekday and with no seconds, are not recognised.
+- **Boundary lengths in base64url**: Padding is added by length modulo four; a length remainder of one produces three pad characters that Foundation rejects, so the part's body is nil, and a later part of the same type then fills the body. A remainder of zero adds none.
+- **Unbalanced quote in an address header**: An opening quote with no close keeps the remainder of the header, commas included, as one piece. This is the splitter's behavior and no error is raised. Ports MUST keep this behavior.
+- **Backslash outside quotes**: A backslash outside a double-quoted section is kept as an ordinary character and does not escape anything. Ports MUST keep this behavior.
+- **Whitespace trimming scope**: Address pieces are trimmed of horizontal whitespace only (spaces, tabs and Unicode space separators); newlines stay. Ports MUST keep this behavior.
+- **Duplicate headers**: The first header with a matching name wins, so a second `Subject` is ignored. This MUST hold.
+- **Multiple bodies of one type**: Only the first plain text and the first HTML part in document order are kept. This MUST hold.
+- **Unknown or invalid charset**: An unrecognised charset name, or bytes invalid in the declared charset, falls back to UTF-8 and then ISO Latin-1, so decoding always succeeds when the base64url is valid. This MUST hold.
+- **Mislabelled charset**: A body declared Latin-1 that is really UTF-8 is decoded as Latin-1, because the declaration wins when it decodes. Ports MUST keep this behavior, because correcting it needs content sniffing that the source does not do.
+- **Wrapper message with only an embedded message**: A bounce or forward whose only content is a `message/rfc822` shows the embedded body. This MUST hold.
+- **Embedded message beside an own body**: The embedded body never merges into the outer body, though files inside it are still listed. This MUST hold.
+- **Named part Gmail inlined**: A named part whose data came inline (no attachment id) is dropped from both body and attachments. This MUST hold, and the part is not recoverable from the record.
+- **Part types other than text and message**: Parts such as `text/calendar` or `image/png` without a filename are ignored for the body and for attachments, though their children are still walked.
+- **Deeply nested parts**: Recursion has no depth or count limit, so an adversarially deep tree is bounded only by the stack. No limit exists and none is applied. This is deliberate prudent debt recorded in Design Decisions with a trigger for revisiting it.
+- **Concurrent access**: The parser keeps no shared state, so concurrent calls need no coordination. Only the generated id and the current-time defaults (`createdAt`, `updatedAt`) differ between runs.
+- **Error states, network and offline**: Not applicable: the parser performs no I/O, takes an already-fetched message, and has no network or dependency to fail.
+- **Cancellation and timeouts**: Not applicable: the function is synchronous and has no suspension point.
+

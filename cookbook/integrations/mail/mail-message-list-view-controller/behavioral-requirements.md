@@ -1,0 +1,32 @@
+
+- **single-column-table**: The list MUST be a table with one column (identifier `message`), no header view, a fixed row height of 68 points, and automatic row heights disabled.
+- **inset-style**: The table MUST use the inset table style.
+- **row-count**: The list MUST show one row per entry in the model's `messages`, in the model's order.
+- **reload-on-messages**: The list MUST reload its rows, re-apply the selection and refresh the empty label whenever the model's `messages` changes.
+- **main-queue-hop**: UI updates from model changes MUST run on the main actor. The source delivers them through a main-queue hop, so the table reloads one hop after the model changes; see **stale-row-guard**.
+- **row-sender**: A row MUST show the sender as the display name from the `from` header, or the bare address when the header has no name.
+- **row-date**: A row MUST show the date as the time for a message sent today, the abbreviated month and day for a message from earlier this year, and the year, abbreviated month and day for an older message. "Today" and "this year" use the current calendar and time zone.
+- **row-date-unparsed**: A row MUST show the original date text when it cannot be parsed as an ISO 8601 date.
+- **row-subject**: A row MUST show the message subject, or the text `(no subject)` when the subject is empty.
+- **row-snippet**: A row MUST show the message snippet in the small system font and the secondary label color.
+- **row-truncation**: The sender, subject and snippet MUST each truncate at the tail when they do not fit on one line.
+- **row-date-priority**: The date MUST NOT be compressed in favor of the sender; the sender MUST give up width first.
+- **unread-dot**: A row MUST show an 8 by 8 point accent-colored dot for an unread message and MUST hide it for a read message.
+- **unread-weight**: A row MUST draw the sender in bold and the subject in semibold when the message is unread, and both in regular weight when it is read.
+- **unread-definition**: A message MUST count as unread when its labels contain `UNREAD`.
+- **row-reuse**: The list MUST reuse row views through the `MessageRow` identifier and MUST rebuild a row's content from the message each time the row is shown.
+- **row-accessibility-label**: A row MUST expose the accessibility label made of the sender, a comma and a space, and the subject.
+- **load-more-on-last-row**: When the table requests the view for the last row and the model reports `hasMore`, the list MUST ask the model to load the next page. The trigger is the request for that row's view, not its becoming visible, so a prefetch or resize that creates the view also triggers it.
+- **stale-row-guard**: The list MUST return no view for a row index the current `messages` no longer contains.
+- **empty-label**: The list MUST show a centered secondary-color label when `messages` is empty and MUST hide it otherwise.
+- **empty-label-text**: The empty label MUST read `Loading…` while the model is loading and `No messages` otherwise.
+- **loading-refresh**: The list MUST refresh the empty label whenever the model's `loading` changes.
+- **selection-to-model**: When the user selects a row, the list MUST ask the model to select that row's message id, and when the selection clears it MUST ask the model to select no message.
+- **selection-from-model**: When the model's `selectedMessageId` changes, the list MUST select the row of the message with that id, or clear the selection when no listed message has it.
+- **selection-single**: The list MUST select at most one row, replacing any earlier selection.
+- **selection-echo-guard**: Applying the model's selection to the table MUST NOT send a selection back to the model.
+- **selection-no-op**: The list MUST leave the table selection alone when the model's selected row already matches it.
+- **selection-out-of-range**: When the table reports a selected row index outside `messages`, the list MUST ask the model to select no message.
+- **accessibility-identifier**: The table MUST carry the accessibility identifier `mail.messages`.
+- **model-injection**: The controller MUST be built with a `MailBrowserModel` and MUST NOT support being loaded from a coder. The source enforces this at run time: `init(coder:)` calls `fatalError`; it is not marked unavailable at compile time.
+

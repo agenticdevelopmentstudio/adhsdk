@@ -1,0 +1,50 @@
+
+### Cases and payloads
+
+- **case-set**: `IntegrationError` MUST declare exactly these cases: `invalidSettings(String)`, `notConfigured`, `unknownAccount(String)`, `unknownMessage(String)`, `unknownLabel(String)`, `revoked`, `gmail(status: Int, message: String)`, `signInCancelled`, `signInFailed(String)`, `tokenRefresh(String)` and `keychain(String)`.
+- **gmail-payload**: The `gmail` case MUST carry an integer `status` and a string `message`, both labelled.
+- **keep-unknown-label**: `unknownLabel(String)` MUST stay in the case set with its description, even though no other integrations file throws it, so callers compile against the same set.
+
+### Protocol conformance
+
+- **conforms-error**: `IntegrationError` MUST conform to `Error`.
+- **conforms-sendable**: `IntegrationError` MUST conform to `Sendable`, so an error can cross actor and task boundaries.
+- **conforms-equatable**: `IntegrationError` MUST conform to `Equatable`, with the synthesized rule that two values are equal when the case and every payload match. Callers rely on it to compare against `.revoked` and to match `gmail(status: 404, ...)`.
+- **conforms-localized**: `IntegrationError` MUST conform to `LocalizedError` and return a non-nil `errorDescription` for every case.
+
+### Descriptions
+
+- **desc-invalid-settings**: `invalidSettings(reason)` MUST describe itself as `Invalid sync settings: <reason>`.
+- **desc-not-configured**: `notConfigured` MUST describe itself as `Gmail is not configured — import an OAuth client JSON first`.
+- **desc-unknown-account**: `unknownAccount(account)` MUST describe itself as `No connected account matches “<account>”`, wrapping the value in curly double quotes.
+- **desc-unknown-message**: `unknownMessage(id)` MUST describe itself as `No message matches “<id>”`, wrapping the value in curly double quotes.
+- **desc-unknown-label**: `unknownLabel(id)` MUST describe itself as `No label matches “<id>”`, wrapping the value in curly double quotes.
+- **desc-revoked**: `revoked` MUST describe itself as `Google access was revoked — sign in again`.
+- **desc-gmail**: `gmail(status, message)` MUST describe itself as `Gmail returned <status>: <message>`.
+- **desc-sign-in-cancelled**: `signInCancelled` MUST describe itself as `Sign-in was cancelled`.
+- **desc-sign-in-failed**: `signInFailed(reason)` MUST describe itself as `Sign-in failed: <reason>`.
+- **desc-token-refresh**: `tokenRefresh(reason)` MUST describe itself as `Token refresh failed: <reason>`.
+- **desc-keychain**: `keychain(reason)` MUST describe itself as `Keychain error: <reason>`.
+- **desc-verbatim-payload**: A payload string MUST be inserted into the description unchanged: no trimming, truncation or escaping.
+- **desc-typography**: The descriptions MUST use the exact non-ASCII characters of the source, never ASCII substitutes: the em dash U+2014 (`—`) in `notConfigured` and `revoked`, the en dash U+2013 (`–`) in the range text of the `batchModify` and `windowDays` messages that callers pass as payloads, and the curly double quotes U+201C and U+201D (`“ ”`) around the value in `unknownAccount`, `unknownMessage` and `unknownLabel`.
+
+### Raised by
+
+These bullets record which callers throw each case today. They describe other components, not the enum, and carry no MUST: the owning ingredient holds the binding requirement.
+
+- **gmail-status-zero**: [GmailRESTClient](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) uses `gmail(status: 0, ...)` for a request whose URL cannot be built (message "Invalid URL for" followed by the path) and for a `batchModify` call whose id list is not 1 to the batch limit (message "batchModify takes 1–<limit> ids, got <count>"), so a status of 0 denotes a failure before any HTTP response.
+- **token-refresh-scope**: `tokenRefresh` is used for Google's token endpoint failing for a reason other than revoked access (a 5xx, a bad reply), per its doc comment.
+- **keychain-scope**: `keychain` is used for the Keychain failing to read or remove a credential (for example, when it is locked), per its doc comment.
+- **revoked-distinct**: Revoked access (the token endpoint answering `invalid_grant`, or no stored credential for a connection) is reported as `revoked`, never as `tokenRefresh`, because callers treat the two differently.
+
+- **raised-invalid-settings**: `invalidSettings` is thrown by [GoogleOAuthClientConfig](cookbook:df121975-deb8-49a9-b023-0aadcb0923d8).parse(json:) for non-JSON input, a Web application client file or missing keys, and by [MailSyncSettings](cookbook:238f4d91-4a22-4a0d-ae4b-b4070d02b357).validated() when `windowDays` is outside 1–3650 or `pollIntervalMinutes` is outside 1–1440.
+- **raised-not-configured**: `notConfigured` is thrown by [MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) when no provider configuration or OAuth client is available, and when provider removals are pending.
+- **raised-unknown-account**: `unknownAccount` is thrown by `MailIntegrationService` when an account identifier or email matches no connection, and by `IntegrationsStore`(cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91) when no live connection has the id being updated.
+- **raised-unknown-message**: `unknownMessage` is thrown by `MailIntegrationService` when Gmail answers 400 or 404 for a requested message id, and `MailIntegrationService.handle` converts it to a `notFound` response carrying its description.
+- **raised-unknown-label**: `unknownLabel` is declared, but no other file in the integrations sources throws it (see #requirements/keep-unknown-label).
+- **raised-revoked**: `revoked` is thrown by the Google token endpoint on `invalid_grant`, by the credential store when a connection has no stored credential, and by `MailIntegrationService` when a sync is requested for a connection whose status is revoked. A recorded `revoked` sets the connection status to `revoked`; any other error except cancellation sets it to `error`.
+- **raised-gmail**: `gmail` is thrown by [GmailRESTClient](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) for a non-success Gmail response, an unbuildable URL or a `batchModify` id list of the wrong size. Callers treat statuses 400 and 404 as "the item is gone" in several paths.
+- **raised-sign-in**: `signInCancelled` is thrown when the user or the calling task cancels sign-in, and `signInFailed` when sign-in fails, times out ("Sign-in timed out"), returns no access token or no refresh token, or cannot start its local listener or save the credential.
+- **raised-token-refresh**: `tokenRefresh` is thrown with `<status> <error code>` for a failed refresh or revoke call, `no access_token in reply` for a reply without a token, and `invalid endpoint <endpoint>` for an unusable endpoint.
+- **raised-keychain**: `keychain` is thrown when the Google credential cannot be read or removed, or the OAuth client secret cannot be read.
+
