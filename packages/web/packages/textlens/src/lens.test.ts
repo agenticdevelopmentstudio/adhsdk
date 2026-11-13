@@ -71,38 +71,47 @@ describe('createLens', () => {
     expect([...element.querySelectorAll('span')].map((span) => span.style.width)).toEqual(['', '', '', '', ''])
   })
 
-  it('travels a radius past the outer glyphs by default, so it starts off the text', () => {
+  it('starts a radius off the text and crosses it in one duration', () => {
     const element = mount('abc')
     const { enlargedAt } = driveFrames(element)
     createLens([element], { radius: 5, duration: 1000 }).start()
 
     expect(enlargedAt(0)).toEqual([])
+    expect(enlargedAt(500)).toEqual(['b'])
+    expect(enlargedAt(1000)).toEqual([])
   })
 
-  it('turns round on the outer glyphs with no margin, so the text is never without it', () => {
+  it('holds off the text at each end for the dwell before it turns back', () => {
     const element = mount('abc')
     const { enlargedAt } = driveFrames(element)
-    createLens([element], { radius: 5, duration: 1000, margin: 0 }).start()
+    createLens([element], { radius: 5, duration: 1000, dwell: 1000 }).start()
 
-    expect(enlargedAt(0)).toEqual(['a'])
-    expect(enlargedAt(1000)).toEqual(['c'])
-  })
-
-  it('holds at each end for the dwell before it turns back', () => {
-    const element = mount('abc')
-    const { enlargedAt } = driveFrames(element)
-    createLens([element], { radius: 5, duration: 1000, dwell: 1000, margin: 0 }).start()
-
-    expect(enlargedAt(1500)).toEqual(['c'])
+    expect(enlargedAt(1500)).toEqual([])
     expect(enlargedAt(2500)).toEqual(['b'])
-    expect(enlargedAt(3500)).toEqual(['a'])
+    expect(enlargedAt(3500)).toEqual([])
     expect(enlargedAt(4500)).toEqual(['b'])
+  })
+
+  it('crosses at one speed when linear, where the default eases', () => {
+    const element = mount('abcdefg')
+    const linear = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000, easing: 'linear' }).start()
+    // Centres 10..70, travel 5..75: a quarter of the way in, the centre is at 22.5.
+    expect(linear.enlargedAt(250)).toEqual(['b'])
+  })
+
+  it('is still near the start a quarter of the way in when eased', () => {
+    const element = mount('abcdefg')
+    const eased = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000 }).start()
+    // Cubic: 4 * 0.25^3 = 0.0625 of the travel, so the centre is at 9.4.
+    expect(eased.enlargedAt(250)).toEqual(['a'])
   })
 
   it('turns back the instant it arrives with no dwell', () => {
     const element = mount('abc')
     const { enlargedAt } = driveFrames(element)
-    createLens([element], { radius: 5, duration: 1000, margin: 0 }).start()
+    createLens([element], { radius: 5, duration: 1000 }).start()
 
     expect(enlargedAt(1500)).toEqual(['b'])
   })

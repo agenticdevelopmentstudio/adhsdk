@@ -12,13 +12,14 @@ export interface HeroNavProps {
   /** The nav's accessible name. Copy, so the host's. */
   label: string
   /** The sweep's timing, for a host that wants it other than the default: a 2s wait before
-   * the first pass, 8s passes, no hold at the ends, and a lens that runs fully off the text
-   * at each end. Any field left out keeps that default. */
+   * the first pass, 8s eased passes that carry the lens fully off the text, and no hold at the
+   * ends.
+   * Any field left out keeps that default. */
   lens?: HeroNavLens
 }
 
 /** The lens timing a host may tune. Its colours and selector stay the row's own. */
-export type HeroNavLens = Pick<UseTextLensOptions, 'startDelay' | 'duration' | 'dwell' | 'margin'>
+export type HeroNavLens = Pick<UseTextLensOptions, 'startDelay' | 'duration' | 'dwell' | 'easing'>
 
 /**
  * The words under a hero's name: the page's table of contents as one line of links, separated
@@ -37,7 +38,7 @@ export function HeroNav({ rows, label, lens = {} }: HeroNavProps): ReactElement 
     startDelay: lens.startDelay ?? 2000,
     duration: lens.duration,
     dwell: lens.dwell,
-    margin: lens.margin,
+    easing: lens.easing,
     fromColor: '--lp-ink-dim',
     toColor: '--lp-accent-bright',
   })

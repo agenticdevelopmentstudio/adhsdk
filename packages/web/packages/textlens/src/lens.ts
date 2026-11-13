@@ -7,17 +7,18 @@ export interface LensOptions {
   /** Milliseconds for one pass across the text. The return trip takes the same. */
   duration?: number
   /**
-   * Milliseconds the lens holds still at each end before it turns back. `0`
-   * (the default) turns it round the instant it arrives.
+   * Milliseconds the lens holds still at each end, fully off the text, before
+   * it turns back. `0` (the default) turns it round the instant it arrives.
    */
   dwell?: number
   /**
-   * How far past the first and last glyph centres the lens travels, in CSS
-   * pixels. Defaults to `radius`, which carries the lens fully off the text at
-   * each end so the line rests between passes; `0` turns it round on the outer
-   * glyphs, so some part of the text is always under it.
+   * How the lens moves along a pass. `'cubic'` (the default) eases in and out,
+   * slowing at each end — which happens off the text, so a lens that eases
+   * spends the first and last stretch of every pass crawling where nothing
+   * shows. `'linear'` crosses at one speed, so off the text it is gone at once
+   * and the only pause is the `dwell`.
    */
-  margin?: number
+  easing?: 'cubic' | 'linear'
   /** Extra scale at the centre of the lens — `0.25` means 125%. */
   scale?: number
   /** Blur in pixels at the centre of the lens. `0` disables it. */
@@ -146,7 +147,7 @@ export function createLens(elements: readonly HTMLElement[], options: LensOption
   const radius = options.radius ?? DEFAULT_RADIUS
   const duration = options.duration ?? DEFAULT_DURATION
   const dwell = options.dwell ?? 0
-  const margin = options.margin ?? radius
+  const easing = options.easing ?? 'cubic'
   const scaleDepth = options.scale ?? DEFAULT_SCALE
   const blurDepth = options.blur ?? DEFAULT_BLUR
   const respectReducedMotion = options.respectReducedMotion ?? true
@@ -224,8 +225,8 @@ export function createLens(elements: readonly HTMLElement[], options: LensOption
 
     ramp = resolveRamp(options, first.el)
 
-    const leftEdge = first.cx - margin
-    const rightEdge = last.cx + margin
+    const leftEdge = first.cx - radius
+    const rightEdge = last.cx + radius
     const span = rightEdge - leftEdge
     const startedAt = performance.now()
 
@@ -249,9 +250,11 @@ export function createLens(elements: readonly HTMLElement[], options: LensOption
 
       // Cubic ease in/out, so the lens slows at each end rather than bouncing.
       const eased =
-        progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2
+        easing === 'linear'
+          ? progress
+          : progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2
 
       // Even legs travel left to right, odd legs come back.
       apply(leg % 2 === 0 ? leftEdge + eased * span : rightEdge - eased * span)
