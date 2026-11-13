@@ -64,6 +64,31 @@ public final class ProjectsCoordinator: AppFeature {
     private weak var opener: ProjectOpening?
     private var progressWindow: ProjectScanProgressWindow?
     private var settingObservers: [AnyObject] = []
+
+    /// Each project's last known branches and worktrees, kept current by
+    /// `startWatchingRepoState()`, so a project window can be shown from them
+    /// before git has answered.
+    public private(set) lazy var repoState = RepoStateRefresher(store: database)
+    private var repoStateWatcher: RepoStateWatcher?
+
+    /// Starts watching every listed project's `.git` directory and sweeps
+    /// them all once. Called by the app, never by init: a coordinator built in
+    /// a test should not start FSEvents streams and git processes.
+    public func startWatchingRepoState() {
+        guard repoStateWatcher == nil else { return }
+        let watcher = RepoStateWatcher(refresher: repoState)
+        repoStateWatcher = watcher
+        watcher.watch(watchedRepos)
+    }
+
+    /// Projects only, most recently opened first, so the sweep warms the
+    /// likeliest switches soonest.
+    private var watchedRepos: [RepoStateWatcher.Repo] {
+        listedRepos
+            .filter { $0.kind == .project }
+            .sorted { ($0.lastOpened ?? .distantPast) > ($1.lastOpened ?? .distantPast) }
+            .map { (id: $0.id, directory: $0.url) }
+    }
     /// A settings change that landed while a scan was running. The running
     /// scan walked the old settings, so it is followed by one more.
     private var rescanPending = false
@@ -290,6 +315,7 @@ public final class ProjectsCoordinator: AppFeature {
     private func reload() {
         repos = (try? database.allRepos()) ?? repos
         listedRepos = Self.listed(repos, by: currentScanner)
+        repoStateWatcher?.watch(watchedRepos)
         NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
     }
 

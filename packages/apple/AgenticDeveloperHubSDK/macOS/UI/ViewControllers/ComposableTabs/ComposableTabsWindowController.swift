@@ -1385,17 +1385,17 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         window?.title = title
     }
 
-    /// Everything the window needs before it is put on screen: the branch the
-    /// title names, read off the main thread, and a layout pass at the frame
-    /// it will show at — so it appears finished instead of filling in and
-    /// resizing in front of the user.
-    public func prepareForDisplay() async {
+    /// Everything the window needs before it is put on screen, without
+    /// waiting on git: the title names `knownBranch` — the last known branch
+    /// of the active directory, from the project's cached state — and
+    /// `refreshTitle()` corrects it once git answers. Then a layout pass at the
+    /// frame it will show at, so it appears laid out.
+    public func prepareForDisplay(knownBranch: (URL) -> String? = { _ in nil }) {
         if window == nil { loadWindow() }
         let directory = activeWorkingDirectory
-        let branch = await Task.detached(priority: .userInitiated) {
-            GitProjectRoot.currentBranchName(at: directory.path)
-        }.value
-        branchNames[directory] = .some(branch)
+        if branchNames[directory] == nil, let branch = knownBranch(directory) {
+            branchNames[directory] = .some(branch)
+        }
         titleDirectory = nil
         refreshTitle()
         window?.contentView?.layoutSubtreeIfNeeded()

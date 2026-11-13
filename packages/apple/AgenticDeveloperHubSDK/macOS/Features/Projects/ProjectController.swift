@@ -80,6 +80,15 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
         await serializedReconcile()
     }
 
+    /// Puts in the last known checkouts before any scan, so the window can
+    /// be built and shown from them at once; `open()` then corrects them from
+    /// git. Ignored once a scan has answered.
+    public func seed(_ cached: [ProjectCheckout]) {
+        guard checkouts.isEmpty, !cached.isEmpty, !isClosed else { return }
+        checkouts = cached
+        syncBranchControllers()
+    }
+
     public func refreshCheckouts() async {
         await serializedReconcile()
     }

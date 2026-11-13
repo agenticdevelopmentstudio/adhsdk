@@ -9,15 +9,22 @@ public final class FileSystemWatcher: @unchecked Sendable {
     public typealias ChangeHandler = @Sendable (_ changedPaths: [String]) -> Void
 
     private var streamRef: FSEventStreamRef?
-    private let rootPath: String
+    private let rootPaths: [String]
+    private var rootPath: String { rootPaths.joined(separator: ", ") }
     private let excludedPrefixes: [String]
     private let handler: ChangeHandler
     private let queue = DispatchQueue(
         label: "com.mikefullerton.agenticdeveloperhubsdk.filebrowser.fswatcher", qos: .utility
     )
 
-    public init(rootPath: String, excludedPrefixes: [String], handler: @escaping ChangeHandler) {
-        self.rootPath = rootPath
+    public convenience init(rootPath: String, excludedPrefixes: [String], handler: @escaping ChangeHandler) {
+        self.init(rootPaths: [rootPath], excludedPrefixes: excludedPrefixes, handler: handler)
+    }
+
+    /// One stream over several roots, so watching many directories costs one
+    /// FSEvents stream rather than one each.
+    public init(rootPaths: [String], excludedPrefixes: [String], handler: @escaping ChangeHandler) {
+        self.rootPaths = rootPaths
         self.excludedPrefixes = excludedPrefixes
         self.handler = handler
     }
@@ -33,7 +40,7 @@ public final class FileSystemWatcher: @unchecked Sendable {
     }
 
     public func start() {
-        guard streamRef == nil else { return }
+        guard streamRef == nil, !rootPaths.isEmpty else { return }
 
         var context = FSEventStreamContext()
         context.info = Unmanaged.passUnretained(self).toOpaque()
@@ -54,7 +61,7 @@ public final class FileSystemWatcher: @unchecked Sendable {
             }
         }
 
-        let pathsToWatch = [rootPath] as CFArray
+        let pathsToWatch = rootPaths as CFArray
         streamRef = FSEventStreamCreate(
             nil, callback, &context,
             pathsToWatch, FSEventStreamEventId(kFSEventStreamEventIdSinceNow),

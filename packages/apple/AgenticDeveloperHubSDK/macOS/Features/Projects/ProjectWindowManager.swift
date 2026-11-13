@@ -641,21 +641,17 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             return
         }
         timing.mark("window built")
-        let scan = openTasks[repo.id]
-        pendingLoads.insert(repo.id)
-        Task { [weak self, weak group] in
-            await scan?.value
-            timing.mark("checkout scan")
-            await controller.prepareForDisplay()
-            timing.mark("prepared for display")
-            busyWindow?.setProjectAreaBusy(false)
-            self?.pendingLoads.remove(repo.id)
-            // The user may have closed the project, or its window, meanwhile.
-            guard let self, let group, self.controllers[repo.id] === controller else { return }
-            self.show(repo, in: group)
-            timing.mark("shown")
-            timing.finish()
-        }
+        // Shown at once, from the stored tabs and the cached checkouts the
+        // window was seeded with (`makeProjectWindow`). The checkout scan
+        // started there runs on behind it and corrects the tabs and title
+        // when git answers — a switch is never kept waiting on git.
+        let cached = database?.cachedRepoState(forRepo: repo.id)
+        controller.prepareForDisplay { cached?.branch(at: $0) }
+        timing.mark("prepared for display")
+        busyWindow?.setProjectAreaBusy(false)
+        show(repo, in: group)
+        timing.mark("shown")
+        timing.finish()
     }
 
     private func show(_ repo: GitRepo, in group: ProjectWindowGroup) {
@@ -827,6 +823,13 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             commandRegistry: commandRegistry
         )
         projectControllers[repo.id] = projectController
+        // Before the window is built, which asks this controller for its tab
+        // items: the last known checkouts, else the project directory as its
+        // main checkout, so the window opens whole and the scan only corrects.
+        projectController.seed(
+            database.cachedRepoState(forRepo: repo.id)?.projectCheckouts
+                ?? [ProjectCheckout(directory: repo.url, branch: nil, isMain: true)]
+        )
         // The data source is passed to the initializer, not assigned after it:
         // the window installs its stored tabs while initializing, and a tab
         // whose item is built before the data source arrives falls back to a
@@ -882,6 +885,9 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         openTasks[repo.id] = Task { [weak self] in
             await projectController.open()
             self?.openTasks[repo.id] = nil
+            // The window's scan has just read git; the cache follows, so the
+            // next switch to this project starts from what is on disk now.
+            await self?.coordinator?.repoState.refresh(repo.id, at: repo.url)
         }
         setWindowOpen(true, repoID: repo.id)
         return controller
