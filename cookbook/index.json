@@ -11443,55 +11443,21 @@
       "path": "status/service/monitor/issue-sources",
       "rdid": "adhsdk.ingredient.status.service.monitor.issue-sources"
     },
-    "86eccc6f-cd1b-4ac7-bb98-851eb7c54324": {
+    "873f79b1-444d-4c2c-8a5f-4fc01cd9022e": {
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ee7f7da8c07f4f89a6bb4c86ec42aa81a866a84181de370330507fbc21b3f990",
+            "hash": "sha256:b50215c79ef23ca6523332d76c1ba52d59743e560462a914ba4690bfd9454bf8",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Formatting/RelativeDateFormatting.swift",
           "platform": "apple"
         }
       ],
       "kind": "ingredient",
-      "path": "auth/accounts/account-display",
-      "rdid": "adhsdk.ingredient.auth.accounts.account-display"
-    },
-    "870c182f-1a80-4254-8fec-3eb35c8f13f7": {
-      "implementations": [
-        {
-          "conformance": {
-            "hash": "sha256:365231edb73791aeb37d0cc218c73f89f8bcf16f05df5fff3ca8cb3cd5f16bfa",
-            "state": "confirmed",
-            "version": "1.0.1"
-          },
-          "location": "packages/web/packages/auth/src/v1.ts",
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "windows"
-        }
-      ],
-      "kind": "ingredient",
-      "path": "data/services/auth/v1",
-      "rdid": "adhsdk.ingredient.data.services.auth.v1"
+      "path": "foundation/formatting/relative-date",
+      "rdid": "adhsdk.ingredient.foundation.formatting.relative-date"
     },
     "87ca0139-6cd0-46dd-a9fb-40ad3406f175": {
       "implementations": [
