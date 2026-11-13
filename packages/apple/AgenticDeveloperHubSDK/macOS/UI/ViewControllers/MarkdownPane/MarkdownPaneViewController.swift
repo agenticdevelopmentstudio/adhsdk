@@ -97,7 +97,12 @@ public final class MarkdownPaneViewController: NSViewController {
     private var needsSplitEqualized = false
     private var pendingRender: DispatchWorkItem?
 
-    public init(accessibilityID: String = "markdown-pane.layout") {
+    /// `opensOn` picks the pane a single-pane editor starts on, for a surface
+    /// that wants one regardless of the last choice (the file browser's `.md`
+    /// documents open on Preview); nil starts on the remembered one.
+    public init(accessibilityID: String = "markdown-pane.layout",
+                opensOn initialContent: MarkdownPaneContent? = nil) {
+        if let initialContent { shownContent = initialContent }
         layoutControl = IconTabBar(
             items: [
                 .init(id: MarkdownPaneLayout.singlePane.rawValue, symbol: "square", title: "Single Pane"),
@@ -126,6 +131,11 @@ public final class MarkdownPaneViewController: NSViewController {
             addChild(frame)
         }
         splitView.dividerStyle = .thin
+        splitView.delegate = self
+        // Neither pane holds its width over the other, so a drag moves the
+        // divider rather than being refused by whichever holds harder.
+        splitView.setHoldingPriority(.defaultLow, forSubviewAt: 0)
+        splitView.setHoldingPriority(.defaultLow, forSubviewAt: 1)
         splitView.addArrangedSubview(markdownFrame.view)
         splitView.addArrangedSubview(previewFrame.view)
 
@@ -312,4 +322,38 @@ private final class MarkdownSourceViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() { view = pane }
+}
+
+/// The side-by-side divider: a thin line is a 1pt target, so its grab area is
+/// widened the way the project window's dividers are, and neither pane may be
+/// dragged narrower than `minimumPaneWidth`.
+extension MarkdownPaneViewController: NSSplitViewDelegate {
+    private static let minimumPaneWidth: CGFloat = 120
+
+    public func splitView(
+        _ splitView: NSSplitView,
+        effectiveRect proposedEffectiveRect: NSRect,
+        forDrawnRect drawnRect: NSRect,
+        ofDividerAt dividerIndex: Int
+    ) -> NSRect {
+        let grab = PaneSpacing.minimumDividerGrab
+        guard proposedEffectiveRect.width < grab else { return proposedEffectiveRect }
+        return proposedEffectiveRect.insetBy(dx: -(grab - proposedEffectiveRect.width) / 2, dy: 0)
+    }
+
+    public func splitView(
+        _ splitView: NSSplitView,
+        constrainMinCoordinate proposedMinimumPosition: CGFloat,
+        ofSubviewAt dividerIndex: Int
+    ) -> CGFloat {
+        max(proposedMinimumPosition, Self.minimumPaneWidth)
+    }
+
+    public func splitView(
+        _ splitView: NSSplitView,
+        constrainMaxCoordinate proposedMaximumPosition: CGFloat,
+        ofSubviewAt dividerIndex: Int
+    ) -> CGFloat {
+        min(proposedMaximumPosition, splitView.bounds.width - splitView.dividerThickness - Self.minimumPaneWidth)
+    }
 }

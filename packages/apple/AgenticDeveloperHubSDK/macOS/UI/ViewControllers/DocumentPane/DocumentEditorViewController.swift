@@ -229,7 +229,8 @@ public final class DocumentEditorViewController: NSViewController {
 
     private func ensureMarkdownEditor() -> MarkdownPaneViewController {
         if let markdownEditor { return markdownEditor }
-        let editor = MarkdownPaneViewController(accessibilityID: "document.markdown-layout")
+        let editor = MarkdownPaneViewController(accessibilityID: "document.markdown-layout",
+                                                opensOn: .preview)
         editor.onTextChange = { [weak self] text in
             guard let self, let document = self.markdownDocument, document.text != text else { return }
             document.replaceAll(with: text)

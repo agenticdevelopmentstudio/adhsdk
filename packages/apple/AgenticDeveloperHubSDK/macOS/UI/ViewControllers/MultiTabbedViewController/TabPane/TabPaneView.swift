@@ -424,8 +424,19 @@ final class TabPaneView: NSView {
     private func place(animated: Bool) {
         guard let cardSides else { return }
         let overhang = isFrontCard ? Self.workspaceOverlap : -recession
+        let apply = { [self] in
+            if edge.isVertical {
+                // Same size selected or not: the slot's spare height is split
+                // above and below the text, and the card only moves across.
+                let spare = max(0, (bounds.height - content.fittingSize.height) / 2)
+                cardSides.slide(isFront: isFrontCard, shift: Self.inactiveInset,
+                                textAlong: spare, overhang: overhang)
+            } else {
+                cardSides.place(inset: recession, overhang: overhang)
+            }
+        }
         guard animated else {
-            cardSides.place(inset: recession, overhang: overhang)
+            apply()
             return
         }
         // Settle whatever layout is still outstanding first: the animation has
@@ -435,7 +446,7 @@ final class TabPaneView: NSView {
             context.duration = Self.depthAnimationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             context.allowsImplicitAnimation = true
-            cardSides.place(inset: recession, overhang: overhang)
+            apply()
             layoutSubtreeIfNeeded()
         }
     }
@@ -462,6 +473,9 @@ private struct InsetBox {
     /// are one piece of knowledge, so they are stored as one.
     let workspace: (constraint: NSLayoutConstraint, outwardSign: CGFloat)
     private let sides: [(constraint: NSLayoutConstraint, inward: CGFloat)]
+    /// The side facing away from the workspace, and the two running along it.
+    private let far: (constraint: NSLayoutConstraint, inward: CGFloat)
+    private let along: [(constraint: NSLayoutConstraint, inward: CGFloat)]
 
     init(edge: Edge, slot: NSView, box: NSView) {
         let top = box.topAnchor.constraint(equalTo: slot.topAnchor)
@@ -470,10 +484,23 @@ private struct InsetBox {
         let bottom = box.bottomAnchor.constraint(equalTo: slot.bottomAnchor)
         sides = [(top, 1), (leading, 1), (trailing, -1), (bottom, -1)]
         switch edge {
-        case .top: workspace = (bottom, 1)
-        case .bottom: workspace = (top, -1)
-        case .left: workspace = (trailing, 1)
-        case .right: workspace = (leading, -1)
+        case .top: workspace = (bottom, 1); far = (top, 1); along = [(leading, 1), (trailing, -1)]
+        case .bottom: workspace = (top, -1); far = (bottom, -1); along = [(leading, 1), (trailing, -1)]
+        case .left: workspace = (trailing, 1); far = (leading, 1); along = [(top, 1), (bottom, -1)]
+        case .right: workspace = (leading, -1); far = (trailing, -1); along = [(top, 1), (bottom, -1)]
+        }
+    }
+
+    /// Keeps the box its full size and slides it across the bar: `shift` in
+    /// from the far side when `towardWorkspace`, else in from the workspace
+    /// side. The two sides along the bar are held `along` in.
+    func slide(towardWorkspace: Bool, shift: CGFloat, along alongInset: CGFloat) {
+        for side in sides { side.constraint.constant = 0 }
+        for side in along { side.constraint.constant = side.inward * alongInset }
+        if towardWorkspace {
+            far.constraint.constant = far.inward * shift
+        } else {
+            workspace.constraint.constant = -workspace.outwardSign * shift
         }
     }
 
@@ -518,6 +545,18 @@ private struct CardSides {
         paint.inset(inset)
         text.inset(inset)
         paint.workspace.constraint.constant = overhang * paint.workspace.outwardSign
+    }
+
+    /// A vertical bar's cards: every card the same size, whichever is in
+    /// front; the one in front only slides `shift` toward the workspace and
+    /// the rest sit `shift` back from it. The text is held `textAlong` in from
+    /// the card's top and bottom, the same on both, so it stays centred.
+    func slide(isFront: Bool, shift: CGFloat, textAlong: CGFloat, overhang: CGFloat) {
+        paint.slide(towardWorkspace: isFront, shift: shift, along: 0)
+        text.slide(towardWorkspace: isFront, shift: shift, along: textAlong)
+        if isFront {
+            paint.workspace.constraint.constant = overhang * paint.workspace.outwardSign
+        }
     }
 }
 

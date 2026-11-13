@@ -316,12 +316,18 @@ open class MultiTabbedViewController: NSViewController {
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError() }
 
+    private var cornerObserver: UserSettingObserver<Bool>?
+
     open override func loadView() {
         let root = ThemedBackgroundView(role: .windowBackground)
 
         centerContainer.translatesAutoresizingMaskIntoConstraints = false
         centerContainer.observeTheme { [weak self] _, palette in
             self?.applyCenterOutline(palette)
+        }
+        cornerObserver = UserSettingObserver(UserSettings.preferRoundedCorners) { [weak self] _ in
+            guard let self else { return }
+            self.applyCenterOutline(self.centerContainer.resolvedThemeScope.palette)
         }
         root.addSubview(centerContainer)
         installAccessoryBelowTopBar()
@@ -668,6 +674,11 @@ open class MultiTabbedViewController: NSViewController {
     /// line as well — a border property on the shared view would be carried by
     /// every other user of it for this one caller's sake.
     private func applyCenterOutline(_ palette: SemanticPalette) {
+        // Rounded with the pane around it, so the two lines nest instead of
+        // a square box sitting inside a rounded one.
+        centerContainer.layer?.cornerRadius = CornerStyle.radius(CornerStyle.tabRadius)
+        centerContainer.layer?.cornerCurve = .continuous
+        centerContainer.layer?.masksToBounds = CornerStyle.prefersRounded
         centerContainer.layer?.borderWidth = 1
         centerContainer.layer?.borderColor = (centerOutlineColor ?? palette.nsColor(.outline)).cgColor
     }

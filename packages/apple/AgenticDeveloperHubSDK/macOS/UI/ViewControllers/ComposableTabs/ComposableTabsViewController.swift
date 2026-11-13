@@ -423,8 +423,52 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// controller is not `Sendable` — its superclass is `open` in another
     /// module, so no implicit conformance reaches it — which makes capturing
     /// `self` in one an error under complete concurrency checking.
+    public override func splitViewWillResizeSubviews(_ notification: Notification) {
+        super.splitViewWillResizeSubviews(notification)
+        guard !isRedistributingDrag,
+              let index = notification.userInfo?["NSSplitViewDividerIndex"] as? Int else {
+            dragTrailingThicknesses = nil
+            return
+        }
+        // A divider drag: remember the panes after it, so they can share the
+        // change in proportion instead of the one beside it taking all of it.
+        let views = splitView.arrangedSubviews
+        dragTrailingThicknesses = (index, views.dropFirst(index + 1).map(thickness(of:)))
+    }
+
+    /// A dragged divider resizes the pane before it and nothing before that;
+    /// the panes after it give up or take the difference in proportion to
+    /// their widths, rather than the next one absorbing all of it.
+    private var dragTrailingThicknesses: (index: Int, thicknesses: [CGFloat])?
+    private var isRedistributingDrag = false
+
+    private func redistributeAfterDrag(_ notification: Notification) {
+        guard !isRedistributingDrag, let saved = dragTrailingThicknesses,
+              notification.userInfo?["NSSplitViewDividerIndex"] as? Int == saved.index else { return }
+        dragTrailingThicknesses = nil
+        let views = splitView.arrangedSubviews
+        let trailing = Array(views.dropFirst(saved.index + 1))
+        guard trailing.count > 1, trailing.count == saved.thicknesses.count,
+              !trailing.contains(where: { splitView.isSubviewCollapsed($0) }) else { return }
+        let total = splitView.isVertical ? splitView.bounds.width : splitView.bounds.height
+        let before = views[saved.index]
+        let start = (splitView.isVertical ? before.frame.maxX : before.frame.maxY) + splitView.dividerThickness
+        let available = total - start - splitView.dividerThickness * CGFloat(trailing.count - 1)
+        let oldSum = saved.thicknesses.reduce(0, +)
+        guard oldSum > 0, available > 0 else { return }
+        isRedistributingDrag = true
+        defer { isRedistributingDrag = false }
+        var offset = start
+        for (step, old) in saved.thicknesses.dropLast().enumerated() {
+            offset += available * old / oldSum
+            splitView.setPosition(offset, ofDividerAt: saved.index + 1 + step)
+            offset += splitView.dividerThickness
+        }
+    }
+
     public override func splitViewDidResizeSubviews(_ notification: Notification) {
         super.splitViewDidResizeSubviews(notification)
+        redistributeAfterDrag(notification)
         guard hasAppliedPreferredThicknesses else { return }
         rootSplit()?.scheduleThicknessPersist()
     }
