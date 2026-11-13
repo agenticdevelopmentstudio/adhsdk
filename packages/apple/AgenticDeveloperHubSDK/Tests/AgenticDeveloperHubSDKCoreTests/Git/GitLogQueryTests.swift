@@ -11,6 +11,8 @@ struct GitLogQueryTests {
         #expect(arguments.contains("--format=" + GitCommit.logFormat))
         #expect(arguments.contains("--max-count=500"))
         #expect(arguments.contains("--skip=0"))
+        #expect(arguments.contains("--no-color"))
+        #expect(arguments.contains("--no-show-signature"))
         #expect(Array(arguments.suffix(4)) == ["--branches", "--tags", "--remotes", "HEAD"])
         #expect(!arguments.contains("--"))
         #expect(!arguments.contains("-z"))
@@ -56,18 +58,5 @@ struct GitLogQueryTests {
         let arguments = GitLogQuery().arguments()
         #expect(!arguments.contains { $0.hasPrefix("--author") || $0.hasPrefix("--grep") || $0.hasPrefix("-S") })
         #expect(!arguments.contains("--regexp-ignore-case"))
-    }
-}
-
-@Suite("GitOutputDecoding")
-struct GitOutputDecodingTests {
-    @Test("UTF-8 decodes as UTF-8")
-    func utf8() {
-        #expect(GitOutputDecoding.string(Data("café".utf8)) == "café")
-    }
-
-    @Test("invalid UTF-8 falls back to ISO Latin-1")
-    func latin1Fallback() {
-        #expect(GitOutputDecoding.string(Data([0x63, 0x61, 0x66, 0xE9])) == "café")
     }
 }

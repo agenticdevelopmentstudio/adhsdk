@@ -139,7 +139,11 @@ picker) is a consumer of this contract, not part of it.
 - **output-decode-fallback**: The execution step MUST decode the child's
   captured standard output as UTF-8 first, MUST fall back to ISO Latin-1
   when UTF-8 decoding fails, and MUST return an empty string when both
-  fail.
+  fail. The fallback MUST apply per segment, not to the whole capture: the
+  capture is cut at the separator bytes NUL, newline, 0x1E and 0x1F, each
+  segment is decoded on its own, and the segments are rejoined with their
+  original separators, so one record with a stray non-UTF-8 byte does not
+  turn every other record into Latin-1 mojibake.
 - **invocation-recorded-before-return**: The execution step MUST record the
   attempt in the command log on every exit path — executable-not-found,
   timed-out, cancelled, launch-failed, and completed (successfully or
@@ -309,7 +313,9 @@ cannot read rather than failing the whole listing.
   and the path, with a trailing ` (<describe>)` removed; the path may
   contain spaces.
 - **log-query-arguments**: A log request MUST produce the arguments that
-  follow `log`: `--date-order`, `--format=` with the commit log format,
+  follow `log`: `--no-color` and `--no-show-signature` (so a user's
+  `color.ui=always` or `log.showSignature=true` cannot write escape codes or
+  signature lines into the records), `--date-order`, `--format=` with the commit log format,
   `--max-count=<limit>` (default 500), `--skip=<skip>` (default 0), then
   `--author=<value>`, `--grep=<value>` with `--regexp-ignore-case`, and
   `-S<text>` for whichever of author, message search and pickaxe are set,
@@ -319,8 +325,8 @@ cannot read rather than failing the whole listing.
   `--follow -- <path>` and MUST omit its revisions, because `git log
   --follow` takes exactly one path and walks from `HEAD`.
 - **history-output-decoding**: Captured history output MUST be decoded with
-  the same ladder as the execution step — UTF-8, then ISO Latin-1 — and
-  never yield nothing.
+  the same ladder as the execution step — UTF-8, then ISO Latin-1, segment
+  by segment (below) — and never yield nothing.
 
 ## Appearance
 
@@ -750,4 +756,4 @@ one.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
-| 1.2.0 | 2026-11-13 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request. |
+| 1.2.0 | 2026-11-13 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment. |
