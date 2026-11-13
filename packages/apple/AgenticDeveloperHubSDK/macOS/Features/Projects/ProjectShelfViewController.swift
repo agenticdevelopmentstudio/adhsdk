@@ -174,6 +174,14 @@ public final class ProjectShelfViewController: NSViewController {
             .receive(on: RunLoop.main)
             .sink { [weak self] panel in self?.applyPanel(panel) }
             .store(in: &cancellables)
+        group.$activeRepoIDs
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] ids in
+                guard let self, self.group.panel == .activeProjects else { return }
+                self.browser.setOnlyRepoIDs(Set(ids))
+            }
+            .store(in: &cancellables)
         group.$filterText
             .removeDuplicates()
             .receive(on: RunLoop.main)
@@ -206,13 +214,17 @@ public final class ProjectShelfViewController: NSViewController {
         // see. Choosing in the browser lands here, on its way to Active
         // Projects.
         let keysInList = focus == .list
-        browser.view.isHidden = panel != .browser
-        activeProjects.view.isHidden = panel != .activeProjects
+        // One list: the active-projects button filters it to the projects
+        // open in this group rather than swapping in a second view.
+        browser.view.isHidden = false
+        activeProjects.view.isHidden = true
+        browser.setOnlyRepoIDs(panel == .activeProjects ? Set(group.activeRepoIDs) : nil)
         searchField.placeholderString = panel.filterPlaceholder
         // `ThemedSearchField` themes the placeholder it was given; a new one
         // needs the palette applied again.
         searchField.applyTheme(view.resolvedThemeScope.palette)
         let text = group.filterText[panel] ?? ""
+        browser.setFilterQuery(text)
         if searchField.stringValue != text { searchField.stringValue = text }
         panelBar.selectedID = panel.rawValue
         if keysInList { focusList() }
@@ -222,8 +234,7 @@ public final class ProjectShelfViewController: NSViewController {
 
     private func applyFilterText(_ text: [ProjectShelfPanel: String]) {
         guard isViewLoaded else { return }
-        browser.setFilterQuery(text[.browser] ?? "")
-        activeProjects.setFilterQuery(text[.activeProjects] ?? "")
+        browser.setFilterQuery(text[group.panel] ?? "")
         let current = text[group.panel] ?? ""
         if searchField.stringValue != current { searchField.stringValue = current }
     }
@@ -240,8 +251,7 @@ public final class ProjectShelfViewController: NSViewController {
     /// The panel on screen's handling of a key typed in the filter field.
     private func handleFilterCommand(_ commandSelector: Selector) -> Bool {
         switch group.panel {
-        case .browser: browser.handleFilterCommand(commandSelector)
-        case .activeProjects: activeProjects.handleFilterCommand(commandSelector)
+        case .browser, .activeProjects: browser.handleFilterCommand(commandSelector)
         }
     }
 
@@ -275,8 +285,7 @@ public final class ProjectShelfViewController: NSViewController {
 
     public func focusList() {
         switch group.panel {
-        case .browser: browser.focusList()
-        case .activeProjects: activeProjects.focusList()
+        case .browser, .activeProjects: browser.focusList()
         }
     }
 

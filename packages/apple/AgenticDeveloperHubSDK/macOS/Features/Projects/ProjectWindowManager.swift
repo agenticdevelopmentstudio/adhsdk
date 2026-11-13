@@ -608,16 +608,33 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// instead of rebuilding its tabs and resizing its panes in front of the
     /// user.
     private func load(_ repo: GitRepo, into group: ProjectWindowGroup) {
-        guard let controller = makeProjectWindow(repo, in: group) else { return }
+        let timing = ProjectLoadTiming(name: repo.name)
+        // The window on screen dims and spins until the new one replaces it,
+        // so a click is answered at once even when the load takes a moment.
+        let busyWindow = shownWindows[group.id]
+        busyWindow?.setProjectAreaBusy(true)
+        // Drawn now: building the window below holds the main thread, and an
+        // overlay added but not yet displayed would only appear after it.
+        busyWindow?.window?.displayIfNeeded()
+        guard let controller = makeProjectWindow(repo, in: group) else {
+            busyWindow?.setProjectAreaBusy(false)
+            return
+        }
+        timing.mark("window built")
         let scan = openTasks[repo.id]
         pendingLoads.insert(repo.id)
         Task { [weak self, weak group] in
             await scan?.value
+            timing.mark("checkout scan")
             await controller.prepareForDisplay()
+            timing.mark("prepared for display")
+            busyWindow?.setProjectAreaBusy(false)
             self?.pendingLoads.remove(repo.id)
             // The user may have closed the project, or its window, meanwhile.
             guard let self, let group, self.controllers[repo.id] === controller else { return }
             self.show(repo, in: group)
+            timing.mark("shown")
+            timing.finish()
         }
     }
 
@@ -1252,4 +1269,43 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
 extension ProjectWindowManager: Loggable {
     public static nonisolated let logger = makeLogger()
+}
+
+/// How long one project load spends in each phase, as signpost intervals for
+/// Instruments (category "ProjectLoad") and one log line with the phase
+/// times, so a slow switch says where the time went.
+@MainActor
+final class ProjectLoadTiming {
+    private static let signposts = OSLog(subsystem: "com.agenticdevelopmentstudio.toolkit", category: "ProjectLoad")
+    private static let logger = Logger(subsystem: "com.agenticdevelopmentstudio.toolkit", category: "ProjectLoad")
+
+    private let name: String
+    private let start = ContinuousClock.now
+    private var last = ContinuousClock.now
+    private var phases: [String] = []
+    private let signpostID: OSSignpostID
+
+    init(name: String) {
+        self.name = name
+        signpostID = OSSignpostID(log: Self.signposts)
+        os_signpost(.begin, log: Self.signposts, name: "Load Project", signpostID: signpostID, "%{public}s", name)
+    }
+
+    func mark(_ phase: String) {
+        let now = ContinuousClock.now
+        phases.append("\(phase) \(Self.milliseconds(now - last))ms")
+        os_signpost(.event, log: Self.signposts, name: "Load Project", signpostID: signpostID, "%{public}s", phase)
+        last = now
+    }
+
+    func finish() {
+        os_signpost(.end, log: Self.signposts, name: "Load Project", signpostID: signpostID)
+        let total = Self.milliseconds(ContinuousClock.now - start)
+        let summary = phases.joined(separator: ", ")
+        Self.logger.info("Loaded \(self.name, privacy: .public) in \(total)ms: \(summary, privacy: .public)")
+    }
+
+    private static func milliseconds(_ duration: Duration) -> Int {
+        Int(duration.components.seconds * 1000 + duration.components.attoseconds / 1_000_000_000_000_000)
+    }
 }

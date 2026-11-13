@@ -164,6 +164,42 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
 
     var hasShelf: Bool { shelfItem != nil }
 
+    /// The dimming and spinner over the project area while another project
+    /// loads to take its place. The shelf stays live.
+    private var busyOverlay: NSView?
+
+    /// Dims the project area (everything but the shelf) and spins over it, or
+    /// takes that away.
+    func setContentBusy(_ busy: Bool) {
+        guard busy != (busyOverlay != nil),
+              let contentView = splitViewItems.last?.viewController.view else { return }
+        guard busy else {
+            busyOverlay?.removeFromSuperview()
+            busyOverlay = nil
+            return
+        }
+        let overlay = ThemedBackgroundView(role: .windowBackground)
+        overlay.alphaValue = 0.6
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.setAccessibilityIdentifier("project-window.loading")
+        let spinner = NSProgressIndicator()
+        spinner.style = .spinning
+        spinner.controlSize = .regular
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(spinner)
+        contentView.addSubview(overlay, positioned: .above, relativeTo: nil)
+        NSLayoutConstraint.activate([
+            overlay.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            overlay.topAnchor.constraint(equalTo: contentView.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            spinner.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: overlay.centerYAnchor)
+        ])
+        spinner.startAnimation(nil)
+        busyOverlay = overlay
+    }
+
     /// Where the shelf is, or — mid-slide — where it is going. A hide only
     /// collapses the item once it lands, so the item alone would answer a
     /// second toggle within the slide as if the first had not happened.

@@ -51,6 +51,9 @@ public final class ProjectBrowserViewController: NSViewController {
     /// The filter as typed, whichever field it was typed in.
     private var filterText = ""
     private var changeObserver: NSObjectProtocol?
+    /// When set, only these projects are listed: the shelf's active-projects
+    /// button filtering the one list rather than showing another.
+    private var onlyRepoIDs: Set<UUID>?
 
     public init(
         coordinator: ProjectsCoordinator,
@@ -184,6 +187,12 @@ public final class ProjectBrowserViewController: NSViewController {
     }
 
     /// Filters the list by `text`, typed into a field the host drew.
+    public func setOnlyRepoIDs(_ ids: Set<UUID>?) {
+        guard ids != onlyRepoIDs else { return }
+        onlyRepoIDs = ids
+        if isViewLoaded { applyFilter() }
+    }
+
     public func setFilterQuery(_ text: String) {
         guard text != filterText else { return }
         filterText = text
@@ -290,7 +299,9 @@ public final class ProjectBrowserViewController: NSViewController {
         query = filterText.trimmingCharacters(in: .whitespaces)
         let previous = selectedRepo?.id
         let all = coordinator.listedRepos
-        let matching = all.filter { ProjectFilter.matches($0, query: query) }
+        let matching = all.filter {
+            (onlyRepoIDs?.contains($0.id) ?? true) && ProjectFilter.matches($0, query: query)
+        }
         roots = ProjectTree.build(from: matching)
         outline.reloadData()
         // Opened all the way down. The tree is what the user came to read, and

@@ -550,6 +550,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         windowContent.toggleShelfPanel(panel)
     }
 
+    public func setProjectAreaBusy(_ busy: Bool) {
+        windowContent.setContentBusy(busy)
+    }
+
     /// The shelf's visibility and width, for the window swapped in for this
     /// one to take over.
     public var shelfLayout: ProjectShelfLayout { windowContent.shelfLayout }
