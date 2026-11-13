@@ -123,7 +123,7 @@ extension ComposableSettings {
                     icon: entry.panel.descriptor.icon,
                     isDisabled: entry.panel.descriptor.isDisabled
                 )
-                let title = titled ? entry.panel.descriptor.section : nil
+                let title = titled ? (entry.panel.descriptor.heading ?? entry.panel.descriptor.section) : nil
                 if !runs.isEmpty, runs[runs.count - 1].title == title {
                     runs[runs.count - 1].items.append(item)
                 } else {

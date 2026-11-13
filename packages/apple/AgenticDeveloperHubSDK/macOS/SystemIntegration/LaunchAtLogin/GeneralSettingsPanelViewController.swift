@@ -7,7 +7,12 @@ import AgenticDeveloperHubSDKDatabase
 @MainActor
 public final class GeneralSettingsPanelViewController: ComposableSettings.SettingsPanelViewController {
 
-    public init() {
+    /// Whether Window Behavior offers “New” menu item prefers tabs to windows,
+    /// for an app whose File ▸ New can open either.
+    private let showsNewPrefersTabs: Bool
+
+    public init(showsNewPrefersTabs: Bool = false) {
+        self.showsNewPrefersTabs = showsNewPrefersTabs
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "General",
             icon: NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
@@ -18,8 +23,17 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
         fatalError("init(coder:) has not been implemented")
     }
 
+    static let newPrefersTabsTitle = "“New” menu item prefers tabs to windows"
+
     public override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
+        let newTopic = ComposableSettings.PanelHelp.Topic(
+            title: Self.newPrefersTabsTitle,
+            body: "File ▸ New (⌘N) over a Coding Project window normally opens another "
+                + "Coding Project window, and over a File Browser window asks for a folder "
+                + "to open in a new one. With this on, it opens a new tab in the window in "
+                + "front instead, as File ▸ New Tab does."
+        )
+        return ComposableSettings.PanelHelp(topics: (showsNewPrefersTabs ? [newTopic] : []) + [
             .init(
                 title: "Launch at Login",
                 body: "\(AppStorageLocation.displayName) works best when it starts automatically "
@@ -79,6 +93,15 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
                 choices: policyChoices
             )
         ))
+
+        if showsNewPrefersTabs {
+            let checkbox = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
+                title: Self.newPrefersTabsTitle,
+                setting: UserSettings.projectsNewOpensTabs
+            ))
+            _ = checkbox.accessibilityID("settings.general.new-prefers-tabs")
+            group.addSettingSubview(checkbox)
+        }
 
         group.addSettingSubview(ComposableSettings.StepperView(
             viewModel: ComposableSettings.RangeViewModel<Int>(

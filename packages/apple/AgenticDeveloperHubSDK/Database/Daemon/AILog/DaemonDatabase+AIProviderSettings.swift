@@ -12,7 +12,22 @@ extension DaemonDatabase {
 
     /// The reader a feature's completions resolve providers through.
     public func aiProviderSettings(for feature: AIFeature) -> ProviderSettingsReader {
-        feature == .oversight ? oversightAIProviderSettings : aiProviderSettings
+        feature == .oversight ? oversightAIProviderSettings : summaryAIProviderSettings
+    }
+
+    /// The provider-registry reader for **summary** completions: the plain registry,
+    /// except that `ai_summary_model` (when set) overrides the selected
+    /// configuration's model, and only that configuration's.
+    public var summaryAIProviderSettings: ProviderSettingsReader {
+        let base = aiProviderSettings
+        return { key in
+            if let uuid = UUID(uuidString: base(AIProviderConfigKeys.selectedConfigIdKey) ?? ""),
+               key == AIProviderConfigKeys.modelKey(config: uuid),
+               let override = base(SummarySettingsKeys.model), !override.isEmpty {
+                return override
+            }
+            return base(key)
+        }
     }
 
     /// The provider-registry reader for **oversight** completions: identical to

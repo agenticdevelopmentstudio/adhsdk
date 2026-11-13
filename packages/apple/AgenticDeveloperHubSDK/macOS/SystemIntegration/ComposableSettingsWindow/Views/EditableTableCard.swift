@@ -362,6 +362,15 @@ extension ComposableSettings {
         }
 
         private let scrollView = ThemedScrollView()
+
+        /// Draws a hairline in the theme's border colour around the table, for a
+        /// list that should read as a box of its own on its card. An overlay
+        /// sibling of the scroll view rather than the scroll view's own layer,
+        /// which NSScrollView manages and resets.
+        public var showsBorder = false {
+            didSet { borderOverlay.isHidden = !showsBorder }
+        }
+        private let borderOverlay = TableBorderOverlay()
         private var heldRows = EditDeferredValue<[EditableTableRow]>()
         private var lastReportedSelection: String??
         private var footerActions: [ObjectIdentifier: () -> Void] = [:]
@@ -772,6 +781,14 @@ extension ComposableSettings {
                 stack.bottomAnchor.constraint(equalTo: container.bottomAnchor),
                 scrollView.widthAnchor.constraint(equalTo: stack.widthAnchor),
                 tableHeight
+            ])
+            borderOverlay.isHidden = !showsBorder
+            container.addSubview(borderOverlay)
+            NSLayoutConstraint.activate([
+                borderOverlay.topAnchor.constraint(equalTo: scrollView.topAnchor),
+                borderOverlay.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+                borderOverlay.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+                borderOverlay.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor)
             ])
             addSettingSubview(container)
             updateButtons()
@@ -1195,4 +1212,24 @@ extension ComposableSettings {
         /// The id of the column this button was last filled for.
         public var buttonColumnID: String?
     }
+}
+
+/// A click-through outline in the theme's border colour, laid over a view.
+@MainActor
+private final class TableBorderOverlay: NSView {
+    init() {
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+        wantsLayer = true
+        layer?.borderWidth = 1
+        layer?.cornerRadius = 6
+        observeTheme { view, palette in
+            view.layer?.borderColor = palette.nsColor(.border).cgColor
+        }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }

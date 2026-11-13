@@ -97,6 +97,13 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         self.picker = picker
         group.addSettingSubview(picker)
 
+        let model = ComposableSettings.TextEditView(with: ComposableSettings.ViewModel<String>(
+            title: "Model",
+            setting: UserSettings.stenographerAISummariesModel
+        ))
+        model.textField.placeholderString = "Provider default"
+        group.addSettingSubview(model)
+
         return group
     }
 

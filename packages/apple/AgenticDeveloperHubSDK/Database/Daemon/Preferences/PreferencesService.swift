@@ -346,8 +346,12 @@ public final class PreferencesService: @unchecked Sendable {
         detailChars: Int? = nil,
         intervalMinutes: Int? = nil,
         maxPerRun: Int? = nil,
-        timeoutSeconds: Int? = nil
+        timeoutSeconds: Int? = nil,
+        model: String? = nil
     ) -> SummaryPreferenceResponse {
+        if let model {
+            persistSetting(SummarySettingsKeys.model, model)
+        }
         if let enabled {
             persistSetting(AIProviderConfigKeys.enabledKey, enabled ? "true" : "false")
         }
@@ -381,7 +385,8 @@ public final class PreferencesService: @unchecked Sendable {
             detailChars: request.detailChars,
             intervalMinutes: request.intervalMinutes,
             maxPerRun: request.maxPerRun,
-            timeoutSeconds: request.timeoutSeconds
+            timeoutSeconds: request.timeoutSeconds,
+            model: request.model
         )
     }
 
@@ -397,7 +402,8 @@ public final class PreferencesService: @unchecked Sendable {
             detailChars: SummaryPrefs.detailChars(database),
             intervalMinutes: SummaryPrefs.intervalMinutes(database),
             maxPerRun: SummaryPrefs.maxPerRun(database),
-            timeoutSeconds: Int(SummaryPrefs.timeoutSeconds(database))
+            timeoutSeconds: Int(SummaryPrefs.timeoutSeconds(database)),
+            model: ((try? database.setting(for: SummarySettingsKeys.model)) ?? nil) ?? ""
         )
     }
 

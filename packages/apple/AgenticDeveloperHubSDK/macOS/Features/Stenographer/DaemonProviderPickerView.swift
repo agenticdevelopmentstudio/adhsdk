@@ -8,8 +8,8 @@ import AgenticDeveloperHubSDKCoreUI
 ///
 /// The registry is the daemon's — the one Stenographer's LLM Providers pane
 /// pushed — not this process's plugin manager, which is why this is not the
-/// toolkit's `LLMPickerView`. There is no model row: the model is the daemon
-/// configuration's own. The list is read from the daemon at init and again each
+/// toolkit's `LLMPickerView`. There is no model row here: a caller that lets
+/// the model be overridden adds its own (AI Summaries does). The list is read from the daemon at init and again each
 /// time the menu is about to open, not pushed live, and the selection follows the
 /// bound setting across a reload.
 @MainActor

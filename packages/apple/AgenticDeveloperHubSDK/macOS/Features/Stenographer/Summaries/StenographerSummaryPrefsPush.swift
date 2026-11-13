@@ -45,7 +45,8 @@ public enum StenographerSummaryPrefsPush {
         engine.start { onChange -> [AnyObject] in
             let strings: [AnyObject] = [
                 UserSettings.stenographerAISummaryPrompt,
-                UserSettings.stenographerAISummariesProviderConfigId
+                UserSettings.stenographerAISummariesProviderConfigId,
+                UserSettings.stenographerAISummariesModel
             ].map { setting in UserSettingObserver(setting) { _ in onChange() } }
             let bools: [AnyObject] = [
                 UserSettingObserver(UserSettings.stenographerAISummariesEnabled) { _ in onChange() }
@@ -73,6 +74,7 @@ public enum StenographerSummaryPrefsPush {
         if let selected = stored.selectedConfigId {
             UserSettings.stenographerAISummariesProviderConfigId.value = selected
         }
+        if let model = stored.model { UserSettings.stenographerAISummariesModel.value = model }
         // An unmodified (or never configured) prompt stays at the default, which
         // is not stored, so a later release's wording still applies.
         if stored.prompt.isEmpty || stored.prompt == SummaryDefaults.prompt {
@@ -105,12 +107,12 @@ public enum StenographerSummaryPrefsPush {
     /// Values travel as the user set them; the daemon clamps through `SummaryLimits`.
     static func makeRequest(
         enabled: Bool, selectedConfigId: String, prompt: String, maxWords: Int, activityLines: Int,
-        detailChars: Int, intervalMinutes: Int, maxPerRun: Int, timeoutSeconds: Int
+        detailChars: Int, intervalMinutes: Int, maxPerRun: Int, timeoutSeconds: Int, model: String = ""
     ) -> SummaryPreferenceRequest {
         SummaryPreferenceRequest(
             enabled: enabled, selectedConfigId: selectedConfigId, prompt: prompt, maxWords: maxWords,
             activityLines: activityLines, detailChars: detailChars, intervalMinutes: intervalMinutes,
-            maxPerRun: maxPerRun, timeoutSeconds: timeoutSeconds)
+            maxPerRun: maxPerRun, timeoutSeconds: timeoutSeconds, model: model)
     }
 
     private static func currentBody() -> Data? {
@@ -128,7 +130,8 @@ public enum StenographerSummaryPrefsPush {
             detailChars: UserSettings.stenographerAISummaryDetailChars.value,
             intervalMinutes: UserSettings.stenographerAISummaryIntervalMinutes.value,
             maxPerRun: UserSettings.stenographerAISummaryMaxPerRun.value,
-            timeoutSeconds: UserSettings.stenographerAISummaryTimeoutSeconds.value
+            timeoutSeconds: UserSettings.stenographerAISummaryTimeoutSeconds.value,
+            model: UserSettings.stenographerAISummariesModel.value
         )
         return try? StenographerWire.encoder().encode(request)
     }

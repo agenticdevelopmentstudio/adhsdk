@@ -2,11 +2,10 @@ import AppKit
 
 import AgenticDeveloperHubSDKCore
 
-/// How project windows behave and where projects come from: how a pane shows
-/// it is the active one, which directories the project scan walks, which it
-/// stays out of, and what it leaves out inside them. Filed under Workspace; how
-/// its panes are spaced is `SpacingSettingsPanelViewController`, under
-/// Appearance.
+/// Where Coding Projects come from: which directories the project scan walks,
+/// which it stays out of, and what it leaves out inside them — the Directories
+/// row of the Coding Projects topic. How a project window behaves is
+/// `ProjectsGeneralSettingsPanel`, its General row.
 ///
 /// Every change here is written straight to its setting, and
 /// `ProjectsCoordinator` observes all four scan settings: the project list
@@ -24,7 +23,7 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
 
     public init() {
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: "Projects",
+            title: "Directories",
             icon: NSImage(systemSymbolName: "folder.badge.gearshape", accessibilityDescription: nil)
         ))
     }
@@ -35,46 +34,12 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
     /// been opened, so this panel names what it is about for the search that
     /// happens before anyone opens it.
     public override var searchKeywords: [String] {
-        ["project", "active pane", "outline", "highlight", "follows mouse",
-         "project directories", "folder", "skipped", "exclude", "scan",
+        ["project", "project directories", "folder", "skipped", "exclude", "scan",
          "hidden", "invisible", "submodule"]
     }
 
     public override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "“New” Opens Tabs",
-                body: "File ▸ New (⌘N) over a Coding Project window normally opens another "
-                    + "Coding Project window, and over a File Browser window asks for a folder "
-                    + "to open in a new one. With this on, it opens a new tab in the window in "
-                    + "front instead, as File ▸ New Tab does."
-            ),
-            .init(
-                title: "Active Pane",
-                body: "A Coding Project window is split into panes, and one of them is the one you "
-                    + "are working in. With this on, that pane is drawn with a border in a "
-                    + "tone one step lighter than the others — enough to find it, not enough "
-                    + "to compete with what is inside it."
-            ),
-            .init(
-                title: "Active Pane Follows the Mouse",
-                body: "With this on, the pane under the pointer becomes the active one as "
-                    + "soon as the pointer is over it, and the keyboard goes with it — so a "
-                    + "window that is already in front can be typed into without clicking "
-                    + "first. Only the front window follows the pointer: passing over a "
-                    + "window behind it changes nothing, because that window is not the one "
-                    + "taking the keys. The keys land where a click at that spot would have "
-                    + "put them, which is the terminal, the list or the field the pointer is "
-                    + "actually over rather than the pane as a whole. Off, the active pane "
-                    + "is the one you last clicked in."
-            ),
-            .init(
-                title: "Themes Override This",
-                body: "A theme can carry its own answer for whether the active pane is "
-                    + "outlined, and in what color, under the theme's Project topic in Theme "
-                    + "settings. When it does, the theme wins over the switch here. A theme "
-                    + "has no project options until you set them."
-            ),
             .init(
                 title: "Project Directories",
                 body: "The directories the project scan looks through for git repositories. "
@@ -105,12 +70,8 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        addGroup(createWindowsGroup())
-        addGroup(createActivePaneGroup())
-
         let directories = makeDirectoryCard(
             title: "Project Directories",
-            emptyMessage: "No project directories. Press + to choose one.",
             accessibilityPrefix: "settings.projects.directories",
             setting: UserSettings.projectDirectories,
             prompt: "Add"
@@ -120,7 +81,6 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
 
         let skipped = makeDirectoryCard(
             title: "Skipped Directories",
-            emptyMessage: "Nothing is being skipped.",
             accessibilityPrefix: "settings.projects.skipped",
             setting: UserSettings.projectSkippedDirectories,
             prompt: "Skip"
@@ -138,30 +98,6 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
     }
 
     // MARK: - Groups
-
-    private func createWindowsGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Windows")
-        let checkbox = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
-            title: "“New” opens tabs",
-            setting: UserSettings.projectsNewOpensTabs
-        ))
-        _ = checkbox.accessibilityID("settings.projects.new-opens-tabs")
-        group.addSettingSubview(checkbox)
-        return group
-    }
-
-    private func createActivePaneGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Active Pane")
-        group.addSettingSubview(ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
-            title: "Outline the active pane",
-            setting: UserSettings.highlightActivePane
-        )))
-        group.addSettingSubview(ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
-            title: "Active pane follows the mouse",
-            setting: UserSettings.activePaneFollowsMouse
-        )))
-        return group
-    }
 
     private func createOptionsGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Options")
@@ -182,7 +118,6 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
     /// (`dry`).
     private func makeDirectoryCard(
         title: String,
-        emptyMessage: String,
         accessibilityPrefix: String,
         setting: UserSetting<[String]>,
         prompt: String
@@ -190,10 +125,10 @@ public final class ProjectsSettingsPanelViewController: ComposableSettings.Setti
         let card = ComposableSettings.EditableTableCard(
             title: title,
             columns: [.init(id: Self.pathColumn, title: "Directory", width: 420)],
-            emptyMessage: emptyMessage,
             visibleRows: 4,
             accessibilityPrefix: accessibilityPrefix
         )
+        card.showsBorder = true
         card.onAdd = { [weak self] in
             self?.chooseDirectories(prompt: prompt) { chosen in
                 let current = setting.currentValue
