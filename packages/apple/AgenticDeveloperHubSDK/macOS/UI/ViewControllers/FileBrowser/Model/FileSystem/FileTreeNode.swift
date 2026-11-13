@@ -251,7 +251,7 @@ public final class FileTreeNode: Identifiable, ObservableObject, Hashable, @unch
             if name.hasPrefix(".") {
                 return "folder.badge.gearshape"
             }
-            return "folder.fill"
+            return TreeRowStyle.folderSymbol
         }
     }
 

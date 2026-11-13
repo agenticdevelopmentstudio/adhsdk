@@ -603,6 +603,7 @@
 		1BCD4F8CA776C9106F8BEFC0 /* PanelScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B8189C88331C62B1565D80 /* PanelScrollView.swift */; };
 		1BE432DFCEC39B9EA0F1A29D /* WallClockBudgetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361299DEB7C722312C1210C1 /* WallClockBudgetTests.swift */; };
 		1BF25AF0B02EAC6550EF3349 /* TerminalHeuristic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A51A8D304409B89F2BA4782 /* TerminalHeuristic.swift */; };
+		1BF2A79686BED436D53BD086 /* TreeRowStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264A8B4E5C1CB4DB1562B3A9 /* TreeRowStyle.swift */; };
 		1C0720E842D110ADCEAE2982 /* AccountRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CA535B367EF6AFA0F2B870D /* AccountRegistry.swift */; };
 		1C2F8DA0B764F83337A82E29 /* WindowManagerSimulatedRelaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5252F9B9ADF530427D8BD6 /* WindowManagerSimulatedRelaunchTests.swift */; };
 		1C43134E1D32E216F29580C5 /* SemanticPalette+UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B14B398FE604CE10602DA5 /* SemanticPalette+UIColor.swift */; };
@@ -7583,6 +7584,7 @@
 		25FB6DADD0DE077223974666 /* PartnerSessionRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerSessionRegistryTests.swift; sourceTree = "<group>"; };
 		261737507794371389A0B530 /* ClaudeHookDropSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeHookDropSource.swift; sourceTree = "<group>"; };
 		263C906AD18823096DDB59DF /* TerminalShellEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalShellEnvironmentTests.swift; sourceTree = "<group>"; };
+		264A8B4E5C1CB4DB1562B3A9 /* TreeRowStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeRowStyle.swift; sourceTree = "<group>"; };
 		267488B492FCC9F4C7A7D774 /* MainThreadDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThreadDiagnostics.swift; sourceTree = "<group>"; };
 		267D270A4A58546E935CB8B6 /* MCPBearerTokenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPBearerTokenTests.swift; sourceTree = "<group>"; };
 		26880AFD92D03A0B211D6654 /* ProviderSpoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSpoolTests.swift; sourceTree = "<group>"; };
@@ -15119,6 +15121,7 @@
 				7773944069F4D7716717EE4A /* FileTreeOutlineViewController.swift */,
 				979E0BD569D1B44F55F68279 /* FileTypesSettingsView.swift */,
 				F2B8636DADE4DC067C99A5DA /* QuickLookPreview.swift */,
+				264A8B4E5C1CB4DB1562B3A9 /* TreeRowStyle.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -23491,6 +23494,7 @@
 				A0E1289C788EF5B020BC0623 /* TopicDialogWindow.swift in Sources */,
 				FBD1EE527057E79E094721BC /* TopicListViewController.swift in Sources */,
 				C673EFAF73EE123DDC950F04 /* TrackedAppsSettingsPanel.swift in Sources */,
+				1BF2A79686BED436D53BD086 /* TreeRowStyle.swift in Sources */,
 				B0F526DC4CA2A72C0792AB1A /* TypingIndicatorView.swift in Sources */,
 				1BCC1D0388E0FCC49E224762 /* UnassignedPanel.swift in Sources */,
 				B604FDDD54A19E59BD03BF29 /* Uri.swift in Sources */,

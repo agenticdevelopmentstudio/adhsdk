@@ -9,7 +9,7 @@ extension FileTreeNode {
     func iconColor(palette: SemanticPalette) -> NSColor {
         if isPackage { return palette.nsColor(.warning) }
         if isDirectory {
-            return palette.nsColor(name == ".claude" ? .info : .accent)
+            return name == ".claude" ? palette.nsColor(.info) : TreeRowStyle.folderColor(palette)
         }
         switch url.pathExtension.lowercased() {
         case "swift", "json":

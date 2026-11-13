@@ -474,21 +474,22 @@ private final class ProjectRowView: NSView {
     init(node: ProjectTreeNode, query: String) {
         super.init(frame: .zero)
 
-        let symbol = node.isFolder ? "folder.fill" : "shippingbox.fill"
+        let symbol = node.isFolder ? TreeRowStyle.folderSymbol : TreeRowStyle.codeProjectSymbol
         let icon = NSImageView(image: NSImage(
             systemSymbolName: symbol,
             accessibilityDescription: node.isFolder ? "Folder" : "Project"
         ) ?? NSImage())
-        icon.contentTintColor = resolvedThemeScope.palette.nsColor(
-            node.isFolder ? .secondaryText : .accent
-        )
+        let palette = resolvedThemeScope.palette
+        icon.contentTintColor = node.isFolder
+            ? TreeRowStyle.folderColor(palette)
+            : TreeRowStyle.codeProjectColor(palette)
         icon.setContentHuggingPriority(.required, for: .horizontal)
 
         let label = ThemedHighlightLabel(
             string: node.name,
             highlighting: ProjectFilter.ranges(of: query, in: node.name),
             role: .primaryText,
-            textRole: node.isFolder ? .caption : .body
+            textRole: .body
         )
         label.lineBreakMode = .byTruncatingMiddle
         label.cell?.usesSingleLineMode = true
