@@ -275,10 +275,14 @@ input it cannot read rather than failing.
 - **diff-change-kind**: A file's change MUST be added for `new file mode`
   or an absent old path, deleted for `deleted file mode` or an absent new
   path, renamed with its similarity for `rename from`/`similarity index
-  N%`, copied with its similarity for `copy from`, type-changed when the
-  old and new mode lines name different object types (a file and a
-  symlink), and modified otherwise — including a change of mode alone,
-  which has no hunks.
+  N%`, copied with its similarity for `copy from`, and modified otherwise —
+  including a change of mode alone, which has no hunks. git writes a change
+  of object type (a file becoming a symlink or a submodule) as a deleted
+  section immediately followed by an added section of the same path; those
+  two MUST become one type-changed file with that path on both sides, the
+  deletion's hunks then the addition's, binary when either half is (the
+  text half keeps its hunks — the one case where a binary file has any),
+  so the file list holds one entry per path.
 - **diff-binary**: A `Binary files … differ` line or a `GIT binary patch`
   line MUST mark the file binary, and a binary file MUST have no hunks.
 - **diff-quoted-paths**: A path git writes in C quotes (because it holds a

@@ -54,8 +54,25 @@ struct GitPatchParser {
 
     private mutating func flushFile() {
         flushHunk()
-        if let built = file?.build() { files.append(built) }
+        if let built = file?.build() {
+            if let last = files.last, let merged = Self.typeChange(deleted: last, added: built) {
+                files[files.count - 1] = merged
+            } else {
+                files.append(built)
+            }
+        }
         file = nil
+    }
+
+    /// git writes a change of object type (file to symlink, file to submodule) as a
+    /// deletion immediately followed by an addition of the same path; the two halves
+    /// are one type-changed file, so the list keeps one entry, and one `id`, per path.
+    private static func typeChange(deleted: GitFileDiff, added: GitFileDiff) -> GitFileDiff? {
+        guard deleted.change == .deleted, added.change == .added,
+              let path = deleted.oldPath, path == added.newPath else { return nil }
+        return GitFileDiff(oldPath: path, newPath: path, change: .typeChanged,
+                           isBinary: deleted.isBinary || added.isBinary,
+                           hunks: deleted.hunks + added.hunks)
     }
 }
 
@@ -64,8 +81,6 @@ struct GitPatchParser {
 private struct FileBuilder {
     var oldPath: String?
     var newPath: String?
-    var oldMode: String?
-    var newMode: String?
     var isNew = false
     var isDeleted = false
     var renamed = false
@@ -81,11 +96,8 @@ private struct FileBuilder {
     }
 
     mutating func readHeader(_ line: Substring) {
-        if let value = line.value(after: "old mode ") {
-            oldMode = String(value)
-        } else if let value = line.value(after: "new mode ") {
-            newMode = String(value)
-        } else if line.hasPrefix("new file mode ") {
+        // `old mode`/`new mode` alone leave the change modified, so they are not read.
+        if line.hasPrefix("new file mode ") {
             isNew = true
         } else if line.hasPrefix("deleted file mode ") {
             isDeleted = true
@@ -126,8 +138,6 @@ private struct FileBuilder {
             change = .renamed(similarity: similarity)
         } else if copied {
             change = .copied(similarity: similarity)
-        } else if let oldMode, let newMode, oldMode.prefix(3) != newMode.prefix(3) {
-            change = .typeChanged
         } else {
             change = .modified
         }
