@@ -327,12 +327,17 @@ public final class FileBrowserViewController: NSViewController {
         // re-read it.
         loadRootsOnce()
 
-        // The breadcrumb names the selected node, and choosing in it is the
-        // same as a click in the tree (`dry`). The hop lets `@Published`'s
-        // `willSet` land before the strip reads the node back.
+        // The breadcrumb names the selected node, or the browser's own
+        // directory when nothing is selected, so the path is always shown.
+        // Choosing in it is the same as a click in the tree (`dry`). The hop
+        // lets `@Published`'s `willSet` land before the strip reads the node back.
+        breadcrumb.fileURL = directories.primary
         selection.$selectedNode
             .receive(on: RunLoop.main)
-            .sink { [weak self] node in self?.breadcrumb.fileURL = node?.url }
+            .sink { [weak self] node in
+                guard let self else { return }
+                self.breadcrumb.fileURL = node?.url ?? self.directories.primary
+            }
             .store(in: &cancellables)
         breadcrumb.onSelect = { [weak self] url in self?.tree.onOpenRequest?(url, .current) }
         // The crumb menus leave out what the tree leaves out, Hide Excluded
