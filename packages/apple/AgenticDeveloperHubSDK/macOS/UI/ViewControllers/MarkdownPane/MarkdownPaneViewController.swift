@@ -324,36 +324,16 @@ private final class MarkdownSourceViewController: NSViewController {
     override func loadView() { view = pane }
 }
 
-/// The side-by-side divider: a thin line is a 1pt target, so its grab area is
-/// widened the way the project window's dividers are, and neither pane may be
-/// dragged narrower than `minimumPaneWidth`.
+/// The side-by-side divider is a line, not a control: it takes no clicks, shows
+/// no resize cursor and cannot be dragged. The two panes stay equal halves
+/// (equal holding priorities, equalized on layout).
 extension MarkdownPaneViewController: NSSplitViewDelegate {
-    private static let minimumPaneWidth: CGFloat = 120
-
     public func splitView(
         _ splitView: NSSplitView,
         effectiveRect proposedEffectiveRect: NSRect,
         forDrawnRect drawnRect: NSRect,
         ofDividerAt dividerIndex: Int
     ) -> NSRect {
-        let grab = PaneSpacing.minimumDividerGrab
-        guard proposedEffectiveRect.width < grab else { return proposedEffectiveRect }
-        return proposedEffectiveRect.insetBy(dx: -(grab - proposedEffectiveRect.width) / 2, dy: 0)
-    }
-
-    public func splitView(
-        _ splitView: NSSplitView,
-        constrainMinCoordinate proposedMinimumPosition: CGFloat,
-        ofSubviewAt dividerIndex: Int
-    ) -> CGFloat {
-        max(proposedMinimumPosition, Self.minimumPaneWidth)
-    }
-
-    public func splitView(
-        _ splitView: NSSplitView,
-        constrainMaxCoordinate proposedMaximumPosition: CGFloat,
-        ofSubviewAt dividerIndex: Int
-    ) -> CGFloat {
-        min(proposedMaximumPosition, splitView.bounds.width - splitView.dividerThickness - Self.minimumPaneWidth)
+        .zero
     }
 }
