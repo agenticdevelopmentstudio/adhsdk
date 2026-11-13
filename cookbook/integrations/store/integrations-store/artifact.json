@@ -1,0 +1,116 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "c19280fd-b80c-46f3-a6a7-0b60a0c90d91",
+    "title": "Integrations Store",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "SQLite mirror of integration tables with tombstones, upserts, paged queries",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios"
+    ],
+    "tags": [
+      "integrations",
+      "mail-sync",
+      "persistence"
+    ],
+    "depends-on": [],
+    "related": [
+      "1157bca1-0d27-49e9-a989-d637505ba5f1"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "3872c3c580a50d7f",
+  "parts": [
+    {
+      "part": "intro"
+    },
+    {
+      "part": "overview",
+      "heading": "Overview"
+    },
+    {
+      "part": "behavioral-requirements",
+      "heading": "Behavioral Requirements"
+    },
+    {
+      "part": "appearance",
+      "heading": "Appearance"
+    },
+    {
+      "part": "states",
+      "heading": "States"
+    },
+    {
+      "part": "accessibility",
+      "heading": "Accessibility"
+    },
+    {
+      "part": "conformance-test-vectors",
+      "heading": "Conformance Test Vectors"
+    },
+    {
+      "part": "edge-cases",
+      "heading": "Edge Cases"
+    },
+    {
+      "part": "configuration",
+      "heading": "Configuration"
+    },
+    {
+      "part": "deep-linking",
+      "heading": "Deep Linking"
+    },
+    {
+      "part": "localization",
+      "heading": "Localization"
+    },
+    {
+      "part": "accessibility-options",
+      "heading": "Accessibility Options"
+    },
+    {
+      "part": "feature-flags",
+      "heading": "Feature Flags"
+    },
+    {
+      "part": "analytics",
+      "heading": "Analytics"
+    },
+    {
+      "part": "privacy",
+      "heading": "Privacy"
+    },
+    {
+      "part": "logging",
+      "heading": "Logging"
+    },
+    {
+      "part": "platform-notes",
+      "heading": "Platform Notes"
+    },
+    {
+      "part": "design-decisions",
+      "heading": "Design Decisions"
+    },
+    {
+      "part": "compliance",
+      "heading": "Compliance"
+    },
+    {
+      "part": "history",
+      "heading": "Change History"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+
+- **single-column-outline**: The sidebar MUST be an outline with one column (identifier `mailbox`) used as the outline column, and no header view.
+- **source-list-style**: The outline MUST use the source list style, with group rows that do not float and the default row size style.
+- **scroll-container**: The sidebar MUST sit in a scroll view with a vertical scroller and no background drawn.
+- **account-groups**: The sidebar MUST show one group row per entry in the model's `accounts`, in the model's order.
+- **mailbox-children**: Beneath each account, the sidebar MUST show that account's mailboxes from the model's `mailboxes` keyed by account id, in the model's order, and no mailboxes when the account has no entry.
+- **expand-on-rebuild**: The sidebar MUST expand every account group each time it rebuilds.
+- **rebuild-on-model**: The sidebar MUST rebuild its rows, reload the outline and re-apply the selection whenever the model's `mailboxes` or `accounts` changes.
+- **main-queue-hop**: The sidebar MUST receive model changes on the main queue.
+- **account-row-text**: An account group row MUST show the account's email address in the small system font, semibold, in the secondary label color.
+- **account-row-truncation**: An account row MUST truncate its text at the tail when it does not fit.
+- **mailbox-row-title**: A mailbox row MUST show the mailbox title, truncated at the tail when it does not fit.
+- **mailbox-row-indent**: A mailbox row MUST indent its content from the leading edge by 14 points times the mailbox's nesting depth.
+- **mailbox-row-symbol**: A mailbox row MUST show a symbol tinted with the control accent color, chosen by label id: `INBOX` tray, `STARRED` star, `IMPORTANT` exclamation-mark circle, `SENT` paper plane, `DRAFT` document, no label id (All Mail) full tray, `SPAM` crossed-out bin, `TRASH` trash, and any other label a tag.
+- **mailbox-row-unread-count**: A mailbox row MUST show the unread count, in the small system font and the secondary label color at the trailing end, only when the count is present and greater than zero.
+- **mailbox-row-title-yields**: A mailbox row's title MUST give up width before the symbol and the count do.
+- **only-mailboxes-selectable**: The sidebar MUST allow selection of mailbox rows only and MUST NOT allow selection of an account group row.
+- **selection-to-model**: When the user selects a mailbox row, the sidebar MUST ask the model to select the mailbox with that row's account id and label id.
+- **selection-from-model**: When the model's `selectedMailbox` changes, the sidebar MUST select the mailbox row whose account id and label id both match it.
+- **selection-no-match**: The sidebar MUST leave the selection unchanged when the model has no selected mailbox or no listed mailbox matches it.
+- **selection-no-op**: The sidebar MUST leave the outline selection alone when the matching row is already the selected row.
+- **selection-single**: The sidebar MUST select at most one row, replacing any earlier selection.
+- **selection-echo-guard**: Applying the model's selection to the outline MUST NOT send a selection back to the model.
+- **selection-clear-ignored**: When the outline's selection clears, the sidebar MUST NOT call the model.
+- **accessibility-identifier**: The outline MUST carry the accessibility identifier `mail.sidebar`.
+- **mailbox-accessibility-label**: A mailbox row MUST expose the mailbox title as its accessibility label.
+- **model-injection**: The controller MUST be built with a `MailBrowserModel` and MUST NOT support being loaded from a coder.
+

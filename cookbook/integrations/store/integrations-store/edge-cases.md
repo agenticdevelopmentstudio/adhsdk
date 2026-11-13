@@ -1,0 +1,25 @@
+
+- **Empty `externalIds` or `classes`**: `tombstoneMessages` returns 0 without a database call (MUST).
+- **Repeated ids**: `tombstoneMessages(connectionId:externalIds:)` collapses `externalIds` to a set first, so 40,000 copies of one id bind once (MUST).
+- **More than 500 ids**: ids are bound 500 per statement, so a list over SQLite's 32,766-variable limit still works, in one transaction (MUST).
+- **`replaceLabels` with many labels**: the `NOT IN` list binds one parameter per label with no chunking, so a call with more labels than SQLite allows variables fails with the database's error and changes nothing, because the call is one transaction. This is a fact of the source, not a requirement.
+- **Empty `replaceLabels`**: tombstones every live label of the connection (MUST).
+- **Duplicate external ids inside one `replaceLabels` or `upsertMessages` call**: each later entry finds the row the earlier entry stored and overwrites it, so the last entry wins and one row remains (MUST).
+- **Negative `limit` or `offset`**: both are clamped to 0, so a negative `limit` returns no rows and a negative `offset` skips none (MUST).
+- **`limit` 0**: returns no rows (MUST).
+- **`after` and `offset` together**: both apply; `offset` skips rows after the `after` filter (MUST).
+- **Label id absent from every message**: matches nothing, so `labelIds` containing it returns no rows, and `anyLabelIds` containing only it returns no rows (MUST). The store does not validate label ids.
+- **Dates that are not ISO-8601 UTC strings of the same width**: `since`, `until`, `cutoff` and `after.internalDate` are compared as strings with no validation, so a differently formatted value gives an order that does not follow time (SHOULD NOT be passed; the contract is the format `IntegrationClock` writes).
+- **Missing connection on `updateSyncState`**: throws `IntegrationError.unknownAccount` after the statement runs and finds no row (MUST).
+- **Tombstoned connection on `updateSyncState`**: treated as missing and throws (MUST).
+- **Delete of a missing config or connection**: no error and no change (MUST).
+- **Same email on a different provider**: the connection upsert key includes `provider`, so it creates a separate row, but `connection(idOrEmail:)` does not filter by provider and returns the earliest-created match (MUST).
+- **Same account signed in again after a delete**: no live row matches, so a new row is stored under the id the caller gave, and the tombstoned row stays (MUST).
+- **Message whose `id` equals another message's `external_id`**: `message(connectionId:idOrExternalId:includingDeleted:)` matches either column and returns the first row the database yields under the live-first ordering (SHOULD NOT be relied on by callers).
+- **Concurrent calls**: writes serialise on the one writer connection; a read on a file database runs on a reader and sees the last committed state; an in-memory database shares one connection, so reads and writes queue together. A call made from inside another `read` or `write` on the same thread runs inline in that transaction (MUST).
+- **Slow statement**: a read past 10 seconds or a write past 60 seconds (the `BoundedDatabase` defaults) is aborted and surfaces as `BoundedDatabaseError.deadlineExceeded`; a write that throws leaves no partial change (MUST).
+- **Database busy**: a write waits up to the database's `busyTimeout` (5 seconds by default) and then fails with the database's error (MUST).
+- **Offline or disconnected**: not applicable; the store reads and writes a local SQLite file and makes no network call.
+- **Missing required value**: the store writes the strings it is given without trimming or checking them; a `NOT NULL` column the record leaves unset is rejected with the database's error (MUST).
+- **Action log `status` text**: not validated; `finishActionLog` stores any `status` string, although `ActionLog.status` documents "pending", "ok" or "error" (SHOULD callers pass one of the three).
+

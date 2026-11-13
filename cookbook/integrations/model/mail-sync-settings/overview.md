@@ -1,0 +1,3 @@
+
+MailSyncSettings is a small value type that says which mail classes a connection mirrors, how many days back it looks, and how often it polls. It holds five fields (`includeArchived`, `includeSpam`, `includeTrash`, `windowDays`, `pollIntervalMinutes`), a static `default`, two range constants, a classification gate `allows(_:)` and a range check `validated()`. It does no I/O. The connection record stores it as JSON, the settings screen edits it, and the mail integration service validates it before saving and reads it when syncing. It depends on `MailClass` (cases `filed`, `archived`, `spam`, `trash`) and on `IntegrationError.invalidSettings(String)`, both from the sibling model files.
+

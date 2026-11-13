@@ -1,0 +1,7 @@
+
+`IntegrationsStore` is a public, `Sendable`, `final class` that owns the local mirror of the hub's integration tables: provider configs, connections, email messages, email labels and the action log. It takes a `BoundedDatabase`, runs `IntegrationsSchema.migrate` on it when it is created, and then exposes synchronous, throwing reads and writes over five tables. It holds no state of its own beyond the database handle.
+
+The store never removes a row. A delete is a tombstone: `deleted_at` is set for connections and provider configs, and `is_deleted` and `deleted_at` are set for messages and labels. "Live" means not tombstoned: `deleted_at IS NULL` for connections and configs, `is_deleted = 0` for messages and labels. Reads return live rows only, except `message(connectionId:idOrExternalId:includingDeleted:)` when asked for a tombstoned row. An upsert reuses the local `id` and `createdAt` of the row it matches and clears any tombstone on it.
+
+Two public value types belong to the contract. `MessageQuery` says which messages of one connection to list, and `MessageKey` is a message's place in the newest-first order, used to resume a page. The record types (`ProviderConfig`, `IntegrationConnection`, `EmailMessage`, `EmailLabel`, `ActionLog`), `ConnectionStatus`, `MailClass`, `IntegrationClock` and `IntegrationError` come from the integrations model and are used here as given. The component does not talk to the network, hold credentials, decide what to sync, or schedule anything; `GmailSyncWorker` and `MailIntegrationService` call it.
+

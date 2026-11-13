@@ -1,0 +1,44 @@
+
+- **model-required**: The component MUST be constructed from a mail browser model and MUST read the open message from that model.
+- **no-coder-init**: The component MUST NOT support construction from an archive; `init(coder:)` MUST trap with the message "init(coder:) has not been implemented".
+- **observe-open-message**: The component MUST react on the main queue to every value the model publishes for its open message, including the value already present when the view loads.
+- **none-hides-message-views**: When the open message is nil, the component MUST hide the header, the separator and the body view and MUST show the placeholder.
+- **none-placeholder-text**: The placeholder MUST read "No message selected".
+- **none-clears-body**: When the open message is nil, the component MUST load an empty HTML string with no base URL into the body view.
+- **message-shows-views**: When a message is open, the component MUST show the header, the separator and the body view and MUST hide the placeholder.
+- **subject-line**: The subject line MUST show the message subject, or "(no subject)" when the subject is empty.
+- **from-line**: The sender line MUST show the message's `from` string unchanged.
+- **recipients-line**: The recipients line MUST read "To: " followed by the `to` addresses joined by a comma and a space.
+- **cc-suffix**: When the message has at least one `cc` address, the recipients line MUST append three spaces, "Cc: " and the `cc` addresses joined by a comma and a space; when `cc` is empty it MUST append nothing.
+- **date-line**: The date line MUST show the model's full-date formatting of the message date, which returns the original string when the date cannot be parsed.
+- **same-message-no-reload**: When the model republishes the message already on screen (same `id`, for example after marking it read), the component MUST update the header lines and MUST NOT reload the body.
+- **new-message-resets-remote**: When a different message becomes open, the component MUST reset remote content to blocked for it.
+- **remote-bar-shown-for-html**: When a different message becomes open, the component MUST show the remote-content bar if and only if the message has a non-nil HTML body.
+- **remote-bar-copy**: The remote-content bar MUST show the note "Remote images are blocked to protect your privacy." and a button titled "Load Remote Images".
+- **load-remote-action**: Activating "Load Remote Images" MUST allow remote content for the open message, hide the remote-content bar and reload the body without the blocking policy and without the content rule list.
+- **load-remote-scoped**: Allowing remote content MUST apply only to the message on screen; opening a different message MUST block remote content again.
+- **load-remote-no-message**: Activating "Load Remote Images" while the model has no open message MUST do nothing.
+- **scripts-off**: The body view MUST run with JavaScript disabled for page content.
+- **no-persistent-data**: The body view MUST use a non-persistent website data store.
+- **blocking-policy-prefix**: When remote content is blocked, the document MUST begin with a Content-Security-Policy meta tag whose policy is exactly `default-src 'none'; img-src data: cid:; media-src data:; font-src data:; style-src 'unsafe-inline'`.
+- **allowed-no-policy**: When remote content is allowed, the document MUST NOT carry that policy prefix.
+- **html-as-sent**: When the message has a non-empty HTML body, the document MUST use that HTML as sent.
+- **text-fallback-source**: When the HTML body is nil or empty, the document MUST be built from the text body, or from the snippet when the text body is nil.
+- **text-escaped**: The text fallback MUST replace `&` with `&amp;`, `<` with `&lt;` and `>` with `&gt;` before placing the text in the page, and the page MUST NOT contain an unescaped `<script>` from the text.
+- **text-page-style**: The text fallback page MUST declare `color-scheme: light dark`, wrap the text in a `pre` element with wrapping whitespace, and use a 13px system sans-serif font with a 16px body margin.
+- **rule-list-applied**: When remote content is blocked and the content rule list is available, the component MUST install a rule list that blocks URLs beginning with `http://`, `https://`, `ws://`, `wss://` and `ftp://`.
+- **rule-list-cleared**: Before every body load the component MUST remove all content rule lists it previously installed.
+- **rule-list-per-scheme**: The rule list MUST use one rule per scheme family (`^https?://`, `^wss?://`, `^ftp://`) because WebKit's content-blocker regular expression has no alternation.
+- **rule-list-compiled-once**: The component MUST compile the rule list at most once per process while compilation succeeds, under the identifier "mail-reader-block-remote".
+- **rule-list-failure-tolerated**: When the rule list fails to compile, the component MUST still load the body with the blocking policy prefix.
+- **stale-load-guard**: When the open message has changed while the rule list compiled, the component MUST NOT load the earlier message's body.
+- **link-opens-externally**: A link activation, or a request with no target frame, to a URL whose scheme is `http`, `https` or `mailto` (compared case-insensitively) MUST open in the system's default handler for that URL.
+- **link-never-in-reader**: A link activation, or a request with no target frame, MUST NOT navigate the reader, whatever its scheme.
+- **link-other-schemes-dropped**: A link to any other scheme (`smb`, `vnc`, `ssh` or an app's own) MUST be cancelled and MUST NOT be opened.
+- **fragment-in-place**: A link within the same frame to the reader's own page that carries a fragment MUST be allowed so the message scrolls in place.
+- **own-page-only**: Any navigation that is not a link activation MUST be allowed only when its URL scheme is `about` (compared case-insensitively) and MUST be cancelled otherwise.
+- **navigation-without-url**: A navigation request with no URL MUST be cancelled.
+- **body-accessibility-id**: The body view MUST carry the accessibility identifier "mail.reader.body".
+- **header-selectable**: The subject, sender, recipients and date text MUST be selectable.
+- **header-truncation**: The sender, recipients and date lines MUST truncate at the tail when too long and MUST yield width before other content.
+

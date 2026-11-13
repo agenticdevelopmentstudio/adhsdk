@@ -9,8 +9,8 @@
     "language": "en",
     "created": "2026-11-13",
     "modified": "2026-11-13",
-    "author": "mfullerton",
-    "copyright": "2026 mfullerton",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "Actor that reserves Gmail quota units per call and returns the wait that keeps a process under the per-user rate, plus the table of per-call unit costs.",
     "platforms": [
@@ -32,25 +32,84 @@
   },
   "synced": "4304b4be5c5d63bd",
   "parts": [
-    {"part": "intro"},
-    {"part": "overview", "heading": "Overview"},
-    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
-    {"part": "appearance", "heading": "Appearance"},
-    {"part": "states", "heading": "States"},
-    {"part": "accessibility", "heading": "Accessibility"},
-    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
-    {"part": "edge-cases", "heading": "Edge Cases"},
-    {"part": "configuration", "heading": "Configuration"},
-    {"part": "deep-linking", "heading": "Deep Linking"},
-    {"part": "localization", "heading": "Localization"},
-    {"part": "accessibility-options", "heading": "Accessibility Options"},
-    {"part": "feature-flags", "heading": "Feature Flags"},
-    {"part": "analytics", "heading": "Analytics"},
-    {"part": "privacy", "heading": "Privacy"},
-    {"part": "logging", "heading": "Logging"},
-    {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "design-decisions", "heading": "Design Decisions"},
-    {"part": "compliance", "heading": "Compliance"},
-    {"part": "history", "heading": "Change History"}
+    {
+      "part": "intro"
+    },
+    {
+      "part": "overview",
+      "heading": "Overview"
+    },
+    {
+      "part": "behavioral-requirements",
+      "heading": "Behavioral Requirements"
+    },
+    {
+      "part": "appearance",
+      "heading": "Appearance"
+    },
+    {
+      "part": "states",
+      "heading": "States"
+    },
+    {
+      "part": "accessibility",
+      "heading": "Accessibility"
+    },
+    {
+      "part": "conformance-test-vectors",
+      "heading": "Conformance Test Vectors"
+    },
+    {
+      "part": "edge-cases",
+      "heading": "Edge Cases"
+    },
+    {
+      "part": "configuration",
+      "heading": "Configuration"
+    },
+    {
+      "part": "deep-linking",
+      "heading": "Deep Linking"
+    },
+    {
+      "part": "localization",
+      "heading": "Localization"
+    },
+    {
+      "part": "accessibility-options",
+      "heading": "Accessibility Options"
+    },
+    {
+      "part": "feature-flags",
+      "heading": "Feature Flags"
+    },
+    {
+      "part": "analytics",
+      "heading": "Analytics"
+    },
+    {
+      "part": "privacy",
+      "heading": "Privacy"
+    },
+    {
+      "part": "logging",
+      "heading": "Logging"
+    },
+    {
+      "part": "platform-notes",
+      "heading": "Platform Notes"
+    },
+    {
+      "part": "design-decisions",
+      "heading": "Design Decisions"
+    },
+    {
+      "part": "compliance",
+      "heading": "Compliance"
+    },
+    {
+      "part": "history",
+      "heading": "Change History"
+    }
   ]
 }
