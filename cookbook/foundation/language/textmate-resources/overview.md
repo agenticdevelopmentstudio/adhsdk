@@ -1,0 +1,3 @@
+
+The files a TextMate syntax highlighter needs at run time, built by one deterministic script from pinned npm packages: VS Code's own `vscode-textmate` engine and its WASM Oniguruma bundled into `highlighter.js` for a bare JavaScriptCore context, `onig.wasm`, the grammars of `tm-grammars` and the themes of `tm-themes` whose licences allow shipping, a language table joined from `linguist-languages`, one licence file per shipped grammar, theme and package, and a manifest of versions and checksums. The tree lives once, in `Resources/TextMate/` of the toolkit, belongs to no framework target, and is copied into an app bundle by the app; code receives its directory by injection.
+

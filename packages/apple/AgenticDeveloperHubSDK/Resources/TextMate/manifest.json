@@ -1,0 +1,2258 @@
+{
+  "allowedLicenses": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unlicense"
+  ],
+  "dropped": {
+    "grammars": [
+      {
+        "license": "none",
+        "name": "abap"
+      },
+      {
+        "license": "GPL-3.0",
+        "name": "ada"
+      },
+      {
+        "license": "GNU",
+        "name": "ahk2"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "apache"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "apex"
+      },
+      {
+        "license": "none",
+        "name": "apl"
+      },
+      {
+        "license": "none",
+        "name": "applescript"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "asciidoc"
+      },
+      {
+        "license": "MPL-2.0",
+        "name": "bird2"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "cue"
+      },
+      {
+        "license": "none",
+        "name": "dax"
+      },
+      {
+        "license": "none",
+        "name": "dream-maker"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "elixir"
+      },
+      {
+        "license": "none",
+        "name": "erb"
+      },
+      {
+        "license": "none",
+        "name": "glsl"
+      },
+      {
+        "license": "GPL-3.0",
+        "name": "gnuplot"
+      },
+      {
+        "license": "MPL-2.0",
+        "name": "hcl"
+      },
+      {
+        "license": "none",
+        "name": "hurl"
+      },
+      {
+        "license": "none",
+        "name": "kusto"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "llvm"
+      },
+      {
+        "license": "none",
+        "name": "logo"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "luau"
+      },
+      {
+        "license": "none",
+        "name": "matlab"
+      },
+      {
+        "license": "none",
+        "name": "mipsasm"
+      },
+      {
+        "license": "GPL-3.0",
+        "name": "nginx"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "nim"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "nsis"
+      },
+      {
+        "license": "GPL-3.0",
+        "name": "org"
+      },
+      {
+        "license": "none",
+        "name": "po"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "purescript"
+      },
+      {
+        "license": "GPL-3.0",
+        "name": "racket"
+      },
+      {
+        "license": "none",
+        "name": "rel"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "sass"
+      },
+      {
+        "license": "none",
+        "name": "sparql"
+      },
+      {
+        "license": "none",
+        "name": "ssh-config"
+      },
+      {
+        "license": "none",
+        "name": "tcl"
+      },
+      {
+        "license": "MPL-2.0",
+        "name": "terraform"
+      },
+      {
+        "license": "none",
+        "name": "toml"
+      },
+      {
+        "license": "none",
+        "name": "ts-tags"
+      },
+      {
+        "license": "none",
+        "name": "turtle"
+      },
+      {
+        "license": "NOASSERTION",
+        "name": "wolfram"
+      },
+      {
+        "license": "none",
+        "name": "yaml"
+      }
+    ],
+    "themes": [
+      {
+        "license": "GPL-3.0",
+        "name": "aurora-x"
+      }
+    ]
+  },
+  "esbuild": [
+    "--bundle",
+    "--format=iife",
+    "--platform=neutral",
+    "--target=safari17",
+    "--main-fields=module,main"
+  ],
+  "files": {
+    "LICENSES/grammar-actionscript-3.txt": "f6ade66dc683049ea730222d8b93ed48b8f7c49e1b23b130b06a560199a92969",
+    "LICENSES/grammar-ahk.txt": "849b20219ae564f7b1e8af46e7b59a9484fc5843fee411bbc8839d876f7dd4e7",
+    "LICENSES/grammar-angular-expression.txt": "7034c22a345d6d26972e5d7c06d5928235b50577128448d3af838c2b06977651",
+    "LICENSES/grammar-angular-html.txt": "35edbd5a9269087869da9cec205a453d0eac3e91ed954578d04199ba5f6ccb6a",
+    "LICENSES/grammar-angular-inline-style.txt": "78fe4f355cee86a6ff88ef1561270a805d56648a8d93c9f05577037ad73ec97f",
+    "LICENSES/grammar-angular-inline-template.txt": "f70385f6d8a6b647e0fc1ffa0c3e4424e710f724859026978a8ead1cbc173a1f",
+    "LICENSES/grammar-angular-let-declaration.txt": "2c5d93f66794aba0cd5e16293c655433d02ac1dd9673c4f45f166aab2e2f7760",
+    "LICENSES/grammar-angular-template-blocks.txt": "7e3c0084cd45b904ae9ec70dc7413bed6544c6964d38eacb0e18409187c35469",
+    "LICENSES/grammar-angular-template.txt": "1936ddaafe98c9386abdf4ba617bc4618c3a2302fe26aec062f11c4702850bc1",
+    "LICENSES/grammar-angular-ts.txt": "04786f5fa99b0d5a38fefb61f02c1ef5759927ba33084710e79cb4551d6beb9d",
+    "LICENSES/grammar-ara.txt": "ecf720cd055dacf143c5330346c0bbf4013494a13de6347ea2a975055e6243c7",
+    "LICENSES/grammar-asm.txt": "e8a77df8506daf360eda0328d54a7ea0e772c408eb7e1b886ee77f3d3bc44579",
+    "LICENSES/grammar-astro.txt": "dbf07542facef6018edce062ec6c9e1d90380c349fad9be8b288bf2e41c24444",
+    "LICENSES/grammar-awk.txt": "8ecea8178cd5dc2c17ee03550082dc0a509d70d8bdc1c0f7b8dc97fcd80027dd",
+    "LICENSES/grammar-ballerina.txt": "8c8b4c9c5554ad7b1778f28f8eb31d4275b85ae9d90c70f4e67e444330dd2351",
+    "LICENSES/grammar-bat.txt": "2b2acc5dbcbb49f31dac0edd944ac10c99461238ea4fa59f7a9134b3b32c8be0",
+    "LICENSES/grammar-beancount.txt": "8eed418d6d65f22e568b96adf6431d0f24f2fd4ff0aafe0f8021b3cbc26b6012",
+    "LICENSES/grammar-berry.txt": "d5e05351336912cc76ebf93a672eed433b00464705b1db96c8eb732d21ba6cf2",
+    "LICENSES/grammar-bibtex.txt": "25dac8418833f20df5a76a82d48d93530c626d12adb2c90e0bc2f31157fe38a9",
+    "LICENSES/grammar-bicep.txt": "66c8c4f3c86e266c6c16a03973547bdf6e96932a7e08b09a3ec38179cb7c9dad",
+    "LICENSES/grammar-blade.txt": "c326e9ed643ea88734cb1fb2ff2f3b34fc72cf045a2075a0ee95f0c038fe2e1e",
+    "LICENSES/grammar-bsl.txt": "278b6e5d4f6cee3cf26663861b59d260ebdbe3acf5f7e06022cabe6043d45329",
+    "LICENSES/grammar-c.txt": "6e9daf546d1047416bf1d15aefbb2eefa326003ec6cbdfe7b45d18d62d6f81d9",
+    "LICENSES/grammar-c3.txt": "499e6af7452e0f774dd6c88f1938728d39c8bc6801c548bb3e6ab523a956a56a",
+    "LICENSES/grammar-cadence.txt": "c0462414904c4c3ae5e518a72300a1850ce265d7c9eed128c537361bfdb0a3e2",
+    "LICENSES/grammar-cairo.txt": "2795a16309731c4492eb12cc416572212033dacc3301e826db12007f3aa086d8",
+    "LICENSES/grammar-chapel.txt": "b0fd5fd5f1323f0908a204404bf8313705eeb03fbd4aee8aac1b0732b0faa0d3",
+    "LICENSES/grammar-clarity.txt": "72dce05b78f9f6197baa7d2fae1a70402be249e218c303a37174dfa02cff2f2d",
+    "LICENSES/grammar-clojure.txt": "ef9613504031a3fc394d98f3c0c1b83bcbfa516f55e59351b8e932f9699cfc8c",
+    "LICENSES/grammar-cmake.txt": "45e0f9a6ceb9ee22a9810a4f6ba52906b7c585d0d8939d2140523100410e600b",
+    "LICENSES/grammar-cobol.txt": "3ddb0dcdbc79af2c1176bb7c74939744e78e8f12c815d7cfd53d17ca5c5d31b9",
+    "LICENSES/grammar-codeowners.txt": "38645816065c9844e45883b2e832a9ea7f87dc2a1fea0b165ff5a732a99735b8",
+    "LICENSES/grammar-codeql.txt": "c93abcda20f2ce92ac6ebd5426ffcf482b1ce670da49070ad559a9cd7acceed0",
+    "LICENSES/grammar-coffee.txt": "7313b32cbc3cdf156d14bc1e2181f686835e4d4694d9ef2da462a279948dc57e",
+    "LICENSES/grammar-common-lisp.txt": "ebb03631e01cca38d8ed44da38b6bf0819cedf2e4aef250b59cc8a0cbb01fe8b",
+    "LICENSES/grammar-coq.txt": "bb596d04ebfe4fb787d1c271ed6d24df47dfd88ae8ff6fefcf4b827dec015611",
+    "LICENSES/grammar-cpp-macro.txt": "f6b96c36f1d9d9c5a1267f90d1c988da9c7541ea051a01ac628c829a82154f85",
+    "LICENSES/grammar-cpp.txt": "7bfbbdf42330421dbec46a020eb3722f268d67d88142e6eff1422e61c39db92e",
+    "LICENSES/grammar-crystal.txt": "1e162e6bf1fc3abe44572b2c1299f263fc9e84aac9b616a3a12ca6c80de784ca",
+    "LICENSES/grammar-csharp.txt": "bbaa36e3f20dbb9911eb3976adafe16ac85631c77c2cb6f5a92daf0cbb1cee54",
+    "LICENSES/grammar-css.txt": "dcd7a0e91efb2fe53f43601e5a28df4c28c61b4da8c1e2dc9ef3ca6ae442a078",
+    "LICENSES/grammar-csv.txt": "5d37e12fd3219be309cab90c15a279c7122f77b4b021c12c1603720baea1fd4c",
+    "LICENSES/grammar-cypher.txt": "93fe491765adb0003ad011f31ffa8c9b1aec46809532800b38ab65a9ba3c49c5",
+    "LICENSES/grammar-d.txt": "0dcf2463e72074686cfb07e5b9577977e377524c9f74cf98d32154399d5e3156",
+    "LICENSES/grammar-dart.txt": "39658139bc2f30ba1ec534b4833282117a2540ff3833663037bd5d312cc6fc9b",
+    "LICENSES/grammar-desktop.txt": "be1301643a5b90e11a1ed28b0959fdaddf32c47f364055ea126c3c8b012fedff",
+    "LICENSES/grammar-diff.txt": "52fed6255b1a739435a51b88abb169d6ba54a95e5753395ae8de5f566d736220",
+    "LICENSES/grammar-docker.txt": "0708b30d571e63be8f8049454c659935887b659918d903ae9e5dddd9f27703e3",
+    "LICENSES/grammar-dotenv.txt": "8a25326304279352ea4d3ba16fb2889dc6bb710e6273047839327b544ec8f682",
+    "LICENSES/grammar-edge.txt": "fc8478044aa08f388296d4775d8bda77bd577fd510881df77da2537c7166cd4f",
+    "LICENSES/grammar-elm.txt": "7e48091dedf5b0d2516ba9cdbd2751a144d7ad1f9cfa1620aef2d1b420f186d9",
+    "LICENSES/grammar-emacs-lisp.txt": "626ed0233e048dd417ebed1728cefde0ac7c56d52cfa242986d3604d23eeb227",
+    "LICENSES/grammar-erlang.txt": "b4bd790922a14a31dff9f281c7005b4b5eda96c4b0aadedfbf044454509cfb2d",
+    "LICENSES/grammar-es-tag-css.txt": "af9fabb1a58064cfa731e4490b968473a7e2bda2669faed1de7e9d7fb3fa8bec",
+    "LICENSES/grammar-es-tag-glsl.txt": "e887fc8929f27b66aa2926847d42bab8a046c9a5c5b4e54f6d24868b02392e8d",
+    "LICENSES/grammar-es-tag-html.txt": "e368847d906a213b803b874fe6f320fad3d7f56700b184990fff83c9f161f945",
+    "LICENSES/grammar-es-tag-sql.txt": "1b81426ef5e68441571d96676f6a5f7f4346e8c0185d043b8206dff855454bec",
+    "LICENSES/grammar-es-tag-xml.txt": "a240ff39d378d5df568d66293310e9bd3aaa6cb19d3abfa5e2cf2f63af97a3bd",
+    "LICENSES/grammar-fennel.txt": "d7027dba872d226e6b3520cec5d31feda79afe80b00a90d2b12fde3b26aa8ff7",
+    "LICENSES/grammar-fish.txt": "376af8a5cf2613956597d3bc208c62181af54679c2ac18c0011743654eaf56cb",
+    "LICENSES/grammar-fluent.txt": "6cd2ebd2398f37d2368e56643c8bb0d114539f8658a5311369278997ca31fb05",
+    "LICENSES/grammar-fortran-fixed-form.txt": "9ababba7125d25095237783d2ae5693728384784977fd057a5f6e9452a633b5e",
+    "LICENSES/grammar-fortran-free-form.txt": "043732cdbb219a76c3d186fb2ee00fff8145eac36eb63f2d39442d838d45a740",
+    "LICENSES/grammar-fsharp.txt": "5ad92f60fd5a171f17db47da8b367553cf2c1ec6132269dc5d90ba27f10c2ab1",
+    "LICENSES/grammar-gdresource.txt": "5b159885bbbf41c3d0a7fdfe042be4a96c6371a02f3a9083e2d24e1c29205256",
+    "LICENSES/grammar-gdscript.txt": "dd62ed21b46995ee9cd5913bb2309e335b9315ff6c700ad0a9a2c77931d14f6a",
+    "LICENSES/grammar-gdshader.txt": "2d43ba1febaf81f7433a4bc3b68154c85a7271749f484031e637a121fd937139",
+    "LICENSES/grammar-genie.txt": "e8830523470f1d2130e4731594f08f1f69e10e3c61fe7481c3496218a63698a1",
+    "LICENSES/grammar-gherkin.txt": "212798ac2f7efe37d5d840077fb54c2e54331dc391336e2dc9a3a4e3eb01fc37",
+    "LICENSES/grammar-git-commit.txt": "09066b4a91d93e208a0fb19f64221a85cc10bfc6ac9caf270c2df1e5ff74cda3",
+    "LICENSES/grammar-git-rebase.txt": "d375059d81970251600beca293ad4a8021835d40cac8dbe4cbe4f8c455e6897e",
+    "LICENSES/grammar-gleam.txt": "3f321d9f31dd74dbacff6c268c70e1ceead617854bdaa7a6252e947ecc8e3e91",
+    "LICENSES/grammar-glimmer-js.txt": "ff4101002d64995f2a1dd00cfdb560fddc0a9bbd75e6299ff8d369c01039c8a7",
+    "LICENSES/grammar-glimmer-ts.txt": "b6152064d41905f6a9625686213489bb7c3ccbf21e639cf4edda8e419bfe696c",
+    "LICENSES/grammar-gn.txt": "fd599169f48ed7c4a5367eb483557255aaa5f87987a68f6127f57f0a34b0e462",
+    "LICENSES/grammar-go.txt": "d77a7470d9bb7a251932c57041490b7abb953a4b2fd7e78ca384a92b368225b5",
+    "LICENSES/grammar-graphql.txt": "7e84203cd5bb7a453beda129f92457267a86684d9b58e0199281ce6f51a22e70",
+    "LICENSES/grammar-groovy.txt": "5a00ac4c01b11e623514fae0a98bd9dbb7d8427f38dd3348d96449f5756bf84e",
+    "LICENSES/grammar-hack.txt": "db6ddf662b8ea424437b094d4311c6610373ed030cecaf1a25353d8f0832bb76",
+    "LICENSES/grammar-haml.txt": "23fbe5c63ab43d33ce14de41706d0af6604409c0be72cb4649de49daba8e0125",
+    "LICENSES/grammar-handlebars.txt": "30d68a5833ac67a246adda29145d99a64d2f57469c1b17b17116a171e4097020",
+    "LICENSES/grammar-haskell.txt": "7c3639dbc3dbcc3ab00de3e7fe746d0e8ba30017a1684a637a178537126fe6d3",
+    "LICENSES/grammar-haxe.txt": "ee6e69e5e2088f26ccc8477fd0b07b6a69667ab9a1e427b8193e177a4c0e2295",
+    "LICENSES/grammar-hjson.txt": "22a5fe57ee89d114dfaa22654ac797cb460eb0387e4b193114132cb8c989451f",
+    "LICENSES/grammar-hlsl.txt": "21cf0d2999aed196440d90a93098fd85e753055db258ada45a75f5b6f4a8fee1",
+    "LICENSES/grammar-html-derivative.txt": "c7d174beaced98a8c15346a5afa2d9d27c640acb5564f1b33be3f5cc98d6d8e2",
+    "LICENSES/grammar-html.txt": "00b770ef74ed7aa9c00709cc973ed89b01059466d5d959984a8395b442337a6a",
+    "LICENSES/grammar-http.txt": "7e8bf0dbd95df9674dbaa7fb29a78d66998796ad9e0c4d2333a27ce811481fdb",
+    "LICENSES/grammar-hxml.txt": "c92d3ae74ae78b163b22f7bddb907cb9ca33d1b57b88512bfae7aeb8fafb20d5",
+    "LICENSES/grammar-hy.txt": "f7f9853cba731bb0b0b680e9da678029f4a5c3cca7cd2fb2e28a48b0d2192fc8",
+    "LICENSES/grammar-imba.txt": "43155f984dda45d2d4ad8ec33185714d8cae2cbd14db33e478b9120ce8d524d4",
+    "LICENSES/grammar-ini.txt": "f896c9e4f1c8ea51721e92c773f9a27ebc970927de13de710072512e2ac58d09",
+    "LICENSES/grammar-java.txt": "10226209aa663df9f05cbf577ac67e48bff9e4f4f336eefb3958b63e3a7dad36",
+    "LICENSES/grammar-javascript.txt": "7c9049856d41beee77f77676b546bc1c36ee0948d93256ce15d83eb7d0debad7",
+    "LICENSES/grammar-jinja-html.txt": "49e578fc507466cfd5e50510f131386892928134c1a24ad67430114091441ac9",
+    "LICENSES/grammar-jinja.txt": "109308ceee04af5c3f4b261bbf4c34375d53a873be139aa670bc46f4e71dec2a",
+    "LICENSES/grammar-jison.txt": "c435cbab553020d6c1f07fb4e00df864e9e1d099b4b72f6e1ca5c6d67e36497f",
+    "LICENSES/grammar-json.txt": "d9e745e4407195073c409b001840bb28d74850d04adc05dfd2a7602da819bb7e",
+    "LICENSES/grammar-json5.txt": "bd842f6bb86e59627611e5e353e71cf2710ca76e245c59b0962191e4bbb0b9bd",
+    "LICENSES/grammar-jsonc.txt": "91046683df24a8feb4faf901fb0ec9534f7aac5060424ed963f05c6d76de5ce1",
+    "LICENSES/grammar-jsonl.txt": "edde21de953dba99a16f9f9a672f6e2d0c76f7e6cea18ea541372ec33fd8351e",
+    "LICENSES/grammar-jsonnet.txt": "bfc4f9b84b1e0b5024bfd87456ecfe3089065442b6ead592ccb251af28e9d5a2",
+    "LICENSES/grammar-jssm.txt": "4c9df7039b0523803bada727d7709068d8ce9ba5cd86b029a9306c6fc78f3e80",
+    "LICENSES/grammar-jsx.txt": "cf216112eb03881116d72355372ba7ddcc9a7ccb3b74c6b6e300c82ca3b26330",
+    "LICENSES/grammar-julia.txt": "a64c79dfa46c6b49ae1ad1d0e874bcf561e93d21a3036799934cb5a186ca32af",
+    "LICENSES/grammar-just.txt": "00e17beff7c64b2bfb5af86d31a09650ce9097ab0aa90903a1fcd7ba5bac7632",
+    "LICENSES/grammar-kdl.txt": "77dc400dba96aba627278eeae91de0b753d409657ef6d0de1d714edfd9f5bcd6",
+    "LICENSES/grammar-kotlin.txt": "32820bba618d58f7a81903d29cb6927ff0f9cdebc6913e56a93ead5dcb1dc0a3",
+    "LICENSES/grammar-latex.txt": "d537b405ae199d05ade3fb3e0cfc173c4b34f195d34a11daa939d1c92242b717",
+    "LICENSES/grammar-lean.txt": "3d13c9368945232c34cf464d0acb16b092811cfa57cc685c614667cb0791e45e",
+    "LICENSES/grammar-less.txt": "bdf347d57bd7aecbf81217407b16027e1ae5279138765af6aa37a8e700fa8d8d",
+    "LICENSES/grammar-liquid.txt": "7040ab770bc6027ff0a45299935ed8d0aa3d17475678c5a9b5f98b61c585b900",
+    "LICENSES/grammar-log.txt": "43859e4707c1a9ccaec18ea610082f7c11c9ce85e96ad6bf20b39a153e747a68",
+    "LICENSES/grammar-lua.txt": "655cb93c2e11606f4cb8ac1c8b1fd910ad2846c974fbbfde37c0dab5ecacd5b9",
+    "LICENSES/grammar-make.txt": "60c02ae883bf191bc039f33446a77ed3ba10d73d25dfd2da72eddf54150ddedd",
+    "LICENSES/grammar-markdown-nix.txt": "1fb85796c6fe6795dacc5ec8bf9be20c9d1a548509874ef562959ef18234ad37",
+    "LICENSES/grammar-markdown-vue.txt": "6ec6702f82f2de06146ce4f0bb1d284002ad786d999c36149209bfc6cd414714",
+    "LICENSES/grammar-markdown.txt": "a7c65e0b520d0ab59693217cac3205c92e34bff9fe7ba9d1ab13b31c005848a9",
+    "LICENSES/grammar-marko.txt": "19f41779e6ca16e279a353bea2609a44433042a9508ebd1fb3c04b02510468b1",
+    "LICENSES/grammar-mdc.txt": "9d7657118ac6d98e8867f4f8690d3aa82903bf503938455211a3b95fcdaf6a85",
+    "LICENSES/grammar-mdx.txt": "e379427f8b29629bf7b72933749e91fd4c26e826110764fed8ea7a8d79738487",
+    "LICENSES/grammar-mermaid.txt": "052b10ea2bb67647a7f47450c2c17301bafb53a4f5d5e9ed193dbcf69b97ab83",
+    "LICENSES/grammar-mojo.txt": "a3126d4f6be442241953fbd6f83dd1698ac239f1e7760aa6bdebbb1ced77634d",
+    "LICENSES/grammar-moonbit.txt": "a0599627ba855131812413839c78147f08ca5d3abab06394284d20c925075e4a",
+    "LICENSES/grammar-move.txt": "44c130ed201c009b909cfe40c999e15f963d4027e1d155cfe32347bb2ca6ecb6",
+    "LICENSES/grammar-narrat.txt": "91149fad393f8c2267dc50f818f780b9cce9586bb7c47256403889dcc7b67ff9",
+    "LICENSES/grammar-nextflow-groovy.txt": "d8e82d21ec079c9c32c2ca7b03d7e51caf85dccbdb2c131b2d91db6967673862",
+    "LICENSES/grammar-nextflow.txt": "b8d16d8c90d02dfcf7ac6e62d9110558713421272bed2610d365f8348bb59bfc",
+    "LICENSES/grammar-nix.txt": "cf83423167c8bb8a5e0c8a40bb714babb1f0d41f8fda8d37da16f513b70f1b15",
+    "LICENSES/grammar-nushell.txt": "c491b31d3f14a0cd8b950ed56cadda6f9350e0974b5c597e428da3b688a073ae",
+    "LICENSES/grammar-objective-c.txt": "fdcc8b35e69e31bf9f89feb9c1dfef81d9db97b7b9175d1982c39cb385d1a3f2",
+    "LICENSES/grammar-objective-cpp.txt": "3ee1306ae9a2405064f0b26c0b18b857ec0488b9ee7b4874337d22bfd21beb89",
+    "LICENSES/grammar-ocaml.txt": "32476cbfdcfa178dbe742accfa8868caa2a2b843cac89dfe546b7ade2e7e218d",
+    "LICENSES/grammar-odin.txt": "926a819711a32c5c29a545c826df3adb2b25ae45c15c7185e0ad6459d76d6016",
+    "LICENSES/grammar-openscad.txt": "86108ecce3cc3b1afadc6b32c5b18ea7e27e98aa098c6cfe058b95de86e4f275",
+    "LICENSES/grammar-pascal.txt": "7c83954b0e3ae6cb68bb4e9ce5c08e2841164c0c7d0374a6c00189db83c5c9d9",
+    "LICENSES/grammar-perl.txt": "fbc1356aa15bf3a5d23bebcbcc6542dbaf2842a6fabb215deba6b9b9cc9141c4",
+    "LICENSES/grammar-php.txt": "a549c2a14cc5c0d72271e0e8f6877cf9f9cbc99f0f950cd96c9c525b7feeb7c3",
+    "LICENSES/grammar-pkl.txt": "08e8f0aaa5dc0450cc4b3fea7283c21c63839614fb3f9bc73c538e6ba8f418fd",
+    "LICENSES/grammar-plsql.txt": "d2a847921d3cba94b28da2653c23dc2d8b73728e00a740fe4d5a3cc1e23ef460",
+    "LICENSES/grammar-polar.txt": "e4559f01235014308de150f56c971ba21a5341bbcbf1d78f936dc95d351e9f10",
+    "LICENSES/grammar-postcss.txt": "3eb662a10115087000c10bbd343ca1432c8a64ef39cd560f834d3520daab4cb8",
+    "LICENSES/grammar-powerquery.txt": "9a2bfe8322e6c41b1506cb37ba8bac0d05658dc277c8b802901c1768dc08299c",
+    "LICENSES/grammar-powershell.txt": "168a79f9859babda3c1bfbf1fcdbf749669605ef9ffdf860bcf41cdf82d6654f",
+    "LICENSES/grammar-prisma.txt": "42be26bb2707c3a1206c077b9d02817e475bdeafc3af573e9c8038ee67ac8f4e",
+    "LICENSES/grammar-prolog.txt": "8fc29feeb37132f02cab658c08d08f94dd4f32eb221f4f12afac173e28e6f05d",
+    "LICENSES/grammar-proto.txt": "3252730b68bd18e7835dd7e9ced326b3fca902cbe0d5c678280f8a9720978082",
+    "LICENSES/grammar-pug.txt": "8b914d6b09984766a5bae4b6b0af5c23329d22fe597b4b6ceda34e5c347ae335",
+    "LICENSES/grammar-puppet.txt": "cde4ef35967638afe239027518ac1fd3700fd8138695f0b3ad105ac3ed6d2864",
+    "LICENSES/grammar-python.txt": "ae0bfe19dd4d639876a1416db7fd23da928dd4004d5faf4bf171ae4104fc438e",
+    "LICENSES/grammar-qml.txt": "c2d0adda7d74bd9677adeeb93ebb93ca75bc98b1fde489254ca7e834054c3627",
+    "LICENSES/grammar-qmldir.txt": "1b4b937fcee5476f7a0791827cb3112e67263b91395e51ecd4983a56a9b563cd",
+    "LICENSES/grammar-qss.txt": "ff4deaf1afcce069b936c335d2c390510cd92dc77c17f7627a15d3b610651f00",
+    "LICENSES/grammar-r.txt": "72cc9e79e4ddc9599835cb27fe79e93a9ce0040ed6e0e406d3d94c42a5ac8401",
+    "LICENSES/grammar-raku.txt": "caa831f6cd6a5dc0589fd5ebfeed0ff2cbd01422e521b60f36d4bae5a53a16aa",
+    "LICENSES/grammar-razor.txt": "e7c164a8de555801966d50b5e053b6d0ec8edb9c163c329d01c08e6860fe473b",
+    "LICENSES/grammar-rbs.txt": "b201f4788595d4af62f5b52366758c39e1e95603db8abcac8540170afe1f4a1c",
+    "LICENSES/grammar-reg.txt": "b1d0c01c8efddc7a66abdb595759ae4e666789c77ed76bb7a32898c988f4d7f1",
+    "LICENSES/grammar-regexp.txt": "714e24d4d932fdf84bfb0c00f3f98d7b6383355ab935b65a41624c87c2ab10ec",
+    "LICENSES/grammar-riscv.txt": "b1a49275c2acd9e38aa80e1dcf378b9c8046ce7b1bf541891deb4d8d39cc5a32",
+    "LICENSES/grammar-ron.txt": "e0569c2b8c40f1d024bf658f3e5beade1fc76cd2fad9fbce040052dea6ab0f55",
+    "LICENSES/grammar-rosmsg.txt": "4f2ae4c1ce60e023cf7be51b0d0077712411e9779dbaeedbe55176a43384aa16",
+    "LICENSES/grammar-rst.txt": "4cafe27133039d409b43748ad9e3be3dbb654b704efdf45342f36b8ec89e6a7b",
+    "LICENSES/grammar-ruby.txt": "481bb1363cd6f92b4859d285e47b218c3031064de69562151f2345405252a474",
+    "LICENSES/grammar-rust.txt": "d5b71cd3b14896989ed217f99693836f12f0e58d682fa5c8b2f2b51a33d66e3c",
+    "LICENSES/grammar-sas.txt": "5b0b0edaaeab202f89bae5ee6ecc3ce9ada391f6a2efc22ad1a30b17c42ddaa4",
+    "LICENSES/grammar-scala.txt": "50172edc69b0b665ac65ed9e618beb514e4371f381679c8be779fb2644e9268d",
+    "LICENSES/grammar-scheme.txt": "2849319610a755dc8211ae016154fc5a4ea36637c1f2bb866c071cbc02372c20",
+    "LICENSES/grammar-scss.txt": "bc3362ca73bf6a45281c75ca28c4769a8bcdcc3dce6e9db468e00ab096a8404d",
+    "LICENSES/grammar-sdbl.txt": "3eec53f5da5aaf8d9568e33af11bd24f4e97295952182d6f18b069ee388be9bd",
+    "LICENSES/grammar-shaderlab.txt": "261813f376b19cd33dd13c30ba117e2cb97ca4d7594d2ac5e4dd0d4ee39c7623",
+    "LICENSES/grammar-shellscript.txt": "b49981d92d2c5b84067c19e9d8290966e6887a9b19b5291d28572b4a04f99137",
+    "LICENSES/grammar-shellsession.txt": "947faf1dde15ac76b141d09bf80d1d5ea37d3bafe4cb5cb11757112e76de4c89",
+    "LICENSES/grammar-smalltalk.txt": "590ab63200fcab309ef12a4fe148d00edea4c6f5f4aa46ac96c6182208e2b015",
+    "LICENSES/grammar-smithy.txt": "d61df12c04c885b6d9b1696b156ec459e520d0d75d2742b61cbfc411f50090f1",
+    "LICENSES/grammar-solidity.txt": "f6d31634378a1f651af11b91ebf71ace2721d6096c6f3b5183245792a9a864c0",
+    "LICENSES/grammar-soy.txt": "df709b4b1315c741d3c5c810c6738da3fdfc184f7dcf7f9883a35e24e58282cc",
+    "LICENSES/grammar-splunk.txt": "a92d482dfb0aa890cd98b96be7071ebbc816d326916b8c84f08805339ebe87ac",
+    "LICENSES/grammar-sql.txt": "412cce99411deff9d334a787e98a76dcaf5d7c3215692cbfcb2f680d1ed56dd5",
+    "LICENSES/grammar-stata.txt": "5b6e11e2d7225f460d34753c0e3bea3673457a8eec60d82ccfe9779dcb5d5581",
+    "LICENSES/grammar-stylus.txt": "66e8d03e8191c31084f3ae65542db82b7dd19db660f15aeab0aa986cc6f7d946",
+    "LICENSES/grammar-surrealql.txt": "ef4817e0644ec7381df16a1949aca2b3538f4cbe57953fbc6f547e658b0a6d1d",
+    "LICENSES/grammar-svelte.txt": "5e81c1117cb15f27fedc0e2da7c9ad45294a8e57c8003d42fa36c7645edecabb",
+    "LICENSES/grammar-swift.txt": "fb602cc9c837c2867fa8e89f8dd3097a52caa211453dad68bc51ade840ccc186",
+    "LICENSES/grammar-system-verilog.txt": "c04b9a2a5e1fac5594e4094de11011d5883bd2f3c0a3e53e78c128077324f232",
+    "LICENSES/grammar-systemd.txt": "63017203f0259d2605bcce1a54922ded4cea6b22a845cd733f33991e537a123d",
+    "LICENSES/grammar-talonscript.txt": "51812ddb60a737b6d501e75199b06e797284f42bd46e3927db526d6b2a02bc65",
+    "LICENSES/grammar-tasl.txt": "07f78a7595e9bae37f934c91c4957c6382ff10aacbce2a161badab6e8ff84abb",
+    "LICENSES/grammar-templ.txt": "da082e89b70ded70ffc6dcc1b96002e9881b1cbe11a04383cd1e838da437361a",
+    "LICENSES/grammar-tex.txt": "901ece8dde6139a192124744c99c25ab14085aad20e3f03ce31d5b6526789bbb",
+    "LICENSES/grammar-tsv.txt": "a0d36dabd0cccfaa80b5ab64ec7d0e4a41a0fe2cd55cf864fadec6b3d23998db",
+    "LICENSES/grammar-tsx.txt": "fd07a82b9414f86c0cc269c184d171b9c308c5408bf2347d71c009a1a660fd4c",
+    "LICENSES/grammar-twig.txt": "221e19b4635ca415f3bf579c6924f372369218c209f2435268489c950abd5c55",
+    "LICENSES/grammar-typescript.txt": "1d4e416579e245da21b6bcb3ba6a9b7d5c9375ef5fbd29d05f0d53928378b48e",
+    "LICENSES/grammar-typespec.txt": "ecaa6e513b91caa4692a8f5836bc48ee5027c145938157f6e99e7431fe8015cd",
+    "LICENSES/grammar-typst.txt": "2527d708b2ce2ad6deeb2aea9e8909bf21d34104aafa42a1d5f14de0b93f6f7d",
+    "LICENSES/grammar-v.txt": "9af29a6caf12db9da72c7eed7feb451ddb8d469d2a2393909c121e476960a239",
+    "LICENSES/grammar-vala.txt": "8433946b6a13e4d9066830c2439057bb12f4df176b65628526ff1fe954b33b56",
+    "LICENSES/grammar-vb.txt": "cc93e767a2b3a363af627b6a21a1496828716c5967d4e8634280f8a3d8ec1658",
+    "LICENSES/grammar-verilog.txt": "4de0df85f512b93ed98b06a6d025b3bf726daa7be16cd365679f20306fda5052",
+    "LICENSES/grammar-vhdl.txt": "fd7a5b82b2042ff89ea8329d14a8ecc1c55f95813bf519aea095b8d1cc8b1196",
+    "LICENSES/grammar-viml.txt": "035c981d68b116c6ad8216bfb2190d1ffb06db4258aa23c560cb9eb7a3829236",
+    "LICENSES/grammar-vue-directives.txt": "5f17d5287e24dca865255808a9f702001fbe15c43043f7becc755d395de70833",
+    "LICENSES/grammar-vue-html.txt": "85099f76d30a1db66d7b397fed96eee9951700078157ebe2e2c4b6392f53a90b",
+    "LICENSES/grammar-vue-interpolations.txt": "b250b17ddf51f6170b81d2e2b1fa466f625fbb97fe803168209d26cf31e89164",
+    "LICENSES/grammar-vue-sfc-style-variable-injection.txt": "3fbc039742ba8f225e65e9419bf382126e0a76f5967b1467319b234bd5e43f70",
+    "LICENSES/grammar-vue-vine.txt": "ba15ba59f84a7c4869d352f867a6961d84e7e0e2303e181598cf16f14191c6e9",
+    "LICENSES/grammar-vue.txt": "4c27f3eabd1afeb7d71099ceeeaa1f30bbb586e974b49d72e961dc39b7ee7916",
+    "LICENSES/grammar-vyper.txt": "b61e15ad4828412993b386f9f978ad00a191b0c6be3306bebdb550130b4dfcbd",
+    "LICENSES/grammar-wasm.txt": "afc1b5011468dd99b5ff3dc8ff46524153bb15b1e28fd2a89fb3e1c6a9f673e3",
+    "LICENSES/grammar-wenyan.txt": "af150b6d4453218f182c7749fa1a51fa7d9447124ce7b0bc7731050b798c2e1a",
+    "LICENSES/grammar-wgsl.txt": "247eda6b4d04a279424840eb8e27996ca92402a96662962ca121256f3f6e26d2",
+    "LICENSES/grammar-wikitext.txt": "c5fc55e88d1662250944ddc39566f3d3acdbf9d27031b2456dae0f900c531857",
+    "LICENSES/grammar-wit.txt": "8749b2d750f823e6e681d607f54f0c7b7d0ebf82f849a459a441e96ea38b5f2e",
+    "LICENSES/grammar-xml.txt": "904a94c54d5b82c3b33ab2fd2e1666307b0c196a0ae186a8f949b0b9ce6d66f6",
+    "LICENSES/grammar-xsl.txt": "7a3ecf4b15ab1564e77762d35406acb917b427d4e06fee3d44623c388cf19fa2",
+    "LICENSES/grammar-zenscript.txt": "e4944729f46ca0c6dfc15aaaf5c1a7dc2adf8fc0530b4ffa90245962d6bb1d52",
+    "LICENSES/grammar-zig.txt": "82d3d1ab08d53945a38bb8b8a4874882f53471e0b18fb715e34808ebf5645d09",
+    "LICENSES/package-esbuild.txt": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681",
+    "LICENSES/package-linguist-languages-notices.txt": "58ecab069d8def3a59eac70e251c6f00534889a6a4b1cefc66803c6cc26da2ca",
+    "LICENSES/package-linguist-languages.txt": "bc3c60953044b4ec92a85e49516b03da0ac7f0dde879f5359de700aeab4de0b7",
+    "LICENSES/package-tm-grammars.txt": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee",
+    "LICENSES/package-tm-themes.txt": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee",
+    "LICENSES/package-vscode-oniguruma-notices.txt": "615d94d89eacc046241518c247f6650a5df80d1adf4b284a756f500867620b35",
+    "LICENSES/package-vscode-oniguruma.txt": "ddde8aba8fe72b4830e27901fc78733eb6db7b6c653161075de213a6adeda3fd",
+    "LICENSES/package-vscode-textmate.txt": "b5cb7ff7859e7d282d98fc43ab081b0dda5dc659dc3385cf65740c759a7e6a6c",
+    "LICENSES/theme-andromeeda.txt": "548f486bab8074dabfb3d9de71ecfe360f58b6c9be7af4537a1bcbfae2eefbaa",
+    "LICENSES/theme-ayu-dark.txt": "3300d3919c4b783cf4a61c918bf404ec4ab751ed2e5ca8cfd4577bcd495dbf8d",
+    "LICENSES/theme-ayu-light.txt": "82392775a5b6cee8858071180e76b3700a98891a06c8ade0a8e91c452acf73d0",
+    "LICENSES/theme-ayu-mirage.txt": "68b914b18df134fe414b656eabe65f1ba0ebb887bb63cbc6fca89008272c01a6",
+    "LICENSES/theme-catppuccin-frappe.txt": "9a67017a88d7a0aacd1bbca94fa9147ca2767e913b82c80115620b573df85b32",
+    "LICENSES/theme-catppuccin-latte.txt": "fb6b6d764208f91d0d31d1ea8abf35c5192c71bc9e1f9685ff8149a239439fca",
+    "LICENSES/theme-catppuccin-macchiato.txt": "0908eef32b36dd80bcc9a4b7901c999441ad0125375b42dc862749c414f8f060",
+    "LICENSES/theme-catppuccin-mocha.txt": "91b9358c311b896c673127bda86418da1a24d193cfd082ededa020302923c12d",
+    "LICENSES/theme-dark-plus.txt": "8770cddb0bcea15421a1cd67fe0ff2ba85de743f167eacd5f4e1938b22853086",
+    "LICENSES/theme-dracula-soft.txt": "2585827c61143367301bba432e24a19ab8ebd4aa724bc1f9d0f162b53c65de9c",
+    "LICENSES/theme-dracula.txt": "1241c5320ec9086e185e31ba57aa2529299387a96f88c19bfbb8cb0b61ef92af",
+    "LICENSES/theme-everforest-dark.txt": "86a844b90d1903aa157e5a0f7be60291446ff57e3bad4b53683ca138ba3c08ba",
+    "LICENSES/theme-everforest-light.txt": "48f6f151db06a5889fa008bfe4c39e80631c5ec6956b0145f5c2ea931a0ed400",
+    "LICENSES/theme-github-dark-default.txt": "5a8a63d8a286177d314b42cad4846f5d1d6d09898b417f20c3ba16a0c07beabf",
+    "LICENSES/theme-github-dark-dimmed.txt": "231926236af3020fb7a613cd3db708a62c838621c4e8f5b40fc5e9dfc3192a66",
+    "LICENSES/theme-github-dark-high-contrast.txt": "93b360cb4fdca42538596f700336c06c62d41246e56558008ef494a3362298be",
+    "LICENSES/theme-github-dark.txt": "320d671a48cb92b58e2663bde9eb6e106ad0a16ec018884780efd0eec11cddb3",
+    "LICENSES/theme-github-light-default.txt": "a170750dabb07847d01193139053933372b5772764e0ca8635ea29ba87d14fe8",
+    "LICENSES/theme-github-light-high-contrast.txt": "a0286cc49f7033631b189f1875e39604bb79f0ac565ee803432508118644021e",
+    "LICENSES/theme-github-light.txt": "a2d2ff77fb9aa1d4f6a78130542912cfe58e13d7bfc4206743d77a0c376678f4",
+    "LICENSES/theme-gruvbox-dark-hard.txt": "080d482c38817e04decfbbd15bc7f7c9789b7648207791567d73198618aba843",
+    "LICENSES/theme-gruvbox-dark-medium.txt": "e5af94ec34107a6b6221e4be28c344fc92b94ec49b49a5058908121b95c1b72f",
+    "LICENSES/theme-gruvbox-dark-soft.txt": "7c00a25dff2bc759e95a40dc39cbbdcd22f2a074b4bd696f24b1aee8f8c04f3f",
+    "LICENSES/theme-gruvbox-light-hard.txt": "5b75153efe4311f15ffcc1ccf8002257ccc37974c22c1c18e9fe98229660be7f",
+    "LICENSES/theme-gruvbox-light-medium.txt": "48b2b5c9f427ca299536d4faaa499e539221e88cc8bad84637d828b16af2ddbf",
+    "LICENSES/theme-gruvbox-light-soft.txt": "6d655a44c9d35fdca23d5b815776a4e85dff0575458b8b1909be6da78b1af905",
+    "LICENSES/theme-horizon-bright.txt": "5b3c9560e78841c047af7b9f149813c935dbc0a4cf0255cfe08be9429ca0ab72",
+    "LICENSES/theme-horizon.txt": "ea0ac8555c1bbc909582923181a0b2fc4d3a7af78c25c369aebedd18702da233",
+    "LICENSES/theme-houston.txt": "54056db4a35a4ea4e5ad87bb3f85acc8ec83edc6ecdef459c07e08c72f1e7f76",
+    "LICENSES/theme-kanagawa-dragon.txt": "543a479cd1f1d617343d903c0c3d23fe86d89a91271ecfab1b5ac48c2e5d6747",
+    "LICENSES/theme-kanagawa-lotus.txt": "f6f1eb7ab1aa6127c39cf448cda043eb93635c6e91c5c856c98d0df7277d4b4d",
+    "LICENSES/theme-kanagawa-wave.txt": "6a879cad8da659e48907ef81e6d60fcf4e70db3527e84783188edf4974475b9a",
+    "LICENSES/theme-laserwave.txt": "8b4c295da8cd168c33c6cf87c6b42c2d3c0ae30151ba5f65e8e035344f545364",
+    "LICENSES/theme-light-plus.txt": "12bc75e8e8e20c861b209317d55aa2f4dd7bc677826f791669ea52791302be52",
+    "LICENSES/theme-material-theme-darker.txt": "f0b9ca545192b95aa21b98386420ae0735c4c5b1e2722f1e606ee76933f08fbc",
+    "LICENSES/theme-material-theme-lighter.txt": "d965d935f8abc10dbab6c5c2601ac0c7c1dccecee4fa7e88c8eb2b45c696946d",
+    "LICENSES/theme-material-theme-ocean.txt": "77c10f517188bba7019a1ef58a880ba3098b9bf49a40e2a92024103fff6295b5",
+    "LICENSES/theme-material-theme-palenight.txt": "45a5cdb6f8196067d3c3f351aa6ccfbdb12b2efc55e9a9d1e9dab7d3ccfc3825",
+    "LICENSES/theme-material-theme.txt": "db3ffe487590ba757bb467381e16493588307b8bd48fb9b08ac1882d3be59d6d",
+    "LICENSES/theme-min-dark.txt": "fd34ae8c0cbdde5722fe55a0d85ff63e8920cce105082113b059bb4b28f5e9a1",
+    "LICENSES/theme-min-light.txt": "4706aeb2ce4ad00d782df6ccb1fd9382e27b12664391176d7ea149439ce27dba",
+    "LICENSES/theme-monokai.txt": "f81667ebb2ad119a749667fbfb5faa220b96a3a5c8e5f4359eae08edf588513a",
+    "LICENSES/theme-night-owl-light.txt": "cff24713d3ce19f06e6ed53b4669d1916eb7d028c039d8ff8216274b98faeecb",
+    "LICENSES/theme-night-owl.txt": "68c8a0db6ec539f6ce6474a02e5701db086773281b41fd67f3d3daa9e9eed617",
+    "LICENSES/theme-nord.txt": "ab59a2521e373cb358af7d07cfd0b1ab8944fd64743ea36e3b2bde970e91fbf4",
+    "LICENSES/theme-one-dark-pro.txt": "2563c1a00d9eebf9dd9207868ca1f17b44f99e58324d20739c7f47f379d75185",
+    "LICENSES/theme-one-light.txt": "64e2df6f5184ac200d1b1abaa90b2aa16b4cffddfce0789cdade4936fe24736e",
+    "LICENSES/theme-plastic.txt": "065e05117cd17d3d24dc3a7e0058f91a82b4013fa3fdf6647f0d635580016b90",
+    "LICENSES/theme-poimandres.txt": "dc2aa645715bee64f77f81d68148615befb4cc5f75e64bad4818413a2717cbdb",
+    "LICENSES/theme-red.txt": "aaea8a7e4bade797a62a3c08e9be3078e96130c0d6baf5d14a448751ad52cb7d",
+    "LICENSES/theme-rose-pine-dawn.txt": "819641a037039d738309a9e7901a651f2612b7fe783f21083dbfb0273e226e31",
+    "LICENSES/theme-rose-pine-moon.txt": "98b50a80eacbb0a6f25b1d1640121764b7db5885078d92ecd14fc242c88fd11f",
+    "LICENSES/theme-rose-pine.txt": "cbb2bbe6c2a6ffd6ab6dbdb401124baa7cbed6d8a19dc176fc938ea8009412c3",
+    "LICENSES/theme-slack-dark.txt": "b48d48ae435c855aeec6e8826c07ccc455edf98783635407a1a2f91da941a753",
+    "LICENSES/theme-slack-ochin.txt": "9cb3b218982622d3b267a2140982e8ef95d47ef420e2480347a920e5c2261449",
+    "LICENSES/theme-snazzy-light.txt": "77133f7cafa81e8173cfc9dd24092211e2e1274ce2f73578cc8dfd3eee0f6351",
+    "LICENSES/theme-solarized-dark.txt": "89552c08d5781260cd4a205d42b9f5ce6bf91e9af450620eba1c773c78dcd5a2",
+    "LICENSES/theme-solarized-light.txt": "64fff3c898e9d5e993f51103dc68a204c08d41ee0a3dad042a53707384732a92",
+    "LICENSES/theme-synthwave-84.txt": "8cce11a8feb723a7a5b437dd621cc40e5799876a709f8d875ce6b64b7c79178a",
+    "LICENSES/theme-tokyo-night.txt": "0481389eb3945a841c40c217f308ad349048de195b9b271a244718ad6d70dad9",
+    "LICENSES/theme-vesper.txt": "9dceec7719fd7089c5566797e21df36f496499392316e034eeed7a86cbe05224",
+    "LICENSES/theme-vitesse-black.txt": "988210c8f954c84b572ad15132c24758397524356d8d617d894c1ee8c944ea63",
+    "LICENSES/theme-vitesse-dark.txt": "59d42a15b20fc2822937817be9750faae2008adbeae52aca73d52c370d06f934",
+    "LICENSES/theme-vitesse-light.txt": "e535acb308ef2987c70ea618aff66bff8a1dc5d4b630d024cf1af563def7b272",
+    "grammars/actionscript-3.json": "617a08d5cfe2fe49e9595ead20ef782736818e88f33d43741cb90838a47c6e9f",
+    "grammars/ahk.json": "2ad57e24f70aa2c03030b94dd1be23281aa0098a77406b903651965ce367ca4d",
+    "grammars/angular-expression.json": "0fc8f4c158dccc522d0ad27153e5e63aa4d26f733c25bd54bebb87309f9d9da8",
+    "grammars/angular-html.json": "c65057850a021d5c725c424cb936a9ef5cbfa8cdf28a05261090e0800ef777eb",
+    "grammars/angular-inline-style.json": "733ce2509055659080e36ad58d83eb057242ea8ed7ede118696cc270e7d7e866",
+    "grammars/angular-inline-template.json": "23eeb4a08a3f67a9d40d09a327a8a43621ab054c6fb45eea8eb0ee05b7edd517",
+    "grammars/angular-let-declaration.json": "d68fe60f06ddfbeaeef3168c66999cc5d986668bd489d5783ff2e95d24489005",
+    "grammars/angular-template-blocks.json": "0dbb6a2872a8ea633687db4bb8e5a75064a78fb3628ae809a296920abd4b0615",
+    "grammars/angular-template.json": "67dbbdbb936ff0e9f5fb8cadefc0c33984369872576f45ee13685ec2316a84b5",
+    "grammars/angular-ts.json": "226afba87e11e01ecfd479c6c44858b8de7c87af30f902cab2524d31fc4e4331",
+    "grammars/ara.json": "c61143712af64cb8119b95c7dd2773a58500168f22f93e065c06e09e7af7b576",
+    "grammars/asm.json": "fb2985f84149f8d230ec89d4b09c305b92660b372e6e8295f2a92553f7ad7426",
+    "grammars/astro.json": "570296dd8ce84a7fe5e64dbb95e180a0c1554a9065aeb2868fbedf2eafbb6c97",
+    "grammars/awk.json": "10d61873d5e08a77781a058910d6e17ce5626cd8026012714dfbaafcc2f9f5e6",
+    "grammars/ballerina.json": "08d1179dc57551a0084d4a48a627d1e2d04a5d5673d2f815dd3215d88d021c6a",
+    "grammars/bat.json": "187895f26d25236be6501e8c8d94192ceace95a4f6ae1f47e47fed19103ae904",
+    "grammars/beancount.json": "2d84b71a502299747a1d0a2abf210aa6fc8dfa4386cba7531d7fcbb588a7116e",
+    "grammars/berry.json": "71ce1be49a48ff357f03545f410a76e4b8f51a9b0156169eabd8cfb9867c06ae",
+    "grammars/bibtex.json": "2031f0fe56abab3490a9768ffa6ee94a7c8d05dc1fba8b130effea9d7587136c",
+    "grammars/bicep.json": "42a31507fec15f20372067f7f05bf77bf5d414b96ac36a3a016df024ff8446ad",
+    "grammars/blade.json": "1913ab44249fb5ba7ff5d93828165c7c817cdb8413ab84b1cc36b8ebabf21c4a",
+    "grammars/bsl.json": "e87ca277cc8daa5f1b7e23863e0848dd193e098791a866a33ecc16be91ec6d20",
+    "grammars/c.json": "6a783a491f44106a4c4710b87422bdcd8540ebe6ec2510dfcdcf7df7edd403f9",
+    "grammars/c3.json": "abeba47760cb650ec622bb2f81b13a878a4a2c11440183d045558093d5245bab",
+    "grammars/cadence.json": "d2d5fef00e56f61005590ed953f90f4da53502411a94183939e9f043a8afbf75",
+    "grammars/cairo.json": "63bcccfa07952be82564b438969de40417314cefeed51e73a3f4e40bb21144b6",
+    "grammars/chapel.json": "03b6937c978a6320b5823d1eb11b37a2885831d0e917899ba5524aec3b7b2b99",
+    "grammars/clarity.json": "fbf9bc255029db55bbb7444dd67a55f0a684bfaa99feb99744ed003ad2250174",
+    "grammars/clojure.json": "de03d10ea8a39ba74fda529e0c25c977cfce6a59f3eef8c1224f536a27c984d4",
+    "grammars/cmake.json": "c02ac569fe3d30b1e36ee5ff9f8548b9f10ce6d8ae7338ef867a1133c1c130b3",
+    "grammars/cobol.json": "e4165fee038b07de87049bef3bf3f02f41d4dbe3d99e9f12aaea0c49e685bf3b",
+    "grammars/codeowners.json": "f4a20cbf42bafc1e34f84da7461979bb229bf14506b2539e42cfce5cf12325a0",
+    "grammars/codeql.json": "a970b5ed5568449349aba1a17e0af933e9789eb3e941b886a3944cc6c65a558b",
+    "grammars/coffee.json": "b22b4e8fbbe6a2683f65265aa071c4815646e5b955ee1dd1662d76efb1761104",
+    "grammars/common-lisp.json": "2e0efc1439447982e8f534de23c9c4f2a393c070e602e503f74ba07ccb21b95a",
+    "grammars/coq.json": "00c967655ff6dafee4a474150b749d0b9099e984090b474038557e9955780390",
+    "grammars/cpp-macro.json": "02e157a7c1a96d98a3c8d3b3f3f33719886410de3a6fdbd6e05826ce2987a7e5",
+    "grammars/cpp.json": "6a8899737f618f3ae6da693c782b32d5d1bb7c772ce9994a29b0d332cf8d0c83",
+    "grammars/crystal.json": "e3fc3a4417144fbbdfa5e7fe3bcfd3f3d0b898a20e3fbb941485803a2cc7c9e7",
+    "grammars/csharp.json": "31ffc2468705f77f9dc601c83e496e61b752d15ed7c3f6f6ac43758ca15c8518",
+    "grammars/css.json": "02060a327b550d015f0b9b0c1aff69e87951f9a6b18a1c75e4405d50ee83c95d",
+    "grammars/csv.json": "7b270d9c4ce6c1db8442f682146ddb337f4c245b999b5a81c6287fe0aa2b1eb7",
+    "grammars/cypher.json": "cd00bf1f7383fcd72f7679d268c61c32556cdb32354a80202bf3e0d96606d5bc",
+    "grammars/d.json": "3f9ad1e7119398651dc6ed30f5fcce770b53d566512685548e1a63cc363965df",
+    "grammars/dart.json": "6e4eec104a6881fcb6ae63a318b6b20d560ff44c2a069e541dedd81297c79eee",
+    "grammars/desktop.json": "e7fe0a770ad2e726d5d736fa7cc315105f4486084de3b1664afbba62355f83e7",
+    "grammars/diff.json": "a711eda13cbf7abe386bf729dc088e127613641f2d0d1a28b62a9fece2877756",
+    "grammars/docker.json": "4b407996ccef6df7feae745ed51e82a6a683339022d3a22cf5e5b2ea0a6db75e",
+    "grammars/dotenv.json": "71426f619467549b623ca2ca3bd826a6596d599faaf0f65b808f6d0fc1a815a7",
+    "grammars/edge.json": "b2d4c31946713943b3abdde58ea63c8fa419b1b51cc25306684e9b760c714a01",
+    "grammars/elm.json": "e1f1f560d87dc5148d47f4f71589c88dd1bd2e27c1e265cd35edf919b4bb8ece",
+    "grammars/emacs-lisp.json": "bec5f69637fd69dfbe65811d71aaf0fd0016841fdbaa7b04ec154c59d373bc92",
+    "grammars/erlang.json": "42de67bb8d971786462e99f0c8d59bc9166163dd60655bd9220e1b11dc02f92e",
+    "grammars/es-tag-css.json": "e7ab773b39220851de32dd949cd2d875f9acc49914401b729a0bea0fff9027b4",
+    "grammars/es-tag-glsl.json": "f7475721a2c19e907b97146ef9153ecba8fc948432e0ec203539ca9b6a0288ed",
+    "grammars/es-tag-html.json": "e5e5d8b20bc4ac5a022f3cd541d6ca4de49867e9b845fb8e0db7fc84f5009107",
+    "grammars/es-tag-sql.json": "dbf6329640c027e24a918c76a45463185230b0d7b690352a437d0bd6a15a22a0",
+    "grammars/es-tag-xml.json": "ee89cadce96b92902cf8bd25ca50c26d0b1db92636c76365504433c6b2a96db9",
+    "grammars/fennel.json": "e1bbbd66d2f08396aec83c5f5d83445f825bef2678d65abe877700fdb4d49ade",
+    "grammars/fish.json": "17a34e3a0003c35fe0cca0fc5be36928addfaeabbd04adefcd8083529a61c854",
+    "grammars/fluent.json": "73c7a2e94da069af7f6092cfd9a29775e319e9ef4fdb0bd5eccc2b18bb703366",
+    "grammars/fortran-fixed-form.json": "3476527231cded8daa9f95ef228ea2b370ccb6a3cb54d2816c7cb66eff7b670c",
+    "grammars/fortran-free-form.json": "8f5cdc19cbb98f244521158c0e9e24cbf4d6660ed60c5bd316f1058b17adc54c",
+    "grammars/fsharp.json": "8e4c5c084814e2264771730fb40e2e9919d3c6512031c43cfe7a4f6b0239d955",
+    "grammars/gdresource.json": "1e858e080db64e878ef3d6ea36b61229be9759da33839177714a11abe604a2a3",
+    "grammars/gdscript.json": "69eab8c23ab46c66068eb3644de73d3527a60465b4c2947ee03c7eef6495c955",
+    "grammars/gdshader.json": "197dc28eee040ba1974bb31173cbd9cc35eefa14e1509129834f4f9ebcec6426",
+    "grammars/genie.json": "959113f8405fd5fb8eea778aaf90e571838220edb276ac1f5d9e6774b959f307",
+    "grammars/gherkin.json": "61e128931e5243c24f86afc24191f380ebd231e47854a37d0ae15d82596c6483",
+    "grammars/git-commit.json": "21be35dcd1572e2d08c3d788840475744765c9b9d148e82057a0b68af109cba9",
+    "grammars/git-rebase.json": "d3abee61347a7bafa3623fddb1bbca3707b565e9e32cd7b886ba3ab06de6f504",
+    "grammars/gleam.json": "64ab9915c3e21f9787b4b789ea68c59d2c3cf81fd40df7f1eb87ff7fafca79c5",
+    "grammars/glimmer-js.json": "4c1bcb5c99c4b9b173087c960a82fe715d6ffc7072424497669d7d2e8440c842",
+    "grammars/glimmer-ts.json": "1dda048a83b57ffe159d7147927371bdb9797b81aaf2e4cbcb7398899680bbfe",
+    "grammars/gn.json": "d6276992d21a3493b7ab64f4e1da75d107beb782ffd3138d08351d86a02bf8c9",
+    "grammars/go.json": "ce39c438983c2eb8680c6612fb949598fdf780f79c91711d1380a5cd988a7dd7",
+    "grammars/graphql.json": "f24255a06c7e9e80256fe65e3d8b68505e4a4f20f068007a739219ec386e73c8",
+    "grammars/groovy.json": "1d3f39d1e474ae3bbd92480f9f985fe660d4af5e72b2ef7aee9e3937970bf8be",
+    "grammars/hack.json": "435fb268a4223fc8b6facaa6243be1103bf21b6e9296472f7f3e36ecd2fb818f",
+    "grammars/haml.json": "2ae1dd6bf77a716f4d96a90097c59a3a1548d64d92045a8cc8c19c2a55af5de9",
+    "grammars/handlebars.json": "63410dba62699aa84008274fec2f733461b97b23d948e23cd1831b62c68c76fa",
+    "grammars/haskell.json": "030927a96a7d4ca5548e6d6631efb048617b6098fde26049d87dd7d17221af00",
+    "grammars/haxe.json": "a26d9810c50a1b4775a4562c1b897294d12e7e04aefbe89d948c0659d22ddd41",
+    "grammars/hjson.json": "eee2f1aa3472ed3d3fc82443ace80be33a921dcdd8fb7210e6822c060790d4e8",
+    "grammars/hlsl.json": "451c884bbe6acdd0b94c7564fed3d161746619d47bb71a6de0ca2032ababb428",
+    "grammars/html-derivative.json": "9e90d5770e508d0c8a43004f782014fe0bfa97867e27c06fef46bcc82f0dfe4c",
+    "grammars/html.json": "7538c38e0d1703bae90fb097a0fbc8501bc112ae06f149934ea6464f2c5ddae4",
+    "grammars/http.json": "577c6a4259737bb723f693300e2dc80b868aa34c00ba824a695a9473cf5ac6e1",
+    "grammars/hxml.json": "5b6cee11134d967bb91c0803dbba0804618e422eb64b4804b7aeac8efb8c5dec",
+    "grammars/hy.json": "d5a356367e00a46688b348d186cca39893e15bcde35dfb807e541e1c78d63ff1",
+    "grammars/imba.json": "f244f61f9358ae6fab62c15134dc209a8ba1c7cee72bf294576998cb3d7a1446",
+    "grammars/ini.json": "5b4a4ef9673429f7f13fec73eae543e3e00e1245762aacd89bb1849322338b61",
+    "grammars/java.json": "c2d622b901b19119f2b3469583ef50fe6998788c179c0d3bbd7a0eab019378cb",
+    "grammars/javascript.json": "a30cb0504491961b3d1bc99971daa5c2aedc7387f4782b567e1f0ac47aa83cba",
+    "grammars/jinja-html.json": "6e2c5dff69a40d21cecc2dda253bd453fb96e9d1259294fa1a0052978e429632",
+    "grammars/jinja.json": "f17c9a7064fcf6f1fb7b900b4180650f69505cb53e82123203541c1af26b40a0",
+    "grammars/jison.json": "984b4ec444bdbf651160f6d787ba626c44ae7e7a586e7ded188765704b4b553a",
+    "grammars/json.json": "f726cfcd953e00567c714a93c15a6227ef7bdb92c939cb07217e036ef5716dc0",
+    "grammars/json5.json": "f034701d1180b6e9b05ed45f135a9798790f42a4ca757a5eedf46bf621413fca",
+    "grammars/jsonc.json": "87374ba1bee9a9af779038accbcbe4ecc7c30ae891b2fefcbc411aa88db24cfc",
+    "grammars/jsonl.json": "d9d9f117f348eec4d85e1ea2133b1e07316c566a8cafc151a42da87d1fb28ccc",
+    "grammars/jsonnet.json": "b8d23e7e2736ca5139ff9f61461ddedb7950654b3e1f84d46be38cdad073c8ab",
+    "grammars/jssm.json": "f643722c2aacda4fe77e95469c410565861ba77206534e135adab59dbe24c7c4",
+    "grammars/jsx.json": "e1a2dadc98b5750946aca0a754a974216fb0d7d5d0c9bdb9d9ad19450a56322b",
+    "grammars/julia.json": "95d3eeb8f35d9ea5fe10edb3a6bdb9fb5e6b9363e71965614141993aeabc7893",
+    "grammars/just.json": "9c6ed82a9fef493c9cc7857f44c2b72128153dac9ec5f80f6a47c51056d42d44",
+    "grammars/kdl.json": "f19e3edcd2e8f387a7cd3ee1414e3a0656eed4c675afd1e2bb15c8e84887aec9",
+    "grammars/kotlin.json": "df113ce9452b3938bdee7a18e88f688eb7eb2023607e62dbad46e756c68f7729",
+    "grammars/latex.json": "aab4fa80c27b22be4dfbe68ed55411c13534929b5fa96ba4a8af1d18d749ad53",
+    "grammars/lean.json": "fa48db0d69244fe7556e5201525cf04bb8ee5146d8626deac1989ddff768fb59",
+    "grammars/less.json": "2dcc623cd0f6457b77ce12765db469707d9da44c2033aa63bfb645bc670f44e9",
+    "grammars/liquid.json": "c94cd418d9f839d5dc922c5cc1a9cffb35d4c82c5be56bf64bc823d29fded9de",
+    "grammars/log.json": "41f32399f600df1710db2e417b5160a3c015c71f97ce851bce3068dd6b157860",
+    "grammars/lua.json": "cba0798e8a1155fa81b72d029332e097a6b7b1f2e45eff036adba602d2efea93",
+    "grammars/make.json": "b39266e91f2b7619395e7c164674bb52ecf7c9ce815beb1065297766e1e2af03",
+    "grammars/markdown-nix.json": "3112dca736910793b9fbe583de8d0159873d3b96fa78f766b43db2fbc2d62199",
+    "grammars/markdown-vue.json": "90267df7bb8adc7cc8a9e9dc379f3b7e53f4f5547c80c534c64cb613a05355c2",
+    "grammars/markdown.json": "02f472fd0df82f212be5dfde4d9ee90982885247a884323d8a6c80ecf87114b3",
+    "grammars/marko.json": "bbbd87a18b6a4a8b328049bcba9509be13afc09cac40a7887544bb70c526e5e4",
+    "grammars/mdc.json": "f5188840eede1fdeb22e1bbcb772e560998d8668bb701b69426608eb9de53e52",
+    "grammars/mdx.json": "1b9569f7369728ba9d088a1720121b4f8129441306e8968fdd747a1c3d73d7d6",
+    "grammars/mermaid.json": "00f2399649293bcd4d9557a82d5e414628d4c675f366fbd73a419b53922e76e7",
+    "grammars/mojo.json": "742bbf1145b3bc47391927128c427a27f3f694d62cb4c4b10fecb8bc3984f148",
+    "grammars/moonbit.json": "0f9cf0bfe8609d49144685dd00b4be9d97aa1e4ee91a80ecf2e039ac389fa8a3",
+    "grammars/move.json": "d37f59207665d42415f071b11116c58e815ca06310409aa917e6007168cda985",
+    "grammars/narrat.json": "7aea8b615eba280e7919a2e63c9ce3bd6fa5f45901d9ba5b60dc8570c8d9b6f0",
+    "grammars/nextflow-groovy.json": "02333af8e2fc69b7dff83bd432036048c5829bc28c89db75ed9572b40f2bcbbc",
+    "grammars/nextflow.json": "cac2155ebedb2522f277e1f45d2800b995d72cc2fa39d0b330868c3ce65cb4aa",
+    "grammars/nix.json": "33555de7449551044cf017d1f3c12ee9df1c7f6a7eb2d9b7357eade16f2363af",
+    "grammars/nushell.json": "186d3aa0dd8914008bcd4d2284a92613d35e63cfc67cd868ecd41d5fc21c1674",
+    "grammars/objective-c.json": "b4d74efae95f6320e43e77a7d2f944b6ad08a647ea9818aa846fea89601ece31",
+    "grammars/objective-cpp.json": "6afdca5beb7414f0861cf8b02d688356b60705b4fb3bba793b70b1519f097eb9",
+    "grammars/ocaml.json": "663942ddd7e33be24edf4dd2029642e171a54bb42aeb3074b542fa2b67410a7b",
+    "grammars/odin.json": "547d78475dbe5677c9caf6e6d32701dd9bdf4541eb61a0107d7d87329b8e4c01",
+    "grammars/openscad.json": "9f997b66068ccd2df78a692dbd0d6b1ade1080dfa97dbca235a828626fa5ac04",
+    "grammars/pascal.json": "a7fb5cdb176b58d998c4af0eb61976c2d487201e2691fc2b3cedbb6e2ed1b7a1",
+    "grammars/perl.json": "f13691f0d72752898f390d2dfbf014a43abe493995140986562e91ed99693688",
+    "grammars/php.json": "f2981c0553e5c0b95f11cc5d2435d6022fcf3bf0a2179c4e52407e8b61d7089f",
+    "grammars/pkl.json": "7bd32ba65e24636ac96bbc382eff195c61ef2774db9f30843b4e8dc9f891b479",
+    "grammars/plsql.json": "f1bda1268a547a0b588cc944f6685b94f585cdcf204e96509981d6d671acc09d",
+    "grammars/polar.json": "86403d6999b32c8ce513a64a578032b9d15dc54847109f8e92667d48ea187845",
+    "grammars/postcss.json": "14e9809ba04f4ca03e8f05675f3e56dadfdfb5a4c12263d6935685baae064659",
+    "grammars/powerquery.json": "e73f4b6e59ec522738180f7ac55e458963ecbad0cabe659679bb772d8a57fc9a",
+    "grammars/powershell.json": "4e01664d850d278e259858fd436eb969aae620f70c4d925ffe3c8d0a188c1479",
+    "grammars/prisma.json": "cb83788493581bebd52594eb6f7a7b66edfc869dbc099c1c42e4e655ba42cbd1",
+    "grammars/prolog.json": "490a5743f8a293cd0bb18db7a79701837869f84595520abc04c01f69fbcd9ffc",
+    "grammars/proto.json": "61d8dbdaf915b9628ce53f13e0d467c95db1b263edc827dfd2499745d7f0f9fc",
+    "grammars/pug.json": "98b0c9fe3464e55029a964658a6a701022957df0391006248ae857bc82b96174",
+    "grammars/puppet.json": "6e7a8494e4b619a4efc2018ac86121e816c1e2631fed7eafc0a8beb6aa84fb67",
+    "grammars/python.json": "8b6b4cb21cce413b2f764ef6b71dfae059a77433530f9dd77ea9b5a53af1ee35",
+    "grammars/qml.json": "51471372dd6d2fbe5f08d26b7100b7b5ae8890560b6b9f21c48deb0cc6316972",
+    "grammars/qmldir.json": "dc22b0d9a691e863ffe3ba9ccb32ab7343eb62bb0db537005353d0569974659c",
+    "grammars/qss.json": "d1e706c75c490163dee96ff70e12cebb656dc4a52cc8ef77c15cc9a12440e09b",
+    "grammars/r.json": "87050d7d24035c6d7bc5c7b409e134f85d1dcaf2a5f08ef532fe1e25491c47de",
+    "grammars/raku.json": "30014c56087f97be1c4732dd86ac845d521de27b54264bc205d01d86ee6bfd50",
+    "grammars/razor.json": "e094c40aa157fb020ee9204de9661370cd0851a4c56b30bd19344707ae29f279",
+    "grammars/rbs.json": "198654ecccaa8c7bb2b27e86f24d55eb14e8c5d24a72f2f56caa8437f3cbb579",
+    "grammars/reg.json": "88bdcd8fea9759d67beae18d7f6255a8c66dd2aebaf48f3a18cf2af110bc75f3",
+    "grammars/regexp.json": "87b56f94dc703cea1cd330d4cd088e4944d8df4358b235f2ae867cfb14143f2d",
+    "grammars/riscv.json": "edd55d53350f5f34c37278d75c23c1dcb36dbea5d5c039d4923513c5df88b2f2",
+    "grammars/ron.json": "0862776e3d701003f381f7877e096a4ccc16fe190e492ac78f80b53b6ee2e72c",
+    "grammars/rosmsg.json": "2997167030755ea64c7e88d79241864d1b87d19b1a7886df3b2d20eee2107d62",
+    "grammars/rst.json": "0de16f7839b2057fda5d59bf9c973185e5d596381d779e60131a350fc6d7620b",
+    "grammars/ruby.json": "ff3e48c0958a75e6bbc794978083320f761c9bc3cfe20a6435f479c7be4c78b0",
+    "grammars/rust.json": "e6ecf805e26ea7db8f32dfca38afcf19192cc45c942f7cedfff33889183c548d",
+    "grammars/sas.json": "730592dc6a79b52f65731e083e3228ea5f694a0465155648b5970b43957059e9",
+    "grammars/scala.json": "ac7c4f2cc8b0f79e975048eefb40751ed6435727cac6dd4df07ce949436b1df5",
+    "grammars/scheme.json": "14620ef4a000f89a39f9e6c53301abbb231b686d8b4fc089f2a91ed6d494e4d4",
+    "grammars/scss.json": "35977f043318d4877b31e40064d90028bfeb085e240e72ae0defa167346112bf",
+    "grammars/sdbl.json": "02add596f17115e7bbf80764f2981e135e3b7a6737e985ae34a6128b3dd08ada",
+    "grammars/shaderlab.json": "a1173a39c7ac3b5376606c1457f287a6d42c5c39cf7942fbcc9a97b3ed5fe9a3",
+    "grammars/shellscript.json": "f9a7ca3def50407b4500311cc47275295f6a2d3f9f683f1f0accc3056f0e4cc8",
+    "grammars/shellsession.json": "0a19fe818f6021a6ffdd6768d35c33cc9469deeab9adcc6754039f71e1f39ef4",
+    "grammars/smalltalk.json": "f557c22367520ded3fd0c296e124f3a2f56466a2e12dff9bf38273b97c1d87cf",
+    "grammars/smithy.json": "cb8a779be9c53ab1f14a86ba8a5f1c068a9014351ac0d78c3ff11a138d5b2ae1",
+    "grammars/solidity.json": "3b8236fbb32ac373e43629032d477e773e76f3d5d262090e824c3d9b42d0deab",
+    "grammars/soy.json": "56901c68e495d7d2c96d6da6ca5e9aed7c50c12352102373d17d657590284ae3",
+    "grammars/splunk.json": "3f7a7a37dc07e259eb0c15b8d201b2f0d8fc4d32a6d911a6d0d20f7e93b541fa",
+    "grammars/sql.json": "a79bd625f928c0c2297ee4d96248b30c357e7c33aba8d6cb8d41d6ae801c8758",
+    "grammars/stata.json": "cee50b9b4cad9f9f1a4685384ae7869a2b445e76c5ffa7381a6844827ee6a3cc",
+    "grammars/stylus.json": "39d238fe3c42cd48f150dc0f21bc92beee534585f7026e5b1ef4c445ba797045",
+    "grammars/surrealql.json": "889e98d5adcb1cbe88ef1a8fa12210c1af5923208eaf849916a1037b31ecc196",
+    "grammars/svelte.json": "cf6fdcd8f16b676bee9d727e661718a6e3b7ac4722c13987d94db551a7d183d5",
+    "grammars/swift.json": "1bb401139dda5ef99bc39dc1719ffeefcb3ba4c2ad6a72457e2b3ff8248e86f9",
+    "grammars/system-verilog.json": "26b3ef7f1bbe16faff89f8059e590667078628fdccb641ca3c02b35082bd265e",
+    "grammars/systemd.json": "6bc98263dec1c7365221ab9488b2dc547f06f2997b195db91c2c1e922913b123",
+    "grammars/talonscript.json": "281d25bf296a66728878265b732d01d0d7fd06e1aecdb2c69a52b945d5994c03",
+    "grammars/tasl.json": "e8d2ce8082be37c7021bf5a173e5ae277143ddb64050bb8ad703a282c13fa205",
+    "grammars/templ.json": "8e4d5ba677ec70c2376d672a1523e45ac716b77591b6b23894f7cb22d85cc2a9",
+    "grammars/tex.json": "5a6795ecb5dcc0bccc65ed86b9beebbd1410c80fc92e325041ba974fe6f19b77",
+    "grammars/tsv.json": "16ecf93386f646cdb792c5cde49ce05ed397ca9e5eb55bfa262943dc43f62fc5",
+    "grammars/tsx.json": "367120b5adb2fe51f4c4b3edcab86e569e5a1e2a6c3652e318ba52281033fddd",
+    "grammars/twig.json": "ef429919b88bb9da5fcc40188c40d51611a4fb21571b69e53593d48f0077e5da",
+    "grammars/typescript.json": "e86e45f551919f50ac5e5cf89990c3520877305b35708294de5ae83c9b6ca559",
+    "grammars/typespec.json": "23ace3084f239c237574e53e53b31e8267859422d5360aa65860010d3176c886",
+    "grammars/typst.json": "5cc026431ee28ba576cd67fbdea31b5bf9de6bc4de6c08dd34f642e3b03a55f7",
+    "grammars/v.json": "27e96ecd7a289dcfc9f474c110c8bc91d24ab156bd8ed15630bc6d236003cad0",
+    "grammars/vala.json": "b4e9fbb5d6527685fd7eed19c4267a5af6105ed425b731bb55c08702fc01728d",
+    "grammars/vb.json": "f69b366bee20af30507108d1e4ebf1844114084ea8af19fa704dc011081ba0d5",
+    "grammars/verilog.json": "b82b36604f451426f04efe26f6d83ca27e2f2b6eae8fb3c2ac9beef316bfdfff",
+    "grammars/vhdl.json": "36eb1d1977150f0c4b8d2eaf5c5cc80a3c1089c5f66d2518f79850fb74e302bf",
+    "grammars/viml.json": "56bd0d022416dd0458949fd36ea0e35fb63c049cb8f597c7b77f2f41e660b43d",
+    "grammars/vue-directives.json": "9bb72cafd98da0395423779319c2bb696063c30dd4cbd2219d30db1be3d86593",
+    "grammars/vue-html.json": "c01bbff38118975292729762527dfd3f68cc67ddf4886a3b51675acc24bfd958",
+    "grammars/vue-interpolations.json": "2397d16983e9cc60afcb239833b5ed35c9e48369d435642eff0fc3e64235465e",
+    "grammars/vue-sfc-style-variable-injection.json": "4cf171a65bc6c036ed0d26c7c36c3984a33a57ee9aa6d492905aac21dbc2fa0b",
+    "grammars/vue-vine.json": "6a5274d61e01a5928e4b496613b4be72cf835eac3c5c64bbbaff15219598cae7",
+    "grammars/vue.json": "86b4d7e883cb346849cce467711eb100695d8ab029481f3e1e82e30626c8a185",
+    "grammars/vyper.json": "4c34391c19b7cd5ee8da086e13435b1c0577c0dc7fc8fb45b4ee2a8d3b78fb70",
+    "grammars/wasm.json": "6609162d75e0569dd829b754675695ecb5c02fd27fb290a42f4e8aed6c5197b4",
+    "grammars/wenyan.json": "8bc2aaa23401eb0720eb0eb1d2be0a7b52a1ee78e396a66d394f3d684d2f8623",
+    "grammars/wgsl.json": "7b5f275146ead9da3d0ff8c9bd0a72cc898060c55aa872357fb21cbabbf76aa7",
+    "grammars/wikitext.json": "86dba29565e8a2697a9d7befc6587b1c8b10c742096fa1a9b9f1d9725d2dcaf7",
+    "grammars/wit.json": "c23035ea7b269b51f9bce46732cc7016185b3e825302e2b2c3d4145e85bd7b4c",
+    "grammars/xml.json": "4432e3aa5974256559326a692830cc5b375a21aac895de739e8b0a73a396edf6",
+    "grammars/xsl.json": "bda17f37f2f316482c6d85a9edd4c36819c101904f0de2bdcad0db44b949fdd4",
+    "grammars/zenscript.json": "9794c14bd839a6dfe19274c89bd5d8c3e4d3d99359e0cae55e7175fb4e4095d7",
+    "grammars/zig.json": "109b561fe38adb2bf9961089e42212ed27e160ab4178dfb5ec4c377cbe2a402f",
+    "highlighter.js": "ac1270a43630e390a0a3141ade24618ee02e55548c71a09dd29d655eea733ea4",
+    "languages.json": "12890b310dfac84454ce12d5d1a05e9f261294797e6e3e60b4aaa1a92fa47cea",
+    "onig.wasm": "76ebc1f0d87b2e7449a45ff3cd1a1546a9f05f54bdac44ee03e8a2b8348897be",
+    "themes/andromeeda.json": "7a02578e92e5cf56584107156fda0a64d29a2633296d16c06b0ac03337bcc225",
+    "themes/ayu-dark.json": "d12ec5d45edf0c6dd1b70eafffd1a1990800614dbddcb67ae9722a48bc73afd3",
+    "themes/ayu-light.json": "5ccdc6750d014d51a1ea0b8eedf236d9b6d84dbc91770d653fa040098d3c2b3e",
+    "themes/ayu-mirage.json": "bfcb47de92bb5891ec0d2a324c17a5410680dd790349c39d5b22032a992e1003",
+    "themes/catppuccin-frappe.json": "ceab2a80285c41a3d22a896028c556d2639e944b155061c05d4e8db29860309f",
+    "themes/catppuccin-latte.json": "6f6a644bdfc2f9f726fbe4500019c115dd6a18ba0116357537bcc44ca782d1a5",
+    "themes/catppuccin-macchiato.json": "838fb5a0d482907a558b5a4bf43976b7249e6cbe0c3f6e0074af99ab691192d2",
+    "themes/catppuccin-mocha.json": "43298c436f7527ef2deee6c5af9fbea61f5eaf547f5b36295c00654e87a9bd88",
+    "themes/dark-plus.json": "9defc2bdb15852177f5937bd4b4d5a822c8bc1eeffddb6b741890a887f0683be",
+    "themes/dracula-soft.json": "e03231d5b1b17910a1f71db90b3bdaa6bc4dc0aae9f9d8bba552fbeb7e13bd39",
+    "themes/dracula.json": "f026b056d5321f7e8469fd811ced975d98e0222a2515d27879f149f751763573",
+    "themes/everforest-dark.json": "cd9bf71333f0296d3cb6b83e25cab67356ce9631cba415762719a9232c2f5a98",
+    "themes/everforest-light.json": "5a1d79eb1d563e6d560bf95fc787d1f02e02c74c88ecbc99803e0c180553f281",
+    "themes/github-dark-default.json": "82ed36bb46a16e69056d2b8f67d217bb6e1ae465cc03479548040ef78bde8632",
+    "themes/github-dark-dimmed.json": "d862633306756cdbc299fb7652cb996883067b3f6e1dde36243605f13572c60d",
+    "themes/github-dark-high-contrast.json": "5804aa288ff5efebf57d650be8a65e7020ea444d67feb17ed4371399ee002162",
+    "themes/github-dark.json": "69b7a9693e9814d478a7d1fdafa52c24cb609b0b0832f50c0a415bf988364d91",
+    "themes/github-light-default.json": "6254983def23d3bb79bf10ee0b95b923c810e50242deacb283ee9761093937e8",
+    "themes/github-light-high-contrast.json": "0d5ea6c82c5113f429873170391dea84642e978c497988aad77b9b8b42270ad2",
+    "themes/github-light.json": "711147741f72fc0db072b09a28de8bedb8984997d572cee9c52c47fa409f17d8",
+    "themes/gruvbox-dark-hard.json": "9be0598abfdf9b0e1e0790aed1ff76f39cb752a4d0903c8ec558cce92adff69c",
+    "themes/gruvbox-dark-medium.json": "8d301867af3eb863e1ae289e8657264e244ffbf2c12f4c40cd13635b102f0046",
+    "themes/gruvbox-dark-soft.json": "18af82a9166c19dfb93abf535ac6a50264213440779f23f193a4194b85e41df7",
+    "themes/gruvbox-light-hard.json": "84d9987e9eb3d2cd690a0ba20b265d25cb1d9f9f8907c24d9ab1be6cfd90d7fc",
+    "themes/gruvbox-light-medium.json": "0fee7e7311f0c1c7b15d01cdb327b9651f7220b1702a3bdfcf9b1ead55752d5b",
+    "themes/gruvbox-light-soft.json": "5f2077c4830cda0fc8e325b77ba42bbce1a0c3875ad02f869c3ba10d72e19814",
+    "themes/horizon-bright.json": "a6699c9600647c18f8cc1db8963d8912c08a8e68e5a53f5b3eb15a24465d8d62",
+    "themes/horizon.json": "9efc612d085200c30766c92420382bb4904f7526701d223ef2a17f6a70ab455b",
+    "themes/houston.json": "89b705970a1bde0a9c6b76a9be737851c69fa080fd0ddbf723b78fbf7f5b49e1",
+    "themes/kanagawa-dragon.json": "158319f1b8fa8893522ce960aa17dfa2cdc986caaedd5acc7bc1a6474c15a9ce",
+    "themes/kanagawa-lotus.json": "caa3ec0d80c5bf21693573ba026166220b01aa52f7587d90faba8b89e3dd5ca6",
+    "themes/kanagawa-wave.json": "7efdd421e37c8f7f029317a9747baaa67fae2d5c21d745c21529aac4ffafa734",
+    "themes/laserwave.json": "55b33280084adf04a188073eec8ed6412b800169d18b85bd33e1f0807170d700",
+    "themes/light-plus.json": "704d9d039c566596c85d2d2e0a8e16153b260b3f953278102fbdd70f19cc95ff",
+    "themes/material-theme-darker.json": "c906002a1229bc5e4e699ff7f0913f3429bcd6cf532702a969ac28cde189cfd6",
+    "themes/material-theme-lighter.json": "ff5725bd2d243d2e10028443af828d61d837099660aec8ea7f55048ef26872f9",
+    "themes/material-theme-ocean.json": "ebe798f6238dc9e4a431aeceaafaec484d363ab23f2f74f40966a9e6f511a0fc",
+    "themes/material-theme-palenight.json": "bc9a2a21201b38c23549b77772956d5a190289166635f337ee5dec7aa5b9f6db",
+    "themes/material-theme.json": "211a8e2026c27b1a039bada9e3f06128b01a76c1791d81e7989cb41130d3a32f",
+    "themes/min-dark.json": "cb02499c9e59675edd0a80f83ceace1493deb60b167d6c8b1c65d62364b8dbc2",
+    "themes/min-light.json": "b8b5be2b8e1ba7f8c2e3bfb9aed4b1b87969980a602bec7eb2b14e56e21a64fc",
+    "themes/monokai.json": "bcd0cdc575684ba46db9bbd25769b64b547ca6dff48c831037cbef8589152c5d",
+    "themes/night-owl-light.json": "ca4a996704d562e7eb46cbacdc8e32b128c6118ec79181749566488c8ff4a6ba",
+    "themes/night-owl.json": "dda3b16f82e8cf18c429401a5a07cd5b60253f6b252657c0a7a51a36d1ad74f6",
+    "themes/nord.json": "0ea054997b6bbe5ca17baae04576190ca34ab06e52908d8831a6cca91b49d090",
+    "themes/one-dark-pro.json": "0f56954abb6e00ecab99bea771702b61021927393119042e5998a6c1d793c1fc",
+    "themes/one-light.json": "cd90b4b872605b8bc5bb5c2148927e19f8376ed2740a8100b1c9b525da7cc864",
+    "themes/plastic.json": "dde7dfb791cf32ba9871e1d769f6bf025847f67eba028baa59ba082bc3091d38",
+    "themes/poimandres.json": "29f90ecf3e070306216868227b38ec81b458d931d2759256064abc05600cf817",
+    "themes/red.json": "33efae69dc386d58c1f147ab6ef6d4282537d749bb9f1631779941148cfdd064",
+    "themes/rose-pine-dawn.json": "9553200699233f23be58851bdd5deac89cdc23a0112bf15910993869c38c15a2",
+    "themes/rose-pine-moon.json": "d482cd50102dfd156a795b476b1796a8abe2584d8dbb58e0e1e697fed0e34bf4",
+    "themes/rose-pine.json": "e7a308d28bd7328696448e134057c1a9be2f11554b3d6ea7ad0800804d47b7c8",
+    "themes/slack-dark.json": "8934af48cc12a75afaf8a84d52e94624c9bf83cbf0c774eb2b6542bbf3d98240",
+    "themes/slack-ochin.json": "84c17b25450fbe2730bd95554ce02981b00b4188f1fef5de37bc916490c7fda3",
+    "themes/snazzy-light.json": "2d5fb123df63a346aa768d19970969319bbb7ec90e9aa23f123b51bac96df08a",
+    "themes/solarized-dark.json": "18722528df8096876cdf5bd14757258501d110cd2f1b3c81f1980e84644870d8",
+    "themes/solarized-light.json": "db52161495a913cef4bd82b9b31e161fb97972a62544e171d76a71cb2f7c778e",
+    "themes/synthwave-84.json": "72fbd749421a297dcb8f5c05b81b48cbb2755dc2e102b4f7595def76b76227f1",
+    "themes/tokyo-night.json": "b77b29c07cceabd70495101d64f1acd350965be209fc13f33ec246cc5f06da01",
+    "themes/vesper.json": "49941f05b0071448272bdd7b2739af5dd954d81c706df6e9965506bcd0b397b6",
+    "themes/vitesse-black.json": "300c2bc38cb890b7c37c1a7ba473ef1256309cd12dc3679d30f5e8e1259aa494",
+    "themes/vitesse-dark.json": "fde16183d942cc7beb22b8bb19e41fcd203656e0ee151e7af8fea703c2a0db22",
+    "themes/vitesse-light.json": "4af3c41a3e41a78cf0105066f40482764c0bedaa28045267675662b1b5b31581"
+  },
+  "grammars": [
+    {
+      "license": "Apache-2.0",
+      "name": "actionscript-3",
+      "scopeName": "source.actionscript.3"
+    },
+    {
+      "license": "MIT",
+      "name": "ahk",
+      "scopeName": "source.ahk"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-expression",
+      "scopeName": "expression.ng"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-html",
+      "scopeName": "text.html.derivative.ng"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-inline-style",
+      "scopeName": "inline-styles.ng"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-inline-template",
+      "scopeName": "inline-template.ng"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-let-declaration",
+      "scopeName": "template.let.ng"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-template-blocks",
+      "scopeName": "template.blocks.ng"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-template",
+      "scopeName": "template.ng"
+    },
+    {
+      "license": "MIT",
+      "name": "angular-ts",
+      "scopeName": "source.ts.ng"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "ara",
+      "scopeName": "source.ara"
+    },
+    {
+      "license": "MIT",
+      "name": "asm",
+      "scopeName": "source.asm.x86_64"
+    },
+    {
+      "license": "MIT",
+      "name": "astro",
+      "scopeName": "source.astro"
+    },
+    {
+      "license": "MIT",
+      "name": "awk",
+      "scopeName": "source.awk"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "ballerina",
+      "scopeName": "source.ballerina"
+    },
+    {
+      "license": "MIT",
+      "name": "bat",
+      "scopeName": "source.batchfile"
+    },
+    {
+      "license": "MIT",
+      "name": "beancount",
+      "scopeName": "text.beancount"
+    },
+    {
+      "license": "MIT",
+      "name": "berry",
+      "scopeName": "source.berry"
+    },
+    {
+      "license": "MIT",
+      "name": "bibtex",
+      "scopeName": "text.bibtex"
+    },
+    {
+      "license": "MIT",
+      "name": "bicep",
+      "scopeName": "source.bicep"
+    },
+    {
+      "license": "MIT",
+      "name": "blade",
+      "scopeName": "text.html.php.blade"
+    },
+    {
+      "license": "MIT",
+      "name": "bsl",
+      "scopeName": "source.bsl"
+    },
+    {
+      "license": "MIT",
+      "name": "c",
+      "scopeName": "source.c"
+    },
+    {
+      "license": "MIT",
+      "name": "c3",
+      "scopeName": "source.c3"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "cadence",
+      "scopeName": "source.cadence"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "cairo",
+      "scopeName": "source.cairo0"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "chapel",
+      "scopeName": "source.chapel"
+    },
+    {
+      "license": "MIT",
+      "name": "clarity",
+      "scopeName": "source.clar"
+    },
+    {
+      "license": "MIT",
+      "name": "clojure",
+      "scopeName": "source.clojure"
+    },
+    {
+      "license": "MIT",
+      "name": "cmake",
+      "scopeName": "source.cmake"
+    },
+    {
+      "license": "MIT",
+      "name": "cobol",
+      "scopeName": "source.cobol"
+    },
+    {
+      "license": "MIT",
+      "name": "codeowners",
+      "scopeName": "text.codeowners"
+    },
+    {
+      "license": "MIT",
+      "name": "codeql",
+      "scopeName": "source.ql"
+    },
+    {
+      "license": "MIT",
+      "name": "coffee",
+      "scopeName": "source.coffee"
+    },
+    {
+      "license": "MIT",
+      "name": "common-lisp",
+      "scopeName": "source.commonlisp"
+    },
+    {
+      "license": "MIT",
+      "name": "coq",
+      "scopeName": "source.rocq"
+    },
+    {
+      "license": "MIT",
+      "name": "cpp-macro",
+      "scopeName": "source.cpp.embedded.macro"
+    },
+    {
+      "license": "MIT",
+      "name": "cpp",
+      "scopeName": "source.cpp"
+    },
+    {
+      "license": "MIT",
+      "name": "crystal",
+      "scopeName": "source.crystal"
+    },
+    {
+      "license": "MIT",
+      "name": "csharp",
+      "scopeName": "source.cs"
+    },
+    {
+      "license": "MIT",
+      "name": "css",
+      "scopeName": "source.css"
+    },
+    {
+      "license": "MIT",
+      "name": "csv",
+      "scopeName": "text.csv"
+    },
+    {
+      "license": "MIT",
+      "name": "cypher",
+      "scopeName": "source.cypher"
+    },
+    {
+      "license": "MIT",
+      "name": "d",
+      "scopeName": "source.d"
+    },
+    {
+      "license": "MIT",
+      "name": "dart",
+      "scopeName": "source.dart"
+    },
+    {
+      "license": "MIT",
+      "name": "desktop",
+      "scopeName": "source.desktop"
+    },
+    {
+      "license": "MIT",
+      "name": "diff",
+      "scopeName": "source.diff"
+    },
+    {
+      "license": "MIT",
+      "name": "docker",
+      "scopeName": "source.dockerfile"
+    },
+    {
+      "license": "MIT",
+      "name": "dotenv",
+      "scopeName": "source.dotenv"
+    },
+    {
+      "license": "MIT",
+      "name": "edge",
+      "scopeName": "text.html.edge"
+    },
+    {
+      "license": "MIT",
+      "name": "elm",
+      "scopeName": "source.elm"
+    },
+    {
+      "license": "ISC",
+      "name": "emacs-lisp",
+      "scopeName": "source.emacs.lisp"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "erlang",
+      "scopeName": "source.erlang"
+    },
+    {
+      "license": "MIT",
+      "name": "es-tag-css",
+      "scopeName": "inline.es6-css"
+    },
+    {
+      "license": "MIT",
+      "name": "es-tag-glsl",
+      "scopeName": "inline.es6-glsl"
+    },
+    {
+      "license": "MIT",
+      "name": "es-tag-html",
+      "scopeName": "inline.es6-html"
+    },
+    {
+      "license": "MIT",
+      "name": "es-tag-sql",
+      "scopeName": "inline.tagged-template-sql"
+    },
+    {
+      "license": "MIT",
+      "name": "es-tag-xml",
+      "scopeName": "inline.es6-xml"
+    },
+    {
+      "license": "MIT",
+      "name": "fennel",
+      "scopeName": "source.fnl"
+    },
+    {
+      "license": "MIT",
+      "name": "fish",
+      "scopeName": "source.fish"
+    },
+    {
+      "license": "MIT",
+      "name": "fluent",
+      "scopeName": "source.ftl"
+    },
+    {
+      "license": "MIT",
+      "name": "fortran-fixed-form",
+      "scopeName": "source.fortran.fixed"
+    },
+    {
+      "license": "MIT",
+      "name": "fortran-free-form",
+      "scopeName": "source.fortran.free"
+    },
+    {
+      "license": "MIT",
+      "name": "fsharp",
+      "scopeName": "source.fsharp"
+    },
+    {
+      "license": "MIT",
+      "name": "gdresource",
+      "scopeName": "source.gdresource"
+    },
+    {
+      "license": "MIT",
+      "name": "gdscript",
+      "scopeName": "source.gdscript"
+    },
+    {
+      "license": "MIT",
+      "name": "gdshader",
+      "scopeName": "source.gdshader"
+    },
+    {
+      "license": "MIT",
+      "name": "genie",
+      "scopeName": "source.genie"
+    },
+    {
+      "license": "MIT",
+      "name": "gherkin",
+      "scopeName": "text.gherkin.feature"
+    },
+    {
+      "license": "MIT",
+      "name": "git-commit",
+      "scopeName": "text.git-commit"
+    },
+    {
+      "license": "MIT",
+      "name": "git-rebase",
+      "scopeName": "text.git-rebase"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gleam",
+      "scopeName": "source.gleam"
+    },
+    {
+      "license": "MIT",
+      "name": "glimmer-js",
+      "scopeName": "source.gjs"
+    },
+    {
+      "license": "MIT",
+      "name": "glimmer-ts",
+      "scopeName": "source.gts"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gn",
+      "scopeName": "source.gn"
+    },
+    {
+      "license": "MIT",
+      "name": "go",
+      "scopeName": "source.go"
+    },
+    {
+      "license": "MIT",
+      "name": "graphql",
+      "scopeName": "source.graphql"
+    },
+    {
+      "license": "MIT",
+      "name": "groovy",
+      "scopeName": "source.groovy"
+    },
+    {
+      "license": "MIT",
+      "name": "hack",
+      "scopeName": "source.hack"
+    },
+    {
+      "license": "MIT",
+      "name": "haml",
+      "scopeName": "text.haml"
+    },
+    {
+      "license": "MIT",
+      "name": "handlebars",
+      "scopeName": "text.html.handlebars"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "haskell",
+      "scopeName": "source.haskell"
+    },
+    {
+      "license": "MIT",
+      "name": "haxe",
+      "scopeName": "source.hx"
+    },
+    {
+      "license": "MIT",
+      "name": "hjson",
+      "scopeName": "source.hjson"
+    },
+    {
+      "license": "MIT",
+      "name": "hlsl",
+      "scopeName": "source.hlsl"
+    },
+    {
+      "license": "MIT",
+      "name": "html-derivative",
+      "scopeName": "text.html.derivative"
+    },
+    {
+      "license": "MIT",
+      "name": "html",
+      "scopeName": "text.html.basic"
+    },
+    {
+      "license": "MIT",
+      "name": "http",
+      "scopeName": "source.http"
+    },
+    {
+      "license": "MIT",
+      "name": "hxml",
+      "scopeName": "source.hxml"
+    },
+    {
+      "license": "MIT",
+      "name": "hy",
+      "scopeName": "source.hy"
+    },
+    {
+      "license": "MIT",
+      "name": "imba",
+      "scopeName": "source.imba"
+    },
+    {
+      "license": "MIT",
+      "name": "ini",
+      "scopeName": "source.ini"
+    },
+    {
+      "license": "MIT",
+      "name": "java",
+      "scopeName": "source.java"
+    },
+    {
+      "license": "MIT",
+      "name": "javascript",
+      "scopeName": "source.js"
+    },
+    {
+      "license": "MIT",
+      "name": "jinja-html",
+      "scopeName": "text.html.jinja"
+    },
+    {
+      "license": "MIT",
+      "name": "jinja",
+      "scopeName": "source.jinja"
+    },
+    {
+      "license": "MIT",
+      "name": "jison",
+      "scopeName": "source.jison"
+    },
+    {
+      "license": "MIT",
+      "name": "json",
+      "scopeName": "source.json"
+    },
+    {
+      "license": "MIT",
+      "name": "json5",
+      "scopeName": "source.json5"
+    },
+    {
+      "license": "MIT",
+      "name": "jsonc",
+      "scopeName": "source.json.comments"
+    },
+    {
+      "license": "MIT",
+      "name": "jsonl",
+      "scopeName": "source.json.lines"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "jsonnet",
+      "scopeName": "source.jsonnet"
+    },
+    {
+      "license": "MIT",
+      "name": "jssm",
+      "scopeName": "source.jssm"
+    },
+    {
+      "license": "MIT",
+      "name": "jsx",
+      "scopeName": "source.js.jsx"
+    },
+    {
+      "license": "MIT",
+      "name": "julia",
+      "scopeName": "source.julia"
+    },
+    {
+      "license": "MIT",
+      "name": "just",
+      "scopeName": "source.just"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "kdl",
+      "scopeName": "source.kdl"
+    },
+    {
+      "license": "MIT",
+      "name": "kotlin",
+      "scopeName": "source.kotlin"
+    },
+    {
+      "license": "MIT",
+      "name": "latex",
+      "scopeName": "text.tex.latex"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "lean",
+      "scopeName": "source.lean4"
+    },
+    {
+      "license": "MIT",
+      "name": "less",
+      "scopeName": "source.css.less"
+    },
+    {
+      "license": "MIT",
+      "name": "liquid",
+      "scopeName": "text.html.liquid"
+    },
+    {
+      "license": "MIT",
+      "name": "log",
+      "scopeName": "text.log"
+    },
+    {
+      "license": "MIT",
+      "name": "lua",
+      "scopeName": "source.lua"
+    },
+    {
+      "license": "MIT",
+      "name": "make",
+      "scopeName": "source.makefile"
+    },
+    {
+      "license": "MIT",
+      "name": "markdown-nix",
+      "scopeName": "markdown.nix.codeblock"
+    },
+    {
+      "license": "MIT",
+      "name": "markdown-vue",
+      "scopeName": "markdown.vue.codeblock"
+    },
+    {
+      "license": "MIT",
+      "name": "markdown",
+      "scopeName": "text.html.markdown"
+    },
+    {
+      "license": "MIT",
+      "name": "marko",
+      "scopeName": "text.marko"
+    },
+    {
+      "license": "MIT",
+      "name": "mdc",
+      "scopeName": "text.markdown.mdc.standalone"
+    },
+    {
+      "license": "MIT",
+      "name": "mdx",
+      "scopeName": "source.mdx"
+    },
+    {
+      "license": "MIT",
+      "name": "mermaid",
+      "scopeName": "markdown.mermaid.codeblock"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "mojo",
+      "scopeName": "source.mojo"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "moonbit",
+      "scopeName": "source.moonbit"
+    },
+    {
+      "license": "MIT",
+      "name": "move",
+      "scopeName": "source.move"
+    },
+    {
+      "license": "MIT",
+      "name": "narrat",
+      "scopeName": "source.narrat"
+    },
+    {
+      "license": "MIT",
+      "name": "nextflow-groovy",
+      "scopeName": "source.nextflow-groovy"
+    },
+    {
+      "license": "MIT",
+      "name": "nextflow",
+      "scopeName": "source.nextflow"
+    },
+    {
+      "license": "MIT",
+      "name": "nix",
+      "scopeName": "source.nix"
+    },
+    {
+      "license": "MIT",
+      "name": "nushell",
+      "scopeName": "source.nushell"
+    },
+    {
+      "license": "MIT",
+      "name": "objective-c",
+      "scopeName": "source.objc"
+    },
+    {
+      "license": "MIT",
+      "name": "objective-cpp",
+      "scopeName": "source.objcpp"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "ocaml",
+      "scopeName": "source.ocaml"
+    },
+    {
+      "license": "MIT",
+      "name": "odin",
+      "scopeName": "source.odin"
+    },
+    {
+      "license": "MIT",
+      "name": "openscad",
+      "scopeName": "source.scad"
+    },
+    {
+      "license": "MIT",
+      "name": "pascal",
+      "scopeName": "source.pascal"
+    },
+    {
+      "license": "MIT",
+      "name": "perl",
+      "scopeName": "source.perl"
+    },
+    {
+      "license": "MIT",
+      "name": "php",
+      "scopeName": "source.php"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "pkl",
+      "scopeName": "source.pkl"
+    },
+    {
+      "license": "MIT",
+      "name": "plsql",
+      "scopeName": "source.plsql.oracle"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "polar",
+      "scopeName": "source.polar"
+    },
+    {
+      "license": "MIT",
+      "name": "postcss",
+      "scopeName": "source.css.postcss"
+    },
+    {
+      "license": "MIT",
+      "name": "powerquery",
+      "scopeName": "source.powerquery"
+    },
+    {
+      "license": "MIT",
+      "name": "powershell",
+      "scopeName": "source.powershell"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "prisma",
+      "scopeName": "source.prisma"
+    },
+    {
+      "license": "MIT",
+      "name": "prolog",
+      "scopeName": "source.prolog"
+    },
+    {
+      "license": "MIT",
+      "name": "proto",
+      "scopeName": "source.proto"
+    },
+    {
+      "license": "MIT",
+      "name": "pug",
+      "scopeName": "text.pug"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "puppet",
+      "scopeName": "source.puppet"
+    },
+    {
+      "license": "MIT",
+      "name": "python",
+      "scopeName": "source.python"
+    },
+    {
+      "license": "MIT",
+      "name": "qml",
+      "scopeName": "source.qml"
+    },
+    {
+      "license": "MIT",
+      "name": "qmldir",
+      "scopeName": "source.qmldir"
+    },
+    {
+      "license": "MIT",
+      "name": "qss",
+      "scopeName": "source.qss"
+    },
+    {
+      "license": "MIT",
+      "name": "r",
+      "scopeName": "source.r"
+    },
+    {
+      "license": "MIT",
+      "name": "raku",
+      "scopeName": "source.perl.6"
+    },
+    {
+      "license": "MIT",
+      "name": "razor",
+      "scopeName": "text.aspnetcorerazor"
+    },
+    {
+      "license": "MIT",
+      "name": "rbs",
+      "scopeName": "source.rbs"
+    },
+    {
+      "license": "MIT",
+      "name": "reg",
+      "scopeName": "source.reg"
+    },
+    {
+      "license": "MIT",
+      "name": "regexp",
+      "scopeName": "source.regexp.python"
+    },
+    {
+      "license": "MIT",
+      "name": "riscv",
+      "scopeName": "source.riscv"
+    },
+    {
+      "license": "MIT",
+      "name": "ron",
+      "scopeName": "source.ron"
+    },
+    {
+      "license": "MIT",
+      "name": "rosmsg",
+      "scopeName": "source.rosmsg"
+    },
+    {
+      "license": "MIT",
+      "name": "rst",
+      "scopeName": "source.rst"
+    },
+    {
+      "license": "MIT",
+      "name": "ruby",
+      "scopeName": "source.ruby"
+    },
+    {
+      "license": "MIT",
+      "name": "rust",
+      "scopeName": "source.rust"
+    },
+    {
+      "license": "MIT",
+      "name": "sas",
+      "scopeName": "source.sas"
+    },
+    {
+      "license": "MIT",
+      "name": "scala",
+      "scopeName": "source.scala"
+    },
+    {
+      "license": "MIT",
+      "name": "scheme",
+      "scopeName": "source.scheme"
+    },
+    {
+      "license": "MIT",
+      "name": "scss",
+      "scopeName": "source.css.scss"
+    },
+    {
+      "license": "MIT",
+      "name": "sdbl",
+      "scopeName": "source.sdbl"
+    },
+    {
+      "license": "MIT",
+      "name": "shaderlab",
+      "scopeName": "source.shaderlab"
+    },
+    {
+      "license": "MIT",
+      "name": "shellscript",
+      "scopeName": "source.shell"
+    },
+    {
+      "license": "MIT",
+      "name": "shellsession",
+      "scopeName": "text.shell-session"
+    },
+    {
+      "license": "MIT",
+      "name": "smalltalk",
+      "scopeName": "source.smalltalk.gnu"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "smithy",
+      "scopeName": "source.smithy"
+    },
+    {
+      "license": "MIT",
+      "name": "solidity",
+      "scopeName": "source.solidity"
+    },
+    {
+      "license": "MIT",
+      "name": "soy",
+      "scopeName": "text.html.soy"
+    },
+    {
+      "license": "MIT",
+      "name": "splunk",
+      "scopeName": "source.splunk_search"
+    },
+    {
+      "license": "MIT",
+      "name": "sql",
+      "scopeName": "source.sql"
+    },
+    {
+      "license": "MIT",
+      "name": "stata",
+      "scopeName": "source.stata"
+    },
+    {
+      "license": "MIT",
+      "name": "stylus",
+      "scopeName": "source.stylus"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "surrealql",
+      "scopeName": "source.surrealql"
+    },
+    {
+      "license": "MIT",
+      "name": "svelte",
+      "scopeName": "source.svelte"
+    },
+    {
+      "license": "MIT",
+      "name": "swift",
+      "scopeName": "source.swift"
+    },
+    {
+      "license": "MIT",
+      "name": "system-verilog",
+      "scopeName": "source.systemverilog"
+    },
+    {
+      "license": "MIT",
+      "name": "systemd",
+      "scopeName": "source.systemd"
+    },
+    {
+      "license": "MIT",
+      "name": "talonscript",
+      "scopeName": "source.talon"
+    },
+    {
+      "license": "MIT",
+      "name": "tasl",
+      "scopeName": "source.tasl"
+    },
+    {
+      "license": "MIT",
+      "name": "templ",
+      "scopeName": "source.templ"
+    },
+    {
+      "license": "MIT",
+      "name": "tex",
+      "scopeName": "text.tex"
+    },
+    {
+      "license": "MIT",
+      "name": "tsv",
+      "scopeName": "text.tsv"
+    },
+    {
+      "license": "MIT",
+      "name": "tsx",
+      "scopeName": "source.tsx"
+    },
+    {
+      "license": "MIT",
+      "name": "twig",
+      "scopeName": "text.html.twig"
+    },
+    {
+      "license": "MIT",
+      "name": "typescript",
+      "scopeName": "source.ts"
+    },
+    {
+      "license": "MIT",
+      "name": "typespec",
+      "scopeName": "source.tsp"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "typst",
+      "scopeName": "source.typst"
+    },
+    {
+      "license": "MIT",
+      "name": "v",
+      "scopeName": "source.v"
+    },
+    {
+      "license": "MIT",
+      "name": "vala",
+      "scopeName": "source.vala"
+    },
+    {
+      "license": "MIT",
+      "name": "vb",
+      "scopeName": "source.asp.vb.net"
+    },
+    {
+      "license": "MIT",
+      "name": "verilog",
+      "scopeName": "source.verilog"
+    },
+    {
+      "license": "MIT",
+      "name": "vhdl",
+      "scopeName": "source.vhdl"
+    },
+    {
+      "license": "MIT",
+      "name": "viml",
+      "scopeName": "source.viml"
+    },
+    {
+      "license": "MIT",
+      "name": "vue-directives",
+      "scopeName": "vue.directives"
+    },
+    {
+      "license": "MIT",
+      "name": "vue-html",
+      "scopeName": "text.html.vue-html"
+    },
+    {
+      "license": "MIT",
+      "name": "vue-interpolations",
+      "scopeName": "vue.interpolations"
+    },
+    {
+      "license": "MIT",
+      "name": "vue-sfc-style-variable-injection",
+      "scopeName": "vue.sfc.style.variable.injection"
+    },
+    {
+      "license": "MIT",
+      "name": "vue-vine",
+      "scopeName": "source.vue-vine"
+    },
+    {
+      "license": "MIT",
+      "name": "vue",
+      "scopeName": "text.html.vue"
+    },
+    {
+      "license": "MIT",
+      "name": "vyper",
+      "scopeName": "source.vyper"
+    },
+    {
+      "license": "MIT",
+      "name": "wasm",
+      "scopeName": "source.wat"
+    },
+    {
+      "license": "MIT",
+      "name": "wenyan",
+      "scopeName": "source.wenyan"
+    },
+    {
+      "license": "MIT",
+      "name": "wgsl",
+      "scopeName": "source.wgsl"
+    },
+    {
+      "license": "MIT",
+      "name": "wikitext",
+      "scopeName": "source.wikitext"
+    },
+    {
+      "license": "MIT",
+      "name": "wit",
+      "scopeName": "source.wit"
+    },
+    {
+      "license": "MIT",
+      "name": "xml",
+      "scopeName": "text.xml"
+    },
+    {
+      "license": "MIT",
+      "name": "xsl",
+      "scopeName": "text.xml.xsl"
+    },
+    {
+      "license": "MIT",
+      "name": "zenscript",
+      "scopeName": "source.zenscript"
+    },
+    {
+      "license": "MIT",
+      "name": "zig",
+      "scopeName": "source.zig"
+    }
+  ],
+  "themes": [
+    {
+      "displayName": "Andromeeda",
+      "license": "MIT",
+      "name": "andromeeda",
+      "type": "dark"
+    },
+    {
+      "displayName": "Ayu Dark",
+      "license": "MIT",
+      "name": "ayu-dark",
+      "type": "dark"
+    },
+    {
+      "displayName": "Ayu Light",
+      "license": "MIT",
+      "name": "ayu-light",
+      "type": "light"
+    },
+    {
+      "displayName": "Ayu Mirage",
+      "license": "MIT",
+      "name": "ayu-mirage",
+      "type": "dark"
+    },
+    {
+      "displayName": "Catppuccin Frappé",
+      "license": "MIT",
+      "name": "catppuccin-frappe",
+      "type": "dark"
+    },
+    {
+      "displayName": "Catppuccin Latte",
+      "license": "MIT",
+      "name": "catppuccin-latte",
+      "type": "light"
+    },
+    {
+      "displayName": "Catppuccin Macchiato",
+      "license": "MIT",
+      "name": "catppuccin-macchiato",
+      "type": "dark"
+    },
+    {
+      "displayName": "Catppuccin Mocha",
+      "license": "MIT",
+      "name": "catppuccin-mocha",
+      "type": "dark"
+    },
+    {
+      "displayName": "Dark Plus",
+      "license": "MIT",
+      "name": "dark-plus",
+      "type": "dark"
+    },
+    {
+      "displayName": "Dracula Theme",
+      "license": "MIT",
+      "name": "dracula",
+      "type": "dark"
+    },
+    {
+      "displayName": "Dracula Theme Soft",
+      "license": "MIT",
+      "name": "dracula-soft",
+      "type": "dark"
+    },
+    {
+      "displayName": "Everforest Dark",
+      "license": "MIT",
+      "name": "everforest-dark",
+      "type": "dark"
+    },
+    {
+      "displayName": "Everforest Light",
+      "license": "MIT",
+      "name": "everforest-light",
+      "type": "light"
+    },
+    {
+      "displayName": "GitHub Dark",
+      "license": "MIT",
+      "name": "github-dark",
+      "type": "dark"
+    },
+    {
+      "displayName": "GitHub Dark Default",
+      "license": "MIT",
+      "name": "github-dark-default",
+      "type": "dark"
+    },
+    {
+      "displayName": "GitHub Dark Dimmed",
+      "license": "MIT",
+      "name": "github-dark-dimmed",
+      "type": "dark"
+    },
+    {
+      "displayName": "GitHub Dark High Contrast",
+      "license": "MIT",
+      "name": "github-dark-high-contrast",
+      "type": "dark"
+    },
+    {
+      "displayName": "GitHub Light",
+      "license": "MIT",
+      "name": "github-light",
+      "type": "light"
+    },
+    {
+      "displayName": "GitHub Light Default",
+      "license": "MIT",
+      "name": "github-light-default",
+      "type": "light"
+    },
+    {
+      "displayName": "GitHub Light High Contrast",
+      "license": "MIT",
+      "name": "github-light-high-contrast",
+      "type": "light"
+    },
+    {
+      "displayName": "Gruvbox Dark Hard",
+      "license": "MIT",
+      "name": "gruvbox-dark-hard",
+      "type": "dark"
+    },
+    {
+      "displayName": "Gruvbox Dark Medium",
+      "license": "MIT",
+      "name": "gruvbox-dark-medium",
+      "type": "dark"
+    },
+    {
+      "displayName": "Gruvbox Dark Soft",
+      "license": "MIT",
+      "name": "gruvbox-dark-soft",
+      "type": "dark"
+    },
+    {
+      "displayName": "Gruvbox Light Hard",
+      "license": "MIT",
+      "name": "gruvbox-light-hard",
+      "type": "light"
+    },
+    {
+      "displayName": "Gruvbox Light Medium",
+      "license": "MIT",
+      "name": "gruvbox-light-medium",
+      "type": "light"
+    },
+    {
+      "displayName": "Gruvbox Light Soft",
+      "license": "MIT",
+      "name": "gruvbox-light-soft",
+      "type": "light"
+    },
+    {
+      "displayName": "Horizon",
+      "license": "MIT",
+      "name": "horizon",
+      "type": "dark"
+    },
+    {
+      "displayName": "Horizon Bright",
+      "license": "MIT",
+      "name": "horizon-bright",
+      "type": "light"
+    },
+    {
+      "displayName": "Houston",
+      "license": "MIT",
+      "name": "houston",
+      "type": "dark"
+    },
+    {
+      "displayName": "Kanagawa Dragon",
+      "license": "MIT",
+      "name": "kanagawa-dragon",
+      "type": "dark"
+    },
+    {
+      "displayName": "Kanagawa Lotus",
+      "license": "MIT",
+      "name": "kanagawa-lotus",
+      "type": "light"
+    },
+    {
+      "displayName": "Kanagawa Wave",
+      "license": "MIT",
+      "name": "kanagawa-wave",
+      "type": "dark"
+    },
+    {
+      "displayName": "LaserWave",
+      "license": "MIT",
+      "name": "laserwave",
+      "type": "dark"
+    },
+    {
+      "displayName": "Light Plus",
+      "license": "MIT",
+      "name": "light-plus",
+      "type": "light"
+    },
+    {
+      "displayName": "Material Theme",
+      "license": "Apache-2.0",
+      "name": "material-theme",
+      "type": "dark"
+    },
+    {
+      "displayName": "Material Theme Darker",
+      "license": "Apache-2.0",
+      "name": "material-theme-darker",
+      "type": "dark"
+    },
+    {
+      "displayName": "Material Theme Lighter",
+      "license": "Apache-2.0",
+      "name": "material-theme-lighter",
+      "type": "light"
+    },
+    {
+      "displayName": "Material Theme Ocean",
+      "license": "Apache-2.0",
+      "name": "material-theme-ocean",
+      "type": "dark"
+    },
+    {
+      "displayName": "Material Theme Palenight",
+      "license": "Apache-2.0",
+      "name": "material-theme-palenight",
+      "type": "dark"
+    },
+    {
+      "displayName": "Min Dark",
+      "license": "MIT",
+      "name": "min-dark",
+      "type": "dark"
+    },
+    {
+      "displayName": "Min Light",
+      "license": "MIT",
+      "name": "min-light",
+      "type": "light"
+    },
+    {
+      "displayName": "Monokai",
+      "license": "MIT",
+      "name": "monokai",
+      "type": "dark"
+    },
+    {
+      "displayName": "Night Owl",
+      "license": "MIT",
+      "name": "night-owl",
+      "type": "dark"
+    },
+    {
+      "displayName": "Night Owl Light",
+      "license": "MIT",
+      "name": "night-owl-light",
+      "type": "light"
+    },
+    {
+      "displayName": "Nord",
+      "license": "MIT",
+      "name": "nord",
+      "type": "dark"
+    },
+    {
+      "displayName": "One Dark Pro",
+      "license": "MIT",
+      "name": "one-dark-pro",
+      "type": "dark"
+    },
+    {
+      "displayName": "One Light",
+      "license": "MIT",
+      "name": "one-light",
+      "type": "light"
+    },
+    {
+      "displayName": "Plastic",
+      "license": "MIT",
+      "name": "plastic",
+      "type": "dark"
+    },
+    {
+      "displayName": "Poimandres",
+      "license": "MIT",
+      "name": "poimandres",
+      "type": "dark"
+    },
+    {
+      "displayName": "Red",
+      "license": "MIT",
+      "name": "red",
+      "type": "dark"
+    },
+    {
+      "displayName": "Rosé Pine",
+      "license": "MIT",
+      "name": "rose-pine",
+      "type": "dark"
+    },
+    {
+      "displayName": "Rosé Pine Dawn",
+      "license": "MIT",
+      "name": "rose-pine-dawn",
+      "type": "light"
+    },
+    {
+      "displayName": "Rosé Pine Moon",
+      "license": "MIT",
+      "name": "rose-pine-moon",
+      "type": "dark"
+    },
+    {
+      "displayName": "Slack Dark",
+      "license": "MIT",
+      "name": "slack-dark",
+      "type": "dark"
+    },
+    {
+      "displayName": "Slack Ochin",
+      "license": "MIT",
+      "name": "slack-ochin",
+      "type": "light"
+    },
+    {
+      "displayName": "Snazzy Light",
+      "license": "MIT",
+      "name": "snazzy-light",
+      "type": "light"
+    },
+    {
+      "displayName": "Solarized Dark",
+      "license": "MIT",
+      "name": "solarized-dark",
+      "type": "dark"
+    },
+    {
+      "displayName": "Solarized Light",
+      "license": "MIT",
+      "name": "solarized-light",
+      "type": "light"
+    },
+    {
+      "displayName": "Synthwave '84",
+      "license": "MIT",
+      "name": "synthwave-84",
+      "type": "dark"
+    },
+    {
+      "displayName": "Tokyo Night",
+      "license": "MIT",
+      "name": "tokyo-night",
+      "type": "dark"
+    },
+    {
+      "displayName": "Vesper",
+      "license": "MIT",
+      "name": "vesper",
+      "type": "dark"
+    },
+    {
+      "displayName": "Vitesse Black",
+      "license": "MIT",
+      "name": "vitesse-black",
+      "type": "dark"
+    },
+    {
+      "displayName": "Vitesse Dark",
+      "license": "MIT",
+      "name": "vitesse-dark",
+      "type": "dark"
+    },
+    {
+      "displayName": "Vitesse Light",
+      "license": "MIT",
+      "name": "vitesse-light",
+      "type": "light"
+    }
+  ],
+  "versions": {
+    "esbuild": "0.28.2",
+    "linguist-languages": "9.5.0",
+    "tm-grammars": "1.32.22",
+    "tm-themes": "1.12.12",
+    "vscode-oniguruma": "2.0.1",
+    "vscode-textmate": "9.3.2"
+  }
+}
