@@ -152,6 +152,241 @@ public actor GitClient {
         return path.hasPrefix("/") ? URL(fileURLWithPath: path) : directory.appendingPathComponent(path)
     }
 
+    // MARK: - History, refs, diff, blame and contents
+
+    /// The top level of the working tree containing `directory`.
+    ///
+    /// Only the trailing newline is dropped: a directory name may itself end in whitespace.
+    public func topLevel(of directory: URL, caller: GitCaller = GitCaller()) async throws -> URL {
+        var path = try await execute(
+            verb: "rev-parse",
+            arguments: ["--show-toplevel"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        if path.hasSuffix("\n") { path.removeLast() }
+        return URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL
+    }
+
+    /// The commits `query` asks for, newest first in date order.
+    ///
+    /// An unborn HEAD is an empty history, not an error: `git log` exits 128 naming the
+    /// revision `HEAD`, so on that failure — and only when HEAD really does not resolve —
+    /// the walk is retried without `HEAD`, or answers empty when nothing else is left to
+    /// walk (a follow-mode request always walks from `HEAD`).
+    public func log(_ query: GitLogQuery, in directory: URL, caller: GitCaller = GitCaller()) async throws
+        -> [GitCommit] {
+        let configuration = await configurationProvider()
+        do {
+            let output = try await execute(verb: "log", arguments: query.arguments(), directory: directory,
+                                           caller: caller, configuration: configuration)
+            return GitCommit.parse(log: output)
+        } catch let error as GitClientError {
+            guard case .commandFailed(_, 128, _) = error,
+                  try await resolveCommit("HEAD", in: directory, caller: caller) == nil else {
+                throw error
+            }
+            var unborn = query
+            unborn.revisions.removeAll { $0 == "HEAD" }
+            if (query.path != nil && query.followRenames) || unborn.revisions.isEmpty { return [] }
+            let output = try await execute(verb: "log", arguments: unborn.arguments(), directory: directory,
+                                           caller: caller, configuration: configuration)
+            return GitCommit.parse(log: output)
+        }
+    }
+
+    /// Every local branch, remote-tracking branch and tag, with each tag peeled to its commit.
+    public func refs(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitRef] {
+        let output = try await execute(
+            verb: "for-each-ref",
+            arguments: ["--format=\(GitRef.forEachRefFormat)", "refs/heads", "refs/remotes", "refs/tags"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        return GitRef.parse(forEachRef: output)
+    }
+
+    /// The stash entries, newest first.
+    public func stashes(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitStash] {
+        let output = try await execute(
+            verb: "stash",
+            arguments: ["list", "-z", "--no-show-signature", "--format=\(GitStash.listFormat)"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        return GitStash.parse(list: output)
+    }
+
+    /// The submodules `git submodule status` reports; none without `.gitmodules`.
+    public func submodules(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitSubmodule] {
+        let output = try await execute(
+            verb: "submodule",
+            arguments: ["status"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider(),
+            configOverrides: ["core.quotePath=false"]
+        )
+        return GitSubmodule.parse(status: output)
+    }
+
+    /// The patch `target` describes, parsed.
+    ///
+    /// Every flag a user's configuration could otherwise flip is spelled out — prefixes,
+    /// colour, external and textconv drivers, `diff.relative`, path quoting, blank-line
+    /// suppression — so `GitDiff.parse` always reads the same shape. Combined (`--cc`) output
+    /// is never asked for: a merge and a stash diff against their first parent, and a root
+    /// commit against the empty tree. Paths are top-level-relative literal pathspecs.
+    public func diff(
+        _ target: GitDiffTarget,
+        options: GitDiffOptions,
+        in directory: URL,
+        caller: GitCaller = GitCaller()
+    ) async throws -> GitDiff {
+        let configuration = await configurationProvider()
+        var arguments = ["--no-color", "--no-ext-diff", "--no-textconv", "--no-relative",
+                         "--src-prefix=a/", "--dst-prefix=b/", "--find-renames", "-U\(max(0, options.contextLines))"]
+        if options.ignoreWhitespace { arguments.append("-w") }
+        let paths: [String]
+        switch target {
+        case .unstaged(let only):
+            paths = only
+        case .staged(let only):
+            arguments.append("--cached")
+            paths = only
+        case .commit(let commit, let only):
+            let base: String
+            if let parent = try await resolveCommit("\(commit)^1", in: directory, caller: caller) {
+                base = parent
+            } else {
+                base = try await emptyTree(in: directory, caller: caller)
+            }
+            arguments += ["--end-of-options", base, commit]
+            paths = only
+        case .range(let from, let until, let only):
+            arguments += ["--end-of-options", from, until]
+            paths = only
+        case .untracked(let path):
+            return try await untrackedDiff(path: path, arguments: arguments, directory: directory, caller: caller,
+                                           configuration: configuration)
+        }
+        if !paths.isEmpty {
+            arguments += ["--"] + paths.map { ":(top,literal)\($0)" }
+        }
+        let output = try await execute(verb: "diff", arguments: arguments, directory: directory, caller: caller,
+                                       configuration: configuration, configOverrides: Self.diffConfigOverrides)
+        return GitDiff.parse(patch: output)
+    }
+
+    /// Who last changed each line of `path` (top-level-relative) at `revision`, or in the
+    /// working tree when `revision` is nil.
+    ///
+    /// `git blame` does not take `--end-of-options` (it reads the next word as the path), so
+    /// the revision is first resolved to a commit hash, which can never be read as an option;
+    /// a revision that names no commit throws `.commandFailed` with exit status 128, as
+    /// blame itself would.
+    public func blame(
+        path: String,
+        at revision: String?,
+        in directory: URL,
+        caller: GitCaller = GitCaller()
+    ) async throws -> GitBlame {
+        let top = try await topLevel(of: directory, caller: caller)
+        var arguments = ["--porcelain"]
+        if let revision {
+            guard let commit = try await resolveCommit(revision, in: top, caller: caller) else {
+                throw GitClientError.commandFailed(verb: "blame", exitStatus: 128,
+                                                   standardError: "fatal: bad revision '\(revision)'\n")
+            }
+            arguments.append(commit)
+        }
+        arguments += ["--", path]
+        let output = try await execute(verb: "blame", arguments: arguments, directory: top, caller: caller,
+                                       configuration: await configurationProvider(),
+                                       configOverrides: ["core.quotePath=false"])
+        return GitBlame.parse(porcelain: output)
+    }
+
+    /// The bytes of `path` (top-level-relative), never decoded: at `revision` (`":0"` is the
+    /// index entry), or the working file when `revision` is nil. Nil when the path does not
+    /// exist there, including on an unborn HEAD.
+    public func fileContents(
+        path: String,
+        at revision: String?,
+        in directory: URL,
+        caller: GitCaller = GitCaller()
+    ) async throws -> Data? {
+        let top = try await topLevel(of: directory, caller: caller)
+        guard let revision else {
+            let file = top.appendingPathComponent(path)
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory),
+                  !isDirectory.boolValue else { return nil }
+            return try Data(contentsOf: file)
+        }
+        let configuration = await configurationProvider()
+        let object: String
+        do {
+            object = try await execute(
+                verb: "rev-parse",
+                arguments: ["--verify", "--quiet", "--end-of-options", "\(revision):\(path)"],
+                directory: top,
+                caller: caller,
+                configuration: configuration
+            ).trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch GitClientError.commandFailed(_, 1, _) {
+            return nil
+        }
+        guard !object.isEmpty else { return nil }
+        let result = try await executeRaw(verb: "cat-file", arguments: ["blob", object], directory: top,
+                                          caller: caller, configuration: configuration)
+        return result.standardOutput
+    }
+
+    /// The `-c` overrides every diff runs with: unquoted paths, and a blank context line kept
+    /// as a space rather than written as an empty line.
+    private static let diffConfigOverrides = ["core.quotePath=false", "diff.suppressBlankEmpty=false"]
+
+    /// The empty tree's object name in this repository's hash algorithm.
+    private func emptyTree(in directory: URL, caller: GitCaller) async throws -> String {
+        try await execute(
+            verb: "hash-object",
+            arguments: ["-t", "tree", "/dev/null"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// An untracked file as one added file: `diff --no-index -- /dev/null <path>` in the top
+    /// level. `--no-index` exits 1 when the two differ, so 1 is success — unless git wrote no
+    /// patch at all, which is git failing to read the file.
+    private func untrackedDiff(
+        path: String,
+        arguments: [String],
+        directory: URL,
+        caller: GitCaller,
+        configuration: GitClientConfiguration
+    ) async throws -> GitDiff {
+        let top = try await topLevel(of: directory, caller: caller)
+        let result = try await executeRaw(
+            verb: "diff",
+            arguments: arguments + ["--no-index", "--", "/dev/null", path],
+            directory: top,
+            caller: caller,
+            configuration: configuration,
+            configOverrides: Self.diffConfigOverrides,
+            acceptedExitCodes: [0, 1]
+        )
+        if result.exitStatus == 1 && result.standardOutput.isEmpty {
+            throw GitClientError.commandFailed(verb: "diff", exitStatus: 1, standardError: result.standardError)
+        }
+        return GitDiff.parse(patch: GitOutputDecoding.string(result.standardOutput))
+    }
+
     // MARK: - Verbs no typed method models
 
     /// Runs `git <verb> <arguments>` in `directory` and returns its standard output.
@@ -244,8 +479,34 @@ public actor GitClient {
         arguments: [String],
         directory: URL,
         caller: GitCaller,
-        configuration: GitClientConfiguration
+        configuration: GitClientConfiguration,
+        configOverrides: [String] = [],
+        acceptedExitCodes: Set<Int32> = [0]
     ) async throws -> String {
+        let result = try await executeRaw(verb: verb, arguments: arguments, directory: directory, caller: caller,
+                                          configuration: configuration, configOverrides: configOverrides,
+                                          acceptedExitCodes: acceptedExitCodes)
+        return GitOutputDecoding.string(result.standardOutput)
+    }
+
+    /// `execute` before decoding: the raw result, for a verb whose output is bytes
+    /// (`cat-file blob`) or whose exit status and standard error are part of its answer.
+    /// The record, the failure mapping and the cancellation rule above are this method's.
+    ///
+    /// `configOverrides` are `key=value` pairs passed as `-c key=value` ahead of the verb and
+    /// logged at the front of the arguments. An exit status outside `acceptedExitCodes`
+    /// throws `.commandFailed`.
+    private func executeRaw(
+        verb: String,
+        arguments verbArguments: [String],
+        directory: URL,
+        caller: GitCaller,
+        configuration: GitClientConfiguration,
+        configOverrides: [String] = [],
+        acceptedExitCodes: Set<Int32> = [0]
+    ) async throws -> SubprocessChannel.RunResult {
+        let overrides = configOverrides.flatMap { ["-c", $0] }
+        let arguments = overrides + verbArguments
         let executablePath = configuration.executableURL.path
         guard FileManager.default.isExecutableFile(atPath: executablePath) else {
             // Recorded even though nothing was spawned. A user who types a
@@ -257,7 +518,7 @@ public actor GitClient {
         }
         let channelConfiguration = SubprocessChannel.Configuration(
             executableURL: configuration.executableURL,
-            arguments: [verb] + arguments,
+            arguments: overrides + [verb] + verbArguments,
             // A non-empty environment is what makes `.mergeOverParent` merge
             // rather than inherit wholesale; git needs PATH and HOME, and this
             // one override stops a credential prompt from hanging the child
@@ -298,13 +559,13 @@ public actor GitClient {
             verb: verb, arguments: arguments, directory: directory, caller: caller,
             duration: result.duration, exitStatus: result.exitStatus
         )
-        guard result.exitStatus == 0 else {
+        guard acceptedExitCodes.contains(result.exitStatus) else {
             throw GitClientError.commandFailed(
                 verb: verb,
                 exitStatus: result.exitStatus,
                 standardError: result.standardError
             )
         }
-        return GitOutputDecoding.string(result.standardOutput)
+        return result
     }
 }

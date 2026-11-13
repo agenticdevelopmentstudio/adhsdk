@@ -4,56 +4,29 @@ import Testing
 
 @Suite("GitClient", .serialized)
 struct GitClientTests {
-    private static let budget: TimeInterval = 10
-
     /// A fresh repository with one commit on `main`, one worktree on `feature`, and a modified file.
     private struct Fixture {
-        let root: URL
-        let worktree: URL
+        let repository: GitTestRepository
+        var root: URL { repository.root }
+        var worktree: URL { repository.url("wt-feature") }
 
         static func make() async throws -> Fixture {
-            let root = FileManager.default.temporaryDirectory
-                .appendingPathComponent("git-client-test-\(UUID().uuidString)")
-            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-            // A throw here never reaches a caller's tearDown, so the half-built
-            // repository is removed before the error propagates.
+            let repository = try await GitTestRepository.make(prefix: "git-client-test")
             do {
-                try await run(["init", "-b", "main"], in: root)
-                try await run(["config", "user.email", "test@example.com"], in: root)
-                try await run(["config", "user.name", "Test"], in: root)
-                // The developer's own global config may turn signing on; a signing
-                // prompt would hang this commit rather than fail it. Mirrors
-                // `TerminalSessionGitBranchTests.makeRepository`.
-                try await run(["config", "commit.gpgsign", "false"], in: root)
-                try "one\n".write(to: root.appendingPathComponent("a.txt"), atomically: true, encoding: .utf8)
-                try await run(["add", "a.txt"], in: root)
-                try await run(["commit", "-m", "initial"], in: root)
-                let worktree = root.appendingPathComponent("wt-feature")
-                try await run(["worktree", "add", "-b", "feature", worktree.path], in: root)
-                try "two\n".write(to: root.appendingPathComponent("a.txt"), atomically: true, encoding: .utf8)
-                return Fixture(root: root, worktree: worktree)
+                try repository.write("one\n", to: "a.txt")
+                try await repository.run(["add", "a.txt"])
+                try await repository.run(["commit", "-m", "initial"])
+                try await repository.run(["worktree", "add", "-b", "feature", repository.url("wt-feature").path])
+                try repository.write("two\n", to: "a.txt")
+                return Fixture(repository: repository)
             } catch {
-                try? FileManager.default.removeItem(at: root)
+                repository.tearDown()
                 throw error
             }
         }
 
         func tearDown() {
-            try? FileManager.default.removeItem(at: root)
-        }
-
-        /// Drives the system binary directly, so the fixture never depends on the
-        /// type under test. Only ever pointed at a throwaway directory this suite made.
-        private static func run(_ arguments: [String], in directory: URL) async throws {
-            let configuration = SubprocessChannel.Configuration(
-                executableURL: URL(fileURLWithPath: "/usr/bin/git"),
-                arguments: arguments,
-                environment: ["GIT_TERMINAL_PROMPT": "0"],
-                environmentPolicy: .mergeOverParent,
-                currentDirectoryURL: directory
-            )
-            let result = try await SubprocessChannel.run(configuration, budget: GitClientTests.budget)
-            #expect(result.exitStatus == 0, "\(arguments.joined(separator: " ")): \(result.standardError)")
+            repository.tearDown()
         }
     }
 
