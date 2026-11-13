@@ -45,8 +45,14 @@ const DEFAULT_BLUR = 0.35
 const SPLIT_FLAG = 'textlensSplit'
 
 /**
- * Replace each element's text with one inline-block span per character, frozen
- * at its measured width so the line does not reflow when a glyph is scaled.
+ * Replace each element's text with one inline-block span per character.
+ *
+ * No span is given a width. The sweep only transforms and filters a glyph, and
+ * neither moves layout, so each span's natural width is already the frozen one.
+ * Measuring here and writing it back was worse than useless: the split runs in
+ * a mount effect, and a row with no layout at that instant (a cold load, a
+ * hidden tab) measured every glyph at 0px and pinned them there, stacking each
+ * label's letters into one smudge.
  *
  * This is destructive and deliberately one-way: the split is left in place when
  * the lens is destroyed. Re-splitting on every start would re-measure every
@@ -70,10 +76,7 @@ function splitIntoChars(elements: readonly HTMLElement[]): void {
       spans.push(span)
     }
 
-    // Measure only after every span is in the document, so one layout serves all.
     for (const span of spans) {
-      span.style.width = `${span.getBoundingClientRect().width.toFixed(1)}px`
-      span.style.textAlign = 'center'
       span.style.willChange = 'transform, color, filter'
     }
 

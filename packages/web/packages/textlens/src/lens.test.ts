@@ -36,6 +36,15 @@ describe('createLens', () => {
     expect(element.querySelectorAll('span')[1]?.textContent).toBe('\u00A0')
   })
 
+  it('pins no width on a glyph, so a split measured before layout cannot collapse the row', () => {
+    const element = mount('About')
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 0, 0))
+
+    createLens([element])
+
+    expect([...element.querySelectorAll('span')].map((span) => span.style.width)).toEqual(['', '', '', '', ''])
+  })
+
   it('leaves an already-split element alone', () => {
     const element = mount('abc')
     createLens([element])
