@@ -3248,6 +3248,7 @@
 		D4A4842A8B3F684274272FB4 /* UnixSocketLineServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31433434674D011470C4B8D1 /* UnixSocketLineServer.swift */; };
 		D4AC718C151A1F9AEED0F234 /* PaneControlClusterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF837434CBB31944C6F8802 /* PaneControlClusterTests.swift */; };
 		D4B73ECB5C8426E748B78E05 /* ThemeStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46638F5787C3EA8A4B7BFACB /* ThemeStoreTests.swift */; };
+		D4B80C7C4F5F219230A40264 /* ClaudeAgentIdBackfill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F833A95759CE69B1110E44 /* ClaudeAgentIdBackfill.swift */; };
 		D4CA380DE19C9748BB34F4D2 /* ComposableTabsMoveMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233B32DD2F3D4F8D9A0B1D66 /* ComposableTabsMoveMenu.swift */; };
 		D4DB10F8D20C364310936136 /* MockScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B1C8C4BADA3FFD02431020 /* MockScreen.swift */; };
 		D4DD8AD9159463037E7DD7FD /* StenographerSummaryPrefsPush.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB918E2895A36DA741EA4564 /* StenographerSummaryPrefsPush.swift */; };
@@ -3256,6 +3257,7 @@
 		D5015062D4F315A9B78CB79B /* AgenticDeveloperHubSDKLaunch.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB8C53E6A590D459D6AA5F76 /* AgenticDeveloperHubSDKLaunch.framework */; };
 		D514BBAD5B00C13F6D2F5D68 /* PartnerSessionEventDetecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A39A4E4CBD39363FD1A878E /* PartnerSessionEventDetecting.swift */; };
 		D5194314C61B59D7B8EBF4FB /* MoneyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC140526FE2102770C4ADCF6 /* MoneyFormatter.swift */; };
+		D523B524FA9BCA934453BBE0 /* ClaudeAgentIdBackfillTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13416011A08A4A2C9C2D916A /* ClaudeAgentIdBackfillTests.swift */; };
 		D527D7D4A0490EE930C904F1 /* AgenticDeveloperHubSDKPermissions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE9D06DBA7E410231438FBD /* AgenticDeveloperHubSDKPermissions.framework */; };
 		D559D6DE66275788B4B36A5C /* ExpiringMemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11B0C02574E35B2AF61C03F7 /* ExpiringMemoTests.swift */; };
 		D5A9CF8B3849F5ACCB010C62 /* AgenticDeveloperHubSDKCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99B0EDCF642AA70D3B9E629F /* AgenticDeveloperHubSDKCore.framework */; };
@@ -7206,6 +7208,7 @@
 		04CD5293597AC58FF8230A90 /* WorkGroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkGroupsView.swift; sourceTree = "<group>"; };
 		04E1F394AB45B5C0C22D8877 /* ConversationMessagesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationMessagesTests.swift; sourceTree = "<group>"; };
 		04F1DC743BA7F237AC0A8CD9 /* JSONFileDocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONFileDocumentStore.swift; sourceTree = "<group>"; };
+		04F833A95759CE69B1110E44 /* ClaudeAgentIdBackfill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeAgentIdBackfill.swift; sourceTree = "<group>"; };
 		050E7857EA194498A1DFCDA9 /* FenceScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FenceScannerTests.swift; sourceTree = "<group>"; };
 		051F66617CF4F35282C1DB81 /* PartnerControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerControllerTests.swift; sourceTree = "<group>"; };
 		05229030C388C3C96EDF0D06 /* InMemoryThemeStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryThemeStorage.swift; sourceTree = "<group>"; };
@@ -7371,6 +7374,7 @@
 		1311BDA4020EA2412E3E36A0 /* TimestampParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimestampParsing.swift; sourceTree = "<group>"; };
 		131886F1163BD17E2CAA1F1B /* TranscriptStore+Cursors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TranscriptStore+Cursors.swift"; sourceTree = "<group>"; };
 		1340388286D4E97360D4415F /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
+		13416011A08A4A2C9C2D916A /* ClaudeAgentIdBackfillTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeAgentIdBackfillTests.swift; sourceTree = "<group>"; };
 		1356324B69DADC433D8ABD70 /* RefusalFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefusalFeedback.swift; sourceTree = "<group>"; };
 		136ECBFE2A267FEED048BAFA /* NotesWindowToolbarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesWindowToolbarTests.swift; sourceTree = "<group>"; };
 		139A49BC21190B9B0DA22A71 /* ProjectFooterStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFooterStatusTests.swift; sourceTree = "<group>"; };
@@ -14609,6 +14613,7 @@
 		9BC15B7461D665654AE0D404 /* Claude */ = {
 			isa = PBXGroup;
 			children = (
+				04F833A95759CE69B1110E44 /* ClaudeAgentIdBackfill.swift */,
 				607E384D8DB4B58A8F102BC9 /* ClaudeArchiveReplay.swift */,
 				7B1D1206A8205472CB7EA6DF /* ClaudeCapture.swift */,
 				261737507794371389A0B530 /* ClaudeHookDropSource.swift */,
@@ -15958,6 +15963,7 @@
 			isa = PBXGroup;
 			children = (
 				C76263746B878989FC6F2339 /* Fixtures */,
+				13416011A08A4A2C9C2D916A /* ClaudeAgentIdBackfillTests.swift */,
 				817AE15CD20D72AF7EF3D3FA /* ClaudeEventReadsTests.swift */,
 				F23CF7F3C929CF274025C8D9 /* ClaudeHookNormalizerTests.swift */,
 				184C45F00B69BAD8635E94B1 /* ClaudeInsightReadsTests.swift */,
@@ -21259,6 +21265,7 @@
 				198398372B4EDB4603E3C754 /* AppStorageLocation.swift in Sources */,
 				AF7D1BD8487419F5CCFEA6E8 /* BoundedDatabase.swift in Sources */,
 				EC637EAD347A150DB5F922FC /* BranchCreationDetector.swift in Sources */,
+				D4B80C7C4F5F219230A40264 /* ClaudeAgentIdBackfill.swift in Sources */,
 				19AA509723FEC7C3139BEC27 /* ClaudeArchiveReplay.swift in Sources */,
 				DE6DAFAAE989B0DDBBB6BD01 /* ClaudeCapture.swift in Sources */,
 				CFD7F951864567AB335257C8 /* ClaudeHookDropSource.swift in Sources */,
@@ -22581,6 +22588,7 @@
 				DF6BE82686656D315DCEA1B1 /* AppStorageLocationTests.swift in Sources */,
 				C338237DEE5F95263A0F9307 /* BoundedDatabaseTests.swift in Sources */,
 				89EA45F644B7C78B5669B892 /* BranchCreationDetectionTests.swift in Sources */,
+				D523B524FA9BCA934453BBE0 /* ClaudeAgentIdBackfillTests.swift in Sources */,
 				4A7FABB4869C96F7C780DA7C /* ClaudeEventReadsTests.swift in Sources */,
 				041EAB5854C5BE462ED6E169 /* ClaudeHookNormalizerTests.swift in Sources */,
 				EB2F8149215F3A6CE2BABC74 /* ClaudeInsightReadsTests.swift in Sources */,
