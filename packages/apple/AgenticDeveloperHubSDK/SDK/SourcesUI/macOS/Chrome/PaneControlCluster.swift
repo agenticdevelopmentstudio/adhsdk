@@ -27,6 +27,9 @@ public final class PaneControlCluster: NSStackView {
     /// Hidden until a host sets `onMove`: only a host that can rearrange its
     /// panes has anything to put in the menu it raises.
     public let moveButton = NSButton()
+    /// Hidden until a host sets `onFit`: only content that knows its own best
+    /// width can size its pane to it.
+    public let fitButton = NSButton()
 
     public var onClose: (() -> Void)?
     /// Handed the minimize button, because that button is the anchor the
@@ -39,6 +42,12 @@ public final class PaneControlCluster: NSStackView {
     /// Setting it shows the button; `nil` hides it again.
     public var onMove: ((NSButton) -> Void)? {
         didSet { moveButton.isHidden = onMove == nil }
+    }
+
+    /// Sizes the pane to its content's best width. Setting it shows the
+    /// button; `nil` hides it again.
+    public var onFit: (() -> Void)? {
+        didSet { fitButton.isHidden = onFit == nil }
     }
 
     /// False when the pane has nowhere to go — the only pane in its tab.
@@ -81,6 +90,7 @@ public final class PaneControlCluster: NSStackView {
         configure(minimizeButton, action: #selector(minimizeTapped))
         configure(zoomButton, action: #selector(zoomTapped))
         configure(moveButton, action: #selector(moveTapped))
+        configure(fitButton, action: #selector(fitTapped))
 
         closeButton.accessibilityID("pane.close")
         closeButton.setAccessibilityLabel("Close Pane")
@@ -95,9 +105,17 @@ public final class PaneControlCluster: NSStackView {
             accessibilityDescription: "Move Pane")
         moveButton.isHidden = true
 
+        fitButton.accessibilityID("pane.fit")
+        fitButton.setAccessibilityLabel("Fit Width")
+        fitButton.toolTip = "Fit Width"
+        fitButton.image = NSImage(
+            systemSymbolName: "arrow.right.and.line.vertical.and.arrow.left",
+            accessibilityDescription: "Fit Width")
+        fitButton.isHidden = true
+
         // A hidden arranged view is detached, so a pane with no Move keeps
         // the three-button row it always had.
-        for button in [closeButton, minimizeButton, zoomButton, moveButton] {
+        for button in [closeButton, minimizeButton, zoomButton, moveButton, fitButton] {
             addArrangedSubview(button)
         }
 
@@ -178,6 +196,7 @@ public final class PaneControlCluster: NSStackView {
     @objc private func closeTapped() { onClose?() }
     @objc private func zoomTapped() { onZoom?() }
     @objc private func moveTapped() { onMove?(moveButton) }
+    @objc private func fitTapped() { onFit?() }
 
     @objc private func minimizeTapped() {
         if isMinimized {

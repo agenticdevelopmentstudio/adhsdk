@@ -108,4 +108,7 @@ public protocol PanePreferredThicknessProviding: AnyObject {
     /// Called by the content with the length its content needs across the
     /// split's axis, excluding the pane's own insets.
     var onPreferredThicknessChange: ((CGFloat) -> Void)? { get set }
+    /// Measures now and reports through `onPreferredThicknessChange`, whether
+    /// or not the content sizes itself automatically — the pane's Fit Width.
+    func reportPreferredThickness()
 }

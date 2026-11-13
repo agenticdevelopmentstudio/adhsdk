@@ -229,6 +229,7 @@ extension ComposableTabsViewController: PaneHost {
         root.zoomedLeaf = leaf
         leaf?.setZoomed(true)
         root.applyZoom(target: leaf?.nodeID)
+        if leaf == nil { root.reapplyThicknessFractions() }
     }
 
     /// Collapses every item in this subtree that is not on the path down to

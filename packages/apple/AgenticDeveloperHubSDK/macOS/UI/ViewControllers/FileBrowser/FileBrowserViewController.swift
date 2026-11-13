@@ -421,6 +421,12 @@ public final class FileBrowserViewController: NSViewController {
         }
     }
 
+    public func reportPreferredThickness() {
+        guard isViewLoaded, view.window != nil else { return }
+        let chrome = max(0, view.bounds.width - tree.view.frame.width)
+        onPreferredThicknessChange?(tree.preferredContentWidth() + chrome)
+    }
+
     public override func viewWillAppear() {
         super.viewWillAppear()
         loadRootsOnce()

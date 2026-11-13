@@ -1378,7 +1378,25 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
             item.preferredThicknessFraction = fraction
         }
         item.holdingPriority = holdingPriority(of: viewController, registry: registry)
+        // Nothing inside a window may resize it: a pane collapsing or
+        // uncollapsing (a zoom, a restore) takes its room from its siblings
+        // rather than growing or shrinking the window, which is AppKit's
+        // default for an uncollapse with no room.
+        item.collapseBehavior = .preferResizingSiblingsWithFixedSplitView
         return item
+    }
+
+    /// Puts every divider in this subtree back on the shares captured before
+    /// a zoom, which un-collapsing alone does not: AppKit restores each item
+    /// to its own last width, so the panes come back at sizes nobody chose.
+    func reapplyThicknessFractions() {
+        guard isViewLoaded else { return }
+        hasAppliedPreferredThicknesses = false
+        splitView.layoutSubtreeIfNeeded()
+        applyPreferredThicknessesIfNeeded()
+        for child in layoutChildren {
+            (child as? ComposableTabsViewController)?.reapplyThicknessFractions()
+        }
     }
 
     /// Undoes a minimize's pinning, putting the item back on the sizing

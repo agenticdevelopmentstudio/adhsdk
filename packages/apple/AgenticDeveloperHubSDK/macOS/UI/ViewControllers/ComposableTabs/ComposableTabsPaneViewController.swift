@@ -170,6 +170,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
             let thickness = contentWidth + self.contentInset * 2 + insets.left + insets.right
             self.host?.paneDidRequestThickness(self, thickness: thickness)
         }
+        titleBar.controls.onFit = { [weak provider] in provider?.reportPreferredThickness() }
     }
 
     public override func viewDidAppear() {
