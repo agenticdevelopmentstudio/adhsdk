@@ -4577,6 +4577,67 @@
       "path": "status/dashboard/logic/deploy-view",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.deploy-view"
     },
+    "6708bfd4-5b29-4bf9-b180-05904873906e": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:b50bb34041bdc58fd2ec6c240fd005eb3bc218b770698166c9aaa217f5240bac",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:e076f36bdbfcfaedeb92bd030fa72e4dc10532dd6254005a26761f5ed9d0706f",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:2e2e63d336a6c524ae519463bcf907b4dd88928c18ae0e267b33d387fe7ed110",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:222aea88714200f27cbdae0b05a14c25828b306a39f8b5ecb0918cdb2e75ba32",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:7c839db8a502765e458aaf28c5ca688829745cbad6811cfafac581c62a372431",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:569685fea243c3963289a47530718a161b798799c1a8154596e6b3b9f4da0293",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/language/syntax-highlighter",
+      "rdid": "adhsdk.ingredient.foundation.language.syntax-highlighter"
+    },
     "67a314b9-d324-4d0c-b9c1-86e27c01537d": {
       "implementations": [
         {
