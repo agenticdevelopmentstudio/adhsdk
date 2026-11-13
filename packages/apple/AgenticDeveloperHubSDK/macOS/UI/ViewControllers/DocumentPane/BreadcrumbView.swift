@@ -52,6 +52,18 @@ public final class BreadcrumbView: NSView {
         )
     }
 
+    /// Directories the strip may not leave: a crumb above the one of these
+    /// that holds the file is disabled, so a project's breadcrumb only moves
+    /// within the project. Empty (the default) leaves every crumb enabled.
+    public var confiningRoots: [URL] = [] {
+        didSet { rebuild() }
+    }
+
+    /// When set, every directory menu starts with a "Browse" item that reports
+    /// its directory here — a File Browser window switching to another folder.
+    /// Nil (the default) leaves directories as places to walk through only.
+    public var onSelectDirectory: ((URL) -> Void)?
+
     /// The crumb labels, first to last. Empty when there is no file.
     public private(set) var crumbTitles: [String] = []
 
@@ -120,6 +132,12 @@ public final class BreadcrumbView: NSView {
         let builder = BreadcrumbMenu(filter: filter(), palette: resolvedThemeScope.palette) { [weak self] url in
             self?.onSelect?(url)
         }
+        if let onSelectDirectory {
+            builder.onChooseDirectory = { [weak self] url in
+                self?.dismissExpansion()
+                onSelectDirectory(url)
+            }
+        }
         activeMenu = builder
         return builder.menu(for: crumbDirectories[index], marking: crumbURLs[index])
     }
@@ -145,6 +163,7 @@ public final class BreadcrumbView: NSView {
                 stack.addArrangedSubview(Self.chevron())
             }
             let button = crumbButton(index: index, isLast: index == path.count - 1)
+            button.isEnabled = !isOutsideConfiningRoot(path[index].url)
             crumbButtons.append(button)
             stack.addArrangedSubview(button)
         }
@@ -207,6 +226,8 @@ public final class BreadcrumbView: NSView {
         let copy = BreadcrumbView(rootURL: rootURL, style: style, homeURL: homeURL)
         copy.expandsOnHover = false
         copy.filter = filter
+        copy.confiningRoots = confiningRoots
+        copy.onSelectDirectory = onSelectDirectory
         copy.onSelect = { [weak self] url in
             self?.dismissExpansion()
             self?.onSelect?(url)
@@ -272,6 +293,18 @@ public final class BreadcrumbView: NSView {
 
     private static func isDirectory(_ url: URL) -> Bool {
         (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+    }
+
+    /// Whether `crumb` lies above the confining root that holds the file.
+    private func isOutsideConfiningRoot(_ crumb: URL) -> Bool {
+        guard let file = fileURL?.standardizedFileURL.pathComponents else { return false }
+        let holding = confiningRoots
+            .map { $0.standardizedFileURL.pathComponents }
+            .filter { file.starts(with: $0) }
+            .max { $0.count < $1.count }
+        guard let root = holding else { return false }
+        let components = crumb.standardizedFileURL.pathComponents
+        return components.count < root.count && root.starts(with: components)
     }
 
     // MARK: - Path arithmetic
@@ -346,7 +379,19 @@ final class BreadcrumbMenu: NSObject, NSMenuDelegate {
         return menu
     }
 
+    /// Set to offer each directory menu's own folder as a choice ("Browse").
+    var onChooseDirectory: ((URL) -> Void)?
+
     private func fill(_ menu: NSMenu, with directory: URL, marking marked: URL?) {
+        if onChooseDirectory != nil {
+            let browse = NSMenuItem(
+                title: "Browse “\(directory.lastPathComponent)”",
+                action: #selector(chooseDirectory(_:)), keyEquivalent: "")
+            browse.target = self
+            browse.representedObject = directory
+            menu.addItem(browse)
+            menu.addItem(.separator())
+        }
         let entries = FileTreeNode.loadChildren(for: directory, filter: filter)
         guard !entries.isEmpty else {
             let empty = NSMenuItem(title: "Empty", action: nil, keyEquivalent: "")
@@ -377,6 +422,11 @@ final class BreadcrumbMenu: NSObject, NSMenuDelegate {
         guard let directory = pending.removeValue(forKey: ObjectIdentifier(menu)) else { return }
         menu.removeAllItems()
         fill(menu, with: directory, marking: nil)
+    }
+
+    @objc private func chooseDirectory(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? URL else { return }
+        onChooseDirectory?(url)
     }
 
     @objc private func choose(_ sender: NSMenuItem) {

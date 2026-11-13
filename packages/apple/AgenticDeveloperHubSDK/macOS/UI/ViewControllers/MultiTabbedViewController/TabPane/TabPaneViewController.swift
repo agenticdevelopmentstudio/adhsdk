@@ -84,6 +84,7 @@ public final class TabPaneViewController: NSViewController, TabBarStackedItem {
         // the summary still to come.
         paneView.summaryLabel.stringValue = summary.map { $0.isEmpty ? " \n " : $0 } ?? ""
         paneView.summaryLabel.isHidden = summary == nil
+        paneView.applyCompactness()
         title = details ? paneView.sessionLabel.stringValue : paneView.agentLabel.stringValue
         preferredContentSize = paneView.contentSize
     }

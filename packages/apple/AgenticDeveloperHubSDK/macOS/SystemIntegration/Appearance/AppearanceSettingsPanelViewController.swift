@@ -36,6 +36,12 @@ public final class AppearanceSettingsPanelViewController: ComposableSettings.Set
                     + "under a light appearance is legal and occasionally what you want."
             ),
             .init(
+                title: "Rounded Corners",
+                body: "Panes and the tab cards beside them are drawn square by default. "
+                    + "Prefer rounded corners rounds them instead; settings cards are "
+                    + "always rounded."
+            ),
+            .init(
                 title: "Text Size",
                 body: "A single scale applied across the app's text. It multiplies the "
                     + "theme's own type sizes rather than replacing them, so a theme with "
@@ -68,6 +74,13 @@ public final class AppearanceSettingsPanelViewController: ComposableSettings.Set
             }
         )
         group.addSettingSubview(ComposableSettings.PopupMenuChoiceView(viewModel: viewModel))
+
+        let corners = ComposableSettings.ViewModel<Bool>(
+            title: "Prefer rounded corners",
+            setting: UserSettings.preferRoundedCorners,
+            explanation: "Draw panes and tabs with rounded corners instead of square ones."
+        )
+        group.addSettingSubview(ComposableSettings.CheckboxView(with: corners))
 
         return group
     }

@@ -80,8 +80,20 @@ final class TabPaneView: NSView {
     let activityView = NSImageView()
 
     /// A card that is only its top line and summary is as tall as those
-    /// lines, not `minHeight`.
-    var showsDetails = true
+    /// lines, not `minHeight`. A card that is its top line alone (no details,
+    /// no summary) also drops to the compact padding, so it is one title row.
+    var showsDetails = true { didSet { applyCompactness() } }
+
+    /// Insets for a card that shows only its title line.
+    private static let compactPadding = NSEdgeInsets(top: 5, left: 14, bottom: 5, right: 14)
+
+    /// Shrinks the stack's padding and spacing when the card holds nothing
+    /// but its header, and restores them otherwise.
+    func applyCompactness() {
+        let compact = !showsDetails && summaryLabel.isHidden
+        content.edgeInsets = compact ? Self.compactPadding : Self.padding
+        content.spacing = compact ? 0 : 6
+    }
 
     var onClose: (() -> Void)?
     var contextMenuProvider: ((NSEvent) -> NSMenu?)?
@@ -525,10 +537,14 @@ private final class TabCardBackgroundView: NSView {
     var reachesOverWorkspace = false { didSet { needsDisplay = true } }
 
     private let edge: Edge
+    private var cornerObserver: UserSettingObserver<Bool>?
 
     init(edge: Edge) {
         self.edge = edge
         super.init(frame: .zero)
+        cornerObserver = UserSettingObserver(UserSettings.preferRoundedCorners) { [weak self] _ in
+            self?.needsDisplay = true
+        }
     }
 
     @available(*, unavailable)
@@ -552,8 +568,17 @@ private final class TabCardBackgroundView: NSView {
         guard rect.width > 0, rect.height > 0 else { return nil }
         let path = NSBezierPath()
         let corners = corners(of: rect)
+        // Appearance > Prefer rounded corners rounds the two outer corners;
+        // the open side stays square so the card still joins the workspace.
+        let radius = min(CornerStyle.radius(CornerStyle.tabRadius), rect.width / 2, rect.height / 2)
         path.move(to: corners[0])
-        for corner in corners.dropFirst() { path.line(to: corner) }
+        if radius > 0 {
+            path.appendArc(from: corners[1], to: corners[2], radius: radius)
+            path.appendArc(from: corners[2], to: corners[3], radius: radius)
+            path.line(to: corners[3])
+        } else {
+            for corner in corners.dropFirst() { path.line(to: corner) }
+        }
         return path
     }
 

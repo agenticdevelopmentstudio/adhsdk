@@ -120,6 +120,25 @@ public final class FileBrowserViewController: NSViewController {
     /// from `~` so it says where the file is on disk, not only in the project.
     private lazy var breadcrumb = BreadcrumbView(rootURL: directories.primary, style: .homeRelative)
 
+    /// Asked to show a different directory, chosen from the breadcrumb's
+    /// "Browse" item. Set by a File Browser window, which reopens on it; nil
+    /// (a project's browser) offers no such item.
+    public var onBrowseDirectoryRequest: ((URL) -> Void)? {
+        didSet { breadcrumb.onSelectDirectory = onBrowseDirectoryRequest }
+    }
+
+    /// Keeps the breadcrumb inside the browser's own roots: crumbs above them
+    /// are disabled. A project's browser sets it; a File Browser window does not.
+    public var confinesBreadcrumbToRoots = false {
+        didSet { updateBreadcrumbConfinement() }
+    }
+
+    private func updateBreadcrumbConfinement() {
+        breadcrumb.confiningRoots = confinesBreadcrumbToRoots
+            ? [directories.primary] + directories.additional
+            : []
+    }
+
     /// Narrows the tree to the names that contain what is typed.
     private let filterField = ThemedSearchField(placeholder: "Filter")
 
@@ -199,7 +218,10 @@ public final class FileBrowserViewController: NSViewController {
         rebuildManagers()
         directories.$additional
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.rebuildManagers() }
+            .sink { [weak self] _ in
+                self?.rebuildManagers()
+                self?.updateBreadcrumbConfinement()
+            }
             .store(in: &cancellables)
 
         // `@Published` publishes from `willSet`, so a synchronous sink reads

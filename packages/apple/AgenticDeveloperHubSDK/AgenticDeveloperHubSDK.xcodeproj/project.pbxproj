@@ -1054,6 +1054,7 @@
 		3AD1F51CF1DE3E337E335D33 /* BrowserAgentPrivacy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E8ECA46B7596C4F76BE55E /* BrowserAgentPrivacy.swift */; };
 		3AD22A6835CBC496E1CA2EFE /* SessionStart.json in Resources */ = {isa = PBXBuildFile; fileRef = BE5E883D635769501551BFD9 /* SessionStart.json */; };
 		3AFC2FA4A1E46ABF8BDD6EE1 /* GitProcessBottleneckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCD69671F525F3E65FE5F4 /* GitProcessBottleneckTests.swift */; };
+		3B0E267C683C0899C5AE2B58 /* UserSettings+Corners.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC190043786704B3B852110 /* UserSettings+Corners.swift */; };
 		3B11DEF2425E20741FA19666 /* TestDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F79E971CC44B2BFCAE973D /* TestDefaults.swift */; };
 		3B1C67008EBDB0E7D11AFF7F /* GmailSettingsAccountErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88291AE9DCD4CBFF726D455F /* GmailSettingsAccountErrorTests.swift */; };
 		3B469D3FED24AA3D431C84F6 /* PointingHandButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F78C32BC10DF50DD9D5B89 /* PointingHandButton.swift */; };
@@ -7659,6 +7660,7 @@
 		2C5C35EACFE87B4997979429 /* ScreenMatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenMatcherTests.swift; sourceTree = "<group>"; };
 		2C78A01812913E651BEB877D /* ExtensionSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionSettingsTests.swift; sourceTree = "<group>"; };
 		2CBDE3B23005C752ED53A4DF /* PartnerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerStore.swift; sourceTree = "<group>"; };
+		2CC190043786704B3B852110 /* UserSettings+Corners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserSettings+Corners.swift"; sourceTree = "<group>"; };
 		2CC9C0AAC4BB014310BBAFFC /* DaemonVersionGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonVersionGateTests.swift; sourceTree = "<group>"; };
 		2CCA4491FE614B17E58797A7 /* FontChooserButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontChooserButtonTests.swift; sourceTree = "<group>"; };
 		2CE588D78FABCDB98F197ECC /* FileBrowserGeneralSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserGeneralSettingsViewController.swift; sourceTree = "<group>"; };
@@ -15110,6 +15112,7 @@
 				B85D5B72769C8298286A5038 /* StoredSettingsStorageProvider.swift */,
 				F08B577AC1EC9CC0733254E5 /* UserSetting.swift */,
 				1340388286D4E97360D4415F /* UserSettings.swift */,
+				2CC190043786704B3B852110 /* UserSettings+Corners.swift */,
 				29632C48AA6047C826485DFA /* UserSettings+Editor.swift */,
 				0313AF318BE8AACFC8398A6F /* UserSettings+FileBrowser.swift */,
 				66627573B457BF9E4361D31E /* UserSettings+Git.swift */,
@@ -24250,6 +24253,7 @@
 				9A644EE9744BA5027A27177A /* UpstreamDivergenceLedger.swift in Sources */,
 				8AC933B36D5D67FB6AF6EE42 /* UserDefaultsSettingsStorageProvider.swift in Sources */,
 				46842A6052B9C8D25F22AAF2 /* UserSetting.swift in Sources */,
+				3B0E267C683C0899C5AE2B58 /* UserSettings+Corners.swift in Sources */,
 				48B5A98E96EA9A1BF9B8277F /* UserSettings+Editor.swift in Sources */,
 				5773CA4BF980EDFFC99BE7A7 /* UserSettings+FileBrowser.swift in Sources */,
 				4374719CA530E985B6734A76 /* UserSettings+Git.swift in Sources */,

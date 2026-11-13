@@ -106,6 +106,17 @@ public final class FileBrowserWindowsFeature: AppFeature {
         return controller
     }
 
+    /// Switches a File Browser window to `directory`: the window on it opens
+    /// (or comes forward) where `window` was, and `window` closes. What the
+    /// breadcrumb's "Browse" item does in a File Browser window.
+    public func browse(_ directory: URL, replacing window: NSWindow?) {
+        let frame = window?.frame
+        guard let controller = open(directory: directory),
+              let newWindow = controller.window, newWindow !== window else { return }
+        if let frame { newWindow.setFrame(frame, display: true) }
+        window?.close()
+    }
+
     /// Reopens the File Browser windows that were open when the app last
     /// quit, without taking the foreground. A directory that has gone is
     /// dropped from the list.
