@@ -4,11 +4,11 @@
     "id": "0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6",
     "title": "Theme Engine",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-13",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "22ff534340aba44b",
+  "synced": "ff0b0a26a9e4e779",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

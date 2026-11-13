@@ -926,6 +926,128 @@ struct VSCodeThemeImporterTests {
         #expect(palette(theme) == palette(try parse(Self.minimalJSON)))
     }
 
+    // MARK: - Kept tokenColors
+
+    /// The rules the TextMate highlighter paints with are the theme's own, at
+    /// full scope resolution, so the import keeps the whole merged array — the
+    /// base's rules first, then the includer's — not just the ten summarised
+    /// syntax styles.
+    @Test("the import keeps the include-merged tokenColors array, base rules first")
+    func importerKeepsTokenColors() throws {
+        let directory = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try write(
+            Self.themeJSON(Self.standardPalette, extras: ["""
+                "tokenColors": [
+                    { "scope": "comment.line", "settings": { "foreground": "#111111" } },
+                    { "scope": "keyword.control", "settings": { "foreground": "#222222", "fontStyle": "bold" } }
+                ]
+            """]),
+            to: "base.json",
+            in: directory
+        )
+        try write("""
+        {
+            "include": "./base.json",
+            "tokenColors": [
+                { "scope": ["comment.line"], "settings": { "foreground": "#333333" } }
+            ]
+        }
+        """, to: "variant.json", in: directory)
+
+        let theme = try VSCodeThemeImporter.parse(
+            contentsOf: directory.appendingPathComponent("variant.json"),
+            label: "Variant",
+            uiTheme: "vs-dark"
+        )
+
+        let text = try #require(theme.vscodeTokenColors)
+        let rules = try #require(
+            try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [[String: Any]]
+        )
+        let summary = rules.map { rule -> String in
+            let scope = (rule["scope"] as? String) ?? ((rule["scope"] as? [String])?.joined(separator: ",") ?? "?")
+            let settings = rule["settings"] as? [String: Any] ?? [:]
+            return scope + " " + ((settings["foreground"] as? String) ?? "?")
+                + ((settings["fontStyle"] as? String).map { " " + $0 } ?? "")
+        }
+        #expect(summary == [
+            "comment.line #111111",
+            "keyword.control #222222 bold",
+            "comment.line #333333"
+        ])
+    }
+
+    @Test("a theme with no tokenColors keeps none")
+    func importerKeepsNoTokenColorsWhenAbsent() throws {
+        #expect(try parse(Self.minimalJSON).vscodeTokenColors == nil)
+        let notAnArray = Self.themeJSON(Self.standardPalette, extras: [#""tokenColors": "./tokens.json""#])
+        #expect(try parse(notAnArray).vscodeTokenColors == nil)
+    }
+
+    /// Every theme saved before the key existed has no `vscodeTokenColors`, and
+    /// those are the user's own themes: they must keep loading.
+    @Test("theme JSON saved before vscodeTokenColors existed still decodes")
+    func oldThemeJSONWithoutTokenColorsDecodes() throws {
+        let encoded = try JSONEncoder().encode(BuiltInThemes.dracula)
+        var object = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object.removeValue(forKey: "vscodeTokenColors")
+        let old = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(ColorTheme.self, from: old)
+        #expect(decoded.vscodeTokenColors == nil)
+        #expect(decoded == BuiltInThemes.dracula)
+
+        var carrying = BuiltInThemes.dracula
+        carrying.vscodeTokenColors = ##"[{"scope":"keyword","settings":{"foreground":"#FF0000"}}]"##
+        let roundTripped = try JSONDecoder().decode(
+            ColorTheme.self, from: try JSONEncoder().encode(carrying))
+        #expect(roundTripped.vscodeTokenColors == carrying.vscodeTokenColors)
+    }
+
+    // MARK: - Syntax defaults
+
+    @Test("each syntax role names its TextMate scopes and its default slot, fallback and emphasis")
+    func syntaxRoleDefaults() {
+        let table = SyntaxRole.allCases.map { role -> String in
+            let style = role.defaultStyle
+            return "\(role.rawValue) \(role.textMateScopes.joined(separator: ",")) "
+                + "\(style.ansiIndex.map(String.init) ?? "-") \(style.fallback.rawValue)"
+                + (style.bold ? " bold" : "") + (style.italic ? " italic" : "")
+        }
+        #expect(table == [
+            "keywords keyword.control 5 accent bold",
+            "commands entity.name.function 4 accent",
+            "types entity.name.type,support.type 6 info",
+            "attributes entity.other.attribute-name 3 warning",
+            "variables variable.other 12 primaryText",
+            "values constant.language 11 warning",
+            "numbers constant.numeric 9 danger",
+            "strings string.quoted.double 2 success",
+            "characters constant.character 2 success",
+            "comments comment.line - tertiaryText italic"
+        ])
+    }
+
+    @Test("a palette's syntax style is the declared one, else the ANSI slot, else the fallback role")
+    func paletteSyntaxStyleResolution() throws {
+        let declared = SyntaxStyle(color: RGBAColor(hexString: "123456FF")!, italic: true)
+        var theme = try parse(Self.minimalJSON).withSyntaxStyles([.keywords: declared])
+        // Declared wins, including its absent bold.
+        #expect(SemanticPalette(theme: theme).syntaxStyle(for: .keywords) == declared)
+        // Undeclared: ANSI slot 4, no emphasis.
+        #expect(SemanticPalette(theme: theme).syntaxStyle(for: .commands)
+            == SyntaxStyle(color: theme.ansi[4]))
+        // No slot: the fallback role, with the default's italic.
+        let palette = SemanticPalette(theme: theme)
+        #expect(palette.syntaxStyle(for: .comments)
+            == SyntaxStyle(color: palette.color(.tertiaryText), italic: true))
+        // A short palette falls back to the semantic role.
+        theme.ansi = Array(theme.ansi.prefix(4))
+        let short = SemanticPalette(theme: theme)
+        #expect(short.syntaxStyle(for: .commands) == SyntaxStyle(color: short.color(.accent)))
+    }
+
     // MARK: - ThemeStore wiring
 
     // `ThemeStore` and the storage double are both main-actor isolated; nothing

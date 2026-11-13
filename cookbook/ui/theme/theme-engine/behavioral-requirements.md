@@ -86,11 +86,27 @@
 - **token-match**: A rule MUST apply to a queried scope when its selector equals the scope or is a dot-separated ancestor of it (the scope begins with selector + `.`).
 - **token-specificity**: Among applicable rules the longest selector MUST win regardless of declaration order.
 - **token-tiebreak**: Among applicable rules of equal selector length, the one later in document order MUST win.
-- **token-scope-chain**: Each role MUST be resolved from this ordered scope chain: `keywords` ← `keyword.control`; `commands` ← `entity.name.function`; `types` ← `entity.name.type`, then `support.type`; `attributes` ← `entity.other.attribute-name`; `variables` ← `variable.other`; `values` ← `constant.language`; `numbers` ← `constant.numeric`; `strings` ← `string.quoted.double`; `characters` ← `constant.character`; `comments` ← `comment.line`.
+- **token-scope-chain**: Each role MUST be resolved from its TextMate scopes (see **syntax-role-textmate-scopes**), this ordered scope chain: `keywords` ← `keyword.control`; `commands` ← `entity.name.function`; `types` ← `entity.name.type`, then `support.type`; `attributes` ← `entity.other.attribute-name`; `variables` ← `variable.other`; `values` ← `constant.language`; `numbers` ← `constant.numeric`; `strings` ← `string.quoted.double`; `characters` ← `constant.character`; `comments` ← `comment.line`.
 - **token-chain-first-match**: A later scope in a role's chain MUST be consulted only when no rule applies to any earlier scope; an ancestor-only match on an earlier scope (for example a rule for `entity` matching `entity.name.type`) MUST win over an exact match on a later scope.
 - **token-unmatched-role**: A role no rule matches MUST get no syntax style, leaving the consumer's ANSI derivation in charge.
 - **token-no-throw**: `tokenColors` handling MUST NOT fail with an error; a malformed `tokenColors` yields no styles and the rest of the theme is unchanged.
 - **token-stored-as-overrides**: The resolved syntax styles MUST be stored by replacing syntax styles, so they appear as `syntax.*` keys in the override map alongside the six role overrides and change no palette field.
+
+- **token-colors-kept**: The importer MUST keep the theme's `tokenColors` array, after `include` merging (base entries first), serialized as JSON text in the theme's VS Code token colours; when `tokenColors` is absent or not an array the theme's VS Code token colours MUST be absent.
+- **token-colors-optional**: A serialized theme without the VS Code token colours key MUST decode, with the token colours absent; a theme carrying them MUST round-trip them unchanged.
+
+### Syntax defaults
+
+- **syntax-role-textmate-scopes**: Each syntax role MUST expose its TextMate scopes, the ordered chain listed in **token-scope-chain**; the importer and the code theme MUST both read that one table.
+- **syntax-role-default-style**: Each syntax role MUST expose a default style of an optional ANSI slot, a fallback semantic role, and bold and italic flags: `keywords` 5, accent, bold; `commands` 4, accent; `types` 6, info; `attributes` 3, warning; `variables` 12, primary text; `values` 11, warning; `numbers` 9, danger; `strings` 2, success; `characters` 2, success; `comments` no slot, tertiary text, italic. Every flag not named is false.
+- **syntax-style-resolution**: A palette's syntax style for a role MUST be the theme's declared syntax style when it has one (its colour and its own emphasis, absences included); otherwise its colour MUST be the theme's ANSI colour at the default style's slot when the slot is named and present, else the palette's colour for the default style's fallback role, with the default style's bold and italic flags. The source editor's theme and the code theme MUST both use this resolution.
+
+### Code theme
+
+- **code-theme-shape**: A code theme MUST carry a foreground colour, a background colour and a VS Code `tokenColors` array as JSON text, and MUST be safe to pass across concurrency boundaries, compare for equality and hash.
+- **code-theme-from-file**: Building a code theme from a VS Code theme file's bytes MUST accept JSONC and MUST fail with the not-an-object error when the root is not an object; it MUST NOT resolve `include`. Its foreground MUST be the first of `colors.editor.foreground`, the first scope-less `tokenColors` entry's `settings.foreground`, `colors.foreground` that parses, else `#333333` when the file's `type` is `light` and `#BBBBBB` otherwise. Its background MUST be the first of `colors.editor.background`, the first scope-less `tokenColors` entry's `settings.background` that parses, else `#FFFFFF` when `type` is `light` and `#1E1E1E` otherwise. Colours parse by **hex-forms**. Its token colours MUST be the file's `tokenColors` array re-serialized, or `[]` when absent or not an array.
+- **code-theme-from-palette**: Building a code theme from a palette MUST take foreground from the palette's primary text and background from its window background. Its token colours MUST be the theme's VS Code token colours when present; otherwise one rule per syntax role in declaration order, `scope` the role's TextMate scopes joined by `,`, `settings.foreground` the role's resolved syntax style colour (see **syntax-style-resolution**) and `settings.fontStyle` `bold`, `italic`, `bold italic` or the empty string.
+- **code-theme-json**: A code theme's theme JSON MUST be an object whose `colors` holds `editor.foreground` and `editor.background` and whose `tokenColors` is its token colours array. Every colour a code theme writes MUST be uppercase `#RRGGBB` when opaque and `#RRGGBBAA` otherwise.
 
 ### VS Code import: include chains
 

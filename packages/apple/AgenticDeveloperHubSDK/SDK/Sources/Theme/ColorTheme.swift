@@ -75,6 +75,16 @@ public struct ColorTheme: Codable, Identifiable, Equatable, Sendable {
     /// settings panel decides.
     public var project: ThemeProjectOptions?
 
+    // MARK: Code colouring
+
+    /// A VS Code theme's `tokenColors` array, kept verbatim as JSON text by the
+    /// VS Code importer (after `include` merging) so a TextMate highlighter can
+    /// paint with the theme's own rules at full scope resolution. `nil` — every
+    /// theme that did not come from VS Code — means the code theme is
+    /// synthesized from the palette instead. Text, not a model, because nothing
+    /// in Swift reads the rules; the highlighter takes JSON.
+    public var vscodeTokenColors: String?
+
     public init(
         id: String = UUID().uuidString,
         name: String,
@@ -90,7 +100,8 @@ public struct ColorTheme: Codable, Identifiable, Equatable, Sendable {
         roleOverrides: [String: RGBAColor] = [:],
         typography: ThemeTypography = .system,
         terminal: ThemeTerminalOptions? = nil,
-        project: ThemeProjectOptions? = nil
+        project: ThemeProjectOptions? = nil,
+        vscodeTokenColors: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -107,6 +118,7 @@ public struct ColorTheme: Codable, Identifiable, Equatable, Sendable {
         self.typography = typography
         self.terminal = terminal
         self.project = project
+        self.vscodeTokenColors = vscodeTokenColors
     }
 
     // Custom decoding so themes persisted before typography existed still load
@@ -137,6 +149,9 @@ public struct ColorTheme: Codable, Identifiable, Equatable, Sendable {
         // has never been given terminal or project overrides has none.
         terminal = try container.decodeIfPresent(ThemeTerminalOptions.self, forKey: .terminal)
         project = try container.decodeIfPresent(ThemeProjectOptions.self, forKey: .project)
+        // Added with the TextMate highlighter; every theme saved before it has
+        // none, and that is also the correct value for them.
+        vscodeTokenColors = try container.decodeIfPresent(String.self, forKey: .vscodeTokenColors)
     }
 }
 

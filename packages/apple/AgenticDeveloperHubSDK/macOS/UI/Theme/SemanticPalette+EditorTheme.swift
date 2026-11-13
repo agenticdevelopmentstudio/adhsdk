@@ -31,11 +31,7 @@ extension SemanticPalette {
 
     /// This palette expressed as a source-editor theme.
     public var editorTheme: EditorTheme {
-        // A theme imported from VS Code states its syntax colours outright
-        // (`tokenColors`); a terminal-derived one states none and every role
-        // below falls through to the ANSI derivation.
-        let syntax = theme.syntaxStyles
-        return EditorTheme(
+        EditorTheme(
             // Chrome is untouched by a declared syntax style: `tokenColors` has
             // nothing to say about editor chrome, which comes from the semantic
             // roles the palette half of the import already filled.
@@ -47,53 +43,27 @@ extension SemanticPalette {
             // relationship a panel has to the window.
             lineHighlight: nsColor(.surface),
             selection: nsColor(.selection),
-            keywords: syntax.attribute(.keywords, or: .init(color: ansiColor(5, or: .accent), bold: true)),
-            commands: syntax.attribute(.commands, or: .init(color: ansiColor(4, or: .accent))),
-            types: syntax.attribute(.types, or: .init(color: ansiColor(6, or: .info))),
-            attributes: syntax.attribute(.attributes, or: .init(color: ansiColor(3, or: .warning))),
+            keywords: attribute(.keywords),
+            commands: attribute(.commands),
+            types: attribute(.types),
+            attributes: attribute(.attributes),
             // `variables` also carries functions, methods and parameters — see
-            // `EditorTheme.mapCapture` — so it takes a bright slot that reads
-            // clearly at the density those appear in.
-            variables: syntax.attribute(.variables, or: .init(color: ansiColor(12, or: .primaryText))),
-            values: syntax.attribute(.values, or: .init(color: ansiColor(11, or: .warning))),
-            numbers: syntax.attribute(.numbers, or: .init(color: ansiColor(9, or: .danger))),
-            strings: syntax.attribute(.strings, or: .init(color: ansiColor(2, or: .success))),
-            characters: syntax.attribute(.characters, or: .init(color: ansiColor(2, or: .success))),
-            comments: syntax.attribute(.comments, or: .init(color: nsColor(.tertiaryText), italic: true))
+            // `EditorTheme.mapCapture` — which is why its default is a bright
+            // slot (`SyntaxRole.defaultStyle`).
+            variables: attribute(.variables),
+            values: attribute(.values),
+            numbers: attribute(.numbers),
+            strings: attribute(.strings),
+            characters: attribute(.characters),
+            comments: attribute(.comments)
         )
     }
 
-    /// ANSI slot `index`, falling back to a semantic role when the theme is
-    /// short of colors. A hand-authored or partially imported scheme is not
-    /// guaranteed to carry all 16, and a missing slot must not blank out a
-    /// whole syntax class.
-    private func ansiColor(_ index: Int, or fallback: ThemeRole) -> NSColor {
-        theme.ansiColor(at: index).map(NSColor.init) ?? nsColor(fallback)
-    }
-}
-
-extension [SyntaxRole: SyntaxStyle] {
-
-    /// The declared style for `role` if the theme states one, otherwise
-    /// `derived`.
-    ///
-    /// **A declared style is authoritative, including its absences.** The
-    /// derived attributes hardcode `keywords` bold and `comments` italic, which
-    /// is the right default for a terminal-derived scheme — one has no opinion
-    /// about weight. A VS Code theme does have an opinion, and a role it
-    /// declares without a `fontStyle` means "no emphasis", so a declared
-    /// `keywords` is not bold unless the theme said `bold`.
-    ///
-    /// That is the whole reason emphasis is carried at all, and it is
-    /// measurable: "Night Owl" and "Night Owl (No Italics)" differ in exactly
-    /// one thing — `comments` is `italic` in one and unstyled in the other,
-    /// while every colour in both is identical. Drop the emphasis and the two
-    /// shipped themes import to the same bytes.
-    ///
-    /// `derived` is evaluated eagerly at the call site; every one of them is a
-    /// dictionary or array lookup, not work.
-    fileprivate func attribute(_ role: SyntaxRole, or derived: EditorTheme.Attribute) -> EditorTheme.Attribute {
-        guard let style = self[role] else { return derived }
+    /// `role` as an editor attribute: the theme's declared style, or the
+    /// shared default (`SemanticPalette.syntaxStyle(for:)`, which the TextMate
+    /// code theme reads too).
+    private func attribute(_ role: SyntaxRole) -> EditorTheme.Attribute {
+        let style = syntaxStyle(for: role)
         return .init(color: NSColor(style.color), bold: style.bold, italic: style.italic)
     }
 }
