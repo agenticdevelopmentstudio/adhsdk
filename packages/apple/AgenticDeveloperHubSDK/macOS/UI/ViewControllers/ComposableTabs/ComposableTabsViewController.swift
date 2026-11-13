@@ -424,51 +424,77 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// module, so no implicit conformance reaches it — which makes capturing
     /// `self` in one an error under complete concurrency checking.
     public override func splitViewWillResizeSubviews(_ notification: Notification) {
-        super.splitViewWillResizeSubviews(notification)
+        // No `super`: NSSplitViewController declares the delegate method but
+        // does not implement it, and calling through raises
+        // unrecognized-selector — which aborted every project window's load.
         guard !isRedistributingDrag,
-              let index = notification.userInfo?["NSSplitViewDividerIndex"] as? Int else {
-            dragTrailingThicknesses = nil
-            return
-        }
-        // A divider drag: remember the panes after it, so they can share the
-        // change in proportion instead of the one beside it taking all of it.
-        let views = splitView.arrangedSubviews
-        dragTrailingThicknesses = (index, views.dropFirst(index + 1).map(thickness(of:)))
+              let index = notification.userInfo?["NSSplitViewDividerIndex"] as? Int else { return }
+        // A divider drag. The pane before the divider takes the change and
+        // nothing before it moves; a nested split after it is told to keep
+        // its panes' shares rather than let AppKit hand the whole change to
+        // whichever of them holds its width least.
+        draggedDividerFollower = proportionalFollower(after: index)
+        draggedDividerFollower?.beginProportionalResize()
     }
 
-    /// A dragged divider resizes the pane before it and nothing before that;
-    /// the panes after it give up or take the difference in proportion to
-    /// their widths, rather than the next one absorbing all of it.
-    private var dragTrailingThicknesses: (index: Int, thicknesses: [CGFloat])?
+    /// The nested split, running the same way as this one, right after the
+    /// divider at `index` — the panes that share a drag of that divider.
+    private func proportionalFollower(after index: Int) -> ComposableTabsViewController? {
+        let items = splitViewItems
+        guard index + 1 < items.count,
+              let nested = items[index + 1].viewController as? ComposableTabsViewController,
+              nested.isViewLoaded, nested.splitView.isVertical == splitView.isVertical else { return nil }
+        return nested
+    }
+
+    private weak var draggedDividerFollower: ComposableTabsViewController?
+    /// Each pane's thickness when a proportional resize began.
+    private var proportionalStartThicknesses: [CGFloat]?
     private var isRedistributingDrag = false
 
-    private func redistributeAfterDrag(_ notification: Notification) {
-        guard !isRedistributingDrag, let saved = dragTrailingThicknesses,
-              notification.userInfo?["NSSplitViewDividerIndex"] as? Int == saved.index else { return }
-        dragTrailingThicknesses = nil
-        let views = splitView.arrangedSubviews
-        let trailing = Array(views.dropFirst(saved.index + 1))
-        guard trailing.count > 1, trailing.count == saved.thicknesses.count,
-              !trailing.contains(where: { splitView.isSubviewCollapsed($0) }) else { return }
-        let total = splitView.isVertical ? splitView.bounds.width : splitView.bounds.height
-        let before = views[saved.index]
-        let start = (splitView.isVertical ? before.frame.maxX : before.frame.maxY) + splitView.dividerThickness
-        let available = total - start - splitView.dividerThickness * CGFloat(trailing.count - 1)
-        let oldSum = saved.thicknesses.reduce(0, +)
-        guard oldSum > 0, available > 0 else { return }
-        isRedistributingDrag = true
-        defer { isRedistributingDrag = false }
-        var offset = start
-        for (step, old) in saved.thicknesses.dropLast().enumerated() {
-            offset += available * old / oldSum
-            splitView.setPosition(offset, ofDividerAt: saved.index + 1 + step)
-            offset += splitView.dividerThickness
+    /// Every nested split directly under this one that runs the same way —
+    /// the rest of the run of panes a proportional resize spreads across.
+    private var sameAxisChildren: [ComposableTabsViewController] {
+        splitViewItems.indices.compactMap { proportionalFollower(after: $0 - 1) }
+    }
+
+    /// Remembers the panes' thicknesses, here and in every nested split along
+    /// the same axis, before the container resizes this split.
+    func beginProportionalResize() {
+        proportionalStartThicknesses = splitView.arrangedSubviews.map(thickness(of:))
+        sameAxisChildren.forEach { $0.beginProportionalResize() }
+    }
+
+    /// Puts the dividers back on the shares `beginProportionalResize()` saw.
+    func endProportionalResize() {
+        defer { proportionalStartThicknesses = nil }
+        if let old = proportionalStartThicknesses,
+           old.count == splitView.arrangedSubviews.count,
+           !splitView.arrangedSubviews.contains(where: { splitView.isSubviewCollapsed($0) }) {
+            let divider = splitView.dividerThickness
+            let length = splitView.isVertical ? splitView.bounds.width : splitView.bounds.height
+            let positions = ProportionalDividers.positions(
+                oldThicknesses: old,
+                available: length - divider * CGFloat(old.count - 1),
+                start: 0,
+                dividerThickness: divider)
+            isRedistributingDrag = true
+            for (index, position) in positions.enumerated() {
+                splitView.setPosition(position, ofDividerAt: index)
+            }
+            isRedistributingDrag = false
         }
+        sameAxisChildren.forEach { $0.endProportionalResize() }
     }
 
     public override func splitViewDidResizeSubviews(_ notification: Notification) {
         super.splitViewDidResizeSubviews(notification)
-        redistributeAfterDrag(notification)
+        if !isRedistributingDrag,
+           notification.userInfo?["NSSplitViewDividerIndex"] is Int,
+           let follower = draggedDividerFollower {
+            draggedDividerFollower = nil
+            follower.endProportionalResize()
+        }
         guard hasAppliedPreferredThicknesses else { return }
         rootSplit()?.scheduleThicknessPersist()
     }
