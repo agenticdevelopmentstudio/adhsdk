@@ -655,6 +655,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     }
 
     private func show(_ repo: GitRepo, in group: ProjectWindowGroup) {
+        adoptSharedTabConfiguration(into: repo.id)
         group.activate(repo.id)
         present(repo.id, in: group)
         activateApp()
@@ -1187,6 +1188,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             queue: nil
         ) { [weak self] _ in
             MainActor.assumeIsolated {
+                self?.adoptSharedTabConfiguration(into: repoID)
                 if UserSettings.lastActiveProjectWindow.currentValue != repoID.uuidString {
                     UserSettings.lastActiveProjectWindow.value = repoID.uuidString
                 }
@@ -1194,6 +1196,27 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
                 Task { await projectController.refreshCheckouts() }
             }
         }
+    }
+
+    /// Every project window shares one tab configuration — the edges and the
+    /// panes' shape and sizes — and it is the one the user last worked in, so
+    /// switching projects never changes the panels' sizes or tab sides. Put on
+    /// `repoID`'s window as it comes forward.
+    private func adoptSharedTabConfiguration(into repoID: UUID) {
+        guard let controller = controllers[repoID],
+              let sourceID = UUID(uuidString: UserSettings.lastActiveProjectWindow.currentValue),
+              sourceID != repoID,
+              let configuration = tabConfiguration(of: sourceID) else { return }
+        controller.adopt(configuration)
+    }
+
+    /// The live window's configuration when it is open, else what it saved.
+    private func tabConfiguration(of repoID: UUID) -> ProjectTabConfiguration? {
+        if let live = controllers[repoID] { return live.tabConfiguration }
+        guard let loaded = try? database?.loadTabs(repoID: repoID), !loaded.tabs.isEmpty else { return nil }
+        return ProjectTabConfiguration(
+            arrangement: ProjectTabReconciler.arrangement(of: loaded.tabs, activeTabID: loaded.activeTabID),
+            enabledEdges: loaded.enabledEdges)
     }
 
     /// Drops the controller when its window closes, so reopening the project

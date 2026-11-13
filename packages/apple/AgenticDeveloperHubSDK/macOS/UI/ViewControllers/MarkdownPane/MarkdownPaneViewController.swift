@@ -96,6 +96,9 @@ public final class MarkdownPaneViewController: NSViewController {
     /// width gives the two frames half each.
     private var needsSplitEqualized = false
     private var pendingRender: DispatchWorkItem?
+    /// Follows the global layout choice, so a pane already open — in another
+    /// project's window, say — takes the layout chosen anywhere else.
+    private var layoutObserver: UserSettingObserver<MarkdownPaneLayout>?
 
     /// `opensOn` picks the pane a single-pane editor starts on, for a surface
     /// that wants one regardless of the last choice (the file browser's `.md`
@@ -163,6 +166,9 @@ public final class MarkdownPaneViewController: NSViewController {
             self?.onTextChange?(text)
         }
         source.pane.applyTheme(ThemeScope.app.palette)
+        layoutObserver = UserSettingObserver(UserSettings.markdownPaneLayout) { [weak self] layout in
+            self?.choose(layout: layout)
+        }
         view.observeTheme { [weak self] _, palette in
             self?.source.pane.applyTheme(palette)
             self?.preview.palette = palette
@@ -171,9 +177,15 @@ public final class MarkdownPaneViewController: NSViewController {
 
     public override func viewDidLayout() {
         super.viewDidLayout()
-        guard needsSplitEqualized, !splitView.isHidden, splitView.bounds.width > 0 else { return }
+        // Every pass, not once: the divider takes no drags, so the halves are
+        // only ever equal, and a pass made before the pane had its real width
+        // (a sunk window, a pane still being installed) must not stick.
+        guard !splitView.isHidden, splitView.bounds.width > 0,
+              let first = splitView.arrangedSubviews.first else { return }
+        let half = ((splitView.bounds.width - splitView.dividerThickness) / 2).rounded()
+        guard needsSplitEqualized || abs(first.frame.width - half) > 1 else { return }
         needsSplitEqualized = false
-        splitView.setPosition((splitView.bounds.width - splitView.dividerThickness) / 2, ofDividerAt: 0)
+        splitView.setPosition(half, ofDividerAt: 0)
     }
 
     // MARK: - Layout and content

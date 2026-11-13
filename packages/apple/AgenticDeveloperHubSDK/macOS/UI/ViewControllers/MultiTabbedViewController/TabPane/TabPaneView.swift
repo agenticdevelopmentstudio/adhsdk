@@ -48,6 +48,9 @@ final class TabPaneView: NSView {
     ///
     /// On a vertical bar the steps accumulate — see `recession`.
     static let inactiveInset: CGFloat = 4
+    /// How far short of the workspace a card behind stops on a vertical bar,
+    /// so the card in front is plainly the longest one.
+    static let verticalInactiveShortfall: CGFloat = 12
 
     /// How many steps back a card is drawn at before they stop adding up.
     ///
@@ -426,10 +429,11 @@ final class TabPaneView: NSView {
         let overhang = isFrontCard ? Self.workspaceOverlap : -recession
         let apply = { [self] in
             if edge.isVertical {
-                // Same size selected or not: the slot's spare height is split
-                // above and below the text, and the card only moves across.
+                // The card in front is the longest: every card shares the outer
+                // edge, and the ones behind stop short of the workspace. The
+                // slot's spare height is split above and below the text.
                 let spare = max(0, (bounds.height - content.fittingSize.height) / 2)
-                cardSides.slide(isFront: isFrontCard, shift: Self.inactiveInset,
+                cardSides.slide(isFront: isFrontCard, shift: Self.verticalInactiveShortfall,
                                 textAlong: spare, overhang: overhang)
             } else {
                 cardSides.place(inset: recession, overhang: overhang)
@@ -547,13 +551,15 @@ private struct CardSides {
         paint.workspace.constraint.constant = overhang * paint.workspace.outwardSign
     }
 
-    /// A vertical bar's cards: every card the same size, whichever is in
-    /// front; the one in front only slides `shift` toward the workspace and
-    /// the rest sit `shift` back from it. The text is held `textAlong` in from
-    /// the card's top and bottom, the same on both, so it stays centred.
+    /// A vertical bar's cards: the one in front is the longest, running the
+    /// full width of the bar from its outer edge to over the workspace's line;
+    /// the rest keep the same outer edge and stop `shift` short of the
+    /// workspace. The text is held `textAlong` in from the card's top and
+    /// bottom, the same on both, so it stays centred.
     func slide(isFront: Bool, shift: CGFloat, textAlong: CGFloat, overhang: CGFloat) {
-        paint.slide(towardWorkspace: isFront, shift: shift, along: 0)
-        text.slide(towardWorkspace: isFront, shift: shift, along: textAlong)
+        let pulledIn = isFront ? 0 : shift
+        paint.slide(towardWorkspace: false, shift: pulledIn, along: 0)
+        text.slide(towardWorkspace: false, shift: pulledIn, along: textAlong)
         if isFront {
             paint.workspace.constraint.constant = overhang * paint.workspace.outwardSign
         }

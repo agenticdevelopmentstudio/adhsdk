@@ -283,6 +283,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// when the mirror is done.
     private var isMirroringArrangement = false
 
+    /// True while `adopt(_:)` puts another window's configuration on this one:
+    /// every edge toggled and tab reshaped would otherwise write a
+    /// half-adopted project. `adopt` writes once, when it is done.
+    private var isAdoptingConfiguration = false
+
     private var titlebarAccessory: NSTitlebarAccessoryViewController?
     private let arrangeButton = ArrangeModeTitlebarButton(accessibilityID: "project-window.arrange-button")
     private var cancellables = Set<AnyCancellable>()
@@ -1696,8 +1701,12 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         guard !isMirroringArrangement, !isReloadingTabs, !isClosing else { return }
         isMirroringArrangement = true
         defer { isMirroringArrangement = false }
+        reshapeTabs(toMatch: arrangement, except: tabID)
+    }
 
-        for (otherTabID, other) in splitControllersByTabID where otherTabID != tabID {
+    /// Puts `arrangement`'s shape and sizes on every tab but `excluded`.
+    private func reshapeTabs(toMatch arrangement: LayoutNode, except excluded: UUID?) {
+        for (otherTabID, other) in splitControllersByTabID where otherTabID != excluded {
             let current = other.snapshotNode()
             let wanted = current.reshaped(toMatch: arrangement)
             if current.hasSameStructure(as: wanted) {
@@ -1706,6 +1715,30 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
                 other.rebuild(from: wanted)
             }
         }
+    }
+
+    /// This window's tab configuration, for another project window to adopt.
+    public var tabConfiguration: ProjectTabConfiguration {
+        ProjectTabConfiguration(
+            arrangement: tabbed.activeTabID.flatMap { splitControllersByTabID[$0]?.snapshotNode() },
+            enabledEdges: Edge.allCases.filter { tabbed.isEdgeEnabled($0) })
+    }
+
+    /// Takes on `configuration` — the edges first, so a newly enabled edge's
+    /// tabs are reshaped with the rest — and writes the result once.
+    public func adopt(_ configuration: ProjectTabConfiguration) {
+        guard !isReloadingTabs, !isClosing else { return }
+        isAdoptingConfiguration = true
+        if !configuration.enabledEdges.isEmpty {
+            enabledTabEdgeNames = configuration.enabledEdges.map(\.rawValue)
+        }
+        if let arrangement = configuration.arrangement {
+            isMirroringArrangement = true
+            reshapeTabs(toMatch: project.layout.spec.reconcile(arrangement), except: nil)
+            isMirroringArrangement = false
+        }
+        isAdoptingConfiguration = false
+        persistAllTabs()
     }
 
     /// Snapshots every tab's split tree (on every edge, enabled or not)
@@ -1723,7 +1756,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// half-mirrored project in the database. The mirror's caller writes once,
     /// for all of them, when the mirror is done.
     private func persistAllTabs() {
-        guard !isReloadingTabs, !isClosing, !isMirroringArrangement else { return }
+        guard !isReloadingTabs, !isClosing, !isMirroringArrangement, !isAdoptingConfiguration else { return }
         project.persistTabs(
             currentTabRecords().map(\.record),
             activeTabID: tabbed.activeTabID,

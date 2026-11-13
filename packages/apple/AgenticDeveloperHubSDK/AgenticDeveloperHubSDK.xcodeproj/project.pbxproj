@@ -3350,6 +3350,7 @@
 		D881393F24027181E79612E3 /* SnoozeOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D8CAC473ECAD07E1D3A844 /* SnoozeOption.swift */; };
 		D88479E0E666F91C31EE2484 /* JSONLScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B5B398C2A90AEDB7A5B023C /* JSONLScannerTests.swift */; };
 		D8902E549097A777FF9DD296 /* MarkdownTimestamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE651462908E4E66F6CDAB4A /* MarkdownTimestamp.swift */; };
+		D8A572438AF5334C66D1C845 /* ProjectTabConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E1C09B4D5C4016A8E71F97 /* ProjectTabConfiguration.swift */; };
 		D8AE750A38459CFE7837CD43 /* AIProviderConfigSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E687BAFA02766336496584 /* AIProviderConfigSyncTests.swift */; };
 		D8B1B6D39E1746CD0EC47572 /* SubprocessChannelRunTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDFDEFB296AD9087D8FBF48 /* SubprocessChannelRunTests.swift */; };
 		D8D396E7AD6AFCB71B8CCD93 /* FeatureModulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85003059FC49434D4445F261 /* FeatureModulesTests.swift */; };
@@ -9362,6 +9363,7 @@
 		C47BE44FE5E64BD11757502A /* ThemeManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManagerTests.swift; sourceTree = "<group>"; };
 		C49387933B69F56113CF1F39 /* TranscriptTailer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptTailer.swift; sourceTree = "<group>"; };
 		C494860C07459746A25155D7 /* PluginTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginTransportTests.swift; sourceTree = "<group>"; };
+		C4E1C09B4D5C4016A8E71F97 /* ProjectTabConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectTabConfiguration.swift; sourceTree = "<group>"; };
 		C4EC948154AE8B9A7D8F3007 /* WindowExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowExplorerView.swift; sourceTree = "<group>"; };
 		C50FF38F72801A84542C4052 /* ModelUseFacet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelUseFacet.swift; sourceTree = "<group>"; };
 		C51E7041A640EE1A23D1F1EA /* ExtensionHostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionHostTests.swift; sourceTree = "<group>"; };
@@ -16780,6 +16782,7 @@
 				9D5A83D5DB424DC3C5A0A402 /* PaneMinimizeGeometry.swift */,
 				90DF4F38C3AA95C0C9E15177 /* PaneSpacing.swift */,
 				EC3E76BA65F4123B9747AAE8 /* ProjectPaneStateStore.swift */,
+				C4E1C09B4D5C4016A8E71F97 /* ProjectTabConfiguration.swift */,
 				AEAD910A3C252C4D49942A15 /* ProjectWindowSplitViewController.swift */,
 				77A5C52681FF78A73C6258CE /* ProportionalDividers.swift */,
 				629D3E6F7D572104F2FDDF0A /* SafeAreaHostViewController.swift */,
@@ -23385,6 +23388,7 @@
 				6E62150DBDEEFAF42AFF24B6 /* ProjectScanProgressWindow.swift in Sources */,
 				DD66A4F505774493335B8AC9 /* ProjectSessionMonitor.swift in Sources */,
 				A6EE1FF79455114CC3AF9228 /* ProjectShelfViewController.swift in Sources */,
+				D8A572438AF5334C66D1C845 /* ProjectTabConfiguration.swift in Sources */,
 				FFEED2A9E70F8741426ED45D /* ProjectTabReconciler.swift in Sources */,
 				EB7E0CA1A6FB5AC108FDA4A0 /* ProjectTree.swift in Sources */,
 				ABDDC8A3B0C53BD563E1D6B6 /* ProjectWindowGroup.swift in Sources */,
