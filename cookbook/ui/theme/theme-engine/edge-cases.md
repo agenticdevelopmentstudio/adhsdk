@@ -20,5 +20,7 @@
 - **Large theme file**: the importer MUST read the whole file into memory with no size cap and no timeout (MUST); when importing into the theme store, this blocks that store's designated thread for the read.
 - **Cancellation**: no parse can be cancelled once started (MUST).
 - **Error states**: every failure MUST surface to the caller as an error — an import error, a resource-path error, a file-read error, or the underlying JSON-parsing error — and nothing is stored (MUST).
+- **Themes imported before token colours were kept**: a theme hand-imported through the theme store's VS Code import before the importer kept `tokenColors` has no VS Code token colours, so its code theme MUST use synthesized rules (coloured from its ten syntax styles) until it is imported again; extension-contributed themes are re-parsed from their files and pick the token colours up on their own (MUST).
+- **Corrupt stored token colours**: VS Code token colours that do not parse as a JSON array MUST be ignored by the code theme, which synthesizes its rules instead (MUST).
 - **Offline or disconnected state**: not applicable; the component reads local files and local settings only and performs no network I/O.
 

@@ -47,18 +47,17 @@ public struct CodeTheme: Sendable, Hashable {
         }
         let colors = root["colors"] as? [String: Any] ?? [:]
         let isLight = (root["type"] as? String) == "light"
-        let defaults = Self.scopelessSettings(in: root)
 
         func parsed(_ value: Any?) -> RGBAColor? {
             (value as? String).flatMap(VSCodeThemeImporter.color(fromHex:))
         }
 
         let foreground = parsed(colors["editor.foreground"])
-            ?? parsed(defaults?["foreground"])
+            ?? Self.scopelessColor("foreground", in: root)
             ?? parsed(colors["foreground"])
             ?? Self.opaque(isLight ? 0x33_33_33 : 0xBB_BB_BB)
         let background = parsed(colors["editor.background"])
-            ?? parsed(defaults?["background"])
+            ?? Self.scopelessColor("background", in: root)
             ?? Self.opaque(isLight ? 0xFF_FF_FF : 0x1E_1E_1E)
         self.init(
             foreground: foreground,
@@ -67,12 +66,18 @@ public struct CodeTheme: Sendable, Hashable {
         )
     }
 
-    /// The `settings` of the first `tokenColors` entry with no `scope`: VS
-    /// Code's way of stating the default text colour inside the rules.
-    private static func scopelessSettings(in root: [String: Any]) -> [String: Any]? {
+    /// `settings[key]` of the first scope-less `tokenColors` entry that states
+    /// a parseable one: VS Code's way of stating the default text colours
+    /// inside the rules. Scope-less is an absent `scope` or `"scope": null`. A
+    /// scope-less entry carrying only a `fontStyle`, or only the other colour,
+    /// is passed over rather than ending the search.
+    private static func scopelessColor(_ key: String, in root: [String: Any]) -> RGBAColor? {
         guard let entries = root["tokenColors"] as? [Any] else { return nil }
-        for case let entry as [String: Any] in entries where entry["scope"] == nil {
-            if let settings = entry["settings"] as? [String: Any] { return settings }
+        for case let entry as [String: Any] in entries where entry["scope"] == nil || entry["scope"] is NSNull {
+            if let raw = (entry["settings"] as? [String: Any])?[key] as? String,
+               let color = VSCodeThemeImporter.color(fromHex: raw) {
+                return color
+            }
         }
         return nil
     }
@@ -91,21 +96,32 @@ public struct CodeTheme: Sendable, Hashable {
     /// The palette's code colours: its primary text on its window background,
     /// painted by the theme's kept `tokenColors`, or by one synthesized rule
     /// per syntax role when it has none.
+    ///
+    /// Kept token colours are used only when they parse as a JSON array. They
+    /// arrive from saved settings, which can be hand-edited or truncated, and a
+    /// highlighter handed anything else would paint nothing at all.
     public init(palette: SemanticPalette) {
+        let kept = palette.theme.vscodeTokenColors.flatMap { text in
+            Self.isJSONArray(text) ? text : nil
+        }
         self.init(
             foreground: palette.color(.primaryText),
             background: palette.color(.windowBackground),
-            tokenColorsJSON: palette.theme.vscodeTokenColors ?? Self.synthesizedTokenColors(for: palette)
+            tokenColorsJSON: kept ?? Self.synthesizedTokenColors(for: palette)
         )
     }
 
-    /// One rule per `SyntaxRole`, in declaration order, over the role's
-    /// TextMate scopes.
+    private static func isJSONArray(_ text: String) -> Bool {
+        (try? JSONSerialization.jsonObject(with: Data(text.utf8))) is [Any]
+    }
+
+    /// One rule per `SyntaxRole`, in declaration order, over the role's broad
+    /// write selectors (`SyntaxRole.textMateRuleScopes`).
     private static func synthesizedTokenColors(for palette: SemanticPalette) -> String {
         let rules: [[String: Any]] = SyntaxRole.allCases.map { role in
             let style = palette.syntaxStyle(for: role)
             return [
-                "scope": role.textMateScopes.joined(separator: ","),
+                "scope": role.textMateRuleScopes.joined(separator: ","),
                 "settings": [
                     "foreground": hex(style.color),
                     "fontStyle": fontStyle(bold: style.bold, italic: style.italic)

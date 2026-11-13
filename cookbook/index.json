@@ -527,7 +527,7 @@
           "conformance": {
             "hash": "sha256:a97a3bde3bae1c5a6407a2bd19bf68e07b24d2d999601327cfc6ff6ff123d8fb",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Theme/SyntaxRoleOverrides.swift",
           "platform": "apple"
@@ -536,7 +536,7 @@
           "conformance": {
             "hash": "sha256:af3db1056bef3ffde5a4b3144b40e5dcd02fd41795e219fd3a234548e68351dc",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Theme/UserSettingsThemeStorage.swift",
           "platform": "apple"
@@ -545,7 +545,7 @@
           "conformance": {
             "hash": "sha256:caf8fa7f94585a6966e9e451e2ed13f3c3822107b67f33242f71ea3382f8a6b9",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Theme/VSCodeThemeImporter.swift",
           "platform": "apple"
@@ -554,25 +554,25 @@
           "conformance": {
             "hash": "sha256:dbdb189fa91b2b9dd9a0ba325706b5887c33570a8d2946b6cc3418fbcd114e0c",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Theme/ThemeManager+UserSettings.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:2e7a2d57ad40d5378df3e1b94538e64a9be3a5ad886883dfa1fe4eed2ac7d95c",
+            "hash": "sha256:954a4f5a0bc7c4abb745d6454de463fb3e5d6a3a0996c878293a27fec77c8bfe",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Theme/SyntaxRole+Defaults.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:bd8cd1ad6354bc6b7014e2bae61e237838b55d1d7a44e029a5e7348072c13559",
+            "hash": "sha256:dbf4b55fdd56a5f8ed01559d7cea71cf4160472cfeea2b439d3059e7c83e2df9",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/CodeTheme.swift",
           "platform": "apple"

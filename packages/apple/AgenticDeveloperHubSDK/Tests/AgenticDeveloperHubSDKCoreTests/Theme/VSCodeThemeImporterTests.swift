@@ -990,8 +990,11 @@ struct VSCodeThemeImporterTests {
     @Test("theme JSON saved before vscodeTokenColors existed still decodes")
     func oldThemeJSONWithoutTokenColorsDecodes() throws {
         let encoded = try JSONEncoder().encode(BuiltInThemes.dracula)
-        var object = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-        object.removeValue(forKey: "vscodeTokenColors")
+        let object = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        // A theme with no token colours encodes no key at all: the same bytes a
+        // build from before the key existed wrote.
+        #expect(object["vscodeTokenColors"] == nil)
+        #expect(object["name"] as? String == BuiltInThemes.dracula.name)
         let old = try JSONSerialization.data(withJSONObject: object)
 
         let decoded = try JSONDecoder().decode(ColorTheme.self, from: old)
@@ -1027,6 +1030,33 @@ struct VSCodeThemeImporterTests {
             "characters constant.character 2 success",
             "comments comment.line - tertiaryText italic"
         ])
+    }
+
+    @Test("each syntax role writes rules over broad TextMate roots, distinct from its query scopes")
+    func syntaxRoleRuleScopes() {
+        #expect(SyntaxRole.allCases.map { "\($0.rawValue) \($0.textMateRuleScopes.joined(separator: ","))" } == [
+            "keywords keyword,storage.type,storage.modifier",
+            "commands entity.name.function,support.function",
+            "types entity.name.type,entity.name.class,support.type,support.class",
+            "attributes entity.other.attribute-name",
+            "variables variable",
+            "values constant.language,support.constant",
+            "numbers constant.numeric",
+            "strings string",
+            "characters constant.character",
+            "comments comment,punctuation.definition.comment"
+        ])
+        // Every query scope falls under one of its own role's write selectors, so
+        // a role the importer reads from a theme is a role the rules paint.
+        for role in SyntaxRole.allCases {
+            for scope in role.textMateScopes {
+                #expect(role.textMateRuleScopes.contains { scope == $0 || scope.hasPrefix($0 + ".") },
+                        "\(role) does not cover \(scope)")
+            }
+        }
+        // No selector is claimed by two roles.
+        let all = SyntaxRole.allCases.flatMap(\.textMateRuleScopes)
+        #expect(Set(all).count == all.count)
     }
 
     @Test("a palette's syntax style is the declared one, else the ANSI slot, else the fallback role")
