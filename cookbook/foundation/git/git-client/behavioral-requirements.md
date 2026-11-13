@@ -170,3 +170,84 @@
   listing is a single space, not an empty string, for every non-current
   branch.
 
+### History model
+
+The history model is the set of value types a read-only history browser
+needs — commits, refs, stashes, submodules and a log request — each with
+the exact format string it is parsed from. Every one is a plain value,
+safe to share across concurrent callers, and every parser drops a record it
+cannot read rather than failing the whole listing.
+
+- **history-person**: A person value MUST carry a name, an email and a
+  date; a commit MUST carry one for its author and one for its committer.
+- **commit-log-format**: The commit parser MUST expect records produced by
+  the format
+  `%H%x1f%P%x1f%an%x1f%ae%x1f%at%x1f%cn%x1f%ce%x1f%ct%x1f%s%x1f%b%x1e` —
+  ten fields separated by the unit separator (0x1F), each record terminated
+  by the record separator (0x1E).
+- **commit-record-split**: Parsing a log MUST split records on the record
+  separator and MUST strip the newline git writes between records (the
+  format is a terminator, so every record after the first begins with one);
+  a record that is empty after that is skipped.
+- **commit-field-split**: Within a record the parser MUST read the first
+  eight fields (full sha, parents, author name, author email, author epoch,
+  committer name, committer email, committer epoch) from the front, and
+  MUST split what remains at its *last* unit separator into subject and
+  body, so a unit separator inside a subject survives; a unit separator
+  inside a body is the one input this cannot recover.
+- **commit-parents-all**: A commit's parents MUST be every space-separated
+  sha in the `%P` field, in order — three for an octopus merge — and an
+  empty list for a root commit.
+- **commit-body-trim**: A commit's body MUST keep its interior newlines and
+  MUST have its trailing newlines removed.
+- **commit-dates-epoch**: Author and committer dates MUST be read as
+  seconds since the Unix epoch; a record whose sha is empty, whose field
+  count is short, or whose epoch is not an integer MUST be dropped.
+- **commit-short-id**: A commit's short id MUST be the first eight
+  characters of its full sha.
+- **ref-format**: The ref parser MUST expect `for-each-ref` lines produced
+  by the format
+  `%(refname)%1f%(refname:short)%1f%(objectname)%1f%(*objectname)%1f%(upstream:short)%1f%(upstream:track,nobracket)%1f%(HEAD)`,
+  one ref per line, fields separated by the unit separator.
+- **ref-kind-from-full-name**: A ref's kind MUST come from its full name:
+  `refs/heads/` is a local branch, `refs/remotes/` a remote branch,
+  `refs/tags/` a tag. Every other ref (`refs/stash`, notes, anything else)
+  MUST be dropped, and so MUST a remote's `HEAD` symbolic ref
+  (`refs/remotes/<remote>/HEAD`).
+- **ref-name-from-full-name**: A ref's display name MUST be its full name
+  with the kind's prefix removed (`origin/main` for a remote branch), not
+  `%(refname:short)`, which prints `heads/<name>` when a branch shares its
+  name with a tag.
+- **ref-target-peeled**: A ref's target MUST be the peeled object
+  (`%(*objectname)`) when that field is non-empty — an annotated tag — and
+  the ref's own object (`%(objectname)`) otherwise.
+- **ref-tracking**: A ref's ahead and behind counts MUST be read from the
+  track field's `ahead N` and `behind N` parts, each defaulting to 0; a
+  track of `gone` MUST yield 0 and 0 while the upstream is kept.
+- **ref-head-and-remote**: A ref MUST be the checked-out one exactly when
+  its `%(HEAD)` field is `*`; a remote branch's remote MUST be the first
+  path component after `refs/remotes/`, and every other kind has none.
+- **stash-list-format**: The stash parser MUST expect `stash list -z`
+  output in the format `%gd%x1f%H%x1f%ct%x1f%gs`: NUL-separated records of
+  selector, sha, epoch and message, the stash's index read from the digits
+  between the selector's braces (`stash@{0}` is 0).
+- **submodule-status-states**: The submodule parser MUST read `submodule
+  status` lines whose first character gives the state — space for current,
+  `+` for modified (checked out at a commit other than the recorded one),
+  `-` for uninitialized, `U` for conflicted — followed by the sha, a space
+  and the path, with a trailing ` (<describe>)` removed; the path may
+  contain spaces.
+- **log-query-arguments**: A log request MUST produce the arguments that
+  follow `log`: `--date-order`, `--format=` with the commit log format,
+  `--max-count=<limit>` (default 500), `--skip=<skip>` (default 0), then
+  `--author=<value>`, `--grep=<value>` with `--regexp-ignore-case`, and
+  `-S<text>` for whichever of author, message search and pickaxe are set,
+  then the revisions (default `--branches --tags --remotes HEAD`), then
+  `--` and the path when a path is set. It MUST NOT pass `-z`.
+- **log-query-follow**: A log request that follows renames MUST end with
+  `--follow -- <path>` and MUST omit its revisions, because `git log
+  --follow` takes exactly one path and walks from `HEAD`.
+- **history-output-decoding**: Captured history output MUST be decoded with
+  the same ladder as the execution step — UTF-8, then ISO Latin-1 — and
+  never yield nothing.
+

@@ -305,16 +305,6 @@ public actor GitClient {
                 standardError: result.standardError
             )
         }
-        // `String(bytes:encoding:)` rather than `String(decoding:as:)` to decode
-        // a capture the same way `SubprocessChannel.standardErrorText()` does;
-        // one framework, one ladder. It is not a correctness win, and neither
-        // ladder round-trips a capture git could not express in UTF-8:
-        // `String(decoding:)` would replace the offending bytes with U+FFFD and
-        // hand the parser a path that matches nothing on disk, while a single
-        // invalid byte here re-reads the *whole* capture as Latin-1 and
-        // mojibakes every legitimate multi-byte character in it.
-        return String(bytes: result.standardOutput, encoding: .utf8)
-            ?? String(bytes: result.standardOutput, encoding: .isoLatin1)
-            ?? ""
+        return GitOutputDecoding.string(result.standardOutput)
     }
 }
