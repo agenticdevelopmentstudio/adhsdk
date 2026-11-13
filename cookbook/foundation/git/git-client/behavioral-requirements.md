@@ -257,3 +257,61 @@ cannot read rather than failing the whole listing.
   the same ladder as the execution step — UTF-8, then ISO Latin-1, segment
   by segment (below) — and never yield nothing.
 
+### Diff and blame
+
+The diff and blame model is what a read-only diff viewer and a blame view
+need: a parsed unified patch, the changed words inside a changed line, and
+a parsed porcelain blame. Each parser takes text that is already decoded,
+returns a plain value safe to share across concurrent callers, and skips
+input it cannot read rather than failing.
+
+- **diff-file-split**: Parsing a patch MUST start a new file at every line
+  beginning with `diff --git `, and MUST read the old and new paths from
+  that line, then let the `---`/`+++` lines and the `rename from`/`rename
+  to` (or `copy from`/`copy to`) lines override them when present.
+- **diff-dev-null**: A `--- /dev/null` side MUST give no old path, and a
+  `+++ /dev/null` side no new path; a file's path MUST be its new path, or
+  its old path when it has no new path.
+- **diff-change-kind**: A file's change MUST be added for `new file mode`
+  or an absent old path, deleted for `deleted file mode` or an absent new
+  path, renamed with its similarity for `rename from`/`similarity index
+  N%`, copied with its similarity for `copy from`, type-changed when the
+  old and new mode lines name different object types (a file and a
+  symlink), and modified otherwise — including a change of mode alone,
+  which has no hunks.
+- **diff-binary**: A `Binary files … differ` line or a `GIT binary patch`
+  line MUST mark the file binary, and a binary file MUST have no hunks.
+- **diff-quoted-paths**: A path git writes in C quotes (because it holds a
+  tab, newline, quote, backslash or, without `core.quotePath=false`, a
+  non-ASCII byte) MUST be unquoted: the escapes `\t`, `\n`, `\r`, `\"`,
+  `\\`, `\a`, `\b`, `\f`, `\v` and three-digit octal byte escapes, the
+  octal bytes collected and decoded together as UTF-8 (`\303\274` is `ü`).
+  The `a/` and `b/` prefixes MUST be removed after unquoting.
+- **diff-hunk-header**: A hunk MUST begin at a line of the form `@@ -o[,c]
+  +n[,c] @@ section`, a count omitted meaning 1, and MUST keep the text after
+  the second `@@` (trimmed) as its section heading.
+- **diff-line-numbers**: Within a hunk a context line MUST carry both an
+  old and a new line number, a removed line only an old one and an added
+  line only a new one, numbered from the hunk's starts; a `\ No newline at
+  end of file` line MUST be kept as its own kind with no numbers. A line's
+  text MUST exclude its one-character prefix.
+- **word-diff-tokens**: The changed words between a removed and an added
+  line MUST be found by a longest-common-subsequence over word tokens —
+  runs of letters, digits and underscores; runs of whitespace; and every
+  other character as a token of its own — and MUST be reported as UTF-16
+  ranges into each line, adjacent changed tokens merged into one range;
+  identical lines MUST report no ranges.
+- **word-diff-pairing**: Within a hunk, each block of consecutive removed
+  and added lines MUST pair its i-th removed line with its i-th added line;
+  lines beyond the shorter side are left unpaired, and a context line ends
+  the block.
+- **blame-porcelain**: Parsing `blame --porcelain` MUST read each header
+  line `<sha> <original line> <final line>[ <group size>]`, collect the
+  commit's `author`, `author-mail` (angle brackets removed), `author-time`,
+  `summary` and `previous <sha> <path>` metadata the first time that commit
+  appears (a repeated header carries none), skip `boundary` and every other
+  metadata line, and take the tab-prefixed line that follows as the line's
+  text.
+- **blame-runs**: A blame's runs MUST be the maximal sequences of
+  consecutive final lines that belong to one commit, in final-line order.
+

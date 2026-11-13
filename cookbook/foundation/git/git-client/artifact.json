@@ -45,6 +45,14 @@
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitSubmodule.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitLogQuery.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOutputDecoding.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitDiff.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileDiff.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitDiffHunk.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitDiffLine.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchParser.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWordDiff.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitBlame.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPathUnquoting.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitCommandLogTests.swift (adhsdk)",
@@ -57,7 +65,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "142c5d8e4c26740d",
+  "synced": "c5e899c57949bd35",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
