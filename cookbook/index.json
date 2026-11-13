@@ -4971,6 +4971,22 @@
       "path": "avatar-animation-engine/runtime",
       "rdid": "adhsdk.ingredient.avatar-animation-engine.runtime"
     },
+    "750fe184-d20a-4b58-867b-3edd094d59b4": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:d0cd2f36782e9e3a163195e4d363116d98ba13bd22e195e0cb9de0cfb5b41851",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Graph/",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/graph/commit-graph-layout",
+      "rdid": "adhsdk.ingredient.foundation.graph.commit-graph-layout"
+    },
     "7610ef55-32c9-43b6-8a70-aaa247cc4899": {
       "implementations": [
         {
