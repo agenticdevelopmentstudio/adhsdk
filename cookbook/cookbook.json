@@ -10,7 +10,9 @@
   "name": "adhsdk",
   "platforms": [
     "apple",
-    "web"
+    "web",
+    "android",
+    "windows"
   ],
   "rdid": "adhsdk",
   "structure": {
