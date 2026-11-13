@@ -1,0 +1,11 @@
+
+| Check | Status | Category |
+|-------|--------|----------|
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
+
+The worker separates concerns cleanly: it sequences calls to an injected `GmailAPI`, an injected store and an injected clock, and leaves transport, retry, pacing, parsing, classification, scheduling, serialisation and status recording to other components. Unit-test coverage is partial: `GmailSyncWorkerTests` has 19 tests covering both modes, paging, batching, partial failure, fallback, tombstoning and labels, but none asserts the fetch concurrency limit of 8, an empty account, changed-id deduplication, the deleted-id exclusion, cancellation, a failure in `labels()` or `profile()`, or the label-name edge cases, and vectors sync-worker-020 to sync-worker-024 are derived from the code. Explicit error handling passes because no error is swallowed: every `GmailAPI` and store error propagates unchanged, the one handled error `GmailCursorExpired` and the one converted status, a 404 on a message, are deliberate and tested. Idempotent operations pass because a repeat of any pass leaves the same stored set: upserts are keyed on connection and external id and revive tombstoned rows, and tombstoning a tombstoned row changes nothing. Data integrity is partial: each store call is its own transaction, so a failed run can leave labels, some batches and the deleted-id tombstones written without a cursor, and the design relies on replay rather than a single transaction to reach a consistent mirror.
+

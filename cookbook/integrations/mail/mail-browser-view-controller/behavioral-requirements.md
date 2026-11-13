@@ -1,0 +1,25 @@
+
+- **client-only-dependency**: The component MUST be constructible from a mail client alone, with no other required argument.
+- **model-owned**: The component MUST create one model from the supplied client at construction and expose it as a public `model`.
+- **shared-model**: The component MUST give that same model instance to the sidebar, the message list and the reader.
+- **no-coder-init**: The component MUST NOT support construction from an archive; `init(coder:)` MUST trap with the message "init(coder:) has not been implemented".
+- **pane-order**: The component MUST lay out the panes in this order: mailbox sidebar, message list, reader.
+- **sidebar-width**: The sidebar pane MUST be between 180 and 320 points wide.
+- **list-min-width**: The message list pane MUST be at least 280 points wide.
+- **reader-min-width**: The reader pane MUST be at least 360 points wide.
+- **divider-persistence**: The component MUST set the split view's autosave name to "MailBrowserSplit" so divider positions are remembered.
+- **initial-load**: The component MUST ask the model to reload once, when its view loads.
+- **poll-start**: The component MUST start a repeating refresh task each time the view appears, cancelling any task already running first.
+- **poll-interval**: The refresh task MUST wait one refresh interval before each refresh, so the first refresh follows the appearance by one full interval.
+- **poll-default-interval**: The refresh interval MUST default to 30 seconds and MAY be set at construction.
+- **poll-action**: Each tick MUST call the model's refresh-if-synced action, which reads the local store and never calls Gmail.
+- **poll-stop**: The component MUST cancel the refresh task and drop it when the view disappears.
+- **poll-cancel-exit**: The refresh task MUST end without calling the model when it was cancelled during its wait.
+- **poll-no-retain**: The refresh task MUST NOT keep the controller alive; if the controller is gone when a wait ends, the task MUST end.
+- **error-observe**: The component MUST observe the model's error message on the main queue and present an alert for every non-nil value.
+- **error-nil-ignored**: The component MUST NOT present an alert when the error message becomes nil.
+- **error-alert-content**: The alert MUST use the title "Mail", the model's message as informative text, the warning style and a single "OK" button.
+- **error-sheet**: When the view is in a window, the alert MUST be presented as a sheet on that window.
+- **error-modal-fallback**: When the view has no window, the alert MUST be run application-modally.
+- **error-dismiss**: The component MUST call the model's dismiss-error action after the alert is closed, in both the sheet and modal paths.
+

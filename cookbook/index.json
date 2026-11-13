@@ -60,6 +60,48 @@
       "path": "foundation/billing/billing-prefs",
       "rdid": "adhsdk.ingredient.foundation.billing.billing-prefs"
     },
+    "018e4a69-cbeb-4105-8f39-dae3e6f7d8ec": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/ios/integrations/mail/mail-browser-view-controller/",
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/mail/mail-browser-view-controller/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/mail/mail-browser-view-controller/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/mail/mail-browser-view-controller/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-browser-view-controller",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-browser-view-controller"
+    },
     "01942f60-6711-43e7-a7b2-a8e7cb4c2cda": {
       "implementations": [
         {
@@ -682,6 +724,41 @@
       "path": "ui/components/overlays/sheet",
       "rdid": "adhsdk.ingredient.ui.components.overlays.sheet"
     },
+    "1157bca1-0d27-49e9-a989-d637505ba5f1": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailSyncWorker.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/gmail/gmail-sync-worker/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/gmail/gmail-sync-worker/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/gmail/gmail-sync-worker/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-sync-worker",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-sync-worker"
+    },
     "11f7a665-60e9-42df-853c-fe4de3af0fd8": {
       "implementations": [
         {
@@ -927,6 +1004,41 @@
       "path": "agentic-developer-hub-sdk/sdk/sources-ui/macos/chat/inline-chat-view",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.macos.chat.inline-chat-view"
     },
+    "18871853-95b7-492a-9f1f-417283594824": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailAPI.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/gmail/gmail-api/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/gmail/gmail-api/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/gmail/gmail-api/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-api",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-api"
+    },
     "18ad68ea-187b-463d-9f5c-b855b9bc36a9": {
       "implementations": [
         {
@@ -1094,6 +1206,48 @@
       "kind": "ingredient",
       "path": "status/service/monitor/refresh-project-meta",
       "rdid": "adhsdk.ingredient.status.service.monitor.refresh-project-meta"
+    },
+    "1c826ac4-20e0-4089-870f-5d1fd4b59983": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/IntegrationsSettingsPanel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/ios/integrations/integrations-settings-panel/",
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/integrations-settings-panel/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/integrations-settings-panel/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/integrations-settings-panel/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/integrations-settings-panel",
+      "rdid": "adhsdk.ingredient.integrations.integrations-settings-panel"
     },
     "1cacbe17-bca6-458c-bf1f-df9efa3652be": {
       "implementations": [
@@ -1640,6 +1794,41 @@
       "path": "workspace/extensions/manifest/contributed-views",
       "rdid": "adhsdk.ingredient.workspace.extensions.manifest.contributed-views"
     },
+    "238f4d91-4a22-4a0d-ae4b-b4070d02b357": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/auth/google-o-auth-client-config/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/auth/google-o-auth-client-config/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/auth/google-o-auth-client-config/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/auth/google-o-auth-client-config",
+      "rdid": "adhsdk.ingredient.integrations.auth.google-o-auth-client-config"
+    },
     "240f8d48-45af-49ea-aebf-95d756d74707": {
       "implementations": [
         {
@@ -1751,6 +1940,48 @@
       "kind": "ingredient",
       "path": "ui/components/overlays/dropdown-menu",
       "rdid": "adhsdk.ingredient.ui.components.overlays.dropdown-menu"
+    },
+    "26473390-9629-40f0-ae98-32ccab2fc5da": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailMessageListViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/ios/integrations/mail/mail-message-list-view-controller/",
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/mail/mail-message-list-view-controller/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/mail/mail-message-list-view-controller/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/mail/mail-message-list-view-controller/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-message-list-view-controller",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-message-list-view-controller"
     },
     "267cdb61-52e4-440c-bfa2-799d8e9e12dc": {
       "implementations": [
@@ -2122,6 +2353,48 @@
       "kind": "ingredient",
       "path": "ai/chat/chat-window/chat-transcript-row-view",
       "rdid": "adhsdk.ingredient.ai.chat.chat-window.chat-transcript-row-view"
+    },
+    "2fa64944-9744-4d71-8fed-f785e7ce1e51": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsModel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/ios/integrations/gmail-settings-model/",
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/gmail-settings-model/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/gmail-settings-model/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/gmail-settings-model/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail-settings-model",
+      "rdid": "adhsdk.ingredient.integrations.gmail-settings-model"
     },
     "31198bb7-2270-449e-94c1-026b68d2bc81": {
       "implementations": [
@@ -3431,6 +3704,48 @@
       "kind": "ingredient",
       "path": "status/dashboard/logic/health",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.health"
+    },
+    "4f066e76-2eca-4cd7-8b73-840178e4edf3": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/ios/integrations/gmail-settings-view/",
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/gmail-settings-view/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/gmail-settings-view/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/gmail-settings-view/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail-settings-view",
+      "rdid": "adhsdk.ingredient.integrations.gmail-settings-view"
     },
     "5069f11f-e0c6-40c3-92ca-6152b8df3bc2": {
       "implementations": [
@@ -5748,6 +6063,20 @@
       "path": "status/service/monitor/time-ago",
       "rdid": "adhsdk.ingredient.status.service.monitor.time-ago"
     },
+    "83a5a5e0-3337-4aff-aef8-40a7393dabfe": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailSidebarViewController.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-sidebar-view-controller",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-sidebar-view-controller"
+    },
     "840b5a7a-921a-4770-8dea-5ffbf9a2ee6c": {
       "implementations": [
         {
@@ -8058,6 +8387,48 @@
       "path": "status/service/monitor/fetch-cloudflare",
       "rdid": "adhsdk.ingredient.status.service.monitor.fetch-cloudflare"
     },
+    "b3edb32d-7473-464b-acfb-c19cdd44e99e": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserModel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/ios/integrations/mail/mail-browser-model/",
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/mail/mail-browser-model/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/mail/mail-browser-model/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/mail/mail-browser-model/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-browser-model",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-browser-model"
+    },
     "b4cfbb31-cacc-4532-97c3-03e53852e8d3": {
       "implementations": [
         {
@@ -8387,6 +8758,41 @@
       "path": "workspace/extensions/vscode-api/languages/main-thread-languages",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.languages.main-thread-languages"
     },
+    "be4db0fe-628d-41f8-9fdf-25a6d46844cf": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/cli/mail-command-line/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/cli/mail-command-line/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/cli/mail-command-line/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/cli/mail-command-line",
+      "rdid": "adhsdk.ingredient.integrations.cli.mail-command-line"
+    },
     "bea6525c-171f-4547-bbb3-7c709543552e": {
       "implementations": [
         {
@@ -8582,6 +8988,41 @@
       "kind": "ingredient",
       "path": "workspace/extensions/manifest/contributed-settings",
       "rdid": "adhsdk.ingredient.workspace.extensions.manifest.contributed-settings"
+    },
+    "c448c9f4-195d-4625-a49d-22dd5468a914": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailRESTClient.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/gmail/gmail-rest-client/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/gmail/gmail-rest-client/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/gmail/gmail-rest-client/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-rest-client",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-rest-client"
     },
     "c4f76978-5aef-430c-a7e1-a20326da6709": {
       "implementations": [
@@ -8960,6 +9401,41 @@
       "kind": "ingredient",
       "path": "status/dashboard/logic/auto-configure",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.auto-configure"
+    },
+    "cdadfe1d-e4a2-4e2d-96a7-a5eb615a1302": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailMessageParser.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/gmail/gmail-message-parser/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/gmail/gmail-message-parser/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/gmail/gmail-message-parser/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-message-parser",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-message-parser"
     },
     "ce157d5a-c145-4348-b58f-6a76c9fda1d6": {
       "implementations": [
@@ -10465,6 +10941,41 @@
       "path": "ui/settings/views/live-timer-list-view",
       "rdid": "adhsdk.ingredient.ui.settings.views.live-timer-list-view"
     },
+    "f0543d0b-31fe-4dcc-833e-21ead91bdca5": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailQuotaPacer.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/gmail/gmail-quota-pacer/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/gmail/gmail-quota-pacer/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/gmail/gmail-quota-pacer/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-quota-pacer",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-quota-pacer"
+    },
     "f064de5a-b117-4147-96a9-c1ed11d5c976": {
       "implementations": [
         {
@@ -11031,6 +11542,41 @@
       "kind": "ingredient",
       "path": "ui/settings/layout/panel-host-view",
       "rdid": "adhsdk.ingredient.ui.settings.layout.panel-host-view"
+    },
+    "fafeef0d-c283-4ecf-92fb-b5de35d71f79": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleAuthorizer.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/integrations/auth/google-authorizer/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/android/integrations/auth/google-authorizer/",
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/windows/integrations/auth/google-authorizer/",
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/auth/google-authorizer",
+      "rdid": "adhsdk.ingredient.integrations.auth.google-authorizer"
     },
     "fb3a0db4-691e-4025-a391-2853908248b5": {
       "implementations": [

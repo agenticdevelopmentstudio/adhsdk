@@ -1,0 +1,56 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "cdadfe1d-e4a2-4e2d-96a7-a5eb615a1302",
+    "title": "Gmail Message Parser",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "mfullerton",
+    "copyright": "2026 mfullerton",
+    "license": "MIT",
+    "summary": "Pure function that turns a Gmail format=full message into an EmailMessage: headers, addresses, bodies, attachments, charsets and dates.",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios"
+    ],
+    "tags": [
+      "gmail",
+      "mail-sync",
+      "mime",
+      "parser"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "d0b98717c1a1be8a",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

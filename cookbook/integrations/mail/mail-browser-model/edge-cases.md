@@ -1,0 +1,22 @@
+
+- **Empty account list (MUST)**: With no accounts, `reload` clears the list and the open message and sets `selectedMailbox` to nil (`withNoAccountsNothingIsSelected`).
+- **Provider not configured (MUST)**: When the status says `configured` is false, `reload` sets `accounts` to empty and reads no labels.
+- **Label read fails partway (MUST)**: A failure on any account's labels abandons the whole mailboxes assignment, so `mailboxes` keeps its earlier value, `errorMessage` is set and `reload` still goes on to the selection step. A previously valid selection is therefore kept and its first page reloaded.
+- **Accounts replaced on a failed reload (MUST)**: `accounts` and the recorded sync values are assigned before the labels are read, so a label failure leaves new accounts beside old mailboxes.
+- **Selection no longer exists (MUST)**: When the selected mailbox is gone after a reload, the first account's Inbox is selected, or its first mailbox when it has no Inbox.
+- **Empty first page (MUST)**: A mailbox with no messages gives an empty `messages`, `hasMore` false and no error.
+- **Boundary page size (MUST)**: A page with no next cursor sets `hasMore` to false and further `loadMore` calls send no request (`pagesAppendUntilTheLast`).
+- **Refresh row count (MUST)**: A refresh asks for the larger of `pageSize` and the rows showing, so the list does not shrink; the cursor then comes from that single larger request.
+- **Concurrent selections (MUST)**: A list or message answer for a superseded selection is dropped through the generation counters (`aPageForAnEarlierMailboxIsDropped`). Because the check applies to failures too, a superseded failure never reaches `errorMessage`.
+- **Concurrent load more (MUST)**: A second `loadMore` while one is running does nothing.
+- **Load more across a refresh (MUST)**: Refreshing or switching the list while `loadMore` is running discards that page, because the list generation has changed.
+- **Open message leaves the list (MUST)**: When a refresh no longer contains the open message, the message closes.
+- **Message opened from another account (MUST)**: A listed message's account email that matches no account falls back to the selected mailbox's account.
+- **Mark read when messages disagree (MUST)**: The copies in `messages` and `openedMessage` take the labels returned by the service, not the locally computed ones.
+- **Unread counts drift (SHOULD)**: Local count changes are an estimate. The next `reload` replaces them with the service's counts.
+- **Unparseable date (MUST)**: `listDate` and `fullDate` return the input text rather than failing.
+- **Sender header without a closing bracket (MUST)**: `senderName` uses the text after the last "<" with ">" and spaces trimmed from both ends.
+- **Offline or store unavailable (MUST)**: Every client failure surfaces as `errorMessage`, and the model holds its previous data. There is no retry and no backoff; the user's next action or the next sync poll tries again. The one exception is the sync poll, which swallows an account-read failure.
+- **Error cleared (MUST NOT)**: A successful call does not clear `errorMessage`; only `dismissError` does.
+- **Concurrent access (MUST)**: The model is main-actor isolated, so state changes are serialized. Overlap is possible only across `await` points, which the generation counters and the `loadMore` flag guard.
+

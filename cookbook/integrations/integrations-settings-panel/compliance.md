@@ -1,0 +1,13 @@
+
+| Check | Status | Category |
+|-------|--------|----------|
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | privacy-and-data |
+
+`separation-of-concerns` is passed: the panel owns only the listing, the add menu and the removal flow, and delegates the Gmail form and account handling to the Gmail settings view and model, and the footer, split view, confirmation and refusal feedback to shared settings components. `unit-test-coverage` is failed: the only tests nearby, `GmailSettingsModelTests`, exercise the model; nothing tests the listing rule, the add menu, the confirmation outcomes or the deferred rebuild. `keyboard-navigable` is partial: the confirmation has Return and Esc defaults and the add menu is a standard menu, but the panel adds no key handling and the footer's keyboard reach is the shared view's. `screen-reader-support` is partial: the footer has an accessibility prefix and the refusal is announced, but both symbol images are created without an accessibility description and the buttons have only tooltips. `no-hardcoded-strings` is failed: every title, tooltip, help body and confirmation text is an English literal. `native-controls-preference` is passed: the panel uses a standard menu, a standard sheet and the shared split view rather than custom controls. `secure-data-storage` is passed for this component: it stores nothing, and on removal it asks for deletion of the OAuth client, accounts and stored sign-ins, treating an unknown state as configured so secrets are not left behind.
+

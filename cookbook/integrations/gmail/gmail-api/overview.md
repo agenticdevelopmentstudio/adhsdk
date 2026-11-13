@@ -1,0 +1,3 @@
+
+`GmailAPI` is the narrow protocol through which the mail sync engine talks to Gmail: profile, message-id listing, search, thread and message fetch, history, labels and label changes. The file also holds the decoded wire shapes (`GmailProfile`, `GmailIdPage`, `GmailThreadDTO`, `GmailHistoryPage`, `GmailHeader`, `GmailBody`, `GmailPart`, `GmailMessageDTO`, `GmailLabelDTO`), the `GmailCursorExpired` error, and `GmailQuery`, which builds the `messages.list` query for a full sync. The protocol's own comment states the design intent: "Small so tests can fake it." The concrete HTTP implementation is `GmailRESTClient`, a separate file; this recipe specifies the contract, not that client. Use it wherever sync code needs Gmail data without depending on HTTP.
+

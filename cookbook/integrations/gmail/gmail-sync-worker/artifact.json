@@ -1,0 +1,55 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "1157bca1-0d27-49e9-a989-d637505ba5f1",
+    "title": "Gmail Sync Worker",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "mfullerton",
+    "copyright": "2026 mfullerton",
+    "license": "MIT",
+    "summary": "Struct that mirrors one Gmail account into IntegrationsStore with a full sync, a history-based incremental sync, and a full fallback when the cursor expires.",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios"
+    ],
+    "tags": [
+      "gmail",
+      "mail-sync",
+      "integrations"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "a3e47eeee0cac85e",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

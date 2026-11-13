@@ -1284,6 +1284,18 @@
       "platform": "python",
       "kind": "logic",
       "group": "apt-terminal"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Integrations",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "integrations"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations",
+      "platform": "macos",
+      "kind": "ui",
+      "group": "integrations"
     }
   ],
   "ignore": [

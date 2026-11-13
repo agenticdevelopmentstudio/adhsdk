@@ -1,0 +1,13 @@
+
+- **Null and empty input**: An empty argument list MUST return 64 with the usage text on `stderr`. An empty-string positional (an account or id of `""`) is accepted by the parser and sent to the client; the client or service decides what it matches. The `list` empty page prints nothing and returns 0; an empty page with a cursor prints only `next cursor: <cursor>`. A blank `--query` MUST be a usage error.
+- **Boundary values**: `--limit 0` and negative limits MUST be usage errors; `--limit` above 500 MUST be clamped to 500 by `MailMessageFilter`, not rejected. `--since 2026-02-30` MUST be a usage error; a date-only `--until` MUST end at `23:59:59.999Z`. A thread of exactly one message MUST say `1 message`.
+- **Malformed input**: A `--limit` that is not an integer, a date in a shape other than `YYYY-MM-DD` or ISO-8601, an unknown `--` option and a missing option value MUST each return 64. A `--` token is never taken as a positional, but a value after a valued option is consumed even if it starts with `-`.
+- **Help anywhere**: `-h` or `--help` anywhere, even as the value of another option, MUST print help and return 0; the check precedes parsing.
+- **Duplicated options**: Repeating `--since`, `--until`, `--limit`, `--cursor` or `--query` uses the last value silently; repeating `--to` is a usage error.
+- **Error states**: A `notFound` error MUST return 3; every other client or encoding error MUST return 1 with `Error: <localizedDescription>` on `stderr`. A service too old to apply `--any-label`, `--query` or threads surfaces as a status-1 failure through `MailClient`, never as an unfiltered listing.
+- **Concurrent access**: `run` keeps no state between calls and holds no locks, and the host provides the `@Sendable` closures; two calls interleave only through their own clients and closures. One call is a single sequential `async` flow: parse, one client call, format, write.
+- **Cancellation and timeouts**: `run` has no timeout and no cancellation handling of its own; cancelling the surrounding task is observed only if the client call throws, in which case the thrown error maps to status 1 with its description on `stderr`.
+- **Offline or unreachable service**: `run` has no retry or offline handling; a transport failure thrown by the client MUST be reported as status 1 with its description on `stderr`. Retry behavior belongs to the host and the service.
+- **Destructive operations**: `label add`, `label remove` and `move` change mail through the service on every call with no confirmation prompt and no idempotency key; the backend's response surfaces unchanged.
+- **Partial results**: A client call that throws prints nothing to `stdout`, so no partial output precedes a failure.
+
