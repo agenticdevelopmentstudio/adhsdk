@@ -4,7 +4,7 @@
     "id": "add92e9b-94e5-412c-970f-5ea8e2eb9eed",
     "title": "TextMate Resources",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3b49a16748543d6b",
+  "synced": "8a7780b2f096ce84",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

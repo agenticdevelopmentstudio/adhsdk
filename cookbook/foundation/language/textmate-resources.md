@@ -2,7 +2,7 @@
 id: add92e9b-94e5-412c-970f-5ea8e2eb9eed
 title: "TextMate Resources"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-13
@@ -44,8 +44,10 @@ The files a TextMate syntax highlighter needs at run time, built by one determin
 - **licence-text**: Every shipped grammar and theme MUST have `LICENSES/grammar-<name>.txt` or `LICENSES/theme-<name>.txt` holding its source, licence URL, SPDX id and licence text; every package whose code or data ships MUST have `LICENSES/package-<name>.txt`. A shipped item with no licence text MUST fail the build.
 - **bundle-api**: `highlighter.js` MUST be an esbuild IIFE (`--platform=neutral --target=safari17`) defining `globalThis.ADKHighlighter` with `create(wasmBytes)`, `setTheme(themeJSON)` and `highlight(text, scopeName)`, and MUST read grammars only through the host's `ADKHost.grammarText(scopeName)`.
 - **raw-theme**: `setTheme` MUST build the engine theme from a VS Code theme as a first scope-less rule with `colors["editor.foreground"]` and `colors["editor.background"]`, then the theme's `tokenColors`; a `tokenColors` that is missing or not an array (a path) contributes no rules, and a TextMate-style `settings` array is read in its place.
-- **highlight-output**: `highlight` MUST resolve to JSON `{"lines": [[[start, length, "#RRGGBB", fontStyle], ...], ...]}`, one entry per line split on `\n` or `\r\n`, with start and length in UTF-16 units within the line, the colour from the engine's colour map at `(metadata >>> 15) & 0x1ff`, the font style bits `(metadata >>> 11) & 0xf` (italic 1, bold 2, underline 4, strikethrough 8), no zero-length runs, and the rule stack carried from line to line. A scope with no grammar MUST reject.
-- **language-table**: `languages.json` MUST list every shipped grammar that `tm-grammars` names as a language, as `{id, scopeName, aliases, extensions, filenames}`, with extensions and filenames the sorted union of every `linguist-languages` language whose `tmScope` equals the scope name.
+- **highlight-output**: `highlight` MUST resolve to JSON `{"lines": [[[start, length, color, fontStyle], ...], ...]}`, one entry per line, with start and length in UTF-16 units within the line, the colour from the engine's colour map at `(metadata >>> 15) & 0x1ff` (see **color-format**), the font style bits `(metadata >>> 11) & 0xf` (italic 1, bold 2, underline 4, strikethrough 8), no zero-length runs, and the rule stack carried from line to line. A scope with no grammar MUST reject.
+- **color-format**: Every colour `highlight` emits MUST be uppercase `#RRGGBB`, or `#RRGGBBAA` when the theme gives an alpha; a theme's `#RGB` and `#RGBA` MUST be expanded to those forms (each digit doubled), and no other form is ever emitted.
+- **line-splitting**: `highlight` MUST split lines on `\r\n`, `\r` and `\n`, each one break (`/\r\n|\r|\n/`): `"a\rb"`, `"a\nb"` and `"a\r\nb"` are each two lines. A host mapping runs back onto its text MUST split the same way.
+- **language-table**: `languages.json` MUST list every shipped grammar that `tm-grammars` names as a language, as `{id, scopeName, aliases, extensions, filenames}`, `id` the tm-grammars name. A `linguist-languages` language feeds a grammar when its name or an alias, lowercased with spaces as `-`, `++` as `pp` and `#` as `sharp`, equals the grammar's name or an alias, or when its `tmScope` equals the scope name. Every extension and every filename MUST belong to exactly one language: a contested one goes to the strongest claim (a linguist name equal to the grammar name beats an alias match, which beats a scope match; then the linguist language's primary, first, entry beats a later one), and what still ties to the build script's explicit override table (`.h` to `c`). The build MUST fail on a tie with no override, on an override that is no longer contested, on any extension or filename claimed twice, and when a canary lookup does not hold: `.md` markdown, `.cpp` cpp, `.php` php, `.ts` typescript, `.rs` rust, `Makefile` make, `.swift` swift, `.py` python, `.json` json, `.h` c.
 - **manifest**: `manifest.json` MUST record every package version, the esbuild arguments, the allowed licences, each shipped grammar's name, scope and licence, each shipped theme, every dropped grammar and theme with its licence, and the sha256 of every other file in the tree.
 
 ## Appearance
@@ -68,12 +70,16 @@ Not applicable: The resources present no UI.
 | textmate-resources-002 | check-mode, deterministic-output | `--check` right after a build into `--out` | exit 0, `up to date`. |
 | textmate-resources-003 | licence-filter | `tm-grammars` 1.32.22, `tm-themes` 1.12.12 | 218 grammars kept, 42 dropped (none, NOASSERTION, GPL-3.0, GNU, MPL-2.0); 64 themes kept, `aurora-x` (GPL-3.0) dropped. |
 | textmate-resources-004 | bundle-api, highlight-output | the README's `node -e` smoke test on Swift with Dark+ | `let` at `[0, 3]` coloured `#569CD6`, every line has runs. |
+| textmate-resources-006 | color-format | `const s = "str"` (source.js) under `laserwave`, `vesper` and `ayu-dark` | every colour matches `^#([0-9A-F]{6}\|[0-9A-F]{8})$`; laserwave's and vesper's `#fff` comes out `#FFFFFF`, ayu-dark keeps `#BFBDB6B3`. |
+| textmate-resources-007 | line-splitting | `"let a = 1\rlet b = 2"` (source.swift) | 2 lines, each starting `[0,3,…]`; `"a\r\r\nb"` gives 3 lines. |
+| textmate-resources-008 | language-table | `languages.json` from linguist-languages 9.5.0 | `.ts` only typescript, `.rs` only rust, `.h` only c, `Makefile` make, `.md` markdown; no extension or filename in two languages; 28 of 200 languages with neither. |
 | textmate-resources-005 | bundle-api | the same bundle and `onig.wasm` in a bare `JSContext` without the JIT entitlement | Swift text highlights with non-empty colour runs. |
 
 ## Edge Cases
 
 - **Null / empty input**: An empty text highlights to one line with no runs; an empty line has no runs.
 - **Boundary values**: A grammar embedded by a shipped grammar but itself dropped (YAML front matter in Markdown) is not found, and the engine leaves that region in the embedding grammar's colours.
+- **Line endings**: A lone `\r` (classic Mac) ends a line like `\n`; `\r\n` is one break, not two.
 - **Concurrent access**: The bundle is single-threaded JavaScript; the host serialises calls on one context.
 - **Error states**: `highlight` before `create` resolves, or on a scope with no grammar, rejects with an `Error`. A licence disagreement or missing licence text stops the build with the file named.
 - **Offline / disconnected state**: The build needs the npm registry only for `npm ci`; the bundle needs no network.
@@ -123,8 +129,8 @@ Not applicable: The bundle calls no logging API; the build prints its counts and
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `tools/apple/textmate/` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Resources/TextMate/` | confirmed (1.0.0) |
+| apple | `tools/apple/textmate/` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Resources/TextMate/` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -134,6 +140,14 @@ Not applicable: The bundle calls no logging API; the build prints its counts and
 
 **Decision**: Licence texts come from the packages' NOTICE files, never from the network.
 **Rationale**: The build must be a pure function of the lock file for `--check` to mean anything; every shipped item's NOTICE entry carries its text, and an item without one stops the build instead of shipping unlicensed.
+**Approved**: pending
+
+**Decision**: Contested extensions are settled by claim strength, then by a small explicit override table in the build script, and the build fails on any tie the table does not settle.
+**Rationale**: linguist and tm-grammars spell scopes differently (`text.md` against `text.html.markdown`) and several linguist languages share a scope, so a scope-only join left Markdown, C++ and PHP with no extensions and gave `.ts` and `.rs` to XML. Name matching recovers them; an explicit table keeps the remaining judgement calls (`.h` is C) visible and reviewable, and failing on a new tie means a linguist update cannot silently reassign an extension.
+**Approved**: pending
+
+**Decision**: Colours are normalised to `#RRGGBB` or `#RRGGBBAA` inside the bundle.
+**Rationale**: 27 shipped themes use `#RRGGBBAA`, `#RGB` or `#RGBA`; normalising once in JavaScript lets every host parse exactly two forms.
 **Approved**: pending
 
 **Decision**: Grammar and theme files are copied verbatim, not re-serialised.
@@ -153,3 +167,4 @@ Not applicable: The bundle calls no logging API; the build prints its counts and
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-11-13 | Mike Fullerton | Name-and-alias language join with one owner per extension, override table and canaries; colours normalised to #RRGGBB/#RRGGBBAA; lone \r splits lines |

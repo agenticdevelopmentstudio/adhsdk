@@ -10,9 +10,13 @@
 //   ADKHighlighter.create(wasmBytes: ArrayBuffer) -> Promise<void>
 //   ADKHighlighter.setTheme(themeJSON: string)
 //   ADKHighlighter.highlight(text: string, scopeName: string) -> Promise<string>
-//     resolves to JSON {"lines": [[[start, length, "#RRGGBB", fontStyle], ...], ...]}
-//     start and length in UTF-16 code units within the line, fontStyle the
-//     bits italic 1, bold 2, underline 4, strikethrough 8.
+//     resolves to JSON {"lines": [[[start, length, color, fontStyle], ...], ...]}
+//     color is uppercase "#RRGGBB" or, when the theme gives an alpha,
+//     "#RRGGBBAA" (a theme's "#RGB" and "#RGBA" are expanded to those);
+//     start and length in UTF-16 code units within the line; fontStyle the
+//     bits italic 1, bold 2, underline 4, strikethrough 8. Lines are split on
+//     "\r\n", "\r" and "\n", each one break: "a\rb" and "a\r\nb" are both two
+//     lines.
 import * as tm from "vscode-textmate";
 import * as onig from "vscode-oniguruma";
 
@@ -38,6 +42,16 @@ function rawTheme(theme) {
       ...rules,
     ],
   };
+}
+
+// A theme colour as uppercase #RRGGBB or #RRGGBBAA. vscode-textmate admits
+// only #RGB, #RGBA, #RRGGBB and #RRGGBBAA into its colour map, so anything else
+// is a broken invariant, not a theme to tolerate.
+function normalizedColor(color) {
+  const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(color || "");
+  if (!hex) throw new Error("unexpected theme colour " + color);
+  const digits = hex[1].length <= 4 ? [...hex[1]].map((d) => d + d).join("") : hex[1];
+  return "#" + digits.toUpperCase();
 }
 
 function requireRegistry() {
@@ -73,9 +87,11 @@ async function highlight(text, scopeName) {
   const g = await grammar(scopeName);
   if (!g) throw new Error("no grammar for " + scopeName);
   const colorMap = requireRegistry().getColorMap();
+  const colors = [];
+  const color = (id) => colors[id] ?? (colors[id] = normalizedColor(colorMap[id]));
   let state = tm.INITIAL;
   const lines = [];
-  for (const line of text.split(/\r?\n/)) {
+  for (const line of text.split(/\r\n|\r|\n/)) {
     const result = g.tokenizeLine2(line, state);
     const tokens = result.tokens;
     const count = tokens.length / 2;
@@ -85,7 +101,7 @@ async function highlight(text, scopeName) {
       const end = i + 1 < count ? tokens[2 * i + 2] : line.length;
       if (end <= start) continue;
       const meta = tokens[2 * i + 1];
-      runs.push([start, end - start, colorMap[(meta >>> 15) & 0x1ff], (meta >>> 11) & 0xf]);
+      runs.push([start, end - start, color((meta >>> 15) & 0x1ff), (meta >>> 11) & 0xf]);
     }
     lines.push(runs);
     state = result.ruleStack;

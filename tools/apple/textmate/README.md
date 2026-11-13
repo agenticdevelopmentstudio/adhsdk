@@ -44,9 +44,32 @@ then calls:
 - `ADKHighlighter.setTheme(themeJSON: string)` — a VS Code theme (`colors`,
   `tokenColors`)
 - `ADKHighlighter.highlight(text, scopeName) -> Promise<string>` — JSON
-  `{"lines": [[[start, length, "#RRGGBB", fontStyle], ...], ...]}`, UTF-16
+  `{"lines": [[[start, length, color, fontStyle], ...], ...]}`, UTF-16
   offsets within each line, font style bits italic 1, bold 2, underline 4,
   strikethrough 8.
+  - **Colours** are always uppercase `#RRGGBB`, or `#RRGGBBAA` when the
+    theme gives an alpha (the ayu themes, andromeeda and others do). A
+    theme's short `#RGB` and `#RGBA` (laserwave, synthwave-84, slack-ochin,
+    vesper) come out expanded to those two forms, and nothing else is ever
+    emitted.
+  - **Lines** are split on `\r\n`, `\r` and `\n`, each counting as one
+    break: `"a\rb"`, `"a\nb"` and `"a\r\nb"` are all two lines. A caller
+    that maps runs back onto its own text must split the same way.
+
+## The language table
+
+`languages.json` lists each grammar tm-grammars describes (`id` is its
+tm-grammars name, so Makefiles are `make`, with alias `makefile`), with the
+extensions and filenames linguist gives it. A linguist language feeds a
+grammar when its name or an alias matches the grammar's name or an alias
+(`C++` reads as `cpp`, `C#` as `csharp`) or when its `tmScope` is the
+grammar's scope name. Every extension and filename belongs to exactly one
+language: a contested one goes to the linguist language whose name is the
+grammar's name, then to the one it is the primary (first) entry of, then to
+`CLAIM_OVERRIDES` in the build script (`.h` → `c`). The build fails on a tie
+with no override, on a stale override, and when any `CANARIES` lookup (`.md`,
+`.cpp`, `.php`, `.ts`, `.rs`, `Makefile`, `.swift`, `.py`, `.json`, `.h`)
+comes out wrong.
 
 ## Smoke test
 
