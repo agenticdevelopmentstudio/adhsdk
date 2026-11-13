@@ -53,7 +53,7 @@ Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every
 - **no-retry-other-network**: Any other error from the session, such as another `URLError` code, MUST propagate unchanged on the first occurrence and MUST NOT be retried.
 - **retry-budget**: One shared counter MUST limit retries to `maxRetries = 6` per call, counting network errors and retryable statuses together, so a call makes at most 7 attempts.
 - **retries-exhausted**: When the retry budget is spent, the client MUST throw the last failure: an `IntegrationError.gmail` for a status, or the `URLError` for a transient network error.
-- **backoff-schedule**: Without a `Retry-After` value, the wait before retry number `n` (0-based) MUST be 1 second doubled `n` times, capped at 32 seconds, giving 1, 2, 4, 8, 16, 32 and 32 seconds for later retries.
+- **backoff-schedule**: Without a `Retry-After` value, the wait before retry number `n` (0-based) MUST be 1 second doubled `n` times, capped at 32 seconds, giving 1, 2, 4, 8, 16 and 32 seconds for the six retries; the same formula for a larger `n` stays at 32 seconds.
 - **retry-after-honoured**: When a retried HTTP response carries a `Retry-After` header that parses as an integer after trimming spaces, the wait MUST be that many seconds instead of the exponential value.
 - **retry-after-capped**: A `Retry-After` wait MUST be capped at 32 seconds, and a negative value MUST be treated as 0 seconds.
 - **retry-after-integer-only**: A `Retry-After` header that is not an integer (such as an HTTP date) MUST be ignored and the exponential backoff used.

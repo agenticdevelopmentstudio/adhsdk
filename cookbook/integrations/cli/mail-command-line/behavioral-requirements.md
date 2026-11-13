@@ -19,7 +19,7 @@
 ### Argument parsing (shared)
 
 - **command-selection**: The first argument MUST select the command; an empty argument list or a first argument other than `accounts`, `labels`, `get`, `list`, `thread`, `label` or `move` MUST be a usage error.
-- **json-flag**: The `--json` option MUST be accepted anywhere in the arguments of every command and MUST switch the output to JSON.
+- **json-flag**: The `--json` option MUST be accepted anywhere after the command name (for `label`, after the `add` or `remove` verb) in every command and MUST switch the output to JSON; as the first argument, or as the verb of `label`, it is not a command or verb and is a usage error.
 - **unknown-option**: Any argument beginning with `--` that is neither `--json` nor an option the command declares MUST be a usage error.
 - **value-required**: A value-taking option appearing as the last argument MUST be a usage error.
 - **value-consumption**: A value-taking option MUST consume the next argument as its value whatever that argument looks like, so `--limit -3` reaches the limit check as the value `-3`.

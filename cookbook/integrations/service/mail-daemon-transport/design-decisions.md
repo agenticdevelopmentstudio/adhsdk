@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: Nothing is retried.
-**Rationale**: `signIn` opens a browser and `modifyLabels` writes to Gmail; a retry after a timeout could do either twice. Each call sends one request with no idempotency key.
+**Rationale**: `signIn` opens a browser and `modifyLabels` writes to Gmail; a retry after a timeout could do either twice.
 **Approved**: pending
 
 **Decision**: An empty reply is an error, `<daemonName> dropped the reply`.

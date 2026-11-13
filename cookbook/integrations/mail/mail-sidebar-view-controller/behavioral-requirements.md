@@ -11,13 +11,13 @@
 - **account-row-truncation**: An account row MUST truncate its text at the tail when it does not fit.
 - **mailbox-row-title**: A mailbox row MUST show the mailbox title, truncated at the tail when it does not fit.
 - **mailbox-row-indent**: A mailbox row MUST indent its content from the leading edge by 14 points times the mailbox's nesting depth.
-- **mailbox-row-symbol**: A mailbox row MUST show a symbol tinted with the control accent color, chosen by label id: `INBOX` tray, `STARRED` star, `IMPORTANT` exclamation-mark circle, `SENT` paper plane, `DRAFT` document, no label id (All Mail) full tray, `SPAM` crossed-out bin, `TRASH` trash, and any other label a tag.
+- **mailbox-row-symbol**: A mailbox row MUST show a symbol tinted with the control accent color, chosen by label id: `INBOX` tray, `STARRED` star, `IMPORTANT` exclamation-mark circle, `SENT` paper plane, `DRAFT` document, no label id (All Mail) full tray, `SPAM` crossed-out bin, `TRASH` trash, and any other label a tag. When the system symbol cannot be created, the row falls back to an empty image.
 - **mailbox-row-unread-count**: A mailbox row MUST show the unread count, in the small system font and the secondary label color at the trailing end, only when the count is present and greater than zero.
 - **mailbox-row-title-yields**: A mailbox row's title MUST give up width before the symbol and the count do.
 - **only-mailboxes-selectable**: The sidebar MUST allow selection of mailbox rows only and MUST NOT allow selection of an account group row.
 - **selection-to-model**: When the user selects a mailbox row, the sidebar MUST ask the model to select the mailbox with that row's account id and label id.
 - **selection-from-model**: When the model's `selectedMailbox` changes, the sidebar MUST select the mailbox row whose account id and label id both match it.
-- **selection-no-match**: The sidebar MUST leave the selection unchanged when the model has no selected mailbox or no listed mailbox matches it.
+- **selection-no-match**: The sidebar MUST leave the selection unchanged when the model has no selected mailbox or no listed mailbox matches it, or when the matching row has no outline row (for example its group is collapsed).
 - **selection-no-op**: The sidebar MUST leave the outline selection alone when the matching row is already the selected row.
 - **selection-single**: The sidebar MUST select at most one row, replacing any earlier selection.
 - **selection-echo-guard**: Applying the model's selection to the outline MUST NOT send a selection back to the model.

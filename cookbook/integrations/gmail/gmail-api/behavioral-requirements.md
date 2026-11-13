@@ -31,7 +31,7 @@
 
 ### Security
 
-- **token-not-in-contract**: The `GmailAPI` protocol and DTOs MUST NOT carry an access token; authentication is the implementation's concern. `GmailRESTClient` takes an `accessToken` at construction and its tests assert it sends a bearer token. Token lifetime, storage and refresh are owned by the code that supplies the `accessToken` and are outside this file.
+- **token-not-in-contract**: The `GmailAPI` protocol and DTOs MUST NOT carry an access token; authentication is the implementation's concern. `GmailRESTClient` takes an `accessToken` closure (`@Sendable () async throws -> String`) at construction, calls it for each request, and sends the result as a bearer token. Token lifetime, storage and refresh are owned by the code that supplies the `accessToken` and are outside this file.
 - **mail-content-sensitive**: Message ids, headers, snippets, bodies and label names are personal mail content; they MUST NOT be altered or filtered by the contract types, which only carry them.
 
 ### Networking and Failure

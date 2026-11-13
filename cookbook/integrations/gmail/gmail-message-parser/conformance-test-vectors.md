@@ -41,5 +41,5 @@ Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures are `gmai
 | parser-036 | embedded-fallback-all-or-nothing | Derived: own HTML only, embedded message with plain text | `bodyHtml` is the own HTML; `bodyText` is nil |
 | parser-037 | headers-absent, total-function, no-body-is-nil | Derived: DTO with `payload` nil and no `internalDate` | `fromAddress`, `subject` empty; no bodies; no attachments; `internalDate` from `now` |
 | parser-038 | undecodable-body-data, first-text-wins | Derived: first `text/plain` part has data `a`, second has `Ym9keQ` | `bodyText` is `body` |
-| parser-039 | pure-and-reentrant, no-io | Derived: two parses of the same DTO with `existingId` set and the same `now` | The two records differ only in `createdAt` and `updatedAt` |
+| parser-039 | pure-and-reentrant, no-io | Derived: two parses of the same DTO with `existingId` set and the same `now` | The two records are equal except that `createdAt` and `updatedAt` are the call-time clock and may differ |
 

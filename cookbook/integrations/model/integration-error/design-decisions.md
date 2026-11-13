@@ -7,7 +7,7 @@
 **Rationale**: `MailIntegrationService` compares against `.revoked` to mark a connection `revoked` (the user must sign in again) and marks every other failure `error`. Folding it into a string case would break that comparison.
 **Approved**: pending
 
-**Decision**: Carry Gmail failures as `gmail(status:message:)`, with status 0 for a failure before any response.
+**Decision**: Carry Gmail failures as `gmail(status:message:)`, with status 0 for a failure before any response (an unbuildable URL or a wrong-size `batchModify` id list).
 **Rationale**: Callers pattern-match on status 400 and 404 to treat a missing item as gone, so the number has to stay machine-readable instead of being folded into the message.
 **Approved**: pending
 

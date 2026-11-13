@@ -24,7 +24,7 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 - **recipient-lists**: The record `toAddresses` and `ccAddresses` MUST each be the `To` and `Cc` header value passed through the address splitter, and MUST be empty lists when the header is absent.
 - **address-split-commas**: The address splitter MUST split on every comma that is outside double quotes.
 - **address-split-escapes**: Inside double quotes, a backslash MUST cause the next character to be kept literally, so an escaped quote does not close the quoted section.
-- **address-split-trim**: The address splitter MUST trim leading and trailing spaces and tabs from each piece and MUST drop pieces that are empty after trimming.
+- **address-split-trim**: The address splitter MUST trim leading and trailing horizontal whitespace (spaces, tabs and other Unicode space separators, but not newlines) from each piece and MUST drop pieces that are empty after trimming.
 - **address-split-keeps-text**: The address splitter MUST keep each piece's text, including display names and angle brackets, exactly as written apart from that trimming.
 
 ### Date

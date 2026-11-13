@@ -7,5 +7,5 @@ The type does no network, file, Keychain or logging work. Its callers use it as 
 
 - `MailIntegrationService` parses an imported file, stores the secret under `GoogleTokenProvider.clientSecretKey` in the secret store, saves the id in the provider config, and rebuilds a config from the two stored halves when a sign-in or refresh needs one.
 - `GmailSettingsModel` builds a config from the two form fields (trimmed) and sends `installedJSON()` as the import payload.
-- `GoogleAuthorizer`, `GoogleTokenEndpoint` and `GoogleTokenProvider` take a config as a parameter to sign in, refresh and fetch access tokens.
+- `GoogleSignInFlow` (implemented by `AppAuthGoogleSignIn`), `GoogleTokenEndpoint` (implemented by `URLSessionGoogleTokenEndpoint`) and `GoogleTokenProvider` take a config as a parameter to sign in, refresh and fetch access tokens.
 

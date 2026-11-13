@@ -33,10 +33,10 @@
 - **rule-list-failure-tolerated**: When the rule list fails to compile, the component MUST still load the body with the blocking policy prefix.
 - **stale-load-guard**: When the open message has changed while the rule list compiled, the component MUST NOT load the earlier message's body.
 - **link-opens-externally**: A link activation, or a request with no target frame, to a URL whose scheme is `http`, `https` or `mailto` (compared case-insensitively) MUST open in the system's default handler for that URL.
-- **link-never-in-reader**: A link activation, or a request with no target frame, MUST NOT navigate the reader, whatever its scheme.
+- **link-never-in-reader**: A link activation, or a request with no target frame, MUST NOT navigate the reader, whatever its scheme, except the in-frame fragment link of fragment-in-place.
 - **link-other-schemes-dropped**: A link to any other scheme (`smb`, `vnc`, `ssh` or an app's own) MUST be cancelled and MUST NOT be opened.
 - **fragment-in-place**: A link within the same frame to the reader's own page that carries a fragment MUST be allowed so the message scrolls in place.
-- **own-page-only**: Any navigation that is not a link activation MUST be allowed only when its URL scheme is `about` (compared case-insensitively) and MUST be cancelled otherwise.
+- **own-page-only**: Any navigation that is not a link activation and has a target frame MUST be allowed only when its URL scheme is `about` (compared case-insensitively) and MUST be cancelled otherwise.
 - **navigation-without-url**: A navigation request with no URL MUST be cancelled.
 - **body-accessibility-id**: The body view MUST carry the accessibility identifier "mail.reader.body".
 - **header-selectable**: The subject, sender, recipients and date text MUST be selectable.

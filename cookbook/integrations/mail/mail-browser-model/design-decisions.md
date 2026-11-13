@@ -1,6 +1,6 @@
 
 **Decision**: Every list and message answer is guarded by a generation counter (`listGeneration`, `messageGeneration`) rather than cancelling the request.
-**Rationale**: The source comment says the counter is bumped "whenever the list is replaced, so a page answering an older selection is dropped." The client call cannot be cancelled, so the answer is ignored instead.
+**Rationale**: The source comment says the counter is bumped "whenever the list is replaced, so a page answering an older selection is dropped." The model never cancels a request; it ignores the stale answer when it arrives.
 **Approved**: pending
 
 **Decision**: A refresh keeps as many rows as were showing and does not clear the list or the open message.
@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: The selected mailbox is held by identity only (`MailboxID`), not as a `Mailbox`.
-**Rationale**: The source comment says this is "so a reload that changes counts keeps it." Counts change on every sync.
+**Rationale**: The source comment says this is "so a reload that changes counts keeps it." Counts change whenever a sync brings new mail.
 **Approved**: pending
 
 **Decision**: The sync poll reads only the account list and compares `lastSyncAt` values, and swallows its own failure.

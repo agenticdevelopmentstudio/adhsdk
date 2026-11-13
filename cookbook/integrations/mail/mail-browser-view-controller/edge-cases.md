@@ -10,5 +10,5 @@
 - **No accounts or provider not configured**: Not a controller concern: the model clears the list and the panes show their empty state.
 - **Concurrent access**: The controller and model are confined to the main actor; the refresh task hops to the main actor to call the model, so calls are serialized with UI work.
 - **Offline**: The poll reads only the local store, so loss of connectivity does not affect it; the controller makes no network call.
-- **Task started before load completes**: The initial reload is a detached task whose handle is not kept; it is not cancelled when the view disappears.
+- **Task started before load completes**: The initial reload is an unstructured main-actor task whose handle is not kept; it is not cancelled when the view disappears.
 

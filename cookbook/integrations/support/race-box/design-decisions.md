@@ -1,6 +1,6 @@
 
 **Decision**: First `finish` wins and later calls are ignored, and `finish` returns whether the caller won.
-**Rationale**: The callers use the return value to decide who runs the cleanup: the timer in `withSignInDeadline` calls `cancel()` and cancels the work only if its `finish` won, and the cancellation handler does the same. A port MUST keep the winner signal, not only the first-wins rule.
+**Rationale**: The callers use the return value to decide who runs the cleanup: the timer in `withSignInDeadline` calls `cancel()` and cancels the work only if its `finish` won, and the cancellation handler calls `cancel()` only if its `finish` won (it cancels the work either way). A port MUST keep the winner signal, not only the first-wins rule.
 **Approved**: pending
 
 **Decision**: A box is used instead of a task group.

@@ -2,8 +2,8 @@
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | gocc-001 | parse-success, parse-extra-keys-ignored | `{"installed":{"client_id":"abc","client_secret":"xyz","auth_uri":"u"}}` (test `parsesInstalledClientJSON`) | Returns a config equal to `clientId` "abc", `clientSecret` "xyz" |
-| gocc-002 | parse-web-client-rejected, parse-error-type | `{"web":{"client_id":"abc","client_secret":"xyz"}}` (test `rejectsWebClientJSON`) | Throws `IntegrationError.invalidSettings` with the Web application client message |
-| gocc-003 | parse-installed-keys-required | `{"installed":{"client_id":"abc"}}` (test `rejectsMissingKeys`) | Throws `IntegrationError.invalidSettings` with the missing-keys message |
+| gocc-002 | parse-web-client-rejected, parse-error-type | `{"web":{"client_id":"abc","client_secret":"xyz"}}` (test `rejectsWebClientJSON`) | Throws `IntegrationError.invalidSettings` with the Web application client message (the test asserts only the error type) |
+| gocc-003 | parse-installed-keys-required | `{"installed":{"client_id":"abc"}}` (test `rejectsMissingKeys`) | Throws `IntegrationError.invalidSettings` with the missing-keys message (the test asserts only the error type) |
 | gocc-004 | parse-json-object-required | `not json`, `[]` and empty data | Each throws `IntegrationError.invalidSettings("the OAuth client file is not valid JSON")` |
 | gocc-005 | parse-empty-values-rejected | `{"installed":{"client_id":"","client_secret":"xyz"}}` | Throws the missing-keys message |
 | gocc-006 | parse-installed-keys-required | `{"installed":{"client_id":"abc","client_secret":7}}` and `{"installed":"x"}` and `{}` | Each throws the missing-keys message |

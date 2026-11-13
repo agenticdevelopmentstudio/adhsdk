@@ -1,6 +1,6 @@
 
 - **empty-payload**: A payload string MAY be empty, and the description then ends with its prefix and no text (`Sign-in failed: `); the type does not validate payloads.
-- **negative-or-zero-status**: `gmail` accepts any `Int` status, including 0 (used for an unbuildable URL) and negative values; the type applies no range check.
+- **negative-or-zero-status**: `gmail` accepts any `Int` status, including 0 (used for an unbuildable URL or a wrong-size `batchModify` id list) and negative values; the type applies no range check.
 - **special-characters**: A payload containing quotes, newlines or non-ASCII text MUST appear in the description unchanged.
 - **unknown-label-unused**: `unknownLabel` exists and has a description, but nothing in the integrations sources throws it; a port MUST keep the case so callers compile against the same set.
 - **equality-of-payloads**: Two `gmail` values with the same status and different messages MUST NOT be equal.

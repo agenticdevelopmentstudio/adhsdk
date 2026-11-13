@@ -10,7 +10,7 @@
 | Draft incomplete | Save Client disabled while either field is empty after trimming whitespace. |
 | Signing in | Spinner, "Waiting for Google sign-in in your browser…" and Cancel appear beside Add Account and Remove. |
 | No selected account | Remove disabled; per-account controls absent. |
-| Account status connected | Badge "Connected"; Sync Now only. |
+| Account status active | Badge "Connected"; Sync Now only. |
 | Account status pending | Badge "Pending"; Sync Now only. |
 | Account status error | Badge "Error"; Reconnect and Sync Now; Show Error when the account has a last error. |
 | Account status revoked | Badge "Reconnect needed"; Reconnect and Sync Now. |

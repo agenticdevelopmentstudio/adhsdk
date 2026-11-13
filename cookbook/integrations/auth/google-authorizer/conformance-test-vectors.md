@@ -1,5 +1,5 @@
 
-Vectors derive from `GoogleOAuthTests` in `Tests/AgenticDeveloperHubSDKIntegrationsTests/GoogleOAuthTests.swift`. Times use a fixed clock `epoch`.
+Vectors derive from `GoogleOAuthTests` in `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKIntegrationsTests/GoogleOAuthTests.swift`. Times use a fixed clock `epoch`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

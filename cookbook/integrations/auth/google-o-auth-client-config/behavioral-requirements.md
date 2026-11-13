@@ -35,5 +35,5 @@ Security of the secret
 
 - **secret-sensitivity**: `clientSecret` is sensitive credential material. The type itself MUST NOT persist, log or transmit it; it exists only as a field value held by its owner.
 - **secret-not-in-errors**: The error strings thrown by `parse(json:)` MUST NOT contain the file's contents, the client id or the client secret.
-- **secret-storage-by-caller**: Persisting the secret is the caller's job. The source's only caller that does so, `MailIntegrationService.importOAuthClient`, stores it through its secret store (the Keychain) and keeps only the client id in the provider config. `GoogleOAuthClientConfig` defines no token lifetime or revocation behavior; those belong to `GoogleTokenProvider` and `GoogleAuthorizer`.
+- **secret-storage-by-caller**: Persisting the secret is the caller's job. The source's only caller that does so, `MailIntegrationService.importOAuthClient`, stores it through its secret store (the Keychain) and keeps only the client id in the provider config. `GoogleOAuthClientConfig` defines no token lifetime or revocation behavior; those belong to `GoogleTokenProvider` and `AppAuthGoogleSignIn`.
 

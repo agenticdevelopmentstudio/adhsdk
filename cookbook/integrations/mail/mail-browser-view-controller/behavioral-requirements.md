@@ -15,7 +15,7 @@
 - **poll-action**: Each tick MUST call the model's refresh-if-synced action, which reads the local store and never calls Gmail.
 - **poll-stop**: The component MUST cancel the refresh task and drop it when the view disappears.
 - **poll-cancel-exit**: The refresh task MUST end without calling the model when it was cancelled during its wait.
-- **poll-no-retain**: The refresh task MUST NOT keep the controller alive; if the controller is gone when a wait ends, the task MUST end.
+- **poll-no-retain**: The refresh task MUST hold the controller weakly while it waits; if the controller is gone when a wait ends, the task MUST end. (It holds the controller strongly only for the duration of one refresh call.)
 - **error-observe**: The component MUST observe the model's error message on the main queue and present an alert for every non-nil value.
 - **error-nil-ignored**: The component MUST NOT present an alert when the error message becomes nil.
 - **error-alert-content**: The alert MUST use the title "Mail", the model's message as informative text, the warning style and a single "OK" button.

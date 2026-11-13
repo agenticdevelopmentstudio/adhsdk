@@ -73,28 +73,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/mail/mail-browser-view-controller/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/mail/mail-browser-view-controller/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/mail/mail-browser-view-controller/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/mail/mail-browser-view-controller/",
           "platform": "windows"
         }
       ],
@@ -737,21 +733,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/gmail/gmail-sync-worker/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/gmail/gmail-sync-worker/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/gmail/gmail-sync-worker/",
           "platform": "windows"
         }
       ],
@@ -1017,21 +1010,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/gmail/gmail-api/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/gmail/gmail-api/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/gmail/gmail-api/",
           "platform": "windows"
         }
       ],
@@ -1220,28 +1210,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/integrations-settings-panel/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/integrations-settings-panel/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/integrations-settings-panel/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/integrations-settings-panel/",
           "platform": "windows"
         }
       ],
@@ -1807,21 +1793,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/auth/google-o-auth-client-config/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/auth/google-o-auth-client-config/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/auth/google-o-auth-client-config/",
           "platform": "windows"
         }
       ],
@@ -1954,28 +1937,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/mail/mail-message-list-view-controller/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/mail/mail-message-list-view-controller/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/mail/mail-message-list-view-controller/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/mail/mail-message-list-view-controller/",
           "platform": "windows"
         }
       ],
@@ -2367,28 +2346,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/gmail-settings-model/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/gmail-settings-model/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/gmail-settings-model/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/gmail-settings-model/",
           "platform": "windows"
         }
       ],
@@ -2514,21 +2489,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/model/integration-error/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/model/integration-error/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/model/integration-error/",
           "platform": "windows"
         }
       ],
@@ -2738,21 +2710,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/store/integrations-schema/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/store/integrations-schema/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/store/integrations-schema/",
           "platform": "windows"
         }
       ],
@@ -2920,21 +2889,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/service/mail-command-support/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/service/mail-command-support/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/service/mail-command-support/",
           "platform": "windows"
         }
       ],
@@ -3823,28 +3789,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/gmail-settings-view/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/gmail-settings-view/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/gmail-settings-view/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/gmail-settings-view/",
           "platform": "windows"
         }
       ],
@@ -4956,14 +4918,12 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/support/race-box/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/support/race-box/",
           "platform": "windows"
         }
       ],
@@ -6209,28 +6169,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/mail/mail-sidebar-view-controller/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/mail/mail-sidebar-view-controller/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/mail/mail-sidebar-view-controller/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/mail/mail-sidebar-view-controller/",
           "platform": "windows"
         }
       ],
@@ -6439,21 +6395,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/model/integration-records/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/model/integration-records/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/model/integration-records/",
           "platform": "windows"
         }
       ],
@@ -8177,28 +8130,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/mail/mail-reader-view-controller/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/mail/mail-reader-view-controller/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/mail/mail-reader-view-controller/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/mail/mail-reader-view-controller/",
           "platform": "windows"
         }
       ],
@@ -8365,21 +8314,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/service/mail-integration-service/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/service/mail-integration-service/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/service/mail-integration-service/",
           "platform": "windows"
         }
       ],
@@ -8673,28 +8619,24 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/apple/ios/integrations/mail/mail-browser-model/",
           "platform": "ios"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/mail/mail-browser-model/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/mail/mail-browser-model/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/mail/mail-browser-model/",
           "platform": "windows"
         }
       ],
@@ -9044,21 +8986,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/cli/mail-command-line/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/cli/mail-command-line/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/cli/mail-command-line/",
           "platform": "windows"
         }
       ],
@@ -9177,21 +9116,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/store/integrations-store/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/store/integrations-store/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/store/integrations-store/",
           "platform": "windows"
         }
       ],
@@ -9310,21 +9246,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/gmail/gmail-rest-client/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/gmail/gmail-rest-client/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/gmail/gmail-rest-client/",
           "platform": "windows"
         }
       ],
@@ -9667,21 +9600,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/mcp/mail-tool-source/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/mcp/mail-tool-source/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/mcp/mail-tool-source/",
           "platform": "windows"
         }
       ],
@@ -9758,21 +9688,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/gmail/gmail-message-parser/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/gmail/gmail-message-parser/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/gmail/gmail-message-parser/",
           "platform": "windows"
         }
       ],
@@ -10590,21 +10517,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/model/mail-sync-settings/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/model/mail-sync-settings/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/model/mail-sync-settings/",
           "platform": "windows"
         }
       ],
@@ -11080,21 +11004,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/model/mail-classification/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/model/mail-classification/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/model/mail-classification/",
           "platform": "windows"
         }
       ],
@@ -11283,21 +11204,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/service/mail-daemon-transport/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/service/mail-daemon-transport/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/service/mail-daemon-transport/",
           "platform": "windows"
         }
       ],
@@ -11402,21 +11320,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/gmail/gmail-quota-pacer/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/gmail/gmail-quota-pacer/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/gmail/gmail-quota-pacer/",
           "platform": "windows"
         }
       ],
@@ -12004,21 +11919,18 @@
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/web/integrations/auth/google-authorizer/",
           "platform": "web"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/android/integrations/auth/google-authorizer/",
           "platform": "android"
         },
         {
           "conformance": {
             "state": "planned"
           },
-          "location": "packages/windows/integrations/auth/google-authorizer/",
           "platform": "windows"
         }
       ],
@@ -12086,10 +11998,21 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "state": "planned"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailRPC.swift",
-          "platform": "macos"
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
         },
         {
           "conformance": {
@@ -12097,27 +12020,6 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailRPC.swift",
           "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "location": "packages/web/integrations/service/mail-rpc/",
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "location": "packages/android/integrations/service/mail-rpc/",
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "location": "packages/windows/integrations/service/mail-rpc/",
-          "platform": "windows"
         }
       ],
       "kind": "ingredient",

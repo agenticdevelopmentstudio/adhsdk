@@ -24,7 +24,7 @@
 **Approved**: pending
 
 **Decision**: `cancelSignIn` makes its own call without the shared call path, so it neither reloads nor changes `busy`.
-**Rationale**: The pending sign-in call is the one that fails with "Sign-in was cancelled" and reloads, so a second reload would duplicate that work. This is a quirk: the pending sign-in's own call clears and may overwrite `errorMessage`, so a cancel failure message can be replaced.
+**Rationale**: The pending sign-in call is the one that fails with "Sign-in was cancelled" and reloads, so a second reload would duplicate that work. This is a quirk: when the pending sign-in then fails, its own call sets `errorMessage` to that failure, so a cancel failure message can be replaced.
 **Approved**: pending
 
 **Decision**: Display strings are English literals inside the model, with the clock and locale injectable for tests.

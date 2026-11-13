@@ -4,7 +4,7 @@ The model contract the controller relies on is covered by `MailBrowserModelTests
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | mail-browser-vc-001 | client-only-dependency, model-owned | Construct with a client and no interval. | The controller exists and its `model` is non-nil. |
-| mail-browser-vc-002 | shared-model | Construct, load the view, inspect each pane's model. | All three panes reference the same model as the controller's `model`. |
+| mail-browser-vc-002 | shared-model | Construct, load the view, make the model change (for example set an error or select a mailbox). | All three panes (which hold the model privately) show the change made on the controller's `model`. |
 | mail-browser-vc-003 | no-coder-init | Decode the controller from an archive. | The process traps with "init(coder:) has not been implemented". |
 | mail-browser-vc-004 | pane-order | Load the view. | Items are, in order: sidebar, message list, reader. |
 | mail-browser-vc-005 | sidebar-width, list-min-width, reader-min-width | Drag each divider to its extremes. | Sidebar stays within 180 to 320 points; list never below 280; reader never below 360. |

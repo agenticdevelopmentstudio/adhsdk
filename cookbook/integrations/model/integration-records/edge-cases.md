@@ -3,7 +3,7 @@
 - **Empty collections**: an empty `toAddresses`, `ccAddresses`, `labelIds` or `attachments` is the default and round-trips as an empty array.
 - **Empty label ids**: an `EmailMessage` built with `labelIds: []` and no `mailClass` gets `.archived`, because `MailClassifier.classify` finds no filing label.
 - **Unknown enum text**: a stored `status` or `mail_class` that is not a known raw value fails to decode through the synthesized `Codable`; the records add no fallback, so the fetch raises the decoding error to the caller.
-- **Missing table or column**: reading a row whose table lacks a mapped snake_case column raises the GRDB error to the caller; the schema lives in the store, not here.
+- **Missing table or column**: a missing table raises the GRDB error to the caller. A row lacking a column that maps to a required property fails to decode with a decoding error; a column that maps to an optional property reads as nil. The schema lives in the store, not here.
 - **Free-string fields**: `EmailLabel.type` and `ActionLog.status` accept any text; the documented value sets are comments, not checks.
 - **Concurrent access**: records are `Sendable` value types with no shared mutable state, so concurrent use needs no ordering rule; serialisation of database writes belongs to the store.
 - **Offline or network failure**: not applicable; the records never touch the network.

@@ -35,7 +35,7 @@ Tests live in `MailIntegrationServiceTests.swift` and `MailRequestAccessTests.sw
 | mail-rpc-030 | page-applied-flags, filter-any-labels-or | service lists with `anyLabels: ["INBOX"]` and again with `labels` only (`MailIntegrationServiceTests`, the any-labels listing test) | first page has `appliedAnyLabels` true; second has it false |
 | mail-rpc-031 | filter-any-labels-or, filter-labels-and | service lists with `anyLabels: ["INBOX", "Nope"]` | the reply is `.failure("unknown label: Nope")` |
 | mail-rpc-032 | filter-query-gmail, page-applied-flags | service lists with `query: " from:sender OR from:other "`, `labels: ["Work"]`, `limit: 2` | first page has `appliedQuery` true |
-| mail-rpc-033 | request-wire-form | encode `MailRequest.listAccounts`, then decode the bytes | decodes to `.listAccounts` (`requestRoundTripsThroughData`) |
+| mail-rpc-033 | request-wire-form | encode `MailRequest.listAccounts` and hand the bytes to the service's `handle(requestData:)` (`requestRoundTripsThroughData`) | the reply decodes as `MailResponse.accounts([])`, so the service decoded the request |
 | mail-rpc-034 | response-cases, failure-not-found-factory | `MailResponse.notFound("x")` | equals `.failure("x", notFound: true)` |
 | mail-rpc-035 | mailbox-access-exhaustive | add a `MailRequest` case with no entry in `isMailboxAccess` | the module fails to compile |
 

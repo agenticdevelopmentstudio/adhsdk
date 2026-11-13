@@ -5,7 +5,7 @@
 - `MailResponse` lists every reply, including `.failure`, which carries an optional `notFound` flag.
 - `MailMessageFilter` describes which messages to list and clamps its `limit` to 1 through 500.
 - `MailAccount`, `MailProviderStatus`, `MailLabel`, `MailMessage`, `MailMessagePage`, `MailThread` and `MailMoveResult` are the records the replies carry.
-- `MailClient` is the caller's side: it encodes a request to JSON, decodes the reply, throws `MailClientError` for a `.failure`, and refuses a page or thread that an older service answered without honoring the request.
+- `MailClient` is the caller's side: it encodes a request to JSON, decodes the reply, throws `MailClientError` for a `.failure`, refuses a page that an older service answered without honoring the filter, and reports a thread request that an older service cannot decode as a service too old to show threads.
 
 The service side (`MailIntegrationService`) is outside this file and answers these requests; the transport is injected, so the same client works over XPC, a socket or in-process.
 

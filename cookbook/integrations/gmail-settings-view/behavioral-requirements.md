@@ -31,7 +31,7 @@
 - **remove-button**: The view MUST show a "Remove" button, MUST disable it while no account is selected or the model is busy, and on press MUST ask for confirmation for the selected account instead of removing it.
 - **remove-confirmation**: The removal confirmation MUST be titled "Remove <email>?", MUST say it signs the account out of Google, removes its stored sign-in and deletes its mail from this Mac, and MUST offer an action titled "Remove".
 - **remove-safe-default**: The removal confirmation MUST make Cancel the default response to Return, and Esc MUST decline.
-- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines.
+- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines or when there is no key window to attach the confirmation to.
 - **sign-in-progress**: While the model's `signingIn` is true, the view MUST show a small spinner, the caption "Waiting for Google sign-in in your browser…" and a "Cancel" button beside the Add Account and Remove buttons.
 - **cancel-sign-in**: The "Cancel" button MUST call the model's `cancelSignIn` and MUST NOT be disabled by the model's busy state.
 

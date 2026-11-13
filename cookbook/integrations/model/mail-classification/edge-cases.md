@@ -1,7 +1,7 @@
 
-- **Empty array**: `classify(labelIds: [])` MUST return `.archived`. Gmail messages with no labels are those removed from the inbox with no other label; the test suite pins this.
+- **Empty array**: `classify(labelIds: [])` MUST return `.archived`. No label means no filing label and no user label, so the message is not filed; the test suite pins this.
 - **Only attribute labels**: A message with only `UNREAD`, `IMPORTANT`, `CHAT` and `CATEGORY_*` labels MUST return `.archived`.
-- **Conflicting labels**: `TRASH` together with `SPAM`, `INBOX` or a user label MUST return `.trash`; `SPAM` together with `INBOX` MUST return `.spam`. Both are pinned by the test suite.
+- **Conflicting labels**: `TRASH` together with `SPAM`, `INBOX` or a user label MUST return `.trash`; `SPAM` together with `INBOX` MUST return `.spam`. `TRASH` with `SPAM` or a user label is pinned by the test suite (`["TRASH", "SPAM"]`, `["TRASH", "Label_9"]`), as is `SPAM` with `INBOX`; `TRASH` with `INBOX` follows from the same rule but has no test case.
 - **Duplicate ids**: Repeated ids MUST NOT change the result.
 - **Unknown or future system label**: A Gmail label id outside `systemLabelIds` and without the `CATEGORY_` prefix MUST be treated as a user label and classify as `.filed`. The classifier cannot tell it from a user label.
 - **Empty or whitespace id**: An empty string, or an id with surrounding whitespace, is not special-cased and is treated as a user label.

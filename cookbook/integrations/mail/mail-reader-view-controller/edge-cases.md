@@ -8,7 +8,7 @@
 - **Unparseable date**: MUST show the original string unchanged (date-line).
 - **Boundary, same id republished**: the body MUST NOT reload (same-message-no-reload). A message with a new id MUST reload even if its body is identical.
 - **Boundary, scheme case**: `HTTPS://` and `Mailto:` MUST be treated as `https` and `mailto` for link opening, and `ABOUT:` as the reader's own page.
-- **Concurrent access**: the controller is main-actor isolated, and each model value starts its own task. The header always reflects the latest value, and the stale-load-guard drops a body load whose message is no longer shown. Two quick publishes of the same new message can both reload the body, since the second is no longer new.
+- **Concurrent access**: the controller is main-actor isolated, and each model value starts its own task. The header always reflects the latest value, and the stale-load-guard drops a body load whose message is no longer shown. Two quick publishes of the same new message reload the body once: the first records the id before any await, so the second is not new.
 - **Error, rule list compile fails**: MUST load with the policy prefix alone (rule-list-failure-tolerated). The failure is swallowed with no log or user message, and the next load tries to compile again.
 - **Error, body load fails**: the controller sets no failure handler on the web view, so a failed load shows no message and no error state.
 - **Remote content allowed**: the policy and the rule list are both gone, so only the navigation rules stop a page's own navigations (own-page-only).

@@ -4,7 +4,7 @@
 - **timeout-for-other-requests**: `timeout(for:)` MUST return `callTimeout` when the bytes decode as any `MailRequest` other than `syncNow`.
 - **timeout-for-undecodable-bytes**: `timeout(for:)` MUST return `callTimeout` when the bytes do not decode as a `MailRequest`; the decode failure MUST NOT be raised.
 - **send-passes-deadline**: `send` MUST invoke `call` with the request bytes unchanged and the value `timeout(for:)` returns for those bytes.
-- **send-calls-once**: `send` MUST invoke `call` exactly once per invocation and MUST NOT retry after a failure. The doc comment on `makeClient` states why: `signIn` opens a browser and `modifyLabels` writes to Gmail, so a retry after a timeout could do either twice.
+- **send-calls-once**: `send` MUST invoke `call` exactly once per invocation and MUST NOT retry after a failure. The doc comment on `makeClient`'s `call` parameter states why: `signIn` opens a browser and `modifyLabels` writes to Gmail, so a retry after a timeout could do either twice.
 - **send-reports-failure-first**: When `call` throws, `send` MUST pass the thrown error to `onFailure` before it throws.
 - **send-classifies-failure**: When `call` throws, `send` MUST pass the thrown error to `classify` and MUST throw `remoteError(for:daemonName:)` of the classification.
 - **send-empty-reply**: When `call` returns zero bytes, `send` MUST throw `MailClientError.remote` with the text `<daemonName> dropped the reply`.

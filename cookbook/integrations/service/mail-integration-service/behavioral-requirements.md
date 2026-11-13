@@ -89,8 +89,8 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **syncable-status**: A connection MUST be syncable only when its status is `active` or `error`.
 - **due-rule**: A connection MUST be due when it is syncable, not being removed, and a poll interval (`pollIntervalMinutes` times 60 seconds) has passed since the later of its `lastSyncAt` and its in-memory last attempt, or when neither exists.
 - **due-malformed-last-sync**: A missing or unparseable `lastSyncAt` (ISO 8601 with fractional seconds) MUST count as never synced.
-- **last-attempt-memory**: The last attempt time MUST be recorded when a sync starts, successful or not, and MUST be kept in memory only, so after a restart due-ness falls back to `lastSyncAt`.
-- **one-sync-per-connection**: At most one sync MUST run for a connection id; a request to start another MUST return no task.
+- **last-attempt-memory**: The last attempt time MUST be recorded when a sync task begins and finds its connection in the store, successful or not (a sync for a vanished connection records none), and MUST be kept in memory only, so after a restart due-ness falls back to `lastSyncAt`.
+- **one-sync-per-connection**: At most one sync MUST run for a connection id; a request to start another, or to start one for a connection being removed, MUST return no task.
 - **sync-token-guard**: A finishing sync MUST clear its `running` entry only when the entry still carries its own token.
 - **sync-skips-vanished**: A sync for a connection id the store no longer has MUST end silently without writing.
 - **sync-outcome-ignored**: The service MUST discard the `GmailSyncWorker.sync` outcome; success is recorded by the worker itself.

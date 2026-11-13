@@ -9,7 +9,7 @@ Test names are the Swift Testing functions in `MailBrowserModelTests`.
 | mail-browser-004 | load-more-appends, load-more-cursor, load-more-noop, first-page-limit | Five messages, page size 2; `reload`, then `loadMore` three times (test `pagesAppendUntilTheLast`) | After `reload` ids are m1, m2 and `hasMore` is true; after two calls ids are m1 to m5 and `hasMore` is false; the third call sends no request, so three list requests were sent in all |
 | mail-browser-005 | select-mailbox-first-page, select-message-clears-open | Open m1, then select the SENT mailbox (test `switchingMailboxesReplacesTheListAndClosesTheMessage`) | `messages` ids are m2; `selectedMessageId` and `openedMessage` are nil |
 | mail-browser-006 | stale-list-dropped | Hold the All Mail list request, select SENT, then release the held request (test `aPageForAnEarlierMailboxIsDropped`) | `selectedMailbox` is SENT; `messages` ids are m2 |
-| mail-browser-007 | reload-failure-reported, first-page-failure, dismiss-error | The list request fails with "store unavailable"; `reload`, then `dismissError` (test `aFailedListBecomesTheErrorMessage`) | `errorMessage` is "store unavailable", then nil after `dismissError` |
+| mail-browser-007 | first-page-failure, dismiss-error | The list request fails with "store unavailable"; `reload`, then `dismissError` (test `aFailedListBecomesTheErrorMessage`) | `errorMessage` is "store unavailable", then nil after `dismissError` |
 | mail-browser-008 | select-message-load | `reload`, then `select(messageId: "m1")` (test `openingAMessageLoadsItsBody`) | Before: the listed message has no body text; after: `openedMessage` body text is "body m1" |
 | mail-browser-009 | mark-read-on-open, mark-read-updates-copies, mark-read-lowers-counts | m1 labeled INBOX and UNREAD, Inbox unread 2; open m1 (test `openingAnUnreadMessageMarksItReadAndLowersTheCount`) | A modify-labels request removes UNREAD from m1; `isUnread` is false for the listed and opened copies; the Inbox unread count is 1 |
 | mail-browser-010 | mark-read-no-request-when-read | m1 labeled INBOX only; open m1 (test `openingAReadMessageChangesNoLabels`) | No modify-labels request is sent |
@@ -24,7 +24,7 @@ Test names are the Swift Testing functions in `MailBrowserModelTests`.
 | mail-browser-019 | mailbox-system-present-only, mailbox-all-mail | Labels contain only UNREAD | The mailbox list is exactly one row: All Mail with nil label id and nil unread |
 | mail-browser-020 | refresh-if-synced-silent | The account read fails during `refreshIfSynced` | `errorMessage` stays nil and no reload happens |
 | mail-browser-021 | select-message-unlisted | Call `select(messageId: "zz")` for an id not in `messages` | `selectedMessageId` is "zz"; `openedMessage` is nil; no client call is made |
-| mail-browser-022 | unread-count-floor, unread-count-nil-untouched | Open an unread message when the Inbox count is 0 and All Mail's count is nil | The Inbox count stays 0; All Mail stays nil |
+| mail-browser-022 | unread-count-floor, unread-count-nil-untouched | Open an unread message labeled INBOX when the Inbox count is 0 (All Mail has a nil label id and a nil count) | The Inbox count stays 0; All Mail stays nil |
 | mail-browser-023 | mark-read-failure | The modify-labels request fails with "denied" | `errorMessage` is "denied"; `openedMessage` is still set |
 | mail-browser-024 | select-message-account-by-email | Listed message names an email no account has | The full message is loaded for the selected mailbox's account |
 

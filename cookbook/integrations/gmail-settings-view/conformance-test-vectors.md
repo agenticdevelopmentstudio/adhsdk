@@ -16,7 +16,7 @@ The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDevel
 | gmail-011 | import-json-cancel | Open panel dismissed without a file (view) | No model call; no alert. |
 | gmail-012 | import-json-panel | Press "Import Client JSON…" (view) | Modal open panel accepting only JSON, one file, no folders. |
 | gmail-013 | reconnect-hint | Client imported, one account (view) | Caption "Accounts signed in with a replaced client need Reconnect." shown; absent when accounts is empty. |
-| gmail-014 | account-row-content | Status values connected, error, revoked, pending (test `statusText`) | Badges read "Connected", "Error", "Reconnect needed", "Pending". |
+| gmail-014 | account-row-content | Status values active, error, revoked, pending (test `statusText`) | Badges read "Connected", "Error", "Reconnect needed", "Pending". |
 | gmail-015 | account-row-content | Last sync two hours before now, en_US (test `lastSyncedTextIsExactForAFixedDate`) | Caption "Last synced 2 hours ago". |
 | gmail-016 | account-row-content | No last sync, or unparseable text "garbage" (same test) | Caption "Never synced". |
 | gmail-017 | account-list, controls-follow-selection | Loaded accounts, no prior selection (test `reloadLoadsProviderAndAccounts`) | List shows the account; first account selected; per-account controls visible. |
@@ -25,11 +25,11 @@ The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDevel
 | gmail-020 | sign-in-progress, cancel-sign-in | Sign-in pending (test `cancelSignInSendsCancelWhileSigningIn`) | Spinner, waiting caption and Cancel visible; pressing Cancel sends cancel-sign-in even though busy is true; `signingIn` false after the sign-in call ends. |
 | gmail-021 | remove-confirmation, remove-safe-default | Press "Remove" with "a@x.com" selected (view) | Confirmation titled "Remove a@x.com?" with the stated detail, Cancel default, action "Remove". |
 | gmail-022 | remove-call | Confirm removal (test `removeSendsRemoveAccount`) | Remove-account request for that account's ID. |
-| gmail-023 | remove-call | Decline removal or press Esc (view) | No model call. |
+| gmail-023 | remove-call | Decline removal, press Esc, or press Remove with no key window (view; the confirmation helper answers no without a window) | No model call. |
 | gmail-024 | remove-button | No account selected, or model busy (view) | Remove disabled. |
 | gmail-025 | sync-now-button | Press "Sync Now" (test `syncNowSendsSyncNow`) | Sync-now request for the selected account. |
 | gmail-026 | reconnect-button | Selected account status revoked or error (view) | "Reconnect" shown; pressing it calls addAccount. |
-| gmail-027 | reconnect-button | Selected account status connected or pending (view) | "Reconnect" absent. |
+| gmail-027 | reconnect-button | Selected account status active or pending (view) | "Reconnect" absent. |
 | gmail-028 | show-error-button, account-error-as-alert | Account in error with a last error, press "Show Error" (view, model `showError`) | Alert titled "<email> couldn't sync" with the error message. |
 | gmail-029 | show-error-button | Account in error with no last error (view) | "Show Error" absent. |
 | gmail-030 | whole-settings-write | Toggle "Sync junk mail" on and set window to 90 (test `updateSendsSettings`) | Update request carries the whole settings with `includeSpam` true and `windowDays` 90; account shows them. |

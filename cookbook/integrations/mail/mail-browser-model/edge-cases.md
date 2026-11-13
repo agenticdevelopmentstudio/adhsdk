@@ -15,8 +15,8 @@
 - **Mark read when messages disagree (MUST)**: The copies in `messages` and `openedMessage` take the labels returned by the service, not the locally computed ones.
 - **Unread counts drift (SHOULD)**: Local count changes are an estimate. The next `reload` replaces them with the service's counts.
 - **Unparseable date (MUST)**: `listDate` and `fullDate` return the input text rather than failing.
-- **Sender header without a closing bracket (MUST)**: `senderName` uses the text after the last "<" with ">" and spaces trimmed from both ends.
-- **Offline or store unavailable (MUST)**: Every client failure surfaces as `errorMessage`, and the model holds its previous data. There is no retry and no backoff; the user's next action or the next sync poll tries again. The one exception is the sync poll, which swallows an account-read failure.
+- **Sender header without a closing bracket (MUST)**: When the display name before the last "<" is empty, `senderName` uses the text after it with ">" and spaces trimmed from both ends.
+- **Offline or store unavailable (MUST)**: Every client failure surfaces as `errorMessage`, and the model keeps its previous data, except that selecting a mailbox has already emptied the list and closed the open message before its first page is requested. There is no retry and no backoff; the user's next action or the next sync poll tries again. The one exception is the sync poll, which swallows an account-read failure.
 - **Error cleared (MUST NOT)**: A successful call does not clear `errorMessage`; only `dismissError` does.
 - **Concurrent access (MUST)**: The model is main-actor isolated, so state changes are serialized. Overlap is possible only across `await` points, which the generation counters and the `loadMore` flag guard.
 

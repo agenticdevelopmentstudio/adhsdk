@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: Declare `integration_email_messages_external` and `integration_email_labels_external` as UNIQUE on `(connection_id, external_id)`, but leave `integration_connections_account` non-unique.
-**Rationale**: The unique indices make a provider's message or label id a stable key per connection, which `IntegrationsStoreTests.upsertMessagesIsIdempotent` relies on. The connections index is only a lookup aid; the source gives no comment on why it is not unique, and `IntegrationsStoreTests.upsertConnectionReusesRowForSameEmail` shows the store, not the schema, prevents duplicate accounts.
+**Rationale**: The unique indices make a provider's message or label id a stable key per connection, and backs the one-row-per-message result that `IntegrationsStoreTests.upsertMessagesIsIdempotent` checks (the store's `upsertMessages` looks up the existing row by that key and reuses its `id`). The connections index is only a lookup aid; the source gives no comment on why it is not unique, and `IntegrationsStoreTests.upsertConnectionReusesRowForSameEmail` shows the store, not the schema, prevents duplicate accounts.
 **Approved**: pending
 
 **Decision**: Tombstone rows with `deleted_at` (and `is_deleted` on messages and labels) instead of deleting them, and leave the action log without either column.

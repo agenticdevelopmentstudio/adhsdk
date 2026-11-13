@@ -7,7 +7,7 @@
 - **Boundary lengths in base64url**: Padding is added by length modulo four; a length remainder of one produces three pad characters that Foundation rejects, so the part's body is nil. A remainder of zero adds none.
 - **Unbalanced quote in an address header**: An opening quote with no close keeps the remainder of the header, commas included, as one piece. This is the splitter's behavior and no error is raised.
 - **Backslash outside quotes**: A backslash outside a double-quoted section is kept as an ordinary character and does not escape anything.
-- **Whitespace trimming scope**: Address pieces are trimmed of spaces and tabs only; other whitespace such as newlines stays. This is what the code does.
+- **Whitespace trimming scope**: Address pieces are trimmed of horizontal whitespace only (spaces, tabs and Unicode space separators); newlines stay. This is what the code does.
 - **Duplicate headers**: The first header with a matching name wins, so a second `Subject` is ignored. This MUST hold.
 - **Multiple bodies of one type**: Only the first plain text and the first HTML part in document order are kept. This MUST hold.
 - **Unknown or invalid charset**: An unrecognised charset name, or bytes invalid in the declared charset, falls back to UTF-8 and then ISO Latin-1, so decoding always succeeds when the base64url is valid. This MUST hold.
