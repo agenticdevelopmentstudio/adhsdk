@@ -215,10 +215,24 @@ public enum VSCodeThemeImporter {
             cursor: cursor,
             selection: selection,
             ansi: ansi,
-            roleOverrides: roleOverrides(in: colors)
+            roleOverrides: roleOverrides(in: colors),
+            vscodeTokenColors: tokenColorsJSON(in: root)
         )
         // `tokenColors` sits beside `colors` at the root, not inside it.
         return theme.withSyntaxStyles(syntaxStyles(in: root))
+    }
+
+    /// The whole `tokenColors` array, `include`s already merged in, as JSON
+    /// text — what the TextMate highlighter paints with (`CodeTheme`). The ten
+    /// syntax styles below are a lossy summary for the source editor; this is
+    /// the theme's own word at full scope resolution. Absent, or not an array,
+    /// is `nil`: a palette without token colours synthesizes its rules.
+    public static func tokenColorsJSON(in root: [String: Any]) -> String? {
+        guard let entries = root["tokenColors"] as? [Any],
+              JSONSerialization.isValidJSONObject(entries),
+              let data = try? JSONSerialization.data(withJSONObject: entries, options: [.withoutEscapingSlashes])
+        else { return nil }
+        return String(bytes: data, encoding: .utf8)
     }
 
     // MARK: - Appearance
@@ -319,31 +333,6 @@ public enum VSCodeThemeImporter {
         let style: SyntaxStyle
     }
 
-    /// The TextMate scope to ask for each syntax role, in the order to try.
-    ///
-    /// Not guesses: measured against 20 published Open VSX themes (the Dracula,
-    /// GitHub, Material and Night Owl families). Nine of the ten resolve in
-    /// **20/20** themes on the single scope named here. `types` resolves in
-    /// 16/20 on `entity.name.type`, and in the remaining four — the Night Owl
-    /// family — only on `support.type`, which is why it alone carries a second
-    /// step and why the chain is ordered rather than a set. This is the reason
-    /// these particular scopes are here and not the dozen plausible
-    /// alternatives (`keyword`, `entity.name`, `string`, `comment`), each of
-    /// which either matched fewer themes or matched an ancestor so general that
-    /// a longer rule elsewhere in the file usually won instead.
-    private static let syntaxScopeChains: [(role: SyntaxRole, scopes: [String])] = [
-        (.keywords, ["keyword.control"]),
-        (.commands, ["entity.name.function"]),
-        (.types, ["entity.name.type", "support.type"]),
-        (.attributes, ["entity.other.attribute-name"]),
-        (.variables, ["variable.other"]),
-        (.values, ["constant.language"]),
-        (.numbers, ["constant.numeric"]),
-        (.strings, ["string.quoted.double"]),
-        (.characters, ["constant.character"]),
-        (.comments, ["comment.line"])
-    ]
-
     /// Nothing in this section throws. A theme with no `tokenColors`, an
     /// unusable entry, or a role nothing matches simply yields no style for
     /// that role, and the editor falls back to its ANSI derivation — a missing
@@ -352,8 +341,10 @@ public enum VSCodeThemeImporter {
     private static func syntaxStyles(in root: [String: Any]) -> [SyntaxRole: SyntaxStyle] {
         let rules = syntaxRules(in: root)
         guard !rules.isEmpty else { return [:] }
-        return syntaxScopeChains.reduce(into: [SyntaxRole: SyntaxStyle]()) { styles, chain in
-            styles[chain.role] = chain.scopes.lazy.compactMap { style(for: $0, in: rules) }.first
+        // `SyntaxRole.textMateScopes` holds the measured scope chains, shared
+        // with the code theme that writes rules over the same scopes.
+        return SyntaxRole.allCases.reduce(into: [SyntaxRole: SyntaxStyle]()) { styles, role in
+            styles[role] = role.textMateScopes.lazy.compactMap { style(for: $0, in: rules) }.first
         }
     }
 
@@ -458,8 +449,10 @@ public enum VSCodeThemeImporter {
 
     /// The normalizer itself, split out from the keyed lookup above because
     /// `tokenColors` states its colours inline rather than under a key. One
-    /// spelling of "what counts as a colour in a VS Code theme" (`dry`).
-    private static func color(fromHex raw: String) -> RGBAColor? {
+    /// spelling of "what counts as a colour in a VS Code theme" (`dry`):
+    /// `#RGB`, `#RGBA`, `#RRGGBB` and `#RRGGBBAA`, `#` optional, any case.
+    /// Public because `CodeTheme` reads theme files by the same rule.
+    public static func color(fromHex raw: String) -> RGBAColor? {
         var hex = raw.hasPrefix("#") ? String(raw.dropFirst()) : raw
         switch hex.count {
         case 3, 4:

@@ -1,4 +1,12 @@
 
+**Decision**: The importer keeps the whole resolved `tokenColors` array on the theme as JSON text, beside the ten summarised syntax styles.
+
+**Rationale**: The TextMate highlighter paints with the theme's own rules at full scope resolution; the ten roles are a lossy summary for the source editor. Text, not a decoded model, because the highlighter takes JSON and nothing in Swift reads the rules.
+
+**Decision**: A theme without kept token colours synthesizes one rule per syntax role from the same defaults the source editor uses.
+
+**Rationale**: One table of default slots and emphasis (`SyntaxRole.defaultStyle`) keeps the diff viewer and the source editor painting a terminal-derived theme alike.
+
 **Decision**: Syntax styles are stored inside `ColorTheme.roleOverrides` under a `syntax.` key namespace instead of a separate field or side store.
 **Rationale**: Per the `syntaxStyles` doc comment, `ColorTheme` is the unit that travels, and `ColorTheme.init(from:)` decodes a fixed key list, so anything stored beside it is silently dropped by `exportJSON(_:)` and `duplicate(_:)`; duplicating an imported theme would then repaint the editor. `SemanticPalette` looks roles up by `ThemeRole.rawValue`, so the extra keys are invisible to it.
 **Approved**: pending
