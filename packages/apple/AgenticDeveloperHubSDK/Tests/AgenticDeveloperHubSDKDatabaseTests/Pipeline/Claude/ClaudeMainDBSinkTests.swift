@@ -365,6 +365,29 @@ final class ClaudeMainDBSinkTests: XCTestCase {
         XCTAssertEqual(try rows(split.database, columns), try rows(whole.database, columns))
     }
 
+    /// A subagent may run another model: its newer lines advance the session's
+    /// activity, never its model.
+    func testASubagentsModelNeverReplacesTheSessions() throws {
+        let pipeline = try makePipeline()
+        try pipeline.deliver(try transcriptRecords())
+        let line = try Self.transcriptLine("assistant")
+            .replacingOccurrences(of: "\"claude-opus-4-1\"", with: "\"claude-haiku-4-5\"")
+            .replacingOccurrences(of: "msg_01XyZAbCdEfGhIjKlMnOpQrS", with: "msg_01Subagent")
+            .replacingOccurrences(
+                of: "0a1b2c3d-0002-4000-8000-000000000002", with: "0a1b2c3d-0099-4000-8000-000000000099")
+            .replacingOccurrences(of: "2026-10-30T12:00:05.000Z", with: "2026-10-30T13:00:00.000Z")
+        let file = transcriptFile.deletingPathExtension().appendingPathComponent("subagents/agent-a1.jsonl").path
+        let payload = ClaudeTranscriptPayload(file: file, lineNo: 1, subagentFile: true, line: line)
+        try pipeline.deliver([ArchivedRecord(id: 500, record: RawRecord(
+            provider: ClaudeProvider.name, sourceKind: ClaudeProvider.transcriptKind,
+            dedupKey: ClaudeTranscriptPayload.dedupKey(line: line, file: file, byteOffset: 1),
+            receivedAt: Self.receivedAt, payload: try ClaudeTranscriptPayload.encode(payload)))])
+
+        XCTAssertEqual(try scalar(pipeline.database, "SELECT model FROM sessions"), "claude-opus-4-1")
+        XCTAssertEqual(
+            try scalar(pipeline.database, "SELECT last_activity_at FROM sessions"), "2026-10-30 13:00:00")
+    }
+
     // MARK: - Redelivery
 
     func testSecondDeliveryOfEveryBatchChangesNothing() throws {

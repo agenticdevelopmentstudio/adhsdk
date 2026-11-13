@@ -223,7 +223,9 @@ public final class ClaudeMainDBSink: PipelineSink {
                   !turn.sessionId.isEmpty else { return }
             var bucket = buckets[turn.sessionId] ?? Bucket()
             bucket.turns += 1
-            if !turn.model.isEmpty { bucket.model = turn.model }
+            // A subagent may run another model; the session's is its own, as in
+            // the JSONL importer.
+            if !turn.model.isEmpty, !payload.subagentFile { bucket.model = turn.model }
             if !turn.cwd.isEmpty { bucket.cwd = turn.cwd }
             if !turn.gitBranch.isEmpty { bucket.gitBranch = turn.gitBranch }
             if bucket.firstTs.isEmpty || (turn.timestamp < bucket.firstTs && !turn.timestamp.isEmpty) {
