@@ -48,7 +48,7 @@ public final class SessionsCoordinator: AppFeature {
         StenographerSummaryPrefsPush.startObserving(service: service)
         ProjectSessionMonitor.shared.attach(
             StenographerSessionListSource(service: service),
-            summariesEnabled: { UserSettings.stenographerAISummariesEnabled.value })
+            summariesEnabled: UserSettings.stenographerAISummariesEnabled)
     }
 
     /// The AI Summaries settings pane, for the host's settings window.

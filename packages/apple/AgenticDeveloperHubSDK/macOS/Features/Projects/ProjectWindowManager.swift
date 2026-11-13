@@ -81,7 +81,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// persisted "reopen me" flag. Tearing the second one down through the
     /// undo of the first would leave the project reopening for ever.
     private var adoptedForScripting: Set<UUID> = []
-    private weak var coordinator: ProjectsCoordinator?
+    private(set) weak var coordinator: ProjectsCoordinator?
 
     /// A database handed over by `attach(database:)`, for a host with no
     /// project registry. Strong where `coordinator` is weak: nothing else in
@@ -383,6 +383,19 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         load(repo, into: group)
     }
 
+    /// `open project` from a script: the same path as choosing the project in
+    /// the front window's Project Browser, so a script exercises exactly what
+    /// a click does. It never activates the app — a script runs while someone
+    /// may be typing in another app (quiet development).
+    public func openProjectForScripting(_ repo: GitRepo) {
+        if let group = frontGroup {
+            loadProject(repo, into: group)
+        } else {
+            coordinator?.recordOpened(repo)
+            load(repo, into: makeGroup())
+        }
+    }
+
     /// Opens a project window with no project in it, its shelf out on the
     /// Project Browser with the keyboard in the filter — File ▸ New Project
     /// Window.
@@ -537,6 +550,20 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// half-built state is not written back over the state being read.
     private var isRestoring = false
 
+    /// Restored projects not yet built: each is built the first time its
+    /// group presents it, never all at launch.
+    private var deferredBuilds: [(repo: GitRepo, group: ProjectWindowGroup)] = []
+
+    /// The window for `repoID`, built now if restore deferred it.
+    private func ensureController(
+        _ repoID: UUID, in group: ProjectWindowGroup
+    ) -> ComposableTabsWindowController? {
+        if let existing = controllers[repoID] { return existing }
+        guard let index = deferredBuilds.firstIndex(where: { $0.repo.id == repoID }) else { return nil }
+        let repo = deferredBuilds.remove(at: index).repo
+        return makeProjectWindow(repo, in: group)
+    }
+
     /// Saved windows none of whose projects this registry knows, kept as they
     /// were and written back beside the live groups. The saved windows are an
     /// app preference and the registry is a database, and a launch can pair a
@@ -671,7 +698,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
     /// Puts `repoID`'s window on screen in place of whatever `group` shows.
     private func present(_ repoID: UUID, in group: ProjectWindowGroup) {
-        guard let incoming = controllers[repoID] else { return }
+        guard let incoming = ensureController(repoID, in: group) else { return }
         group.select(repoID)
         persistGroups()
         swap(to: incoming, in: group)
@@ -1121,8 +1148,15 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             // every launch after.
             guard wasEmpty || !state.activeRepoIDs.isEmpty else { continue }
             let group = makeGroup(state: state)
-            for id in state.activeRepoIDs {
-                if let repo = repos[id] { makeProjectWindow(repo, in: group) }
+            // Only the project the group shows is built now. Building every
+            // restored project here held the main thread for ~13 s at launch
+            // with 23 of them, and draining them later still stalled ~1 s per
+            // project; the rest are built when first presented (`ensureController`).
+            if let selected = state.selectedRepoID, let repo = repos[selected] {
+                makeProjectWindow(repo, in: group)
+            }
+            for id in state.activeRepoIDs where id != state.selectedRepoID {
+                if let repo = repos[id] { deferredBuilds.append((repo, group)) }
             }
             if let selected = state.selectedRepoID, controllers[selected] != nil {
                 present(selected, in: group)

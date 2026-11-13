@@ -92,9 +92,6 @@ public final class MarkdownPaneViewController: NSViewController {
     /// True while the panes are being moved between frames, whose removals
     /// and insertions report tab selections that are not the user's.
     private var isRearranging = false
-    /// Set when the split view is shown, so the next layout pass with a real
-    /// width gives the two frames half each.
-    private var needsSplitEqualized = false
     private var pendingRender: DispatchWorkItem?
     /// Follows the global layout choice, so a pane already open — in another
     /// project's window, say — takes the layout chosen anywhere else.
@@ -141,6 +138,11 @@ public final class MarkdownPaneViewController: NSViewController {
         splitView.setHoldingPriority(.defaultLow, forSubviewAt: 1)
         splitView.addArrangedSubview(markdownFrame.view)
         splitView.addArrangedSubview(previewFrame.view)
+        // Equal halves by constraint, solved in the same pass as everything
+        // else. Equalizing with `setPosition` from `viewDidLayout` forced a
+        // second synchronous layout of the whole pane on every pass — about
+        // 300 ms of main thread per Markdown pane when a project window opened.
+        markdownFrame.view.widthAnchor.constraint(equalTo: previewFrame.view.widthAnchor).isActive = true
 
         let contentViews: [NSView] = [singleFrame.view, splitView]
         var constraints: [NSLayoutConstraint] = []
@@ -173,19 +175,6 @@ public final class MarkdownPaneViewController: NSViewController {
             self?.source.pane.applyTheme(palette)
             self?.preview.palette = palette
         }
-    }
-
-    public override func viewDidLayout() {
-        super.viewDidLayout()
-        // Every pass, not once: the divider takes no drags, so the halves are
-        // only ever equal, and a pass made before the pane had its real width
-        // (a sunk window, a pane still being installed) must not stick.
-        guard !splitView.isHidden, splitView.bounds.width > 0,
-              let first = splitView.arrangedSubviews.first else { return }
-        let half = ((splitView.bounds.width - splitView.dividerThickness) / 2).rounded()
-        guard needsSplitEqualized || abs(first.frame.width - half) > 1 else { return }
-        needsSplitEqualized = false
-        splitView.setPosition(half, ofDividerAt: 0)
     }
 
     // MARK: - Layout and content
@@ -236,7 +225,6 @@ public final class MarkdownPaneViewController: NSViewController {
         case .sideBySide:
             markdownFrame.addTab(markdownTab, on: .top)
             previewFrame.addTab(previewTab, on: .top)
-            needsSplitEqualized = true
         }
         singleFrame.view.isHidden = layout != .singlePane
         splitView.isHidden = layout != .sideBySide
@@ -338,7 +326,7 @@ private final class MarkdownSourceViewController: NSViewController {
 
 /// The side-by-side divider is a line, not a control: it takes no clicks, shows
 /// no resize cursor and cannot be dragged. The two panes stay equal halves
-/// (equal holding priorities, equalized on layout).
+/// (an equal-width constraint).
 extension MarkdownPaneViewController: NSSplitViewDelegate {
     public func splitView(
         _ splitView: NSSplitView,

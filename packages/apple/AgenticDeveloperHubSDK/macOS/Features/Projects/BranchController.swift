@@ -15,7 +15,6 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
     private let panes = NSHashTable<TabPaneViewController>.weakObjects()
     private var statusObservation: GitStatusObservation?
     private var sessionObserver: NSObjectProtocol?
-    private var settingsObserver: NSObjectProtocol?
     /// `nil` until the first status arrives, and when git could not answer.
     private var isClean: Bool?
 
@@ -42,13 +41,13 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
             self.reloadPanes()
         }
         statusProvider.refresh()
+        // The session monitor also announces its summaries switch flipping,
+        // the one setting a card reads. Never `UserDefaults.didChangeNotification`:
+        // every defaults write anywhere (a shelf width, a window frame) then
+        // reloaded every card of every open project on the main thread, which
+        // is most of what made switching projects spin.
         sessionObserver = NotificationCenter.default.addObserver(
             forName: ProjectSessionMonitor.didChangeNotification, object: nil, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.reloadPanes() }
-        }
-        settingsObserver = NotificationCenter.default.addObserver(
-            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.reloadPanes() }
         }

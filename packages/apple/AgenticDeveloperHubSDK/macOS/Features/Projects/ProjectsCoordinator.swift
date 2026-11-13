@@ -281,12 +281,18 @@ public final class ProjectsCoordinator: AppFeature {
     /// Stamps `repo` as just opened, which is what the browser sorts by,
     /// without opening anything — for a caller that opens the window itself.
     public func recordOpened(_ repo: GitRepo) {
-        do {
-            try database.markOpened(id: repo.id)
-        } catch {
-            Self.logger.error("Could not record open time: \(error)")
+        // Off the click: the window is what was asked for, the stamp only
+        // reorders the next sweep. Done on the next main-queue turn so the
+        // window shows first.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            do {
+                try self.database.markOpened(id: repo.id)
+            } catch {
+                Self.logger.error("Could not record open time: \(error)")
+            }
+            self.reload()
         }
-        reload()
     }
 
     /// Shows the picker the host handed in. A host that wired none has a

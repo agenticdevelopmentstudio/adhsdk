@@ -15,19 +15,26 @@ public final class ProjectSessionMonitor {
     public static let didChangeNotification = Notification.Name("ProjectSessionMonitorDidChange")
 
     /// Whether AI summaries are switched on, asked by the cards that hold a
-    /// place for one.
-    public private(set) var summariesEnabled: @MainActor () -> Bool = { false }
+    /// place for one. Flipping it posts `didChangeNotification`, so a card
+    /// needs no settings observer of its own.
+    public func summariesEnabled() -> Bool { summariesSetting?.currentValue ?? false }
+
+    private var summariesSetting: UserSetting<Bool>?
+    private var summariesObserver: UserSettingObserver<Bool>?
 
     private var source: SessionWatcher.SessionListSource?
     private var sessions: [SessionWatcher.SessionWatcherSession] = []
 
     public func attach(
         _ source: SessionWatcher.SessionListSource,
-        summariesEnabled: @escaping @MainActor () -> Bool
+        summariesEnabled: UserSetting<Bool>
     ) {
         self.source?.stopObserving()
         self.source = source
-        self.summariesEnabled = summariesEnabled
+        summariesSetting = summariesEnabled
+        summariesObserver = UserSettingObserver(summariesEnabled) { [weak self] _ in
+            NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
+        }
         source.startObserving { [weak self] in
             Task { @MainActor in await self?.reload() }
         }

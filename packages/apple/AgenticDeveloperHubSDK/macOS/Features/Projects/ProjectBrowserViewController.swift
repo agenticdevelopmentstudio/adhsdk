@@ -48,6 +48,11 @@ public final class ProjectBrowserViewController: NSViewController {
     /// What the rows highlight, kept because a row is built long after the
     /// filter ran and has to be able to ask what it survived.
     private var query = ""
+    /// What the drawn tree was built from: ids, paths, names, remotes and the
+    /// query. A coordinator change that leaves all of it alone (an open stamp,
+    /// a rescan that found nothing new) must not rebuild every row on the main
+    /// thread, which is what made clicking a project spin.
+    private var builtSignature: [String]?
     /// The filter as typed, whichever field it was typed in.
     private var filterText = ""
     private var changeObserver: NSObjectProtocol?
@@ -344,6 +349,9 @@ public final class ProjectBrowserViewController: NSViewController {
         let matching = all.filter {
             (onlyRepoIDs?.contains($0.id) ?? true) && ProjectFilter.matches($0, query: query)
         }
+        let signature = [query] + matching.map { "\($0.id)|\($0.kind)|\($0.path)|\($0.name)|\($0.remote ?? "")" }
+        guard signature != builtSignature else { return }
+        builtSignature = signature
         roots = ProjectTree.build(from: matching)
         outline.reloadData()
         restoreDisclosure()
