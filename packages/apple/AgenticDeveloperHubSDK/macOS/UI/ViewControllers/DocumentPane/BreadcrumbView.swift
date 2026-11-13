@@ -66,6 +66,19 @@ public final class BreadcrumbView: NSView {
     /// Kept while a crumb's menu is up: `NSMenu` holds its delegate weakly.
     private var activeMenu: BreadcrumbMenu?
 
+    /// One button per crumb, parallel to `crumbTitles`.
+    private var crumbButtons: [NSButton] = []
+    /// How many leading crumbs are collapsed to "…" to fit the width.
+    public private(set) var collapsedCount = 0
+    /// Whether the strip is showing less than the whole path.
+    public var isTruncated: Bool { collapsedCount > 0 }
+    /// The full-width copy shown over the neighbours while the pointer is on
+    /// a truncated strip.
+    private var expansion: BreadcrumbExpansionWindow?
+    private var hoverArea: NSTrackingArea?
+    /// Set on the copy inside an expansion, which never truncates or expands.
+    var expandsOnHover = true
+
     public init(
         rootURL: URL,
         style: Style = .rootRelative,
@@ -125,12 +138,101 @@ public final class BreadcrumbView: NSView {
             stack.removeArrangedSubview(view)
             view.removeFromSuperview()
         }
+        crumbButtons = []
+        collapsedCount = 0
         for index in path.indices {
             if index > 0 {
                 stack.addArrangedSubview(Self.chevron())
             }
-            stack.addArrangedSubview(crumbButton(index: index, isLast: index == path.count - 1))
+            let button = crumbButton(index: index, isLast: index == path.count - 1)
+            crumbButtons.append(button)
+            stack.addArrangedSubview(button)
         }
+        needsLayout = true
+    }
+
+    public override func layout() {
+        super.layout()
+        fitCrumbs()
+    }
+
+    /// A strip too narrow for its path keeps the file's own crumb whole and
+    /// collapses the crumbs before it to "…", leftmost first, until it fits.
+    private func fitCrumbs() {
+        guard expandsOnHover, !crumbButtons.isEmpty, bounds.width > 0 else { return }
+        let available = bounds.width - 16
+        var collapse = 0
+        restoreCrumbs(collapsing: 0)
+        while stack.fittingSize.width > available, collapse < crumbButtons.count - 1 {
+            collapse += 1
+            restoreCrumbs(collapsing: collapse)
+        }
+        collapsedCount = collapse
+        if collapse == 0 { dismissExpansion() }
+    }
+
+    private func restoreCrumbs(collapsing count: Int) {
+        for (index, button) in crumbButtons.enumerated() {
+            let collapsed = index < count
+            let title = collapsed ? "…" : crumbTitles[index]
+            if button.title != title { button.title = title }
+            let isLast = index == crumbButtons.count - 1
+            let isDirectory = !isLast || (fileURL.map(Self.isDirectory) ?? false)
+            button.image = collapsed ? nil : BreadcrumbMenu.icon(
+                for: crumbURLs[index], isDirectory: isDirectory, palette: resolvedThemeScope.palette)
+        }
+        // A collapsed run reads as one "…": the chevrons between them go.
+        for (offset, view) in stack.arrangedSubviews.enumerated() where view is NSImageView {
+            let crumbAfter = (offset + 1) / 2
+            view.isHidden = crumbAfter < count
+        }
+    }
+
+    // MARK: - Hover expansion
+
+    public override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverArea { removeTrackingArea(hoverArea) }
+        guard expandsOnHover else { return }
+        let area = NSTrackingArea(
+            rect: bounds, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect], owner: self)
+        addTrackingArea(area)
+        hoverArea = area
+    }
+
+    public override func mouseEntered(with event: NSEvent) {
+        guard isTruncated, expansion == nil, let window else { return }
+        let copy = BreadcrumbView(rootURL: rootURL, style: style, homeURL: homeURL)
+        copy.expandsOnHover = false
+        copy.filter = filter
+        copy.onSelect = { [weak self] url in
+            self?.dismissExpansion()
+            self?.onSelect?(url)
+        }
+        copy.fileURL = fileURL
+        let width = max(bounds.width, copy.stack.fittingSize.width + 16)
+        var frame = window.convertToScreen(convert(bounds, to: nil))
+        frame.size.width = width
+        if let screen = window.screen, frame.maxX > screen.visibleFrame.maxX {
+            frame.origin.x = max(screen.visibleFrame.minX, screen.visibleFrame.maxX - width)
+        }
+        let panel = BreadcrumbExpansionWindow(frame: frame, content: copy) { [weak self] in
+            self?.dismissExpansion()
+        }
+        window.addChildWindow(panel, ordered: .above)
+        expansion = panel
+    }
+
+    private func dismissExpansion() {
+        guard let expansion else { return }
+        expansion.parent?.removeChildWindow(expansion)
+        expansion.orderOut(nil)
+        self.expansion = nil
+    }
+
+    public override func viewWillMove(toWindow newWindow: NSWindow?) {
+        if newWindow == nil { dismissExpansion() }
+        super.viewWillMove(toWindow: newWindow)
     }
 
     private func crumbButton(index: Int, isLast: Bool) -> NSButton {
@@ -303,4 +405,54 @@ final class BreadcrumbMenu: NSObject, NSMenuDelegate {
         return NSImage(systemSymbolName: symbol, accessibilityDescription: description)?
             .withSymbolConfiguration(configuration)
     }
+}
+
+/// The borderless window a truncated breadcrumb shows its whole path in, laid
+/// over the views beside it, gone when the pointer leaves it.
+@MainActor
+final class BreadcrumbExpansionWindow: NSPanel {
+    private let onExit: () -> Void
+
+    init(frame: NSRect, content: BreadcrumbView, onExit: @escaping () -> Void) {
+        self.onExit = onExit
+        super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        isOpaque = false
+        hasShadow = true
+        backgroundColor = .clear
+        let host = HoverExitView(onExit: onExit)
+        host.wantsLayer = true
+        host.layer?.cornerRadius = 4
+        host.layer?.backgroundColor = NSColor(ThemePaletteObserver.currentPalette.projectPaneBackdrop).cgColor
+        content.translatesAutoresizingMaskIntoConstraints = false
+        host.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.leadingAnchor.constraint(equalTo: host.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: host.trailingAnchor),
+            content.topAnchor.constraint(equalTo: host.topAnchor),
+            content.bottomAnchor.constraint(equalTo: host.bottomAnchor)
+        ])
+        contentView = host
+    }
+
+    override var canBecomeKey: Bool { false }
+}
+
+@MainActor
+private final class HoverExitView: NSView {
+    private let onExit: () -> Void
+    init(onExit: @escaping () -> Void) {
+        self.onExit = onExit
+        super.init(frame: .zero)
+    }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(
+            rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect], owner: self))
+    }
+
+    override func mouseExited(with event: NSEvent) { onExit() }
 }
