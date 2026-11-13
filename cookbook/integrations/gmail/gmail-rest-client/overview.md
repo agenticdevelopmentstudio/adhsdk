@@ -1,0 +1,7 @@
+
+`GmailRESTClient` is the production implementation of the `GmailAPI` protocol ([adhsdk.ingredient.integrations.gmail.gmail-api](cookbook:18871853-95b7-492a-9f1f-417283594824)). It is a `public final class` that calls the Gmail REST API at `https://gmail.googleapis.com/gmail/v1/users/me/` through an injected `URLSession`, and holds no mutable state. A caller supplies an `accessToken` closure that returns a fresh bearer token; the client never stores or refreshes a credential.
+
+It exposes eight operations: `profile`, `listMessageIds`, `searchMessageIds`, `thread`, `message`, `history`, `labels` and `batchModify`. Around them sits shared plumbing that every operation uses: request building, quota pacing through a `GmailQuotaPacer`, a retry loop with exponential backoff, and mapping of a failed response to `IntegrationError.gmail(status:message:)`. Turning a returned message into a record is a separate component ([adhsdk.ingredient.integrations.gmail.gmail-message-parser](cookbook:cdadfe1d-e4a2-4e2d-96a7-a5eb615a1302)); deciding when to call, how to chunk and what to do with a `GmailCursorExpired` belongs to the sync engine and `MailIntegrationService`.
+
+The runtime flow of one network call (`send`) is a loop of attempts. Each attempt reserves quota with the pacer, sleeps if told to, sends the request, and then ends in one of three ways: return the body (a 2xx status), sleep and try again (a retryable failure with retries left), or throw. Retries and pacing are explained in the requirements below.
+

@@ -1,0 +1,61 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "df121975-deb8-49a9-b023-0aadcb0923d8",
+    "title": "MailSyncSettings",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Per-connection mail sync settings: which mail classes are mirrored, the look-back window in days and the poll interval.",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios"
+    ],
+    "tags": [
+      "integrations",
+      "mail",
+      "settings"
+    ],
+    "depends-on": [
+      "ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43",
+      "351e3bf8-b137-4f59-94de-c769aa8b0666"
+    ],
+    "related": [
+      "888b7ba2-61f6-4251-88df-3586c5c86b1f",
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "e3e60ee1c4882747",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

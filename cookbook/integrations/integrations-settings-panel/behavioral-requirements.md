@@ -1,0 +1,33 @@
+
+- **panel-identity**: The panel MUST describe itself to the settings window with the title "Integrations" and the `puzzlepiece.extension` symbol as its icon.
+- **sidebar-title**: The panel MUST set the sidebar title to "Integrations".
+- **help-topics**: The panel MUST supply exactly two help topics, "Integrations" and "Gmail".
+- **help-integrations-body**: The "Integrations" help topic body MUST be the exact Integrations help body string in the Localization table.
+- **help-gmail-body**: The "Gmail" help topic body MUST be the exact Gmail help body string in the Localization table.
+- **search-keywords**: The panel MUST contribute the search keywords "integrations", "gmail", "mail", "email", "google", "oauth", "account" and "sync".
+- **gmail-detail-keywords**: The Gmail detail MUST contribute the search keywords "gmail", "mail", "email", "google", "oauth", "account" and "sync", without "integrations".
+- **gmail-row**: The Gmail detail MUST describe itself with the title "Gmail" and the `envelope` symbol, and that title MUST be the sidebar row label.
+- **model-from-client**: The panel MUST create its Gmail settings model ([Gmail settings model](cookbook:2fa64944-9744-4d71-8fed-f785e7ce1e51)) from the mail client and the sign-in tracker given to its initializer, and MUST use the shared sign-in tracker when none is given.
+- **footer-controls**: The panel MUST install an add-and-remove footer ([AddRemoveFooterView](cookbook:a1d787e2-2e3f-4742-a30b-120a8607c518)) under the sidebar list, with a separator above it and the accessibility prefix `integrations.add-remove`.
+- **add-tooltip**: The add button MUST carry the tooltip "Add an integration".
+- **remove-tooltip**: The remove button MUST carry the tooltip "Remove the selected integration".
+- **initial-load**: When its view loads, the panel MUST build its listing and MUST ask the model to reload.
+- **listing-rule**: The sidebar MUST list Gmail when the loaded provider reports it configured or when Gmail has been picked from `+` in this session, and MUST list nothing otherwise.
+- **picked-in-memory**: A Gmail pick from `+` MUST be held only in memory and MUST NOT be sent to the service.
+- **auto-select**: Whenever the listing is rebuilt and is not empty, the panel MUST select its first row.
+- **remove-enabled**: The remove button MUST be enabled exactly when the listing is not empty, and MUST be re-evaluated on every rebuild.
+- **rebuild-on-change**: When the model's provider changes, the panel MUST rebuild the listing only if whether Gmail is listed no longer matches whether a row is shown, and MUST evaluate that against the provider's post-change value, not its value before the change.
+- **add-menu**: Pressing the add button MUST pop up a menu with one item, "Gmail", anchored at the bottom-left of the add button.
+- **add-menu-disabled**: The "Gmail" menu item MUST be disabled while Gmail is already listed.
+- **add-gmail**: Choosing "Gmail" from the menu MUST mark Gmail as picked and rebuild the listing.
+- **remove-refused-when-empty**: Pressing the remove button while Gmail is not listed MUST announce refusal feedback and MUST NOT open a confirmation.
+- **remove-confirmation**: Pressing the remove button while Gmail is listed MUST open a destructive confirmation ([confirmDestructive](cookbook:0fc99299-f3ba-4883-ab08-9bd614da7900)) attached to the panel's window, with the title, detail and action title given as the exact "Remove Gmail?", confirmation detail and "Remove" strings in the Localization table.
+- **remove-cancel-default**: The removal confirmation MUST make Cancel the Return default and MUST treat Esc as declining, as the shared destructive confirmation does.
+- **remove-declined**: When the confirmation is declined, the panel MUST NOT change the picked state, the listing or the service.
+- **remove-configured**: When the removal is confirmed and the provider is configured or its configuration is unknown (not loaded yet, or the load failed; see Design Decisions), the panel MUST clear the picked state, ask the model to remove the integration, and rebuild the listing.
+- **remove-unconfigured**: When the removal is confirmed and the provider is known to be not configured, the panel MUST clear the picked state, MUST dismiss the model's error message, MUST NOT ask the model to remove anything, and MUST rebuild the listing.
+- **started-latest-sign-in**: The panel MUST expose whether the most recent Gmail sign-in in the app was started by its model.
+- **reload-after-sign-in**: The panel MUST expose a call that asks the model to reload, because a panel brought back to the front gets no appearance callback.
+- **gmail-body**: The Gmail detail MUST host the [Gmail settings view](cookbook:4f066e76-2eca-4cd7-8b73-840178e4edf3) over the shared model, wrapped in the themed root.
+- **sync-error-surface**: The panel MUST NOT display an error message of its own; errors belong to the Gmail settings view over the shared model.
+

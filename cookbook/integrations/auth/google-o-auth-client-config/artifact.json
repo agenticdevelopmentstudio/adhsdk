@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "238f4d91-4a22-4a0d-ae4b-b4070d02b357",
+    "title": "GoogleOAuthClientConfig",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Value type for the Google Desktop-app OAuth client: parses the downloaded client JSON, rejects Web clients, and re-emits the same JSON shape.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "oauth",
+      "google",
+      "gmail",
+      "credentials",
+      "parsing"
+    ],
+    "depends-on": [],
+    "related": [
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a",
+      "2fa64944-9744-4d71-8fed-f785e7ce1e51",
+      "351e3bf8-b137-4f59-94de-c769aa8b0666"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "33cb053e43b98fa3",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}
