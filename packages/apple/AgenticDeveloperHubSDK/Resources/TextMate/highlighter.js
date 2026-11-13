@@ -2727,6 +2727,12 @@
       ]
     };
   }
+  function normalizedColor(color) {
+    const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(color || "");
+    if (!hex) throw new Error("unexpected theme colour " + color);
+    const digits = hex[1].length <= 4 ? [...hex[1]].map((d) => d + d).join("") : hex[1];
+    return "#" + digits.toUpperCase();
+  }
   function requireRegistry() {
     if (!registry) throw new Error("ADKHighlighter.create has not completed");
     return registry;
@@ -2756,9 +2762,11 @@
     const g = await grammar(scopeName);
     if (!g) throw new Error("no grammar for " + scopeName);
     const colorMap = requireRegistry().getColorMap();
+    const colors = [];
+    const color = (id) => colors[id] ?? (colors[id] = normalizedColor(colorMap[id]));
     let state = tm.INITIAL;
     const lines = [];
-    for (const line of text.split(/\r?\n/)) {
+    for (const line of text.split(/\r\n|\r|\n/)) {
       const result = g.tokenizeLine2(line, state);
       const tokens = result.tokens;
       const count = tokens.length / 2;
@@ -2768,7 +2776,7 @@
         const end = i + 1 < count ? tokens[2 * i + 2] : line.length;
         if (end <= start) continue;
         const meta = tokens[2 * i + 1];
-        runs.push([start, end - start, colorMap[meta >>> 15 & 511], meta >>> 11 & 15]);
+        runs.push([start, end - start, color(meta >>> 15 & 511), meta >>> 11 & 15]);
       }
       lines.push(runs);
       state = result.ruleStack;

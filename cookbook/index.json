@@ -7733,9 +7733,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:cd1e54d2b8a3a5c6e26fdac4cc3b7b494290d61a710e61766a56b29711471cc5",
+            "hash": "sha256:606b29c3deef5907602c80cffb6b786aeac030800981acaa0f85ee184f2ccf26",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.1.0"
           },
           "location": "tools/apple/textmate/",
           "platform": "apple"
@@ -7744,7 +7744,7 @@
           "conformance": {
             "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Resources/TextMate/",
           "platform": "apple"

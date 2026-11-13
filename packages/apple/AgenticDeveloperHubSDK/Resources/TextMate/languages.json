@@ -48,7 +48,14 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".a51",
+      ".asm",
+      ".i",
+      ".nas",
+      ".nasm",
+      ".s"
+    ],
     "filenames": [],
     "id": "asm",
     "scopeName": "source.asm.x86_64"
@@ -166,14 +173,11 @@
       ".b",
       ".c",
       ".cats",
-      ".cl",
-      ".d",
       ".h",
       ".h.in",
       ".idc",
       ".opencl",
       ".pc",
-      ".pm",
       ".upc",
       ".x",
       ".xbm",
@@ -310,7 +314,6 @@
     ],
     "extensions": [
       "._coffee",
-      ".cake",
       ".cjsx",
       ".coffee",
       ".coffee.erb",
@@ -345,7 +348,9 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".coq"
+    ],
     "filenames": [],
     "id": "coq",
     "scopeName": "source.rocq"
@@ -354,7 +359,26 @@
     "aliases": [
       "c++"
     ],
-    "extensions": [],
+    "extensions": [
+      ".c++",
+      ".cc",
+      ".cp",
+      ".cpp",
+      ".cppm",
+      ".cxx",
+      ".h++",
+      ".hh",
+      ".hpp",
+      ".hxx",
+      ".inl",
+      ".ino",
+      ".ipp",
+      ".ixx",
+      ".re",
+      ".tcc",
+      ".tpp",
+      ".txx"
+    ],
     "filenames": [],
     "id": "cpp",
     "scopeName": "source.cpp"
@@ -398,7 +422,9 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".csv"
+    ],
     "filenames": [],
     "id": "csv",
     "scopeName": "text.csv"
@@ -408,6 +434,7 @@
       "cql"
     ],
     "extensions": [
+      ".cql",
       ".cyp",
       ".cypher"
     ],
@@ -545,7 +572,6 @@
       ".app",
       ".app.src",
       ".erl",
-      ".es",
       ".escript",
       ".hrl",
       ".xrl",
@@ -583,7 +609,8 @@
       "ftl"
     ],
     "extensions": [
-      ".ftl"
+      ".ftl",
+      ".ftlh"
     ],
     "filenames": [],
     "id": "fluent",
@@ -608,7 +635,12 @@
       "f08",
       "f18"
     ],
-    "extensions": [],
+    "extensions": [
+      ".f03",
+      ".f08",
+      ".f90",
+      ".f95"
+    ],
     "filenames": [],
     "id": "fortran-free-form",
     "scopeName": "source.fortran.free"
@@ -667,7 +699,9 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".gs"
+    ],
     "filenames": [],
     "id": "genie",
     "scopeName": "source.genie"
@@ -782,9 +816,7 @@
     "aliases": [],
     "extensions": [
       ".hack",
-      ".hh",
-      ".hhi",
-      ".php"
+      ".hhi"
     ],
     "filenames": [],
     "id": "hack",
@@ -872,7 +904,6 @@
       ".htm",
       ".html",
       ".html.hl",
-      ".inc",
       ".kit",
       ".mtml",
       ".xht",
@@ -884,7 +915,9 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".http"
+    ],
     "filenames": [],
     "id": "http",
     "scopeName": "source.http"
@@ -935,7 +968,6 @@
       ".mount",
       ".network",
       ".prefs",
-      ".pro",
       ".properties",
       ".service",
       ".socket",
@@ -985,7 +1017,6 @@
       ".es",
       ".es6",
       ".frag",
-      ".gs",
       ".jake",
       ".javascript",
       ".js",
@@ -995,7 +1026,6 @@
       ".jsfl",
       ".jslib",
       ".jsm",
-      ".json5",
       ".jsonld",
       ".jspre",
       ".jss",
@@ -1019,7 +1049,11 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".j2",
+      ".jinja",
+      ".jinja2"
+    ],
     "filenames": [],
     "id": "jinja",
     "scopeName": "source.jinja"
@@ -1094,7 +1128,9 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".json5"
+    ],
     "filenames": [],
     "id": "json5",
     "scopeName": "source.json5"
@@ -1230,22 +1266,7 @@
   },
   {
     "aliases": [],
-    "extensions": [
-      ".aux",
-      ".bbx",
-      ".cbx",
-      ".cls",
-      ".dtx",
-      ".ins",
-      ".lbx",
-      ".ltx",
-      ".mkii",
-      ".mkiv",
-      ".mkvi",
-      ".sty",
-      ".tex",
-      ".toc"
-    ],
+    "extensions": [],
     "filenames": [],
     "id": "latex",
     "scopeName": "text.tex.latex"
@@ -1255,6 +1276,7 @@
       "lean4"
     ],
     "extensions": [
+      ".hlean",
       ".lean"
     ],
     "filenames": [],
@@ -1289,7 +1311,6 @@
   {
     "aliases": [],
     "extensions": [
-      ".fcgi",
       ".lua",
       ".nse",
       ".p8",
@@ -1309,7 +1330,6 @@
       "makefile"
     ],
     "extensions": [
-      ".d",
       ".mak",
       ".make",
       ".makefile",
@@ -1339,8 +1359,22 @@
     "aliases": [
       "md"
     ],
-    "extensions": [],
-    "filenames": [],
+    "extensions": [
+      ".livemd",
+      ".markdown",
+      ".md",
+      ".mdown",
+      ".mdwn",
+      ".mkd",
+      ".mkdn",
+      ".mkdown",
+      ".ronn",
+      ".scd",
+      ".workbook"
+    ],
+    "filenames": [
+      "contents.lr"
+    ],
     "id": "markdown",
     "scopeName": "text.html.markdown"
   },
@@ -1373,7 +1407,10 @@
     "aliases": [
       "mmd"
     ],
-    "extensions": [],
+    "extensions": [
+      ".mermaid",
+      ".mmd"
+    ],
     "filenames": [],
     "id": "mermaid",
     "scopeName": "markdown.mermaid.codeblock"
@@ -1453,7 +1490,9 @@
     "extensions": [
       ".nu"
     ],
-    "filenames": [],
+    "filenames": [
+      "Nukefile"
+    ],
     "id": "nushell",
     "scopeName": "source.nushell"
   },
@@ -1462,7 +1501,6 @@
       "objc"
     ],
     "extensions": [
-      ".h",
       ".m"
     ],
     "filenames": [],
@@ -1471,7 +1509,9 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".mm"
+    ],
     "filenames": [],
     "id": "objective-cpp",
     "scopeName": "source.objcpp"
@@ -1514,15 +1554,12 @@
   {
     "aliases": [],
     "extensions": [
-      ".cp",
       ".cps",
       ".dfm",
       ".dpr",
-      ".inc",
       ".lpr",
       ".pas",
-      ".pascal",
-      ".pp"
+      ".pascal"
     ],
     "filenames": [],
     "id": "pascal",
@@ -1555,8 +1592,23 @@
   },
   {
     "aliases": [],
-    "extensions": [],
-    "filenames": [],
+    "extensions": [
+      ".aw",
+      ".ctp",
+      ".inc",
+      ".php",
+      ".php3",
+      ".php4",
+      ".php5",
+      ".phps",
+      ".phpt"
+    ],
+    "filenames": [
+      ".php",
+      ".php_cs",
+      ".php_cs.dist",
+      "Phakefile"
+    ],
     "id": "php",
     "scopeName": "source.php"
   },
@@ -1571,7 +1623,21 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".bdy",
+      ".fnc",
+      ".pck",
+      ".pkb",
+      ".pks",
+      ".plb",
+      ".pls",
+      ".plsql",
+      ".spc",
+      ".tpb",
+      ".tps",
+      ".trg",
+      ".vw"
+    ],
     "filenames": [],
     "id": "plsql",
     "scopeName": "source.plsql.oracle"
@@ -1587,7 +1653,10 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".pcss",
+      ".postcss"
+    ],
     "filenames": [],
     "id": "postcss",
     "scopeName": "source.css.postcss"
@@ -1628,7 +1697,6 @@
   {
     "aliases": [],
     "extensions": [
-      ".pl",
       ".plt",
       ".pro",
       ".prolog",
@@ -1653,7 +1721,10 @@
     "aliases": [
       "jade"
     ],
-    "extensions": [],
+    "extensions": [
+      ".jade",
+      ".pug"
+    ],
     "filenames": [],
     "id": "pug",
     "scopeName": "text.pug"
@@ -1675,9 +1746,7 @@
     ],
     "extensions": [
       ".bzl",
-      ".cgi",
       ".eb",
-      ".fcgi",
       ".gyp",
       ".gypi",
       ".lmi",
@@ -1764,14 +1833,28 @@
     "aliases": [
       "perl6"
     ],
-    "extensions": [],
+    "extensions": [
+      ".6pl",
+      ".6pm",
+      ".nqp",
+      ".p6",
+      ".p6l",
+      ".p6m",
+      ".pl6",
+      ".pm6",
+      ".raku",
+      ".rakumod"
+    ],
     "filenames": [],
     "id": "raku",
     "scopeName": "source.perl.6"
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".cshtml",
+      ".razor"
+    ],
     "filenames": [],
     "id": "razor",
     "scopeName": "text.aspnetcorerazor"
@@ -1800,7 +1883,10 @@
     "aliases": [
       "regex"
     ],
-    "extensions": [],
+    "extensions": [
+      ".regex",
+      ".regexp"
+    ],
     "filenames": [],
     "id": "regexp",
     "scopeName": "source.regexp.python"
@@ -1834,7 +1920,12 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".rest",
+      ".rest.txt",
+      ".rst",
+      ".rst.txt"
+    ],
     "filenames": [],
     "id": "rst",
     "scopeName": "source.rst"
@@ -1848,7 +1939,6 @@
       ".druby",
       ".duby",
       ".eye",
-      ".fcgi",
       ".gemspec",
       ".god",
       ".jbuilder",
@@ -1866,7 +1956,6 @@
       ".rbx",
       ".ru",
       ".ruby",
-      ".spec",
       ".thor",
       ".watchr"
     ],
@@ -1984,12 +2073,10 @@
     "extensions": [
       ".bash",
       ".bats",
-      ".cgi",
       ".command",
       ".csh",
       ".ebuild",
       ".eclass",
-      ".fcgi",
       ".ksh",
       ".pacscript",
       ".sbatch",
@@ -2063,7 +2150,9 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".st"
+    ],
     "filenames": [],
     "id": "smalltalk",
     "scopeName": "source.smalltalk.gnu"
@@ -2111,7 +2200,6 @@
     "extensions": [
       ".db2",
       ".ddl",
-      ".inc",
       ".mysql",
       ".pgsql",
       ".prc",
@@ -2226,14 +2314,32 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".aux",
+      ".bbx",
+      ".cbx",
+      ".cls",
+      ".dtx",
+      ".ins",
+      ".lbx",
+      ".ltx",
+      ".mkii",
+      ".mkiv",
+      ".mkvi",
+      ".sty",
+      ".tex",
+      ".toc"
+    ],
     "filenames": [],
     "id": "tex",
     "scopeName": "text.tex"
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".tsv",
+      ".vcf"
+    ],
     "filenames": [],
     "id": "tsv",
     "scopeName": "text.tsv"
@@ -2295,9 +2401,7 @@
   },
   {
     "aliases": [],
-    "extensions": [
-      ".v"
-    ],
+    "extensions": [],
     "filenames": [],
     "id": "v",
     "scopeName": "source.v"
@@ -2405,7 +2509,10 @@
   },
   {
     "aliases": [],
-    "extensions": [],
+    "extensions": [
+      ".wast",
+      ".wat"
+    ],
     "filenames": [],
     "id": "wasm",
     "scopeName": "source.wat"
@@ -2433,7 +2540,11 @@
       "mediawiki",
       "wiki"
     ],
-    "extensions": [],
+    "extensions": [
+      ".mediawiki",
+      ".wiki",
+      ".wikitext"
+    ],
     "filenames": [],
     "id": "wikitext",
     "scopeName": "source.wikitext"
@@ -2496,9 +2607,7 @@
       ".mdpolicy",
       ".meta4",
       ".mjml",
-      ".mm",
       ".mod",
-      ".mojo",
       ".mxml",
       ".natvis",
       ".ncl",
@@ -2509,7 +2618,6 @@
       ".osm",
       ".owl",
       ".pkgproj",
-      ".pluginspec",
       ".proj",
       ".props",
       ".ps1xml",
@@ -2521,9 +2629,7 @@
       ".rdf",
       ".res",
       ".resx",
-      ".rs",
       ".rss",
-      ".sch",
       ".scxml",
       ".sfproj",
       ".shproj",
@@ -2534,9 +2640,6 @@
       ".sw",
       ".targets",
       ".tml",
-      ".ts",
-      ".tsx",
-      ".typ",
       ".ui",
       ".urdf",
       ".ux",
