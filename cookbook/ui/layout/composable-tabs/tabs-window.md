@@ -154,6 +154,20 @@ address directly.
   every named edge before disabling any edge that is not named, so that
   reassigning the enabled-edge set never fails the last-enabled-edge
   refusal on an intermediate step.
+- **title-sits-in-the-toolbar**: The window MUST show its title as a
+  toolbar item, after the shelf toggle when there is a shelf and first
+  when there is none, with the window's icon, on the same line as the
+  toolbar's other items, and MUST hide the system-drawn title; the
+  window's own title string MUST still be set, for the Window menu,
+  Mission Control and accessibility.
+- **title-follows-the-focused-document**: In a window of a Document kind,
+  while the owner has supplied a focused-document URL the title MUST be
+  that file's name and the title breadcrumb's file MUST be that URL; the
+  title MUST return to the project's display name when the URL is
+  cleared.
+- **pane-chrome-is-optional**: A window created without pane chrome MUST
+  show no pane header (title, window controls, gear) above its panes;
+  with it, the default, every pane keeps its header.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **title-document-kinds**: For a repository of a Document kind the window
   title MUST be the project's display name (the file's name for a
@@ -472,6 +486,12 @@ Not applicable: no logging calls appear anywhere in this component.
   `IsChecked` visual state in place of the source's tint-plus-button-state
   combination.
 - **UI-thread confinement**: `confines-to-ui-thread` — the window controller is declared `@MainActor`, so use from off the main actor fails to compile.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

@@ -3,6 +3,9 @@
   project-opening interface — supplying an open-project operation and a
   close-project operation, each keyed by a repository id — and MUST
   publish its state so another component can observe it.
+- **document-windows-have-no-pane-chrome**: A window opened for either
+  Document kind MUST be created without pane chrome; a File Browser
+  window and a project window MUST keep it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **shared-singleton**: The manager MUST expose one process-wide shared
   instance.

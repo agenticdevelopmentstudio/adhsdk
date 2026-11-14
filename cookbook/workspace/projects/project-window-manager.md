@@ -64,6 +64,9 @@ property and method is confined there by that declaration alone.
   project-opening interface — supplying an open-project operation and a
   close-project operation, each keyed by a repository id — and MUST
   publish its state so another component can observe it.
+- **document-windows-have-no-pane-chrome**: A window opened for either
+  Document kind MUST be created without pane chrome; a File Browser
+  window and a project window MUST keep it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **shared-singleton**: The manager MUST expose one process-wide shared
   instance.
@@ -504,6 +507,12 @@ bundle identifier; category is this component's name.
   manager delegates to (git, language servers) needs them — this type itself
   makes no HTTP call and reads no `Windows.Storage` file directly.
 - **confines-to-ui-thread** (scope): The manager has no thread-safety guarantee of its own; every stored property and method is reached only from the UI thread.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
