@@ -24,6 +24,13 @@ export { ClientAuthPolicyFields, LoginRegistrationFields } from "./ClientAuthFie
 export { FeatureFlagsPane, FlagDialog } from "./FeatureFlagsPane";
 export { ServerBagsPane, BagDialog } from "./ServerBagsPane";
 export { StorageTokensPanel } from "./StorageTokensPanel";
+export { SyncTablesPane, SyncTablesEditor } from "./SyncTablesPane";
+export {
+  useSyncTables,
+  useSetSyncOverride,
+  useClearSyncOverride,
+  syncTablesKey,
+} from "./sync-tables-hooks";
 
 // No help-text export. The sentences these panes show live in adh's site-config content package —
 // the product's VOCABULARY tier, which a portable package may not import (tools/check_boundaries.py).

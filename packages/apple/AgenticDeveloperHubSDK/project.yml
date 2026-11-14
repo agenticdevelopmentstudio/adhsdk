@@ -940,135 +940,6 @@ targets:
       - package: GRDB
         product: GRDB
 
-  # The Desktop: App abstraction, icon layout, window management.
-  AgenticDeveloperHubSDKDesktop:
-    type: framework
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - Desktop
-    dependencies:
-      - target: AgenticDeveloperHubSDKCore
-      - target: AgenticDeveloperHubSDKCoreUI
-
-  AgenticDeveloperHubSDKDesktopTests:
-    type: bundle.unit-test
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - Tests/AgenticDeveloperHubSDKDesktopTests
-    dependencies:
-      - target: AgenticDeveloperHubSDKDesktop
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCoreUI
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCore
-        embed: true
-        codeSign: true
-      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
-      - target: AgenticDeveloperHubSDK-macOS
-        embed: true
-        codeSign: true
-
-  # The Desktop's built-in Apps: Hello World and Email.
-  AgenticDeveloperHubSDKDesktopApps:
-    type: framework
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - DesktopApps
-    dependencies:
-      - target: AgenticDeveloperHubSDKDesktop
-      - target: AgenticDeveloperHubSDKMacOS
-      - target: AgenticDeveloperHubSDKIntegrations
-      - target: AgenticDeveloperHubSDKCore
-      - target: AgenticDeveloperHubSDKCoreUI
-    settings:
-      base:
-        MACOSX_DEPLOYMENT_TARGET: "26.0"
-
-  AgenticDeveloperHubSDKDesktopAppsTests:
-    type: bundle.unit-test
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - path: Tests/AgenticDeveloperHubSDKDesktopAppsTests
-    dependencies:
-      - target: AgenticDeveloperHubSDKMacOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKIntegrations
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKScripting
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCoreMacOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCoreUI
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCore
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDK-macOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKUI-macOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKMarkdown-macOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKPermissions
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKPermissionsUI
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKDisplays
-        embed: true
-        codeSign: true
-      - target: AIPluginKit
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKLanguage
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKDatabase
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKSync
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKSyncGRDB
-        embed: true
-        codeSign: true
-      - package: GRDB
-        product: GRDB
-      # Closure completion: the test bundle loads frameworks from its own Frameworks directory.
-      - package: Sparkle
-        product: Sparkle
-      - package: FlyingFox
-        product: FlyingFox
-      - package: KeyboardShortcuts
-      - target: AgenticDeveloperHubSDKDesktop
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKDesktopApps
-        embed: true
-        codeSign: true
-    settings:
-      base:
-        MACOSX_DEPLOYMENT_TARGET: "26.0"
-
   # Activity capture and tracking, moved verbatim from Olylo's Timeline:
   # the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore),
   # the context-event model/store/triggers, the capture permission gate, and
@@ -2096,8 +1967,6 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubUI-macOS
       - AgenticDeveloperHubSDKActivity-macOS
       - AgenticDeveloperHubSDKIntegrations
-      - AgenticDeveloperHubSDKDesktop
-      - AgenticDeveloperHubSDKDesktopApps
 
   # The spec files this store under "macOS, iOS", and `AgenticDeveloperHubSDKMarkdown-iOS`
   # existed but was reachable from no aggregate and no scheme — so nothing ever
@@ -2182,10 +2051,6 @@ aggregateTargets:
       - AgenticDeveloperHubSDKActivityTests
       - AgenticDeveloperHubSDKIntegrations
       - AgenticDeveloperHubSDKIntegrationsTests
-      - AgenticDeveloperHubSDKDesktop
-      - AgenticDeveloperHubSDKDesktopTests
-      - AgenticDeveloperHubSDKDesktopApps
-      - AgenticDeveloperHubSDKDesktopAppsTests
 
 schemes:
   AgenticDeveloperHubSDKChromium:
@@ -2354,39 +2219,7 @@ schemes:
     archive:
       config: Release
 
-  AgenticDeveloperHubSDKDesktop:
-    build:
-      targets:
-        AgenticDeveloperHubSDKDesktop: all
-    run:
-      config: Debug
-    test:
-      config: Debug
-      targets:
-        - AgenticDeveloperHubSDKDesktopTests
-    profile:
-      config: Release
-    analyze:
-      config: Debug
-    archive:
-      config: Release
 
-  AgenticDeveloperHubSDKDesktopApps:
-    build:
-      targets:
-        AgenticDeveloperHubSDKDesktopApps: all
-    run:
-      config: Debug
-    test:
-      config: Debug
-      targets:
-        - AgenticDeveloperHubSDKDesktopAppsTests
-    profile:
-      config: Release
-    analyze:
-      config: Debug
-    archive:
-      config: Release
 
   AgenticDeveloperHubSDKIntegrations:
     build:

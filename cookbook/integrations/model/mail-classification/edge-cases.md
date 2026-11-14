@@ -1,0 +1,13 @@
+
+- **Empty array**: See #requirements/archived-otherwise. No label means no filing label and no user label; the test suite pins this.
+- **Only attribute labels**: See #requirements/attribute-labels-not-filing and #requirements/archived-otherwise.
+- **Conflicting labels**: See #requirements/trash-first and #requirements/spam-second. `["TRASH", "SPAM"]`, `["TRASH", "Label_9"]` and `["SPAM", "INBOX"]` are pinned by the test suite; `TRASH` with `INBOX` follows from the same rule but has no test case.
+- **Duplicate ids**: See #requirements/label-order-independent.
+- **Unknown or future system label**: See #requirements/filed-by-user-label. The classifier cannot tell it from a user label.
+- **Empty or whitespace id**: See #requirements/no-validation. An id with surrounding whitespace is likewise a user label.
+- **Case**: See #requirements/label-match-exact.
+- **Very large arrays**: The cost is linear in the number of labels; there is no cap.
+- **Concurrent access**: See #requirements/classify-pure; no ordering rule is needed.
+- **Error states, network and offline**: Not applicable. The function does no I/O, takes no dependency that can fail, and never throws.
+- **Stale classification**: The class is computed from the label ids at the moment of the call. This file does not recompute it when labels change; a caller that re-fetches a message gets a new result by calling again.
+- **Test gap**: `MailClassificationTests` covers vectors 001-010 only. Cases for `CHAT`, `inbox`, `category_updates`, `""`, `["INBOX", "TRASH"]` and `MailClass` coding and `allCases` do not exist yet.

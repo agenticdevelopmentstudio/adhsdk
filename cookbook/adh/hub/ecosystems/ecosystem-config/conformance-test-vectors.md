@@ -25,3 +25,9 @@
 | ecosystem-config-022 | conflict-message-parity | The alternate client's create operation invoked for slug "kiosk", where the backend responds with a conflict status | Rejects with "A sign-in app \"kiosk\" already exists in this ecosystem." |
 | ecosystem-config-023 | dual-scoping-channels | The alternate client's mint operation invoked with name "nightly" and ecosystem id "eco-1" via the scope-query channel | The request carries the ecosystem id only in the scope-query channel, not in the body |
 
+| ecosystem-config-024 | sync-tables-two-families | The `"ecosystem"` client sets `content.notes` on for ecosystem "eco-1" | POST `/api/v1/ecosystems/eco-1/sync_tables/content.notes` with `{"enabled":true}` |
+| ecosystem-config-025 | sync-tables-two-families | The `"admin"` client sets `content.notes` off for ecosystem "eco-1" | POST `/api/v1/sync/tables/eco-1/resources/content.notes` with `{"enabled":false}` |
+| ecosystem-config-026 | sync-tables-camel-rows, sync-tables-read-drains-list | The list returns `{resource:"content.feed", push_mode:"generic", default_enabled:true, …}` | The row reads `pushMode: "generic"`, `defaultEnabled: true` |
+| ecosystem-config-027 | sync-tables-clear-rereads | The `"ecosystem"` client clears `content.notes`, and the DELETE answers a tombstone | DELETE `/api/v1/ecosystems/eco-1/sync_tables/content.notes`, then a fresh read of the catalog is returned |
+| ecosystem-config-028 | sync-tables-schema-of | Resource `persona_memory.links` | Schema `persona_memory` |
+| ecosystem-config-029 | sync-tables-pane-skips-noops | Two rows selected, one already synced, then Sync | One POST, for the row that was not synced |

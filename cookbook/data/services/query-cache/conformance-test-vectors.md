@@ -18,3 +18,7 @@
 | query-cache-015 | cross-tab-session-watch | With the singleton constructed for subject `'user-1'`, dispatch a cross-tab storage-change notification (simulating another tab writing subject `'user-2'`'s token) without ever invoking the session-change notification directly | The same comparison runs and clears the cache exactly as vector 013 (no test in this package exercises this today) |
 | query-cache-016 | provider-uses-singleton | Render the cache provider component and inspect the client it passes to its underlying cache-provider wrapper | It is exactly the singleton cache accessor's current return value |
 
+| query-cache-017 | batch-sequential, batch-invalidate-at-end | Run three items that all succeed, with an invalidation key | Results ok, ok, ok in order; `done` 3; the key invalidated once |
+| query-cache-018 | batch-halt-on-failure | The second of three items fails, then the caller stops | Run ends with one ok and one failed; the third is never performed |
+| query-cache-019 | batch-empty-is-no-run | Run zero items | State stays idle |
+| query-cache-020 | batch-single-flight | Start a second run while the first is halted | The second run is ignored |

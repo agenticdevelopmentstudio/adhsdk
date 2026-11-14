@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "fc9671be-170c-436e-9628-892624952191",
+    "title": "MailRPC",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The mail service wire contract: MailRequest and MailResponse, their record types, MailMessageFilter, and MailClient, which checks that an older service honored each filter.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "mail",
+      "rpc",
+      "gmail",
+      "integrations"
+    ],
+    "depends-on": [],
+    "related": [
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a",
+      "be4db0fe-628d-41f8-9fdf-25a6d46844cf",
+      "cbee8b02-9456-4d9b-942a-51f8a9c074fc",
+      "3d12c073-edc3-44fb-a988-5edec20575e0"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "dfeee8f5292d014f",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}
