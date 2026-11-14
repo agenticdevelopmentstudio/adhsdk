@@ -15,3 +15,15 @@
 **Rationale**: `git submodule status` reports paths relative to the working tree; the model already knows its root.
 **Approved**: pending
 
+**Decision**: `GitHistorySearch` lives in `AgenticDeveloperHubSDKCore`, beside `GitLogQuery`, not with the view.
+**Rationale**: It is pure Foundation; the lowest tier that can hold it is Core, where a CLI or another view can parse the same search text.
+**Approved**: pending
+
+**Decision**: `sha:` selects among loaded commits rather than filtering the log.
+**Rationale**: The search is for finding a commit in context; filtering to one commit would hide the graph around it. A prefix not yet loaded selects nothing.
+**Approved**: pending
+
+**Decision**: Paging is asked for when the table requests a row near the end, and not again until the count or the query changes.
+**Rationale**: The table only requests rows it is about to show, so the request is the visibility signal; the count guard keeps a finished history from reloading in a loop.
+**Approved**: pending
+

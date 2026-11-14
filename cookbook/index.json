@@ -8623,11 +8623,20 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:a4c3a2f2848248d9684913a161462d3c279a2d98abdb9a9393d7f1d60d2c5aa4",
+            "hash": "sha256:c989d455a2316963c8a2dab776e7c99e62f91a7a37bdb3b4d1cc336ec24da651",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:89c5b6d54c6bf328fc8223f850d2f26c9978a2023b50ec769ea4f20075d67a4d",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift",
           "platform": "apple"
         }
       ],

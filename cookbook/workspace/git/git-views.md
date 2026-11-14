@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-13
@@ -10,7 +10,7 @@ modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees)."
+summary: "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees) and the history list (graph, subject with ref badges, author, date, short sha; paging; search)."
 platforms:
   - swift
   - macos
@@ -18,13 +18,20 @@ tags:
   - git
   - ui
   - sidebar
+  - history
+  - search
 depends-on:
   - a2394ca0-3988-410b-9fc8-e0c9e253fc94
   - ce223be3-818a-4310-b136-9e1e84e9af54
+  - 595f1a5e-0f92-49c5-a980-af6f809be932
+  - e3a2394d-d0d0-4495-bde4-59197f9d7866
+  - 873f79b1-444d-4c2c-8a5f-4fc01cd9022e
+  - 2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f
 related:
   - 779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/ (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -34,6 +41,7 @@ approved-date: ""
 ## Overview
 
 The views of a git window: each one an AppKit view controller that reads one narrow data-source protocol of the [git repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) and reports what the user chose to a delegate, injected, so none of them knows its window or calls git. This recipe has one section per view. The **refs sidebar** (`GitRefsSidebarViewController`) lists, on the toolkit's [topic list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54), the working copy, the local branches, the remote branches grouped by remote, the tags, the stashes, the submodules and every non-bare worktree (the main one and the one the window is on included), with ahead/behind badges on branches that track an upstream and the checked-out branch in bold.
+The **history list** (`GitHistoryViewController`) is a paged table of the [commit graph cell](cookbook:595f1a5e-0f92-49c5-a980-af6f809be932), the subject behind a [badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f) per ref at the commit, the author's [avatar](cookbook:e3a2394d-d0d0-4495-bde4-59197f9d7866) and name, the [relative date](cookbook:873f79b1-444d-4c2c-8a5f-4fc01cd9022e) and the short sha. It reads a `GitHistoryDataSource`, asks for the next page as the end of the list comes into view, and takes the window's search text through `setQuery(_:)`, which `GitHistorySearch.parse(_:)` (Foundation only, in `AgenticDeveloperHubSDKCore`) turns into a `GitLogQuery`.
 
 ## Behavioral Requirements
 
@@ -48,11 +56,27 @@ The views of a git window: each one an AppKit view controller that reads one nar
 - **sidebar-reload**: `reload()` MUST rebuild every section from the data source's current values, keeping the selected row selected when its id is still present (by the topic list's restore-by-id) without calling the delegate. When the selected row is gone, the sidebar MUST select `Working Copy` and call `sidebarDidSelectWorkingCopy` once, so the owner never keeps showing a ref or stash that no longer exists.
 - **sidebar-ui-thread**: The sidebar MUST be used on the UI thread.
 
+### History list
+
+- **history-columns**: The history list MUST show one row per data-source commit, in the data source's order, with these columns in order: `graph` (a `CommitGraphCellView` drawing the data source's graph row at the same index), `subject` (the ref badges, then the commit's subject), `author` (an `AvatarView` of side 18 showing initials, seeded by the author's email, with no picture URL, then the author's name), `date` (`RelativeDateFormatting.string(for:)` of the author date, with the absolute date and time, `date.formatted(date: .abbreviated, time: .shortened)`, as its tooltip) and `sha` (the commit's `shortID` in the theme's code font).
+- **history-graph-width**: The graph column MUST be as wide as the widest loaded graph row (`width × CommitGraphCellView.columnWidth`), and never narrower than one graph column.
+- **history-ref-badges**: The subject cell MUST carry one badge per ref the data source reports at the commit (`refs(at:)`), titled with the ref's name (`main`, `origin/main`, `v1`), ordered local branches, then remote branches, then tags, keeping the data source's order within a kind. A local branch is a filled badge in the accent colour; a remote branch an outlined badge in the accent colour; a tag an outlined badge in the warning colour. A commit with no refs has no badges.
+- **history-selection**: Selecting a row MUST call the delegate's `history(_:didSelect:)` once with that commit; clearing the selection calls it once with nil. `select(commitID:)` MUST select the loaded commit with exactly that id, scroll it into view and call the delegate the same way; an id that is not loaded changes nothing.
+- **history-reload**: `reload()` MUST re-read the data source. A selected commit that is still loaded stays selected without a delegate call; a selected commit that is gone is deselected and the delegate is called once with nil, so the owner never keeps showing a commit that left the list.
+- **history-paging**: When the table asks for a row in the last 50 loaded rows (index ≥ count − 50), the list MUST call the data source's `loadMore()` once, then reload, and MUST NOT call it again until the number of loaded commits or the data source's query has changed, so the end of the history does not loop and a new search whose first page is the same size still pages.
+- **history-search-parse**: `GitHistorySearch.parse(_:)` MUST be pure and return a `GitLogQuery` with the default revisions, limit and skip and at most one filter, from the text trimmed of whitespace: empty → no filter; `author:<x>` (prefix in any case) → `author` `x`; `sha:<x>` (prefix in any case) → no filter; `-S <x>` or `-S<x>` → `pickaxe` `x`; anything else → `messageGrep`, the whole trimmed text. A prefix with nothing after it is no filter. `GitHistorySearch.shaPrefix(_:)` MUST return the lowercased `x` of the `sha:` form and nil for every other form.
+- **history-set-query**: `setQuery(_:)` MUST parse the text, and when the parsed query differs from the data source's current query, await the data source's `setQuery` and reload. For the `sha:` form it MUST then select the first loaded commit whose id starts with the prefix (case-insensitively), as `select(commitID:)` does; no match selects nothing. A `setQuery` overtaken by a later one MUST NOT select.
+- **history-ui-thread**: The history list MUST be used on the UI thread; every data-source call that waits is awaited, never blocked on.
+
 ## Appearance
 
 ### Refs sidebar
 
 The topic list's appearance throughout. Icons (SF Symbols): working copy `square.and.pencil`, local branch `arrow.triangle.branch`, remote branch `network`, tag `tag`, stash `tray`, submodule `shippingbox`, worktree `folder`. The ahead/behind badge is the topic list's trailing badge; the checked-out branch uses its emphasized (bold) label.
+
+### History list
+
+A `ThemedTableView` in a `ThemedScrollView`, with a themed header and themed row selection. The subject is body text in the primary colour; the author name and the date are body text in the secondary colour; the sha is the code font in the secondary colour. Ref badges are the toolkit's `Badge`: local branch filled `accent`, remote branch outlined `accent`, tag outlined `warning`, repainted on a theme change. The avatar is 18 points and shows initials only.
 
 ## States
 
@@ -62,11 +86,22 @@ The topic list's appearance throughout. Icons (SF Symbols): working copy `square
 - **Selected row removed**: after a reload that no longer contains the selected ref or stash, `Working Copy` is selected and the delegate is told.
 - **Repository deleted**: the data source keeps its last values, so the sidebar keeps its last rows.
 
+### History list
+
+- **Unborn repository / empty history**: no rows; nothing throws, and no text stands in for the rows.
+- **Paging**: further rows appear as the data source loads them; the selection is kept.
+- **Selected commit removed**: after a reload that no longer contains the selected commit, nothing is selected and the delegate is told nil.
+- **Repository deleted**: the data source keeps its last values, so the list keeps its last rows.
+
 ## Accessibility
 
 ### Refs sidebar
 
 The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic list's, so each row's label carries `topic-list.item.<slug of title>` and answers an accessibility press by selecting the row; a badge carries `topic-list.item.<slug>.badge`. Because the identifier comes from the title, a branch name shared by `Branches` and a `Remotes · <remote>` section (`main`) yields the same identifier in each; address one with `dev.py ax --nth`.
+
+### History list
+
+The root view carries `git.history`, the table `git.history.table`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`. Rows are table rows, so `dev.py ax --nth` picks one.
 
 ## Conformance Test Vectors
 
@@ -83,6 +118,13 @@ The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic
 | git-views-009 | sidebar-selection | Tag `v1` selected, then worktree `/w/feature` chosen | `open directory /w/feature`; `v1` is selected again. |
 | git-views-010 | sidebar-row-titles | Remote refs `origin/main` and `odd` | Rows `main` and `odd`. |
 | git-views-011 | sidebar-empty-sections-omitted | An unborn source with main worktree `/repo` | Sections `Workspace`, `Worktrees`; rows `Working Copy`; `repo`. |
+| git-views-012 | history-search-parse | `""`, `"  "`, `fix bug`, `author:Ann`, `AUTHOR: Ann `, `sha:AbC12`, `-S needle`, `-Sneedle`, `author:` | No filter; no filter; messageGrep `fix bug`; author `Ann`; author `Ann`; no filter (shaPrefix `abc12`); pickaxe `needle`; pickaxe `needle`; no filter. Revisions, limit and skip are the defaults throughout. |
+| git-views-013 | history-columns | A fake source with three commits | Three rows; columns `graph`, `subject`, `author`, `date`, `sha`; row 0's subject, author name, relative date with the absolute tooltip, and 8-character sha. |
+| git-views-014 | history-ref-badges | Commit A carries tag `v1`, remote `origin/main` and local `main` (in that order); commit B carries none | A's badges `main` (local), `origin/main` (remote), `v1` (tag); B has none. |
+| git-views-015 | history-paging | 120 commits; the table asks for row 69, then 70, then 71 | `loadMore` is not called for 69, is called once for 70, and not again for 71 while the count is unchanged; after `setQuery("author:Ann")` row 70 calls it again. |
+| git-views-016 | history-selection, history-reload | Select commit `c1`; reload with `c1` still loaded; reload without it | Delegate `c1` once; nothing on the first reload; nil once on the second. |
+| git-views-017 | history-set-query | `setQuery("sha:C1")` on an unfiltered source holding `c1…`; then `setQuery("author:Ann")` | First: the source's query is not replaced and `c1…` is selected. Second: the source receives author `Ann`. |
+| git-views-018 | history-graph-width | Graph rows of width 1 and 3 | The graph column is 3 × `columnWidth` wide. |
 
 ## Edge Cases
 
@@ -94,12 +136,20 @@ The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic
 - **Error states**: The sidebar shows whatever the data source last loaded; it has no error state of its own.
 - **Offline / disconnected state**: Not applicable: no network.
 
+- **History, empty**: an unborn repository has no commits; the list has no rows and asks for one page at most.
+- **History, end reached**: a `loadMore` that adds nothing is not repeated until the count or the query changes.
+- **History, ambiguous sha prefix**: the first (newest) loaded match is selected.
+- **History, search text with regex characters**: plain text is passed to git as `--grep` (a regular expression, case-insensitive); `-S` is a literal string.
+- **History, non-UTF-8 messages**: shown as the model decoded them (lossily), never dropped.
+
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `source` | `GitRefsDataSource` | none | Where the sidebar reads refs, stashes, submodules, worktrees and the repository root. |
 | `delegate` | `GitRefsSidebarDelegate?` | nil | Told what the user selected. |
+| `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query and the refs at a commit, and asks for pages and queries. |
+| `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil. |
 
 ## Deep Linking
 
@@ -108,6 +158,7 @@ Not applicable: the views define no URL scheme, route or navigation destination.
 ## Localization
 
 Section titles (`Workspace`, `Branches`, `Remotes · <remote>`, `Tags`, `Stashes`, `Submodules`, `Worktrees`) and `Working Copy` are English literals today; ref names, messages and paths are shown verbatim.
+The history list's column titles (`Graph`, `Subject`, `Author`, `Date`, `SHA`) are English literals today; relative and absolute dates follow the current locale; the search prefixes (`author:`, `sha:`, `-S`) are not localized.
 
 ## Accessibility Options
 
@@ -134,14 +185,15 @@ Not applicable: the views log nothing; the model logs failed loads.
 - **SwiftUI**: A `List` with `Section`s and `.badge(_:)` would serve; this toolkit's views are AppKit.
 - **Compose**: A `LazyColumn` with sticky headers; the badge as trailing text.
 - **React/Web**: A listbox with grouped options; the badge as a trailing span.
-- **AppKit / UIKit**: AppKit: `@MainActor public final class GitRefsSidebarViewController: NSViewController` in `AgenticDeveloperHubSDKMacOS`, hosting a `TopicListViewController` as a child. UIKit: not applicable (no git on iOS).
+- **AppKit / UIKit**: AppKit: `@MainActor public final class GitRefsSidebarViewController: NSViewController` in `AgenticDeveloperHubSDKMacOS`, hosting a `TopicListViewController` as a child; `@MainActor public final class GitHistoryViewController: NSViewController` on a `ThemedTableView`, and `public enum GitHistorySearch` in `AgenticDeveloperHubSDKCore`. UIKit: not applicable (no git on iOS).
 - **WinUI 3**: A `ListView` with grouped items.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -161,6 +213,18 @@ Not applicable: the views log nothing; the model logs failed loads.
 **Rationale**: `git submodule status` reports paths relative to the working tree; the model already knows its root.
 **Approved**: pending
 
+**Decision**: `GitHistorySearch` lives in `AgenticDeveloperHubSDKCore`, beside `GitLogQuery`, not with the view.
+**Rationale**: It is pure Foundation; the lowest tier that can hold it is Core, where a CLI or another view can parse the same search text.
+**Approved**: pending
+
+**Decision**: `sha:` selects among loaded commits rather than filtering the log.
+**Rationale**: The search is for finding a commit in context; filtering to one commit would hide the graph around it. A prefix not yet loaded selects nothing.
+**Approved**: pending
+
+**Decision**: Paging is asked for when the table requests a row near the end, and not again until the count or the query changes.
+**Rationale**: The table only requests rows it is about to show, so the request is the visibility signal; the count guard keeps a finished history from reloading in a loop.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -168,7 +232,7 @@ Not applicable: the views log nothing; the model logs failed loads.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source.
+`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source; `GitHistoryViewControllerTests` covers the columns, ref badges per row, the graph width, paging, selection and reload, and `setQuery`, and `GitHistorySearchTests` each search form.
 
 ## Change History
 
@@ -176,3 +240,4 @@ Not applicable: the views log nothing; the model logs failed loads.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation: the refs sidebar |
 | 1.0.1 | 2026-11-13 | Mike Fullerton | Reload falls back to the working copy when the selected ref or stash vanishes; directory rows restore the selection; remote title fallback; vectors 007-011 |
+| 1.1.0 | 2026-11-13 | Mike Fullerton | History list: graph, subject with ref badges, author, date, short sha; paging; selection and reload; search parsing and setQuery; vectors 012-018 |
