@@ -178,10 +178,10 @@ public final class WebBrowserWindowController: SingleWindowController {
         }
         let gear = WindowTitlebarAccessory.makeButton(
             symbolName: "gearshape",
-            description: "Browser Settings",
-            toolTip: "Settings for this browser",
+            description: "Browser Options",
+            toolTip: "Pause Events and settings for this browser",
             target: self,
-            action: #selector(showSettings))
+            action: #selector(showOptions(_:)))
         gear.setAccessibilityIdentifier(Self.settingsButtonID)
         WindowTitlebarAccessory.install([gear], in: window)
         titleAccessory.install(in: window)
@@ -215,8 +215,14 @@ public final class WebBrowserWindowController: SingleWindowController {
         window.cascadeTopLeft(from: topLeft)
     }
 
-    @objc func showSettings() {
-        pane.showPaneSettings()
+    /// The same items a browser pane's gear offers (Pause Events,
+    /// Settings…, and in Debug Show Browser Log), so a standalone browser
+    /// window can pause its events as a pane can (spec section 7).
+    @objc func showOptions(_ sender: NSView) {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        pane.makePaneMenuItems().forEach(menu.addItem)
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY + 4), in: sender)
     }
 
     public override func windowWillClose(_ notification: Notification) {
