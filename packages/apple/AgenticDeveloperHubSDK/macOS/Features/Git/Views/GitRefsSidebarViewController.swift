@@ -1,6 +1,18 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 
+/// What the user asked the sidebar to do to a ref, a remote or a stash. The view runs
+/// none of it; its delegate does.
+public enum GitRefIntent: Equatable {
+    /// A local branch, or a remote branch to check out as a local one that tracks it.
+    case checkout(GitRef), createBranch(from: GitRef), rename(GitRef)
+    /// A local or a remote branch; the ref's kind decides which git verb runs.
+    case delete(GitRef)
+    case push(GitRef), pull, fetch(remote: String)
+    case deleteTag(GitRef), pushTag(GitRef)
+    case applyStash(GitStash), popStash(GitStash), dropStash(GitStash)
+}
+
 /// What the refs sidebar tells its owner the user chose.
 @MainActor public protocol GitRefsSidebarDelegate: AnyObject {
     func sidebar(_ sidebar: GitRefsSidebarViewController, didSelect ref: GitRef)
@@ -8,6 +20,8 @@ import AgenticDeveloperHubSDKCore
     func sidebar(_ sidebar: GitRefsSidebarViewController, didSelectStash stash: GitStash)
     /// A submodule or a worktree: a repository of its own, opened in its own window.
     func sidebar(_ sidebar: GitRefsSidebarViewController, open directory: URL)
+    /// An action chosen from a row's context menu, or a branch double-clicked.
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent)
 }
 
 /// A git window's sidebar: the working copy, branches with ahead/behind badges,
@@ -15,7 +29,9 @@ import AgenticDeveloperHubSDKCore
 /// `TopicListViewController` it hosts as a child.
 ///
 /// It reads a `GitRefsDataSource` and reports selections to its delegate; its
-/// owner calls `reload()` when the refs change.
+/// owner calls `reload()` when the refs change. A branch, tag or stash row and a
+/// remote's section header have context menus whose items, like a double-clicked
+/// branch, reach the delegate as `GitRefIntent`s; the sidebar runs no git.
 @MainActor
 public final class GitRefsSidebarViewController: NSViewController {
 
@@ -30,6 +46,9 @@ public final class GitRefsSidebarViewController: NSViewController {
 
     /// What each row id names, rebuilt with the sections.
     private var targets: [String: Target] = [:]
+
+    /// The remote each `Remotes · <remote>` section header names, by its title.
+    private var remotesBySectionTitle: [String: String] = [:]
 
     /// The id of the row last reported to the delegate as selected. A
     /// submodule or worktree row is an action, not a place, so it never
@@ -52,6 +71,9 @@ public final class GitRefsSidebarViewController: NSViewController {
             guard let self, let item else { return }
             self.select(itemID: item.id)
         }
+        list.itemMenuProvider = { [weak self] item in self?.contextMenu(forItemID: item.id) }
+        list.headerMenuProvider = { [weak self] title in self?.contextMenu(forSectionTitle: title) }
+        list.onDoubleClick = { [weak self] item in self?.doubleClick(itemID: item.id) }
         reload()
     }
 
@@ -103,8 +125,10 @@ public final class GitRefsSidebarViewController: NSViewController {
         for ref in remoteBranches {
             if let remote = ref.remote, !remotes.contains(remote) { remotes.append(remote) }
         }
+        var remotesBySectionTitle: [String: String] = [:]
         for remote in remotes {
-            add("Remotes · \(remote)", remoteBranches.filter { $0.remote == remote }.map { ref in
+            remotesBySectionTitle[Self.remoteSectionTitle(remote)] = remote
+            add(Self.remoteSectionTitle(remote), remoteBranches.filter { $0.remote == remote }.map { ref in
                 (TopicListItem(id: ref.fullName, title: Self.remoteBranchTitle(ref, remote: remote),
                                icon: Self.symbol("network")), .ref(ref))
             })
@@ -135,6 +159,7 @@ public final class GitRefsSidebarViewController: NSViewController {
         })
 
         self.targets = targets
+        self.remotesBySectionTitle = remotesBySectionTitle
         self.sections = sections
         list.setSections(sections)
 
@@ -196,7 +221,102 @@ public final class GitRefsSidebarViewController: NSViewController {
         }
     }
 
+    private static func remoteSectionTitle(_ remote: String) -> String { "Remotes · \(remote)" }
+
+    // MARK: - Context menus and double-click
+
+    /// The context menu for the row `id` names: a branch, remote branch, tag or stash
+    /// row's actions; nil for the working copy, a submodule, a worktree or an unknown id.
+    func contextMenu(forItemID id: String) -> NSMenu? {
+        switch targets[id] {
+        case .ref(let ref):
+            switch ref.kind {
+            case .localBranch: return localBranchMenu(ref)
+            case .remoteBranch: return remoteBranchMenu(ref)
+            case .tag: return makeMenu([("Push", "push", .pushTag(ref)), ("Delete…", "delete", .deleteTag(ref))])
+            }
+        case .stash(let stash):
+            return makeMenu([
+                ("Apply", "apply", .applyStash(stash)), ("Pop", "pop", .popStash(stash)),
+                ("Drop…", "drop", .dropStash(stash))
+            ])
+        case .workingCopy, .directory, nil:
+            return nil
+        }
+    }
+
+    /// `Fetch` for a remote's section header; nil for every other section.
+    func contextMenu(forSectionTitle title: String) -> NSMenu? {
+        guard let remote = remotesBySectionTitle[title] else { return nil }
+        return makeMenu([("Fetch", "fetch", .fetch(remote: remote))])
+    }
+
+    /// A double-clicked local or remote branch is checked out; the checked-out branch,
+    /// and every other row, asks for nothing.
+    func doubleClick(itemID id: String) {
+        guard case .ref(let ref) = targets[id], ref.kind != .tag, !ref.isHead else { return }
+        request(.checkout(ref))
+    }
+
+    private typealias MenuEntry = (title: String, name: String, intent: GitRefIntent)
+
+    private func localBranchMenu(_ ref: GitRef) -> NSMenu {
+        var entries: [MenuEntry?] = []
+        if !ref.isHead { entries.append(("Checkout", "checkout", .checkout(ref))) }
+        entries.append(("New Branch…", "newBranch", .createBranch(from: ref)))
+        entries.append(("Rename…", "rename", .rename(ref)))
+        if !ref.isHead { entries.append(("Delete…", "delete", .delete(ref))) }
+        entries.append(nil)
+        entries.append(("Push", "push", .push(ref)))
+        if ref.isHead { entries.append(("Pull", "pull", .pull)) }
+        return makeMenu(entries)
+    }
+
+    private func remoteBranchMenu(_ ref: GitRef) -> NSMenu {
+        var entries: [MenuEntry?] = [
+            ("Checkout", "checkout", .checkout(ref)), ("New Branch…", "newBranch", .createBranch(from: ref)),
+            ("Delete…", "delete", .delete(ref))
+        ]
+        if let remote = ref.remote {
+            entries.append(nil)
+            entries.append(("Fetch \(remote)", "fetch", .fetch(remote: remote)))
+        }
+        return makeMenu(entries)
+    }
+
+    /// A menu of `entries` in order, a nil entry being a separator.
+    private func makeMenu(_ entries: [MenuEntry?]) -> NSMenu {
+        let menu = NSMenu()
+        for entry in entries {
+            guard let entry else {
+                menu.addItem(.separator())
+                continue
+            }
+            let item = NSMenuItem(title: entry.title, action: #selector(performMenuIntent(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = RefIntentBox(entry.intent)
+            item.accessibilityID("git.sidebar.menu.\(entry.name)")
+            menu.addItem(item)
+        }
+        return menu
+    }
+
+    @objc private func performMenuIntent(_ sender: NSMenuItem) {
+        guard let box = sender.representedObject as? RefIntentBox else { return }
+        request(box.intent)
+    }
+
+    private func request(_ intent: GitRefIntent) {
+        delegate?.sidebar(self, didRequest: intent)
+    }
+
     private static func symbol(_ name: String) -> NSImage? {
         NSImage(systemSymbolName: name, accessibilityDescription: nil)
     }
+}
+
+/// Carries a menu item's intent as its `representedObject`, which must be an object.
+private final class RefIntentBox: NSObject {
+    let intent: GitRefIntent
+    init(_ intent: GitRefIntent) { self.intent = intent }
 }

@@ -5,5 +5,8 @@
 | Selection callback | A callback receiving the newly selected item, or none | none | Invoked with the newly selected item, or none, on a user-driven selection change; never invoked for a programmatic change made through selecting by id or a theme-triggered reload. |
 | Title | An optional string | none | Text shown in the optional header above the list, set via the title setter; empty or unset hides the header unless a header accessory view is set. |
 | Footer view | An optional view | none | Client view pinned below the list via the footer setter, spanning the sidebar width; unset collapses the footer to zero height. |
+| Item menu provider | A function from an item to an optional menu | none | Builds the context menu for a secondary-clicked item row; none shows no menu. |
+| Header menu provider | A function from a section title to an optional menu | none | Builds the context menu for a secondary-clicked section header row; none shows no menu. |
+| Double-click callback | A callback receiving the double-clicked item | none | Invoked with an item row's item when the row is double-clicked; never for a header row. |
 | Header accessory view | An optional view | none | Client view shown directly beneath the title and above the list via the accessory setter, spanning the header's width; unset collapses to nothing. |
 

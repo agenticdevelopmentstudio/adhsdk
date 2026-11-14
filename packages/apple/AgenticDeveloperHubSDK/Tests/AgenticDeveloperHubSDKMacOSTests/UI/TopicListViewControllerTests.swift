@@ -116,4 +116,74 @@ final class TopicListViewControllerTests: XCTestCase {
         XCTAssertEqual(controller.selectedItem?.id, "2")
         XCTAssertEqual(reported, 0, "a programmatic selection fires no callback")
     }
+
+    // MARK: - Context menus and double-click
+
+    private func menuWith(_ title: String) -> NSMenu {
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: title, action: nil, keyEquivalent: ""))
+        return menu
+    }
+
+    private func loadedWithSections() -> TopicListViewController {
+        let controller = makeLoaded()
+        controller.setSections([
+            TopicListSection(title: "Branches", items: [TopicListItem(id: "b1", title: "main")]),
+            TopicListSection(title: "Tags", items: [TopicListItem(id: "t1", title: "v1")])
+        ])
+        return controller
+    }
+
+    /// topic-list-032: an item row's menu is itemMenuProvider's, a header row's is
+    /// headerMenuProvider's, each given what the row shows.
+    func testContextMenuAsksTheProviderForTheRowsKind() {
+        let controller = loadedWithSections()
+        var askedItems: [String] = []
+        var askedHeaders: [String] = []
+        controller.itemMenuProvider = { item in
+            askedItems.append(item.id)
+            return self.menuWith("item \(item.id)")
+        }
+        controller.headerMenuProvider = { title in
+            askedHeaders.append(title)
+            return title == "Tags" ? self.menuWith("header \(title)") : nil
+        }
+
+        XCTAssertNil(controller.contextMenu(forRow: 0), "the provider declined the Branches header")
+        XCTAssertEqual(controller.contextMenu(forRow: 1)?.items.map(\.title), ["item b1"])
+        XCTAssertEqual(controller.contextMenu(forRow: 2)?.items.map(\.title), ["header Tags"])
+        XCTAssertEqual(controller.contextMenu(forRow: 3)?.items.map(\.title), ["item t1"])
+        XCTAssertNil(controller.contextMenu(forRow: 4))
+        XCTAssertNil(controller.contextMenu(forRow: -1))
+        XCTAssertEqual(askedItems, ["b1", "t1"])
+        XCTAssertEqual(askedHeaders, ["Branches", "Tags"])
+    }
+
+    /// topic-list-033: with no providers set, no row has a menu.
+    func testNoProvidersMeansNoMenus() {
+        let controller = loadedWithSections()
+        for row in 0..<4 { XCTAssertNil(controller.contextMenu(forRow: row)) }
+    }
+
+    /// topic-list-034: a double-clicked item row reaches onDoubleClick; a header row does not.
+    func testDoubleClickReportsItemRowsOnly() {
+        let controller = loadedWithSections()
+        var clicked: [String] = []
+        controller.onDoubleClick = { clicked.append($0.id) }
+        for row in [0, 1, 2, 3, 9] { controller.doubleClick(row: row) }
+        XCTAssertEqual(clicked, ["b1", "t1"])
+    }
+
+    /// topic-list-035: the outline view carries the menu the providers fill and sends its
+    /// double-click to the list; opening the menu with no row clicked leaves it empty.
+    func testOutlineCarriesTheMenuAndTheDoubleClick() throws {
+        let controller = loadedWithSections()
+        controller.itemMenuProvider = { _ in self.menuWith("unused") }
+        let outline = try XCTUnwrap(findOutline(in: controller.view))
+        let menu = try XCTUnwrap(outline.menu)
+        XCTAssertTrue(outline.target === controller)
+        XCTAssertNotNil(outline.doubleAction)
+        controller.menuNeedsUpdate(menu)
+        XCTAssertTrue(menu.items.isEmpty, "clickedRow is -1 outside a click")
+    }
 }

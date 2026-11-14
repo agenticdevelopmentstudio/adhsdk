@@ -65,7 +65,12 @@ private final class FakeHistorySource: GitHistoryDataSource {
 @MainActor
 private final class RecordingHistoryDelegate: GitHistoryDelegate {
     private(set) var events: [String?] = []
+    /// Every intent requested, with the id of the commit it was for.
+    private(set) var intents: [(intent: GitCommitIntent, commitID: String)] = []
     func history(_ history: GitHistoryViewController, didSelect commit: GitCommit?) { events.append(commit?.id) }
+    func history(_ history: GitHistoryViewController, didRequest intent: GitCommitIntent, for commit: GitCommit) {
+        intents.append((intent, commit.id))
+    }
 }
 
 @Suite("GitHistoryViewController")
@@ -535,5 +540,87 @@ struct GitHistoryViewControllerTests {
         #expect(history.tableView.enclosingScrollView?.accessibilityIdentifier() == "git.history.scroll")
         let rowView = history.tableView(history.tableView, rowViewForRow: 0)
         #expect(rowView?.accessibilityIdentifier() == "git.history.row")
+    }
+
+    // MARK: - Context menu
+
+    /// Fires `item` the way AppKit does when the user chooses it.
+    private func fire(_ item: NSMenuItem?) throws {
+        let item = try #require(item)
+        let action = try #require(item.action)
+        let target = try #require(item.target as? NSObject)
+        target.perform(action, with: item)
+    }
+
+    @Test("a row's menu lists the commit actions in order, with the reset modes in a submenu")
+    func commitMenuTitles() throws {
+        let history = GitHistoryViewController(source: Self.source(count: 2))
+        history.loadViewIfNeeded()
+        let menu = try #require(history.contextMenu(forRow: 1))
+        #expect(menu.items.map { $0.isSeparatorItem ? "-" : $0.title } == [
+            "Checkout", "New Branch…", "New Tag…", "-", "Cherry-pick", "Revert", "-",
+            "Reset Current Branch to Here", "-", "Copy SHA"
+        ])
+        #expect(menu.items.filter { !$0.isSeparatorItem }.map { $0.accessibilityIdentifier() } == [
+            "git.history.menu.checkout", "git.history.menu.newBranch", "git.history.menu.newTag",
+            "git.history.menu.cherryPick", "git.history.menu.revert", "git.history.menu.reset",
+            "git.history.menu.copySha"
+        ])
+        let reset = try #require(menu.items.first { $0.title == "Reset Current Branch to Here" }?.submenu)
+        #expect(reset.items.map(\.title) == ["Soft", "Mixed", "Hard…"])
+        #expect(reset.items.map { $0.accessibilityIdentifier() } == [
+            "git.history.menu.resetSoft", "git.history.menu.resetMixed", "git.history.menu.resetHard"
+        ])
+    }
+
+    @Test("each item sends its intent with the clicked row's commit, not the selected one")
+    func commitMenuIntents() throws {
+        let history = GitHistoryViewController(source: Self.source(count: 3))
+        let delegate = RecordingHistoryDelegate()
+        history.delegate = delegate
+        history.loadViewIfNeeded()
+        history.select(commitID: Self.sha("c000"))
+        let menu = try #require(history.contextMenu(forRow: 2))
+        let reset = try #require(menu.items.first { $0.title == "Reset Current Branch to Here" }?.submenu)
+        for title in ["Checkout", "New Branch…", "New Tag…", "Cherry-pick", "Revert"] {
+            try fire(menu.items.first { $0.title == title })
+        }
+        for title in ["Soft", "Mixed", "Hard…"] {
+            try fire(reset.items.first { $0.title == title })
+        }
+        let expected: [GitCommitIntent] = [
+            .checkout, .createBranch, .createTag, .cherryPick, .revert,
+            .reset(.soft), .reset(.mixed), .reset(.hard)
+        ]
+        #expect(delegate.intents.map(\.intent) == expected)
+        #expect(delegate.intents.allSatisfy { $0.commitID == Self.sha("c002") })
+        #expect(history.selectedCommitID == Self.sha("c000"))
+    }
+
+    @Test("Copy SHA puts the full sha on the pasteboard and sends no intent")
+    func copySha() throws {
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("git.history.test.\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        let history = GitHistoryViewController(source: Self.source(count: 2), pasteboard: pasteboard)
+        let delegate = RecordingHistoryDelegate()
+        history.delegate = delegate
+        history.loadViewIfNeeded()
+        let menu = try #require(history.contextMenu(forRow: 1))
+        try fire(menu.items.first { $0.title == "Copy SHA" })
+        #expect(pasteboard.string(forType: .string) == Self.sha("c001"))
+        #expect(delegate.intents.isEmpty)
+    }
+
+    @Test("a row outside the list has no menu, and the table carries the menu that opens")
+    func commitMenuOutsideRows() {
+        let history = GitHistoryViewController(source: Self.source(count: 2))
+        history.loadViewIfNeeded()
+        #expect(history.contextMenu(forRow: -1) == nil)
+        #expect(history.contextMenu(forRow: 2) == nil)
+        let tableMenu = history.tableView.menu
+        #expect(tableMenu != nil)
+        // Opening it with no row clicked leaves it empty, which AppKit does not show.
+        if let tableMenu { history.menuNeedsUpdate(tableMenu) }
+        #expect(tableMenu?.items.isEmpty == true)
     }
 }

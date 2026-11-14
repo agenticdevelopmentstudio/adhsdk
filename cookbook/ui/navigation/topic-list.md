@@ -177,6 +177,16 @@ component always disables. A section's optional title renders as a
   emphasized item's title in the bold font and MUST add, for an item with
   a badge, the badge gap and the badge's rendered width in the badge font
   to that item's candidate width.
+- **row-context-menu**: Component MUST show, for a secondary click on an
+  item row, the menu the item-menu provider returns for that row's item,
+  and for a secondary click on a section header row the menu the
+  header-menu provider returns for that header's title. A provider that is
+  unset or returns none, and a click outside the rows, MUST show no menu.
+  The menu is built for the clicked row, not the selected one, and opening
+  it MUST NOT change the selection.
+- **item-double-click**: Component MUST call the double-click callback
+  with an item row's item when that row is double-clicked, and MUST NOT
+  call it for a section header row or outside the rows.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -295,7 +305,10 @@ component always disables. A section's optional title renders as a
 | topic-list-029 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
 | topic-list-030 | item-badge, item-emphasis | Items `main` (badge `↑2 ↓1`, emphasized) and `dev` (no badge) | `main`'s badge label reads `↑2 ↓1`, is visible and is identified `topic-list.item.main.badge`; `main`'s label is bold; `dev`'s badge label is hidden and its label is not bold |
 | topic-list-031 | preferred-width-badge-emphasis | One item `main`, then the same item with badge `↑12 ↓34` | The second preferred width is larger than the first |
-
+| topic-list-032 | row-context-menu | Sections `Branches` (`main`) and `Tags` (`v1`); an item provider returning a menu per item, a header provider returning one only for `Tags`; ask each row and rows -1 and 4 | `Branches` header: no menu; `main`: `main`'s menu; `Tags` header: the `Tags` menu; `v1`: `v1`'s menu; outside the rows: no menu |
+| topic-list-033 | row-context-menu | The same sections with no providers set | No row has a menu |
+| topic-list-034 | item-double-click | Double-click each of the four rows and row 9 | The callback receives `main`, then `v1`, and nothing else |
+| topic-list-035 | row-context-menu, item-double-click | Inspect the list after it loads; open its menu with no row clicked | The list carries a menu and a double-click action; the opened menu is empty, so none is shown |
 ## Edge Cases
 
 - Null/empty input (MUST): An empty grouped setter call yields an empty
@@ -355,6 +368,9 @@ component always disables. A section's optional title renders as a
 | Selection callback | A callback receiving the newly selected item, or none | none | Invoked with the newly selected item, or none, on a user-driven selection change; never invoked for a programmatic change made through selecting by id or a theme-triggered reload. |
 | Title | An optional string | none | Text shown in the optional header above the list, set via the title setter; empty or unset hides the header unless a header accessory view is set. |
 | Footer view | An optional view | none | Client view pinned below the list via the footer setter, spanning the sidebar width; unset collapses the footer to zero height. |
+| Item menu provider | A function from an item to an optional menu | none | Builds the context menu for a secondary-clicked item row; none shows no menu. |
+| Header menu provider | A function from a section title to an optional menu | none | Builds the context menu for a secondary-clicked section header row; none shows no menu. |
+| Double-click callback | A callback receiving the double-clicked item | none | Invoked with an item row's item when the row is double-clicked; never for a header row. |
 | Header accessory view | An optional view | none | Client view shown directly beneath the title and above the list via the accessory setter, spanning the header's width; unset collapses to nothing. |
 
 ## Deep Linking
@@ -534,6 +550,7 @@ component.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -641,7 +658,7 @@ macOS list - not a defect, and not an applicable check for this control (the
 44×44pt/48×48dp threshold does apply to the touch-platform translations
 described in Platform Notes).
 
-Separation-of-concerns is passed: `TopicListViewController` renders sections and rows from `TopicListItemProtocol` values handed to it and reports selection outward, with no domain knowledge of what a topic is or what selecting it does. Unit-test-coverage is partial: `TopicListViewControllerTests.swift` has four tests covering preferred-width measurement and selection applied before the view loads, but section headers, disabled rows, selection gating, accessibility and click behavior have no tests.
+Separation-of-concerns is passed: `TopicListViewController` renders sections and rows from `TopicListItemProtocol` values handed to it and reports selection outward, with no domain knowledge of what a topic is or what selecting it does. Unit-test-coverage is partial: `TopicListViewControllerTests.swift` covers preferred-width measurement, badges and emphasis, selection applied before the view loads, the item and header context menus and the double-click callback, but disabled rows, selection gating, accessibility and single-click behavior have no tests.
 
 ## Change History
 
@@ -654,4 +671,4 @@ Separation-of-concerns is passed: `TopicListViewController` renders sections and
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/navigation/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
-| 1.3.0 | 2026-11-13 | Mike Fullerton | Items can carry a trailing badge and be emphasized (bold); the preferred width measures both. |
+| 1.3.0 | 2026-11-13 | Mike Fullerton | Items can carry a trailing badge and be emphasized (bold); the preferred width measures both. Item and section header context menus from client providers, and a double-click callback for item rows (vectors 032-035). |

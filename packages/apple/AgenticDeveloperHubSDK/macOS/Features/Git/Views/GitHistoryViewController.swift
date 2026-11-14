@@ -1,9 +1,17 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 
-/// Told which commit the history list has selected, or nil when nothing is.
+/// What the user asked the history list to do with a commit. The view runs none of it;
+/// its delegate does.
+public enum GitCommitIntent: Equatable {
+    case checkout, createBranch, createTag, cherryPick, revert, reset(GitResetMode)
+}
+
+/// Told which commit the history list has selected, or nil when nothing is, and every
+/// action chosen from a commit's context menu.
 @MainActor public protocol GitHistoryDelegate: AnyObject {
     func history(_ history: GitHistoryViewController, didSelect commit: GitCommit?)
+    func history(_ history: GitHistoryViewController, didRequest intent: GitCommitIntent, for commit: GitCommit)
 }
 
 /// The git window's history list (recipe `workspace/git/git-views`, "History list"): a
@@ -11,14 +19,20 @@ import AgenticDeveloperHubSDKCore
 /// relative date and the short sha, read from a `GitHistoryDataSource`.
 ///
 /// The owner calls `reload()` when the model reports a history change and forwards the
-/// window's search text to `setQuery(_:)`. Used on the main thread; every data-source
-/// call that waits is awaited.
+/// window's search text to `setQuery(_:)`. A right-clicked row's context menu acts on that
+/// row's commit, not the selection: its actions reach the delegate as `GitCommitIntent`s,
+/// and Copy SHA puts the full sha on `pasteboard`. Used on the main thread; every
+/// data-source call that waits is awaited.
 @MainActor
 public final class GitHistoryViewController: NSViewController {
 
     public weak var delegate: GitHistoryDelegate?
 
     let tableView = ThemedTableView()
+    /// The table's menu, refilled for the clicked row each time it opens.
+    private let rowMenu = NSMenu()
+    /// Where Copy SHA puts the sha.
+    private let pasteboard: NSPasteboard
     /// The page request in flight or last finished; tests await it.
     private(set) var pagingTask: Task<Void, Never>?
 
@@ -79,8 +93,9 @@ public final class GitHistoryViewController: NSViewController {
         var identifier: NSUserInterfaceItemIdentifier { NSUserInterfaceItemIdentifier(rawValue) }
     }
 
-    public init(source: GitHistoryDataSource) {
+    public init(source: GitHistoryDataSource, pasteboard: NSPasteboard = .general) {
         self.source = source
+        self.pasteboard = pasteboard
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -109,6 +124,8 @@ public final class GitHistoryViewController: NSViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.accessibilityID("git.history.table")
+        rowMenu.delegate = self
+        tableView.menu = rowMenu
 
         scrollView.documentView = tableView
         scrollView.accessibilityID("git.history.scroll")
@@ -259,6 +276,80 @@ public final class GitHistoryViewController: NSViewController {
             await self.source.loadMore()
             self.reload()
         }
+    }
+}
+
+// MARK: - Context menu
+
+extension GitHistoryViewController: NSMenuDelegate {
+    /// The context menu for `row`'s commit, or nil for a row outside the list.
+    func contextMenu(forRow row: Int) -> NSMenu? {
+        guard commits.indices.contains(row) else { return nil }
+        let commit = commits[row]
+        let menu = NSMenu()
+        menu.addItem(intentItem("Checkout", "checkout", .checkout, commit))
+        menu.addItem(intentItem("New Branch…", "newBranch", .createBranch, commit))
+        menu.addItem(intentItem("New Tag…", "newTag", .createTag, commit))
+        menu.addItem(.separator())
+        menu.addItem(intentItem("Cherry-pick", "cherryPick", .cherryPick, commit))
+        menu.addItem(intentItem("Revert", "revert", .revert, commit))
+        menu.addItem(.separator())
+        let reset = NSMenuItem(title: "Reset Current Branch to Here", action: nil, keyEquivalent: "")
+        reset.accessibilityID("git.history.menu.reset")
+        let modes = NSMenu()
+        modes.addItem(intentItem("Soft", "resetSoft", .reset(.soft), commit))
+        modes.addItem(intentItem("Mixed", "resetMixed", .reset(.mixed), commit))
+        modes.addItem(intentItem("Hard…", "resetHard", .reset(.hard), commit))
+        reset.submenu = modes
+        menu.addItem(reset)
+        menu.addItem(.separator())
+        let copy = NSMenuItem(title: "Copy SHA", action: #selector(copySha(_:)), keyEquivalent: "")
+        copy.target = self
+        copy.representedObject = commit.id
+        copy.accessibilityID("git.history.menu.copySha")
+        menu.addItem(copy)
+        return menu
+    }
+
+    /// Moves the clicked row's menu items into the table's menu as it opens; a click
+    /// outside the rows leaves it empty, which AppKit does not show.
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        guard menu === rowMenu else { return }
+        menu.removeAllItems()
+        guard let provided = contextMenu(forRow: tableView.clickedRow) else { return }
+        let items = provided.items
+        provided.removeAllItems()
+        for item in items { menu.addItem(item) }
+    }
+
+    private func intentItem(_ title: String, _ name: String, _ intent: GitCommitIntent,
+                            _ commit: GitCommit) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: #selector(performMenuIntent(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = CommitIntentBox(intent, commit)
+        item.accessibilityID("git.history.menu.\(name)")
+        return item
+    }
+
+    @objc private func performMenuIntent(_ sender: NSMenuItem) {
+        guard let box = sender.representedObject as? CommitIntentBox else { return }
+        delegate?.history(self, didRequest: box.intent, for: box.commit)
+    }
+
+    @objc private func copySha(_ sender: NSMenuItem) {
+        guard let sha = sender.representedObject as? String else { return }
+        pasteboard.clearContents()
+        pasteboard.setString(sha, forType: .string)
+    }
+}
+
+/// Carries a menu item's intent and commit as its `representedObject`, which must be an object.
+private final class CommitIntentBox: NSObject {
+    let intent: GitCommitIntent
+    let commit: GitCommit
+    init(_ intent: GitCommitIntent, _ commit: GitCommit) {
+        self.intent = intent
+        self.commit = commit
     }
 }
 

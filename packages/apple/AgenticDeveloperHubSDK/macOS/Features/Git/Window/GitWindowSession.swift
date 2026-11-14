@@ -312,6 +312,10 @@ extension GitWindowSession: GitRefsSidebarDelegate {
     func sidebar(_ sidebar: GitRefsSidebarViewController, open directory: URL) {
         onOpenDirectory?(directory)
     }
+
+    /// The session does not act on ref intents yet; nothing is checked out, pushed or
+    /// deleted from here.
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent) {}
 }
 
 // MARK: - GitHistoryDelegate
@@ -323,6 +327,10 @@ extension GitWindowSession: GitHistoryDelegate {
         detail.show(commit: commit)
         clearDiff()
     }
+
+    /// The session does not act on commit intents yet; nothing is checked out, picked,
+    /// reverted or reset from here.
+    func history(_ history: GitHistoryViewController, didRequest intent: GitCommitIntent, for commit: GitCommit) {}
 }
 
 // MARK: - GitCommitDetailDelegate

@@ -32,6 +32,9 @@ private final class RecordingDelegate: GitRefsSidebarDelegate {
         events.append(.stash(stash.id))
     }
     func sidebar(_ sidebar: GitRefsSidebarViewController, open directory: URL) { events.append(.directory(directory)) }
+
+    private(set) var intents: [GitRefIntent] = []
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent) { intents.append(intent) }
 }
 
 @Suite("GitRefsSidebarViewController")
@@ -267,5 +270,134 @@ struct GitRefsSidebarViewControllerTests {
         #expect(sidebar.view.accessibilityIdentifier() == "git.sidebar")
         #expect(sidebar.list.parent === sidebar)
         #expect(sidebar.list.view.superview === sidebar.view)
+    }
+
+    // MARK: - Context menus and double-click
+
+    /// The menu the list asks the sidebar for at `section`/`row`.
+    private func rowMenu(_ sidebar: GitRefsSidebarViewController, section: Int, row: Int) -> NSMenu? {
+        sidebar.list.itemMenuProvider?(item(sidebar, section: section, row: row))
+    }
+
+    private func menuTitles(_ menu: NSMenu?) -> [String] {
+        (menu?.items ?? []).map { $0.isSeparatorItem ? "-" : $0.title }
+    }
+
+    private func menuIDs(_ menu: NSMenu?) -> [String] {
+        (menu?.items ?? []).filter { !$0.isSeparatorItem }.compactMap { $0.accessibilityIdentifier() }
+    }
+
+    /// Fires every item of `menu` in order, the way AppKit does when the user chooses one.
+    private func fireAll(_ menu: NSMenu?) throws {
+        for item in try #require(menu).items where !item.isSeparatorItem {
+            let action = try #require(item.action)
+            let target = try #require(item.target as? NSObject)
+            target.perform(action, with: item)
+        }
+    }
+
+    @Test("a local branch's menu checks out, branches, renames, deletes and pushes it")
+    func localBranchMenu() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let menu = rowMenu(sidebar, section: 1, row: 1)
+        #expect(menuTitles(menu) == ["Checkout", "New Branch…", "Rename…", "Delete…", "-", "Push"])
+        #expect(menuIDs(menu) == [
+            "git.sidebar.menu.checkout", "git.sidebar.menu.newBranch", "git.sidebar.menu.rename",
+            "git.sidebar.menu.delete", "git.sidebar.menu.push"
+        ])
+        try fireAll(menu)
+        let dev = Self.branch("dev")
+        #expect(delegate.intents == [.checkout(dev), .createBranch(from: dev), .rename(dev), .delete(dev), .push(dev)])
+        #expect(delegate.events.isEmpty)
+    }
+
+    @Test("the checked-out branch's menu has Pull and no Checkout or Delete")
+    func headBranchMenu() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let menu = rowMenu(sidebar, section: 1, row: 0)
+        #expect(menuTitles(menu) == ["New Branch…", "Rename…", "-", "Push", "Pull"])
+        #expect(menuIDs(menu).last == "git.sidebar.menu.pull")
+        try fireAll(menu)
+        let main = Self.branch("main", ahead: 2, behind: 1, head: true)
+        #expect(delegate.intents == [.createBranch(from: main), .rename(main), .push(main), .pull])
+    }
+
+    @Test("a remote branch's menu checks out, branches, deletes it and fetches its remote")
+    func remoteBranchMenu() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let menu = rowMenu(sidebar, section: 2, row: 1)
+        #expect(menuTitles(menu) == ["Checkout", "New Branch…", "Delete…", "-", "Fetch origin"])
+        #expect(menuIDs(menu) == [
+            "git.sidebar.menu.checkout", "git.sidebar.menu.newBranch", "git.sidebar.menu.delete",
+            "git.sidebar.menu.fetch"
+        ])
+        try fireAll(menu)
+        let dev = Self.remote("origin/dev")
+        #expect(delegate.intents == [.checkout(dev), .createBranch(from: dev), .delete(dev), .fetch(remote: "origin")])
+    }
+
+    @Test("a remote's section header fetches that remote; other headers have no menu")
+    func remoteHeaderMenu() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let menu = sidebar.list.headerMenuProvider?("Remotes · upstream")
+        #expect(menuTitles(menu) == ["Fetch"])
+        #expect(menuIDs(menu) == ["git.sidebar.menu.fetch"])
+        try fireAll(menu)
+        #expect(delegate.intents == [.fetch(remote: "upstream")])
+        for title in ["Workspace", "Branches", "Tags", "Stashes", "Submodules", "Worktrees"] {
+            #expect(sidebar.list.headerMenuProvider?(title) == nil)
+        }
+    }
+
+    @Test("a tag's menu pushes and deletes it; a stash's applies, pops and drops it")
+    func tagAndStashMenus() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let tagMenu = rowMenu(sidebar, section: 4, row: 0)
+        #expect(menuTitles(tagMenu) == ["Push", "Delete…"])
+        #expect(menuIDs(tagMenu) == ["git.sidebar.menu.push", "git.sidebar.menu.delete"])
+        let stashMenu = rowMenu(sidebar, section: 5, row: 1)
+        #expect(menuTitles(stashMenu) == ["Apply", "Pop", "Drop…"])
+        #expect(menuIDs(stashMenu) == ["git.sidebar.menu.apply", "git.sidebar.menu.pop", "git.sidebar.menu.drop"])
+        try fireAll(tagMenu)
+        try fireAll(stashMenu)
+        let tag = Self.tag("v1")
+        let stash = Self.fullSource().stashes[1]
+        #expect(delegate.intents == [
+            .pushTag(tag), .deleteTag(tag), .applyStash(stash), .popStash(stash), .dropStash(stash)
+        ])
+    }
+
+    @Test("the working copy, submodule and worktree rows have no menu")
+    func rowsWithoutMenus() {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        #expect(rowMenu(sidebar, section: 0, row: 0) == nil)
+        #expect(rowMenu(sidebar, section: 6, row: 0) == nil)
+        #expect(rowMenu(sidebar, section: 7, row: 0) == nil)
+        #expect(rowMenu(sidebar, section: 7, row: 1) == nil)
+    }
+
+    @Test("double-clicking a local or remote branch checks it out; other rows ask for nothing")
+    func doubleClickChecksOut() {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let doubleClick = sidebar.list.onDoubleClick
+        doubleClick?(item(sidebar, section: 1, row: 1))
+        doubleClick?(item(sidebar, section: 2, row: 0))
+        for (section, row) in [(0, 0), (1, 0), (4, 0), (5, 0), (6, 0), (7, 1)] {
+            doubleClick?(item(sidebar, section: section, row: row))
+        }
+        #expect(delegate.intents == [.checkout(Self.branch("dev")), .checkout(Self.remote("origin/main"))])
+        #expect(delegate.events.isEmpty)
     }
 }

@@ -38,5 +38,5 @@ macOS list - not a defect, and not an applicable check for this control (the
 44×44pt/48×48dp threshold does apply to the touch-platform translations
 described in Platform Notes).
 
-Separation-of-concerns is passed: `TopicListViewController` renders sections and rows from `TopicListItemProtocol` values handed to it and reports selection outward, with no domain knowledge of what a topic is or what selecting it does. Unit-test-coverage is partial: `TopicListViewControllerTests.swift` has four tests covering preferred-width measurement and selection applied before the view loads, but section headers, disabled rows, selection gating, accessibility and click behavior have no tests.
+Separation-of-concerns is passed: `TopicListViewController` renders sections and rows from `TopicListItemProtocol` values handed to it and reports selection outward, with no domain knowledge of what a topic is or what selecting it does. Unit-test-coverage is partial: `TopicListViewControllerTests.swift` covers preferred-width measurement, badges and emphasis, selection applied before the view loads, the item and header context menus and the double-click callback, but disabled rows, selection gating, accessibility and single-click behavior have no tests.
 

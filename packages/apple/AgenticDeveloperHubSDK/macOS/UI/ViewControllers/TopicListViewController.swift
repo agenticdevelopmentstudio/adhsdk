@@ -64,6 +64,19 @@ open class TopicListViewController: NSViewController {
     /// Fired when the user changes the selection. Nil when nothing is selected.
     public var onSelect: (((any TopicListItemProtocol)?) -> Void)?
 
+    /// The context menu for a right-clicked item row; nil, or a nil menu, shows none.
+    public var itemMenuProvider: (((any TopicListItemProtocol)) -> NSMenu?)?
+
+    /// The context menu for a right-clicked section header row, given the section's
+    /// title; nil, or a nil menu, shows none.
+    public var headerMenuProvider: ((String) -> NSMenu?)?
+
+    /// Called with a double-clicked item row's item. A header row calls nothing.
+    public var onDoubleClick: (((any TopicListItemProtocol)) -> Void)?
+
+    /// The outline's menu, refilled from the providers each time it opens.
+    private let rowMenu = NSMenu()
+
     /// Nesting depth of "suppress the selection callback" scopes. While > 0, the
     /// outline's selection-changed delegate is a no-op, so programmatic selection
     /// never echoes back through `onSelect`. A counter (not a one-shot flag) so a
@@ -136,6 +149,10 @@ open class TopicListViewController: NSViewController {
         outlineView.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
         outlineView.dataSource = self
         outlineView.delegate = self
+        outlineView.target = self
+        outlineView.doubleAction = #selector(outlineDoubleClicked(_:))
+        rowMenu.delegate = self
+        outlineView.menu = rowMenu
         // `setItems`/`setSections` can run before the view ever loads — a
         // caller populating the list from its own `init()`, before the owning
         // window is ever shown, is the common case for a window whose sidebar
@@ -490,6 +507,29 @@ open class TopicListViewController: NSViewController {
         }
     }
 
+    // MARK: - Context menu + double-click
+
+    /// The menu for `row`: `itemMenuProvider`'s for an item row, `headerMenuProvider`'s
+    /// for a section header row, nil for a row outside the list.
+    public func contextMenu(forRow row: Int) -> NSMenu? {
+        guard rootNodes.indices.contains(row) else { return nil }
+        switch rootNodes[row].kind {
+        case .header(let title): return headerMenuProvider?(title)
+        case .item(let item): return itemMenuProvider?(item)
+        }
+    }
+
+    /// Calls `onDoubleClick` with `row`'s item; nothing for a header row or a row
+    /// outside the list.
+    public func doubleClick(row: Int) {
+        guard rootNodes.indices.contains(row), case .item(let item) = rootNodes[row].kind else { return }
+        onDoubleClick?(item)
+    }
+
+    @objc private func outlineDoubleClicked(_ sender: Any?) {
+        doubleClick(row: outlineView.clickedRow)
+    }
+
     private static func buildRootNodes(from sections: [TopicListSection]) -> [TopicListNode] {
         var nodes: [TopicListNode] = []
         for section in sections {
@@ -609,6 +649,21 @@ private final class TopicListNode: NSObject {
 
 extension TopicListViewController {
     fileprivate var rootNodes: [TopicListNode] { rootNodesCache }
+}
+
+// MARK: - NSMenuDelegate
+
+extension TopicListViewController: NSMenuDelegate {
+    /// Moves the clicked row's menu items into the outline's menu as it opens; with no
+    /// menu for the click it opens empty, which AppKit does not show.
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        guard menu === rowMenu else { return }
+        menu.removeAllItems()
+        guard let provided = contextMenu(forRow: outlineView.clickedRow) else { return }
+        let items = provided.items
+        provided.removeAllItems()
+        for item in items { menu.addItem(item) }
+    }
 }
 
 // MARK: - NSOutlineViewDataSource

@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.6.0
+version: 1.7.0
 status: review
 language: en
 created: 2026-11-13
@@ -43,8 +43,8 @@ approved-date: ""
 
 ## Overview
 
-The views of a git window: each one an AppKit view controller that reads one narrow data-source protocol of the [git repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) and reports what the user chose to a delegate, injected, so none of them knows its window or calls git. This recipe has one section per view. The **refs sidebar** (`GitRefsSidebarViewController`) lists, on the toolkit's [topic list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54), the working copy, the local branches, the remote branches grouped by remote, the tags, the stashes, the submodules and every non-bare worktree (the main one and the one the window is on included), with ahead/behind badges on branches that track an upstream and the checked-out branch in bold.
-The **history list** (`GitHistoryViewController`) is a paged table of the [commit graph cell](cookbook:595f1a5e-0f92-49c5-a980-af6f809be932), the subject behind a [badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f) per ref at the commit, the author's [avatar](cookbook:e3a2394d-d0d0-4495-bde4-59197f9d7866) and name, the [relative date](cookbook:873f79b1-444d-4c2c-8a5f-4fc01cd9022e) and the short sha. It reads a `GitHistoryDataSource`, asks for the next page as the end of the list comes into view, and takes the window's search text through `setQuery(_:)`, which `GitHistorySearch.parse(_:)` (Foundation only, in `AgenticDeveloperHubSDKCore`) turns into a `GitLogQuery`.
+The views of a git window: each one an AppKit view controller that reads one narrow data-source protocol of the [git repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) and reports what the user chose to a delegate, injected, so none of them knows its window or calls git. This recipe has one section per view. The **refs sidebar** (`GitRefsSidebarViewController`) lists, on the toolkit's [topic list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54), the working copy, the local branches, the remote branches grouped by remote, the tags, the stashes, the submodules and every non-bare worktree (the main one and the one the window is on included), with ahead/behind badges on branches that track an upstream and the checked-out branch in bold. Its row and remote-header context menus, and a double-clicked branch, send intents (`GitRefIntent`) to the delegate.
+The **history list** (`GitHistoryViewController`) is a paged table of the [commit graph cell](cookbook:595f1a5e-0f92-49c5-a980-af6f809be932), the subject behind a [badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f) per ref at the commit, the author's [avatar](cookbook:e3a2394d-d0d0-4495-bde4-59197f9d7866) and name, the [relative date](cookbook:873f79b1-444d-4c2c-8a5f-4fc01cd9022e) and the short sha. It reads a `GitHistoryDataSource`, asks for the next page as the end of the list comes into view, and takes the window's search text through `setQuery(_:)`, which `GitHistorySearch.parse(_:)` (Foundation only, in `AgenticDeveloperHubSDKCore`) turns into a `GitLogQuery`. A row's context menu sends intents (`GitCommitIntent`) for that commit to the delegate and copies its sha.
 The **changed-files list** (`GitFileListViewController`) is one list of `GitFileListItem`s (`AgenticDeveloperHubSDKCore`), each a status letter in its status colour, the file type's icon and the path (`old → new` for a rename), reused wherever the window lists files.
 The **commit detail** (`GitCommitDetailViewController`) shows one commit's subject, body, author and committer with their avatars, dates, full sha with a copy button and its parents as links, over a changed-files list read from the `GitContentSource`'s diff of that commit; the latest `show(commit:)` always wins over a load still in flight.
 The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyDataSource`'s staged and unstaged files in two changed-files lists and reports the selected file as the `GitDiffTarget` that shows its diff. Under them the **commit box** (`GitCommitBoxViewController`) holds the message, Amend and Commit. Staging, unstaging, discarding and committing are intents (`GitWorkingCopyIntent`) sent to the delegate, never git run by the view.
@@ -61,6 +61,9 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **sidebar-head-bold**: The checked-out branch's row MUST be emphasized (bold); no other row is.
 - **sidebar-selection**: Selecting a row MUST call the delegate once: the working copy → `sidebarDidSelectWorkingCopy`; a branch, remote branch or tag → `didSelect ref`; a stash → `didSelectStash`; a submodule → `open directory` with the repository root joined with the submodule's path; a worktree → `open directory` with the worktree's directory. A submodule or worktree row is an action, not a place: after it opens, the previous selection, when there is one, is restored, so the same row can be chosen again. Clearing the selection calls nothing.
 - **sidebar-reload**: `reload()` MUST rebuild every section from the data source's current values, keeping the selected row selected when its id is still present (by the topic list's restore-by-id) without calling the delegate. When the selected row is gone, the sidebar MUST select `Working Copy` and call `sidebarDidSelectWorkingCopy` once, so the owner never keeps showing a ref or stash that no longer exists.
+- **sidebar-intents-only**: The sidebar MUST NOT run git. Every action chosen from a context menu, and a double-clicked branch, is one call of the delegate's `sidebar(_:didRequest:)` with a `GitRefIntent` (`checkout(GitRef)`, `createBranch(from:)`, `rename`, `delete`, `push`, `pull`, `fetch(remote:)`, `deleteTag`, `pushTag`, `applyStash`, `popStash`, `dropStash`); confirming a delete or a drop is the owner's. `delete` names a local or a remote branch alike; the ref's kind decides which git verb runs.
+- **sidebar-menus**: A local branch row's menu MUST hold `Checkout` (`.checkout`), `New Branch…` (`.createBranch(from:)`), `Rename…` (`.rename`), `Delete…` (`.delete`), a separator and `Push` (`.push`); on the checked-out branch `Checkout` and `Delete…` are absent and `Pull` (`.pull`) follows `Push`. A remote branch row's menu MUST hold `Checkout`, `New Branch…`, `Delete…`, a separator and `Fetch <remote>` (`.fetch(remote:)`). A `Remotes · <remote>` section header's menu MUST hold `Fetch` for that remote; no other header has a menu. A tag row's menu MUST hold `Push` (`.pushTag`) and `Delete…` (`.deleteTag`); a stash row's `Apply`, `Pop` and `Drop…` (`.applyStash`, `.popStash`, `.dropStash`). The working copy, submodule and worktree rows have no menu. Each item carries the clicked row's ref or stash, never the selection's; the menus are built through the topic list's `itemMenuProvider` and `headerMenuProvider`.
+- **sidebar-double-click**: Double-clicking a local or remote branch row MUST send `.checkout(ref)` through the topic list's `onDoubleClick`; the checked-out branch, and every other row, sends nothing.
 - **sidebar-ui-thread**: The sidebar MUST be used on the UI thread.
 
 ### History list
@@ -73,6 +76,8 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **history-paging**: When the table asks for a row in the last 50 loaded rows (index ≥ count − 50), the list MUST call the data source's `loadMore()` once, then reload, and MUST NOT call it again until the number of loaded commits or the data source's query has changed, so the end of the history does not loop and a new search whose first page is the same size still pages. The count and query are the ones as of the last `reload()`, so a data source that cleared its commits for a search in flight does not page.
 - **history-search-parse**: `GitHistorySearch.parse(_:)` MUST be pure and return a `GitLogQuery` with the default revisions, limit and skip and at most one filter, from the text trimmed of whitespace: empty → no filter; `author:<x>` (prefix in any case) → `author` `x`; `sha:<x>` (prefix in any case) → no filter; `-S <x>` or `-S<x>` → `pickaxe` `x`; anything else → `messageGrep`, the whole trimmed text. A prefix with nothing after it is no filter. `GitHistorySearch.shaPrefix(_:)` MUST return the lowercased `x` of the `sha:` form and nil for every other form.
 - **history-set-query**: `setQuery(_:)` MUST parse the text, and when the parsed query differs from the one the list last sent (applied or in flight; the data source's query before the first search), send it to the data source after a quiet period (`searchDelay`, 250 ms), cancelling the send it replaces, so a burst of keystrokes runs one `git log` and a superseded one is terminated rather than left to run. Cancelling the latest caller cancels its send, and the next call with that query sends it afresh; an older caller's cancellation never cancels a send a newer call shares. A parsed query equal to one still in flight MUST wait for that request rather than skip or resend it, because the data source takes a new query before its results arrive. The latest call then reloads. For the `sha:` form it MUST then select the first loaded commit whose id starts with the prefix (case-insensitively), as `select(commitID:)` does; no match selects nothing. A `setQuery` overtaken by a later one MUST NOT select.
+- **history-intents-only**: The history list MUST NOT run git. Every action chosen from a row's context menu, except Copy SHA, is one call of the delegate's `history(_:didRequest:for:)` with a `GitCommitIntent` (`checkout`, `createBranch`, `createTag`, `cherryPick`, `revert`, `reset(GitResetMode)`) and the commit; confirming a hard reset is the owner's.
+- **history-menu**: A row's context menu MUST hold, in order, `Checkout`, `New Branch…`, `New Tag…`, a separator, `Cherry-pick`, `Revert`, a separator, a `Reset Current Branch to Here` submenu of `Soft`, `Mixed` and `Hard…` (`.reset(.soft)`, `.reset(.mixed)`, `.reset(.hard)`), a separator and `Copy SHA`. It acts on the right-clicked row (`clickedRow`), not the selection, and leaves the selection alone; a click outside the rows shows no menu. `Copy SHA` MUST put the commit's full sha on the list's `pasteboard` and send no intent.
 - **history-ui-thread**: The history list MUST be used on the UI thread; every data-source call that waits is awaited, never blocked on.
 
 ### Changed-files list
@@ -228,11 +233,11 @@ A vertical-divider `ThemedSplitView`: the commit list (a headerless single-colum
 
 ### Refs sidebar
 
-The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic list's, so each row's label carries `topic-list.item.<slug of title>` and answers an accessibility press by selecting the row; a badge carries `topic-list.item.<slug>.badge`. Because the identifier comes from the title, a branch name shared by `Branches` and a `Remotes · <remote>` section (`main`) yields the same identifier in each; address one with `dev.py ax --nth`.
+The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic list's, so each row's label carries `topic-list.item.<slug of title>` and answers an accessibility press by selecting the row; a badge carries `topic-list.item.<slug>.badge`. Because the identifier comes from the title, a branch name shared by `Branches` and a `Remotes · <remote>` section (`main`) yields the same identifier in each; address one with `dev.py ax --nth`. Context menu items carry `git.sidebar.menu.<name>`: `checkout`, `newBranch`, `rename`, `delete`, `push`, `pull`, `fetch`, `apply`, `pop` and `drop` (a tag's `Push` and `Delete…` share `push` and `delete`).
 
 ### History list
 
-The root view carries `git.history`, its scroll view `git.history.scroll`, the table `git.history.table`, each row view `git.history.row`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`. Rows are table rows, so `dev.py ax --nth` picks one.
+The root view carries `git.history`, its scroll view `git.history.scroll`, the table `git.history.table`, each row view `git.history.row`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`. Rows are table rows, so `dev.py ax --nth` picks one. Context menu items carry `git.history.menu.<name>`: `checkout`, `newBranch`, `newTag`, `cherryPick`, `revert`, `reset` (the submenu's item), `resetSoft`, `resetMixed`, `resetHard` and `copySha`.
 
 ### Changed-files list
 
@@ -323,6 +328,13 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-059 | wc-stage-all | Press `Stage All`, then `Unstage All` | `.stageAll`, then `.unstageAll`. |
 | git-views-060 | wc-commit-box | Nothing staged, message `Fix\n\nBody`; then Amend ticked; press Commit | Commit disabled for an empty or blank message and with a message but nothing staged; enabled with Amend; `.commit(message: "Fix\n\nBody", amend: true)`. |
 | git-views-061 | wc-amend | `canAmend` true, tick Amend; set `canAmend` false; then `commitDidSucceed()` | `.amendChanged(true)` once; the checkbox disabled and unticked; the message empty. |
+| git-views-062 | history-menu, history-intents-only | Three commits, the first selected; open row 2's menu, choose each item and each reset mode | Titles `Checkout`, `New Branch…`, `New Tag…`, separator, `Cherry-pick`, `Revert`, separator, `Reset Current Branch to Here` (submenu `Soft`, `Mixed`, `Hard…`), separator, `Copy SHA`; `.checkout`, `.createBranch`, `.createTag`, `.cherryPick`, `.revert`, `.reset(.soft)`, `.reset(.mixed)`, `.reset(.hard)`, each for the third commit; the first stays selected. |
+| git-views-063 | history-menu | Choose `Copy SHA` on row 1 | The pasteboard holds the second commit's full sha; no intent. A row outside the list has no menu. |
+| git-views-064 | sidebar-menus, sidebar-intents-only | The git-views-001 source; `dev`'s menu, each item | `Checkout`, `New Branch…`, `Rename…`, `Delete…`, separator, `Push`; `.checkout(dev)`, `.createBranch(from: dev)`, `.rename(dev)`, `.delete(dev)`, `.push(dev)`; no selection call. |
+| git-views-065 | sidebar-menus | `main` (head)'s menu, each item | `New Branch…`, `Rename…`, separator, `Push`, `Pull`; `.createBranch(from: main)`, `.rename(main)`, `.push(main)`, `.pull`. |
+| git-views-066 | sidebar-menus | `origin/dev`'s menu; the `Remotes · upstream` header's; every other header's | `Checkout`, `New Branch…`, `Delete…`, separator, `Fetch origin` → `.checkout`, `.createBranch(from:)`, `.delete`, `.fetch(remote: "origin")`; `Fetch` → `.fetch(remote: "upstream")`; none. |
+| git-views-067 | sidebar-menus | `v1`'s menu; `stash@{1}`'s; the working copy's, a submodule's and each worktree's | `Push`, `Delete…` → `.pushTag`, `.deleteTag`; `Apply`, `Pop`, `Drop…` → `.applyStash`, `.popStash`, `.dropStash` of stash 1; no menu. |
+| git-views-068 | sidebar-double-click | Double-click `dev`, `origin/main`, then the working copy, `main` (head), `v1`, a stash, a submodule and a worktree | `.checkout(dev)`, `.checkout(origin/main)`, nothing else. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -370,9 +382,10 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `source` | `GitRefsDataSource` | none | Where the sidebar reads refs, stashes, submodules, worktrees and the repository root. |
-| `delegate` | `GitRefsSidebarDelegate?` | nil | Told what the user selected. |
+| `delegate` | `GitRefsSidebarDelegate?` | nil | Told what the user selected, and every `GitRefIntent`. |
 | `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query and the refs at a commit, and asks for pages and queries. |
-| `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil. |
+| `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil, and every `GitCommitIntent` with its commit. |
+| `pasteboard` (history) | `NSPasteboard` | `.general` | Where Copy SHA puts the sha. |
 | `identifier` (file list) | `String` | none | The list's context (`commit`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
 | `files` (file list) | `[GitFileListItem]` | `[]` | The rows. |
 | `delegate` (file list) | `GitFileListDelegate?` | nil | Told which item is selected, or nil. |
@@ -433,16 +446,16 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.5.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.5.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.5.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.5.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.5.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.5.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.5.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.5.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.5.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.5.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.6.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.6.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.6.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.6.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.6.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.6.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.6.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.6.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.6.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.6.0) |
 
 ## Design Decisions
 
@@ -525,7 +538,7 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source; `GitHistoryViewControllerTests` covers the columns, ref badges per row, the graph width, paging, selection and reload, and `setQuery`, and `GitHistorySearchTests` each search form; `GitFileListItemTests` covers the item mapping, `GitFileListViewControllerTests` the rows, selection and `files` changes, `GitCommitDetailViewControllerTests` the header, copy, parent links, files, file selection, clearing and latest-call-wins in both finishing orders, `GitWorkingCopyViewControllerTests` the lists, targets, reload, header buttons, menus and double-clicks, and `GitCommitBoxViewControllerTests` the Commit button's enabling, the commit and amend intents, `canAmend` and `commitDidSucceed()`, all against fakes that behave like the model.
+`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, directory rows restoring the selection, every row's and remote header's context menu with its intents, the rows with none, and double-click, against a fake data source; `GitHistoryViewControllerTests` covers the columns, ref badges per row, the graph width, paging, selection and reload, `setQuery`, and the row menu's items, intents for the clicked commit and Copy SHA, and `GitHistorySearchTests` each search form; `GitFileListItemTests` covers the item mapping, `GitFileListViewControllerTests` the rows, selection and `files` changes, `GitCommitDetailViewControllerTests` the header, copy, parent links, files, file selection, clearing and latest-call-wins in both finishing orders, `GitWorkingCopyViewControllerTests` the lists, targets, reload, header buttons, menus and double-clicks, and `GitCommitBoxViewControllerTests` the Commit button's enabling, the commit and amend intents, `canAmend` and `commitDidSucceed()`, all against fakes that behave like the model.
 
 ## Change History
 
@@ -541,3 +554,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.4.1 | 2026-11-14 | Mike Fullerton | File history diffs each commit under the file's path at that commit; Blame and History act on the latest show; a file missing from the diff shows no rows; blame's uncommitted id at either hash length; colouring decodes each line as the diff text does |
 | 1.5.0 | 2026-11-14 | Mike Fullerton | Final review: debounced cancellable search; commit detail lists changed files without the patch; colouring resolves the language before a capped read; file-history reload keeps the current selection; one error-label helper; key style; readable status label |
 | 1.6.0 | 2026-11-14 | Mike Fullerton | Working copy actions: stage, unstage and discard by menu, double-click and header buttons, and a commit box with Amend; every action a GitWorkingCopyIntent sent to the delegate; vectors 058-061 |
+| 1.7.0 | 2026-11-14 | Mike Fullerton | Commit and ref menus: history row menu with a reset submenu and Copy SHA; branch, remote, remote header, tag and stash menus and double-click to check out in the sidebar; every action a GitCommitIntent or GitRefIntent sent to the delegate; vectors 062-068 |

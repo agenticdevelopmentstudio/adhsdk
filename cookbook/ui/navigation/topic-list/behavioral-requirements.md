@@ -120,5 +120,15 @@
   emphasized item's title in the bold font and MUST add, for an item with
   a badge, the badge gap and the badge's rendered width in the badge font
   to that item's candidate width.
+- **row-context-menu**: Component MUST show, for a secondary click on an
+  item row, the menu the item-menu provider returns for that row's item,
+  and for a secondary click on a section header row the menu the
+  header-menu provider returns for that header's title. A provider that is
+  unset or returns none, and a click outside the rows, MUST show no menu.
+  The menu is built for the clicked row, not the selected one, and opening
+  it MUST NOT change the selection.
+- **item-double-click**: Component MUST call the double-click callback
+  with an item row's item when that row is double-clicked, and MUST NOT
+  call it for a section header row or outside the rows.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

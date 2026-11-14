@@ -2,9 +2,10 @@
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `source` | `GitRefsDataSource` | none | Where the sidebar reads refs, stashes, submodules, worktrees and the repository root. |
-| `delegate` | `GitRefsSidebarDelegate?` | nil | Told what the user selected. |
+| `delegate` | `GitRefsSidebarDelegate?` | nil | Told what the user selected, and every `GitRefIntent`. |
 | `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query and the refs at a commit, and asks for pages and queries. |
-| `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil. |
+| `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil, and every `GitCommitIntent` with its commit. |
+| `pasteboard` (history) | `NSPasteboard` | `.general` | Where Copy SHA puts the sha. |
 | `identifier` (file list) | `String` | none | The list's context (`commit`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
 | `files` (file list) | `[GitFileListItem]` | `[]` | The rows. |
 | `delegate` (file list) | `GitFileListDelegate?` | nil | Told which item is selected, or nil. |
