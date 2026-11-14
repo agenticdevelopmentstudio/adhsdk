@@ -2,7 +2,7 @@
 id: 6708bfd4-5b29-4bf9-b180-05904873906e
 title: "Syntax Highlighter"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-13
@@ -41,7 +41,7 @@ Colours source text with TextMate grammars. A `GrammarRegistry` answers grammar 
 - **resources-validated**: `TextMateResources(directory:)` MUST throw when `highlighter.js`, `onig.wasm`, `languages.json` or `manifest.json` is missing from the directory; code receives the directory by injection, never from a bundle lookup.
 - **bundled-source**: `BundledGrammarSource` MUST read its languages from `languages.json` and map every scope name in `manifest.json`'s `grammars` (embed-only grammars included) to `grammars/<name>.json`, reading a grammar's text only when asked for it.
 - **directory-source**: `DirectoryGrammarSource` MUST offer every `*.tmLanguage.json` in its directory whose JSON has a string `scopeName`, as a language whose id is the file name without `.tmLanguage.json` and whose `fileTypes` are matched as TextMate matches them: each is an extension, lowercased with a leading dot, and each that does not start with a dot is also an exact file name as written (`Makefile`). A file that is not such JSON, and a second file for a scope already taken, MUST be skipped with a log line, and a missing directory MUST give no languages.
-- **extension-source**: `ExtensionGrammarSource`, built by `GrammarContributionPoint` from the extensions it has applied (the registry applies only enabled ones, and withdraws an extension when it is disabled), MUST offer every `contributes.grammars` entry whose `path` resolves inside its extension and ends in `.json` (`.tmLanguage.json` included); a plist `.tmLanguage`, a path that escapes the extension, a missing file, and a second claim on a scope (extensions taken in identifier order, then manifest order) MUST be skipped with a log line. An entry with a `language` MUST give a language with that id, the grammar's scope, and the aliases, extensions (lowercased with a leading dot, glob and empty values dropped) and file names of every applied extension's `contributes.languages` entry with that id; one without (an injection grammar) MUST give its text by scope name and no language. The source is a snapshot: it does not change when extensions do, and `hasGrammar` is a lookup.
+- **extension-source**: `ExtensionGrammarSource`, built by `GrammarContributionPoint` from the extensions it has applied (the registry applies only enabled ones, and withdraws an extension when it is disabled), MUST offer every `contributes.grammars` entry whose `path` resolves inside its extension and ends in `.json` (`.tmLanguage.json` included); a plist `.tmLanguage`, a path that escapes the extension, a missing file, and a second claim on a scope (extensions taken in identifier order, then manifest order) MUST be skipped with a log line, a contested scope logged once while the conflict stands rather than on every rebuild. Every offered grammar MUST give its text by scope name. An entry with a `language` MUST also give a language with that id, the grammar's scope, and the aliases, extensions (lowercased with a leading dot, multi-dot values kept, glob and empty values dropped) and file names of every applied extension's `contributes.languages` entry with that id, whichever extension declares it, but only when that yields at least one extension or file name: an entry with neither would resolve no file and would hide a later source's language of the same id. One without a `language` (an injection grammar) MUST give no language. The source is a snapshot: it does not change when extensions do, and `hasGrammar` is a lookup.
 - **first-source-wins**: `GrammarRegistry` MUST answer a scope's grammar text from the first source that has it, list each language id once (the first source's entry), and answer `scopeName(languageID:)` from that entry.
 - **resolution-order**: `LanguageResolver.languageID(for:)` MUST try, in order, the override closure, an exact file name match, an extension match ignoring case (longest multi-dot extension first, so `x.h.in` tries `.h.in` before `.in`), and otherwise answer nil. Among languages claiming the same file name or extension, the earlier language in the registry wins.
 - **limits**: `highlight` MUST answer nil, without running the engine, when the text is over `maximumBytes` (1 000 000 UTF-8 bytes) or any line is over `maximumLineLength` (10 000 UTF-16 units).
@@ -87,6 +87,11 @@ Not applicable: The highlighter presents no UI.
 | syntax-highlighter-014 | extension-source | an extension contributing grammar `source.widget` (`language` `widget`, `./syntaxes/widget.tmLanguage.json`), an injection grammar `text.widget.injection` (`./syntaxes/injection.json`), and language `widget` with aliases `["Widget"]`, extensions `[".Widget", "wdg"]`, filenames `["Widgetfile"]` | grammar text for both scopes is the files' text; one language: id `widget`, scope `source.widget`, aliases `["Widget"]`, extensions `.widget`, `.wdg`, file names `Widgetfile`; `x.wdg` resolves to `widget` through a registry over the source. |
 | syntax-highlighter-015 | extension-source | the same extension, disabled | no languages; neither scope has a grammar. |
 | syntax-highlighter-016 | extension-source | a grammar at `./syntaxes/old.tmLanguage` and one at `../outside.json` | neither scope has a grammar. |
+| syntax-highlighter-017 | extension-source, first-source-wins | an extension contributing only grammar `source.cpp` (`language` `cpp`) and no `contributes.languages`, in a registry before a source declaring language `cpp` with extension `.cpp` | the extension source has no languages; `x.cpp` resolves to `cpp`; the grammar text for `source.cpp` is the extension's. |
+| syntax-highlighter-018 | extension-source | grammar `source.gadget` (`language` `gadget`) from one extension, language `gadget` with extension `.gdg` and file name `Gadgetfile` from another | one language: id `gadget`, scope `source.gadget`, extensions `.gdg`, file names `Gadgetfile`. |
+| syntax-highlighter-019 | extension-source | language `hin` declaring extension `.H.in`; a grammar at `./pl.plist` | extension `.h.in`, and `config.h.in` resolves to `hin`; `./pl.plist` gives no grammar. |
+| syntax-highlighter-020 | extension-source | `alpha` and `beta` both claiming `source.shared`, then an unrelated extension applied and withdrawn, then `beta` withdrawn and re-applied | one conflict logged, none for the unrelated rebuilds, one more when the conflict returns. |
+
 ## Edge Cases
 
 - **Null / empty input**: An empty text is one line with no runs.
@@ -140,13 +145,13 @@ The bundle's `console` output and skipped user and extension grammar files go to
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift` | confirmed (1.1.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift` | confirmed (1.1.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -174,6 +179,7 @@ The bundle's `console` output and skipped user and extension grammar files go to
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-13 | Mike Fullerton | A grammar adds a language only when its join yields an extension or file name; a contested scope is logged once while it stands |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | Extension grammars: `ExtensionGrammarSource` from `contributes.grammars` joined with `contributes.languages` |
 | 1.0.1 | 2026-11-13 | Mike Fullerton | Synchronous promise settling with no suspension on the engine path, hasGrammar, fileTypes as file names, both instantiate forms |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |
