@@ -89,6 +89,8 @@ public final class GitBlameViewController: NSViewController {
     private let coloring: GitSyntaxColoring?
     /// The viewer holds its data source weakly; this keeps it alive.
     private var model: GitBlameLineModel?
+    /// The path and revision last asked for, or nil after `clear()`.
+    private var shown: (path: String, revision: String?)?
 
     /// git's id for lines not yet committed.
     /// Git's id for lines not yet committed: all zeros, at whichever hash length.
@@ -134,6 +136,7 @@ public final class GitBlameViewController: NSViewController {
     /// the blame arrives; it shows uncoloured, then coloured from its own text, each only
     /// if no later `show` or `clear` has been made.
     public func show(path: String, at revision: String?) {
+        shown = (path, revision)
         generation += 1
         let generation = self.generation
         loadTask?.cancel()
@@ -163,8 +166,19 @@ public final class GitBlameViewController: NSViewController {
         }
     }
 
+    /// Blames the shown path at the shown revision again (the working file changed, or
+    /// a Refresh); the latest `show`, `reload` or `clear` wins. Nothing shown, nothing read.
+    public func reload() {
+        guard let shown else { return }
+        show(path: shown.path, at: shown.revision)
+    }
+
+    /// Whether the shown blame is of the working file, which changes as it is edited.
+    public var isShowingWorkingFile: Bool { shown != nil && shown?.revision == nil }
+
     /// Shows nothing and drops any blame in flight.
     public func clear() {
+        shown = nil
         generation += 1
         loadTask?.cancel()
         loadTask = nil

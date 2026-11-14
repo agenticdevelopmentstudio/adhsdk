@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -53,13 +53,13 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **restore-quietly**: `restoreOpenWindows()` MUST reopen every remembered key without activating the app, and MUST forget a key whose directory no longer exists.
 - **shared-highlighter**: Every window MUST share one `GitSyntaxColoring`, built on the first window over a grammar registry whose sources are, in order, the user grammars directory, the extensions' grammars (a snapshot taken then), and the bundled grammars.
 - **missing-resources-uncoloured**: When the TextMate resources are missing (nil) or the highlighter cannot be built, the feature MUST log it once and every window MUST show code uncoloured.
-- **file-type-override-validated**: The injected file-type override MUST be consulted for a file's language, but only a value the grammar registry knows as a language id is used; anything else falls through to the name and extension rules.
+- **file-type-override-validated**: The injected file-type override MUST be consulted for a file's language, and the name it returns (the File Types mapping stores display names such as `C++` or `Shell Script`) MUST be mapped to a language id through the grammar registry's ids and aliases, exactly or with spaces and punctuation other than `+` and `#` dropped; a name the registry cannot map falls through to the name and extension rules.
 - **commands**: The feature MUST register `git.action.openWindow` (asks for a folder, then opens it) and `git.action.openWindowForPath` (opens its first argument, a path string; no argument or a non-string does nothing), and contribute File > New > `New Git Window…` at order 45 bound to `git.action.openWindow`.
 
 ### Window
 
 - **window-identity**: The window id MUST be `git:<key>`, the title the top level's folder name, and the subtitle the current branch (`detached HEAD` when there is none), refreshed after every refs change; a failed branch read is logged and keeps the last subtitle.
-- **layout**: The content MUST be a three-column split, autosaved: the sidebar, the centre, and a right column that is itself a horizontal-divider split of the commit detail over the bottom pane (diff, blame or file history).
+- **layout**: The content MUST be a three-column split, autosaved once per repository (the autosave names carry the top level's path): the sidebar, the centre, and a right column that is itself a horizontal-divider split of the commit detail over the bottom pane (diff, blame or file history).
 - **centre-follows-sidebar**: The centre MUST show the working copy while the sidebar's Working Copy row is selected (including when the sidebar falls back to it after its selection vanished), and the history otherwise.
 - **ref-scrolls-history**: Selecting a branch or tag MUST show the history and select the ref's target commit there; when the commit is not loaded, nothing is selected and the selection is applied after a later history change loads it.
 - **stash-shows-commit**: Selecting a stash MUST show the history and load the stash's commit (`git log` of the stash id, one commit) into the commit detail; a failed load is logged and shown as a plain error label.
@@ -68,9 +68,9 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **file-shows-diff**: A file chosen in the commit detail MUST show the diff `.commit(<id>, paths:)` for that file (its old path too, for a rename); a file cleared MUST clear the diff.
 - **working-copy-target**: While the working copy is the centre, a working-copy selection MUST show its target's diff and nil MUST clear it.
 - **blame-and-history**: Blame or History requested from the diff (or from the file history's own diff) MUST swap the bottom pane to the blame of that path at that revision, or the file history of that path; choosing a commit in the blame, or a parent link in the commit detail, MUST select that commit in the history.
-- **refresh-reapplies-selection**: After each model change the window MUST reload the views the change concerns (refs: sidebar; history: history; working copy or operation: working copy) and then re-check its own selection: a ref whose target moved re-selects the new target, a stash whose id changed reloads it, and one that vanished leaves the sidebar's fallback in charge.
+- **refresh-reapplies-selection**: After each model change the window MUST reload the views the change concerns (refs: sidebar; history: history; working copy or operation: working copy) and only then re-check its own selection, once per change: a ref whose target moved re-selects the new target, counted as applied only once the history holds and selects that commit (so a commit picked by hand survives a Refresh that moved nothing), a stash whose id changed reloads it, and one that vanished leaves the sidebar's fallback in charge. The bottom pane MUST follow too: a working-copy diff or a blame of the working file reloads on a working-copy or operation change, and a file history reloads on a history change.
 - **search-drives-history**: Text in the toolbar search field MUST be handed to the history's `setQuery(_:)` as typed.
-- **refresh-button**: Refresh MUST ask the model to reload every part, then reload the visible views.
+- **refresh-button**: Refresh MUST ask the model to reload every part, then reload the visible views, the bottom pane included, and re-check the selection without forgetting what was applied.
 - **latest-call-wins**: Each asynchronous load the window starts (the subtitle, a stash's commit) MUST carry a generation the window owns, and a result for an older generation MUST be dropped.
 - **close-stops-model**: Closing the window MUST stop the model's watcher and tell the feature, unless the app is terminating.
 - **confines-to-ui-thread**: The feature and the window MUST be usable only on the UI thread.
@@ -95,6 +95,17 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | git-window-002 | non-repository-refused | A temporary directory that is not a repository; open it | nil; the remembered list is unchanged. |
 | git-window-003 | commands | Branch management for a checkout, with a registry that holds `git.action.openWindowForPath` | Its commands include `branch.action.openGitWindow.<checkout id>` titled `Open in Git Window`; running it executes the open-for-path command with the checkout's directory path. |
 | git-window-004 | commands | The same, with a registry that does not hold it | No such command. |
+| git-window-005 | refresh-reapplies-selection, ref-scrolls-history | `main` selected; a new commit on it, reported as refs and history at once | The history and the commit detail both show the new tip. |
+| git-window-006 | refresh-reapplies-selection, refresh-button | `main` selected and an older commit picked in the history; Refresh | The older commit stays selected and shown. |
+| git-window-007 | centre-follows-sidebar | A branch selected, then deleted; a refs change | Selection Working Copy, the centre the working copy, the detail empty. |
+| git-window-008 | stash-shows-commit | A stash whose id git cannot read is selected | The detail is hidden and the error label `git.window.error` shows git's message. |
+| git-window-009 | refresh-reapplies-selection, refresh-button | A working-copy diff of a modified file; the file edited again, then a working-copy change; edited again, then Refresh | The diff shows the new text both times. |
+| git-window-010 | refresh-reapplies-selection | A blame of the working file; the file edited, then a working-copy change | The blame shows the new text. |
+| git-window-011 | refresh-reapplies-selection | A file history of `a.txt`; a new commit to it, then a history change | One more entry. |
+| git-window-012 | search-drives-history | Two commits; a `sha:` search for the older one's prefix, then a message search | The older commit is selected; then the model's query is the parsed message search and only the matching commit is listed. |
+| git-window-013 | window-identity | Subtitle `main`; the repository's `.git` moved away; the subtitle read again | The subtitle is still `main`. |
+| git-window-014 | file-type-override-validated | Names `C++`, `C#`, `Shell Script`, `bash`, an unknown name, a blank name | `cpp`, `csharp`, `shellscript`, `shellscript` (an alias), nil, nil. |
+| git-window-015 | commands | Open Git Window for Path run with no argument, then with a number | No window opens and nothing is remembered. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -103,6 +114,9 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 - **Remembered root gone**: dropped at restore.
 - **Remembered root no longer a repository**: dropped at restore, since it no longer resolves.
 - **Detached HEAD**: subtitle `detached HEAD`.
+- **Two repositories open side by side**: each keeps its own divider positions.
+- **A repository path containing a newline**: the watcher reads each directory with its own `rev-parse`, so the path is not split.
+- **Refresh with nothing changed**: a commit picked by hand in the history stays selected.
 - **Fast typing in search**: the history view serialises queries; the window only forwards text.
 - **Quick selection changes**: generations drop stale stash and subtitle loads; the views drop their own.
 - **Offline / disconnected state**: Not applicable: no network.
@@ -114,7 +128,7 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | `resources` | `TextMateResources?` | none | The bundled TextMate directory (`Contents/Resources/TextMate`); nil shows code uncoloured. |
 | `userGrammarsDirectory` | `URL` | none | User grammars, ahead of every other source (`~/.agenticdeveloperkitchen/Grammars` in the Kitchen). |
 | `extensionGrammars` | `() -> GrammarSource?` | none | The extensions' grammars, read when the highlighter is built. |
-| `fileTypeOverride` | `@Sendable (URL) -> String?` | none | The app's File Types mapping, as a candidate language id. |
+| `fileTypeOverride` | `@Sendable (URL) -> String?` | none | The app's File Types mapping: the language name the user chose for the file's extension, mapped to a language id through the grammar registry. |
 | `client` | `GitClient` | `.shared` | Every git call. |
 | `openRoots` | `UserSetting<[String]>` | `UserSettings.openGitWindowRoots` (`open_git_window_roots`) | Where the open windows are remembered. |
 ## Deep Linking
@@ -122,7 +136,7 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 Not applicable: the window defines no URL scheme or route; scripts reach it through `perform command "git.action.openWindowForPath" with arguments {"<path>"}`.
 ## Localization
 
-The menu item (`New Git Window…`), command titles, toolbar labels (`Search history`, `Refresh`), `detached HEAD` and the chooser's prompt are English literals today; ref names and paths are shown verbatim.
+The menu item (`New Git Window…`), command titles, toolbar labels (`Search history`, `Refresh`), `detached HEAD` and the folder chooser's `Open` button are English literals today; ref names and paths are shown verbatim.
 ## Accessibility Options
 
 The panes follow the theme's fonts; the window adds no text of its own beyond the title and subtitle.
@@ -137,7 +151,7 @@ Not applicable: the window contains no analytics call.
 The window shows local repository data only and sends nothing anywhere; the remembered list holds local paths.
 ## Logging
 
-Under `GitWindowFeature`'s and `GitWindowController`'s `Loggable` categories: a path refused as not a repository, missing TextMate resources or a highlighter that cannot be built (once), a failed branch read, a failed stash load and a watcher that could not resolve its directories, each at error level and by `GitClientError.logDescription` where the error is git's.
+Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and `GitDeferredRepositoryWatcher` (the last for its directories): a path refused as not a repository, missing TextMate resources or a highlighter that cannot be built (once), a failed branch read, a failed stash load and a watcher that could not resolve its directories, each at error level and by `GitClientError.logDescription` where the error is git's.
 ## Platform Notes
 
 - **SwiftUI**: a `WindowGroup(for: URL.self)` with a `NavigationSplitView`; this toolkit's windows are AppKit.
@@ -145,6 +159,12 @@ Under `GitWindowFeature`'s and `GitWindowController`'s `Loggable` categories: a 
 - **React/Web**: not applicable.
 - **AppKit / UIKit**: AppKit: `@MainActor public final class GitWindowFeature: AppFeature`, `public final class GitWindowController: SingleWindowController`, `GitWindowSplitViewController: ThemedSplitViewController`, the toolbar from `WindowToolbarBuilder`, all in `AgenticDeveloperHubSDKMacOS` (`macOS/Features/Git/Window/`). The window spec persists the frame only: the keyed window set, not the window manager, decides what reopens. UIKit: not applicable.
 - **WinUI 3**: a window with a `SplitView`.
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.0.1) |
+
 ## Design Decisions
 
 **Decision**: The window set is keyed by the canonical top level, resolved through git before the set is asked.
@@ -159,8 +179,16 @@ Under `GitWindowFeature`'s and `GitWindowController`'s `Loggable` categories: a 
 **Rationale**: The sidebar only reports a selection that vanished; a branch whose tip moved, or a stash whose index shifted, is the same row to it but a different commit to the window.
 **Approved**: pending
 
-**Decision**: The file-type override is validated against the grammar registry inside the feature.
-**Rationale**: The File Types mapping stores names typed by the user; only a value that is a language id the registry knows can colour anything, and an unknown override would otherwise stop the extension rules from applying.
+**Decision**: The app passes the File Types mapping's raw language name, and the feature maps it to a language id through the grammar registry.
+**Rationale**: The mapping stores display names (`C++`, `Shell Script`), not ids; only the registry knows its ids and aliases, so the mapping belongs beside it, and a name it cannot map falls through so the extension rules still apply.
+**Approved**: pending
+
+**Decision**: The divider layout is autosaved per repository.
+**Rationale**: Two repositories open side by side would otherwise move each other's dividers, and the last one closed would win for every window.
+**Approved**: pending
+
+**Decision**: The watcher reads the git directory and the common directory with two separate `rev-parse` calls.
+**Rationale**: One call prints both on separate lines, which a path containing a newline would split wrongly; each answer is read whole, trimming only git's final newline.
 **Approved**: pending
 
 **Decision**: An existing window opened with `activates` false is returned untouched.
@@ -178,4 +206,5 @@ Under `GitWindowFeature`'s and `GitWindowController`'s `Loggable` categories: a 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Selection and the bottom pane follow model changes; per-repository autosave; override names mapped through the registry |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

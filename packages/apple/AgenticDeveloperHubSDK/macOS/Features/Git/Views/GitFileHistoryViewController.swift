@@ -33,6 +33,8 @@ public final class GitFileHistoryViewController: NSViewController {
     private let source: GitContentSource
     /// True while `setCommits` moves the selection itself.
     private var isApplyingSelection = false
+    /// The path last asked for, or nil before the first `show`.
+    private var shownPath: String?
 
     private static let column = NSUserInterfaceItemIdentifier("git.fileHistory.column")
 
@@ -102,6 +104,20 @@ public final class GitFileHistoryViewController: NSViewController {
     /// Lists `path`'s commits. The previous list stays until the history arrives; it lands
     /// only if no later `show` has been made, and then the newest commit is selected.
     public func show(path: String) {
+        load(path: path, keeping: nil)
+    }
+
+    /// Lists the shown path's commits again (new commits, or a Refresh), keeping the
+    /// selected commit selected when it is still listed, else the newest. The latest
+    /// `show` or `reload` wins. Nothing shown, nothing read.
+    public func reload() {
+        guard let shownPath else { return }
+        let selected = entries.indices.contains(tableView.selectedRow) ? entries[tableView.selectedRow].commit.id : nil
+        load(path: shownPath, keeping: selected)
+    }
+
+    private func load(path: String, keeping selectedID: String?) {
+        shownPath = path
         generation += 1
         let generation = self.generation
         loadTask?.cancel()
@@ -121,21 +137,23 @@ public final class GitFileHistoryViewController: NSViewController {
                 Self.logger.error("Git file history failed: \(description, privacy: .public)")
                 self.showFailure(error)
             case .success(let entries):
-                self.setEntries(entries)
+                self.setEntries(entries, keeping: selectedID)
             }
         }
     }
 
-    /// Lists `entries` with the newest selected (none when empty), and shows that in the
-    /// diff once, however many selection notifications the table sends on the way.
-    private func setEntries(_ entries: [GitFileHistoryEntry]) {
+    /// Lists `entries` with the commit `selectedID` selected when listed, else the newest
+    /// (none when empty), and shows that in the diff once, however many selection
+    /// notifications the table sends on the way.
+    private func setEntries(_ entries: [GitFileHistoryEntry], keeping selectedID: String? = nil) {
         self.entries = entries
         isApplyingSelection = true
         tableView.reloadData()
         if entries.isEmpty {
             tableView.deselectAll(nil)
         } else {
-            tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+            let row = selectedID.flatMap { id in entries.firstIndex { $0.commit.id == id } } ?? 0
+            tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
         }
         isApplyingSelection = false
         selectionChanged()

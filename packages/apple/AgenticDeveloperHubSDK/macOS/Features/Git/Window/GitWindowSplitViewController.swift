@@ -35,7 +35,7 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
 
     let centre = GitWindowContainerViewController(identifier: "git.window.centre")
     let bottom = GitWindowContainerViewController(identifier: "git.window.bottom")
-    private let detailHost: GitWindowDetailHostViewController
+    let detailHost: GitWindowDetailHostViewController
     private let right: GitWindowRightSplitViewController
 
     /// Called when a submodule or worktree row asks for a window of its own.
@@ -47,6 +47,8 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
     private var appliedRefTarget: String?
     /// Bumped by every commit load, so a load a newer one overtook is dropped.
     private var loadGeneration = 0
+    /// The single-commit read in flight or last finished; tests await it.
+    private(set) var commitLoadTask: Task<Void, Never>?
     private let client: GitClient
     private var observation: AnyObject?
 
@@ -61,7 +63,8 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
         blame = GitBlameViewController(source: model, coloring: coloring)
         fileHistory = GitFileHistoryViewController(source: model, coloring: coloring)
         detailHost = GitWindowDetailHostViewController(detail: detail)
-        right = GitWindowRightSplitViewController(top: detailHost, bottom: bottom)
+        right = GitWindowRightSplitViewController(
+            top: detailHost, bottom: bottom, autosaveName: Self.autosaveName("git.window.right", root: model.root))
         super.init(nibName: nil, bundle: nil)
         sidebar.delegate = self
         history.delegate = self
@@ -103,33 +106,54 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
 
         splitView.dividerStyle = .thin
         splitView.accessibilityID("git.window.split")
-        splitView.autosaveName = NSSplitView.AutosaveName("git.window.split")
+        splitView.autosaveName = Self.autosaveName("git.window.split", root: model.root)
+    }
+
+    /// One divider layout per repository, so two Git windows never share theirs.
+    static func autosaveName(_ base: String, root: URL) -> NSSplitView.AutosaveName {
+        NSSplitView.AutosaveName(base + ":" + root.path)
     }
 
     // MARK: - Model changes
 
-    private func modelDidChange(_ changes: Set<GitRepositoryChange>) {
-        if changes.contains(.refs) {
-            sidebar.reload()
-            reapplyRefSelection()
-        }
-        if changes.contains(.history) {
-            history.reload()
-            reapplyRefSelection()
-        }
-        if !changes.isDisjoint(with: [.workingCopy, .operation]) {
-            workingCopy.reload()
+    /// Reloads every view `changes` names first, then shows the selected ref again once,
+    /// so the history already holds a commit the refs moved to. The bottom pane reads
+    /// again when what it shows can have changed: a working-copy diff or a blame of the
+    /// working file on a working-copy change, a file's history on a history change.
+    func modelDidChange(_ changes: Set<GitRepositoryChange>) {
+        let workingCopyChanged = !changes.isDisjoint(with: [.workingCopy, .operation])
+        if changes.contains(.refs) { sidebar.reload() }
+        if changes.contains(.history) { history.reload() }
+        if workingCopyChanged { workingCopy.reload() }
+        if !changes.isDisjoint(with: [.refs, .history]) { reapplyRefSelection() }
+
+        switch bottom.content {
+        case let shown as GitDiffViewController where workingCopyChanged && shown.isShowingWorkingCopy:
+            shown.reload()
+        case let shown as GitBlameViewController where workingCopyChanged && shown.isShowingWorkingFile:
+            shown.reload()
+        case let shown as GitFileHistoryViewController where changes.contains(.history):
+            shown.reload()
+        default:
+            break
         }
     }
 
-    /// After a Refresh: every view reads the model again and the selection is shown
-    /// again, whether or not the refresh reported a change.
+    /// After a Refresh: every view reads the model again, the selected ref is shown
+    /// again if it moved, and the bottom pane reads its diff, blame or file history
+    /// again, whether or not the refresh reported a change. A commit picked in the
+    /// history after the ref stays picked while the ref has not moved.
     func reloadAll() {
         sidebar.reload()
         history.reload()
         workingCopy.reload()
-        appliedRefTarget = nil
         reapplyRefSelection()
+        switch bottom.content {
+        case let shown as GitDiffViewController: shown.reload()
+        case let shown as GitBlameViewController: shown.reload()
+        case let shown as GitFileHistoryViewController: shown.reload()
+        default: break
+        }
     }
 
     /// Shows the selected ref's commit in the history when it has moved or was not
@@ -141,13 +165,15 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
         showInHistory(ref)
     }
 
+    /// Selects the ref's commit in the history and shows it in the detail. It counts as
+    /// applied only once the history holds the commit; until then a later reload tries
+    /// again.
     private func showInHistory(_ ref: GitRef) {
-        guard model.commit(ref.target) != nil else {
+        guard model.commit(ref.target) != nil, history.select(commitID: ref.target) else {
             appliedRefTarget = nil
             return
         }
         appliedRefTarget = ref.target
-        history.select(commitID: ref.target)
         // The history tells its delegate only about a change of row, so a ref on the
         // commit already selected there (after a stash showed in the detail) is
         // shown here.
@@ -180,7 +206,7 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
         query.limit = 1
         let root = model.root
         let client = client
-        Task { [weak self] in
+        commitLoadTask = Task { [weak self] in
             do {
                 let commits = try await client.log(query, in: root)
                 guard let self, generation == self.loadGeneration else { return }
@@ -425,10 +451,12 @@ final class GitWindowDetailHostViewController: NSViewController {
 final class GitWindowRightSplitViewController: ThemedSplitViewController {
     private let top: NSViewController
     private let bottomController: NSViewController
+    private let autosaveName: NSSplitView.AutosaveName
 
-    init(top: NSViewController, bottom: NSViewController) {
+    init(top: NSViewController, bottom: NSViewController, autosaveName: NSSplitView.AutosaveName) {
         self.top = top
         bottomController = bottom
+        self.autosaveName = autosaveName
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -446,6 +474,6 @@ final class GitWindowRightSplitViewController: ThemedSplitViewController {
         addSplitViewItem(topItem)
         addSplitViewItem(bottomItem)
         splitView.accessibilityID("git.window.right")
-        splitView.autosaveName = NSSplitView.AutosaveName("git.window.right")
+        splitView.autosaveName = autosaveName
     }
 }
