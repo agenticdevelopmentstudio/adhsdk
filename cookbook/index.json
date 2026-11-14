@@ -16387,88 +16387,21 @@
       "path": "workspace/extensions/vscode-api/languages/main-thread-languages",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.languages.main-thread-languages"
     },
-    "bdd78ecf-0a90-4a3c-8731-df6999442776": {
+    "bdd3a72d-8810-439b-bad7-ec16233cb2a3": {
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:85c0db4dae8d0542fdfe5db708b003f2db6dc2ac1fd7d96a202db07dbb529e15",
+            "hash": "sha256:6c250489053c4b8188af5930d8dde7c2be456586ad9cb865479ed84cbac8d4c5",
             "state": "confirmed",
             "version": "1.0.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneContentSpacingConsuming.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/",
           "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "windows"
         }
       ],
       "kind": "ingredient",
-      "path": "ui/panes/pane-content-spacing-consuming",
-      "rdid": "adhsdk.ingredient.ui.panes.pane-content-spacing-consuming"
-    },
-    "be4db0fe-628d-41f8-9fdf-25a6d46844cf": {
-      "implementations": [
-        {
-          "conformance": {
-            "hash": "sha256:bc27297a24e139fa233cbba1db979b7f99b579ae6079086e0fea56388aec6ca9",
-            "state": "confirmed",
-            "version": "1.0.1"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift",
-          "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "windows"
-        },
-        {
-          "conformance": {
-            "hash": "sha256:bc27297a24e139fa233cbba1db979b7f99b579ae6079086e0fea56388aec6ca9",
-            "state": "confirmed",
-            "version": "1.0.1"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift",
-          "platform": "macos"
-        }
-      ],
-      "kind": "ingredient",
-      "path": "integrations/cli/mail-command-line",
-      "rdid": "adhsdk.ingredient.integrations.cli.mail-command-line"
+      "path": "workspace/git/git-views",
+      "rdid": "adhsdk.ingredient.workspace.git.git-views"
     },
     "bea6525c-171f-4547-bbb3-7c709543552e": {
       "implementations": [
@@ -17690,9 +17623,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:bfe949b78812e072c077bccb986abde19ae94047514159c7a0ea7f1268c1c945",
+            "hash": "sha256:291f8fee78f4478f7fc24dae79a8a83b99944ef0030e72ea03767c62b175b188",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift",
           "platform": "apple"

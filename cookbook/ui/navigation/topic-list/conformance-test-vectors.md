@@ -31,4 +31,6 @@
 | topic-list-027 | overlay-autohide-scroller | Inspect the scroll view after it loads | The vertical scroller floats over content and auto-hides when not scrolling |
 | topic-list-028 | automatic-outline-style | Inspect the list's rendering style after it loads | The list renders with the theme-following material, not the forced dark material |
 | topic-list-029 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| topic-list-030 | item-badge, item-emphasis | Items `main` (badge `↑2 ↓1`, emphasized) and `dev` (no badge) | `main`'s badge label reads `↑2 ↓1`, is visible and is identified `topic-list.item.main.badge`; `main`'s label is bold; `dev`'s badge label is hidden and its label is not bold |
+| topic-list-031 | preferred-width-badge-emphasis | One item `main`, then the same item with badge `↑12 ↓34` | The second preferred width is larger than the first |
 

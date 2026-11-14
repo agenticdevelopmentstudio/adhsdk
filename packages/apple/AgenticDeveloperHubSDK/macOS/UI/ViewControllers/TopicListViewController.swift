@@ -7,6 +7,15 @@ public protocol TopicListItemProtocol: Sendable {
     var title: String { get }
     var icon: NSImage? { get }
     var isDisabled: Bool { get }
+    /// Short trailing text after the title (a count, an ahead/behind pair); nil shows none.
+    var badge: String? { get }
+    /// Draw the title in the bold variant of the body font (the current branch, the open document).
+    var isEmphasized: Bool { get }
+}
+
+extension TopicListItemProtocol {
+    public var badge: String? { nil }
+    public var isEmphasized: Bool { false }
 }
 
 /// One row in a `TopicListViewController`.
@@ -16,12 +25,19 @@ public struct TopicListItem: TopicListItemProtocol {
     public let icon: NSImage?
     /// Render the row in a muted style (e.g. for "coming soon" placeholders).
     public let isDisabled: Bool
+    public let badge: String?
+    public let isEmphasized: Bool
 
-    public init(id: String, title: String, icon: NSImage? = nil, isDisabled: Bool = false) {
+    public init(
+        id: String, title: String, icon: NSImage? = nil, isDisabled: Bool = false,
+        badge: String? = nil, isEmphasized: Bool = false
+    ) {
         self.id = id
         self.title = title
         self.icon = icon
         self.isDisabled = isDisabled
+        self.badge = badge
+        self.isEmphasized = isEmphasized
     }
 }
 
@@ -366,8 +382,7 @@ open class TopicListViewController: NSViewController {
                     + ceil(title.renderedWidth(usingFont: CellMetrics.headerFont)))
             }
             for item in section.items {
-                widest = max(widest, CellMetrics.itemChromeWidth
-                    + ceil(item.title.renderedWidth(usingFont: CellMetrics.itemFont)))
+                widest = max(widest, Self.itemWidth(item))
             }
         }
         var width = widest + Self.outlineChromePadding
@@ -384,6 +399,17 @@ open class TopicListViewController: NSViewController {
         return width
     }
 
+    /// An item row's content width: chrome, its title in the font it is drawn
+    /// in, and its badge with the gap before it.
+    private static func itemWidth(_ item: any TopicListItemProtocol) -> CGFloat {
+        let font = item.isEmphasized ? CellMetrics.emphasizedItemFont : CellMetrics.itemFont
+        var width = CellMetrics.itemChromeWidth + ceil(item.title.renderedWidth(usingFont: font))
+        if let badge = item.badge, !badge.isEmpty {
+            width += CellMetrics.badgeGap + ceil(badge.renderedWidth(usingFont: CellMetrics.badgeFont))
+        }
+        return width
+    }
+
     /// The one source of truth for the row layout, shared by `preferredWidth`
     /// (which measures it) and `makeItemCell`/`makeHeaderCell` (which build it),
     /// so the two can never drift and silently re-clip labels.
@@ -395,6 +421,9 @@ open class TopicListViewController: NSViewController {
         static var itemFont: NSFont { ThemePaletteObserver.currentPalette.font(.body) }
         static var headerFont: NSFont { ThemePaletteObserver.currentPalette.font(.caption) }
         static var titleFont: NSFont { ThemePaletteObserver.currentPalette.font(.button) }
+        static var emphasizedItemFont: NSFont { NSFontManager.shared.convert(itemFont, toHaveTrait: .boldFontMask) }
+        static var badgeFont: NSFont { ThemePaletteObserver.currentPalette.font(.caption) }
+        static let badgeGap: CGFloat = 6
         static let titleLeadingInset: CGFloat = 14
         static let headerTrailingInset: CGFloat = 14
         static let headerAccessorySpacing: CGFloat = 8
@@ -551,6 +580,11 @@ private final class TopicListItemLabel: NSTextField {
     }
 }
 
+/// An item row's cell: the standard image and label, plus a trailing badge.
+private final class TopicListItemCell: NSTableCellView {
+    let badgeLabel = NSTextField(labelWithString: "")
+}
+
 private final class TopicListNode: NSObject {
     enum Kind {
         case header(String)
@@ -638,11 +672,20 @@ extension TopicListViewController: NSOutlineViewDelegate {
             // Set here and not in `makeItemCell`, alongside the title it is
             // derived from: cells are pooled, so an identifier baked in at
             // creation names whichever row the cell was first used for, forever.
-            cell.textField?.accessibilityID("topic-list.item.\(AccessibilityID.slug(item.title))")
+            let labelID = "topic-list.item.\(AccessibilityID.slug(item.title))"
+            cell.textField?.accessibilityID(labelID)
             cell.textField?.stringValue = item.title
             // Cells are pooled, so the font is reapplied here alongside the color
             // rather than at creation — a font baked in stays stale after a swap.
-            cell.textField?.font = CellMetrics.itemFont
+            cell.textField?.font = item.isEmphasized ? CellMetrics.emphasizedItemFont : CellMetrics.itemFont
+            if let badgeLabel = (cell as? TopicListItemCell)?.badgeLabel {
+                let badge = item.badge ?? ""
+                badgeLabel.stringValue = badge
+                badgeLabel.isHidden = badge.isEmpty
+                badgeLabel.font = CellMetrics.badgeFont
+                badgeLabel.textColor = palette.secondaryTextColor
+                badgeLabel.accessibilityID(labelID + ".badge")
+            }
             cell.textField?.textColor = item.isDisabled ? palette.tertiaryTextColor : palette.primaryTextColor
             cell.textField?.alphaValue = 1.0
             cell.imageView?.image = item.icon
@@ -690,7 +733,7 @@ extension TopicListViewController: NSOutlineViewDelegate {
     }
 
     private static func makeItemCell(identifier: NSUserInterfaceItemIdentifier) -> NSTableCellView {
-        let cell = NSTableCellView()
+        let cell = TopicListItemCell()
         cell.identifier = identifier
 
         let imageView = NSImageView()
@@ -703,8 +746,16 @@ extension TopicListViewController: NSOutlineViewDelegate {
         textField.lineBreakMode = .byTruncatingTail
         textField.translatesAutoresizingMaskIntoConstraints = false
 
+        // The badge keeps its full width and the title truncates first.
+        let badgeLabel = cell.badgeLabel
+        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        badgeLabel.isHidden = true
+        badgeLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        badgeLabel.setContentHuggingPriority(.required, for: .horizontal)
+
         cell.addSubview(imageView)
         cell.addSubview(textField)
+        cell.addSubview(badgeLabel)
         cell.imageView = imageView
         cell.textField = textField
 
@@ -719,7 +770,13 @@ extension TopicListViewController: NSOutlineViewDelegate {
                 equalTo: imageView.trailingAnchor, constant: CellMetrics.iconToTextGap),
             textField.trailingAnchor.constraint(
                 lessThanOrEqualTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
-            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
+            textField.trailingAnchor.constraint(
+                lessThanOrEqualTo: badgeLabel.leadingAnchor, constant: -CellMetrics.badgeGap),
+            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+
+            badgeLabel.trailingAnchor.constraint(
+                equalTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
+            badgeLabel.firstBaselineAnchor.constraint(equalTo: textField.firstBaselineAnchor)
         ])
 
         return cell
