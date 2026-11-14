@@ -257,6 +257,50 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         }
     }
 
+    // MARK: Actions
+
+    /// Whether a `perform` is running its git command. It goes false before the refresh
+    /// that follows, so observers told of that refresh already see it false.
+    public private(set) var isPerforming = false
+    private var performingCount = 0 {
+        didSet { isPerforming = performingCount > 0 }
+    }
+
+    /// The checked-out local branch; nil on a detached HEAD or before the refs load.
+    public var headBranch: GitRef? {
+        refs.first { $0.kind == .localBranch && $0.isHead }
+    }
+
+    /// False on an unborn HEAD: no history loaded and no local branch.
+    public var hasCommits: Bool {
+        !commits.isEmpty || refs.contains { $0.kind == .localBranch }
+    }
+
+    /// Runs `action`, then refreshes every part whether it succeeded or failed (a failed
+    /// merge or pull can still have changed the repository), and rethrows its error.
+    public func perform(_ action: GitAction, caller: GitCaller = GitCaller()) async throws {
+        performingCount += 1
+        var failure: Error?
+        do {
+            try await client.perform(action, in: root, caller: caller)
+        } catch {
+            failure = error
+        }
+        performingCount -= 1
+        await refresh(Set(GitRepositoryChange.allCases))
+        if let failure { throw failure }
+    }
+
+    /// The repository's remote names, sorted.
+    public func remotes(caller: GitCaller = GitCaller()) async throws -> [String] {
+        try await client.remotes(in: root, caller: caller)
+    }
+
+    /// HEAD's full message, or nil on an unborn HEAD.
+    public func lastCommitMessage(caller: GitCaller = GitCaller()) async throws -> String? {
+        try await client.lastCommitMessage(in: root, caller: caller)
+    }
+
     // MARK: Content
 
     public func diff(_ target: GitDiffTarget, options: GitDiffOptions) async throws -> GitDiff {

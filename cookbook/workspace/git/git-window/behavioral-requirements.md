@@ -29,3 +29,12 @@
 - **latest-call-wins**: Each asynchronous load the window starts (the subtitle, a stash's commit) MUST carry a generation the window owns, and a result for an older generation MUST be dropped.
 - **close-stops-model**: Closing the window MUST stop the model's watcher and tell the feature, unless the app is terminating.
 - **confines-to-ui-thread**: The feature and the window MUST be usable only on the UI thread.
+
+### Asking the user
+
+- **presenter-seam**: The window MUST ask the user only through `GitActionPresenting` (`confirm`, `askForText`, `showFailure`), never through `NSAlert` directly, so a test answers with a fake.
+- **sheets-only**: `GitAlertPresenter` MUST show each question as an `NSAlert` sheet on the window its provider returns (`beginSheetModal`, bridged to `async` with a checked continuation); it MUST NOT run a modal loop or activate the app. With no window it MUST log at error level and answer as cancelled: `confirm` false, `askForText` nil, `showFailure` nothing shown.
+- **confirm-buttons**: A confirmation MUST have the action button first and Cancel second, and answer true only for the first; a destructive one MUST set `hasDestructiveAction` on its first button.
+- **text-fields**: A text request MUST stack one `NSTextField` per field in the alert's accessory view, labelled with the field's label and filled with its initial text, the first field focused; it MUST answer one value per field, trimmed of whitespace and newlines, or nil when cancelled.
+- **text-action-enablement**: The action button MUST be enabled exactly while `GitTextRequest.isComplete(_:)` holds for the fields' current text: every non-optional field holds something other than whitespace (and there is one value per field). It MUST be re-checked on every keystroke.
+- **failure-sheet**: `showFailure(title:message:)` MUST show an informational sheet with one OK button and not wait for it. The message for a failed git call MUST be `GitClientError.userMessage(of:)`: git's trimmed standard error, else the error's description.

@@ -55,3 +55,4 @@
 | git-client-052 | file-history-command | A repository where `a b.txt` was renamed to `c d.txt`, then edited; file history of `c d.txt` | Edit at `c d.txt`; rename at `c d.txt` from `a b.txt`; initial at `a b.txt`. |
 | git-client-053 | log-query-name-status | A follow request for `a b.txt` with name-status | Ends `--name-status --follow -- a b.txt`. |
 | git-client-054 | file-contents | A repository with `dir é/naïve file.swift` committed as `let a = 1`, then `let a = 2`, and `let a = 3` staged | Contents at `second^1`, `second` and `:0` are the three versions; `dir é` at `second` and `dir é/missing` at `:0` are nothing. |
+| git-client-055 | user-message | Command-failed with standard error `  fatal: nope` plus a newline; command-failed with only a newline; timed-out | `fatal: nope`; each error's user-facing description. |

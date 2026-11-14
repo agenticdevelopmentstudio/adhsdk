@@ -282,6 +282,11 @@
   launch failure's reason, or the configured executable path in any case,
   returning only the case name plus non-sensitive structured fields (verb,
   exit status).
+- **user-message**: The error outcome MUST offer one user-message mapping
+  for any error a git call ends with: git's standard-error text, trimmed of
+  whitespace and newlines, for a command-failed error that has any; the
+  error's user-facing description otherwise. It is for display only and
+  MUST NOT be logged.
 - **command-log-fields**: The command log MUST record the verb, its
   redacted arguments, the working directory, the calling file and
   function, the duration in milliseconds, and the exit status (or the

@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
@@ -74,6 +74,15 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **latest-call-wins**: Each asynchronous load the window starts (the subtitle, a stash's commit) MUST carry a generation the window owns, and a result for an older generation MUST be dropped.
 - **close-stops-model**: Closing the window MUST stop the model's watcher and tell the feature, unless the app is terminating.
 - **confines-to-ui-thread**: The feature and the window MUST be usable only on the UI thread.
+
+### Asking the user
+
+- **presenter-seam**: The window MUST ask the user only through `GitActionPresenting` (`confirm`, `askForText`, `showFailure`), never through `NSAlert` directly, so a test answers with a fake.
+- **sheets-only**: `GitAlertPresenter` MUST show each question as an `NSAlert` sheet on the window its provider returns (`beginSheetModal`, bridged to `async` with a checked continuation); it MUST NOT run a modal loop or activate the app. With no window it MUST log at error level and answer as cancelled: `confirm` false, `askForText` nil, `showFailure` nothing shown.
+- **confirm-buttons**: A confirmation MUST have the action button first and Cancel second, and answer true only for the first; a destructive one MUST set `hasDestructiveAction` on its first button.
+- **text-fields**: A text request MUST stack one `NSTextField` per field in the alert's accessory view, labelled with the field's label and filled with its initial text, the first field focused; it MUST answer one value per field, trimmed of whitespace and newlines, or nil when cancelled.
+- **text-action-enablement**: The action button MUST be enabled exactly while `GitTextRequest.isComplete(_:)` holds for the fields' current text: every non-optional field holds something other than whitespace (and there is one value per field). It MUST be re-checked on every keystroke.
+- **failure-sheet**: `showFailure(title:message:)` MUST show an informational sheet with one OK button and not wait for it. The message for a failed git call MUST be `GitClientError.userMessage(of:)`: git's trimmed standard error, else the error's description.
 ## Appearance
 
 A titled, closable, miniaturizable, resizable window, 1200 x 760 points by default and at least 720 x 440, with a unified toolbar: a flexible space, the search field (placeholder `Search history`), then Refresh (`arrow.clockwise`). The title bar shows the folder name over the branch as its subtitle. Columns: sidebar about 220 points (160-360), centre at least 360, right column at least 320; in the right column the commit detail takes about 40 % of the height. Every pane is the git views' own, themed by them.
@@ -84,9 +93,10 @@ A titled, closable, miniaturizable, resizable window, 1200 x 760 points by defau
 - **Stash load failed**: the commit detail is cleared and a plain error label shows the failure's description; selecting anything else hides it.
 - **Repository deleted underneath**: the model keeps its last state and logs; the window keeps showing it until closed.
 - **Highlighting unavailable**: diffs and blame show uncoloured text.
+- **Asking**: a confirmation, text or failure sheet is attached to the window; the window's other controls wait behind it.
 ## Accessibility
 
-The window carries `git-window`. Its split carries `git.window.split`, the right column `git.window.right`, the centre container `git.window.centre`, the bottom container `git.window.bottom`, the error label `git.window.error`; the toolbar's search field `git.window.search` and Refresh `git.window.refresh`. The panes keep the git views' own identifiers.
+The window carries `git-window`. Its split carries `git.window.split`, the right column `git.window.right`, the centre container `git.window.centre`, the bottom container `git.window.bottom`, the error label `git.window.error`; the toolbar's search field `git.window.search` and Refresh `git.window.refresh`. The panes keep the git views' own identifiers. Its sheets carry `git.prompt.confirm`, `git.prompt.text` or `git.prompt.failure`; their buttons `git.prompt.action`, `git.prompt.cancel` and `git.prompt.ok`; a text request's fields `git.prompt.field.<index>` (each with its label as accessibility label) inside `git.prompt.fields`.
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
@@ -106,6 +116,7 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | git-window-013 | window-identity | Subtitle `main`; the repository's `.git` moved away; the subtitle read again | The subtitle is still `main`. |
 | git-window-014 | file-type-override-validated | Names `C++`, `C#`, `Shell Script`, `bash`, an unknown name, a blank name | `cpp`, `csharp`, `shellscript`, `shellscript` (an alias), nil, nil. |
 | git-window-015 | commands | Open Git Window for Path run with no argument, then with a number | No window opens and nothing is remembered. |
+| git-window-016 | text-action-enablement | Fields `Name` (required) and `Message` (optional); values `["", "note"]`, `["   ", ""]`, `["v1", ""]`, `["v1"]` | Incomplete, incomplete, complete, incomplete. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -151,7 +162,7 @@ Not applicable: the window contains no analytics call.
 The window shows local repository data only and sends nothing anywhere; the remembered list holds local paths.
 ## Logging
 
-Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and `GitDeferredRepositoryWatcher` (the last for its directories): a path refused as not a repository, missing TextMate resources or a highlighter that cannot be built (once), a failed branch read, a failed stash load and a watcher that could not resolve its directories, each at error level and by `GitClientError.logDescription` where the error is git's.
+Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and `GitDeferredRepositoryWatcher` (the last for its directories): a path refused as not a repository, missing TextMate resources or a highlighter that cannot be built (once), a failed branch read, a failed stash load and a watcher that could not resolve its directories, each at error level and by `GitClientError.logDescription` where the error is git's. `GitAlertPresenter` logs, at error level, a question it could not show because there was no window.
 ## Platform Notes
 
 - **SwiftUI**: a `WindowGroup(for: URL.self)` with a `NavigationSplitView`; this toolkit's windows are AppKit.
@@ -194,6 +205,10 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 **Decision**: An existing window opened with `activates` false is returned untouched.
 **Rationale**: Restore and scripts must never take the foreground; the keyed window set's bring-forward always activates, so the feature answers that case itself.
 **Approved**: pending
+
+**Decision**: Questions go through a `GitActionPresenting` protocol, with `NSAlert` sheets as its one AppKit implementation.
+**Rationale**: The session's rules (what to ask before a hard reset, what to show after a failure) can be tested with a fake that answers instantly; a sheet keeps the question on the repository it concerns and never runs a modal loop that would stall the other windows.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -206,5 +221,6 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-14 | Mike Fullerton | Asking the user: the GitActionPresenting seam and GitAlertPresenter's confirm, text and failure sheets |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Selection and the bottom pane follow model changes; per-repository autosave; override names mapped through the registry |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

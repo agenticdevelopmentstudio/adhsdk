@@ -73,6 +73,17 @@ public enum GitClientError: Error, LocalizedError, Equatable {
         }
     }
 
+    /// What to show a person when `error` ends a git call: git's own standard error,
+    /// trimmed, for a `.commandFailed` that has one; otherwise the error's
+    /// `localizedDescription`. For display only — never log it.
+    public static func userMessage(of error: Error) -> String {
+        if case let .commandFailed(_, _, standardError)? = error as? GitClientError {
+            let detail = standardError.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !detail.isEmpty { return detail }
+        }
+        return error.localizedDescription
+    }
+
     /// `error`'s `logDescription` when it is a `GitClientError`, else only its type name:
     /// any other error's description could carry git's output too.
     public static func logDescription(of error: Error) -> String {

@@ -15,3 +15,11 @@
 **Rationale**: One porcelain parser; the merged map the file browser uses and the per-column maps come from the same pass.
 **Approved**: pending
 
+
+**Decision**: `perform(_:)` refreshes every kind after any action, and after a failure too.
+**Rationale**: Which parts an action touches is git's knowledge, not the caller's (a checkout moves refs, history and the working copy; a failed merge leaves conflicts); one full refresh is cheap and the watcher's later event finds nothing new.
+**Approved**: pending
+
+**Decision**: `isPerforming` goes false before the post-action refresh, not after it.
+**Rationale**: The refresh is what observers react to; if they saw it still true, controls they disable while performing would stay disabled until some unrelated later change.
+**Approved**: pending

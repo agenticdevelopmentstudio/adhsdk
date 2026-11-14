@@ -18,3 +18,12 @@
 - **main-actor**: The model MUST be used on the main actor; every git call MUST be `async` and never block it.
 - **deferred-watcher**: The window's watcher (`GitDeferredRepositoryWatcher`) MUST ask git for the git and common directories before it makes the real watcher, one `rev-parse --path-format=absolute` call each, read whole. Each `start` MUST stop a watcher it already made before making another, and only the latest `start` makes one: a `start` overtaken by a `stop` or another `start` before git answers makes nothing.
 - **watcher-canonical-roots**: The watcher MUST canonicalise its three roots the way the file-system event stream spells paths (symlinks resolved, `/private` kept), so a repository under a symlinked directory such as the temporary directory still reports changes and still excludes `objects/`.
+
+### Actions
+
+- **perform-refreshes**: `perform(_:)` MUST run the action through `GitClient.perform` in the model's root, then `refresh(_:)` every kind whether the action succeeded or failed (a failed pull or merge can still have changed the repository), and then rethrow the action's error.
+- **is-performing**: `isPerforming` MUST be true from the start of `perform(_:)` until its git call returns, and false before the refresh that follows, so observers told of that refresh already see it false; overlapping calls keep it true until the last one's git call returns.
+- **head-branch**: `headBranch` MUST be the local branch whose `isHead` is true, and nil on a detached HEAD, an unborn HEAD, or before the refs load.
+- **has-commits**: `hasCommits` MUST be true when history is loaded or any local branch exists, and false on an unborn HEAD, which has neither.
+- **reads-pass-through**: `remotes()` and `lastCommitMessage()` MUST return `GitClient.remotes(in:)` and `GitClient.lastCommitMessage(in:)` for the model's root; the latter is nil on an unborn HEAD.
+- **caller-attributed**: `perform(_:)`, `remotes()` and `lastCommitMessage()` MUST pass their `GitCaller` (defaulted at the call site) through to the client, so the command log names the code that asked.

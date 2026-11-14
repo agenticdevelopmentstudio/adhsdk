@@ -367,6 +367,11 @@ picker) is a consumer of this contract, not part of it.
   launch failure's reason, or the configured executable path in any case,
   returning only the case name plus non-sensitive structured fields (verb,
   exit status).
+- **user-message**: The error outcome MUST offer one user-message mapping
+  for any error a git call ends with: git's standard-error text, trimmed of
+  whitespace and newlines, for a command-failed error that has any; the
+  error's user-facing description otherwise. It is for display only and
+  MUST NOT be logged.
 - **command-log-fields**: The command log MUST record the verb, its
   redacted arguments, the working directory, the calling file and
   function, the duration in milliseconds, and the exit status (or the
@@ -666,6 +671,7 @@ component.
 | git-client-052 | file-history-command | A repository where `a b.txt` was renamed to `c d.txt`, then edited; file history of `c d.txt` | Edit at `c d.txt`; rename at `c d.txt` from `a b.txt`; initial at `a b.txt`. |
 | git-client-053 | log-query-name-status | A follow request for `a b.txt` with name-status | Ends `--name-status --follow -- a b.txt`. |
 | git-client-054 | file-contents | A repository with `dir é/naïve file.swift` committed as `let a = 1`, then `let a = 2`, and `let a = 3` staged | Contents at `second^1`, `second` and `:0` are the three versions; `dir é` at `second` and `dir é/missing` at `:0` are nothing. |
+| git-client-055 | user-message | Command-failed with standard error `  fatal: nope` plus a newline; command-failed with only a newline; timed-out | `fatal: nope`; each error's user-facing description. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an

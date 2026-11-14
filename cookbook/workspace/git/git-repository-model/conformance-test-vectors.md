@@ -10,3 +10,8 @@
 | git-repository-model-007 | watcher-classify | `.git/HEAD`, `.git/refs/heads/main`, `.git/packed-refs`, `.git/index`, `.git/MERGE_HEAD`, `.git/rebase-merge/done`, `.git/objects/ab/cd`, `.git/index.lock`, `.git/refs/heads/main.lock`, `.git/config`, `src/a.swift` | refs+history ×3, working copy, operation ×2, nothing ×4, working copy. |
 | git-repository-model-008 | watcher-classify | `.git/worktrees/other`, `.git/worktrees/other/HEAD`, `.git/worktrees/other/index`, `.git/worktrees/other/HEAD.lock` | refs ×2, nothing ×2. |
 | git-repository-model-009 | watcher-canonical-roots | The real watcher started on a fixture under the temporary directory, then `git checkout -b x` | `onChange` receives a set containing `.refs` within 10 s. |
+| git-repository-model-010 | perform-refreshes, observe | One commit and an untracked `a.txt`; `perform(.stage(paths: ["a.txt"]))` | `staged` lists `a.txt`; an observer received a set containing `.workingCopy`; `isPerforming` is false. |
+| git-repository-model-011 | perform-refreshes | `perform(.checkout(branch: "nope"))` | Throws a `GitClientError`; observers were still told of the refresh. |
+| git-repository-model-012 | is-performing | A client whose executable sleeps 0.3 s before running git; `perform(.stage(...))` started in a task, read after 100 ms | `isPerforming` true while it runs, false once it returns. |
+| git-repository-model-013 | head-branch, has-commits | `git init`, `start()`; then a commit and a refresh of every kind | nil and false; then `main` and true. |
+| git-repository-model-014 | reads-pass-through | A clone of a bare remote; `lastCommitMessage()`, a commit, then `remotes()` and `lastCommitMessage()` | nil; then `["origin"]` and the commit's message. |

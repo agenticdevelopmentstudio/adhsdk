@@ -2,7 +2,7 @@
 id: a2394ca0-3988-410b-9fc8-e0c9e253fc94
 title: "Git Repository Model"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-13
@@ -57,13 +57,22 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **main-actor**: The model MUST be used on the main actor; every git call MUST be `async` and never block it.
 - **deferred-watcher**: The window's watcher (`GitDeferredRepositoryWatcher`) MUST ask git for the git and common directories before it makes the real watcher, one `rev-parse --path-format=absolute` call each, read whole. Each `start` MUST stop a watcher it already made before making another, and only the latest `start` makes one: a `start` overtaken by a `stop` or another `start` before git answers makes nothing.
 - **watcher-canonical-roots**: The watcher MUST canonicalise its three roots the way the file-system event stream spells paths (symlinks resolved, `/private` kept), so a repository under a symlinked directory such as the temporary directory still reports changes and still excludes `objects/`.
+
+### Actions
+
+- **perform-refreshes**: `perform(_:)` MUST run the action through `GitClient.perform` in the model's root, then `refresh(_:)` every kind whether the action succeeded or failed (a failed pull or merge can still have changed the repository), and then rethrow the action's error.
+- **is-performing**: `isPerforming` MUST be true from the start of `perform(_:)` until its git call returns, and false before the refresh that follows, so observers told of that refresh already see it false; overlapping calls keep it true until the last one's git call returns.
+- **head-branch**: `headBranch` MUST be the local branch whose `isHead` is true, and nil on a detached HEAD, an unborn HEAD, or before the refs load.
+- **has-commits**: `hasCommits` MUST be true when history is loaded or any local branch exists, and false on an unborn HEAD, which has neither.
+- **reads-pass-through**: `remotes()` and `lastCommitMessage()` MUST return `GitClient.remotes(in:)` and `GitClient.lastCommitMessage(in:)` for the model's root; the latter is nil on an unborn HEAD.
+- **caller-attributed**: `perform(_:)`, `remotes()` and `lastCommitMessage()` MUST pass their `GitCaller` (defaulted at the call site) through to the client, so the command log names the code that asked.
 ## Appearance
 
 Not applicable: the model draws nothing; the git window's views do.
 
 ## States
 
-Not applicable: the model is a non-visual component. It holds the last loaded refs, stashes, submodules, worktrees, history page and status, and whether paging has ended.
+Not applicable: the model is a non-visual component. It holds the last loaded refs, stashes, submodules, worktrees, history page and status, whether paging has ended, and whether an action is running (`isPerforming`).
 
 ## Accessibility
 
@@ -82,6 +91,11 @@ Not applicable: the model presents no view.
 | git-repository-model-007 | watcher-classify | `.git/HEAD`, `.git/refs/heads/main`, `.git/packed-refs`, `.git/index`, `.git/MERGE_HEAD`, `.git/rebase-merge/done`, `.git/objects/ab/cd`, `.git/index.lock`, `.git/refs/heads/main.lock`, `.git/config`, `src/a.swift` | refs+history ×3, working copy, operation ×2, nothing ×4, working copy. |
 | git-repository-model-008 | watcher-classify | `.git/worktrees/other`, `.git/worktrees/other/HEAD`, `.git/worktrees/other/index`, `.git/worktrees/other/HEAD.lock` | refs ×2, nothing ×2. |
 | git-repository-model-009 | watcher-canonical-roots | The real watcher started on a fixture under the temporary directory, then `git checkout -b x` | `onChange` receives a set containing `.refs` within 10 s. |
+| git-repository-model-010 | perform-refreshes, observe | One commit and an untracked `a.txt`; `perform(.stage(paths: ["a.txt"]))` | `staged` lists `a.txt`; an observer received a set containing `.workingCopy`; `isPerforming` is false. |
+| git-repository-model-011 | perform-refreshes | `perform(.checkout(branch: "nope"))` | Throws a `GitClientError`; observers were still told of the refresh. |
+| git-repository-model-012 | is-performing | A client whose executable sleeps 0.3 s before running git; `perform(.stage(...))` started in a task, read after 100 ms | `isPerforming` true while it runs, false once it returns. |
+| git-repository-model-013 | head-branch, has-commits | `git init`, `start()`; then a commit and a refresh of every kind | nil and false; then `main` and true. |
+| git-repository-model-014 | reads-pass-through | A clone of a bare remote; `lastCommitMessage()`, a commit, then `remotes()` and `lastCommitMessage()` | nil; then `["origin"]` and the commit's message. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository loads empty history and refs; a repository with no stashes, submodules or linked worktrees loads empty lists (worktrees still lists the main one).
@@ -143,7 +157,7 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -163,6 +177,14 @@ A failed load logs one line at error level naming the part (refs, history, statu
 **Rationale**: One porcelain parser; the merged map the file browser uses and the per-column maps come from the same pass.
 **Approved**: pending
 
+
+**Decision**: `perform(_:)` refreshes every kind after any action, and after a failure too.
+**Rationale**: Which parts an action touches is git's knowledge, not the caller's (a checkout moves refs, history and the working copy; a failed merge leaves conflicts); one full refresh is cheap and the watcher's later event finds nothing new.
+**Approved**: pending
+
+**Decision**: `isPerforming` goes false before the post-action refresh, not after it.
+**Rationale**: The refresh is what observers react to; if they saw it still true, controls they disable while performing would stay disabled until some unrelated later change.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -177,6 +199,7 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: perform refreshes every kind after any action and rethrows; isPerforming, headBranch, hasCommits; remotes and last commit message |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Final review: refs, stashes, submodules and worktrees load independently; cancelled loads log at debug; contents pass a size cap; a capped file history is logged; the deferred watcher makes one watcher per latest start |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | fileHistory returns the client's entries, each commit with the file's path at that commit |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |
