@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-11-13
@@ -79,7 +79,7 @@ The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyD
 - **file-list-item**: A `GitFileListItem` made from a `GitFileChange` MUST take its path and status and have no old path. One made from a `GitFileDiff` MUST take the diff's `path` (the new path, or the old one for a deleted file) and the status of its change (added `A`, deleted `D`, modified and type-changed `M`, renamed `R`, copied `C`), and an old path only for a rename or copy whose old path differs from its new one. Its `title` MUST be `<old> → <new>` when it has an old path and the path otherwise; its id is its path.
 - **file-list-rows**: The list MUST show one row per item of `files`, in order, each with the status letter (`GitFileStatus.displayCharacter`) in the status's colour (`GitFileStatus.nsColor`), the SF Symbol `FileTypeIcons.builtInIcon(for:)` names for the path's extension (`doc` when it names none), and the title, truncated in the middle with the whole title as its tooltip.
 - **file-list-selection**: Selecting a row MUST call the delegate's `fileList(_:didSelect:)` once with that item; clearing the selection calls it once with nil. `clearSelection()` MUST deselect without calling the delegate.
-- **file-list-files**: Setting `files` MUST keep a selected item whose path is still listed selected without calling the delegate; when the selected path is gone, the list MUST deselect and call the delegate once with nil.
+- **file-list-files**: Setting `files` MUST keep a selected item whose path is still listed selected without calling the delegate, unless the listed item differs (a new status), when it MUST call the delegate once with the new item; when the selected path is gone, the list MUST deselect and call the delegate once with nil.
 - **file-list-ui-thread**: The changed-files list MUST be used on the UI thread.
 
 ### Commit detail
@@ -87,17 +87,17 @@ The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyD
 - **detail-header**: `show(commit:)` with a commit MUST fill the header at once: the subject (heading); the body, wrapped, hidden when empty; an author row and a committer row, each an `AvatarView` of side 28 showing initials seeded by the person's email with no picture URL, the name followed by `<email>`, and the date as `date.formatted(date: .abbreviated, time: .shortened)` with `RelativeDateFormatting.string(for:)` as its tooltip; the full sha in the theme's code font beside a copy button; and a parents row with one link per parent, in order, titled with the parent's first eight characters, hidden for a root commit.
 - **detail-copy-sha**: The copy button MUST put the full sha on the pasteboard as a string, replacing what was there.
 - **detail-parent-link**: Pressing a parent link MUST call the delegate's `commitDetail(_:didSelectCommit:)` once with that parent's full sha.
-- **detail-files**: After the header, the detail MUST ask the content source for `diff(.commit(<sha>, paths: []), options: GitDiffOptions())` and list each of its files, in order, as `GitFileListItem(diff:)` in its changed-files list (context `commit`). Showing a different commit MUST empty the list at once, so it never lists another commit's files; showing the same commit again keeps the list (and its selection) until the new diff arrives. A diff that throws leaves the list empty.
-- **detail-latest-wins**: The latest `show(commit:)` MUST win: a diff requested by an earlier call never changes the list, whichever order the diffs finish in. The check is the detail's own call counter, taken before it awaits, never state the content source changes.
+- **detail-files**: After the header, the detail MUST ask the content source for `diff(.commit(<sha>, paths: []), options: GitDiffOptions())` and list each of its files, in order, as `GitFileListItem(diff:)` in its changed-files list (context `commit`). Showing a different commit MUST empty the list at once, so it never lists another commit's files; showing the same commit again keeps the list (and its selection) until the new diff arrives. A diff that throws MUST be logged at error level by `GitClientError.logDescription` (never git's own output) and MUST leave the list empty with the error's description shown over it (`git.detail.error`, in the theme's danger colour), so a failure never reads as a commit with no changes; the next `show(commit:)` hides it, and a diff with no files shows no error.
+- **detail-latest-wins**: The latest `show(commit:)` MUST win: a diff requested by an earlier call never changes the list, whichever order the diffs finish in. The check is the detail's own call counter, taken before it awaits, never state the content source changes; a failure from an earlier call is dropped the same way. Cancelling the earlier request only stops its work early: a cancelled request that still returns is dropped by the counter alone.
 - **detail-file-selection**: Selecting a file MUST call the delegate's `commitDetail(_:didSelectFile:in:)` once with that item and the shown commit; clearing the selection, or a list change that removes the selected file, calls it once with nil.
-- **detail-clear**: `show(commit: nil)` MUST empty the header and the list and cancel any diff in flight.
+- **detail-clear**: `show(commit: nil)` MUST empty the header and the list, hide a shown failure, collapse the header to no height, and cancel any diff in flight.
 - **detail-ui-thread**: The commit detail MUST be used on the UI thread; the diff is awaited, never blocked on.
 
 ### Working copy
 
 - **wc-lists**: The working copy MUST show two changed-files lists, `Staged` (context `staged`) over the data source's `staged` files and `Unstaged` (context `unstaged`) over its `unstaged` files, in the data source's order, each item `GitFileListItem(change:)`, each under a header titled `Staged (<count>)` or `Unstaged (<count>)`.
 - **wc-selection**: Selecting a file MUST call the delegate's `workingCopy(_:didSelect:)` once with its diff target: a staged file `.staged(paths: [path])`, an untracked unstaged file `.untracked(path:)`, any other unstaged file `.unstaged(paths: [path])`. Selecting in one list MUST clear the other without a delegate call for the clearing. Clearing the selection calls the delegate once with nil.
-- **wc-reload**: `reload()` MUST re-read both lists from the data source. A selected file still in its list stays selected without a delegate call; one that left its list is deselected and the delegate is called once with nil.
+- **wc-reload**: `reload()` MUST re-read both lists from the data source. A selected file still in its list stays selected without a delegate call, unless its status changed, when the delegate is called once with its new target (an untracked file that becomes intent-to-add moves from `.untracked` to `.unstaged`); one that left its list is deselected and the delegate is called once with nil.
 - **wc-ui-thread**: The working copy MUST be used on the UI thread.
 
 ## Appearance
@@ -144,9 +144,9 @@ Two panes in a horizontal-divider `ThemedSplitView`, staged above unstaged, each
 
 ### Commit detail
 
-- **Nothing shown**: before the first `show(commit:)` and after `show(commit: nil)`, the header is empty and the list has no rows.
+- **Nothing shown**: before the first `show(commit:)` and after `show(commit: nil)`, the header is empty and takes no height, and the list has no rows.
 - **Loading**: the header shows the new commit while its list is empty until the diff arrives.
-- **Diff failed**: the header stays, the list stays empty.
+- **Diff failed**: the header stays, the list stays empty, and the error's description is shown over it until the next `show(commit:)`.
 - **Repository deleted**: the shown header and list stay until the next `show(commit:)`.
 
 ### Working copy
@@ -213,11 +213,13 @@ The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHead
 | git-views-030 | detail-latest-wins | `show(A)` held; `show(B)` returns at once; then A's diff is released | The list shows B's files; A's never appear. |
 | git-views-031 | detail-latest-wins | `show(A)` held; `show(B)` held; B released first, then A | The list shows B's files. |
 | git-views-032 | detail-files, detail-clear | `show(A)` loaded; `show(B)` held; then `show(nil)` | While B is held the list is empty and the header is B's; after nil, the header and list are empty and B's diff, released, changes nothing. |
-| git-views-033 | detail-files | The source's diff throws | The header shows the commit; the list is empty. |
+| git-views-033 | detail-files | The source's diff throws `commandFailed(verb: "diff", exitStatus: 128, standardError: "fatal: bad object")`; then `show(B)` whose diff lists `from-b` | The header shows the commit; the list is empty; the error label shows the error's description and the failure is logged. After `show(B)` the label is hidden and the list shows `from-b`. |
 | git-views-034 | wc-lists | Staged `a` added; unstaged `b` modified, `c` untracked | Headers `Staged (1)`, `Unstaged (2)`; rows `a`; `b`, `c`. |
 | git-views-035 | wc-selection | Select `a` (staged), then `c` (unstaged untracked), then `b` | Delegate `.staged(paths: ["a"])`, `.untracked(path: "c")`, `.unstaged(paths: ["b"])`, once each; the staged list is cleared when `c` is selected, with no nil reported. |
 | git-views-036 | wc-reload | `b` selected; reload with `b` still unstaged; reload with `b` staged instead | Nothing on the first reload; nil once on the second. |
-
+| git-views-037 | file-list-files, wc-reload | Unstaged `c` untracked selected; reload with `c` added (intent-to-add) | Delegate `.untracked(path: "c")`, then `.unstaged(paths: ["c"])` once; `c` stays selected; a second identical reload reports nothing. |
+| git-views-038 | detail-files | A commit whose diff lists no files | The list is empty and no error is shown. |
+| git-views-039 | detail-latest-wins, detail-clear | `show(A)` held and failing; `show(B)` returns; A released; then B fails and `show(nil)` | No error after A's late failure, B's files listed; B's failure shown; hidden after nil. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -236,7 +238,7 @@ The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHead
 - **History, typing while a search is in flight**: `fix` then `fix ` (or `sha:a` then `sha:ab` while a filter clears) parse to the query already in flight; the later call waits for it, then reloads and selects.
 - **History, non-UTF-8 messages**: shown as the model decoded them (lossily), never dropped.
 
-- **Files, awkward paths**: spaces, unicode and tabs are shown as they are; a path holding a newline stays on one row (single-line label) and its tooltip holds the whole path.
+- **Files, awkward paths**: spaces, unicode and tabs are shown as they are; a path holding a newline stays on one row (single-line label, one line at most) and its tooltip holds the whole path.
 - **Files, a path with no extension** (`Makefile`) or a dot file (`.gitignore`, whose extension is empty): the `doc` icon.
 - **Files, the same path twice**: the id is the path, so the selection kept across a `files` change is the first row with that path.
 - **Commit detail, a merge**: one parent link per parent; the list is the diff against the first parent.
@@ -294,7 +296,7 @@ The views show local repository data only and send nothing anywhere.
 
 ## Logging
 
-Not applicable: the views log nothing; the model logs failed loads.
+The commit detail logs a failed diff at error level, by `GitClientError.logDescription` (case and fields, never git's output), under its own `Loggable` category; the other views log nothing, and the model logs failed reloads.
 
 ## Platform Notes
 
@@ -388,3 +390,4 @@ Not applicable: the views log nothing; the model logs failed loads.
 | 1.1.0 | 2026-11-13 | Mike Fullerton | History list: graph, subject with ref badges, author, date, short sha; paging; selection and reload; search parsing and setQuery; vectors 012-018 |
 | 1.1.1 | 2026-11-13 | Mike Fullerton | setQuery tracks the query it sent and waits for one in flight; paging and badges read the reload snapshot; scroll and row identifiers; vectors 019-022 |
 | 1.2.0 | 2026-11-13 | Mike Fullerton | Changed-files list, commit detail and working copy: GitFileListItem in Core, one shared list, latest-call-wins detail, staged/unstaged targets; vectors 023-036 |
+| 1.3.0 | 2026-11-13 | Mike Fullerton | Commit detail logs a failed diff and shows its description; surviving items re-report on a status change; single-line titles; collapsed empty header; vectors 033, 037-039 |

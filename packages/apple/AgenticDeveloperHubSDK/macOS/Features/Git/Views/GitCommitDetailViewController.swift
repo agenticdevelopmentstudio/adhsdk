@@ -1,6 +1,7 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
+import os
 
 /// Told which parent link and which changed file the commit detail chose.
 @MainActor public protocol GitCommitDetailDelegate: AnyObject {
@@ -16,8 +17,9 @@ import AgenticDeveloperHubSDKCoreUI
 /// commit's changed files, read from a `GitContentSource`.
 ///
 /// `show(commit:)` fills the header at once and then awaits the commit's diff for the
-/// list; the latest call always wins, decided by the detail's own counter. Used on the
-/// main thread.
+/// list; the latest call always wins, decided by the detail's own counter. A diff that
+/// fails is logged and shown as the error's description in place of the list, so it
+/// never reads as a commit with no changes. Used on the main thread.
 @MainActor
 public final class GitCommitDetailViewController: NSViewController {
 
@@ -36,6 +38,8 @@ public final class GitCommitDetailViewController: NSViewController {
     let shaLabel = ThemedLabel(role: .secondaryText, textRole: .code)
     let copyButton = NSButton()
     let parentsRow = NSStackView()
+    /// The failed diff's description, over the empty list; hidden otherwise.
+    let errorLabel = ThemedLabel.wrapping("", width: 400, role: .danger, textRole: .body)
     private(set) var parentButtons: [NSButton] = []
     /// The diff request in flight or last finished; tests await it.
     private(set) var loadTask: Task<Void, Never>?
@@ -46,7 +50,9 @@ public final class GitCommitDetailViewController: NSViewController {
     private let source: GitContentSource
     private let pasteboard: NSPasteboard
     private let parentsCaption = ThemedLabel(string: "Parents", role: .secondaryText, textRole: .caption)
-    private var wrappingLabels: [ThemedLabel] { [subjectLabel, bodyLabel] }
+    private var wrappingLabels: [ThemedLabel] { [subjectLabel, bodyLabel, errorLabel] }
+    /// Holds the header at zero height while nothing is shown.
+    private var collapsedHeader: NSLayoutConstraint?
 
     public init(source: GitContentSource, pasteboard: NSPasteboard = .general) {
         self.source = source
@@ -63,6 +69,7 @@ public final class GitCommitDetailViewController: NSViewController {
         root.accessibilityID("git.detail")
 
         let document = TopAnchoredFlippedView()
+        document.accessibilityID("git.detail.headerDocument")
         document.translatesAutoresizingMaskIntoConstraints = false
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         document.addSubview(headerStack)
@@ -74,16 +81,21 @@ public final class GitCommitDetailViewController: NSViewController {
         headerScrollView.translatesAutoresizingMaskIntoConstraints = false
 
         let separator = ThemedSeparatorView()
+        separator.accessibilityID("git.detail.separator")
         separator.translatesAutoresizingMaskIntoConstraints = false
         addChild(fileList)
         let listView = fileList.view
         listView.translatesAutoresizingMaskIntoConstraints = false
-        for view in [headerScrollView, separator, listView] { root.addSubview(view) }
+        errorLabel.translatesAutoresizingMaskIntoConstraints = false
+        for view in [headerScrollView, separator, listView, errorLabel] { root.addSubview(view) }
 
         let clip = headerScrollView.contentView
         // The header is as tall as its content, but never more than half the detail.
         let fitsContent = headerScrollView.heightAnchor.constraint(equalTo: document.heightAnchor)
         fitsContent.priority = .defaultHigh
+        let collapsed = headerScrollView.heightAnchor.constraint(equalToConstant: 0)
+        collapsed.isActive = commit == nil
+        collapsedHeader = collapsed
         NSLayoutConstraint.activate([
             document.leadingAnchor.constraint(equalTo: clip.leadingAnchor),
             document.topAnchor.constraint(equalTo: clip.topAnchor),
@@ -104,7 +116,10 @@ public final class GitCommitDetailViewController: NSViewController {
             listView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             listView.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             listView.topAnchor.constraint(equalTo: separator.bottomAnchor),
-            listView.bottomAnchor.constraint(equalTo: root.bottomAnchor)
+            listView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+            errorLabel.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 12),
+            errorLabel.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor, constant: -12),
+            errorLabel.topAnchor.constraint(equalTo: separator.bottomAnchor, constant: 10)
         ])
         view = root
     }
@@ -124,8 +139,11 @@ public final class GitCommitDetailViewController: NSViewController {
     /// empties the list straight away; the same commit keeps it until its diff arrives.
     /// The diff is then awaited, and lands only if no later call has been made: the
     /// check is this detail's own counter, taken before it awaits, never state the
-    /// content source changes. A diff that throws leaves the list empty. Nil also
-    /// cancels the diff in flight.
+    /// content source changes. A diff that throws is logged and leaves the list empty
+    /// under the error's description. Nil also cancels the diff in flight.
+    ///
+    /// The previous request is cancelled too, but only to stop its work early: a
+    /// cancelled request that still returns is dropped by the counter alone.
     public func show(commit newCommit: GitCommit?) {
         generation += 1
         let generation = self.generation
@@ -136,13 +154,38 @@ public final class GitCommitDetailViewController: NSViewController {
         if newCommit?.id != commit?.id { fileList.files = [] }
         commit = newCommit
         fillHeader(newCommit)
+        showFailure(nil)
         guard let newCommit else { return }
         let target = GitDiffTarget.commit(newCommit.id, paths: [])
         loadTask = Task { [weak self, source] in
-            let diff = try? await source.diff(target, options: GitDiffOptions())
-            guard let self, generation == self.generation, !Task.isCancelled else { return }
-            self.fileList.files = diff?.files.map(GitFileListItem.init(diff:)) ?? []
+            let result: Result<GitDiff, Error>
+            do {
+                result = .success(try await source.diff(target, options: GitDiffOptions()))
+            } catch {
+                result = .failure(error)
+            }
+            guard let self, generation == self.generation else { return }
+            switch result {
+            case .success(let diff):
+                self.fileList.files = diff.files.map(GitFileListItem.init(diff:))
+            case .failure(let error):
+                self.fileList.files = []
+                self.logFailure(error)
+                self.showFailure(error)
+            }
         }
+    }
+
+    /// Shows `error`'s description over the list, or hides it for nil.
+    private func showFailure(_ error: Error?) {
+        errorLabel.stringValue = error?.localizedDescription ?? ""
+        errorLabel.isHidden = error == nil
+    }
+
+    /// Logs a failed diff by its case and fields, never git's own output.
+    private func logFailure(_ error: Error) {
+        let description = (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+        Self.logger.error("Git commit diff failed: \(description, privacy: .public)")
     }
 
     // MARK: - Header
@@ -154,6 +197,10 @@ public final class GitCommitDetailViewController: NSViewController {
         headerStack.alignment = .leading
         headerStack.spacing = 8
         headerStack.isHidden = true
+        headerStack.accessibilityID("git.detail.headerStack")
+        errorLabel.accessibilityID("git.detail.error")
+        errorLabel.isSelectable = true
+        errorLabel.isHidden = true
 
         subjectLabel.accessibilityID("git.detail.subject")
         subjectLabel.isSelectable = true
@@ -176,11 +223,14 @@ public final class GitCommitDetailViewController: NSViewController {
         shaRow.orientation = .horizontal
         shaRow.alignment = .centerY
         shaRow.spacing = 6
+        shaRow.accessibilityID("git.detail.shaRow")
 
         parentsRow.orientation = .horizontal
         parentsRow.alignment = .firstBaseline
         parentsRow.spacing = 8
         parentsRow.addArrangedSubview(parentsCaption)
+        parentsRow.accessibilityID("git.detail.parents")
+        parentsCaption.accessibilityID("git.detail.parentsCaption")
 
         for view in [subjectLabel, bodyLabel, authorRow, committerRow, shaRow, parentsRow] {
             headerStack.addArrangedSubview(view)
@@ -189,6 +239,7 @@ public final class GitCommitDetailViewController: NSViewController {
 
     private func fillHeader(_ commit: GitCommit?) {
         headerStack.isHidden = commit == nil
+        collapsedHeader?.isActive = commit == nil
         subjectLabel.stringValue = commit?.subject ?? ""
         bodyLabel.stringValue = commit?.body ?? ""
         bodyLabel.isHidden = bodyLabel.stringValue.isEmpty
@@ -230,6 +281,10 @@ public final class GitCommitDetailViewController: NSViewController {
         guard let parents = commit?.parents, parents.indices.contains(sender.tag) else { return }
         delegate?.commitDetail(self, didSelectCommit: parents[sender.tag])
     }
+}
+
+extension GitCommitDetailViewController: Loggable {
+    public static nonisolated let logger = makeLogger()
 }
 
 extension GitCommitDetailViewController: GitFileListDelegate {

@@ -4,7 +4,9 @@ import Testing
 @testable import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
-private struct DiffFailed: Error {}
+/// The error a failing commit's diff throws: a real git failure, with git's own message.
+private let diffFailure = GitClientError.commandFailed(verb: "diff", exitStatus: 128,
+                                                       standardError: "fatal: bad object")
 
 /// A content source whose `diff` answers from `diffs` by commit id, like the model: it
 /// records the request first and then awaits. A commit id in `holding` waits until a
@@ -25,7 +27,7 @@ private final class FakeContentSource: GitContentSource {
                 MainActor.assumeIsolated { self.held[id] = continuation }
             }
         }
-        if failing.contains(id) { throw DiffFailed() }
+        if failing.contains(id) { throw diffFailure }
         return diffs[id] ?? GitDiff(files: [])
     }
 
@@ -33,8 +35,11 @@ private final class FakeContentSource: GitContentSource {
         held.removeValue(forKey: id)?.resume()
     }
 
-    func waitUntilHeld(_ id: String) async {
-        while held[id] == nil { await Task.yield() }
+    /// Waits until `id`'s diff is suspended; records an issue rather than hanging when it
+    /// never is.
+    func waitUntilHeld(_ id: String, sourceLocation: SourceLocation = #_sourceLocation) async {
+        for _ in 0..<10_000 where held[id] == nil { await Task.yield() }
+        if held[id] == nil { Issue.record("the diff of \(id) was never held", sourceLocation: sourceLocation) }
     }
 
     func contents(path: String, at revision: String?) async throws -> Data? { nil }
@@ -308,16 +313,91 @@ struct GitCommitDetailViewControllerTests {
         #expect(Self.paths(detail).isEmpty)
     }
 
-    @Test("a diff that throws leaves the header and an empty list")
+    @Test("a diff that throws shows the failure, distinct from a commit with no files, until the next show")
     func diffThrows() async {
         let source = FakeContentSource()
-        let first = Self.commit("aa")
+        let first = Self.commit("aa"), second = Self.commit("bb")
         source.failing = [first.id]
+        source.diffs[second.id] = GitDiff(files: [Self.file("from-b")])
         let detail = Self.detail(source)
+        #expect(detail.errorLabel.isHidden)
+        #expect(detail.errorLabel.accessibilityIdentifier() == "git.detail.error")
+
         detail.show(commit: first)
         await detail.loadTask?.value
         #expect(detail.subjectLabel.stringValue == first.subject)
         #expect(Self.paths(detail).isEmpty)
+        #expect(!detail.errorLabel.isHidden)
+        #expect(detail.errorLabel.stringValue == diffFailure.errorDescription)
+
+        detail.show(commit: second)
+        #expect(detail.errorLabel.isHidden)
+        await detail.loadTask?.value
+        #expect(Self.paths(detail) == ["from-b"])
+        #expect(detail.errorLabel.isHidden)
+    }
+
+    @Test("a commit with no changed files shows an empty list and no failure")
+    func emptyDiffIsNotAFailure() async {
+        let source = FakeContentSource()
+        let empty = Self.commit("ee")
+        source.diffs[empty.id] = GitDiff(files: [])
+        let detail = Self.detail(source)
+        detail.show(commit: empty)
+        await detail.loadTask?.value
+        #expect(Self.paths(detail).isEmpty)
+        #expect(detail.errorLabel.isHidden)
+    }
+
+    @Test("a failure that returns after a newer show is dropped, and show(nil) hides a failure")
+    func staleFailureDropped() async {
+        let source = FakeContentSource()
+        let first = Self.commit("aa"), second = Self.commit("bb")
+        source.failing = [first.id]
+        source.holding = [first.id]
+        source.diffs[second.id] = GitDiff(files: [Self.file("from-b")])
+        let detail = Self.detail(source)
+
+        detail.show(commit: first)
+        let taskA = detail.loadTask
+        await source.waitUntilHeld(first.id)
+        detail.show(commit: second)
+        await detail.loadTask?.value
+        source.release(first.id)
+        await taskA?.value
+        #expect(detail.errorLabel.isHidden)
+        #expect(Self.paths(detail) == ["from-b"])
+
+        source.holding = []
+        source.failing = [second.id]
+        detail.show(commit: second)
+        await detail.loadTask?.value
+        #expect(!detail.errorLabel.isHidden)
+        detail.show(commit: nil)
+        #expect(detail.errorLabel.isHidden)
+    }
+
+    @Test("every header container and the error label carry identifiers")
+    func containerIdentifiers() {
+        let detail = Self.detail(FakeContentSource())
+        #expect(detail.headerStack.accessibilityIdentifier() == "git.detail.headerStack")
+        #expect(detail.headerScrollView.documentView?.accessibilityIdentifier() == "git.detail.headerDocument")
+        #expect(detail.parentsRow.accessibilityIdentifier() == "git.detail.parents")
+        #expect(detail.shaLabel.superview?.accessibilityIdentifier() == "git.detail.shaRow")
+    }
+
+    @Test("with nothing shown the header takes no height")
+    func emptyHeaderCollapses() {
+        let detail = Self.detail(FakeContentSource())
+        detail.view.frame = NSRect(x: 0, y: 0, width: 400, height: 600)
+        detail.view.layoutSubtreeIfNeeded()
+        #expect(detail.headerScrollView.frame.height == 0)
+        detail.show(commit: Self.commit("c1", parents: ["p1"]))
+        detail.view.layoutSubtreeIfNeeded()
+        #expect(detail.headerScrollView.frame.height > 0)
+        detail.show(commit: nil)
+        detail.view.layoutSubtreeIfNeeded()
+        #expect(detail.headerScrollView.frame.height == 0)
     }
 
     @Test("a file selection that a new commit removes reports nil for the old commit")

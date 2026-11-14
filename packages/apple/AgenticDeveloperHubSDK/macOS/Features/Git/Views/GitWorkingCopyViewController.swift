@@ -22,8 +22,8 @@ public final class GitWorkingCopyViewController: NSViewController {
     let stagedHeader = ThemedLabel(role: .secondaryText, textRole: .caption, weight: .semibold)
     let unstagedHeader = ThemedLabel(role: .secondaryText, textRole: .caption, weight: .semibold)
 
+    let splitView = ThemedSplitView()
     private let source: GitWorkingCopyDataSource
-    private let splitView = ThemedSplitView()
 
     public init(source: GitWorkingCopyDataSource) {
         self.source = source
@@ -41,13 +41,14 @@ public final class GitWorkingCopyViewController: NSViewController {
         let root = NSView()
         root.accessibilityID("git.workingCopy")
 
+        splitView.accessibilityID("git.workingCopy.split")
         splitView.isVertical = false
         splitView.dividerStyle = .thin
         splitView.translatesAutoresizingMaskIntoConstraints = false
         addChild(stagedList)
         addChild(unstagedList)
-        splitView.addArrangedSubview(pane(header: stagedHeader, list: stagedList))
-        splitView.addArrangedSubview(pane(header: unstagedHeader, list: unstagedList))
+        splitView.addArrangedSubview(pane("staged", header: stagedHeader, list: stagedList))
+        splitView.addArrangedSubview(pane("unstaged", header: unstagedHeader, list: unstagedList))
         root.addSubview(splitView)
         NSLayoutConstraint.activate([
             splitView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
@@ -59,8 +60,9 @@ public final class GitWorkingCopyViewController: NSViewController {
         reload()
     }
 
-    /// Re-reads both lists. A selected file still in its list stays selected without a
-    /// delegate call; one that left its list is deselected and the delegate is told nil.
+    /// Re-reads both lists. A selected file still in its list stays selected, without a
+    /// delegate call unless its status changed, when the delegate is told its new target;
+    /// one that left its list is deselected and the delegate is told nil.
     public func reload() {
         let staged = source.staged.map(GitFileListItem.init(change:))
         let unstaged = source.unstaged.map(GitFileListItem.init(change:))
@@ -70,8 +72,9 @@ public final class GitWorkingCopyViewController: NSViewController {
         unstagedList.files = unstaged
     }
 
-    private func pane(header: ThemedLabel, list: GitFileListViewController) -> NSView {
+    private func pane(_ name: String, header: ThemedLabel, list: GitFileListViewController) -> NSView {
         let pane = NSView()
+        pane.accessibilityID("git.workingCopy.\(name)Pane")
         let listView = list.view
         header.translatesAutoresizingMaskIntoConstraints = false
         listView.translatesAutoresizingMaskIntoConstraints = false

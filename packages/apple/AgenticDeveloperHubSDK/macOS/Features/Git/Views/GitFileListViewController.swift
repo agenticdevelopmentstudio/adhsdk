@@ -21,7 +21,8 @@ public final class GitFileListViewController: NSViewController {
     public let context: String
 
     /// The rows, in order. Setting them keeps a selected path that is still listed,
-    /// without a delegate call; a selected path that is gone is deselected and the
+    /// without a delegate call unless its item changed (a new status), when the delegate
+    /// is told the new item; a selected path that is gone is deselected and the
     /// delegate is told nil.
     public var files: [GitFileListItem] = [] {
         didSet { filesDidChange(from: oldValue) }
@@ -30,8 +31,8 @@ public final class GitFileListViewController: NSViewController {
     let tableView = ThemedTableView()
     private let scrollView = ThemedScrollView()
     private static let column = NSUserInterfaceItemIdentifier("file")
-    /// The path the delegate was last told about, so it hears each change once.
-    private var reportedPath: String?
+    /// The item the delegate was last told about, so it hears each change once.
+    private var reportedItem: GitFileListItem?
     /// Set while the list changes the selection itself, which reports on its own terms.
     private var isApplyingSelection = false
 
@@ -79,7 +80,7 @@ public final class GitFileListViewController: NSViewController {
     /// Deselects without telling the delegate; the next selection, even of the same
     /// file, is reported.
     public func clearSelection() {
-        reportedPath = nil
+        reportedItem = nil
         guard isViewLoaded else { return }
         isApplyingSelection = true
         tableView.deselectAll(nil)
@@ -105,13 +106,13 @@ public final class GitFileListViewController: NSViewController {
             tableView.deselectAll(nil)
         }
         isApplyingSelection = false
-        if survivor == nil { report(nil) }
+        report(survivor.map { files[$0] })
     }
 
     /// Tells the delegate about `item` unless it is what the delegate last heard.
     private func report(_ item: GitFileListItem?) {
-        guard item?.path != reportedPath else { return }
-        reportedPath = item?.path
+        guard item != reportedItem else { return }
+        reportedItem = item
         delegate?.fileList(self, didSelect: item)
     }
 }
@@ -156,6 +157,7 @@ final class GitFileListCellView: NSView {
     let statusLabel = NSTextField(labelWithString: "")
     let iconView = ThemedSymbolImageView(symbolName: "doc", role: .secondaryText)
     let titleLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    let stack = NSStackView()
 
     /// The SF Symbol for `path`'s extension, `doc` when there is none to name.
     static func iconName(for path: String) -> String {
@@ -173,10 +175,14 @@ final class GitFileListCellView: NSView {
         statusLabel.observeTheme { label, palette in label.font = palette.font(.code) }
         iconView.accessibilityID("git.fileList.icon")
         titleLabel.accessibilityID("git.fileList.title")
+        // One line, even for a path holding a newline.
+        titleLabel.usesSingleLineMode = true
+        titleLabel.maximumNumberOfLines = 1
         titleLabel.lineBreakMode = .byTruncatingMiddle
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let stack = NSStackView(views: [statusLabel, iconView, titleLabel])
+        for view in [statusLabel, iconView, titleLabel] { stack.addArrangedSubview(view) }
+        stack.accessibilityID("git.fileList.fileStack")
         stack.orientation = .horizontal
         stack.alignment = .centerY
         stack.spacing = 6

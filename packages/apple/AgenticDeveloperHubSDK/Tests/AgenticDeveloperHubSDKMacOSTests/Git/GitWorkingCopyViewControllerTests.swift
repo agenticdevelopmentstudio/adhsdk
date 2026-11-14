@@ -115,4 +115,27 @@ struct GitWorkingCopyViewControllerTests {
         #expect(workingCopy.unstagedList.tableView.selectedRow == -1)
         #expect(workingCopy.stagedHeader.stringValue == "Staged (2)")
     }
+
+    @Test("an untracked selection that becomes intent-to-add is reported again as an unstaged target")
+    func untrackedBecomesIntentToAdd() {
+        let source = Self.source()
+        let workingCopy = GitWorkingCopyViewController(source: source)
+        workingCopy.loadViewIfNeeded()
+        let delegate = RecordingWorkingCopyDelegate()
+        workingCopy.delegate = delegate
+
+        select(workingCopy.unstagedList, row: 1)
+        source.unstaged = [GitFileChange(path: "b", status: .modified), GitFileChange(path: "c", status: .added)]
+        workingCopy.reload()
+        #expect(delegate.events == [.untracked(path: "c"), .unstaged(paths: ["c"])])
+    }
+
+    @Test("the split view and both panes carry identifiers")
+    func containerIdentifiers() {
+        let workingCopy = GitWorkingCopyViewController(source: Self.source())
+        workingCopy.loadViewIfNeeded()
+        #expect(workingCopy.splitView.accessibilityIdentifier() == "git.workingCopy.split")
+        #expect(workingCopy.splitView.arrangedSubviews.map { $0.accessibilityIdentifier() }
+                == ["git.workingCopy.stagedPane", "git.workingCopy.unstagedPane"])
+    }
 }

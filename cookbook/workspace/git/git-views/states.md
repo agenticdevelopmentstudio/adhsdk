@@ -19,9 +19,9 @@
 
 ### Commit detail
 
-- **Nothing shown**: before the first `show(commit:)` and after `show(commit: nil)`, the header is empty and the list has no rows.
+- **Nothing shown**: before the first `show(commit:)` and after `show(commit: nil)`, the header is empty and takes no height, and the list has no rows.
 - **Loading**: the header shows the new commit while its list is empty until the diff arrives.
-- **Diff failed**: the header stays, the list stays empty.
+- **Diff failed**: the header stays, the list stays empty, and the error's description is shown over it until the next `show(commit:)`.
 - **Repository deleted**: the shown header and list stay until the next `show(commit:)`.
 
 ### Working copy
