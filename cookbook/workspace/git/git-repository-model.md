@@ -2,11 +2,11 @@
 id: a2394ca0-3988-410b-9fc8-e0c9e253fc94
 title: "Git Repository Model"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -49,7 +49,7 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **failures-keep-state**: A git call that fails MUST leave that part's last loaded value in place and be logged; `start()` and `refresh(_:)` MUST NOT throw. A repository deleted under the model keeps showing what it last loaded.
 - **stale-results-dropped**: A history result that a later `setQuery(_:)` or refresh superseded MUST be discarded, and so MUST a page from `loadMore()` that finishes after one.
 - **unborn**: A repository with no commits MUST load an empty history and no refs without failing, and its working copy MUST list its files.
-- **content-pass-through**: `diff`, `contents`, `blame` and `fileHistory` MUST call the git client in the model's root; `fileHistory` MUST follow renames; `commit(_:)` MUST return a loaded commit by id, or nil.
+- **content-pass-through**: `diff`, `contents`, `blame` and `fileHistory` MUST call the git client in the model's root; `fileHistory` MUST follow renames and return the client's `fileHistory(path:in:)` entries, each commit with the file's path at that commit; `commit(_:)` MUST return a loaded commit by id, or nil.
 - **watcher-classify**: `classify(relativePath:)` MUST map a path inside the git directory (written `.git/<path>`) as follows: `HEAD`, `packed-refs`, `refs` and anything under `refs/` → refs and history; `index` → working copy; `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `rebase-merge`, `rebase-apply` and anything under the last two → operation; `worktrees/<name>` (the directory itself) and `worktrees/<name>/HEAD` (another worktree switching branch) → refs; anything under `objects/`, any name ending `.lock`, and everything else inside the git directory → nothing. Any path outside the git directory MUST map to working copy.
 - **watcher-paths**: The watcher MUST watch the working tree, the git directory and the common directory through the toolkit's file-system watcher, MUST exclude the common directory's `objects`, and MUST write a path under the git directory or the common directory as `.git/<path relative to it>` (the git directory wins when both contain it) before classifying it.
 - **watcher-debounce**: The watcher MUST call `onChange` once, 300 ms after the last event, with the union of the kinds since its last call, and MUST NOT call it for events that classify to nothing. `stop()` MUST stop the stream and drop a pending call.
@@ -141,7 +141,7 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -175,4 +175,5 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | fileHistory returns the client's entries, each commit with the file's path at that commit |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

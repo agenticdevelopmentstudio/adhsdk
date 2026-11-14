@@ -11,10 +11,13 @@ import Foundation
 /// `String(bytes:encoding:)` rather than `String(decoding:as:)`, as
 /// `SubprocessChannel.standardErrorText()` does: `String(decoding:)` would replace the
 /// offending bytes with U+FFFD and hand a parser a path that matches nothing on disk.
-enum GitOutputDecoding {
+///
+/// Public so text shown beside git's output (a file's bytes read for syntax colouring)
+/// decodes exactly as that output does, line for line.
+public enum GitOutputDecoding {
     private static let separators: Set<UInt8> = [0x00, 0x0A, 0x1E, 0x1F]
 
-    static func string(_ data: Data) -> String {
+    public static func string(_ data: Data) -> String {
         // A capture that is UTF-8 as a whole decodes the same segment by segment.
         if let whole = String(bytes: data, encoding: .utf8) { return whole }
         var result = ""

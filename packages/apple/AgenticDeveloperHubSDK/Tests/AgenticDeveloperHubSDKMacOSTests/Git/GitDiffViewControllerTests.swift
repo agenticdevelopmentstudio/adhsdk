@@ -193,13 +193,13 @@ struct GitDiffViewControllerTests {
     }
 
     @Test("the latest show wins when the earlier diff returns last")
-    func latestWinsEarlierLast() async {
+    func latestWinsEarlierLast() async throws {
         let source = GitViewsFakeContentSource()
         source.diffs = ["a1": Self.oneLine("a.swift", "from a"), "b1": Self.oneLine("b.swift", "from b")]
         source.files = ["b.swift@b1^1": Data("let b = 1".utf8), "b.swift@b1": Data("let b = 1".utf8),
                         "a.swift@a1^1": Data("let a = 1".utf8), "a.swift@a1": Data("let a = 1".utf8)]
         source.holding = ["diff:a1", "diff:b1"]
-        let controller = Self.controller(source, coloring: try? GitTextMateFixture.coloring())
+        let controller = Self.controller(source, coloring: try GitTextMateFixture.coloring())
 
         controller.show(target: .commit("a1", paths: []), file: "a.swift")
         let first = controller.loadTask
@@ -219,11 +219,11 @@ struct GitDiffViewControllerTests {
     }
 
     @Test("the latest show wins when the earlier diff returns first")
-    func latestWinsEarlierFirst() async {
+    func latestWinsEarlierFirst() async throws {
         let source = GitViewsFakeContentSource()
         source.diffs = ["a1": Self.oneLine("a.swift", "from a"), "b1": Self.oneLine("b.swift", "from b")]
         source.holding = ["diff:a1", "diff:b1"]
-        let controller = Self.controller(source, coloring: try? GitTextMateFixture.coloring())
+        let controller = Self.controller(source, coloring: try GitTextMateFixture.coloring())
 
         controller.show(target: .commit("a1", paths: []), file: "a.swift")
         let first = controller.loadTask
@@ -242,12 +242,12 @@ struct GitDiffViewControllerTests {
     }
 
     @Test("colours read for an earlier show are dropped once a later show is made")
-    func latestWinsDuringColouring() async {
+    func latestWinsDuringColouring() async throws {
         let source = GitViewsFakeContentSource()
         source.diffs = ["a1": Self.oneLine("a.swift", "from a"), "b1": Self.oneLine("b.swift", "from b")]
         source.files = ["a.swift@a1^1": Data("let a = 1".utf8), "a.swift@a1": Data("let a = 1".utf8)]
         source.holding = ["contents:a.swift@a1^1", "diff:b1"]
-        let controller = Self.controller(source, coloring: try? GitTextMateFixture.coloring())
+        let controller = Self.controller(source, coloring: try GitTextMateFixture.coloring())
 
         controller.show(target: .commit("a1", paths: []), file: "a.swift")
         let first = controller.loadTask
@@ -324,6 +324,39 @@ struct GitDiffViewControllerTests {
         controller.blameButton.performClick(nil)
 
         #expect(delegate.events == [.blame("a", "c1"), .history("a"), .blame("d", "c1^1"), .blame("a", nil)])
+    }
+
+    @Test("while a later file loads, Blame and History act on it, never on the diff still shown")
+    func blameAndHistoryDuringLoad() async {
+        let source = GitViewsFakeContentSource()
+        let deleted = GitFileDiff(oldPath: "a", newPath: nil, change: .deleted, isBinary: false, hunks: [])
+        source.diffs["c1"] = GitDiff(files: [deleted])
+        source.diffs["c2"] = Self.oneLine("b", "from b")
+        source.holding = ["diff:c2"]
+        let controller = Self.controller(source)
+        let delegate = RecordingDiffDelegate()
+        controller.delegate = delegate
+
+        controller.show(target: .commit("c1", paths: ["a"]), file: "a")
+        await controller.loadTask?.value
+        controller.show(target: .commit("c2", paths: ["b"]), file: "b")
+        await source.waitUntilHeld("diff:c2")
+        controller.blameButton.performClick(nil)
+        controller.historyButton.performClick(nil)
+        source.release("diff:c2")
+        await controller.loadTask?.value
+
+        #expect(delegate.events == [.blame("b", "c2"), .history("b")])
+    }
+
+    @Test("a file missing from the diff shows no rows rather than another file's")
+    func missingFile() async {
+        let source = GitViewsFakeContentSource()
+        source.diffs["c1"] = Self.oneLine("other", "o")
+        let controller = Self.controller(source)
+        controller.show(target: .commit("c1", paths: []), file: "mine")
+        await controller.loadTask?.value
+        #expect(Self.texts(controller.inlineViewer.dataSource).isEmpty)
     }
 
     @Test("the blame revision follows the diff target")

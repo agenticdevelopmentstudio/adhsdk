@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-11-13 | Mike Fullerton | Changed-files list, commit detail and working copy: GitFileListItem in Core, one shared list, latest-call-wins detail, staged/unstaged targets; vectors 023-036 |
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Commit detail logs a failed diff and shows its description; surviving items re-report on a status change; single-line titles; collapsed empty header; vectors 033, 037-039 |
 | 1.4.0 | 2026-11-13 | Mike Fullerton | Diff, blame and file history views: inline and side-by-side diff models, syntax colouring, persisted diff toggles |
+| 1.4.1 | 2026-11-14 | Mike Fullerton | File history diffs each commit under the file's path at that commit; Blame and History act on the latest show; a file missing from the diff shows no rows; blame's uncommitted id at either hash length; colouring decodes each line as the diff text does |

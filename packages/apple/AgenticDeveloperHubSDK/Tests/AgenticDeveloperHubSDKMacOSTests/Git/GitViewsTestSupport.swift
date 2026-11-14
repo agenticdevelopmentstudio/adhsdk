@@ -44,7 +44,7 @@ final class GitViewsFakeContentSource: GitContentSource {
     var diffs: [String: GitDiff] = [:]
     var files: [String: Data] = [:]
     var blames: [String: GitBlame] = [:]
-    var histories: [String: [GitCommit]] = [:]
+    var histories: [String: [GitFileHistoryEntry]] = [:]
     var holding: Set<String> = []
     var failing: Set<String> = []
     private(set) var diffRequests: [(target: GitDiffTarget, options: GitDiffOptions)] = []
@@ -89,7 +89,7 @@ final class GitViewsFakeContentSource: GitContentSource {
         return blames[key] ?? GitBlame(lines: [], commits: [:])
     }
 
-    func fileHistory(path: String) async throws -> [GitCommit] {
+    func fileHistory(path: String) async throws -> [GitFileHistoryEntry] {
         historyRequests.append(path)
         try await gate("history:\(path)")
         return histories[path] ?? []

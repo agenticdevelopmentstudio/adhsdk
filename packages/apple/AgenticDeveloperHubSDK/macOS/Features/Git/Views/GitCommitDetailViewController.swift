@@ -184,7 +184,7 @@ public final class GitCommitDetailViewController: NSViewController {
 
     /// Logs a failed diff by its case and fields, never git's own output.
     private func logFailure(_ error: Error) {
-        let description = (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+        let description = GitClientError.logDescription(of: error)
         Self.logger.error("Git commit diff failed: \(description, privacy: .public)")
     }
 

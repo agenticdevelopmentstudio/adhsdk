@@ -5,8 +5,9 @@ import os
 
 /// The git window's file history (recipe `workspace/git/git-views`, "File history"): the
 /// commits that touched one file, newest first, in a list beside a `GitDiffViewController`
-/// showing the selected commit's change to that file. The newest is selected on load; an
-/// empty selection clears the diff.
+/// showing the selected commit's change to that file, asked for under the file's path at
+/// that commit (both paths for a rename), so commits from before a rename show their
+/// change too. The newest is selected on load; an empty selection clears the diff.
 ///
 /// The latest `show(path:)` wins, decided by the controller's own counter. A history that
 /// fails is logged and its description shown, with the list emptied and the diff cleared.
@@ -21,16 +22,15 @@ public final class GitFileHistoryViewController: NSViewController {
     let errorLabel = ThemedLabel.wrapping("", width: 400, role: .danger, textRole: .body)
     public let diffViewController: GitDiffViewController
 
-    /// The file's commits as of the last load, newest first.
-    private(set) var commits: [GitCommit] = []
+    /// The file's commits as of the last load, newest first, each with the file's path then.
+    private(set) var entries: [GitFileHistoryEntry] = []
+    var commits: [GitCommit] { entries.map(\.commit) }
     /// The history request in flight or last finished; tests await it.
     private(set) var loadTask: Task<Void, Never>?
     /// Bumped by every `show` before anything awaits.
     private(set) var generation = 0
 
     private let source: GitContentSource
-    /// The file whose history is listed.
-    private var path: String?
     /// True while `setCommits` moves the selection itself.
     private var isApplyingSelection = false
 
@@ -105,10 +105,9 @@ public final class GitFileHistoryViewController: NSViewController {
         generation += 1
         let generation = self.generation
         loadTask?.cancel()
-        self.path = path
         showFailure(nil)
         loadTask = Task { [weak self, source] in
-            let result: Result<[GitCommit], Error>
+            let result: Result<[GitFileHistoryEntry], Error>
             do {
                 result = .success(try await source.fileHistory(path: path))
             } catch {
@@ -117,23 +116,23 @@ public final class GitFileHistoryViewController: NSViewController {
             guard let self, generation == self.generation else { return }
             switch result {
             case .failure(let error):
-                self.setCommits([])
-                let description = (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+                self.setEntries([])
+                let description = GitClientError.logDescription(of: error)
                 Self.logger.error("Git file history failed: \(description, privacy: .public)")
                 self.showFailure(error)
-            case .success(let commits):
-                self.setCommits(commits)
+            case .success(let entries):
+                self.setEntries(entries)
             }
         }
     }
 
-    /// Lists `commits` with the newest selected (none when empty), and shows that in the
+    /// Lists `entries` with the newest selected (none when empty), and shows that in the
     /// diff once, however many selection notifications the table sends on the way.
-    private func setCommits(_ commits: [GitCommit]) {
-        self.commits = commits
+    private func setEntries(_ entries: [GitFileHistoryEntry]) {
+        self.entries = entries
         isApplyingSelection = true
         tableView.reloadData()
-        if commits.isEmpty {
+        if entries.isEmpty {
             tableView.deselectAll(nil)
         } else {
             tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
@@ -144,11 +143,12 @@ public final class GitFileHistoryViewController: NSViewController {
 
     private func selectionChanged() {
         let row = tableView.selectedRow
-        guard let path, commits.indices.contains(row) else {
+        guard entries.indices.contains(row) else {
             diffViewController.clear()
             return
         }
-        diffViewController.show(target: .commit(commits[row].id, paths: [path]), file: path)
+        let entry = entries[row]
+        diffViewController.show(target: .commit(entry.commit.id, paths: entry.paths), file: entry.path)
     }
 
     private func showFailure(_ error: Error?) {
@@ -158,12 +158,12 @@ public final class GitFileHistoryViewController: NSViewController {
 }
 
 extension GitFileHistoryViewController: NSTableViewDataSource {
-    public func numberOfRows(in tableView: NSTableView) -> Int { commits.count }
+    public func numberOfRows(in tableView: NSTableView) -> Int { entries.count }
 }
 
 extension GitFileHistoryViewController: NSTableViewDelegate {
     public func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        guard commits.indices.contains(row) else { return nil }
+        guard entries.indices.contains(row) else { return nil }
         let cell: GitFileHistoryCellView
         if let reused = tableView.makeView(withIdentifier: GitFileHistoryCellView.identifier,
                                            owner: self) as? GitFileHistoryCellView {
@@ -172,7 +172,7 @@ extension GitFileHistoryViewController: NSTableViewDelegate {
             cell = GitFileHistoryCellView()
             cell.identifier = GitFileHistoryCellView.identifier
         }
-        cell.configure(commits[row])
+        cell.configure(entries[row].commit)
         return cell
     }
 

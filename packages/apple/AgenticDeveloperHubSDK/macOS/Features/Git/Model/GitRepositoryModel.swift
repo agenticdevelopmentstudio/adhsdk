@@ -237,12 +237,10 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         try await client.blame(path: path, at: revision, in: root)
     }
 
-    /// The commits that changed `path`, following it across renames.
-    public func fileHistory(path: String) async throws -> [GitCommit] {
-        var history = GitLogQuery()
-        history.path = path
-        history.followRenames = true
-        return try await client.log(history, in: root)
+    /// The commits that changed `path`, following it across renames, each with the
+    /// file's path at that commit.
+    public func fileHistory(path: String) async throws -> [GitFileHistoryEntry] {
+        try await client.fileHistory(path: path, in: root)
     }
 
     /// A loaded commit by id; nil when it is not in the history loaded so far.
@@ -253,7 +251,7 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     // MARK: Failures
 
     private func logFailure(_ part: String, _ error: Error) {
-        let description = (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+        let description = GitClientError.logDescription(of: error)
         Self.logger.error(
             "Git \(part, privacy: .public) reload failed, keeping the last state: \(description, privacy: .public)"
         )

@@ -40,6 +40,16 @@ struct GitLogQueryTests {
         #expect(arguments.contains("--skip=100"))
     }
 
+    @Test("name-status asks for each commit's changed paths, ahead of the path part")
+    func nameStatus() {
+        var query = GitLogQuery()
+        #expect(!query.arguments().contains("--name-status"))
+        query.path = "a b.txt"
+        query.followRenames = true
+        query.nameStatus = true
+        #expect(Array(query.arguments().suffix(4)) == ["--name-status", "--follow", "--", "a b.txt"])
+    }
+
     @Test("author, message search and pickaxe map to flags")
     func filters() {
         var query = GitLogQuery()

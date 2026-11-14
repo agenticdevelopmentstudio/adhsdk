@@ -116,6 +116,24 @@ struct GitClientHistoryTests {
         #expect(followed == [history.latin1, history.rename, history.initial])
     }
 
+    @Test("file history follows a rename and names the file's path at each commit")
+    func fileHistoryFollowsRename() async throws {
+        let history = try await History.make()
+        defer { history.tearDown() }
+        let entries = try await client.fileHistory(path: "c d.txt", in: history.root)
+        #expect(entries.map(\.commit.id) == [history.latin1, history.rename, history.initial])
+        #expect(entries.map(\.path) == ["c d.txt", "c d.txt", "a b.txt"])
+        #expect(entries.map(\.oldPath) == [nil, "a b.txt", nil])
+        #expect(entries.map(\.paths) == [["c d.txt"], ["a b.txt", "c d.txt"], ["a b.txt"]])
+    }
+
+    @Test("file history on an unborn HEAD is empty")
+    func fileHistoryOnUnbornHeadIsEmpty() async throws {
+        let repository = try await GitTestRepository.make()
+        defer { repository.tearDown() }
+        #expect(try await client.fileHistory(path: "a.txt", in: repository.root).isEmpty)
+    }
+
     @Test("log narrows by author, by message (case-insensitively) and by pickaxe")
     func logSearchesMessageAuthorAndPickaxe() async throws {
         let history = try await History.make()
@@ -381,6 +399,36 @@ struct GitClientHistoryTests {
         let nested = history.repository.url("nested")
         try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
         #expect(try await client.fileContents(path: "c d.txt", at: nil, in: nested) == Data("working\n".utf8))
+    }
+
+    @Test("fileContents reads the diff views' revision specs, <id>^1 and :0, for a path with spaces and Unicode")
+    func fileContentsAtDiffRevisionsForAwkwardPath() async throws {
+        let repository = try await GitTestRepository.make()
+        defer { repository.tearDown() }
+        let path = "dir é/naïve file.swift"
+        try FileManager.default.createDirectory(at: repository.url("dir é"), withIntermediateDirectories: true)
+        try repository.write("let a = 1\n", to: path)
+        try await repository.run(["add", path])
+        try await repository.commit("first", at: Self.epoch + 100)
+        try repository.write("let a = 2\n", to: path)
+        try await repository.run(["add", path])
+        try await repository.commit("second", at: Self.epoch + 200)
+        let second = try await repository.sha("HEAD")
+        try repository.write("let a = 3\n", to: path)
+        try await repository.run(["add", path])
+
+        // The views read with the path the diff names. Process passes arguments decomposed,
+        // so a `<rev>:<path>` lookup would miss the precomposed name git stores.
+        let diff = try await client.diff(.commit(second, paths: []), options: GitDiffOptions(), in: repository.root)
+        let named = try #require(diff.files.first?.newPath)
+        #expect(named == path)
+        #expect(try await client.fileContents(path: "dir é", at: second, in: repository.root) == nil)
+        #expect(try await client.fileContents(path: "dir é/missing", at: ":0", in: repository.root) == nil)
+        // A commit's old side is `<id>^1`, its new side `<id>`; the unstaged old side is `:0`.
+        #expect(try await client.fileContents(path: named, at: second + "^1", in: repository.root)
+            == Data("let a = 1\n".utf8))
+        #expect(try await client.fileContents(path: named, at: second, in: repository.root) == Data("let a = 2\n".utf8))
+        #expect(try await client.fileContents(path: named, at: ":0", in: repository.root) == Data("let a = 3\n".utf8))
     }
 
     @Test("fileContents of an absent path is nil, at a revision and in the working tree")

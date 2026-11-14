@@ -51,4 +51,7 @@
 | git-client-048 | error-description-vs-log-description | Produce the log-facing description of an executable-not-found outcome carrying path `"/Users/secret/bin/git"`. | Excludes `"secret"`. |
 | git-client-049 | status-staged-unstaged-columns | Parse status output `MM both.txt`, `A  new.txt`, ` D gone.txt`, `?? loose.txt`. | Staged: `both.txt` modified, `new.txt` added. Unstaged: `both.txt` modified, `gone.txt` deleted, `loose.txt` untracked. |
 | git-client-050 | status-staged-unstaged-columns | Parse status output `UU fight.txt`, `RM new.txt` (origin `old.txt`), `!! ignored.txt`. | Staged: `new.txt` renamed. Unstaged: `fight.txt` conflicted, `new.txt` modified. `ignored.txt` is in neither; `old.txt` is in neither. |
-
+| git-client-051 | file-history-parse | Records `c4` (`M new name.txt`), `c3` (no status), `c2` (`R087 mid.txt new name.txt`), `c1` (`C100 old.txt mid.txt`), `c0` (`A old.txt`), requested `new name.txt` | Paths `new name.txt`, `new name.txt`, `new name.txt`, `mid.txt`, `old.txt`; old paths none, none, `mid.txt`, `old.txt`, none. |
+| git-client-052 | file-history-command | A repository where `a b.txt` was renamed to `c d.txt`, then edited; file history of `c d.txt` | Edit at `c d.txt`; rename at `c d.txt` from `a b.txt`; initial at `a b.txt`. |
+| git-client-053 | log-query-name-status | A follow request for `a b.txt` with name-status | Ends `--name-status --follow -- a b.txt`. |
+| git-client-054 | file-contents | A repository with `dir é/naïve file.swift` committed as `let a = 1`, then `let a = 2`, and `let a = 3` staged | Contents at `second^1`, `second` and `:0` are the three versions; `dir é` at `second` and `dir é/missing` at `:0` are nothing. |

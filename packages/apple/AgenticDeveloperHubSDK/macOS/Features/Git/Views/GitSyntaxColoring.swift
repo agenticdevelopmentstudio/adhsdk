@@ -36,8 +36,7 @@ public final class GitSyntaxColoring {
 
     /// `data` as styled lines, or nil for nil data, data over the highlighter's limits, a
     /// path whose language is unknown or has no grammar, or a highlighter error (logged).
-    /// Bytes that are not UTF-8 are decoded as ISO Latin-1, so they are coloured rather
-    /// than dropped.
+    /// A line that is not UTF-8 is decoded as ISO Latin-1, so it is coloured, not dropped.
     public func lines(for data: Data?, path: String) async -> [StyledLine]? {
         guard let data, data.count <= SyntaxHighlighter.maximumBytes,
               let languageID = resolver.languageID(for: URL(fileURLWithPath: path)),
@@ -53,9 +52,18 @@ public final class GitSyntaxColoring {
         }
     }
 
-    /// UTF-8 when the bytes are UTF-8, otherwise ISO Latin-1, which decodes any bytes.
+    /// `GitOutputDecoding`, the decoding the diff and blame text get: each line UTF-8, else
+    /// ISO Latin-1. A file with one stray byte keeps every other line's runs on the columns
+    /// they colour, rather than every multi-byte character becoming two or three.
+    ///
+    /// A lone carriage return becomes a space. The diff splits lines at newlines only, so a
+    /// lone CR is a character inside its line there, while the highlighter would break the
+    /// line at it and every later line would take the next line's colours. A space keeps the
+    /// line count and the columns. `\r\n` is one `Character`, so it is left as it is.
     nonisolated static func decode(_ data: Data) -> String {
-        String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) ?? ""
+        let text = GitOutputDecoding.string(data)
+        guard text.unicodeScalars.contains("\r") else { return text }
+        return String(text.map { $0 == "\r" ? " " : $0 })
     }
 
     /// Where a diff target's old and new sides are read from: the working copy's unstaged
@@ -97,7 +105,7 @@ public final class GitSyntaxColoring {
         do {
             data = try await source.contents(path: path, at: spec)
         } catch {
-            let description = (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+            let description = GitClientError.logDescription(of: error)
             Self.logger.error("Git contents for colouring failed: \(description, privacy: .public)")
             return nil
         }

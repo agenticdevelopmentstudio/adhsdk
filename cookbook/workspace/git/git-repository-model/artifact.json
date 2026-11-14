@@ -4,11 +4,11 @@
     "id": "a2394ca0-3988-410b-9fc8-e0c9e253fc94",
     "title": "Git Repository Model",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dfe9675c2f7a8f93",
+  "synced": "7c122f6d8e1a5a7b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

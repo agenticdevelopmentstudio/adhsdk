@@ -21,11 +21,17 @@ final class GitBlameLineModel: LineViewerDataSource {
 
     static let dayWidth = 10
 
-    init(blame: GitBlame, colours: [StyledLine]?) {
+    /// The gutter's day, `yyyy-MM-dd` in the local time zone; one for every model.
+    private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    init(blame: GitBlame, colours: [StyledLine]?) {
+        let formatter = Self.dayFormatter
         let firstLines = Set(blame.runs.map(\.finalLines.lowerBound))
         var rows: [LineViewerRow] = []
         for (index, line) in blame.lines.enumerated() {
@@ -85,7 +91,10 @@ public final class GitBlameViewController: NSViewController {
     private var model: GitBlameLineModel?
 
     /// git's id for lines not yet committed.
-    static let uncommittedID = String(repeating: "0", count: 40)
+    /// Git's id for lines not yet committed: all zeros, at whichever hash length.
+    static func isUncommitted(_ id: String) -> Bool {
+        !id.isEmpty && id.allSatisfy { $0 == "0" }
+    }
 
     public init(source: GitContentSource, coloring: GitSyntaxColoring?) {
         self.source = source
@@ -140,7 +149,7 @@ public final class GitBlameViewController: NSViewController {
             switch result {
             case .failure(let error):
                 self.setModel(nil)
-                let description = (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+                let description = GitClientError.logDescription(of: error)
                 Self.logger.error("Git blame failed: \(description, privacy: .public)")
                 self.showFailure(error)
             case .success(let blame):
@@ -181,7 +190,7 @@ extension GitBlameViewController: LineViewerDelegate {
     public func lineViewer(_ viewer: LineViewerViewController, didClickGutterColumn column: Int, row: Int) {
         guard column == 0, let model, model.commitIDs.indices.contains(row) else { return }
         let id = model.commitIDs[row]
-        guard id != Self.uncommittedID else { return }
+        guard !Self.isUncommitted(id) else { return }
         delegate?.blame(self, didSelectCommit: id)
     }
 }
