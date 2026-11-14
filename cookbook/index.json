@@ -8623,9 +8623,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:6c250489053c4b8188af5930d8dde7c2be456586ad9cb865479ed84cbac8d4c5",
+            "hash": "sha256:a4c3a2f2848248d9684913a161462d3c279a2d98abdb9a9393d7f1d60d2c5aa4",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/",
           "platform": "apple"

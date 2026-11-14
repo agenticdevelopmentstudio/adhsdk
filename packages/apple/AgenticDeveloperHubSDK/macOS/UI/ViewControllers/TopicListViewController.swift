@@ -583,6 +583,16 @@ private final class TopicListItemLabel: NSTextField {
 /// An item row's cell: the standard image and label, plus a trailing badge.
 private final class TopicListItemCell: NSTableCellView {
     let badgeLabel = NSTextField(labelWithString: "")
+    /// Title trailing ≤ badge leading − gap. Active only while the badge shows,
+    /// so a row without one lays out exactly as `preferredWidth` measures it.
+    var titleToBadge: NSLayoutConstraint?
+
+    func setBadge(_ badge: String?) {
+        let text = badge ?? ""
+        badgeLabel.stringValue = text
+        badgeLabel.isHidden = text.isEmpty
+        titleToBadge?.isActive = !text.isEmpty
+    }
 }
 
 private final class TopicListNode: NSObject {
@@ -678,10 +688,9 @@ extension TopicListViewController: NSOutlineViewDelegate {
             // Cells are pooled, so the font is reapplied here alongside the color
             // rather than at creation — a font baked in stays stale after a swap.
             cell.textField?.font = item.isEmphasized ? CellMetrics.emphasizedItemFont : CellMetrics.itemFont
-            if let badgeLabel = (cell as? TopicListItemCell)?.badgeLabel {
-                let badge = item.badge ?? ""
-                badgeLabel.stringValue = badge
-                badgeLabel.isHidden = badge.isEmpty
+            if let itemCell = cell as? TopicListItemCell {
+                let badgeLabel = itemCell.badgeLabel
+                itemCell.setBadge(item.badge)
                 badgeLabel.font = CellMetrics.badgeFont
                 badgeLabel.textColor = palette.secondaryTextColor
                 badgeLabel.accessibilityID(labelID + ".badge")
@@ -770,14 +779,15 @@ extension TopicListViewController: NSOutlineViewDelegate {
                 equalTo: imageView.trailingAnchor, constant: CellMetrics.iconToTextGap),
             textField.trailingAnchor.constraint(
                 lessThanOrEqualTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
-            textField.trailingAnchor.constraint(
-                lessThanOrEqualTo: badgeLabel.leadingAnchor, constant: -CellMetrics.badgeGap),
             textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
 
             badgeLabel.trailingAnchor.constraint(
                 equalTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
             badgeLabel.firstBaselineAnchor.constraint(equalTo: textField.firstBaselineAnchor)
         ])
+        // Activated by `setBadge` only while a badge shows.
+        cell.titleToBadge = textField.trailingAnchor.constraint(
+            lessThanOrEqualTo: badgeLabel.leadingAnchor, constant: -CellMetrics.badgeGap)
 
         return cell
     }

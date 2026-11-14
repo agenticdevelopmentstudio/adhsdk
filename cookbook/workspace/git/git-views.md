@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
@@ -33,7 +33,7 @@ approved-date: ""
 
 ## Overview
 
-The views of a git window: each one an AppKit view controller that reads one narrow data-source protocol of the [git repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) and reports what the user chose to a delegate, injected, so none of them knows its window or calls git. This recipe has one section per view. The **refs sidebar** (`GitRefsSidebarViewController`) lists, on the toolkit's [topic list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54), the working copy, the local branches, the remote branches grouped by remote, the tags, the stashes, the submodules and the linked worktrees, with ahead/behind badges on branches that track an upstream and the checked-out branch in bold.
+The views of a git window: each one an AppKit view controller that reads one narrow data-source protocol of the [git repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) and reports what the user chose to a delegate, injected, so none of them knows its window or calls git. This recipe has one section per view. The **refs sidebar** (`GitRefsSidebarViewController`) lists, on the toolkit's [topic list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54), the working copy, the local branches, the remote branches grouped by remote, the tags, the stashes, the submodules and every non-bare worktree (the main one and the one the window is on included), with ahead/behind badges on branches that track an upstream and the checked-out branch in bold.
 
 ## Behavioral Requirements
 
@@ -41,11 +41,11 @@ The views of a git window: each one an AppKit view controller that reads one nar
 
 - **sidebar-section-order**: The sidebar MUST list its sections in this order: `Workspace` (one row, `Working Copy`), `Branches` (local branches), one section per remote titled `Remotes · <remote>` (in the order each remote first appears in the refs), `Tags`, `Stashes`, `Submodules`, `Worktrees`. Rows keep the data source's order within a section.
 - **sidebar-empty-sections-omitted**: A section with no rows MUST be left out, header included; `Workspace` always has its one row.
-- **sidebar-row-titles**: A local branch or tag row MUST be titled with its name; a remote branch row with its name less the `<remote>/` prefix; a stash row with its message, or `stash@{N}` when the message is empty; a submodule row with its path; a worktree row with its directory's last path component. Bare worktrees MUST be left out.
+- **sidebar-row-titles**: A local branch or tag row MUST be titled with its name; a remote branch row with its name less the `<remote>/` prefix, or its whole name when nothing follows the prefix; a stash row with its message, or `stash@{N}` when the message is empty; a submodule row with its path; a worktree row with its directory's last path component. Bare worktrees MUST be left out.
 - **sidebar-ahead-behind-badge**: A local branch row MUST carry a badge `↑n ↓m`, each half present only when its count is non-zero (`↑2 ↓1`, `↑2`, `↓1`), and no badge when both are zero. Other rows carry none.
 - **sidebar-head-bold**: The checked-out branch's row MUST be emphasized (bold); no other row is.
-- **sidebar-selection**: Selecting a row MUST call the delegate once: the working copy → `sidebarDidSelectWorkingCopy`; a branch, remote branch or tag → `didSelect ref`; a stash → `didSelectStash`; a submodule → `open directory` with the repository root joined with the submodule's path; a worktree → `open directory` with the worktree's directory. Clearing the selection calls nothing.
-- **sidebar-reload**: `reload()` MUST rebuild every section from the data source's current values, keeping the selected row selected when its id is still present (by the topic list's restore-by-id) without calling the delegate, and dropping it otherwise.
+- **sidebar-selection**: Selecting a row MUST call the delegate once: the working copy → `sidebarDidSelectWorkingCopy`; a branch, remote branch or tag → `didSelect ref`; a stash → `didSelectStash`; a submodule → `open directory` with the repository root joined with the submodule's path; a worktree → `open directory` with the worktree's directory. A submodule or worktree row is an action, not a place: after it opens, the previous selection, when there is one, is restored, so the same row can be chosen again. Clearing the selection calls nothing.
+- **sidebar-reload**: `reload()` MUST rebuild every section from the data source's current values, keeping the selected row selected when its id is still present (by the topic list's restore-by-id) without calling the delegate. When the selected row is gone, the sidebar MUST select `Working Copy` and call `sidebarDidSelectWorkingCopy` once, so the owner never keeps showing a ref or stash that no longer exists.
 - **sidebar-ui-thread**: The sidebar MUST be used on the UI thread.
 
 ## Appearance
@@ -59,14 +59,14 @@ The topic list's appearance throughout. Icons (SF Symbols): working copy `square
 ### Refs sidebar
 
 - **Unborn repository**: only `Workspace` is listed (no refs yet), plus `Worktrees` when the data source lists one.
-- **Selected row removed**: after a reload that no longer contains the selected row, nothing is selected.
+- **Selected row removed**: after a reload that no longer contains the selected ref or stash, `Working Copy` is selected and the delegate is told.
 - **Repository deleted**: the data source keeps its last values, so the sidebar keeps its last rows.
 
 ## Accessibility
 
 ### Refs sidebar
 
-The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic list's, so each row's label carries `topic-list.item.<slug of title>` and answers an accessibility press by selecting the row; a badge carries `topic-list.item.<slug>.badge`.
+The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic list's, so each row's label carries `topic-list.item.<slug of title>` and answers an accessibility press by selecting the row; a badge carries `topic-list.item.<slug>.badge`. Because the identifier comes from the title, a branch name shared by `Branches` and a `Remotes · <remote>` section (`main`) yields the same identifier in each; address one with `dev.py ax --nth`.
 
 ## Conformance Test Vectors
 
@@ -78,6 +78,11 @@ The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic
 | git-views-004 | sidebar-empty-sections-omitted | A source with one local branch and nothing else | Sections `Workspace`, `Branches` only. |
 | git-views-005 | sidebar-selection | Select each row kind in turn | The delegate receives working copy; ref `refs/heads/main`; ref `refs/remotes/origin/main`; ref `refs/tags/v1`; the stash; directory `<root>/lib/sub`; directory `/w/feature`, once each. |
 | git-views-006 | sidebar-reload | Source gains a branch `x`; `reload()` | `Branches` lists `x`; the delegate is not called. |
+| git-views-007 | sidebar-reload | `dev` selected; the source gains a branch above it and `dev`'s ahead count changes; `reload()` | `dev` is still selected; the delegate is not called again. |
+| git-views-008 | sidebar-reload | Stash `s0` selected and then dropped; `reload()`. Then `dev` selected and deleted; `reload()` | Each time `Working Copy` is selected and `sidebarDidSelectWorkingCopy` is called once. |
+| git-views-009 | sidebar-selection | Tag `v1` selected, then worktree `/w/feature` chosen | `open directory /w/feature`; `v1` is selected again. |
+| git-views-010 | sidebar-row-titles | Remote refs `origin/main` and `odd` | Rows `main` and `odd`. |
+| git-views-011 | sidebar-empty-sections-omitted | An unborn source with main worktree `/repo` | Sections `Workspace`, `Worktrees`; rows `Working Copy`; `repo`. |
 
 ## Edge Cases
 
@@ -136,7 +141,7 @@ Not applicable: the views log nothing; the model logs failed loads.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -163,10 +168,11 @@ Not applicable: the views log nothing; the model logs failed loads.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind and reload, against a fake data source.
+`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation: the refs sidebar |
+| 1.0.1 | 2026-11-13 | Mike Fullerton | Reload falls back to the working copy when the selected ref or stash vanishes; directory rows restore the selection; remote title fallback; vectors 007-011 |
