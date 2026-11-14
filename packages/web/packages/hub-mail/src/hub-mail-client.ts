@@ -1,6 +1,8 @@
 import { MailSnapshot } from './snapshot'
 import type {
   FetchJson,
+  HubConnection,
+  HubList,
   HubMailAccount,
   HubMailClient,
   HubMailMessage,
@@ -10,22 +12,14 @@ import type {
 
 export interface HubMailClientOptions {
   fetchJson: FetchJson
-  /** The `limit` sent to `/sync/pull`; the hub clamps it to 1..1000. */
+  /** The `limit` sent to `/v1/sync/pull`; the hub clamps it to 1..1000. */
   pageSize?: number
 }
 
 const DEFAULT_PAGE_SIZE = 500
 const DEFAULT_MESSAGE_LIMIT = 50
-
-interface ConnectionRow {
-  id: string
-  provider?: string
-  serviceType?: string
-  status?: string
-  displayName?: string
-  username?: string
-  lastError?: string | null
-}
+/** The widest page `/v1` list routes give. */
+const CONNECTIONS_PAGE_SIZE = 100
 
 /**
  * Reads the caller's hub-synced Gmail through the hub API, holding what it read in memory
@@ -41,12 +35,11 @@ export function createHubMailClient(options: HubMailClientOptions): HubMailClien
 
   async function pullPages(): Promise<void> {
     for (;;) {
-      const page = (await fetchJson(
-        `/sync/pull?cursor=${encodeURIComponent(cursor)}&limit=${pageSize}`,
-      )) as HubSyncPullPage
+      const query = cursor ? `cursor=${encodeURIComponent(cursor)}&limit=${pageSize}` : `limit=${pageSize}`
+      const page = (await fetchJson(`/v1/sync/pull?${query}`)) as HubSyncPullPage
       for (const change of page.changes) snapshot.apply(change)
       cursor = page.cursor
-      if (!page.hasMore) return
+      if (!page.has_more) return
     }
   }
 
@@ -77,16 +70,23 @@ export function createHubMailClient(options: HubMailClientOptions): HubMailClien
 
   return {
     async accounts(): Promise<HubMailAccount[]> {
-      const body = (await fetchJson('/integrations/me/connections')) as {
-        connections?: ConnectionRow[]
+      const rows: HubConnection[] = []
+      for (let after = ''; ; ) {
+        const query = `limit=${CONNECTIONS_PAGE_SIZE}${after ? `&starting_after=${encodeURIComponent(after)}` : ''}`
+        const page = (await fetchJson(`/v1/integrations/connections?${query}`)) as HubList<HubConnection>
+        const data = page.data ?? []
+        rows.push(...data)
+        const last = data[data.length - 1]
+        if (!page.has_more || !last) break
+        after = last.id
       }
-      return (body.connections ?? [])
-        .filter((c) => c.provider === 'gmail' && c.serviceType === 'messages')
+      return rows
+        .filter((c) => c.provider === 'gmail' && c.service_type === 'messages')
         .map((c) => ({
           id: c.id,
-          email: c.username || c.displayName || c.id,
+          email: c.username || c.display_name || c.id,
           status: c.status ?? 'active',
-          lastError: c.lastError ?? null,
+          lastError: c.last_error ?? null,
         }))
     },
 

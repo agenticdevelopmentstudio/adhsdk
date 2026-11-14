@@ -5128,9 +5128,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ff184af97e33639007d68d16b40710a8219500278d961c0e748853c060c9f948",
+            "hash": "sha256:65339811b49acddca66ee13a56574402a0ae8a08c02d2549dca086b843907b2b",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/hub-mail/src/",
           "platform": "web"
