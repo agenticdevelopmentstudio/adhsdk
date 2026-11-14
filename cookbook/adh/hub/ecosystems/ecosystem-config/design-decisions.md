@@ -29,3 +29,12 @@ Platform scope: web implementation.
 
 **Approved**: pending
 
+
+**Decision**: one sync-tables pane, in this package, serves both the admin
+console and the hub's `[workspace]/sync` page; the route family is a prop.
+**Rationale**: the two surfaces differ only in who may call the backend, and the
+backend already shares one handler set between its two route families. A second
+pane would be two copies of the same list that nothing keeps in step. This package
+is the lowest tier that holds an ecosystem's configuration panes, and the admin
+console already sits above it.
+**Approved**: yes (owner, Temporal plan, 2026-11-13)

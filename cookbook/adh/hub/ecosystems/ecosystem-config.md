@@ -356,6 +356,44 @@ fetch-based operations with no view code of its own.
   carries only a `prefix`); the alternate client gives no other route through which
   the raw secret can be retrieved again.
 
+
+### Sync tables (web)
+
+Which catalog resources one ecosystem syncs to offline clients. The backend
+contract is adhbackend's sync-table-enrollment recipe; this topic is its client
+and pane. It is web-only for now.
+
+- **sync-tables-two-families**: the sync-tables client MUST be built for one of two
+  route families. `"admin"` addresses `/api/v1/sync/tables/{id}`, with one resource
+  at `/api/v1/sync/tables/{id}/resources/{resource}`, for platform staff.
+  `"ecosystem"` addresses `/api/v1/ecosystems/{id}/sync_tables`, with one resource
+  at `/api/v1/ecosystems/{id}/sync_tables/{resource}`, for the ecosystem's
+  managers. The ecosystem id and the resource MUST be URL-encoded in both.
+- **sync-tables-camel-rows**: each catalog row MUST be mapped from the wire's
+  snake_case (`push_mode`, `default_enabled`) to `pushMode` and `defaultEnabled`,
+  keeping `resource`, `scope`, `enabled` and `overridden` as they are.
+- **sync-tables-read-drains-list**: reading the catalog MUST drain the /v1 list
+  envelope, so every resource is returned however the server pages it.
+- **sync-tables-set-returns-catalog**: setting a resource MUST POST
+  `{ enabled }` to its resource path and return the full refreshed catalog from the
+  response's `tables`.
+- **sync-tables-clear-rereads**: clearing a resource's override MUST DELETE its
+  resource path and then re-read the catalog, because /v1 answers a DELETE with a
+  tombstone, not the catalog.
+- **sync-tables-schema-of**: a row's schema MUST be the part of its resource before
+  the first dot.
+- **sync-tables-pane-family**: the pane MUST take the family as a prop, defaulting
+  to `"ecosystem"`, and MUST key its cached catalog by family and ecosystem id, so
+  the admin console and the hub never share a cache entry.
+- **sync-tables-pane-skips-noops**: Sync and Don't sync MUST act only on selected
+  rows not already in that state, and Reset to default only on selected rows that
+  are overridden. A no-op set would store an override that pins the resource
+  against a later change to its default.
+- **sync-tables-pane-sequential**: the pane's bulk actions MUST run one resource at
+  a time through the shared batch runner, halting on the first failure until the
+  user continues or stops, and leaving earlier saves in place.
+- **sync-tables-pane-reseed**: after each write the pane MUST replace its cached
+  catalog with the catalog the write returned, then refetch once the write settles.
 ## Appearance
 
 Not applicable — this is a set of navigation/data-orchestration topics and data
@@ -405,6 +443,12 @@ component not among these given sources.
 | ecosystem-config-022 | conflict-message-parity | The alternate client's create operation invoked for slug "kiosk", where the backend responds with a conflict status | Rejects with "A sign-in app \"kiosk\" already exists in this ecosystem." |
 | ecosystem-config-023 | dual-scoping-channels | The alternate client's mint operation invoked with name "nightly" and ecosystem id "eco-1" via the scope-query channel | The request carries the ecosystem id only in the scope-query channel, not in the body |
 
+| ecosystem-config-024 | sync-tables-two-families | The `"ecosystem"` client sets `content.notes` on for ecosystem "eco-1" | POST `/api/v1/ecosystems/eco-1/sync_tables/content.notes` with `{"enabled":true}` |
+| ecosystem-config-025 | sync-tables-two-families | The `"admin"` client sets `content.notes` off for ecosystem "eco-1" | POST `/api/v1/sync/tables/eco-1/resources/content.notes` with `{"enabled":false}` |
+| ecosystem-config-026 | sync-tables-camel-rows, sync-tables-read-drains-list | The list returns `{resource:"content.feed", push_mode:"generic", default_enabled:true, …}` | The row reads `pushMode: "generic"`, `defaultEnabled: true` |
+| ecosystem-config-027 | sync-tables-clear-rereads | The `"ecosystem"` client clears `content.notes`, and the DELETE answers a tombstone | DELETE `/api/v1/ecosystems/eco-1/sync_tables/content.notes`, then a fresh read of the catalog is returned |
+| ecosystem-config-028 | sync-tables-schema-of | Resource `persona_memory.links` | Schema `persona_memory` |
+| ecosystem-config-029 | sync-tables-pane-skips-noops | Two rows selected, one already synced, then Sync | One POST, for the row that was not synced |
 ## Edge Cases
 
 - **Path deeper than one segment**: sign-in apps, feature flags, server bags, and
@@ -447,6 +491,13 @@ component not among these given sources.
   **dual-scoping-channels** documents that the rail always leaves the body field
   unset and relies on the parameter/query channel exclusively.
 
+
+- **A follower turned on while its parent is off**: the sync-tables write succeeds
+  and the row comes back `overridden` but not `enabled`. The pane shows the server's
+  answer rather than the requested state.
+- **Switching ecosystems with rows selected**: the admin console clears the
+  selection with the ecosystem, because resource ids are the same in every
+  ecosystem and a kept selection would write to one the user has not looked at.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -632,6 +683,16 @@ kind.
   blocks Save on `policyError` and re-keys the rows editor on each re-seed.
   There is no customer picker: the hub has no owner-scoped customer listing, so
   ids are typed.
+  The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
+  the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
+  features package holds `SyncTablesEditor` (the list and its progress modal, no
+  chrome, `family` defaulting to `"ecosystem"`) and `SyncTablesPane` (the hub's
+  `DetailsPane` around it); the hooks are in `sync-tables-hooks.ts`, keyed by
+  family and ecosystem. Bulk actions run through `useBatchRun` from
+  `@adh-sdk/data/query`. The admin console's `SyncPane` adds a picker over every
+  ecosystem and mounts `SyncTablesEditor` with `family="admin"`, keyed on the
+  ecosystem id; the hub's `[workspace]/sync` page mounts `SyncTablesPane`. Apple,
+  Android and Windows have no sync-tables editor; it is planned.
 - **Compose**: model each Apple protocol as a Kotlin `interface` with `suspend
   fun`s (e.g. `interface FeatureFlagsDataSource { suspend fun list(ecosystemId:
   String): List<FeatureFlag> }`); represent the shared token rail's revealed-secrets
@@ -659,6 +720,7 @@ kind.
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | unverified |
 | web | `packages/web/packages/data/src/ecosystem-config/` | unverified |
 | web | `packages/web/packages/features/ecosystem-config/src/` | unverified |
+| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | unverified |
 
 ## Design Decisions
 
@@ -692,6 +754,15 @@ Platform scope: web implementation.
 
 **Approved**: pending
 
+
+**Decision**: one sync-tables pane, in this package, serves both the admin
+console and the hub's `[workspace]/sync` page; the route family is a prop.
+**Rationale**: the two surfaces differ only in who may call the backend, and the
+backend already shares one handler set between its two route families. A second
+pane would be two copies of the same list that nothing keeps in step. This package
+is the lowest tier that holds an ecosystem's configuration panes, and the admin
+console already sits above it.
+**Approved**: yes (owner, Temporal plan, 2026-11-13)
 ## Compliance
 
 | Check | Status | Category |

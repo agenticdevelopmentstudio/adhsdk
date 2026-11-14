@@ -672,6 +672,13 @@
           },
           "location": "packages/web/packages/data/src/query/index.tsx",
           "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/web/packages/data/src/query/use-batch-run.ts",
+          "platform": "web"
         }
       ],
       "kind": "ingredient",
@@ -6368,6 +6375,13 @@
             "state": "unverified"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/web/packages/data/src/ecosystem-config/sync-tables.ts",
           "platform": "web"
         }
       ],

@@ -5,8 +5,9 @@
  * so that where a piece lives stays one decision, made here, instead of thirty import lines to
  * rewrite the next time one moves.
  *
- * The three that stayed are the three that are not about a table: a typed confirmation, a footer
- * that GROWS an append-only log, and a batch runner built on this site's react-query client.
+ * The two that stayed are the two that are not about a table: a typed confirmation and a footer
+ * that GROWS an append-only log. The batch runner moved to `@adh-sdk/data/query` when the hub's
+ * sync pane needed it too; it is re-exported here for the same reason as the list.
  */
 export {
   EditableList,
@@ -31,4 +32,4 @@ export {
   type BatchRunController,
   type BatchRunState,
   type UseBatchRunOptions,
-} from "./use-batch-run";
+} from "@adh-sdk/data/query";

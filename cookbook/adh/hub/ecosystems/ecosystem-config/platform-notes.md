@@ -97,6 +97,16 @@
   blocks Save on `policyError` and re-keys the rows editor on each re-seed.
   There is no customer picker: the hub has no owner-scoped customer listing, so
   ids are typed.
+  The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
+  the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
+  features package holds `SyncTablesEditor` (the list and its progress modal, no
+  chrome, `family` defaulting to `"ecosystem"`) and `SyncTablesPane` (the hub's
+  `DetailsPane` around it); the hooks are in `sync-tables-hooks.ts`, keyed by
+  family and ecosystem. Bulk actions run through `useBatchRun` from
+  `@adh-sdk/data/query`. The admin console's `SyncPane` adds a picker over every
+  ecosystem and mounts `SyncTablesEditor` with `family="admin"`, keyed on the
+  ecosystem id; the hub's `[workspace]/sync` page mounts `SyncTablesPane`. Apple,
+  Android and Windows have no sync-tables editor; it is planned.
 - **Compose**: model each Apple protocol as a Kotlin `interface` with `suspend
   fun`s (e.g. `interface FeatureFlagsDataSource { suspend fun list(ecosystemId:
   String): List<FeatureFlag> }`); represent the shared token rail's revealed-secrets
