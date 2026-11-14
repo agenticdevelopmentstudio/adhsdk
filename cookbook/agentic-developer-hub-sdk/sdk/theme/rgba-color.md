@@ -1,31 +1,30 @@
 ---
 id: ad5bae6b-0172-4cd4-a4b7-297eb58eb28d
-title: RGBAColor
+title: "RGBAColor"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
-created: '2026-11-14'
-modified: '2026-11-14'
+created: 2026-11-14
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: 'Platform-neutral RGBA color value with components clamped to 0 through 1
-  that encodes as an uppercase #RRGGBBAA hex string.'
+summary: "Platform-neutral RGBA color value with components clamped to 0 through 1 that encodes as an uppercase #RRGGBBAA hex string."
 platforms:
-- swift
-- macos
-- ios
+  - swift
+  - macos
+  - ios
 tags:
-- theme
-- color
-- codable
-- logic
+  - theme
+  - color
+  - codable
+  - logic
 depends-on: []
 related: []
 references: []
-approved-by: ''
-approved-date: ''
+approved-by: ""
+approved-date: ""
 ---
 
 # RGBAColor
@@ -101,7 +100,7 @@ Not applicable — this is a color value type, not a visual component. The type 
 
 ## Conformance Test Vectors
 
-The source has no test file of its own. Vectors derive from the source's documented behavior; the neighboring tests that exercise the type are `RGBAColorThemeTests` (construction with in-range components) and `PortedThemeTests` and `SemanticPaletteTests` (`RGBAColor(hexString: "#00ff41ff")!` and similar lowercase eight-digit strings parse and compare equal).
+The source has no test file of its own. Vectors derive from the source's documented behavior. Neighboring tests use the type only indirectly: `RGBAColorThemeTests` builds in-range colors to test compositing, `PortedThemeTests` and `SemanticPaletteTests` parse lowercase eight-digit strings such as `RGBAColor(hexString: "#00ff41ff")!`, `SemanticPaletteTests` reads `hexString` for uniqueness, and `ITermColorsParserTests` compares components built with the component initializer.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -178,10 +177,19 @@ Not applicable: the source makes no log calls; parse failure is reported as nil 
 ## Platform Notes
 
 - **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor.swift`. It imports only `Foundation`, so it compiles for macOS and iOS. A SwiftUI view builds `Color(.sRGB, red:green:blue:opacity:)` from the four components; that bridge lives in the UI layers, not in this file.
-- **Compose**: Use `androidx.compose.ui.graphics.Color(red, green, blue, alpha)` as the bridge, which takes floats in 0 to 1. Compose's `Color` already holds clamped floats, so keep a thin wrapper if the clamp and the `#RRGGBBAA` string must match; note that Android's `Color.parseColor` expects `#AARRGGBB` (alpha first), which differs from this type's alpha-last order.
+- **Compose**: Use `androidx.compose.ui.graphics.Color(red, green, blue, alpha)` as the bridge, which takes floats in 0 to 1. The `Color` float constructor throws on out-of-range components rather than clamping, so clamp first with a thin wrapper, which also carries the `#RRGGBBAA` string; note that Android's `Color.parseColor` expects `#AARRGGBB` (alpha first), which differs from this type's alpha-last order.
 - **React/Web**: Port as an immutable TypeScript class or readonly object with a `clamp` helper (`Math.min(1, Math.max(0, x))` returns NaN for NaN, so test `Number.isNaN` explicitly to store 0 as the source does). CSS 8-digit hex is also `#RRGGBBAA`, so the string can be used directly in `color` values; `JSON.stringify` writes it as a plain string if `toJSON` returns the hex.
 - **AppKit / UIKit**: The macOS bridge is in `RGBAColor+NSColor.swift` under the macOS UI layer; build `NSColor(srgbRed:green:blue:alpha:)` or `UIColor(red:green:blue:alpha:)` from the components. Convert through `RGBAColor` first so out-of-range values are clamped before they reach the platform color.
 - **WinUI 3**: Make `RGBAColor` an immutable `readonly record struct` with four `double` properties and a static factory that clamps with `Math.Clamp` (note `Math.Clamp` returns NaN for NaN, so check `double.IsNaN` first and store 0). Parse hex with `uint.TryParse(span, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var value)` after stripping one leading `#`; this rejects a `+` or `-` sign, so add it deliberately only if the source's leniency must be matched. Serialize with a `System.Text.Json.Serialization.JsonConverter<RGBAColor>` that reads and writes a single string, formatting each byte with `X2` after `Math.Round(x * 255, MidpointRounding.AwayFromZero)` to match Swift's `rounded()`. Bridge to the UI with `Windows.UI.Color.FromArgb(a, r, g, b)` (alpha first) for a `SolidColorBrush`; the struct is value-typed and thread-safe without `INotifyPropertyChanged`.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| web | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -217,4 +225,5 @@ Separation of concerns passes because the file holds only the value, its hex for
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
+| 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

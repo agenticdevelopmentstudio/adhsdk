@@ -4,7 +4,7 @@
     "id": "fd1f8d3c-6110-4687-a715-c8fa7c7caa5b",
     "title": "Built-In Themes Native Adjustments",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4d206e466ce31054",
+  "synced": "47fd28a272c72cb3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

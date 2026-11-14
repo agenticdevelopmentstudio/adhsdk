@@ -1,0 +1,22 @@
+
+Vectors AS-001 to AS-008 are asserted by `appearanceScope.test.ts`, `AppearanceScope.test.tsx` or `clearAppearance.test.ts`; AS-009 to AS-016 are derived from the source and have no test beside them.
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| AS-001 | scope-mount-arms, scope-first-paint, scope-last-release-clears, os-change-repaint | `appearanceScope.test.ts` "an OS scheme change after the scope unmounts leaves html alone": OS light; mount a scope; `adoptAppearance` with colour mode `auto`, contrast `high`; release; flip the OS to dark | After adopt `data-contrast` is `high`; after release `<html>` carries no `data-color-mode`, no `dark` class and no `data-contrast`; after the flip it is still unpainted |
+| AS-002 | scope-unmounted-no-paint, adopt-wholesale, set-caches | `appearanceScope.test.ts` "a commit that resolves after the scope unmounts is cached but not painted": mount and release a scope; `adoptAppearance` with colour mode `dark`; then `resetAppearance()` | After adopt `<html>` is unpainted and `localStorage["adh:appearance"]` parses to colour mode `dark`; after reset `<html>` is still unpainted |
+| AS-003 | scope-first-paint | `appearanceScope.test.ts` "mounting the scope again paints what the store holds now": mount and release; `adoptAppearance` with colour mode `dark`; mount again | `<html>` has the `dark` class and `data-color-mode="dark"` |
+| AS-004 | scope-nested, scope-release-once, scope-last-release-clears | `appearanceScope.test.ts` "keeps painting until the last of two scopes unmounts, and a release runs once": mount twice; adopt dark; call the first release twice | `dark` class still present; after the second release `<html>` is unpainted |
+| AS-005 | scope-first-paint, os-change-repaint | `appearanceScope.test.ts` "a scope mounted with nothing stored follows the OS when it flips": OS light, nothing stored; mount a scope; flip the OS dark, then light | Initially no `dark` class and `data-color-mode="auto"`; `dark` class after the first flip; gone after the second |
+| AS-006 | scope-unscoped-paints, paints-rule | `appearanceScope.test.ts` "a site that never mounts a scope keeps painting on commit and on an OS change": no scope; adopt colour mode `auto` with contrast `high`; flip the OS dark | `data-contrast="high"` and no `dark` class after adopt; `dark` class after the flip |
+| AS-007 | scope-component, scope-last-release-clears, scope-unmounted-no-paint | `AppearanceScope.test.tsx`: render `<AppearanceScope/>`; adopt dark with contrast `high`; unmount; adopt dark again | While mounted: `dark` class and `data-contrast="high"`; after unmount no `dark`, `data-color-mode` or `data-contrast`; after the second adopt still no `dark` class |
+| AS-008 | scope-last-release-clears | `clearAppearance.test.ts` (the function the last release calls): apply every pref to an element, then clear it | The element's `outerHTML` equals its value before apply; `data-color-mode="auto"` and `dark` set by the pre-paint script are also removed |
+| AS-009 | os-change-explicit-mode | Unscoped site, adopt colour mode `light`, flip the OS dark | No `dark` class; the listener makes no repaint |
+| AS-010 | reset-defaults, reset-clears-cache | Unscoped site, `adoptAppearance` with colour mode `dark`, then `resetAppearance()` | The `localStorage` entry is absent, the snapshot equals `APPEARANCE_DEFAULTS` in value, and `<html>` follows the OS (no `dark` class when the OS is light) |
+| AS-011 | set-merges, set-caches, hook-subscribes | Hook mounted with defaults; call `set({ contrast: "high" })` | `prefs.contrast` is `high`, every other field is unchanged, the stored JSON holds the merged object, and the component re-renders once |
+| AS-012 | server-snapshot | Render on the server (no `window`) | The hook returns `APPEARANCE_DEFAULTS`; no paint, no error |
+| AS-013 | os-listener-guards | Load the module with `window.matchMedia` undefined | The import does not throw; `adoptAppearance` with colour mode `auto` paints no `dark` class |
+| AS-014 | os-listener-guards | Load the module with a query object that has no `addEventListener` | The import does not throw and no OS change is followed |
+| AS-015 | cache-failure-silent | `localStorage.setItem` throws; call `adoptAppearance(prefs)` | No exception; the snapshot equals `prefs`, `<html>` is painted and listeners are notified |
+| AS-016 | os-change-unread | Fresh module, no read, OS flips | No repaint and no error |
+

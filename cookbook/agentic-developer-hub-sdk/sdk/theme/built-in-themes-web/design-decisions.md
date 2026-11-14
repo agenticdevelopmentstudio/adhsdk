@@ -24,6 +24,6 @@
 **Approved**: pending
 
 **Decision**: Keep `thinkingDoneText` out of Old School Terminal although it shares a phosphor palette with the two CRT themes.
-**Rationale**: Its CSS does not declare `--pc-thinking-done-color`, and a green settled line on that theme, the one the olylo chat wears, read as a turn still running. Sharing a palette is not the same as sharing the answer to this question.
+**Rationale**: Its CSS does not declare `--pc-thinking-done-color`, and a green settled line on that theme, the one the test comments say olylo's chat wears (the app's first-launch default theme is Old School Terminal), read as a turn still running. Sharing a palette is not the same as sharing the answer to this question.
 **Approved**: pending
 

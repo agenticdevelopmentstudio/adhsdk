@@ -172,8 +172,8 @@ Derived from `PortedThemeTests` (Swift Testing suite "Ported web themes") and fr
 - **Theme with no `--color-warning` or `--color-link`** (MUST): CRT Monitor and Handheld Communicator fill `ansi` slots 3 and 11 from the accent and slots 5 and 13 with `#005fffff`.
 - **Fully transparent `background`** (MUST): CRT Monitor and Handheld Communicator carry `#00000000`, so `ansi[0]` is also transparent; a consumer that needs an opaque cell colour must composite it, because this source does not.
 - **Optional chat roles absent** (MUST): a missing `sendButton` role, bubble border or `thinkingDoneText` key means "derive", not "transparent" or "none". Where web means transparent the source says so with `#00000000`.
-- **Font family not installed** (SHOULD): the source names only the first family of each web stack and records no fallback chain; its doc comments state the face falls back to the system face at the same metrics when the family is not installed. That fallback is applied where `FontStyle` is resolved to a platform font, outside this file.
-- **Malformed colour literal** (MUST): `RGBAColor(hexString:)` returns nil for anything but 8 hex digits, and this file force-unwraps, so a bad literal traps on first read. The generator is responsible for emitting valid literals.
+- **Font family not installed** (SHOULD): the source names only the first family of each web stack and records no fallback chain; its doc comments state the face falls back to the system face at the same metrics when the family is not installed. Only `VT323` is bundled and registered (by `ToolkitFonts`); every other family relies on the host's installed fonts. That fallback is applied where `FontStyle` is resolved to a platform font, outside this file.
+- **Malformed colour literal** (MUST): `RGBAColor(hexString:)` returns nil for anything but 8 hex digits after an optional leading `#`, and this file force-unwraps, so a bad literal traps on first read. The generator is responsible for emitting valid literals.
 - **Native adjustment over a generated theme** (MUST): `webPortedNative` replaces Fishlamp's `selection` with `#232831ff`, sets `card` and `selectionEdge` overrides and a `project` backdrop, so the shipped Fishlamp differs from the generated one in `webPorted`.
 - **Concurrent access**: not applicable — every theme is an immutable `static let` value built once from literals, with no mutation path in this source.
 - **Offline or disconnected state**: not applicable — the file performs no network or file access.
@@ -223,8 +223,17 @@ Not applicable: the file contains no log calls.
 - **SwiftUI**: Source is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Web.swift`, an `extension BuiltInThemes` of static `ColorTheme` constants built with `RGBAColor(hexString:)`. Native adjustments are in `BuiltInThemes+Native.swift` and the tests are in `PortedThemeTests.swift`. The data is made of value types, so reads need no actor isolation.
 - **Compose**: Port each theme to a Kotlin `data class` and pass colours as `Color(0xAARRGGBB)`; Android hex is alpha-first while the source is `#RRGGBBAA`, so swap the channel order when converting. Keep the list as a top-level `val` and expose the type styles as `TextStyle` values with `fontFamily`, `fontWeight` and a `fontSize` multiplied by the scale.
 - **React/Web**: These themes originate as CSS custom properties (`--pc-persona-bg`, `--color-accent`, `--pc-font`, `--font-mono`) in `packages/web/packages/themes/src/styles/*.css`; the web stylesheets keep the gradients and full font stacks that this port reduces to a first stop and a first family. A TypeScript port would be a typed record per theme, with colours as `#RRGGBBAA` strings or CSS custom properties.
-- **AppKit / UIKit**: Resolve the colours to `NSColor` or `UIColor` through the SDK's `RGBAColor` converters, and the typography to `NSFont` or `UIFont` by family name, falling back to the system face (a monospaced system font when `monospaced` is true) when the family is not installed. The bundled faces such as VT323 are registered by `ToolkitFonts` in the test comments, so they resolve.
+- **AppKit / UIKit**: Resolve the colours to `NSColor` or `UIColor` through the SDK's `RGBAColor` converters, and the typography to `NSFont` or `UIFont` by family name, falling back to the system face (a monospaced system font when `monospaced` is true) when the family is not installed. `ToolkitFonts.registerBundledFonts()` is called before every font lookup and registers the faces the framework ships, which today is only `VT323-Regular`, at process scope through `CTFontManagerRegisterFontsForURL`. VT323 therefore resolves everywhere, while every other named family (Iosevka, Inter, Manrope and the rest) resolves only where the host has installed it and otherwise takes the system fallback.
 - **WinUI 3**: Model each theme as an immutable C# record, with `Windows.UI.Color` values parsed from `#RRGGBBAA` strings (`Color.FromArgb` takes alpha first, so reorder the bytes). Expose the list as `IReadOnlyList<ColorTheme>` and publish the colours as `SolidColorBrush` entries in a `ResourceDictionary` that is swapped per theme; `ThemeDictionaries` keys are only `Light`, `Dark` and `HighContrast`, so a custom theme is a merged dictionary replaced at runtime rather than a new theme key. Bundle fonts such as VT323 with the package and reference them as `FontFamily="ms-appx:///Assets/Fonts/VT323.ttf#VT323"`. Whimsical's solid fill is a `SolidColorBrush`; a `LinearGradientBrush` would restore the web gradient. Apply `sizeScale` by multiplying the `FontSize` of each style, or bind it through a converter.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Web.swift` | confirmed (1.0.0) |
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| web | (planned) | planned |
 
 ## Design Decisions
 
@@ -253,7 +262,7 @@ Not applicable: the file contains no log calls.
 **Approved**: pending
 
 **Decision**: Keep `thinkingDoneText` out of Old School Terminal although it shares a phosphor palette with the two CRT themes.
-**Rationale**: Its CSS does not declare `--pc-thinking-done-color`, and a green settled line on that theme, the one the olylo chat wears, read as a turn still running. Sharing a palette is not the same as sharing the answer to this question.
+**Rationale**: Its CSS does not declare `--pc-thinking-done-color`, and a green settled line on that theme, the one the test comments say olylo's chat wears (the app's first-launch default theme is Old School Terminal), read as a turn still running. Sharing a palette is not the same as sharing the answer to this question.
 **Approved**: pending
 
 ## Compliance

@@ -1,15 +1,15 @@
 ---
-id: ""
+id: 62abe97d-75f7-48c0-83cd-6df02a48515e
 title: "ThemeStorage"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
-created: ""
-modified: ""
-author: ""
-copyright: ""
-license: ""
+created: 2026-11-14
+modified: 2026-11-14
+author: Mike Fullerton
+copyright: 2026 Mike Fullerton
+license: MIT
 summary: "Main-actor persistence seam for custom themes and the active theme id, with an external-change hook so a host's own settings system can drive repaint."
 platforms:
   - swift
@@ -77,8 +77,8 @@ Built-in themes are never stored. `ThemeStore` concatenates them with `BuiltInTh
 ### Shipped and test conformers
 
 - **user-defaults-conformer**: `UserDefaultsThemeStorage` is the SDK's conformer. It MUST persist `customThemes` as JSON under the key `theme.custom_themes` and `activeThemeID` as a string under `theme.active_theme_id`, the same keys and encoding a host settings system uses, so a host that later swaps conformers finds the user's themes where it left them.
-- **user-defaults-undecodable**: `UserDefaultsThemeStorage` MUST read an undecodable `customThemes` blob as an empty array and MUST NOT trap.
-- **user-defaults-unencodable**: `UserDefaultsThemeStorage` MUST ignore a `customThemes` write whose value fails to encode, leaving the stored value unchanged.
+- **user-defaults-undecodable**: `UserDefaultsThemeStorage` MUST read an undecodable `customThemes` blob as an empty array, MUST log the decode failure at error level, and MUST NOT trap.
+- **user-defaults-unencodable**: `UserDefaultsThemeStorage` MUST ignore a `customThemes` write whose value fails to encode, leaving the stored value unchanged, and MUST log the encode failure at error level.
 - **user-defaults-self-write-detection**: `UserDefaultsThemeStorage` MUST decide whether a change is external by comparing the stored values with the values it last wrote or last saw, and MUST record the new value before writing it. A boolean "writing" flag is wrong because the change notification arrives on a later run-loop turn.
 - **user-defaults-coalescing**: `UserDefaultsThemeStorage` MUST NOT invoke `onExternalChange` when a foreign write stores the value it already had, and MUST invoke it at most once per notification.
 - **user-defaults-injectable-domain**: `UserDefaultsThemeStorage` MUST accept the `UserDefaults` instance to use, defaulting to `.standard`, so a host with an app group can pass its shared suite.
@@ -116,8 +116,8 @@ Not applicable — this is a persistence protocol, not a visual component.
 
 - **Nothing persisted**: a conformer MUST return an empty `customThemes` and a nil `activeThemeID`; `ThemeStore` still yields the built-in catalog.
 - **`activeThemeID` naming an unknown theme**: the protocol does not validate the id. `ThemeManager.reload` resolves it through `ThemeStore` and falls back to `BuiltInThemes.solarizedDark` when no theme matches.
-- **Undecodable stored themes**: `UserDefaultsThemeStorage` MUST read them as empty rather than throw, because failing a preference read would take the whole app down. The stored blob is left in place and is not repaired.
-- **Unencodable themes on write**: `UserDefaultsThemeStorage` MUST drop the write silently. The failure is not signalled to the caller (see `no-errors-declared`), and the previous stored value remains.
+- **Undecodable stored themes**: `UserDefaultsThemeStorage` MUST read them as empty rather than throw, because failing a preference read would take the whole app down. The failure is logged at error level. The stored blob is left in place and is not repaired.
+- **Unencodable themes on write**: `UserDefaultsThemeStorage` MUST drop the write. The failure is logged at error level but not signalled to the caller (see `no-errors-declared`), and the previous stored value remains. The last-seen record is not updated for a dropped write.
 - **Writing `nil` to `activeThemeID`**: a conformer MUST accept it. `UserDefaultsThemeStorage` passes the optional straight to `UserDefaults`, which removes the key.
 - **Several writes then one notification**: `UserDefaultsThemeStorage` MUST compare final values against the last seen values and fire at most once.
 - **Foreign write storing the existing value**: not a change; the hook MUST NOT fire.
@@ -125,7 +125,7 @@ Not applicable — this is a persistence protocol, not a visual component.
 - **Conformer deallocation**: `UserDefaultsThemeStorage` removes its notification observer in `deinit`, and its hook closure is invoked only while the object is alive.
 - **Concurrent access**: serialised by main-actor isolation of the protocol; the one nonisolated member, the observer token in `UserDefaultsThemeStorage`, is written once in `init` and read once in `deinit`, so it cannot race.
 - **Offline, timeout, cancellation**: not applicable; the protocol is synchronous and does no network I/O. A sync-backed conformer's connectivity is that conformer's concern, and it reports arrivals through `onExternalChange`.
-- **Storage full or unwritable**: the protocol has no error channel, so such a failure is not reported to `ThemeStore`. A conformer decides whether to log or ignore it.
+- **Storage full or unwritable**: the protocol has no error channel, so such a failure is not reported to `ThemeStore`. A conformer decides whether to log or ignore it; `UserDefaultsThemeStorage` writes through `UserDefaults` and has no failure path of its own beyond encoding.
 
 ## Configuration
 
@@ -164,7 +164,7 @@ Not applicable: the protocol stores theme definitions and one theme id and colle
 
 ## Logging
 
-Not applicable: neither `ThemeStorage` nor `UserDefaultsThemeStorage` makes a log call; an undecodable or unencodable theme payload is handled without logging.
+`ThemeStorage` makes no log call. `UserDefaultsThemeStorage` logs at error level through its `Loggable` logger (`makeLogger()`), once when the stored custom-themes blob cannot be decoded (it reads an empty catalog) and once when a custom-themes write cannot be encoded (the stored catalog is unchanged), each with the error's `localizedDescription` marked public. It logs nothing on a successful read or write or on an external change.
 
 ## Platform Notes
 
@@ -173,6 +173,15 @@ Not applicable: neither `ThemeStorage` nor `UserDefaultsThemeStorage` makes a lo
 - **React/Web**: Use a TypeScript interface with `customThemes`, `activeThemeID` and an optional `onExternalChange`, backed by `localStorage` under the same two keys. The browser's `storage` event fires only for writes from other tabs, which maps onto the external-change hook and makes self-write detection unnecessary.
 - **AppKit / UIKit**: Same Swift protocol. `UserDefaults` is the platform answer, and the `didChangeNotification` posts for the process's own writes as well as foreign ones, which is why the shipped conformer compares values instead of using a flag. On macOS the host conformer `UserSettingsThemeStorage` fills the same role over the app's settings system.
 - **WinUI 3**: Define a C# interface `IThemeStorage` with `IReadOnlyList<ColorTheme>`-style settable `CustomThemes`, a nullable `string? ActiveThemeId` and an `Action? ExternalChanged`. Back it with `Windows.Storage.ApplicationData.Current.LocalSettings` (a composite value or a JSON string under `theme.custom_themes`, serialised with `System.Text.Json`) for a packaged app, or a JSON file in `LocalFolder` otherwise. `LocalSettings` raises no change event for the process's own writes, so wire `ExternalChanged` to roaming-settings `DataChanged` or a `FileSystemWatcher` and keep the last-seen JSON to ignore echoes. Call the setters and the hook on the UI thread through `DispatcherQueue.TryEnqueue`, matching the main-actor rule, and make the owning class implement `INotifyPropertyChanged` when it is bound to a settings page.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| web | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStorage.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -192,8 +201,8 @@ Not applicable: neither `ThemeStorage` nor `UserDefaultsThemeStorage` makes a lo
 **Rationale**: The source comment lets an in-memory test double leave it as a plain stored property. `ThemeManager` always installs it so that a theme chosen from a settings panel or a sync repaints without relaunch. It is a SHOULD rather than a MUST that a conformer stays silent on its own writes, because `ThemeManager.reload` already tolerates a duplicate call.
 **Approved**: pending
 
-**Decision**: Read an undecodable theme blob as an empty list and drop an unencodable write, with no error and no log.
-**Rationale**: The source comment reasons there is nothing useful to do with an incompatible blob and that throwing would take the app down over a preference; an empty catalog still yields every built-in theme. The cost is that a decode failure is invisible, which this recipe records as a fact.
+**Decision**: Read an undecodable theme blob as an empty list and drop an unencodable write, with no error thrown or returned, logging each failure at error level.
+**Rationale**: The source comment reasons there is nothing useful to do with an incompatible blob and that throwing would take the app down over a preference; an empty catalog still yields every built-in theme. The failure is surfaced only in the log, never to the caller, which this recipe records as a fact.
 **Approved**: pending
 
 **Decision**: Use the same two keys and JSON encoding as the host settings system.
@@ -215,4 +224,5 @@ Not applicable: neither `ThemeStorage` nor `UserDefaultsThemeStorage` makes a lo
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Theme storage now logs decode and encode failures; claims verified against source |
+| 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

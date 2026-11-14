@@ -2,7 +2,7 @@
 id: fd1f8d3c-6110-4687-a715-c8fa7c7caa5b
 title: "Built-In Themes Native Adjustments"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -69,11 +69,11 @@ Not applicable — this is theme-data code, not a visual component.
 
 ## Conformance Test Vectors
 
-The source ships no test that asserts the adjustments directly. Vectors native-001 and native-002 follow the assertions in `BuiltInThemesTests` (36 themes in `all`, unique ids) and `PortedThemeTests` (every ported theme is in `all`); the rest are derived from the source itself.
+The source ships no test that asserts the adjustments directly. Vector native-002 follows the `BuiltInThemesTests` assertion of 36 themes in `all`, and native-001 is consistent with the `PortedThemeTests` assertions (the `webPorted` name set, unique ids across `all`); the rest are derived from the source itself.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| native-001 | native-list, native-map | `BuiltInThemes.webPortedNative.map(\.id)` against `BuiltInThemes.webPorted.map(\.id)` | The two id arrays are equal, element by element (consistent with the `PortedThemeTests` membership and `BuiltInThemesTests` unique-id assertions) |
+| native-001 | native-list, native-map | `BuiltInThemes.webPortedNative.map(\.id)` against `BuiltInThemes.webPorted.map(\.id)` | The two id arrays are equal, element by element (consistent with the `PortedThemeTests` ported-name set and unique-id assertions; no test compares the two lists directly) |
 | native-002 | native-map | `BuiltInThemes.all.count` | 36, the hand-authored set plus `webPortedNative` (`BuiltInThemesTests`) |
 | native-003 | dispatch-default | `nativeAdjusted` on the first `webPorted` theme whose id is not `BuiltInThemes.fishlamp.id` | The returned theme is equal to the input |
 | native-004 | dispatch-fishlamp, fishlamp-selection | `nativeAdjusted(BuiltInThemes.fishlamp).selection.hexString` | `#232831FF` |
@@ -148,6 +148,15 @@ Not applicable: the file contains no log call; it has no failure path to report.
 - **AppKit / UIKit**: Consumers read the adjusted values through the palette, for example `SemanticPalette+NSColor.swift` (`selectionEdgeColor`), `TabPaneView` (outlines a selected card when `selectionEdge` has alpha above zero) and `ThemedViews` (draws a 2-point leading bar in `selectionEdge`, flipped under right-to-left layout). UIKit would read the same palette through `UIColor`.
 - **WinUI 3**: Model the theme as a C# `record` so `with` expressions give the copy-and-adjust behaviour: `WebPortedNative = WebPorted.Select(NativeAdjusted).ToList()` and a `switch` expression on `theme.Id` returning `theme with { Selection = slate, RoleOverrides = theme.RoleOverrides.SetItem("card", ember).SetItem("selectionEdge", amber), Project = new ThemeProjectOptions(PaneBackdrop: ember) }`, with `RoleOverrides` an `ImmutableDictionary` from `System.Collections.Immutable`. Parse colours with `Windows.UI.Color.FromArgb` (alpha first), since the source's `RRGGBBAA` order differs. Publish the values as `SolidColorBrush` entries in a `ResourceDictionary` swapped through `Application.Resources.MergedDictionaries`, using `ThemeDictionaries` with `Dark` and `Light` keys for the appearance. Selection fill and edge map to the `ListViewItem` `Selected` and `SelectedPointerOver` visual states through the `ListViewItemBackgroundSelected` and `ListViewItemSelectionIndicatorBrush` theme resources. A `static readonly` field in a static class gives the same once-only initialisation as `static let`.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift` | confirmed (1.0.1) |
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| web | (planned) | planned |
+
 ## Design Decisions
 
 **Decision**: Keep the native adjustments in `BuiltInThemes+Native.swift` and apply them over the generated list rather than editing `BuiltInThemes+Web.swift`.
@@ -185,3 +194,4 @@ Separation of concerns passes: the adjustments are isolated from the generated f
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

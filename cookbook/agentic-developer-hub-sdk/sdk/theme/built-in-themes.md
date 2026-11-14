@@ -2,7 +2,7 @@
 id: 359491fd-36ee-4e07-9971-76260183f243
 title: "Built-In Themes"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -128,7 +128,7 @@ Not applicable — this is a static catalogue of color data, not a visual compon
 - **Case difference**: An ID differing only in letter case MUST NOT match, because comparison is exact string equality.
 - **Duplicate IDs**: The source does not guard against two entries sharing an ID; `theme(withID:)` would return the first. Uniqueness is enforced only by the `uniqueIDs` test, so a duplicate is caught at test time, not at runtime.
 - **Malformed hex literal**: A built-in constant that is not valid hex MUST trap on first access of the theme that contains it (fail-fast), as the `rgb(_:)` doc comment states. Because the themes are `static let`, the trap happens on first use of that constant or of `all`, not at launch.
-- **Bright ANSI duplicates**: Several schemes repeat a normal color as its bright variant (Nord indices 1 to 3 and 8 to 11 share values, Monokai Pro repeats cyan at indices 4, 6, 12 and 14). That is the data as authored and a port MUST copy it rather than invent distinct brights.
+- **Bright ANSI duplicates**: Several schemes repeat a normal color as its bright variant (Nord bright indices 9 to 13 repeat normal indices 1 to 5, Monokai Pro repeats cyan at indices 4, 6, 12 and 14). That is the data as authored and a port MUST copy it rather than invent distinct brights.
 - **Mixed ANSI ordering**: Gruvbox Light places `fbf1c7` (its background tone) at ANSI index 0 and `3c3836` at index 15, the reverse of Solarized Dark's relationship; a port MUST NOT normalize the order.
 - **Concurrent access**: Not applicable beyond `immutable-statics`: the values are immutable after lazy initialization, which Swift performs thread-safely, so concurrent readers need no lock.
 - **Offline or disconnected**: Not applicable — the catalogue is compiled-in data with no network or file dependency.
@@ -175,11 +175,20 @@ Not applicable: the source makes no log call. The only diagnostic is the `precon
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform. The code is in `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift`, with `BuiltInThemes+Web.swift` and `BuiltInThemes+Native.swift` supplying the web-ported part and its native adjustments. Static `let` properties on a caseless enum give thread-safe lazy initialization for free. SwiftUI views convert `RGBAColor` to `Color` elsewhere in the Theme folder; this file produces only value data.
+- **SwiftUI**: Source platform. The code is in `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift`, with `BuiltInThemes+Web.swift` and `BuiltInThemes+Native.swift` supplying the web-ported part and its native adjustments. Static `let` properties on a caseless enum give thread-safe lazy initialization for free. This file imports only `Foundation` and produces only value data; the conversion from `RGBAColor` to platform colors lives in the UI target (`SemanticPalette+NSColor.swift` on macOS and `SemanticPalette+UIColor.swift` on iOS under `SDK/SourcesUI`).
 - **Compose**: Use a Kotlin `object` holding `val` lists of a data class with `Color(0xFF...)` fields (`Color` takes ARGB, so the alpha byte moves to the front). A `lazy` list matches the lazy static initialization; `require(hex.length == 6)` plays the role of the fail-fast `preconditionFailure`. Apply the chrome overrides in a `ColorScheme` or custom `CompositionLocal` rather than Material defaults.
 - **React/Web**: Use a frozen module-level array of theme objects keyed by the same ID strings, and a `Map` for `theme(withID:)` to give constant-time lookup. Validate hex literals at module load with a thrown `Error`, since JavaScript has no precondition trap. Expose chrome roles as CSS custom properties.
 - **AppKit / UIKit**: Convert `RGBAColor` to `NSColor` or `UIColor` with the sRGB initializer using the stored 0 to 1 components. The catalogue itself is identical to the SwiftUI use; only the color bridge differs.
 - **WinUI 3**: Model a theme as a C# `record` with `Windows.UI.Color` (`Color.FromArgb(0xFF, r, g, b)`) fields, and hold the catalogue in a `static readonly IReadOnlyList<ColorTheme>`, which the CLR initializes once and thread-safely through a static constructor. Look up by ID with `FirstOrDefault(t => t.Id == id)` using `StringComparison.Ordinal` to keep the exact-match rule. Surface the chrome roles as `SolidColorBrush` entries in a `ResourceDictionary` merged at the application level, overriding `ThemeDictionaries` keys such as `LayerFillColorDefaultBrush` rather than editing control templates, and set `RequestedTheme` to `Dark` or `Light` from `appearance`. Replace the Swift `preconditionFailure` with an `ArgumentException` thrown from a static initializer, or a unit test over the constants; a static constructor failure surfaces as `TypeInitializationException` on first access, which matches the first-use trap. Persist the selected ID with `Windows.Storage.ApplicationData.Current.LocalSettings`.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift` | confirmed (1.0.1) |
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| web | (planned) | planned |
 
 ## Design Decisions
 
@@ -222,4 +231,5 @@ The catalogue does one job: it holds color data and looks it up by ID, while per
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
+| 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

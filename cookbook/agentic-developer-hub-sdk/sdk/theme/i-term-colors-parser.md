@@ -1,31 +1,30 @@
 ---
 id: 231a7e9a-8c03-44b3-afaf-b71755e05c1d
-title: ITermColorsParser
+title: "ITermColorsParser"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
-created: '2026-11-14'
-modified: '2026-11-14'
+created: 2026-11-14
+modified: 2026-11-14
 author: mfullerton
 copyright: 2026 mfullerton
 license: MIT
-summary: Parses an iTerm2 .itermcolors property list into a ColorTheme, failing fast
-  on missing required colors and falling back for cursor and selection.
+summary: "Parses an iTerm2 .itermcolors property list into a ColorTheme, failing fast on missing required colors and falling back for cursor and selection."
 platforms:
-- swift
-- macos
-- ios
+  - swift
+  - macos
+  - ios
 tags:
-- theme
-- parser
-- iterm2
-- color
+  - theme
+  - parser
+  - iterm2
+  - color
 depends-on: []
 related: []
 references: []
-approved-by: ''
-approved-date: ''
+approved-by: ""
+approved-date: ""
 ---
 
 # ITermColorsParser
@@ -51,7 +50,7 @@ Public surface: `ITermColorsParser.parse(data:name:id:appearance:)`, `ITermColor
 - **ansi-required**: The parser MUST read `Ansi 0 Color` through `Ansi 15 Color` (`ColorTheme.ansiColorCount`, 16) in index order and MUST throw `missingColor("Ansi N Color")` for the first absent index.
 - **ansi-order-preserved**: The returned `ansi` array MUST hold exactly 16 colors, where element N is the color decoded from `Ansi N Color`.
 - **component-required**: Within any required color dictionary, the parser MUST throw `missingComponent(colorKey:component:)` naming the color key and the first missing component among `Red Component`, `Green Component`, `Blue Component`, checked in that order.
-- **component-type-strict**: A component present but not decodable as `Double` MUST be treated as missing and MUST throw `missingComponent`.
+- **component-type-strict**: A component present but not castable to `Double` (a plist `integer` is castable and is accepted) MUST be treated as missing and MUST throw `missingComponent`.
 - **alpha-default-opaque**: When `Alpha Component` is absent or not a `Double`, the parser MUST use alpha `1.0`; a missing alpha MUST NOT raise an error.
 - **extra-keys-ignored**: Keys the parser does not read (for example `Color Space`, `Bold Color`, `Link Color`, `Cursor Text Color`) MUST be ignored.
 - **channel-clamping**: Every decoded channel MUST be clamped to 0 to 1, because each color is built through the `RGBAColor` initializer, which clamps its components.
@@ -110,7 +109,7 @@ Vectors derive from `ITermColorsParserTests` (Swift Testing suite `ITermColorsPa
 - **Malformed or non-plist bytes** (MUST): the Foundation parse error propagates; it is not an `ITermColorsParseError`.
 - **Non-dictionary root** (MUST): an array, string or number root throws `notADictionary`.
 - **Required key present but not a dictionary** (MUST): a value of the wrong type under a color key is treated as absent and throws `missingColor` with that key.
-- **Component of the wrong type** (MUST): a string or other non-`Double` value under a component key throws `missingComponent`.
+- **Component of the wrong type** (MUST): a string or other value that does not bridge to `Double` under a component key throws `missingComponent`. A plist `integer` (for example `1`) bridges to `Double` and is accepted.
 - **Out-of-range components** (MUST): values below 0 or above 1 clamp to 0 and 1, per the `RGBAColor` initializer's doc comment.
 - **Boundary luminance** (MUST): a background with relative luminance exactly 0.5 is `.light`, because `isDark` is a strict less-than.
 - **Translucent background** (MUST): alpha does not enter the dark/light inference, because `relativeLuminance` reads only the channels.
@@ -173,6 +172,15 @@ Not applicable: the source makes no log calls; failures are surfaced by throwing
 - **AppKit / UIKit**: The parser is identical on macOS and iOS because it is Foundation-only. The `NSColor` and `UIColor` bridge lives in the UI layer, as the `RGBAColor` doc comment says. iTerm2 files declare a `Color Space` entry (for example `sRGB` or `Calibrated`), which this parser ignores and does not convert.
 - **WinUI 3**: Port as a `static class ITermColorsParser` with `Parse(byte[] data, string name, string? id = null, ThemeAppearance? appearance = null)` and a file overload taking a `StorageFile` or path. Decode the XML plist with `System.Xml.Linq.XDocument`, walking `dict` children as alternating `key` and `real` elements; .NET has no binary plist support, so reject the `bplist` case or add a library, since Foundation accepts it. Read the file with `await FileIO.ReadBufferAsync(StorageFile)` from `Windows.Storage` or `File.ReadAllBytes`, making the file overload `async Task<ColorTheme>`. Replace the Swift `throws` enum with an exception hierarchy or a result type carrying `ColorKey` and `Component` fields. Represent `RGBAColor` as a `readonly record struct` with `double` channels and a clamping constructor, which gives the value equality the foreground/background check relies on. Convert to `Windows.UI.Color` (byte channels) or `SolidColorBrush` only in the UI layer; `INotifyPropertyChanged` is unnecessary because the parser holds no state. Use `Guid.NewGuid().ToString().ToUpperInvariant()` for the default id to match `UUID().uuidString`.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| web | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ITermColorsParser.swift` | confirmed (1.0.1) |
+
 ## Design Decisions
 
 **Decision**: Foreground, background and all 16 ANSI colors are required and fail fast; cursor and selection fall back to palette-derived values.
@@ -213,3 +221,4 @@ The parser does one job, turning plist bytes into a `ColorTheme`, and leaves sto
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

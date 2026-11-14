@@ -1,9 +1,9 @@
 
-The source ships no test that asserts the adjustments directly. Vectors native-001 and native-002 follow the assertions in `BuiltInThemesTests` (36 themes in `all`, unique ids) and `PortedThemeTests` (every ported theme is in `all`); the rest are derived from the source itself.
+The source ships no test that asserts the adjustments directly. Vector native-002 follows the `BuiltInThemesTests` assertion of 36 themes in `all`, and native-001 is consistent with the `PortedThemeTests` assertions (the `webPorted` name set, unique ids across `all`); the rest are derived from the source itself.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| native-001 | native-list, native-map | `BuiltInThemes.webPortedNative.map(\.id)` against `BuiltInThemes.webPorted.map(\.id)` | The two id arrays are equal, element by element (consistent with the `PortedThemeTests` membership and `BuiltInThemesTests` unique-id assertions) |
+| native-001 | native-list, native-map | `BuiltInThemes.webPortedNative.map(\.id)` against `BuiltInThemes.webPorted.map(\.id)` | The two id arrays are equal, element by element (consistent with the `PortedThemeTests` ported-name set and unique-id assertions; no test compares the two lists directly) |
 | native-002 | native-map | `BuiltInThemes.all.count` | 36, the hand-authored set plus `webPortedNative` (`BuiltInThemesTests`) |
 | native-003 | dispatch-default | `nativeAdjusted` on the first `webPorted` theme whose id is not `BuiltInThemes.fishlamp.id` | The returned theme is equal to the input |
 | native-004 | dispatch-fishlamp, fishlamp-selection | `nativeAdjusted(BuiltInThemes.fishlamp).selection.hexString` | `#232831FF` |

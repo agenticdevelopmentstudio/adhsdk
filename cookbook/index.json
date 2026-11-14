@@ -132,6 +132,40 @@
       "path": "status/dashboard/logic/board-staleness",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.board-staleness"
     },
+    "02e566d2-7403-4584-948c-1b4fff05070d": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:e649dbcc4b19adcbaddf129ef78bec28ec2a9e195a018931181e75df2e2fd502",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/src/fonts.ts",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/fonts",
+      "rdid": "adhsdk.ingredient.themes.fonts"
+    },
     "0396e49d-f933-4454-bacc-5cf97beda7de": {
       "implementations": [
         {
@@ -650,6 +684,40 @@
       "path": "ai/providers/provider-config-keys",
       "rdid": "adhsdk.ingredient.ai.providers.provider-config-keys"
     },
+    "0f721fc3-0e8f-4a1b-b895-1b1bad370bd0": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:dd6e15b54c0af2c29f92601811d98e8b6539e328bee174ba3294df35b3e5252c",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/src/appearance.ts",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/appearance",
+      "rdid": "adhsdk.ingredient.themes.appearance"
+    },
     "0fc99299-f3ba-4883-ab08-9bd614da7900": {
       "implementations": [
         {
@@ -726,6 +794,40 @@
       "kind": "ingredient",
       "path": "ui/components/overlays/sheet",
       "rdid": "adhsdk.ingredient.ui.components.overlays.sheet"
+    },
+    "112f2150-3fcd-416c-bd25-b40f729b8ef2": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:137c99f9d3465952b7b414b430bddda09e0fcd106bd512500ed4e5a16240e662",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/themes/src/appearance-store.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/appearance-store",
+      "rdid": "adhsdk.ingredient.themes.appearance-store"
     },
     "1157bca1-0d27-49e9-a989-d637505ba5f1": {
       "implementations": [
@@ -1682,6 +1784,40 @@
       "path": "agentic-developer-hub-sdk/sdk/contract",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.contract"
     },
+    "1f80f43d-5aa4-42cf-bc3e-fb742662b615": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:41bfc56f19299c4d7887dce2238a7057c074e8411acbf2894f0ddf58a3dea0f7",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/SemanticPalette.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/semantic-palette",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.semantic-palette"
+    },
     "201572ee-2e0f-4839-94f5-252f8044c4bf": {
       "implementations": [
         {
@@ -1772,6 +1908,40 @@
       "kind": "ingredient",
       "path": "foundation/defaults-domain-migration",
       "rdid": "adhsdk.ingredient.foundation.defaults-domain-migration"
+    },
+    "231a7e9a-8c03-44b3-afaf-b71755e05c1d": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:6c300583f57699d548e66191ae37b47761afd6cdd3a3592c100a44cdc8367831",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ITermColorsParser.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/i-term-colors-parser",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.i-term-colors-parser"
     },
     "236659d0-ee7d-45c9-8986-181f027a4058": {
       "implementations": [
@@ -2052,6 +2222,40 @@
       "kind": "ingredient",
       "path": "status/service/monitor/health",
       "rdid": "adhsdk.ingredient.status.service.monitor.health"
+    },
+    "28c73b3b-5614-4ec7-bf99-60a64aa77350": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:cdeb38f33664eae17d8c3a13e4b2d60bd3c6e1d67c40bf06b05bac369227fecf",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/themes/src/DocumentLoadScript.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/document-load-script",
+      "rdid": "adhsdk.ingredient.themes.document-load-script"
     },
     "28fc5136-e1bf-4672-b783-ed2f3a8983f5": {
       "implementations": [
@@ -2483,6 +2687,40 @@
       "path": "ui/blocks/batch-select",
       "rdid": "adhsdk.ingredient.ui.blocks.batch-select"
     },
+    "345bb44b-1a4b-46ce-be8f-0796edbf70c9": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:dc6e84e47d91da004f64d26ce6fe74439ae66023ff6fd7dd2b98b039dec18883",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/src/tokens.ts",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/tokens",
+      "rdid": "adhsdk.ingredient.themes.tokens"
+    },
     "351e3bf8-b137-4f59-94de-c769aa8b0666": {
       "implementations": [
         {
@@ -2589,10 +2827,30 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:75c78d2a3a20f3e74af75eee0c37504c8b0b139811a64206c1900492c4ec757e",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
         }
       ],
       "kind": "ingredient",
@@ -2717,6 +2975,40 @@
       "kind": "ingredient",
       "path": "registry-types",
       "rdid": "adhsdk.ingredient.registry-types"
+    },
+    "391a4eef-9872-432f-a049-eac4af00938d": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:442e7e149d7a65f0dca0d286d243146e0b28014bd87f4ab2d0d39abccd74bd50",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/src/manifest.ts",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/manifest",
+      "rdid": "adhsdk.ingredient.themes.manifest"
     },
     "39a27113-5478-468c-8417-a291d587aab6": {
       "implementations": [
@@ -2882,6 +3174,40 @@
       "kind": "ingredient",
       "path": "workspace/projects/git-repo-scanner",
       "rdid": "adhsdk.ingredient.workspace.projects.git-repo-scanner"
+    },
+    "3bff70de-bfca-4bfd-b112-2a6044416ddc": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:a9bfadb9adcf24364be2169f4188192b767b7db2428d112c9f22b393de5b1f51",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/src/colorMode.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/color-mode",
+      "rdid": "adhsdk.ingredient.themes.color-mode"
     },
     "3c65c844-6c3c-43e2-b792-8575f5dda9cf": {
       "implementations": [
@@ -3521,10 +3847,30 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:b0b847ed455ca2de6c53ef50d8ac10dc0fdf921547a4db8a731bfbef564d58c4",
+            "state": "confirmed",
+            "version": "1.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Web.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
         }
       ],
       "kind": "ingredient",
@@ -4073,6 +4419,40 @@
       "path": "system/system-windows/window-activation",
       "rdid": "adhsdk.ingredient.system.system-windows.window-activation"
     },
+    "54b48020-df78-4b41-853c-268ad0ea6b84": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:73bf263bdf644cf8814e074925670c204fb178f927dfe44ad0594b96139c9565",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/src/ThemeStyle.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/theme-style",
+      "rdid": "adhsdk.ingredient.themes.theme-style"
+    },
     "550f00f7-bfb2-415e-9b15-bd5dce015500": {
       "implementations": [],
       "kind": "recipe",
@@ -4190,6 +4570,40 @@
       "kind": "ingredient",
       "path": "adh/hub/admin/admin-notes-modal",
       "rdid": "adhsdk.ingredient.adh.hub.admin.admin-notes-modal"
+    },
+    "591d0b87-ce71-4b11-8642-149fc405cce9": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:6283f43d1c72003f6fd34a3c8b8259f36167da7333009a09f0259cf47b2d5c4d",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor+Theme.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/rgba-color-theme",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color-theme"
     },
     "5935b39d-9451-48c1-8b99-bd510d66d1a0": {
       "implementations": [
@@ -4554,6 +4968,40 @@
       "kind": "ingredient",
       "path": "adh/hub/projects",
       "rdid": "adhsdk.ingredient.adh.hub.projects"
+    },
+    "62abe97d-75f7-48c0-83cd-6df02a48515e": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:c6d1cacab9b573596aab18bcd2124616a4be5f59803b9356933e25a0789863bf",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStorage.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/theme-storage",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-storage"
     },
     "62c755ed-eeba-4ada-a907-4a0f802e0466": {
       "implementations": [
@@ -5231,6 +5679,58 @@
       "path": "ui/components/overlays/unsaved-changes-guard",
       "rdid": "adhsdk.ingredient.ui.components.overlays.unsaved-changes-guard"
     },
+    "6ddafe05-a417-498d-90b1-00f69c89f7ac": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:a9f7f26e70f9af99e223b86e3520f812f59baeff27a85605fdd76e360b050744",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/scripts/build-theme-data.mjs",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:932162785f39ad3a906649327f01680bdd286c067fd8ea75fbc6cfcdecc07bda",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/src/theme-data.ts",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:27eda41879bf4967f2f4c257a06483591428babdbcbb94e01c4392ca44bbd836",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/themes/scripts/theme-data.mjs",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "themes/theme-data",
+      "rdid": "adhsdk.ingredient.themes.theme-data"
+    },
     "6e0e27bf-5f7d-46bf-85d0-fb5bdf5dab8a": {
       "implementations": [
         {
@@ -5710,6 +6210,40 @@
       "kind": "ingredient",
       "path": "landing/blocks/trust",
       "rdid": "adhsdk.ingredient.landing.blocks.trust"
+    },
+    "794a60b5-7833-4dc3-a7b9-8280333cde8b": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:130f6d4f948df64f4e6c05d19ccd5e6d770a88e654b3fce595a7cb05ddbf8a6d",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeOptions.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/theme-options",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-options"
     },
     "7984f592-a12d-49da-806c-ff39d9557998": {
       "implementations": [
@@ -7124,6 +7658,40 @@
       "path": "workspace/projects/branch-controller",
       "rdid": "adhsdk.ingredient.workspace.projects.branch-controller"
     },
+    "932449c9-b57f-4e2c-992a-1e27584742b6": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:811757835172eef9fe11058dcc553a3664c41a07f5963952751c29a897149b42",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/color-theme",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.color-theme"
+    },
     "937650ae-ac85-43f4-8aa4-708207e0d745": {
       "implementations": [
         {
@@ -8419,6 +8987,40 @@
       "kind": "ingredient",
       "path": "status/dashboard/state/status",
       "rdid": "adhsdk.ingredient.status.dashboard.state.status"
+    },
+    "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:9e5a067d76fc80b9adb822894d80ea105d757f2e78c989540f30c273f53c0fe5",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/rgba-color",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color"
     },
     "ad8ad3fe-e3ba-4c1c-a601-62b1a2c1a3b2": {
       "implementations": [
@@ -9884,6 +10486,40 @@
       "path": "workspace/projects/project-scripting",
       "rdid": "adhsdk.ingredient.workspace.projects.project-scripting"
     },
+    "ccc0d121-4927-4a83-b0e5-337116edebc0": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:5f10a49d0f2f8bea20b5ed29bd87009d246be7090dff15bf2a4ba148576ba9ba",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeTypography.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/theme-typography",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-typography"
+    },
     "ccfd0128-374c-4cca-a83f-71efd3c02176": {
       "implementations": [
         {
@@ -10172,6 +10808,40 @@
       "kind": "ingredient",
       "path": "ui/layout/tabbed-view",
       "rdid": "adhsdk.ingredient.ui.layout.tabbed-view"
+    },
+    "d15bba09-4574-4fd1-93a0-f7d2cccd04f2": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:a911f1cba5d42cfaea3f39d6258dd743c07f3243e4c9b77ae857e8a1293e9553",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStore.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/theme-store",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-store"
     },
     "d274abfa-3696-4fd0-b3e8-cff6fdffb825": {
       "implementations": [
@@ -11460,6 +12130,40 @@
       "path": "foundation/billing/billing-dt-os",
       "rdid": "adhsdk.ingredient.foundation.billing.billing-dt-os"
     },
+    "edd40452-1ef7-42ba-b3e9-066a5a2ca1f6": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:c012220ca445086d8a1543a7b8781137d72f08dbfa5314ee3638c0238e4aeba7",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/UserDefaultsThemeStorage.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/user-defaults-theme-storage",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.user-defaults-theme-storage"
+    },
     "ee901ea5-cf3e-4276-8367-0693911bc02e": {
       "implementations": [
         {
@@ -12462,10 +13166,30 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:16134a97ec2cb15cd0c312cb408b2fcc5fc794dd4799aeca43ca7cb918c7616d",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
         }
       ],
       "kind": "ingredient",

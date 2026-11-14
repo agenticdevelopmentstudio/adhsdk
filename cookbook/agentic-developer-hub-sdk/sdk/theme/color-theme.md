@@ -1,33 +1,31 @@
 ---
 id: 932449c9-b57f-4e2c-992a-1e27584742b6
-title: ColorTheme
+title: "ColorTheme"
 type: ingredient
 version: 1.0.0
 status: review
 language: en
-created: '2026-11-14'
-modified: '2026-11-14'
+created: 2026-11-14
+modified: 2026-11-14
 author: mfullerton
 copyright: 2026 mfullerton
 license: MIT
-summary: 'The app-wide color theme value type: terminal palette, identity and lock
-  flags, semantic role overrides, typography and per-feature options, with tolerant
-  Codable decoding.'
+summary: "The app-wide color theme value type: terminal palette, identity and lock flags, semantic role overrides, typography and per-feature options, with tolerant Codable decoding."
 platforms:
-- swift
-- macos
-- ios
+  - swift
+  - macos
+  - ios
 tags:
-- theme
-- color
-- model
-- codable
+  - theme
+  - color
+  - model
+  - codable
 depends-on: []
 related:
-- 0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6
+  - 0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6
 references: []
-approved-by: ''
-approved-date: ''
+approved-by: ""
+approved-date: ""
 ---
 
 # ColorTheme
@@ -186,6 +184,15 @@ Not applicable: the source of `ColorTheme` makes no log call.
 - **AppKit / UIKit**: Same Swift type. Convert `RGBAColor` to `NSColor` or `UIColor` in an extension in the UI layer; `ThemeAppearance` maps to the dark and light `NSAppearance` names or `UIUserInterfaceStyle`, with `auto` meaning follow the system.
 - **WinUI 3**: Model it as a C# `record` (or an immutable class) with `init` properties and defaults, serialized with `System.Text.Json`. Write a `JsonConverter<RGBAColor>` that reads and writes `#RRGGBBAA` and throws `JsonException` on a malformed string, because `Windows.UI.Color` is ARGB and `Color.FromArgb` takes alpha first. Absent keys fall back to property initializers, and required keys use the `required` modifier or a custom converter that throws. Derived flags are get-only expression-bodied properties. Persist custom themes with `Windows.Storage.ApplicationData.Current.LocalSettings` or a JSON file in `LocalFolder`, behind the same storage interface as `ThemeStorage`. Map `ThemeAppearance` to `ElementTheme.Dark`, `Light` and `Default`, and apply it with `FrameworkElement.RequestedTheme`. Bind to the lock state in XAML through `isLocked`; if the record is immutable, raise `INotifyPropertyChanged` from the owning view model rather than the record.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| web | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift` | confirmed (1.0.0) |
+
 ## Design Decisions
 
 **Decision**: Decode `isBuiltIn`, `isImported`, `roleOverrides` and `typography` with defaults when absent, instead of failing.
@@ -223,4 +230,4 @@ Not applicable: the source of `ColorTheme` makes no log call.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |
