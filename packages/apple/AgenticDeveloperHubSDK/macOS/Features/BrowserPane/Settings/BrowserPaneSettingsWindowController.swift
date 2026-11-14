@@ -7,9 +7,11 @@ import AgenticDeveloperHubSDKCoreUI
 import AppKit
 
 /// A browser pane's settings in an ordinary window, movable, resizable and
-/// titled like every other window, rather than a sheet over the pane. One per
-/// pane: Settings… again brings it forward. Closing the window ends the
-/// settings, which is when the pane rebuilds for a construction-time change.
+/// titled like every other window, run app-modal so only one is ever open.
+/// Closing the window ends the settings (and the modal session), which is
+/// when the pane rebuilds for a construction-time change. The settings sit in
+/// a plain container, so neither a topic's content nor a preferred content
+/// size ever resizes the window: the window sizes the settings.
 @MainActor
 final class BrowserPaneSettingsWindowController: SingleWindowController {
 
@@ -29,13 +31,26 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
         let controller = BrowserPaneSettingsWindowController(settings: settings, key: key)
         open[key] = controller
         controller.showWindow()
+        // Next pass, so the menu that asked has finished tracking.
+        DispatchQueue.main.async { [weak controller] in
+            guard let window = controller?.window, window.isVisible else { return }
+            NSApp.runModal(for: window)
+        }
     }
 
     private init(settings: BrowserPaneSettingsSheetController, key: ObjectIdentifier) {
         self.key = key
         self.settings = settings
         settings.presentsInWindow = true
-        super.init(windowID: "browser-pane-settings-\(UUID().uuidString)", contentViewController: settings)
+        let container = NSViewController()
+        container.view = NSView(frame: NSRect(x: 0, y: 0, width: 820, height: 560))
+        container.addChild(settings)
+        let settingsView = settings.view
+        settingsView.translatesAutoresizingMaskIntoConstraints = true
+        settingsView.autoresizingMask = [.width, .height]
+        settingsView.frame = container.view.bounds
+        container.view.addSubview(settingsView)
+        super.init(windowID: "browser-pane-settings-\(UUID().uuidString)", contentViewController: container)
         windowTitle = settings.title ?? "Browser Settings"
         windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
         windowSpec = WindowSpec(
@@ -54,6 +69,7 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
     override func windowWillClose(_ notification: Notification) {
         super.windowWillClose(notification)
         Self.open[key] = nil
+        if NSApp.modalWindow === window { NSApp.stopModal() }
         settings.finish(dismissing: false)
     }
 }

@@ -122,7 +122,6 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
             container.bottomAnchor.constraint(equalTo: panelsView.bottomAnchor)
         ])
         self.view = container
-        self.preferredContentSize = NSSize(width: 820, height: 560)
     }
 
     /// Watches the window the sheet is on for the sheet ending, so a

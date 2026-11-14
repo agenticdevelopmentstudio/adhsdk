@@ -66,6 +66,13 @@ public final class WebBrowserWindowController: SingleWindowController {
     private var backdropObserver: ThemePaletteObserver?
     private var spacingObservers: [UserSettingObserver<Int>] = []
     private let host: SafeAreaHostViewController
+    /// The page above, and the browser log below it while it is showing.
+    private let split = NSSplitViewController()
+    private var logItem: NSSplitViewItem?
+
+    /// Where the last browser window was moved or resized to, so a new one
+    /// opens there (cascaded off any window already on that spot).
+    static let lastFrameKey = "web-browser.window.last-frame"
 
     static let windowIDPrefix = "web-browser"
     static let accessibilityWindowID = "web-browser.window"
@@ -132,7 +139,13 @@ public final class WebBrowserWindowController: SingleWindowController {
     private init(pane: WebBrowserPaneViewController, purpose: Purpose) {
         self.pane = pane
         self.purpose = purpose
-        let host = SafeAreaHostViewController(child: pane, pinsToSafeArea: true)
+        split.splitView.isVertical = false
+        split.splitView.dividerStyle = .thin
+        let pageItem = NSSplitViewItem(viewController: pane)
+        pageItem.minimumThickness = 160
+        pageItem.holdingPriority = .defaultLow
+        split.addSplitViewItem(pageItem)
+        let host = SafeAreaHostViewController(child: split, pinsToSafeArea: true)
         self.host = host
         super.init(
             windowID: "\(Self.windowIDPrefix)-\(UUID().uuidString)",
@@ -154,6 +167,23 @@ public final class WebBrowserWindowController: SingleWindowController {
         pane.onPaneTitleChange = { [weak self] in
             self?.refreshTitle()
         }
+        pane.onShowBrowserLog = { [weak self] _ in self?.toggleBrowserLog() }
+    }
+
+    /// Shows the browser log as a panel under the page, or hides it again.
+    func toggleBrowserLog() {
+        if let logItem {
+            split.removeSplitViewItem(logItem)
+            self.logItem = nil
+            return
+        }
+        let item = NSSplitViewItem(viewController: BrowserLogPaneViewController(following: pane))
+        item.minimumThickness = 120
+        item.holdingPriority = .defaultLow + 1
+        split.addSplitViewItem(item)
+        logItem = item
+        let height = split.splitView.bounds.height
+        split.splitView.setPosition(max(160, height - 240), ofDividerAt: 0)
     }
 
     /// The browser's icon before the page's name, as a pane's title bar shows
@@ -209,6 +239,21 @@ public final class WebBrowserWindowController: SingleWindowController {
     /// A new window opens down and to the right of the browser window in
     /// front, so it never lands exactly on top of one.
     public override func placeWindowWithoutSavedFrame(_ window: NSWindow) {
+        if let saved = UserDefaults.standard.string(forKey: Self.lastFrameKey) {
+            let frame = NSRectFromString(saved)
+            if frame.width >= 200, frame.height >= 200,
+               NSScreen.screens.contains(where: { $0.visibleFrame.intersects(frame) }) {
+                window.setFrame(frame, display: false)
+                let taken = Self.openWindows.contains {
+                    $0 !== self && $0.isVisible && $0.window?.frame.origin == frame.origin
+                }
+                if taken {
+                    let topLeft = window.cascadeTopLeft(from: NSPoint(x: frame.minX, y: frame.maxY))
+                    window.cascadeTopLeft(from: topLeft)
+                }
+                return
+            }
+        }
         guard let front = Self.openWindows.last(where: { $0 !== self && $0.isVisible })?.window else { return }
         window.setFrame(NSRect(origin: window.frame.origin, size: front.frame.size), display: false)
         let topLeft = window.cascadeTopLeft(from: NSPoint(x: front.frame.minX, y: front.frame.maxY))
@@ -223,6 +268,22 @@ public final class WebBrowserWindowController: SingleWindowController {
         menu.autoenablesItems = false
         pane.makePaneMenuItems().forEach(menu.addItem)
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY + 4), in: sender)
+    }
+
+    public override func windowDidMove(_ notification: Notification) {
+        super.windowDidMove(notification)
+        rememberFrame()
+    }
+
+    public override func windowDidResize(_ notification: Notification) {
+        super.windowDidResize(notification)
+        rememberFrame()
+    }
+
+    private func rememberFrame() {
+        guard let window, window.isVisible, !window.isMiniaturized,
+              !window.styleMask.contains(.fullScreen) else { return }
+        UserDefaults.standard.set(NSStringFromRect(window.frame), forKey: Self.lastFrameKey)
     }
 
     public override func windowWillClose(_ notification: Notification) {
