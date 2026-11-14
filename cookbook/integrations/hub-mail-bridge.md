@@ -2,7 +2,7 @@
 id: e12914f0-3a3b-4fb7-ac0c-6332de37de4f
 title: "Hub Mail Bridge"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-11-14
@@ -46,7 +46,7 @@ What it does with each request:
 - **Sync now** runs a pull.
 - **Administration** (the OAuth client, signing accounts in and out, sync settings) is refused: on the hub path those are managed on the hub.
 
-`HubMailService` keeps a bridge open while a hub identity is signed in. Its `client` is one stable `MailClient` for the app's lifetime: it answers through the current bridge when connected and refuses with a sign-in message otherwise, so windows can hold it from launch. Sign-in opens the mirror and pulls; sign-out purges it. `HubMailService.live` ties the service to a `HubAccount` over one shared session, so signing in from the accounts settings opens hub mail. `MailClient.routed` (in the Mail framework, with `MailSource`) picks the direct or hub client per request, which is how a host offers a source switch.
+`HubMailService` keeps a bridge open while a hub identity is signed in. Its `client` is one stable `MailClient` for the app's lifetime: it answers through the current bridge when connected and refuses with a sign-in message otherwise, so windows can hold it from launch. Sign-in opens the mirror and pulls; sign-out purges it. `HubMailService.live` ties the service to a `HubAccount` over one shared session, so signing in from the accounts settings opens hub mail. `HubMailLocation` names where the mirror lives and which device id it syncs under (`Application Support/<appFolder>/hub-mail.db`, plus a UUID kept in `UserDefaults`), and `HubMailService.live(at:)` takes one, so each app states only its folder name. `MailClient.routed` (in the Mail framework, with `MailSource`) picks the direct or hub client per request, which is how a host offers a source switch.
 ## Behavioral Requirements
 
 - **one-entry-point**: `respond(to:)` MUST answer every `MailRequest` with a `MailResponse` and never throw; a failure becomes `.failure(message)`, and a missing account, message or thread becomes `.notFound(message)`.
@@ -77,6 +77,10 @@ What it does with each request:
 - **service-follows-session**: `follow(_:)` MUST sign in on `.signedIn`, sign out on `.signedOut`, and leave the mirror alone on `.restoring` and `.error`.
 - **service-status-callback**: `onChange` MUST be called on the main actor once for every change of `status`, and never when it is set to the value it already has.
 - **live-shares-session**: `HubMailService.live` MUST build one `SessionController` that both the returned `HubAccount` and the service follow, pull with the stored session's credentials, and send label writes through the hub client so its middleware refreshes an expired token. The database MUST open on the first sign-in, creating its folder, and stay open.
+- **live-at-location**: `HubMailService.live(at:syncInterval:)` MUST build the same session as `live(databaseURL:deviceId:syncInterval:)`, with the location's `databaseURL` and `deviceId`, `syncInterval` defaulting to 300, and the default Keychain session store and bundle sign-in configuration.
+- **location-value**: `HubMailLocation` MUST carry a `databaseURL` and a `deviceId` and compare equal when both match.
+- **location-app-file**: `HubMailLocation.app(_ appFolder:)` MUST put the mirror at `<Application Support>/<appFolder>/hub-mail.db`, the first Application Support directory of the user domain, in its own file apart from every other database the app keeps, so signing out purges hub mail alone. It MUST NOT create the folder; the first sign-in does.
+- **location-device-id**: `HubMailLocation.deviceId(defaults:key:)` MUST return the string stored under `key` (default `hub_mail_device_id`), or, when there is none or it is empty, make a new UUID string, store it under `key` and return it, so the same device keeps one id and the hub resumes its cursor. `app(_:defaults:deviceIdKey:fileManager:)` MUST take its `deviceId` from this rule, from `UserDefaults.standard` unless told otherwise.
 - **routed-client**: `MailClient.routed(_:)` MUST call its picker for every request and send that request through the client it returns, so a source switch takes effect on the next request.
 ## Appearance
 
@@ -137,6 +141,9 @@ Not applicable: no visual or interactive element.
 | hub-mail-bridge-027 | service-sign-in, service-sign-out | `connect` throws | status `.failed`; requests refused; `signedOut()` returns to `.signedOut` |
 | hub-mail-bridge-028 | service-follows-session | `follow(.restoring)`, sign in, `follow(.error)`, `follow(.signedOut)` | `.signedOut`, `.connected`, still `.connected` with accounts readable, `.signedOut` |
 | hub-mail-bridge-029 | routed-client | A routed client over a direct stub and a connected service, switched between requests | the stub's empty accounts, then `c1` |
+| hub-mail-bridge-030 | location-app-file | `HubMailLocation.app("Temporal", defaults: suite)` | file name `hub-mail.db`, in a folder named `Temporal`, directly under the user's Application Support directory |
+| hub-mail-bridge-031 | location-device-id | `deviceId(defaults:)` twice on an empty suite, then `app("Temporal", defaults:)` | one non-empty id, stored under `hub_mail_device_id`, returned each time and by `app` |
+| hub-mail-bridge-032 | location-device-id | `""` stored under `custom`, then `deviceId(defaults:key: "custom")` | a new non-empty id, now stored under `custom` |
 ## Edge Cases
 
 - A `from` with no angle brackets is used whole, trimmed and lowercased.
@@ -144,6 +151,10 @@ Not applicable: no visual or interactive element.
 - A message id that matches no live row is not found; the bridge cannot read Gmail directly, so a message the hub has not synced is not reachable.
 - A label change written into the mirror is replaced by the hub's row on the next pull that carries it; until the worker syncs, a pull that carries an older copy of the row puts the old labels back.
 
+- An id stored under the device-id key that is empty is treated as missing and replaced, so a blank value never reaches the hub as a device id.
+- Two apps that share one `UserDefaults` and one key share one device id; an app wanting its own passes a different `deviceIdKey`.
+- Deleting the defaults loses the device id, so the next launch is a new device to the hub and starts a new cursor.
+- `HubMailLocation.app(_:)` only names the file; a folder that does not exist yet is created when the database first opens on sign-in.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -158,6 +169,19 @@ Not applicable: no visual or interactive element.
 |--------|------|---------|-------------|
 | syncInterval | `TimeInterval?` | 300 | Seconds between background pulls; nil for none (the `syncNow` request still pulls). |
 | connect | `@MainActor () throws -> Connection` | required | Builds the sync and label writer for the identity that just signed in. |
+
+`HubMailLocation`:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| databaseURL | `URL` | required | The mirror's database file. |
+| deviceId | `String` | required | The stable device id the sync cursor is filed under. |
+| appFolder | `String` | required for `app(_:)` | The folder under Application Support that holds `hub-mail.db`. |
+| defaults | `UserDefaults` | `.standard` | Where `app(_:)` and `deviceId(defaults:)` keep the device id. |
+| deviceIdKey / key | `String` | `HubMailLocation.defaultDeviceIdKey` (`hub_mail_device_id`) | The defaults key the device id is stored under. |
+| fileManager | `FileManager` | `.default` | Supplies the Application Support directory for `app(_:)`. |
+
+`HubMailService.live(at:syncInterval:)` takes a `HubMailLocation` and `syncInterval` (default 300), and uses the defaults below.
 
 `HubMailService.live(databaseURL:deviceId:syncInterval:sessionStore:configuration:)` defaults `sessionStore` to the Keychain store `HubAccount.live` uses (`adh.api`) and `configuration` to `.fromBundle()`.
 ## Deep Linking
@@ -191,8 +215,9 @@ Not applicable: no event is recorded.
 The bridge logs nothing; failures are answered to the caller. `HubMailService` logs a failed connect and a failed purge at error level (subsystem `com.agenticdevelopmentstudio.hubmail`, category `service`), with the error message public and no mail content.
 ## Platform Notes
 
+- **Shared location rules**: `HubMailLocation` (`HubMailBridge/HubMailLocation.swift`) holds the database location and device-id rules once for the macOS and iOS Temporal apps, so neither repeats them: `Application Support/<appFolder>/hub-mail.db` and a UUID kept in `UserDefaults`. It uses only Foundation, so it behaves the same on both platforms. `live(at:)` lives in `HubMailService+Live.swift`.
 - **SwiftUI**: An iOS or macOS SwiftUI host uses the same Swift framework, `AgenticDeveloperHubSDKHubMailBridge`, which builds for both. An iOS host may read `HubMailStore` directly, or link the bridge when it wants the same `MailClient` seam as macOS.
-- **AppKit / UIKit**: Source platform: `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/`, built for macOS and iOS. It depends on the Mail, HubMail, HubAuth, HubSync, Sync and Database frameworks, the hub client, and the foundation framework `AgenticDeveloperHubSDK` (for `HTMLText`); it does not depend on Core or Integrations. The host builds `HubMailService.live(databaseURL:deviceId:)` once at launch, shows its `account` in the accounts settings, calls `start()` so a stored login reconnects, and hands `MailClient.routed { source == .hub ? live.service.client : daemonClient }` to the mail browser and the Email App. The Integrations settings panel keeps the daemon's client, because it administers the direct worker.
+- **AppKit / UIKit**: Source platform: `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/`, built for macOS and iOS. It depends on the Mail, HubMail, HubAuth, HubSync, Sync and Database frameworks, the hub client, and the foundation framework `AgenticDeveloperHubSDK` (for `HTMLText`); it does not depend on Core or Integrations. The host builds `HubMailService.live(at: .app("<AppFolder>"))` once at launch (or `live(databaseURL:deviceId:)` when it keeps the file elsewhere), shows its `account` in the accounts settings, calls `start()` so a stored login reconnects, and hands `MailClient.routed { source == .hub ? live.service.client : daemonClient }` to the mail browser and the Email App. The Integrations settings panel keeps the daemon's client, because it administers the direct worker.
 - **Compose**: Not applicable: an Android client reads its mirror directly, as iOS does.
 - **React/Web**: Not applicable: the web app reads the hub API directly and has no local RPC.
 - **WinUI 3**: Not applicable until a Windows host shares one mail UI between two sources; it would follow this shape.
@@ -201,9 +226,9 @@ The bridge logs nothing; failures are answered to the caller. `HubMailService` l
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.1.0) |
-| ios | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.3.0) |
+| ios | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -247,6 +272,7 @@ Every vector has a named test in `AgenticDeveloperHubSDKHubMailBridgeTests`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Describes HubMailLocation and live(at:) |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | HubMailBridge now builds for macOS and iOS on the Mail framework, no longer depending on Core or Integrations |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | HubMailService keeps the bridge open across sign-in and purges on sign-out; MailClient.routed and MailSource switch a window's source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

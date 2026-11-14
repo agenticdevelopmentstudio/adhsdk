@@ -4,7 +4,7 @@
     "id": "e12914f0-3a3b-4fb7-ac0c-6332de37de4f",
     "title": "Hub Mail Bridge",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b2175065d02d4d42",
+  "synced": "e3d807c86be109b8",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

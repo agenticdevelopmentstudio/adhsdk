@@ -30,3 +30,6 @@
 | hub-mail-bridge-027 | service-sign-in, service-sign-out | `connect` throws | status `.failed`; requests refused; `signedOut()` returns to `.signedOut` |
 | hub-mail-bridge-028 | service-follows-session | `follow(.restoring)`, sign in, `follow(.error)`, `follow(.signedOut)` | `.signedOut`, `.connected`, still `.connected` with accounts readable, `.signedOut` |
 | hub-mail-bridge-029 | routed-client | A routed client over a direct stub and a connected service, switched between requests | the stub's empty accounts, then `c1` |
+| hub-mail-bridge-030 | location-app-file | `HubMailLocation.app("Temporal", defaults: suite)` | file name `hub-mail.db`, in a folder named `Temporal`, directly under the user's Application Support directory |
+| hub-mail-bridge-031 | location-device-id | `deviceId(defaults:)` twice on an empty suite, then `app("Temporal", defaults:)` | one non-empty id, stored under `hub_mail_device_id`, returned each time and by `app` |
+| hub-mail-bridge-032 | location-device-id | `""` stored under `custom`, then `deviceId(defaults:key: "custom")` | a new non-empty id, now stored under `custom` |

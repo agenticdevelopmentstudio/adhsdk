@@ -1326,6 +1326,18 @@
       "platform": "macos",
       "kind": "ui",
       "group": "integrations"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "auth/accounts"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Accounts",
+      "platform": "ios",
+      "kind": "ui",
+      "group": "auth/accounts"
     }
   ],
   "ignore": [

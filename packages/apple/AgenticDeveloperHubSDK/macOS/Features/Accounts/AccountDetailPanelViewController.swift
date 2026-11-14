@@ -8,7 +8,7 @@ import os
 /// (its `summary`) is explanation, so it is the help drawer's, not the body's.
 @MainActor
 final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelViewController {
-    static let restoringText = "Checking sign-in…"
+    static let restoringText = AccountDisplay.restoringText
 
     private static let wrapWidth: CGFloat = 360
 
@@ -119,15 +119,9 @@ final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelVi
     // MARK: Rendering
 
     private func render() {
-        let state = account.state
-        let busy = state == .busy
-        var signedInUser: AccountUser?
-        if case .signedIn(let user) = state { signedInUser = user }
-        let restoring = state == .restoring
-        let signedOutLike = state == .signedOut || (busy && signedInUser == nil && lastUser == nil)
-
-        if let signedInUser { lastUser = signedInUser } else if !busy { lastUser = nil }
-        let shownUser = signedInUser ?? (busy ? lastUser : nil)
+        let display = AccountDisplay(account: account, lastUser: lastUser)
+        lastUser = display.shownUser
+        let shownUser = display.shownUser
 
         identityRow.isHidden = shownUser == nil
         avatarView.user = shownUser
@@ -135,18 +129,18 @@ final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelVi
         nameLabel.stringValue = shownUser?.name ?? ""
         emailLabel.stringValue = shownUser?.email ?? ""
 
-        statusLabel.isHidden = !restoring
-        statusRow.isHidden = !(restoring || busy)
-        if restoring || busy { spinner.startAnimation(nil) } else { spinner.stopAnimation(nil) }
-        spinner.isHidden = !(restoring || busy)
+        statusLabel.isHidden = !display.showsStatusText
+        statusRow.isHidden = !display.showsSpinner
+        if display.showsSpinner { spinner.startAnimation(nil) } else { spinner.stopAnimation(nil) }
+        spinner.isHidden = !display.showsSpinner
 
-        loginButton.isHidden = !signedOutLike
-        signupButton.isHidden = !signedOutLike || account.signupURL == nil
-        logoutButton.isHidden = shownUser == nil
-        for button in [loginButton, signupButton, logoutButton] { button.isEnabled = !busy }
+        loginButton.isHidden = !display.showsLogin
+        signupButton.isHidden = !display.showsSignup
+        logoutButton.isHidden = !display.showsLogout
+        for button in [loginButton, signupButton, logoutButton] { button.isEnabled = display.controlsEnabled }
 
-        messageLabel.stringValue = account.message ?? ""
-        messageLabel.isHidden = account.message == nil
+        messageLabel.stringValue = display.message ?? ""
+        messageLabel.isHidden = display.message == nil
     }
 
     // MARK: Actions
