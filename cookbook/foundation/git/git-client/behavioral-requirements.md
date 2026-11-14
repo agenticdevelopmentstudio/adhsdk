@@ -174,6 +174,17 @@
   pop and drop → `stash apply|pop|drop stash@{<index>}`; cherry-pick →
   `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
   <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`.
+- **write-operand-guard**: None of those mappings puts a ref, branch, tag,
+  remote or commit after `--`, so git would read one that begins with `-`
+  as an option (`branch --delete main` from a branch named `--delete`
+  started at `main`; `tag -d v2` from a tag named `-d` on `v2`). The
+  perform verb MUST therefore refuse, before resolving its configuration or
+  spawning anything, any action whose positional operands — branch name,
+  start point, checkout target, remote branch, commit, tag name, remote,
+  and a rename's old and new names — include one that is empty or begins
+  with `-`, with a distinct invalid-argument outcome carrying the verb and
+  the offending value (its log description carries only the verb). Paths,
+  which follow `--`, and messages, which follow `-m`, are exempt.
 - **write-budgets**: The perform verb MUST run through the same private
   execution step as every read — logged, attributed and mapped onto the
   same error outcomes — with its own wall-clock budget: the larger of the
@@ -261,9 +272,9 @@
 
 ### Errors and security-relevant logging
 
-- **error-taxonomy**: The git client's error outcome MUST be exactly four
-  cases — command-failed, timed-out, launch-failed, executable-not-found —
-  and MUST NOT include a cancellation signal as one of its cases.
+- **error-taxonomy**: The git client's error outcome MUST be exactly five
+  cases — command-failed, timed-out, launch-failed, executable-not-found,
+  and invalid-argument (a write refused before anything ran) — and MUST NOT include a cancellation signal as one of its cases.
 - **error-description-vs-log-description**: The error outcome's
   user-facing description MAY interpolate git's own standard-error text
   into a message for the command-failed case. The error outcome's

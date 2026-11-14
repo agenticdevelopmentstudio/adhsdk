@@ -2,10 +2,11 @@ import Foundation
 
 /// Everything `GitClient` can fail with.
 ///
-/// Four cases, and the split between them is about *how far the invocation
-/// got*, because that is what a caller can act on: nothing executable to run,
-/// a process that never produced an exit status, a process that ran out of
-/// time, or a process that ran and disagreed.
+/// Five cases, and the split between them is about *how far the invocation
+/// got*, because that is what a caller can act on: a write refused before
+/// anything ran, nothing executable to run, a process that never produced an
+/// exit status, a process that ran out of time, or a process that ran and
+/// disagreed.
 ///
 /// One error deliberately does **not** appear here: `CancellationError` leaves
 /// `GitClient` as itself, unwrapped. See `GitClient.execute`.
@@ -27,9 +28,16 @@ public enum GitClientError: Error, LocalizedError, Equatable {
     case launchFailed(verb: String, reason: String)
     /// Nothing executable at the configured path; no process was spawned.
     case executableNotFound(path: String)
+    /// A write was refused before anything ran: `argument`, a ref, branch, tag, remote or
+    /// commit, was empty or began with `-`, so git would have read it as an option.
+    case invalidArgument(verb: String, argument: String)
 
     public var errorDescription: String? {
         switch self {
+        case let .invalidArgument(verb, argument):
+            return argument.isEmpty
+                ? "git \(verb) was not run: a name or commit is empty."
+                : "git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."
         case let .commandFailed(verb, exitStatus, standardError):
             let detail = standardError.trimmingCharacters(in: .whitespacesAndNewlines)
             return detail.isEmpty
@@ -60,6 +68,8 @@ public enum GitClientError: Error, LocalizedError, Equatable {
             return "launchFailed(verb: \(verb))"
         case .executableNotFound:
             return "executableNotFound"
+        case let .invalidArgument(verb, _):
+            return "invalidArgument(verb: \(verb))"
         }
     }
 

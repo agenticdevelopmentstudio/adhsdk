@@ -534,9 +534,17 @@ public actor GitClient {
     /// Goes through `execute` like every read, so each write is logged, attributed and
     /// bounded; only the budget differs: `max(configuration.timeout, writeBudget)`, or
     /// `longWriteBudget` for a long-running action.
+    ///
+    /// An action with an operand git would read as an option or as nothing
+    /// (`GitAction.invalidOperand`) throws `.invalidArgument` before anything is resolved or
+    /// spawned: `createBranch(name: "--delete", startPoint: "main")` would otherwise run
+    /// `git branch --delete main`.
     @discardableResult
     public func perform(_ action: GitAction, in directory: URL, caller: GitCaller = GitCaller()) async throws
         -> String {
+        if let operand = action.invalidOperand {
+            throw GitClientError.invalidArgument(verb: action.verb, argument: operand)
+        }
         let configuration = await configurationProvider()
         let floor = action.isLongRunning ? Self.longWriteBudget : Self.writeBudget
         return try await execute(

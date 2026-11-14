@@ -118,4 +118,40 @@ struct GitActionTests {
         #expect(long.filter { !$0.isLongRunning }.isEmpty)
         #expect(short.filter(\.isLongRunning).isEmpty)
     }
+
+    @Test("an empty or dash-led ref, remote or commit is invalid; paths and messages never are")
+    func invalidOperands() {
+        let invalid: [(GitAction, String)] = [
+            (.createBranch(name: "--delete", startPoint: "main", checkout: false), "--delete"),
+            (.createBranch(name: "topic", startPoint: "-f", checkout: true), "-f"),
+            (.checkout(branch: "-f"), "-f"),
+            (.checkoutTracking(remoteBranch: "-b"), "-b"),
+            (.deleteBranch(name: "", force: false), ""),
+            (.createTag(name: "-d", commit: "v2", message: nil), "-d"),
+            (.createTag(name: "v1", commit: "--all", message: "m"), "--all"),
+            (.deleteTag(name: "-l"), "-l"),
+            (.checkoutDetached(commit: "--orphan"), "--orphan"),
+            (.cherryPick(commit: "--abort", mainline: nil), "--abort"),
+            (.revert(commit: "", mainline: nil), ""),
+            (.reset(commit: "--hard", mode: .soft), "--hard"),
+            (.fetch(remote: "--upload-pack=x"), "--upload-pack=x"),
+            (.pushSettingUpstream(remote: "-q", branch: "main"), "-q"),
+            (.pushSettingUpstream(remote: "origin", branch: "--force"), "--force"),
+            (.deleteRemoteBranch(remote: "origin", name: "--mirror"), "--mirror"),
+            (.pushTag(name: "v1", remote: "--force"), "--force"),
+            (.renameBranch(from: "-M", to: "topic"), "-M"),
+            (.renameBranch(from: "topic", to: "-D"), "-D")
+        ]
+        for (action, operand) in invalid {
+            #expect(action.invalidOperand == operand, "\(action)")
+        }
+        let valid: [GitAction] = [
+            .stage(paths: ["-a"]), .unstage(paths: ["--x"]), .discard(paths: ["-"]), .removeUntracked(paths: ["-r"]),
+            .commit(message: "-m", amend: false), .stashSave(message: "--x"), .fetch(remote: nil),
+            .createBranch(name: "topic", startPoint: nil, checkout: true),
+            .createTag(name: "v1", commit: "HEAD", message: "-a"),
+            .renameBranch(from: "a-b", to: "c-d"), .reset(commit: "HEAD~2", mode: .hard)
+        ]
+        #expect(valid.compactMap(\.invalidOperand).isEmpty)
+    }
 }

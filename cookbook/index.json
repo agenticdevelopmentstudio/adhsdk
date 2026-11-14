@@ -9777,9 +9777,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:b1a85a32038891cdf219ce6895a975203b9d8283d14f0eff7c38fddf3f0b5a95",
+            "hash": "sha256:54c2dc0c82023a8023995d03d3f11f199b10994858b12fcc6bf433c4c059a712",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/",
           "platform": "apple"
@@ -9788,9 +9788,18 @@
           "conformance": {
             "hash": "sha256:3f8e3101cf591fe5337374b7008ae8668d13dff5379fed6bb97f92cfc7e9288d",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:91d5a39e7e0c0afc9c64fb1cccd96a282fd37df36e69cee78b0320410b70c5d7",
+            "state": "confirmed",
+            "version": "2.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift",
           "platform": "macos"
         }
       ],

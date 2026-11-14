@@ -114,6 +114,36 @@ public enum GitAction: Sendable, Hashable {
         }
     }
 
+    /// The positional ref, branch, tag, remote and commit values the command line carries
+    /// where git would read an option: none of them follows `--`, so each must be checked.
+    /// Paths (after `--`) and messages (after `-m`) are not operands.
+    public var operands: [String] {
+        switch self {
+        case .stage, .stageAll, .unstage, .unstageAll, .discard, .removeUntracked, .commit, .pull, .push,
+             .stashSave, .stashApply, .stashPop, .stashDrop:
+            []
+        case .fetch(let remote): remote.map { [$0] } ?? []
+        case let .pushSettingUpstream(remote, branch): [remote, branch]
+        case let .createBranch(name, startPoint, _): [name] + (startPoint.map { [$0] } ?? [])
+        case .checkout(let branch): [branch]
+        case .checkoutTracking(let remoteBranch): [remoteBranch]
+        case .checkoutDetached(let commit): [commit]
+        case let .renameBranch(oldName, newName): [oldName, newName]
+        case .deleteBranch(let name, _): [name]
+        case let .deleteRemoteBranch(remote, name): [remote, name]
+        case let .createTag(name, commit, _): [name, commit]
+        case .deleteTag(let name): [name]
+        case let .pushTag(name, remote): [name, remote]
+        case .cherryPick(let commit, _), .revert(let commit, _), .reset(let commit, _): [commit]
+        }
+    }
+
+    /// The first operand git could misread — empty, or starting with `-` (`--delete`, `-f`) —
+    /// or nil when every operand is safe. `GitClient.perform` refuses an action that has one.
+    public var invalidOperand: String? {
+        operands.first { $0.isEmpty || $0.hasPrefix("-") }
+    }
+
     private static func mainlineArguments(_ mainline: Int?) -> [String] {
         mainline.map { ["-m", String($0)] } ?? []
     }

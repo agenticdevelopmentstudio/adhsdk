@@ -212,6 +212,124 @@ struct GitClientWriteTests {
         #expect(try await remote.sha("refs/tags/v1") == tagged)
     }
 
+    // MARK: - Operands git would read as options
+
+    /// Everything a refused write could have changed: every ref, HEAD and the status.
+    private func snapshot(_ repository: GitTestRepository) async throws -> [String] {
+        [try await repository.run(["for-each-ref"]),
+         try await repository.run(["rev-parse", "--symbolic-full-name", "HEAD"]),
+         try await repository.run(["status", "--porcelain"])]
+    }
+
+    /// A repository with `main`, a branch `v2`, a tag `v2`, and a remote `origin`, so a
+    /// misread operand has something real to delete, move or push.
+    private func repositoryWithRefs(_ prefix: String) async throws -> GitTestRepository {
+        let repository = try await GitTestRepository.make(prefix: prefix)
+        do {
+            try await commitFile(repository, "a.txt", "alpha\n", message: "initial")
+            try await repository.run(["branch", "v2-branch"])
+            try await repository.run(["tag", "v2"])
+            try await repository.run(["remote", "add", "origin", repository.url(".git").path])
+            return repository
+        } catch {
+            repository.tearDown()
+            throw error
+        }
+    }
+
+    /// Each action throws `.invalidArgument` naming `operand`, and the repository is unchanged.
+    private func expectRefused(_ actions: [(GitAction, String)], prefix: String,
+                               sourceLocation: SourceLocation = #_sourceLocation) async throws {
+        let repository = try await repositoryWithRefs(prefix)
+        defer { repository.tearDown() }
+        let before = try await snapshot(repository)
+        for (action, operand) in actions {
+            let error = await failure { try await client.perform(action, in: repository.root) }
+            #expect(error == .invalidArgument(verb: action.verb, argument: operand), "\(action)",
+                    sourceLocation: sourceLocation)
+        }
+        #expect(try await snapshot(repository) == before, sourceLocation: sourceLocation)
+    }
+
+    @Test("a branch name that is empty or starts with a dash is refused")
+    func refusesDashBranchNames() async throws {
+        try await expectRefused([
+            (.createBranch(name: "--delete", startPoint: "v2-branch", checkout: false), "--delete"),
+            (.createBranch(name: "-D", startPoint: "v2-branch", checkout: true), "-D"),
+            (.checkout(branch: "-f"), "-f"),
+            (.checkoutTracking(remoteBranch: "--orphan"), "--orphan"),
+            (.deleteBranch(name: "", force: true), ""),
+            (.deleteRemoteBranch(remote: "origin", name: "--mirror"), "--mirror"),
+            (.pushSettingUpstream(remote: "origin", branch: "--force"), "--force")
+        ], prefix: "git-write-dash-branch")
+    }
+
+    @Test("a start point that starts with a dash is refused")
+    func refusesDashStartPoints() async throws {
+        try await expectRefused([
+            (.createBranch(name: "topic", startPoint: "-f", checkout: false), "-f"),
+            (.createBranch(name: "topic", startPoint: "--track", checkout: true), "--track")
+        ], prefix: "git-write-dash-start")
+    }
+
+    @Test("a tag name that is empty or starts with a dash is refused")
+    func refusesDashTagNames() async throws {
+        try await expectRefused([
+            (.createTag(name: "-d", commit: "v2", message: nil), "-d"),
+            (.createTag(name: "", commit: "HEAD", message: "m"), ""),
+            (.deleteTag(name: "-l"), "-l"),
+            (.pushTag(name: "-f", remote: "origin"), "-f")
+        ], prefix: "git-write-dash-tag")
+    }
+
+    @Test("a commit that is empty or starts with a dash is refused")
+    func refusesDashCommits() async throws {
+        try await expectRefused([
+            (.createTag(name: "v3", commit: "--delete", message: nil), "--delete"),
+            (.checkoutDetached(commit: "-"), "-"),
+            (.cherryPick(commit: "--abort", mainline: nil), "--abort"),
+            (.revert(commit: "", mainline: 1), ""),
+            (.reset(commit: "--hard", mode: .soft), "--hard")
+        ], prefix: "git-write-dash-commit")
+    }
+
+    @Test("a remote that is empty or starts with a dash is refused")
+    func refusesDashRemotes() async throws {
+        try await expectRefused([
+            (.fetch(remote: "--upload-pack=touch pwned"), "--upload-pack=touch pwned"),
+            (.fetch(remote: ""), ""),
+            (.pushSettingUpstream(remote: "--mirror", branch: "main"), "--mirror"),
+            (.deleteRemoteBranch(remote: "-f", name: "v2-branch"), "-f"),
+            (.pushTag(name: "v2", remote: "--all"), "--all")
+        ], prefix: "git-write-dash-remote")
+    }
+
+    @Test("a rename whose old or new name starts with a dash is refused")
+    func refusesDashRenames() async throws {
+        try await expectRefused([
+            (.renameBranch(from: "-M", to: "v2-branch"), "-M"),
+            (.renameBranch(from: "v2-branch", to: "--delete"), "--delete"),
+            (.renameBranch(from: "", to: "topic"), "")
+        ], prefix: "git-write-dash-rename")
+    }
+
+    @Test("a refused write never reaches the executable")
+    func refusalSpawnsNothing() async throws {
+        // A missing executable fails every call that gets as far as `execute` with
+        // `.executableNotFound`; a refusal must come first.
+        let missing = GitClient(configuration: GitClientConfiguration(
+            executableURL: URL(fileURLWithPath: "/nonexistent/git-\(UUID().uuidString)")
+        ))
+        let directory = FileManager.default.temporaryDirectory
+        let refused = await failure { try await missing.perform(.checkout(branch: "-f"), in: directory) }
+        #expect(refused == .invalidArgument(verb: "switch", argument: "-f"))
+        let reached = await failure { try await missing.perform(.checkout(branch: "main"), in: directory) }
+        guard case .executableNotFound? = reached else {
+            Issue.record("expected executableNotFound, got \(String(describing: reached))")
+            return
+        }
+    }
+
     @Test("push with no remote fails as a command, not a timeout")
     func pushWithNoRemoteFailsQuickly() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-write-noremote")

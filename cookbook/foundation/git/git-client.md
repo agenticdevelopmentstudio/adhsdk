@@ -2,7 +2,7 @@
 id: 779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344
 title: "Git Client"
 type: ingredient
-version: 1.3.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
@@ -78,7 +78,7 @@ branches, worktrees) and three global-configuration verbs (read global
 config, set global config, unset global config), resolves its own
 configuration from three persisted settings on every call, records every
 attempt — success or failure — in a redacted command log, and maps every
-failure onto a closed four-case error outcome. It has no visual surface of
+failure onto a closed five-case error outcome. It has no visual surface of
 its own; every UI element that shows git state (a status badge, a branch
 picker) is a consumer of this contract, not part of it.
 
@@ -259,6 +259,17 @@ picker) is a consumer of this contract, not part of it.
   pop and drop → `stash apply|pop|drop stash@{<index>}`; cherry-pick →
   `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
   <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`.
+- **write-operand-guard**: None of those mappings puts a ref, branch, tag,
+  remote or commit after `--`, so git would read one that begins with `-`
+  as an option (`branch --delete main` from a branch named `--delete`
+  started at `main`; `tag -d v2` from a tag named `-d` on `v2`). The
+  perform verb MUST therefore refuse, before resolving its configuration or
+  spawning anything, any action whose positional operands — branch name,
+  start point, checkout target, remote branch, commit, tag name, remote,
+  and a rename's old and new names — include one that is empty or begins
+  with `-`, with a distinct invalid-argument outcome carrying the verb and
+  the offending value (its log description carries only the verb). Paths,
+  which follow `--`, and messages, which follow `-m`, are exempt.
 - **write-budgets**: The perform verb MUST run through the same private
   execution step as every read — logged, attributed and mapped onto the
   same error outcomes — with its own wall-clock budget: the larger of the
@@ -346,9 +357,9 @@ picker) is a consumer of this contract, not part of it.
 
 ### Errors and security-relevant logging
 
-- **error-taxonomy**: The git client's error outcome MUST be exactly four
-  cases — command-failed, timed-out, launch-failed, executable-not-found —
-  and MUST NOT include a cancellation signal as one of its cases.
+- **error-taxonomy**: The git client's error outcome MUST be exactly five
+  cases — command-failed, timed-out, launch-failed, executable-not-found,
+  and invalid-argument (a write refused before anything ran) — and MUST NOT include a cancellation signal as one of its cases.
 - **error-description-vs-log-description**: The error outcome's
   user-facing description MAY interpolate git's own standard-error text
   into a message for the command-failed case. The error outcome's
@@ -731,12 +742,13 @@ mechanism.
 | timed-out | `"git \(verb) did not finish within the configured timeout."` | The timed-out outcome |
 | launch-failed | `"git \(verb) could not be run: \(reason)"` | The launch-failed outcome |
 | executable-not-found | `"No git executable at \(path). Change it in Settings > Git."` | The executable-not-found outcome |
+| invalid-argument | `"git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."` (or `"git \(verb) was not run: a name or commit is empty."`) | The invalid-argument outcome |
 
 Every string above is hardcoded English with no lookup table, ICU message,
 or locale parameter anywhere in this component — there is no localization
 mechanism here. This is a plain fact about the design, not a gap: a port to
 a platform with an internationalization layer MUST decide, as a design
-choice outside this contract, whether and how to route these four strings
+choice outside this contract, whether and how to route these five strings
 through it.
 
 ## Accessibility Options
@@ -841,13 +853,13 @@ once those verbs exist.
   privacy after redaction, never through `OSLogPrivacy.private`, because
   that would collapse the whole interpolation for every verb rather than
   redacting the one argument position that needs it. An AppKit or UIKit
-  caller consumes the same actor and the same four-case error outcome
+  caller consumes the same actor and the same five-case error outcome
   through ordinary `async`/`await`, with no framework-specific adaptation
   needed.
 - **Compose (Kotlin/Android)**: The actor's bottleneck-for-accounting model
   maps to a Kotlin object exposing `suspend fun`s backed by
   `ProcessBuilder`/`Process`, run on `Dispatchers.IO`; `withTimeout` stands
-  in for the wall-clock budget, a sealed class with the same four variants
+  in for the wall-clock budget, a sealed class with the same five variants
   stands in for the git client's error outcome, and
   `kotlinx.coroutines.CancellationException` is the analog that MUST
   likewise be left to propagate unchanged rather than wrapped.
@@ -855,7 +867,7 @@ once those verbs exist.
   git process; a web port MUST run the equivalent of this component in a
   Node.js backend (`child_process.spawn`/`execa`) behind an API the page
   calls, with an `AbortController`/`AbortSignal.timeout` standing in for
-  the configured timeout and a discriminated union mirroring the four
+  the configured timeout and a discriminated union mirroring the five
   error-outcome cases returned as the API's error shape.
 - **WinUI 3**: This is a process-spawning wrapper, not an HTTP client, so
   `HttpClient`/`System.Text.Json` do not apply. The port is
@@ -878,8 +890,9 @@ once those verbs exist.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (1.2.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -1003,7 +1016,7 @@ argument position capable of carrying personal data (a `config` value) is
 redacted before it reaches the log, and `GitClientError.logDescription`
 withholds `standardError`, the launch `reason`, and the configured
 executable `path` from ever reaching `OSLog`. `no-hardcoded-strings`
-**failed**: all four `GitClientError.errorDescription` strings are hardcoded
+**failed**: all five `GitClientError.errorDescription` strings are hardcoded
 English with no lookup table or locale parameter anywhere in this component
 (see Localization) — an honestly-reported gap in the source, not a hidden
 one.
@@ -1017,4 +1030,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
-| 1.3.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and `core.editor=true`, the remotes verb and the last commit message. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). |

@@ -4,7 +4,7 @@
     "id": "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344",
     "title": "Git Client",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
@@ -71,7 +71,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "22adae150bb057a7",
+  "synced": "aac360c658d665a0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -41,7 +41,7 @@ argument position capable of carrying personal data (a `config` value) is
 redacted before it reaches the log, and `GitClientError.logDescription`
 withholds `standardError`, the launch `reason`, and the configured
 executable `path` from ever reaching `OSLog`. `no-hardcoded-strings`
-**failed**: all four `GitClientError.errorDescription` strings are hardcoded
+**failed**: all five `GitClientError.errorDescription` strings are hardcoded
 English with no lookup table or locale parameter anywhere in this component
 (see Localization) — an honestly-reported gap in the source, not a hidden
 one.
