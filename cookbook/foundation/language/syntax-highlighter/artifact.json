@@ -4,7 +4,7 @@
     "id": "6708bfd4-5b29-4bf9-b180-05904873906e",
     "title": "Syntax Highlighter",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8799cbfafdb1cea5",
+  "synced": "ffc40f595032200a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

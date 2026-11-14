@@ -1,6 +1,6 @@
 
-**Decision**: Promises are awaited through `then` callbacks inside the actor's own call, never by running a run loop.
-**Rationale**: JavaScriptCore drains microtasks when the outermost call returns, and the bundle uses nothing but promises, so every promise settles before the call returns; spinning a run loop from an actor would block a cooperative thread and could re-enter unrelated work.
+**Decision**: Promises are settled synchronously through `then` callbacks inside the actor's own call, never by a continuation and never by running a run loop.
+**Rationale**: JavaScriptCore drains microtasks when the outermost call returns, and the bundle uses nothing but promises, so every promise settles before the call returns; spinning a run loop from an actor would block a cooperative thread and could re-enter unrelated work, and an `await` on the engine path would let the actor be re-entered between creating the engine and setting the theme.
 **Approved**: pending
 
 **Decision**: `WebAssembly.instantiate` is replaced in the context with a synchronous `Module` + `Instance` that returns a resolved promise.

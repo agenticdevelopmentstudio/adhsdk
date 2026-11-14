@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 import Testing
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKLanguage
@@ -20,6 +21,11 @@ enum TextMateFixture {
         GrammarRegistry(sources: [try BundledGrammarSource(resources: resources())])
     }
 
+    /// A new highlighter whose engine has not been created yet.
+    static func highlighter() throws -> SyntaxHighlighter {
+        try SyntaxHighlighter(resources: resources(), registry: bundledRegistry())
+    }
+
     static func theme(_ name: String) throws -> CodeTheme {
         try CodeTheme(vscodeThemeData: Data(contentsOf: directory.appendingPathComponent("themes/\(name).json")))
     }
@@ -30,14 +36,12 @@ struct SyntaxHighlighterTests {
 
     /// One engine for the suite: creating it interprets the whole WASM
     /// Oniguruma without the JIT, which is the slow part of every test.
-    private static let shared: SyntaxHighlighter? = {
-        guard let resources = try? TextMateFixture.resources(),
-              let registry = try? TextMateFixture.bundledRegistry() else { return nil }
-        return try? SyntaxHighlighter(resources: resources, registry: registry)
-    }()
+    /// Kept as a `Result` so a failed init is reported by every test as the
+    /// error it was, not as a nil.
+    private static let shared = Result { try TextMateFixture.highlighter() }
 
     private func highlighter() throws -> SyntaxHighlighter {
-        try #require(Self.shared)
+        try Self.shared.get()
     }
 
     private func hex(_ color: RGBAColor) -> String {
@@ -102,6 +106,85 @@ struct SyntaxHighlighterTests {
             #expect(lines[index].runs.first?.range == NSRange(location: 0, length: 3))
         }
         #expect(lines[3].runs.isEmpty)
+    }
+
+    @Test("concurrent first calls build one engine and both are coloured by the theme")
+    func concurrentFirstCalls() async throws {
+        let engine = try TextMateFixture.highlighter()
+        let theme = try TextMateFixture.theme("dark-plus")
+
+        async let first = engine.highlight("let x = 1", scopeName: "source.swift", theme: theme)
+        async let second = engine.highlight("let y = 2", scopeName: "source.swift", theme: theme)
+        let more = try await withThrowingTaskGroup(of: [StyledLine]?.self) { group in
+            for index in 0..<6 {
+                group.addTask {
+                    try await engine.highlight("let z\(index) = 3", scopeName: "source.swift", theme: theme)
+                }
+            }
+            return try await group.reduce(into: []) { $0.append($1) }
+        }
+        let results = try await [first, second] + more
+
+        #expect(results.count == 8)
+        for lines in results {
+            let styled = try #require(lines)
+            let run = try #require(styled.first?.runs.first)
+            #expect(hex(run.foreground) == "#569CD6")
+        }
+        #expect(await engine.engineCount == 1)
+        #expect(await engine.setThemeCount == 1)
+    }
+
+    @Test("the theme is handed to the bundle only when it changes")
+    func themeSetOnlyWhenChanged() async throws {
+        let engine = try TextMateFixture.highlighter()
+        let dark = try TextMateFixture.theme("dark-plus")
+        let light = try TextMateFixture.theme("light-plus")
+
+        for (theme, expected) in [(dark, 1), (dark, 1), (light, 2), (light, 2), (dark, 3)] {
+            _ = try await engine.highlight("let x = 1", scopeName: "source.swift", theme: theme)
+            #expect(await engine.setThemeCount == expected)
+        }
+    }
+
+    // MARK: - Promises and WebAssembly
+
+    @Test("a promise still pending when the call returns throws rather than waits")
+    func settleWithoutRunLoop() throws {
+        let context = try #require(JSContext())
+
+        #expect(try SyntaxHighlighter.settle(
+            try #require(context.evaluateScript("Promise.resolve('done')")), in: context, "resolved") == "done")
+        #expect(throws: SyntaxHighlighterError.javaScript("Error: no")) {
+            try SyntaxHighlighter.settle(
+                try #require(context.evaluateScript("Promise.reject(new Error('no'))")), in: context, "rejected")
+        }
+        #expect(throws: SyntaxHighlighterError.promiseDidNotSettle("pending")) {
+            try SyntaxHighlighter.settle(
+                try #require(context.evaluateScript("new Promise(() => {})")), in: context, "pending")
+        }
+    }
+
+    @Test("the synchronous instantiate takes bytes or a module, and rejects bad bytes")
+    func synchronousInstantiate() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript(SyntaxHighlighter.synchronousWebAssembly)
+        context.evaluateScript("var bytes = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);")
+        func settle(_ script: String) throws -> String {
+            try SyntaxHighlighter.settle(try #require(context.evaluateScript(script)), in: context, script)
+        }
+
+        #expect(try settle("""
+            WebAssembly.instantiate(bytes, {}).then(r =>
+              `${r.module instanceof WebAssembly.Module},${r.instance instanceof WebAssembly.Instance}`)
+            """) == "true,true")
+        #expect(try settle("""
+            WebAssembly.instantiate(new WebAssembly.Module(bytes), {}).then(r =>
+              `${r instanceof WebAssembly.Instance}`)
+            """) == "true")
+        #expect(throws: SyntaxHighlighterError.self) {
+            try settle("WebAssembly.instantiate(new Uint8Array([1, 2, 3]), {})")
+        }
     }
 
     // MARK: - Declining

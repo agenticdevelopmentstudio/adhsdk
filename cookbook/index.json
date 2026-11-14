@@ -4583,25 +4583,25 @@
           "conformance": {
             "hash": "sha256:b50bb34041bdc58fd2ec6c240fd005eb3bc218b770698166c9aaa217f5240bac",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:e076f36bdbfcfaedeb92bd030fa72e4dc10532dd6254005a26761f5ed9d0706f",
+            "hash": "sha256:6242ef5755654309ea01d109b1745056a6cf15f474e65e8746ed0d5d62e6f77e",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:2e2e63d336a6c524ae519463bcf907b4dd88928c18ae0e267b33d387fe7ed110",
+            "hash": "sha256:30954e12f689313a320127f0182ed30b173f4327e326398b92fd473f96af00a2",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift",
           "platform": "apple"
@@ -4610,16 +4610,16 @@
           "conformance": {
             "hash": "sha256:222aea88714200f27cbdae0b05a14c25828b306a39f8b5ecb0918cdb2e75ba32",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:7c839db8a502765e458aaf28c5ca688829745cbad6811cfafac581c62a372431",
+            "hash": "sha256:736d5c96a5d23940e61ba6e42eb839480dc0c712e4116efc03e0ea5fd5d577fe",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift",
           "platform": "apple"
@@ -4628,7 +4628,7 @@
           "conformance": {
             "hash": "sha256:569685fea243c3963289a47530718a161b798799c1a8154596e6b3b9f4da0293",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift",
           "platform": "apple"

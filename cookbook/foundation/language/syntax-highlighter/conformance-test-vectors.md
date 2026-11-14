@@ -9,4 +9,8 @@
 | syntax-highlighter-006 | first-source-wins | a user `swift.tmLanguage.json` (`scopeName` `source.swift`) ahead of the bundled source | the registry's `source.swift` text is the user file's. |
 | syntax-highlighter-007 | resolution-order | `Package.swift`, `x.PY`, `Makefile`, an override answering `json`, `notes.unknownext` | `swift`, `python`, `make`, `json`, nil. |
 | syntax-highlighter-008 | line-split | `a\rb`, `a\r\nb` | two lines each. |
-
+| syntax-highlighter-009 | no-reentry, theme-once | eight concurrent first `highlight` calls with Dark+ on a new highlighter | every `let` run is `#569CD6`; one engine created; `setTheme` called once. |
+| syntax-highlighter-010 | theme-once | Dark+, Dark+, Light+, Light+, Dark+ in turn | `setTheme` counts 1, 1, 2, 2, 3. |
+| syntax-highlighter-011 | promises-without-run-loop | `new Promise(() => {})` | throws `promiseDidNotSettle`. |
+| syntax-highlighter-012 | promises-without-run-loop | `WebAssembly.instantiate` with the empty module's bytes, with that `WebAssembly.Module`, and with `[1, 2, 3]` | `{module, instance}`; an `Instance`; rejected. |
+| syntax-highlighter-013 | directory-source | a user grammar with `fileTypes` `["Makefile", "MK", ".gnu"]` | extensions `.makefile`, `.mk`, `.gnu`; file names `Makefile`, `MK`; `Makefile` and `rules.mk` resolve to it. |
