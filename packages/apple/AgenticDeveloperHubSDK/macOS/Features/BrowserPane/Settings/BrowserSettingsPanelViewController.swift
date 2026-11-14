@@ -1258,7 +1258,16 @@ private final class BrowserResetPanel: BrowserTopicPanel {
             // Nothing is lost that the Settings window does not still hold,
             // so this one does not ask first.
             let useGlobal = ComposableSettings.ButtonViewModel(title: "Use Global Settings for This Pane") {
-                layered.removeAllOverrides(withPrefix: "browser.")
+                // A private window's private browsing is what makes it that
+                // window, not a pane preference; dropping it would move the
+                // window onto the persistent data store under its "Private"
+                // title.
+                let isPrivateWindow = layered.hasOverride(UserSettings.browserPrivateBrowsing)
+                    && layered.get(UserSettings.browserPrivateBrowsing)
+                layered.removeAllOverrides(
+                    withPrefix: "browser.",
+                    keeping: isPrivateWindow ? [UserSettings.browserPrivateBrowsing.name] : []
+                )
             }
             let useGlobalView = ComposableSettings.ButtonView(viewModel: useGlobal, placement: .leading)
             _ = useGlobalView.button.accessibilityID(Self.useGlobalIdentifier)

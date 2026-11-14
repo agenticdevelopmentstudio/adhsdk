@@ -40,9 +40,11 @@ public final class LayeredSettingsStore: SettingsStore {
         remove(key)
     }
 
-    /// Drops every override whose name starts with `prefix`.
-    public func removeAllOverrides(withPrefix prefix: String) {
-        for name in overrides.keys(withPrefix: prefix) {
+    /// Drops every override whose name starts with `prefix`, except the
+    /// names in `keeping` — overrides that define what the layer is (the
+    /// private browser window's private browsing) rather than a preference.
+    public func removeAllOverrides(withPrefix prefix: String, keeping: Set<String> = []) {
+        for name in overrides.keys(withPrefix: prefix) where !keeping.contains(name) {
             overrides.remove(NamedSetting(name: name))
         }
     }
