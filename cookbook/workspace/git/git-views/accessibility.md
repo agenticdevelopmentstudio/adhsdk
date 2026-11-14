@@ -9,7 +9,7 @@ The root view carries `git.history`, its scroll view `git.history.scroll`, the t
 
 ### Changed-files list
 
-The root view carries `git.fileList.<context>` (`commit`, `staged`, `unstaged`), its scroll view `git.fileList.<context>.scroll` and its table `git.fileList.<context>.table`. Each row view carries `git.fileList.row`, each cell `git.fileList.file`, and within it `git.fileList.status`, `git.fileList.icon` and `git.fileList.title`. The status letter's accessibility label is the status's name (`modified`, `added`, …).
+The root view carries `git.fileList.<context>` (`commit`, `staged`, `unstaged`), its scroll view `git.fileList.<context>.scroll` and its table `git.fileList.<context>.table`. Each row view carries `git.fileList.row`, each cell `git.fileList.file`, and within it `git.fileList.status`, `git.fileList.icon` and `git.fileList.title`. The status letter's accessibility label is the status's readable, localized name, `GitFileStatus.displayName` (`Modified`, `Added`, …), never its case name.
 
 ### Commit detail
 

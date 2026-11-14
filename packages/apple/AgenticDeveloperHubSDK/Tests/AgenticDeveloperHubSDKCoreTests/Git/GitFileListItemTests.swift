@@ -51,4 +51,28 @@ struct GitFileListItemTests {
         #expect(item.path == path)
         #expect(item.title == "x y.json → " + path)
     }
+
+    @Test("--name-status -z output: one item per file, rename and copy with their old path")
+    func parseNameStatus() {
+        let output = ["M", "m.swift", "A", "new file.txt", "D", "gone.c", "T", "link",
+                      "R087", "old\tname.txt", "new\nname.txt", "C100", "src.c", "copy.c",
+                      "R100", "same", "same", ""].joined(separator: "\0")
+        #expect(GitFileListItem.parse(nameStatus: output) == [
+            GitFileListItem(path: "m.swift", oldPath: nil, status: .modified),
+            GitFileListItem(path: "new file.txt", oldPath: nil, status: .added),
+            GitFileListItem(path: "gone.c", oldPath: nil, status: .deleted),
+            GitFileListItem(path: "link", oldPath: nil, status: .modified),
+            GitFileListItem(path: "new\nname.txt", oldPath: "old\tname.txt", status: .renamed),
+            GitFileListItem(path: "copy.c", oldPath: "src.c", status: .copied),
+            GitFileListItem(path: "same", oldPath: nil, status: .renamed)
+        ])
+    }
+
+    @Test("--name-status -z output: empty is no files, and a truncated record is dropped")
+    func parseNameStatusEdges() {
+        #expect(GitFileListItem.parse(nameStatus: "").isEmpty)
+        #expect(GitFileListItem.parse(nameStatus: "M\0a.txt\0R100\0only-old\0") == [
+            GitFileListItem(path: "a.txt", oldPath: nil, status: .modified)
+        ])
+    }
 }

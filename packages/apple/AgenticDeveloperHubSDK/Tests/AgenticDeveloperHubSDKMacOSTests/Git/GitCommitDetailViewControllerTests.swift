@@ -8,27 +8,34 @@ import Testing
 private let diffFailure = GitClientError.commandFailed(verb: "diff", exitStatus: 128,
                                                        standardError: "fatal: bad object")
 
-/// A content source whose `diff` answers from `diffs` by commit id, like the model: it
-/// records the request first and then awaits. A commit id in `holding` waits until a
-/// test releases it, in any order; one in `failing` throws.
+/// A content source whose `changedFiles` answers from `diffs` by commit id, like the
+/// model: it records the request first and then awaits. A commit id in `holding` waits
+/// until a test releases it, in any order; one in `failing` throws. `diff` only records:
+/// the detail lists a commit's files without fetching its patch.
 @MainActor
 private final class FakeContentSource: GitContentSource {
     var diffs: [String: GitDiff] = [:]
     var holding: Set<String> = []
     var failing: Set<String> = []
     private(set) var requests: [(target: GitDiffTarget, options: GitDiffOptions)] = []
+    private(set) var fileRequests: [String] = []
     private(set) var held: [String: CheckedContinuation<Void, Never>] = [:]
 
     func diff(_ target: GitDiffTarget, options: GitDiffOptions) async throws -> GitDiff {
         requests.append((target, options))
         guard case .commit(let id, _) = target else { return GitDiff(files: []) }
+        return diffs[id] ?? GitDiff(files: [])
+    }
+
+    func changedFiles(commit id: String) async throws -> [GitFileListItem] {
+        fileRequests.append(id)
         if holding.contains(id) {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 MainActor.assumeIsolated { self.held[id] = continuation }
             }
         }
         if failing.contains(id) { throw diffFailure }
-        return diffs[id] ?? GitDiff(files: [])
+        return (diffs[id]?.files ?? []).map(GitFileListItem.init(diff:))
     }
 
     func release(_ id: String) {
@@ -42,7 +49,7 @@ private final class FakeContentSource: GitContentSource {
         if held[id] == nil { Issue.record("the diff of \(id) was never held", sourceLocation: sourceLocation) }
     }
 
-    func contents(path: String, at revision: String?) async throws -> Data? { nil }
+    func contents(path: String, at revision: String?, maximumBytes: Int?) async throws -> Data? { nil }
     func blame(path: String, at revision: String?) async throws -> GitBlame { GitBlame(lines: [], commits: [:]) }
     func fileHistory(path: String) async throws -> [GitFileHistoryEntry] { [] }
     func commit(_ id: String) -> GitCommit? { nil }
@@ -178,7 +185,7 @@ struct GitCommitDetailViewControllerTests {
         #expect(delegate.events == [.commit(Self.sha("p2"))])
     }
 
-    @Test("the files come from the commit's diff with default options, and selecting one reports it")
+    @Test("the files come from the commit's file list, never its patch, and selecting one reports it")
     func filesAndSelection() async throws {
         let source = FakeContentSource()
         let commit = Self.commit("c1")
@@ -193,10 +200,8 @@ struct GitCommitDetailViewControllerTests {
         detail.show(commit: commit)
         await detail.loadTask?.value
 
-        let request = try #require(source.requests.first)
-        #expect(source.requests.count == 1)
-        #expect(request.target == .commit(commit.id, paths: []))
-        #expect(request.options == GitDiffOptions())
+        #expect(source.fileRequests == [commit.id])
+        #expect(source.requests.isEmpty, "the detail must not fetch the whole commit's patch")
         #expect(detail.fileList.files == [
             GitFileListItem(path: "a.swift", oldPath: nil, status: .modified),
             GitFileListItem(path: "b", oldPath: "a", status: .renamed)

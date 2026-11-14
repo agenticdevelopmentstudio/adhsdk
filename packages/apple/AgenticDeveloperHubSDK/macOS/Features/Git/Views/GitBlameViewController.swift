@@ -92,7 +92,6 @@ public final class GitBlameViewController: NSViewController {
     /// The path and revision last asked for, or nil after `clear()`.
     private var shown: (path: String, revision: String?)?
 
-    /// git's id for lines not yet committed.
     /// Git's id for lines not yet committed: all zeros, at whichever hash length.
     static func isUncommitted(_ id: String) -> Bool {
         !id.isEmpty && id.allSatisfy { $0 == "0" }
@@ -140,7 +139,7 @@ public final class GitBlameViewController: NSViewController {
         generation += 1
         let generation = self.generation
         loadTask?.cancel()
-        showFailure(nil)
+        errorLabel.show(error: nil)
         loadTask = Task { [weak self, source, coloring] in
             let result: Result<GitBlame, Error>
             do {
@@ -154,7 +153,7 @@ public final class GitBlameViewController: NSViewController {
                 self.setModel(nil)
                 let description = GitClientError.logDescription(of: error)
                 Self.logger.error("Git blame failed: \(description, privacy: .public)")
-                self.showFailure(error)
+                self.errorLabel.show(error: error)
             case .success(let blame):
                 self.setModel(GitBlameLineModel(blame: blame, colours: nil))
                 guard let coloring, !blame.lines.isEmpty else { return }
@@ -182,7 +181,7 @@ public final class GitBlameViewController: NSViewController {
         generation += 1
         loadTask?.cancel()
         loadTask = nil
-        showFailure(nil)
+        errorLabel.show(error: nil)
         setModel(nil)
     }
 
@@ -190,11 +189,6 @@ public final class GitBlameViewController: NSViewController {
         self.model = model
         viewer.dataSource = model
         viewer.reloadData()
-    }
-
-    private func showFailure(_ error: Error?) {
-        errorLabel.stringValue = error?.localizedDescription ?? ""
-        errorLabel.isHidden = error == nil
     }
 }
 

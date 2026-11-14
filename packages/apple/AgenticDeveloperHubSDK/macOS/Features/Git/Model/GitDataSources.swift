@@ -27,10 +27,14 @@ import AgenticDeveloperHubSDKCore
     var unstaged: [GitFileChange] { get }
 }
 
-/// Content read on demand: diffs, file bytes, blame and a file's history.
+/// Content read on demand: diffs, a commit's file list, file bytes, blame and a file's history.
 @MainActor public protocol GitContentSource: AnyObject {
     func diff(_ target: GitDiffTarget, options: GitDiffOptions) async throws -> GitDiff
-    func contents(path: String, at revision: String?) async throws -> Data?
+    /// The files `commit` changed, without their patch.
+    func changedFiles(commit: String) async throws -> [GitFileListItem]
+    /// The bytes of `path` at `revision` (nil: the working file); nil when it is not a file
+    /// there, or is larger than `maximumBytes`, which is checked before anything is read.
+    func contents(path: String, at revision: String?, maximumBytes: Int?) async throws -> Data?
     func blame(path: String, at revision: String?) async throws -> GitBlame
     func fileHistory(path: String) async throws -> [GitFileHistoryEntry]
     func commit(_ id: String) -> GitCommit?

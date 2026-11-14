@@ -111,6 +111,28 @@ struct GitSyntaxColoringTests {
         #expect(source.contentsRequests == ["a.swift@c1", "a.swift@:0", "a.swift@"])
     }
 
+    @Test("each side is read capped at the highlighter's byte limit")
+    func sidesReadCapped() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let source = GitViewsFakeContentSource()
+        let diff = GitFileDiff(oldPath: "a.swift", newPath: "a.swift", change: .modified, isBinary: false, hunks: [])
+        _ = await coloring.sides(of: diff, target: .commit("c1", paths: []), source: source)
+        #expect(source.contentsLimits == [SyntaxHighlighter.maximumBytes, SyntaxHighlighter.maximumBytes])
+    }
+
+    @Test("a path with no known language is never read")
+    func unknownLanguageNotRead() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let source = GitViewsFakeContentSource()
+        source.files = ["a.unknownext@c1": Data("x".utf8)]
+        let diff = GitFileDiff(oldPath: "a.unknownext", newPath: "a.unknownext", change: .modified,
+                               isBinary: false, hunks: [])
+        let sides = await coloring.sides(of: diff, target: .commit("c1", paths: []), source: source)
+        #expect(source.contentsRequests.isEmpty)
+        #expect(sides.old == nil)
+        #expect(sides.new == nil)
+    }
+
     @Test("a side whose contents fail is nil, the other still coloured")
     func sidesWithFailure() async throws {
         let coloring = try GitTextMateFixture.coloring()

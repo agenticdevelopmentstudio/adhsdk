@@ -376,3 +376,46 @@ struct SubprocessChannelTerminationRaceTests {
         await channel.terminate()
     }
 }
+
+/// A cancelled caller must end the git process it started, not leave it running: the
+/// history search relies on this to stop a superseded `git log` (final review,
+/// Important 1). The "git" here is a script that records its pid and sleeps, so the
+/// test can see whether the process outlives the cancellation.
+@Suite("GitClient cancellation")
+struct GitClientCancellationTests {
+    @Test("cancelling a running command throws CancellationError and terminates the process")
+    func cancellingTerminatesTheProcess() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-cancel-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let script = directory.appendingPathComponent("slow-git")
+        let pidFile = directory.appendingPathComponent("pid")
+        try "#!/bin/sh\necho $$ > \"$SLOW_GIT_PID\"\nexec /bin/sleep 30\n"
+            .write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(
+            executableURL: script, timeout: 60, extraEnvironment: ["SLOW_GIT_PID": pidFile.path]))
+
+        let call = Task { try await client.run("log", [], in: directory) }
+        var pid: pid_t?
+        let started = Date()
+        while pid == nil, Date().timeIntervalSince(started) < 5 {
+            let text = (try? String(contentsOf: pidFile, encoding: .utf8)) ?? ""
+            pid = pid_t(text.trimmingCharacters(in: .whitespacesAndNewlines))
+            if pid == nil { try await Task.sleep(for: .milliseconds(20)) }
+        }
+        let running = try #require(pid)
+
+        call.cancel()
+        await #expect(throws: CancellationError.self) { try await call.value }
+
+        let cancelled = Date()
+        while kill(running, 0) == 0, Date().timeIntervalSince(cancelled) < 5 {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        let alive = kill(running, 0) == 0
+        if alive { kill(running, SIGKILL) }
+        #expect(!alive, "the git process must not outlive its cancelled caller")
+    }
+}

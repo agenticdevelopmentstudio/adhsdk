@@ -91,8 +91,17 @@ struct GitWindowFeatureTests {
 
         _ = command.run([])
         _ = command.run([42])
-        for _ in 0..<100 { await Task.yield() }
-
+        #expect(feature.openTask == nil, "a bad argument starts no open")
         #expect(setting.value.isEmpty)
+
+        // A good argument starts one, which is how the bad ones are known to have been refused.
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-window-open-for-path-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        _ = command.run([directory.path])
+        let open = try #require(feature.openTask)
+        await open.value
+        #expect(setting.value.isEmpty, "not a repository, so nothing is remembered")
     }
 }

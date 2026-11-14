@@ -78,10 +78,17 @@ struct GitFileListViewControllerTests {
             #expect(cell.iconView.accessibilityIdentifier() == "git.fileList.icon")
             #expect(cell.titleLabel.accessibilityIdentifier() == "git.fileList.title")
         }
-        #expect(try #require(cell(list, row: 0)).statusLabel.accessibilityLabel() == "modified")
+        #expect(try #require(cell(list, row: 0)).statusLabel.accessibilityLabel() == "Modified")
         #expect(try #require(cell(list, row: 0)).stack.accessibilityIdentifier() == "git.fileList.fileStack")
         let rowView = list.tableView(list.tableView, rowViewForRow: 0)
         #expect(rowView?.accessibilityIdentifier() == "git.fileList.row")
+    }
+
+    @Test("every status has a readable name, not its case name")
+    func statusNames() {
+        let names = GitFileStatus.allCases.map(\.displayName)
+        #expect(names == ["Modified", "Added", "Deleted", "Renamed", "Copied", "Untracked", "Conflicted",
+                          "Ignored"])
     }
 
     @Test("a path with no extension, or a dot file, gets the doc icon")

@@ -130,7 +130,7 @@ public final class GitDiffViewController: NSViewController {
     /// on screen.
     public func show(target: GitDiffTarget, file: String) {
         request = (target, file)
-        showFailure(nil)
+        errorLabel.show(error: nil)
         updateButtons()
         load()
     }
@@ -160,7 +160,7 @@ public final class GitDiffViewController: NSViewController {
         request = nil
         fileDiff = nil
         colouredSides = nil
-        showFailure(nil)
+        errorLabel.show(error: nil)
         updateButtons()
         render()
     }
@@ -188,7 +188,7 @@ public final class GitDiffViewController: NSViewController {
                 self.colouredSides = nil
                 self.render()
                 self.logFailure(error)
-                self.showFailure(error)
+                self.errorLabel.show(error: error)
                 return
             case .success(let diff):
                 let fileDiff = Self.file(request.file, in: diff)
@@ -298,7 +298,7 @@ public final class GitDiffViewController: NSViewController {
     @objc private func ignoreWhitespaceChanged(_ sender: NSButton) {
         settings.set(sender.state == .on, for: UserSettings.gitDiffIgnoreWhitespace)
         guard request != nil else { return }
-        showFailure(nil)
+        errorLabel.show(error: nil)
         load()
     }
 
@@ -346,12 +346,6 @@ public final class GitDiffViewController: NSViewController {
     }
 
     // MARK: - Failure
-
-    /// Shows `error`'s description over the viewer, or hides it for nil.
-    private func showFailure(_ error: Error?) {
-        errorLabel.stringValue = error?.localizedDescription ?? ""
-        errorLabel.isHidden = error == nil
-    }
 
     /// Logs a failed diff by its case and fields, never git's own output.
     private func logFailure(_ error: Error) {

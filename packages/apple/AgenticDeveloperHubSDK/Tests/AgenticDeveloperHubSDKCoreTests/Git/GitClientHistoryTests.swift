@@ -272,6 +272,48 @@ struct GitClientHistoryTests {
                                                                            oldNumber: nil, newNumber: 3))
     }
 
+    @Test("changedFiles lists a commit's files without its patch: root, rename, merge and stash")
+    func changedFilesNamesEachFile() async throws {
+        let history = try await History.make()
+        defer { history.tearDown() }
+
+        let root = try await client.changedFiles(commit: history.initial, in: history.root)
+        #expect(root == [GitFileListItem(path: "a b.txt", oldPath: nil, status: .added),
+                         GitFileListItem(path: "latin.txt", oldPath: nil, status: .added)])
+
+        let rename = try await client.changedFiles(commit: history.rename, in: history.root)
+        #expect(rename == [GitFileListItem(path: "c d.txt", oldPath: "a b.txt", status: .renamed)])
+
+        let latin1 = try await client.changedFiles(commit: history.latin1, in: history.root)
+        #expect(latin1 == [GitFileListItem(path: "c d.txt", oldPath: nil, status: .modified)])
+
+        let merge = try await client.changedFiles(commit: history.merge, in: history.root)
+        #expect(merge == [GitFileListItem(path: "feature.txt", oldPath: nil, status: .added)])
+
+        let stash = try await client.changedFiles(commit: history.stash, in: history.root)
+        #expect(stash == [GitFileListItem(path: "c d.txt", oldPath: nil, status: .modified)])
+    }
+
+    @Test("changedFiles keeps unusual paths whole and reports deletions under their old path")
+    func changedFilesUnusualPaths() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-client-changed-files")
+        defer { repository.tearDown() }
+        try repository.write("one\n", to: "dir é/naïve file.swift")
+        try repository.write("two\n", to: "tab\there.txt")
+        try repository.write("gone\n", to: "gone.txt")
+        try await repository.run(["add", "--", "dir é/naïve file.swift", "tab\there.txt", "gone.txt"])
+        try await repository.commit("first", at: Self.epoch + 100)
+        try await repository.run(["rm", "--quiet", "--", "gone.txt"])
+        try await repository.run(["mv", "--", "tab\there.txt", "new\nline.txt"])
+        try await repository.commit("second", at: Self.epoch + 200)
+
+        let first = try await client.changedFiles(commit: "HEAD~1", in: repository.root)
+        #expect(Set(first.map(\.path)) == ["dir é/naïve file.swift", "tab\there.txt", "gone.txt"])
+        let second = try await client.changedFiles(commit: "HEAD", in: repository.root)
+        #expect(Set(second) == [GitFileListItem(path: "gone.txt", oldPath: nil, status: .deleted),
+                                GitFileListItem(path: "new\nline.txt", oldPath: "tab\there.txt", status: .renamed)])
+    }
+
     @Test("a range diff limits itself to its paths")
     func diffRange() async throws {
         let history = try await History.make()
@@ -439,5 +481,81 @@ struct GitClientHistoryTests {
         #expect(try await client.fileContents(path: "nope.txt", at: ":0", in: history.root) == nil)
         #expect(try await client.fileContents(path: "nope.txt", at: nil, in: history.root) == nil)
         #expect(try await client.fileContents(path: "a b.txt", at: "HEAD", in: history.root) == nil)
+    }
+
+    @Test("fileContents over maximumBytes is nil; at or under it the bytes come back")
+    func fileContentsCappedBySize() async throws {
+        let history = try await History.make()
+        defer { history.tearDown() }
+        try history.repository.write("staged\n", to: "c d.txt")
+        try await history.repository.run(["add", "c d.txt"])
+        try history.repository.write("working file\n", to: "c d.txt")
+        let head = Data("alpha\nneedle\n".utf8)
+
+        for (revision, bytes) in [("HEAD", head), (":0", Data("staged\n".utf8)),
+                                  (nil, Data("working file\n".utf8))] as [(String?, Data)] {
+            let label = revision ?? "the working file"
+            #expect(try await client.fileContents(path: "c d.txt", at: revision, in: history.root,
+                                                  maximumBytes: bytes.count - 1) == nil, "\(label)")
+            #expect(try await client.fileContents(path: "c d.txt", at: revision, in: history.root,
+                                                  maximumBytes: bytes.count) == bytes, "\(label)")
+        }
+    }
+
+    // MARK: - non-ASCII paths in a repository that does not precompose
+
+    /// A repository whose `core.precomposeUnicode` is off (made on another system, or with
+    /// the setting cleared), holding `dir é/naïve file.swift` in two commits.
+    private func decomposingRepository() async throws -> (GitTestRepository, String) {
+        let repository = try await GitTestRepository.make()
+        let path = "dir é/naïve file.swift"
+        try FileManager.default.createDirectory(at: repository.url("dir é"), withIntermediateDirectories: true)
+        try repository.write("let a = 1\n", to: path)
+        try await repository.run(["add", path])
+        try await repository.commit("first", at: Self.epoch + 100)
+        try repository.write("let a = 1\nlet b = 2\n", to: path)
+        try await repository.run(["add", path])
+        try await repository.commit("second", at: Self.epoch + 200)
+        try await repository.run(["config", "core.precomposeUnicode", "false"])
+        return (repository, path)
+    }
+
+    @Test("blame finds a non-ASCII path though the repository does not precompose")
+    func blameNonASCIIPath() async throws {
+        let (repository, path) = try await decomposingRepository()
+        defer { repository.tearDown() }
+        let blame = try await client.blame(path: path, at: "HEAD", in: repository.root)
+        #expect(blame.lines.map(\.text) == ["let a = 1", "let b = 2"])
+        let working = try await client.blame(path: path, at: nil, in: repository.root)
+        #expect(working.lines.count == 2)
+    }
+
+    @Test("file history finds a non-ASCII path though the repository does not precompose")
+    func fileHistoryNonASCIIPath() async throws {
+        let (repository, path) = try await decomposingRepository()
+        defer { repository.tearDown() }
+        let entries = try await client.fileHistory(path: path, in: repository.root)
+        #expect(entries.map(\.commit.subject) == ["second", "first"])
+        #expect(entries.map(\.path) == [path, path])
+    }
+
+    @Test("message and author search match their text literally")
+    func searchIsLiteral() async throws {
+        let repository = try await GitTestRepository.make()
+        defer { repository.tearDown() }
+        try repository.write("1\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("fix x", at: Self.epoch + 100, author: "Ann Lee <ann@example.com>")
+        try repository.write("2\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("fix (x)", at: Self.epoch + 200, author: "A.n Lee <a.n@example.com>")
+        let literal = try await repository.sha("HEAD")
+
+        var byMessage = GitLogQuery()
+        byMessage.messageGrep = "(X)"
+        #expect(try await client.log(byMessage, in: repository.root).map(\.id) == [literal])
+        var byAuthor = GitLogQuery()
+        byAuthor.author = "A.n"
+        #expect(try await client.log(byAuthor, in: repository.root).map(\.id) == [literal])
     }
 }

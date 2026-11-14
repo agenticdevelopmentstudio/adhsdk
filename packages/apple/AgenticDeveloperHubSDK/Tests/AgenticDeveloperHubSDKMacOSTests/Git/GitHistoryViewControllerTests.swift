@@ -21,9 +21,23 @@ private final class FakeHistorySource: GitHistoryDataSource {
     var holdsSetQuery = false
     private(set) var held: [CheckedContinuation<Void, Never>] = []
 
+    /// While set, `setQuery` sleeps this long the way a running `git log` would, and
+    /// records whether the call was cancelled (a cancelled git process is terminated).
+    var cancellableWork: Duration?
+    private(set) var cancelledQueries: [GitLogQuery] = []
+    private(set) var finishedQueries: [GitLogQuery] = []
+
     func setQuery(_ query: GitLogQuery) async {
         self.query = query
         setQueries.append(query)
+        if let cancellableWork {
+            do {
+                try await Task.sleep(for: cancellableWork)
+                finishedQueries.append(query)
+            } catch {
+                cancelledQueries.append(query)
+            }
+        }
         if holdsSetQuery {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 MainActor.assumeIsolated { self.held.append(continuation) }
@@ -396,6 +410,83 @@ struct GitHistoryViewControllerTests {
         #expect(source.setQueries == [GitLogQuery()])
         #expect(history.tableView.selectedRow == 1)
         #expect(delegate.events == [Self.sha("ab12")])
+    }
+
+    private static func grep(_ text: String) -> GitLogQuery {
+        var query = GitLogQuery()
+        query.messageGrep = text
+        return query
+    }
+
+    /// Polls `condition` every 10 ms until it holds or `seconds` pass.
+    private func eventually(_ seconds: Double = 3, _ condition: () -> Bool) async {
+        let deadline = Date().addingTimeInterval(seconds)
+        while !condition(), Date() < deadline {
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+    }
+
+    @Test("setQuery: keystrokes typed faster than the debounce reach the source as the last query only")
+    func setQueryDebounces() async {
+        let source = Self.source(count: 3)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+
+        let typed = ["a", "ab", "abc"].map { text in Task { await history.setQuery(text) } }
+        for task in typed { await task.value }
+
+        #expect(source.setQueries == [Self.grep("abc")])
+    }
+
+    @Test("setQuery: a query overtaken by a different one cancels its git log")
+    func setQuerySupersededSendIsCancelled() async {
+        let source = Self.source(count: 3)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+
+        source.cancellableWork = .seconds(5)
+        let first = Task { await history.setQuery("one") }
+        await eventually { source.setQueries.count == 1 }
+        source.cancellableWork = nil
+        await history.setQuery("two")
+        await first.value
+
+        #expect(source.cancelledQueries == [Self.grep("one")])
+        #expect(source.finishedQueries.isEmpty)
+        #expect(source.setQueries == [Self.grep("one"), Self.grep("two")])
+    }
+
+    @Test("setQuery: cancelling the caller cancels the git log, and the same query is sent again next time")
+    func setQueryCallerCancellationReachesSource() async {
+        let source = Self.source(count: 3)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+
+        source.cancellableWork = .seconds(5)
+        let caller = Task { await history.setQuery("one") }
+        await eventually { source.setQueries.count == 1 }
+        caller.cancel()
+        await caller.value
+        await eventually { !source.cancelledQueries.isEmpty }
+        #expect(source.cancelledQueries == [Self.grep("one")])
+
+        source.cancellableWork = nil
+        await history.setQuery("one")
+        #expect(source.setQueries == [Self.grep("one"), Self.grep("one")])
+    }
+
+    @Test("setQuery: a caller cancelled during the debounce never reaches the source")
+    func setQueryCancelledDuringDebounce() async {
+        let source = Self.source(count: 3)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+
+        let caller = Task { await history.setQuery("one") }
+        await waitForGeneration(history, 1)
+        caller.cancel()
+        await caller.value
+        try? await Task.sleep(for: .milliseconds(400))
+        #expect(source.setQueries.isEmpty)
     }
 
     @Test("a row added to the table is what asks for the next page")

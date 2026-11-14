@@ -4,7 +4,7 @@
     "id": "a2394ca0-3988-410b-9fc8-e0c9e253fc94",
     "title": "Git Repository Model",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7c122f6d8e1a5a7b",
+  "synced": "dbcaf14c6cd43834",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
