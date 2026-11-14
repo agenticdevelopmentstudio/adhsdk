@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import AgenticDeveloperHubSDKCore
+@testable import AgenticDeveloperHubSDK
 
 struct HTMLTextTests {
     @Test func decodesNamedAndNumericEntities() {
