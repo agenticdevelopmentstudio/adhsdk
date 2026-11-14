@@ -13,3 +13,6 @@
 - **Error states**: When its underlying image fails to load, Base UI's `Avatar.Image` renders nothing and `Avatar.Fallback` is revealed; this load-failure-to-fallback handoff is Base UI's behavior (`@base-ui/react/avatar`), not logic this wrapper adds.
 - **Offline or disconnected state**: Base UI's Avatar falls back the same way whether a load failure is caused by an offline network or any other image-load error, because it has no separate retry or timeout path for network failures — a failed load leaves `Avatar.Image` unrendered and reveals `Avatar.Fallback` exactly as in Error states above.
 
+<!-- appkit-avatar -->
+- **AppKit — replaced content mid-load**: setting new content cancels the old load, and a cancelled load never writes its picture or clears the new load's task.
+

@@ -2,16 +2,17 @@
 id: e3a2394d-d0d0-4495-bde4-59197f9d7866
 title: "Avatar"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: "Thin wrapper around Base UI's Avatar primitive (Root/Image/Fallback) exposing stable adh-avatar* classes as a public theming surface."
 platforms:
+  - macos
   - typescript
   - web
 tags:
@@ -41,6 +42,9 @@ one of the semantic classes `adh-avatar`, `adh-avatar__image`, or
 forward every other prop unchanged to the underlying Base UI primitive. The
 module is a client component (`'use client'`). The source (`packages/web/packages/ui/src/components/avatar.tsx`) skins the three classes in `packages/web/packages/ui/src/styles/components.css`. The class names are a public theming surface, so they must stay stable; the first Design Decision gives the reason.
 
+<!-- appkit-avatar -->
+**AppKit (`AvatarView`).** The macOS face of the same ingredient is `AvatarView` in `AgenticDeveloperHubSDKMacOS` (`macOS/UI/Avatar/`): a round view showing a picture when one loads and initials on a coloured circle until then and whenever it does not. It is drawn from an `AvatarContent` (`name`, `seed`, `imageURL`) rather than any feature's user type, so the Accounts settings and the git window's commit authors share it. The circle's colour comes from a stable hash of `seed` over the [commit graph cell](cookbook:595f1a5e-0f92-49c5-a980-af6f809be932)'s lane palette, from the [theme engine](cookbook:0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6).
+
 ## Behavioral Requirements
 
 - **render-root-with-semantic-class**: `Avatar` MUST render Base UI's `Avatar.Root` (`AvatarPrimitive.Root`) with the class name `adh-avatar` applied.
@@ -51,13 +55,35 @@ module is a client component (`'use client'`). The source (`packages/web/package
 - **forward-remaining-props**: Each of `Avatar`, `AvatarImage`, and `AvatarFallback` MUST forward every prop other than `className` unchanged to its underlying Base UI primitive.
 - **load-as-client-module**: The module MUST be marked `'use client'`, so `Avatar`, `AvatarImage`, and `AvatarFallback` render as client components. This is verified by a static check for the `'use client'` directive at the top of `avatar.tsx`, not by a runtime conformance test vector.
 
+<!-- appkit-avatar -->
+AppKit `AvatarView`:
+
+- **appkit-content**: `content` (`AvatarContent?`) MUST drive the view: setting a different value MUST cancel any load in flight, show the initials and start a load for `imageURL`; setting an equal value MUST do nothing.
+- **appkit-initials**: The initials MUST be the uppercased first letters of `name`'s first two whitespace-separated words, else the uppercased first letter of `seed`, else `?`.
+- **appkit-no-url-no-fetch**: An `imageURL` of `nil` MUST never call the fetch.
+- **appkit-picture**: A fetch answering 2xx (or a non-HTTP response) with bytes that decode as an image MUST replace the initials with the picture; an error, a non-2xx answer (even one that decodes) or undecodable bytes MUST leave the initials up and log at debug level.
+- **appkit-retry**: Moving into a window while no picture is showing MUST retry the load; a picture already showing MUST NOT be fetched again.
+- **appkit-colour**: The circle MUST be filled with `SemanticPalette.laneColor(i)`, `i` the FNV-1a 64-bit hash of `seed`'s UTF-8 bytes modulo 12, so one person keeps one colour across launches; it MUST repaint on theme change.
+- **appkit-side**: `init(side:fetch:)` MUST size the view to `side × side` (default 48 pt) with corners of radius `side / 2`.
+- **appkit-fetch-seam**: The fetch MUST be injectable (`Fetch = @Sendable (URL) async throws -> (Data, URLResponse)`); the default goes through `URLSession.shared`, whose HTTP cache follows the server's headers, and the view keeps no cache of its own.
+
 ## Appearance
 
 Not applicable: Component applies only semantic class names; styling values are defined externally in `packages/web/packages/ui/src/styles/components.css` and are outside this wrapper's scope.
 
+<!-- appkit-avatar -->
+AppKit `AvatarView`: a `side × side` circle; initials in the theme's `onAccentText` role, `heading` text role, semibold, centred, on the lane colour for `seed`; the picture fills the circle, scaled proportionally, clipped round.
+
 ## States
 
 Not applicable: Component is a stateless rendering wrapper; interactive state management is delegated to Base UI's Avatar primitives.
+
+<!-- appkit-avatar -->
+AppKit `AvatarView`:
+
+- **Empty**: no content; an empty coloured circle.
+- **Initials**: content shown, no picture (no URL, loading, or failed).
+- **Picture**: the picture loaded and replaced the initials.
 
 ## Accessibility
 
@@ -65,6 +91,9 @@ The wrapper adds no accessibility defaults of its own — it forwards every prop
 
 - **required-alt**: `AvatarImage` forwards `alt` unchanged to Base UI's `Avatar.Image`, which renders it on the underlying `<img>`; consumers MUST supply a meaningful `alt` value, since the wrapper performs no validation or default of its own.
 - **decorative-fallback**: `AvatarFallback` forwards `children` unchanged to Base UI's `Avatar.Fallback` with no default `aria-hidden`; consumers SHOULD mark fallback content `aria-hidden="true"` when it is purely decorative (e.g., initials that duplicate a name already shown as text elsewhere), to avoid a redundant screen-reader announcement.
+
+<!-- appkit-avatar -->
+AppKit `AvatarView`: role `image`, label `Avatar for <name>`, default identifier `avatar`, which a host replaces (Accounts uses `accounts.detail.avatar`).
 
 ## Conformance Test Vectors
 
@@ -83,6 +112,20 @@ The wrapper adds no accessibility defaults of its own — it forwards every prop
 | avatar-012 | #edge-cases/error-states | Render `<Avatar><AvatarImage src="https://example.test/ada.png" /><AvatarFallback>AL</AvatarFallback></Avatar>` with `window.Image` mocked so it fires `onerror` | No `adh-avatar__image` element is rendered and the `adh-avatar__fallback` element with text `AL` is present |
 
 Image-loading vectors need a mocked `window.Image`: Base UI's `Avatar.Image` creates `new window.Image()` and renders only after that object fires `onload` (jsdom never loads images). For avatar-002, avatar-005 and avatar-008, mock `window.Image` so it fires `onload` as soon as `src` is set; for avatar-012, mock it so it fires `onerror`.
+
+<!-- appkit-avatar -->
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| avatar-101 | appkit-picture | 200 with image bytes | picture shown. |
+| avatar-102 | appkit-picture | 404 with image bytes | initials stay. |
+| avatar-103 | appkit-picture | 200 with `<html>` | initials stay. |
+| avatar-104 | appkit-retry | offline, then 200; view added to a window | 2 fetches, picture shown. |
+| avatar-105 | appkit-retry | 200; view added to a window after loading | 1 fetch, no load in flight. |
+| avatar-106 | appkit-no-url-no-fetch | content with `imageURL` nil | 0 fetches, initials shown. |
+| avatar-107 | appkit-initials | name `ada lovelace byron`; name blank, seed `zed@b.c`; both empty | `AL`; `Z`; `?`. |
+| avatar-108 | appkit-colour | seeds ``, `ada@x.y`, `b` | palette indices 5, 6, 1. |
+| avatar-109 | appkit-side | `side` 20 | fitting size 20 × 20. |
+
 ## Edge Cases
 
 - **Omitted `className`**: `Avatar`, `AvatarImage`, and `AvatarFallback` MUST still render when `className` is omitted (`undefined`), passing `undefined` as the second argument to `cn`; the wrapper performs no validation of `className` before doing so.
@@ -99,6 +142,9 @@ Image-loading vectors need a mocked `window.Image`: Base UI's `Avatar.Image` cre
 - **Error states**: When its underlying image fails to load, Base UI's `Avatar.Image` renders nothing and `Avatar.Fallback` is revealed; this load-failure-to-fallback handoff is Base UI's behavior (`@base-ui/react/avatar`), not logic this wrapper adds.
 - **Offline or disconnected state**: Base UI's Avatar falls back the same way whether a load failure is caused by an offline network or any other image-load error, because it has no separate retry or timeout path for network failures — a failed load leaves `Avatar.Image` unrendered and reveals `Avatar.Fallback` exactly as in Error states above.
 
+<!-- appkit-avatar -->
+- **AppKit — replaced content mid-load**: setting new content cancels the old load, and a cancelled load never writes its picture or clears the new load's task.
+
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -111,6 +157,15 @@ Image-loading vectors need a mocked `window.Image`: Base UI's `Avatar.Image` cre
 | `...props` (on `AvatarFallback`) | `AvatarPrimitive.Fallback.Props`, minus `className` | — | Forwarded unchanged to Base UI's `Avatar.Fallback`. |
 
 The wrapper forwards all other props to the underlying Base UI primitives unchanged. See `@base-ui/react/avatar` for the exhaustive `Avatar.Root.Props`, `Avatar.Image.Props`, and `Avatar.Fallback.Props` type definitions.
+
+<!-- appkit-avatar -->
+AppKit `AvatarView`:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `side` | `CGFloat` | `48` | Width and height of the circle. |
+| `fetch` | `AvatarView.Fetch` | `URLSession.shared.data(from:)` | Loads a picture's bytes. |
+| `content` | `AvatarContent?` | `nil` | `name`, `seed` (stable identity, e.g. an email) and `imageURL`. |
 
 ## Deep Linking
 
@@ -139,9 +194,15 @@ Not applicable: Component performs no analytics tracking.
 - **Transmission**: Not applicable: Component has no transmission logic; any network requests for image loading are delegated to Base UI's `Avatar.Image` implementation.
 - **Retention**: None. This file has no caching or retention logic of its own.
 
+<!-- appkit-avatar -->
+- **AppKit transmission**: `AvatarView` fetches only `imageURL`, and only when it is set; callers that must not reach the network (commit authors) pass `nil`.
+
 ## Logging
 
 Not applicable: Component performs no logging.
+
+<!-- appkit-avatar -->
+AppKit `AvatarView` logs failed loads, non-2xx answers and undecodable bytes at debug level through its `Loggable` logger; the URL is never logged.
 
 ## Platform Notes
 
@@ -156,6 +217,7 @@ Not applicable: Component performs no logging.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | web | `packages/web/packages/ui/src/components/avatar.tsx` | confirmed (1.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Avatar/AvatarView.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -166,6 +228,11 @@ Not applicable: Component performs no logging.
 **Decision**: `Avatar`, `AvatarImage`, and `AvatarFallback` add no logic beyond class assignment and prop forwarding.
 **Rationale**: Loading/error/fallback-reveal behavior, ARIA semantics, and any interactive states are owned entirely by Base UI's `Avatar` primitive (`@base-ui/react/avatar`), delegated to deliberately to keep this wrapper stateless and composable.
 **Approved**: pending
+
+<!-- appkit-avatar -->
+- **Decision**: The AppKit view takes an `AvatarContent` (`name`, `seed`, `imageURL`) rather than `AccountUser`.
+  **Rationale**: Accounts and commit authors are different people models; a value type of exactly what the view draws lets both share one view, and `seed` keeps the colour stable without exposing an id.
+  **Approved**: pending
 
 ## Compliance
 
@@ -185,6 +252,7 @@ Not applicable: Component performs no logging.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-16 | Mike Fullerton | Added the AppKit AvatarView (moved from Accounts, made public): AvatarContent input, initials rule, no fetch without an imageURL, retry on show, seed-hashed lane colour, configurable side. |
 | 1.2.2 | 2026-11-14 | Mike Fullerton | Kept the class-name stability rule only in the first Design Decision, used full repository paths, reformatted Design Decisions and Accessibility labels, removed Base UI's error string, downgraded unit-test-coverage to partial and added vectors avatar-009 to avatar-012 with a window.Image mocking note. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | avatar-003/006 vectors and the no-props Edge Case corrected: AvatarFallback/AvatarImage throw outside <Avatar> (Base UI AvatarRootContext), so vectors now nest them inside <Avatar>. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped invented Base UI retry/timeout behavior in favor of the actual load-failure-to-fallback handoff; quoted the in-source comment once with its location instead of repeating unquoted references to it; replaced "refer to the source for details" pointers with inline behavior statements; documented the consumer-facing accessibility contract (required `alt`, decorative fallback) instead of marking Accessibility not applicable; deleted the duplicate class-name-stability requirement and folded its rationale into a note under the three class requirements; renamed all requirement names to subject-only kebab-case; fixed avatar-002/005/008 to nest `AvatarImage` inside `Avatar` with a loaded stub; moved the client-module check out of the conformance table to a static-check note and removed the source-text-only avatar-010 vector; reformatted Design Decisions into the three-line Decision/Rationale/Approved form; replaced the prose Compliance section with a checks table; rewrote MUST-tagged edge cases as normative MUST clauses; fixed the WinUI 3 bullet's "this recipe" noun; added reference URLs for Base UI Avatar and WinUI 3 PersonPicture |

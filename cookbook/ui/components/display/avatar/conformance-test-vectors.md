@@ -14,3 +14,17 @@
 | avatar-012 | #edge-cases/error-states | Render `<Avatar><AvatarImage src="https://example.test/ada.png" /><AvatarFallback>AL</AvatarFallback></Avatar>` with `window.Image` mocked so it fires `onerror` | No `adh-avatar__image` element is rendered and the `adh-avatar__fallback` element with text `AL` is present |
 
 Image-loading vectors need a mocked `window.Image`: Base UI's `Avatar.Image` creates `new window.Image()` and renders only after that object fires `onload` (jsdom never loads images). For avatar-002, avatar-005 and avatar-008, mock `window.Image` so it fires `onload` as soon as `src` is set; for avatar-012, mock it so it fires `onerror`.
+
+<!-- appkit-avatar -->
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| avatar-101 | appkit-picture | 200 with image bytes | picture shown. |
+| avatar-102 | appkit-picture | 404 with image bytes | initials stay. |
+| avatar-103 | appkit-picture | 200 with `<html>` | initials stay. |
+| avatar-104 | appkit-retry | offline, then 200; view added to a window | 2 fetches, picture shown. |
+| avatar-105 | appkit-retry | 200; view added to a window after loading | 1 fetch, no load in flight. |
+| avatar-106 | appkit-no-url-no-fetch | content with `imageURL` nil | 0 fetches, initials shown. |
+| avatar-107 | appkit-initials | name `ada lovelace byron`; name blank, seed `zed@b.c`; both empty | `AL`; `Z`; `?`. |
+| avatar-108 | appkit-colour | seeds ``, `ada@x.y`, `b` | palette indices 5, 6, 1. |
+| avatar-109 | appkit-side | `side` 20 | fitting size 20 × 20. |
+
