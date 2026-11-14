@@ -15,7 +15,7 @@
 **Rationale**: The tidy stage collapses and trims whitespace on every line; stand-ins that are neither whitespace nor controls survive it. The cost, a quirk, is that a literal U+E000 or U+E001 in the input is dropped.
 **Approved**: pending
 
-**Decision**: `decodeEntities` decodes only a built-in list of named references plus all numeric ones, looks 11 scalars ahead for the `;`, and leaves anything else as written.
+**Decision**: `decodeEntities` decodes only a built-in list of named references plus all numeric ones, looks 12 scalars ahead for the `;`, and leaves anything else as written.
 **Rationale**: The source comment says names and numbers are short and looking further only finds the next sentence's `;`; leaving unknown references untouched keeps text such as `AT&T;` intact.
 **Approved**: pending
 

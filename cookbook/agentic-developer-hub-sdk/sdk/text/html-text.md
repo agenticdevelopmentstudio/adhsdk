@@ -59,9 +59,9 @@ It is deliberately small: there is no layout engine and no WebKit (which wants t
 - **tag-name**: A tag name MUST be read as ASCII letters, digits, `-` and `:`, and MUST be matched case-insensitively (ASCII `A`-`Z` lowercased).
 - **tag-attributes**: Attributes MUST be skipped up to the closing `>`, and the tag MAY span lines.
 - **quoted-attribute-value**: A quote (`"` or `'`) that follows an `=` (with only whitespace between) MUST open a value that runs to the matching quote, so a `>` inside it does not end the tag.
-- **comment**: A comment from `<!--` through the first `-->` that starts at or after the third scalar of the comment body MUST be removed and replaced by a single space.
+- **comment**: A comment from `<!--` through the first `-->` that begins after the `<!--` opener (so `<!-->` does not close itself) MUST be removed and replaced by a single space.
 - **declaration**: A `<!` or `<?` construct that is not a comment MUST be removed up to the next `>` and produce no output.
-- **bogus-close**: `</` followed by a scalar that cannot start a name MUST be removed up to the next `>` and produce no output.
+- **bogus-close**: `</` followed by a scalar that is not a name scalar (ASCII letter, digit, `-` or `:`) MUST be removed up to the next `>` and produce no output.
 - **unterminated-markup**: An unclosed comment, declaration, tag or quoted attribute value MUST end processing, keeping the text read before it and dropping the rest of the input.
 - **other-tags-removed**: A tag that is not hidden, a break element, `li`, `td` or `th` MUST be removed, leaving its text content.
 
@@ -110,7 +110,7 @@ It is deliberately small: there is no layout engine and no WebKit (which wants t
 - **entity-numeric-digits**: A numeric reference MUST have 1 to 8 ASCII digits (hex digits for hexadecimal), no sign and no space, and a non-zero value; otherwise it MUST be left as written.
 - **entity-invalid-scalar**: A numeric reference whose value is not a valid Unicode scalar MUST be left as written.
 - **entity-windows-1252**: A numeric reference from 128 to 159 MUST decode as windows-1252 for the 27 codes that map (for example 146 to a right single quote); the five undefined codes (129, 141, 143, 144, 157) MUST decode to nothing.
-- **entity-lookahead**: A reference MUST end at a `;` within 11 scalars after the `&`; an `&` with no `;` in that window MUST be left as written.
+- **entity-lookahead**: A reference MUST end at a `;` within 12 scalars after the `&` (so a name or number is at most 11 scalars); an `&` with no `;` in that window MUST be left as written.
 - **entity-unknown**: An unknown name, an empty name and any malformed reference MUST be left exactly as written, including the `&` and `;`.
 - **entity-single-pass**: Decoding MUST happen once, so `&amp;lt;` yields `&lt;`.
 - **entity-scalar-based**: Decoding MUST work on Unicode scalars, so a `;` or `&` followed by a combining mark or joiner still decodes.
@@ -175,7 +175,7 @@ Tests are in `HTMLTextTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/A
 | html-text-025 | unterminated-markup, hidden-unclosed | `<p>Shown</p><!-- never closed <p>gone</p>`; `<p>Shown</p><style>p{} <p>gone</p>`; `<p>Shown</p><img src="x` (test `anUnclosedCommentTagOrHiddenElementRunsToTheEnd`) | `Shown` for each |
 | html-text-026 | hidden-raw-content, hidden-elements | `<script>if (a</b) {}</script>Shown` (same test) | `Shown` |
 | html-text-027 | linear-time | Five hostile inputs: 50,000 `<!--`; a `style` plus 50,000 `a{} `; 100,000 `< ` then `<p>end</p>`; 50,000 `<a `; 50,000 `</` (test `hostileHTMLConvertsInLinearTime`) | All five convert in under 5 seconds total; the second yields `x` |
-| html-text-028 | pre-preserve, pre-whitespace | `<pre>step 1 ok\nstep 2 FAILED</pre>` (test `preKeepsItsLineBreaksAndIndentation`) | `step 1 ok\nstep 2 FAILED` |
+| html-text-028 | pre-preserve | `<pre>step 1 ok\nstep 2 FAILED</pre>` (test `preKeepsItsLineBreaksAndIndentation`) | `step 1 ok\nstep 2 FAILED` |
 | html-text-029 | pre-first-newline, pre-line-endings, pre-trailing-trim, pre-decoded-breaks | `<pre>\n  indented\r\n\tTab  \nx&#10;y</pre>` (same test) | `  indented\n\tTab\nx\ny` |
 | html-text-030 | pre-preserve, whitespace-collapse, pre-depth | `<p>a   b</p><PRE>x  <b>y</b></PRE><p>c\n d</p>` (same test) | `a b\n\nx  y\n\nc d` |
 | html-text-031 | entity-before-whitespace, pre-decoded-breaks | `<p>Thank you for applying.&#13;\nWe will review it&#13;\nand reply.</p>`; `a&#10;&#9;b` (test `encodedLineBreaksAreCollapsibleWhitespace`) | `Thank you for applying. We will review it and reply.`; `a b` |
@@ -189,7 +189,7 @@ Tests are in `HTMLTextTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/A
 - **Empty and null input** (MUST): `""` returns `""`; a `String` is never nil. An input of only whitespace, comments or hidden elements returns `""` (vectors html-text-001, html-text-014).
 - **Bare angle brackets** (MUST): `<` followed by a digit, a space or the end of input is text, and a `>` outside a tag is text (vectors html-text-022, html-text-023).
 - **Unclosed constructs** (MUST): An unclosed comment, declaration, tag, quoted attribute or hidden element ends processing; the text before it is kept, the rest is dropped, as in a browser (vector html-text-025).
-- **Comment edge** (MUST): The search for `-->` starts three scalars into the comment, so `<!-->` does not close itself and runs on to a later `-->` or to the end.
+- **Comment edge** (MUST): The search for `-->` starts after the `<!--` opener, so `<!-->` does not close itself and runs on to a later `-->` or to the end.
 - **Quote handling** (MUST): A quote only opens a value right after `=`; a quote elsewhere in a tag is ignored, and an unmatched value quote drops the rest of the input.
 - **Form feed** (MUST): U+000C is a control, so decoding drops it from text before whitespace collapsing sees it; it never becomes a space in text, although the attribute scanner treats it as whitespace.
 - **Hostile input size** (MUST): Inputs of 50,000 to 100,000 repeated openers convert in under 5 seconds (vector html-text-027). There is no explicit input-size limit.
@@ -213,7 +213,7 @@ Nothing is supplied by the caller or the environment: both operations take only 
 | `hidden` | `Set<String>` | `style`, `script`, `title`, `noscript` | Elements whose content is dropped |
 | `paragraphElements` | `Set<String>` | `p`, `h1`-`h6`, `blockquote`, `table`, `ul`, `ol`, `dl`, `pre`, `hr` | Elements that produce a blank-line break |
 | `lineElements` | `Set<String>` | `div`, `tr`, `li`, `dt`, `dd`, `section`, `article`, `header`, `footer`, `nav`, `aside`, `main`, `address`, `figure`, `figcaption`, `center`, `form`, `fieldset` | Elements that produce a single line break |
-| `named` | `[String: String]` | about 100 entries | Named references that decode |
+| `named` | `[String: String]` | 77 entries | Named references that decode |
 | `windows1252` | `[UInt32: Character]` | 27 entries | Characters shown for `&#128;` to `&#159;` |
 | `invisible` | `Set<Unicode.Scalar>` | U+200B, U+2060, U+FEFF, U+00AD, U+034F | Scalars always dropped |
 | `joiners` | `Set<Unicode.Scalar>` | U+200C, U+200D | Scalars kept only between two visible scalars |
@@ -281,7 +281,7 @@ Not applicable: the source contains no log calls.
 **Rationale**: The tidy stage collapses and trims whitespace on every line; stand-ins that are neither whitespace nor controls survive it. The cost, a quirk, is that a literal U+E000 or U+E001 in the input is dropped.
 **Approved**: pending
 
-**Decision**: `decodeEntities` decodes only a built-in list of named references plus all numeric ones, looks 11 scalars ahead for the `;`, and leaves anything else as written.
+**Decision**: `decodeEntities` decodes only a built-in list of named references plus all numeric ones, looks 12 scalars ahead for the `;`, and leaves anything else as written.
 **Rationale**: The source comment says names and numbers are short and looking further only finds the next sentence's `;`; leaving unknown references untouched keeps text such as `AT&T;` intact.
 **Approved**: pending
 

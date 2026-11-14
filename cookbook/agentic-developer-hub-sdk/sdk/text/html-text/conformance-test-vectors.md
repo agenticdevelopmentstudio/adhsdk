@@ -30,7 +30,7 @@ Tests are in `HTMLTextTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/A
 | html-text-025 | unterminated-markup, hidden-unclosed | `<p>Shown</p><!-- never closed <p>gone</p>`; `<p>Shown</p><style>p{} <p>gone</p>`; `<p>Shown</p><img src="x` (test `anUnclosedCommentTagOrHiddenElementRunsToTheEnd`) | `Shown` for each |
 | html-text-026 | hidden-raw-content, hidden-elements | `<script>if (a</b) {}</script>Shown` (same test) | `Shown` |
 | html-text-027 | linear-time | Five hostile inputs: 50,000 `<!--`; a `style` plus 50,000 `a{} `; 100,000 `< ` then `<p>end</p>`; 50,000 `<a `; 50,000 `</` (test `hostileHTMLConvertsInLinearTime`) | All five convert in under 5 seconds total; the second yields `x` |
-| html-text-028 | pre-preserve, pre-whitespace | `<pre>step 1 ok\nstep 2 FAILED</pre>` (test `preKeepsItsLineBreaksAndIndentation`) | `step 1 ok\nstep 2 FAILED` |
+| html-text-028 | pre-preserve | `<pre>step 1 ok\nstep 2 FAILED</pre>` (test `preKeepsItsLineBreaksAndIndentation`) | `step 1 ok\nstep 2 FAILED` |
 | html-text-029 | pre-first-newline, pre-line-endings, pre-trailing-trim, pre-decoded-breaks | `<pre>\n  indented\r\n\tTab  \nx&#10;y</pre>` (same test) | `  indented\n\tTab\nx\ny` |
 | html-text-030 | pre-preserve, whitespace-collapse, pre-depth | `<p>a   b</p><PRE>x  <b>y</b></PRE><p>c\n d</p>` (same test) | `a b\n\nx  y\n\nc d` |
 | html-text-031 | entity-before-whitespace, pre-decoded-breaks | `<p>Thank you for applying.&#13;\nWe will review it&#13;\nand reply.</p>`; `a&#10;&#9;b` (test `encodedLineBreaksAreCollapsibleWhitespace`) | `Thank you for applying. We will review it and reply.`; `a b` |

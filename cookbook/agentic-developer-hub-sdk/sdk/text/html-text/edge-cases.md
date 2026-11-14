@@ -2,7 +2,7 @@
 - **Empty and null input** (MUST): `""` returns `""`; a `String` is never nil. An input of only whitespace, comments or hidden elements returns `""` (vectors html-text-001, html-text-014).
 - **Bare angle brackets** (MUST): `<` followed by a digit, a space or the end of input is text, and a `>` outside a tag is text (vectors html-text-022, html-text-023).
 - **Unclosed constructs** (MUST): An unclosed comment, declaration, tag, quoted attribute or hidden element ends processing; the text before it is kept, the rest is dropped, as in a browser (vector html-text-025).
-- **Comment edge** (MUST): The search for `-->` starts three scalars into the comment, so `<!-->` does not close itself and runs on to a later `-->` or to the end.
+- **Comment edge** (MUST): The search for `-->` starts after the `<!--` opener, so `<!-->` does not close itself and runs on to a later `-->` or to the end.
 - **Quote handling** (MUST): A quote only opens a value right after `=`; a quote elsewhere in a tag is ignored, and an unmatched value quote drops the rest of the input.
 - **Form feed** (MUST): U+000C is a control, so decoding drops it from text before whitespace collapsing sees it; it never becomes a space in text, although the attribute scanner treats it as whitespace.
 - **Hostile input size** (MUST): Inputs of 50,000 to 100,000 repeated openers convert in under 5 seconds (vector html-text-027). There is no explicit input-size limit.

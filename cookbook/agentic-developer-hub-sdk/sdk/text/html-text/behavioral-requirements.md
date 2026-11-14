@@ -14,9 +14,9 @@
 - **tag-name**: A tag name MUST be read as ASCII letters, digits, `-` and `:`, and MUST be matched case-insensitively (ASCII `A`-`Z` lowercased).
 - **tag-attributes**: Attributes MUST be skipped up to the closing `>`, and the tag MAY span lines.
 - **quoted-attribute-value**: A quote (`"` or `'`) that follows an `=` (with only whitespace between) MUST open a value that runs to the matching quote, so a `>` inside it does not end the tag.
-- **comment**: A comment from `<!--` through the first `-->` that starts at or after the third scalar of the comment body MUST be removed and replaced by a single space.
+- **comment**: A comment from `<!--` through the first `-->` that begins after the `<!--` opener (so `<!-->` does not close itself) MUST be removed and replaced by a single space.
 - **declaration**: A `<!` or `<?` construct that is not a comment MUST be removed up to the next `>` and produce no output.
-- **bogus-close**: `</` followed by a scalar that cannot start a name MUST be removed up to the next `>` and produce no output.
+- **bogus-close**: `</` followed by a scalar that is not a name scalar (ASCII letter, digit, `-` or `:`) MUST be removed up to the next `>` and produce no output.
 - **unterminated-markup**: An unclosed comment, declaration, tag or quoted attribute value MUST end processing, keeping the text read before it and dropping the rest of the input.
 - **other-tags-removed**: A tag that is not hidden, a break element, `li`, `td` or `th` MUST be removed, leaving its text content.
 
@@ -65,7 +65,7 @@
 - **entity-numeric-digits**: A numeric reference MUST have 1 to 8 ASCII digits (hex digits for hexadecimal), no sign and no space, and a non-zero value; otherwise it MUST be left as written.
 - **entity-invalid-scalar**: A numeric reference whose value is not a valid Unicode scalar MUST be left as written.
 - **entity-windows-1252**: A numeric reference from 128 to 159 MUST decode as windows-1252 for the 27 codes that map (for example 146 to a right single quote); the five undefined codes (129, 141, 143, 144, 157) MUST decode to nothing.
-- **entity-lookahead**: A reference MUST end at a `;` within 11 scalars after the `&`; an `&` with no `;` in that window MUST be left as written.
+- **entity-lookahead**: A reference MUST end at a `;` within 12 scalars after the `&` (so a name or number is at most 11 scalars); an `&` with no `;` in that window MUST be left as written.
 - **entity-unknown**: An unknown name, an empty name and any malformed reference MUST be left exactly as written, including the `&` and `;`.
 - **entity-single-pass**: Decoding MUST happen once, so `&amp;lt;` yields `&lt;`.
 - **entity-scalar-based**: Decoding MUST work on Unicode scalars, so a `;` or `&` followed by a combining mark or joiner still decodes.
