@@ -1,0 +1,12 @@
+
+- **data-source**: The viewer MUST read rows only through `LineViewerDataSource` (`gutterColumnCount`, `rowCount`, `row(at:)`); it MUST NOT copy the rows. `reloadData()` MUST re-read the counts, clear folds and selection, and resize the document view.
+- **geometry**: The document view MUST be flipped and exactly `displayedRowCount × rowHeight` tall, where `rowHeight` is `ceil(ascent + descent + leading) + 4` of the theme's code font and `displayedRowCount` is `rowCount` less the rows hidden by folds. Its width MUST be the larger of the clip view's width and the widest row drawn so far.
+- **virtualised-drawing**: Drawing MUST ask the data source only for the rows intersecting the dirty rect; drawing a 10-row rect of a 100 000-row source MUST call `row(at:)` at most 20 times.
+- **folding**: With `foldsAtHeaders`, clicking a header row MUST hide the rows after it up to (not including) the next header or the end, and clicking it again MUST show them. Folding MUST remove hidden rows from the selection. A header click MUST NOT change the selection. Without `foldsAtHeaders` a header row selects like any row.
+- **selection**: A click MUST select the clicked row; shift-click MUST extend from the anchor row; command-click MUST toggle the row; dragging MUST extend from the anchor. Every change MUST call `lineViewer(_:didSelectRows:)` with data-source row indices. `selectedRows` is in data-source indices.
+- **gutter-click**: A click inside gutter column `c` of row `r` MUST call `lineViewer(_:didClickGutterColumn: c, row: r)` and MUST NOT change the selection.
+- **copy**: Copy (Cmd-C, `copy(_:)`) MUST put the selected rows' `text`, in row order, joined by `\n` with no trailing newline, on the general pasteboard as a plain string; with nothing selected the menu item MUST be disabled and the pasteboard left alone.
+- **scroll-to-row**: `scrollToRow(_:)` MUST unfold the fold hiding the row, if any, then scroll vertically so the row is at the top, clamped to the scrollable range, keeping the horizontal offset.
+- **scroll-sync**: `LineViewerScrollSync` MUST keep the vertical scroll offset of every viewer it holds equal to the last one scrolled, leaving each viewer's horizontal offset alone, without re-entering itself. It holds the viewers weakly; rows are assumed aligned.
+- **theme**: The viewer MUST repaint and re-measure (font, row height, gutter width) on every theme change, through `ThemePaletteObserver`.
+

@@ -4031,6 +4031,22 @@
       "path": "status/service/monitor/types",
       "rdid": "adhsdk.ingredient.status.service.monitor.types"
     },
+    "5f9e0c63-382d-4803-bd50-a8fb90ea9e4d": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:eb3ffa51d2e3c1ea53f6fdb7f65febe7342305f21f4e580f7070142d45bb9133",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ui/components/display/line-viewer",
+      "rdid": "adhsdk.ingredient.ui.components.display.line-viewer"
+    },
     "60a907a2-2cc8-4c0c-bb54-3b0516d280b6": {
       "implementations": [
         {
