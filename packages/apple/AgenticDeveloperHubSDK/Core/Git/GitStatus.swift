@@ -12,8 +12,10 @@ public struct GitStatus: Sendable, Equatable {
     /// conflicts: what is not staged yet.
     public let unstagedFiles: [String: GitFileStatus]
 
+    /// Every map is required, so a status can never claim changed files while its
+    /// staged and unstaged columns say nothing changed.
     public init(files: [String: GitFileStatus], directories: [String: GitFileStatus],
-                stagedFiles: [String: GitFileStatus] = [:], unstagedFiles: [String: GitFileStatus] = [:]) {
+                stagedFiles: [String: GitFileStatus], unstagedFiles: [String: GitFileStatus]) {
         self.files = files
         self.directories = directories
         self.stagedFiles = stagedFiles
@@ -34,7 +36,7 @@ public struct GitStatus: Sendable, Equatable {
         }
     }
 
-    public static let empty = GitStatus(files: [:], directories: [:])
+    public static let empty = GitStatus(files: [:], directories: [:], stagedFiles: [:], unstagedFiles: [:])
 
     /// The seven `XY` pairs `git status` documents as *unmerged* — a file in
     /// the middle of a conflict. A conflict is a property of the pair, not of

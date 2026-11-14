@@ -225,7 +225,9 @@ struct GitRepositoryModelTests {
         #expect(classify(".git/rebase-merge/done") == [.operation])
         #expect(classify(".git/rebase-apply/next") == [.operation])
         #expect(classify(".git/worktrees/other") == [.refs])
-        #expect(classify(".git/worktrees/other/HEAD").isEmpty)
+        #expect(classify(".git/worktrees/other/HEAD") == [.refs])
+        #expect(classify(".git/worktrees/other/index").isEmpty)
+        #expect(classify(".git/worktrees/other/HEAD.lock").isEmpty)
         #expect(classify(".git/objects/ab/cdef").isEmpty)
         #expect(classify(".git/index.lock").isEmpty)
         #expect(classify(".git/refs/heads/main.lock").isEmpty)
@@ -280,5 +282,28 @@ struct GitRepositoryModelTests {
         watcher.receive(paths: ["/r/wt/.git/config"])
         try await Task.sleep(for: .milliseconds(700))
         #expect(recorder.calls.count == 1)
+    }
+
+    @Test("the real watcher reports refs for a branch switch in a repository under the temporary directory")
+    func realWatcherReportsCheckoutUnderTemporaryDirectory() async throws {
+        // The temporary directory is under /var -> /private/var: FSEvents reports the
+        // /private spelling, so this fails unless the roots are canonicalised to match.
+        let repository = try await GitTestRepository.make(prefix: "git-repository-watcher")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "one.txt", at: 100)
+        let gitDirectory = repository.url(".git")
+        let watcher = GitRepositoryWatcher(root: repository.root, gitDirectory: gitDirectory,
+                                           commonDirectory: gitDirectory)
+        defer { watcher.stop() }
+        let recorder = ChangeRecorder()
+        watcher.start { recorder.record($0) }
+        try await Task.sleep(for: .milliseconds(300))
+
+        try await repository.run(["checkout", "-b", "x"])
+        let deadline = Date().addingTimeInterval(10)
+        while !recorder.calls.contains(where: { $0.contains(.refs) }), Date() < deadline {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        #expect(recorder.calls.contains { $0.contains(.refs) })
     }
 }

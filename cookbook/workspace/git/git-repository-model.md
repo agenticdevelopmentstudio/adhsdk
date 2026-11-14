@@ -50,11 +50,11 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **stale-results-dropped**: A history result that a later `setQuery(_:)` or refresh superseded MUST be discarded, and so MUST a page from `loadMore()` that finishes after one.
 - **unborn**: A repository with no commits MUST load an empty history and no refs without failing, and its working copy MUST list its files.
 - **content-pass-through**: `diff`, `contents`, `blame` and `fileHistory` MUST call the git client in the model's root; `fileHistory` MUST follow renames; `commit(_:)` MUST return a loaded commit by id, or nil.
-- **watcher-classify**: `classify(relativePath:)` MUST map a path inside the git directory (written `.git/<path>`) as follows: `HEAD`, `packed-refs`, `refs` and anything under `refs/` → refs and history; `index` → working copy; `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `rebase-merge`, `rebase-apply` and anything under the last two → operation; `worktrees/<name>` (the directory itself) → refs; anything under `objects/`, any name ending `.lock`, and everything else inside the git directory → nothing. Any path outside the git directory MUST map to working copy.
+- **watcher-classify**: `classify(relativePath:)` MUST map a path inside the git directory (written `.git/<path>`) as follows: `HEAD`, `packed-refs`, `refs` and anything under `refs/` → refs and history; `index` → working copy; `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `rebase-merge`, `rebase-apply` and anything under the last two → operation; `worktrees/<name>` (the directory itself) and `worktrees/<name>/HEAD` (another worktree switching branch) → refs; anything under `objects/`, any name ending `.lock`, and everything else inside the git directory → nothing. Any path outside the git directory MUST map to working copy.
 - **watcher-paths**: The watcher MUST watch the working tree, the git directory and the common directory through the toolkit's file-system watcher, MUST exclude the common directory's `objects`, and MUST write a path under the git directory or the common directory as `.git/<path relative to it>` (the git directory wins when both contain it) before classifying it.
 - **watcher-debounce**: The watcher MUST call `onChange` once, 300 ms after the last event, with the union of the kinds since its last call, and MUST NOT call it for events that classify to nothing. `stop()` MUST stop the stream and drop a pending call.
 - **main-actor**: The model MUST be used on the main actor; every git call MUST be `async` and never block it.
-
+- **watcher-canonical-roots**: The watcher MUST canonicalise its three roots the way the file-system event stream spells paths (symlinks resolved, `/private` kept), so a repository under a symlinked directory such as the temporary directory still reports changes and still excludes `objects/`.
 ## Appearance
 
 Not applicable: the model draws nothing; the git window's views do.
@@ -78,7 +78,8 @@ Not applicable: the model presents no view.
 | git-repository-model-005 | unborn | `git init`, one untracked file; `start()` | No commits, no graph rows, no refs; unstaged lists the file. |
 | git-repository-model-006 | failures-keep-state | `start()`, delete the repository directory, `refresh` of every kind | Refs, commits and status are unchanged; nothing throws. |
 | git-repository-model-007 | watcher-classify | `.git/HEAD`, `.git/refs/heads/main`, `.git/packed-refs`, `.git/index`, `.git/MERGE_HEAD`, `.git/rebase-merge/done`, `.git/objects/ab/cd`, `.git/index.lock`, `.git/refs/heads/main.lock`, `.git/config`, `src/a.swift` | refs+history ×3, working copy, operation ×2, nothing ×4, working copy. |
-
+| git-repository-model-008 | watcher-classify | `.git/worktrees/other`, `.git/worktrees/other/HEAD`, `.git/worktrees/other/index`, `.git/worktrees/other/HEAD.lock` | refs ×2, nothing ×2. |
+| git-repository-model-009 | watcher-canonical-roots | The real watcher started on a fixture under the temporary directory, then `git checkout -b x` | `onChange` receives a set containing `.refs` within 10 s. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository loads empty history and refs; a repository with no stashes, submodules or linked worktrees loads empty lists (worktrees still lists the main one).
@@ -89,7 +90,7 @@ Not applicable: the model presents no view.
 - **Cancellation**: A superseded history load still runs to completion, and its result is dropped.
 - **Linked worktrees**: The git directory (`<common>/worktrees/<name>`) and the common directory lie outside the working tree, so all three are watched.
 - **Event storms**: A checkout or rebase writes many files; the 300 ms debounce folds them into one refresh, and lock files and objects never trigger one.
-
+- **Symlinked location**: A repository under `/tmp` or `/var` is reported by the event stream as `/private/...`; the roots are canonicalised with realpath to match, never with a resolver that strips `/private`.
 ## Configuration
 
 | Option | Type | Default | Description |

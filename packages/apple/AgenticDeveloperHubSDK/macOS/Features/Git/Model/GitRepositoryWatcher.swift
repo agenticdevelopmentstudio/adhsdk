@@ -38,11 +38,21 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     var onChange: (@Sendable (Set<GitRepositoryChange>) -> Void)?
 
     public init(root: URL, gitDirectory: URL, commonDirectory: URL) {
-        // FSEvents reports resolved paths (`/private/var/...`), so the roots are resolved
-        // too, or no reported path would ever match one.
-        self.root = root.resolvingSymlinksInPath().path
-        self.gitDirectory = gitDirectory.resolvingSymlinksInPath().path
-        self.commonDirectory = commonDirectory.resolvingSymlinksInPath().path
+        // FSEvents reports canonical paths (`/private/var/...`, `/private/tmp/...`), so the
+        // roots are canonicalised with realpath(3) or no reported path would ever match one.
+        // Not `resolvingSymlinksInPath()`: it strips a leading `/private`, the opposite.
+        self.root = Self.canonicalPath(root)
+        self.gitDirectory = Self.canonicalPath(gitDirectory)
+        self.commonDirectory = Self.canonicalPath(commonDirectory)
+    }
+
+    /// `url`'s path with every symlink resolved the way the kernel spells it, keeping
+    /// `/private`; the standardized path when it does not exist.
+    static func canonicalPath(_ url: URL) -> String {
+        let path = url.standardizedFileURL.path
+        guard let resolved = realpath(path, nil) else { return path }
+        defer { free(resolved) }
+        return String(cString: resolved)
     }
 
     deinit {
@@ -118,7 +128,8 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     /// Anything outside `.git` is the working copy. Inside it: `HEAD`, `packed-refs` and
     /// anything under `refs/` move refs and history; `index` is the working copy;
     /// `MERGE_HEAD`, `CHERRY_PICK_HEAD` and anything under `rebase-merge/` or
-    /// `rebase-apply/` is an operation; a worktree's entry appearing or going is refs.
+    /// `rebase-apply/` is an operation; a worktree's entry appearing or going, or another
+    /// worktree's `worktrees/<name>/HEAD` moving, is refs (the refs reload lists worktrees).
     /// Lock files, objects and everything else mean nothing.
     public static func classify(relativePath: String) -> Set<GitRepositoryChange> {
         let components = relativePath.split(separator: "/", omittingEmptySubsequences: true)
@@ -133,7 +144,8 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
             return [.workingCopy]
         case "MERGE_HEAD" where single, "CHERRY_PICK_HEAD" where single, "rebase-merge", "rebase-apply":
             return [.operation]
-        case "worktrees" where rest.count == 2:
+        case "worktrees" where rest.count == 2,
+             "worktrees" where rest.count == 3 && last == "HEAD":
             return [.refs]
         default:
             return []
