@@ -141,6 +141,9 @@ guidance this recipe was authored under.
 - **dm-thread-null-chatid-clears-state**: when `chatId` is `null` or the empty string, the DM
   thread state MUST set `messages` to `[]` and `loading` to `false`, and MUST NOT issue any
   request or open any connection.
+- **dm-thread-reset-on-chatid-change**: on every `chatId` change, the DM thread state MUST set
+  `messages` to `[]` before loading the new thread, so no message from the previous chat is shown
+  under the new one.
 - **dm-thread-history-load-and-sort**: for a non-empty `chatId`, the DM thread state MUST request
   `GET {DM_BASE}/<enc(chatId)>/messages?pageSize=200` and MUST merge the returned `items`, sorted
   ascending by `seq`, into `messages`.
@@ -157,6 +160,9 @@ guidance this recipe was authored under.
 - **dm-thread-teardown-on-change-or-unmount**: on `chatId` change or unmount, the DM thread state
   MUST mark itself cancelled and MUST close the stream/poll handle, so neither the pending history
   fetch nor the connection can update state afterward.
+- **dm-thread-send-merge-guarded**: the send action MUST merge its POST response into `messages`
+  only when the `chatId` it was called for is still the current one; a send that settles after a
+  `chatId` change MUST NOT update `messages`.
 - **dm-thread-poll-fallback-refetch**: the poll fallback MUST re-request the same `GET
   {DM_BASE}/<enc(chatId)>/messages?pageSize=200` window and merge its `items` the same way as the
   initial load; a failed poll refetch MUST be swallowed, leaving `messages` unchanged.
@@ -276,7 +282,8 @@ Not applicable — this is the DM and notification data-and-transport layer, not
 | hub-domain-hooks-030 | start-dm-other-errors-propagate | `POST /api/v1/chats` responds `500` | The start-DM action's returned promise rejects with a typed HTTP error, status `500` |
 | hub-domain-hooks-031 | session-refresh-waterfall | Any plain HTTP call in this recipe first responds `401`; refresh succeeds | Exactly one retried request is sent with the new token; a `401` on that retry throws a typed HTTP error, status `401` — owned by the shared authenticated request client, not these hooks |
 | hub-domain-hooks-032 | sse-token-rides-the-query-string | The live-connection transport opens the DM thread's live connection with a current access token `"tok"` | The constructed live-connection URL ends in `access_token=tok` — owned by the shared live-connection transport, not these hooks |
-| hub-domain-hooks-033 | thread-message-bleed-on-chatid-switch | The send action is called for `chatId = "c1"`; before the POST resolves, `chatId` changes to `"c2"` | See the `thread-message-bleed-on-chatid-switch` edge case below — the resolved message from `"c1"`'s send call merges into whatever `messages` array is current when it settles, with no chatId-generation guard preventing it from landing under `"c2"` |
+| hub-domain-hooks-033 | thread-message-bleed-on-chatid-switch | The send action is called for `chatId = "c1"`; before the POST resolves, `chatId` changes to `"c2"` | `messages` contains no message with `chatId` `\"c1\"` after the POST resolves; the send action resolves without error |
+| hub-domain-hooks-034 | dm-thread-reset-on-chatid-change | `chatId` `"c1"` loads one message; `chatId` then changes to `"c2"`, whose history load returns no messages | `messages` is `[]` for `"c2"`; the `"c1"` message is not shown |
 
 ## Edge Cases
 
@@ -326,12 +333,12 @@ Not applicable — this is the DM and notification data-and-transport layer, not
   on a `401`, the single inherited refresh-and-retry); nothing in this recipe retries a network
   failure or a non-401 error status, and no exponential backoff exists anywhere in this recipe —
   the poll fallback is a fixed interval, not a backoff schedule.
-- **thread-message-bleed-on-chatid-switch**: if the send action (or its returned promise) is still
-  pending when `chatId` changes, the DM thread state's `messages` is a single array not
-  partitioned by chat id, and neither the send action nor the mark-read action carries a
-  generation guard analogous to the history load's own cancellation flag or the DM conversation
-  list's generation counter; the resolved message MAY merge into whatever thread is displayed when
-  it settles rather than the one it was sent for.
+- **thread-message-bleed-on-chatid-switch**: if the send action is still pending when `chatId`
+  changes, its resolved message is dropped rather than merged into the newly displayed thread
+  (`dm-thread-send-merge-guarded`), and the new thread starts from an empty `messages` list
+  (`dm-thread-reset-on-chatid-change`). The message is still stored server-side and appears when
+  the original chat is opened again. The mark-read action needs no guard: it updates no thread
+  state, only the server's read cursor for the chat it was called for.
 
 ## Configuration
 
@@ -485,18 +492,13 @@ request headers); a live-connection client on another platform that can set a he
 replicate this deviation.
 **Approved**: pending
 
-**Decision**: `send` and `markRead` carry no chatId-generation guard, while the thread's own history
-load and `useDmConversations`' window load both do.
-**Rationale**: recorded as observed source behavior, not smoothed over — see the
-`thread-message-bleed-on-chatid-switch` marker; a port MUST decide deliberately whether to add
-a matching guard to these two callbacks or to preserve the current behavior, since the current
-checkout does not settle which is intended.
-**Approved**: pending
-
-**Decision**: a send that settles after a `chatId` switch can merge its message into the newly displayed thread; the send and mark-read actions have no generation guard.
-
-**Rationale**: the thread's `messages` is one array not partitioned by chat id, unlike the history load's cancellation flag and the conversation list's generation counter; closing the gap takes a generation guard (or per-chat partitioning) on send and mark-read, and it is undecided whether product intent tolerates the bleed-through during a fast switch.
-
+**Decision**: a send that settles after a `chatId` switch is dropped from local state instead of
+merged into the newly displayed thread, and a `chatId` change clears `messages` first.
+**Rationale**: `messages` is one array not partitioned by chat id, so without the guard a message
+sent in one chat appeared under another during a fast switch, and without the reset the previous
+chat's messages stayed in the new thread. A ref holding the current `chatId` is the smallest guard;
+the dropped message is not lost, because the server stored it and the original chat's history
+load returns it. `markRead` stays unguarded because it changes no local thread state.
 **Approved**: pending
 
 ## Compliance
@@ -519,11 +521,10 @@ checkout does not settle which is intended.
 
 `separation-of-concerns` passes: both files contain zero JSX or DOM code — they export hooks and
 plain functions consumed by a separate presentation layer. `unit-test-coverage` is `partial`:
-`hooks/__tests__/use-notifications.test.ts` and `hooks/__tests__/use-dms.test.ts` cover 30 of the 33
+`hooks/__tests__/use-notifications.test.ts` and `hooks/__tests__/use-dms.test.ts` cover 32 of the 34
 conformance vectors with passing tests. Vectors `hub-domain-hooks-031` (401 refresh waterfall) and
 `-032` (`access_token` query parameter) belong to the shared `authedFetch` and `connectSse`
-transport and are skipped; `-033` (a send resolving after a chat switch merges into the new
-thread) is a source bug and is skipped with a `BUG` note. `explicit-error-handling` is
+transport and are skipped. `explicit-error-handling` is
 `partial`: every plain HTTP failure either throws (`AuthHttpError`/`Error`) or lands in an exposed
 `error` field, but several catches (`fetchPresenceMap`, the SSE malformed-frame handler, and both
 poll-fallback refetches) discard the error with no signal at all beyond a silent fallback.

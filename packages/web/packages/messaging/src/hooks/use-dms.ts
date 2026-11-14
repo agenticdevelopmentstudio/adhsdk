@@ -316,13 +316,18 @@ export function useDmThread(chatId: string | null): UseDmThreadResult {
   const [messages, setMessages] = useState<DmMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // The thread currently shown, so a send that settles after a chat switch is
+  // dropped instead of merged into the new thread.
+  const currentChatId = useRef(chatId)
 
   // Load history, then open the live stream from the newest loaded seq. Both live
   // in one effect so the stream's `after` cursor is the post-load high-water mark.
   // A dead stream (token expiry, network drop) downgrades to polling.
   useEffect(() => {
+    currentChatId.current = chatId
+    // A new thread starts empty: the previous chat's messages never carry over.
+    setMessages([])
     if (!chatId) {
-      setMessages([])
       setLoading(false)
       return
     }
@@ -410,7 +415,7 @@ export function useDmThread(chatId: string | null): UseDmThreadResult {
         { method: 'POST', body: JSON.stringify({ body: text, client_message_id: clientMessageId }) },
       )
       const msg = messageFromWire(wire)
-      setMessages((prev) => mergeMessage(prev, msg))
+      if (currentChatId.current === chatId) setMessages((prev) => mergeMessage(prev, msg))
       // Refresh the conversation list (preview + ordering + unread).
       emitLocalChange()
     },

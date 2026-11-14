@@ -88,7 +88,7 @@ Not applicable: Group is a static, presentational component. It does not have in
 
 - **Null title**: When `title` is `null` or `undefined`, the component treats it as falsy and does not render a title element.
 - **Empty title**: When `title` is an empty string `""`, it is falsy and does not render a title element.
-- **Falsy hint**: When `hint` is `null`, `undefined`, `false`, or empty string `""`, nothing renders in its place. When `hint` is the number `0`, nothing renders either (**hint-when-omitted**). The React/Web reference currently does not conform: its `hint && <p>…</p>` pattern short-circuits to the falsy operand, so a bare `0` text node leaks into the `<section>`. The same leak applies to `title={0}`. A conforming implementation tests `hint != null && hint !== false && hint !== ""` (or an equivalent) and the matching condition for `title`.
+- **Falsy hint**: When `hint` is `null`, `undefined`, `false`, or empty string `""`, nothing renders in its place. When `hint` is the number `0`, nothing renders either (**hint-when-omitted**). The React/Web reference renders `title` and `hint` through a ternary (`hint ? <p>…</p> : null`), because the `hint && <p>…</p>` pattern would short-circuit to the falsy operand and leak a bare `0` text node into the `<section>`.
 - **No children**: When `children` is not provided, `undefined`, or `null`, the body div is rendered empty but still present.
 - **React node children**: The `title`, `hint`, and `children` props accept `ReactNode`, which may be strings, numbers, elements, fragments, arrays, or null. All valid React node types MUST render correctly.
 - **Multiple children**: When `children` is an array (list of React elements), all items MUST render within the body div without modification.
@@ -167,9 +167,9 @@ Not applicable: Group does not perform any logging. It is a purely presentationa
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` elements with no ARIA attributes and no accessible name wired to the section (see **Accessibility**), and on the component deferring all typography, color, and spacing to CSS classes (`aws-group*`) that it does not itself define, so dynamic type and contrast cannot be confirmed from the source. `separation-of-concerns` is `passed` because the component is pure presentation over `title`/`hint`/`children` props with no business logic; `unit-test-coverage` is `partial`: `Group.test.tsx` covers group-001 to group-012, and skips group-013 and group-014 because `hint && <p>` and `title && <h3>` leak a bare `0` text node into the section (the known non-conformance in Edge Cases).
+Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` elements with no ARIA attributes and no accessible name wired to the section (see **Accessibility**), and on the component deferring all typography, color, and spacing to CSS classes (`aws-group*`) that it does not itself define, so dynamic type and contrast cannot be confirmed from the source. `separation-of-concerns` is `passed` because the component is pure presentation over `title`/`hint`/`children` props with no business logic; `unit-test-coverage` is `passed`: `Group.test.tsx` covers every vector, group-001 to group-014.
 ## Change History
 
 | Version | Date | Author | Summary |
