@@ -213,6 +213,12 @@ final class NotationsListViewController: NSViewController {
                 $0.notation.branch.localizedStandardCompare($1.notation.branch) == .orderedAscending
             }
         }
+        // reloadData drops the selection, which would tell the detail view
+        // to show nothing and then the same notation again — clearing and
+        // refilling the editor under the caret on every autosave. Report the
+        // selection once, after it is restored.
+        isReloading = true
+        defer { isReloading = false }
         outline.reloadData()
         outline.expandItem(nil, expandChildren: true)
 
@@ -224,8 +230,12 @@ final class NotationsListViewController: NSViewController {
         } else {
             outline.deselectAll(nil)
         }
+        isReloading = false
         selectionChanged()
     }
+
+    /// True while `applyFilter` rebuilds the outline.
+    private var isReloading = false
 
     static func matches(_ notation: Notation, query: String) -> Bool {
         guard !query.isEmpty else { return true }
@@ -408,6 +418,7 @@ extension NotationsListViewController: NSOutlineViewDataSource, NSOutlineViewDel
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
+        guard !isReloading else { return }
         selectionChanged()
     }
 }
