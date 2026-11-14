@@ -363,8 +363,8 @@ struct LineViewerTests {
         withExtendedLifetime(source) {}
     }
 
-    @Test func cacheKeepsEveryRowOfTheFrameBeyondItsCapacity() throws {
-        // A 300 pt viewer caches about 2 × 17 rows; one dirty rect of 60 rows still keeps all of them.
+    @Test func cacheTrimsBackToCapacityAfterAFrameBeyondIt() throws {
+        // A 300 pt viewer caches about 2 x 17 rows; one dirty rect of 60 rows keeps them all while it draws.
         let rows = (0..<60).map {
             LineViewerRow(text: String(repeating: "r\($0)\tc\u{4E2D}d\u{1F600}; ", count: 200))
         }
@@ -374,11 +374,114 @@ struct LineViewerTests {
         let rect = NSRect(x: 0, y: 0, width: 400, height: 60 * viewer.rowHeight)
 
         try draw(document, rect)
-        let built = document.longLayoutBuildCount
-        #expect(built == 60)
-        #expect(document.cachedLineCount == 60)
-        try draw(document, rect)
-        #expect(document.longLayoutBuildCount == built)
+        #expect(document.longLayoutBuildCount == 60)
+        #expect(document.lineCacheCapacity < 60)
+        #expect(document.cachedLineCount == document.lineCacheCapacity)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func cacheTrimsBackToItsUnitBudgetAfterAFrameBeyondIt() throws {
+        let rows = (0..<10).map {
+            LineViewerRow(text: String(repeating: "r\($0)\tc\u{4E2D}d\u{1F600}; ", count: 200))
+        }
+        let source = FakeSource(rows: rows)
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+        let rowLength = (rows[0].text as NSString).length
+        document.lineCacheUnitBudget = 3 * rowLength + 1
+
+        try draw(document, NSRect(x: 0, y: 0, width: 400, height: 10 * viewer.rowHeight))
+        #expect(document.longLayoutBuildCount == 10)
+        #expect(document.cachedUnitCount <= document.lineCacheUnitBudget)
+        #expect(document.cachedLineCount == 3)
+        withExtendedLifetime(source) {}
+    }
+
+    /// Runs `width` units wide across `length` units in two alternating colours,
+    /// and over them one bold run across the whole row and one highlight run
+    /// across its middle half: they overlap the rest.
+    private func denseRuns(length: Int, width: Int) -> [LineViewerRun] {
+        let colours = [RGBAColor(red: 0.8, green: 0.1, blue: 0.1, alpha: 1),
+                       RGBAColor(red: 0.1, green: 0.1, blue: 0.8, alpha: 1)]
+        var runs = [LineViewerRun(range: NSRange(location: 0, length: length), fontStyle: .bold)]
+        runs.reserveCapacity(length / width + 2)
+        for start in stride(from: 0, to: length, by: width) {
+            runs.append(LineViewerRun(range: NSRange(location: start, length: min(width, length - start)),
+                                      foreground: colours[(start / width) % 2]))
+        }
+        runs.append(LineViewerRun(range: NSRange(location: length / 4, length: length / 2), highlight: .emphasis))
+        return runs
+    }
+
+    @Test func longAsciiRowFrameTouchesOnlyTheRunsUnderTheRect() throws {
+        let length = 1_000_000
+        let runs = denseRuns(length: length, width: 10)
+        #expect(runs.count >= 100_000)
+        let source = FakeSource(rows: [LineViewerRow(text: String(repeating: "x", count: length), runs: runs)])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+
+        for column in [0, 600_000] {
+            let originX = column == 0 ? 0 : document.textOriginX + CGFloat(column) * document.charWidth
+            try draw(document, NSRect(x: originX, y: 0, width: 400, height: viewer.rowHeight))
+            #expect(document.drawnGlyphCount > 0)
+            #expect(document.runsTouchedLastFrame > 0)
+            #expect(document.runsTouchedLastFrame <= 16)
+        }
+        #expect(document.longLayoutBuildCount == 0)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func longCachedRowFrameTouchesOnlyTheRunsUnderTheRect() throws {
+        // The trailing non-ASCII character sends the row down the cached-layout path.
+        let length = 300_000
+        let runs = denseRuns(length: length, width: 3)
+        #expect(runs.count >= 100_000)
+        let text = String(repeating: "x", count: length - 1) + "\u{E9}"
+        let source = FakeSource(rows: [LineViewerRow(text: text, runs: runs)])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+
+        for column in [0, 200_000] {
+            let originX = column == 0 ? 0 : document.textOriginX + CGFloat(column) * document.charWidth
+            try draw(document, NSRect(x: originX, y: 0, width: 400, height: viewer.rowHeight))
+            #expect(document.drawnGlyphCount > 0)
+            #expect(document.runsTouchedLastFrame > 0)
+            #expect(document.runsTouchedLastFrame <= 40)
+        }
+        #expect(document.longLayoutBuildCount == 1)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test(arguments: ["", "\u{E9}"])
+    func overlappingRunsAcrossSeamsDrawTheSameSplitOrWhole(tail: String) throws {
+        // Overlapping runs, given out of order, whose edges fall either side of the seams at 333 and 617 pt.
+        let line = String(repeating: "func a(b: Int) -> [C] { return d && e || f } // g; ", count: 50) + tail
+        #expect((line as NSString).length > 2000)
+        let source = FakeSource(rows: [LineViewerRow(text: line, runs: [
+            LineViewerRun(range: NSRange(location: 20, length: 120), foreground: RGBAColor(red: 0.9, green: 0.2,
+                                                                                          blue: 0.2, alpha: 1),
+                          fontStyle: .strikethrough),
+            LineViewerRun(range: NSRange(location: 0, length: 200), highlight: .emphasis),
+            LineViewerRun(range: NSRange(location: 30, length: 60), fontStyle: [.bold, .underline]),
+            LineViewerRun(range: NSRange(location: 70, length: 50), fontStyle: .italic, highlight: .added),
+            LineViewerRun(range: NSRange(location: 40, length: 2000), foreground: RGBAColor(red: 0.2, green: 0.6,
+                                                                                           blue: 0.2, alpha: 1))
+        ])])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+        let height = viewer.rowHeight
+
+        let whole = try render(document, width: 900, height: height,
+                               rects: [NSRect(x: 0, y: 0, width: 900, height: height)])
+        let split = try render(document, width: 900, height: height, rects: [
+            NSRect(x: 0, y: 0, width: 333, height: height),
+            NSRect(x: 333, y: 0, width: 284, height: height),
+            NSRect(x: 617, y: 0, width: 283, height: height)
+        ])
+        #expect(Set(whole).count > 1)
+        #expect(split == whole)
+        #expect(document.longLayoutBuildCount == (tail.isEmpty ? 0 : 1))
         withExtendedLifetime(source) {}
     }
 
