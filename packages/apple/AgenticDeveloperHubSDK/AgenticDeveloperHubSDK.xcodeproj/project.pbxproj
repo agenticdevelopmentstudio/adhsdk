@@ -704,6 +704,7 @@
 		219BFD942F00AFDDEAE6D356 /* MachineDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC505A774D27F659EF3F3699 /* MachineDescriptor.swift */; };
 		21A4093ABA031175AB5AE0F2 /* StenographerFeaturePermissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA5CE7F7171F07B930C4C048 /* StenographerFeaturePermissions.swift */; };
 		21A5CD3051688FCC48B4BD93 /* InMemorySettingsStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4459F497B9FC3F81F7DCFA1B /* InMemorySettingsStorageProvider.swift */; };
+		21AB435B8ECE7C041A3B9440 /* HubMailLocationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67B2CDEB7AC374803E885268 /* HubMailLocationTests.swift */; };
 		21C39391E4DB35AF6FCE3C46 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 3F45C441D8339CE4C5DA90DD /* GRDB */; };
 		21E4806BFE2703042AAEC163 /* BucketsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD0F03841891549CDD06CDA /* BucketsAdapter.swift */; };
 		21F519AF7D65DDCEC6AB65F4 /* MarkdownTextPaneInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1259DF5C9A17752FF2BDEB /* MarkdownTextPaneInputTests.swift */; };
@@ -771,6 +772,7 @@
 		25620375713861E8E5D8D1BB /* AccountMenuModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01DC0855F9406998DD6D3434 /* AccountMenuModel.swift */; };
 		2575E01EC96B689BF3B47724 /* ADHSharedRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 5BD51A5AFE16EC3886EDC433 /* ADHSharedRuntime */; };
 		259F8EBF8852417FE10231B1 /* SystemWindowContextPickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA49D7DFEACD8DBC3D0BC944 /* SystemWindowContextPickerPanel.swift */; };
+		25AC40533B4D78EE7E0C2509 /* HubMailLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBB2589168477BDF1344CA5 /* HubMailLocation.swift */; };
 		25BA8224C0F7B84ABBD659DD /* ApplicationsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F0A9A474DB37C8F7365544 /* ApplicationsModels.swift */; };
 		25BB20A478DD4964375E36CE /* PaneMinimizedStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B4CC4D2D5EF84A2CA46857 /* PaneMinimizedStripView.swift */; };
 		25EAF8AB1CCE9E97FDC33871 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0B294E18D40885C1890D5F2D /* GRDB */; };
@@ -7694,6 +7696,7 @@
 		2D75306DE708EEA509EF555E /* SessionEnricher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionEnricher.swift; sourceTree = "<group>"; };
 		2D771772A4CB046644738B5F /* NoticeReplyFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeReplyFieldTests.swift; sourceTree = "<group>"; };
 		2D94F2EBF4D49310F0767DBB /* EditorSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSettingsPanelViewController.swift; sourceTree = "<group>"; };
+		2DBB2589168477BDF1344CA5 /* HubMailLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubMailLocation.swift; sourceTree = "<group>"; };
 		2DE0C68765924BA0FD64A167 /* SubprocessChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubprocessChannel.swift; sourceTree = "<group>"; };
 		2E1CC2F214BC1592691D288A /* TabPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPaneView.swift; sourceTree = "<group>"; };
 		2E1DC406CAC470603292A462 /* ProjectsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsWindowController.swift; sourceTree = "<group>"; };
@@ -8313,6 +8316,7 @@
 		6708390214D6C8D66503DF68 /* EcosystemConfigModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcosystemConfigModels.swift; sourceTree = "<group>"; };
 		67286F557A6BA503B1485B1A /* SceneLifecycleQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneLifecycleQueue.swift; sourceTree = "<group>"; };
 		672D27BB1F1D087994E8D9B9 /* WorkspaceResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceResolver.swift; sourceTree = "<group>"; };
+		67B2CDEB7AC374803E885268 /* HubMailLocationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubMailLocationTests.swift; sourceTree = "<group>"; };
 		67BE40C8064CB7135FD7FFB7 /* AppearanceSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsPanelViewController.swift; sourceTree = "<group>"; };
 		67C9CF1CBE95377A9D0F653A /* MessageFramingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageFramingTests.swift; sourceTree = "<group>"; };
 		6801E7CF77903C335EEB8591 /* StubSignInSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubSignInSession.swift; sourceTree = "<group>"; };
@@ -11878,6 +11882,7 @@
 			isa = PBXGroup;
 			children = (
 				F5466308B630656B463C6B0E /* HubMailBridge.swift */,
+				2DBB2589168477BDF1344CA5 /* HubMailLocation.swift */,
 				9FE34D3D499779A74015E6C7 /* HubMailService.swift */,
 				C1D3D450E33B01CF19337251 /* HubMailService+Live.swift */,
 			);
@@ -15813,6 +15818,7 @@
 			isa = PBXGroup;
 			children = (
 				F677A77D0F919FE44FBABC43 /* HubMailBridgeTests.swift */,
+				67B2CDEB7AC374803E885268 /* HubMailLocationTests.swift */,
 				AA792DCC545BA9F142A1C331 /* HubMailServiceTests.swift */,
 			);
 			name = AgenticDeveloperHubSDKHubMailBridgeTests;
@@ -21411,6 +21417,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B1C9FFCA60AC0CE7963CB334 /* HubMailBridgeTests.swift in Sources */,
+				21AB435B8ECE7C041A3B9440 /* HubMailLocationTests.swift in Sources */,
 				8008358841EE45D795BD36E2 /* HubMailServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -21975,6 +21982,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				71AEE3E7B5444CFC236DF752 /* HubMailBridge.swift in Sources */,
+				25AC40533B4D78EE7E0C2509 /* HubMailLocation.swift in Sources */,
 				D2B78707D3D32260282B9CAD /* HubMailService+Live.swift in Sources */,
 				667F09F370EFA2512B87EB25 /* HubMailService.swift in Sources */,
 			);
