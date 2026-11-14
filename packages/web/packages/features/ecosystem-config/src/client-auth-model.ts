@@ -1,6 +1,7 @@
 // The pure half of client auth editing, which the ecosystem's Settings pane and an application's
 // client auth section share. It covers the draft shapes, what counts as a change, what a save
-// sends, what a platform allows, and how a provider switch maps onto `allowedProviders`.
+// sends, what a platform allows, how a provider switch maps onto `allowedProviders`, and how the
+// login allow-list is cleaned and bounded.
 
 import type {
   ApplicationPlatform,
@@ -145,8 +146,44 @@ export function samePolicy(a: ClientAuthPolicy | null, b: ClientAuthPolicy | nul
     a.signupMode === b.signupMode &&
     a.loginEnabled === b.loginEnabled &&
     a.passwordEnabled === b.passwordEnabled &&
-    sameProviders(a.allowedProviders, b.allowedProviders)
+    sameProviders(a.allowedProviders, b.allowedProviders) &&
+    sameCustomerList(a.loginAllowedCustomerIds, b.loginAllowedCustomerIds)
   );
+}
+
+/** The backend's bounds on the login allow-list (auth/clientAuthPolicy.ts), mirrored so Save is
+ *  refused before the round trip. */
+export const MAX_LOGIN_ALLOWED_CUSTOMERS = 500;
+const MAX_CUSTOMER_ID_LENGTH = 36;
+
+/**
+ * The login allow-list as a save sends it: each id trimmed, blank rows dropped, duplicates dropped
+ * with the first kept. `null` (every customer) stays `null`, and an empty list stays `[]`, which
+ * means nobody — the editor's switch, not the row count, decides between the two.
+ */
+export function cleanCustomerList(ids: string[] | null): string[] | null {
+  if (ids === null) return null;
+  return [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+}
+
+/** Two allow-lists are the same when they would SAVE the same, compared as sets. */
+function sameCustomerList(a: string[] | null, b: string[] | null): boolean {
+  const ca = cleanCustomerList(a);
+  const cb = cleanCustomerList(b);
+  if (ca === null || cb === null) return ca === cb;
+  return ca.length === cb.length && ca.every((id) => cb.includes(id));
+}
+
+/** Why the policy cannot be saved as it stands, or null when it can. The backend is
+ *  authoritative; this only says it sooner. */
+export function policyError(policy: ClientAuthPolicy | null): string | null {
+  const ids = cleanCustomerList(policy?.loginAllowedCustomerIds ?? null);
+  if (ids === null) return null;
+  if (ids.length > MAX_LOGIN_ALLOWED_CUSTOMERS)
+    return `At most ${MAX_LOGIN_ALLOWED_CUSTOMERS} customers can be listed.`;
+  const long = ids.find((id) => id.length > MAX_CUSTOMER_ID_LENGTH);
+  if (long) return `"${long}" is not a customer id.`;
+  return null;
 }
 
 function sameProviders(a: string[] | null, b: string[] | null): boolean {
@@ -188,5 +225,7 @@ export function policyPatch(
   if (draft.passwordEnabled !== base.passwordEnabled) patch.passwordEnabled = draft.passwordEnabled;
   if (!sameProviders(draft.allowedProviders, base.allowedProviders))
     patch.allowedProviders = draft.allowedProviders;
+  if (!sameCustomerList(draft.loginAllowedCustomerIds, base.loginAllowedCustomerIds))
+    patch.loginAllowedCustomerIds = cleanCustomerList(draft.loginAllowedCustomerIds);
   return Object.keys(patch).length > 0 ? patch : undefined;
 }
