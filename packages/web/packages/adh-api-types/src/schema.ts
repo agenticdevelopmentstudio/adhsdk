@@ -17521,6 +17521,8 @@ export interface components {
             password_enabled: boolean;
             /** @description null means every configured provider. An empty array is stored as null, never as "none". */
             allowed_providers: string[] | null;
+            /** @description The customers who may sign in, by customer id. null (the default) means every customer; an empty array means nobody. It gates sign-in only: an invitee who is not listed still joins, and is refused with login_disabled until listed. */
+            login_allowed_customer_ids: string[] | null;
         };
         /** @description A partial update — supply at least one field. Anything omitted is left as it was. */
         EcosystemAuthSettingsUpdate: {
@@ -17530,6 +17532,8 @@ export interface components {
             password_enabled?: boolean;
             /** @description Every slug must name a configured provider, or the call is a 400. An empty array is coerced to null (all providers) rather than locking everyone out. */
             allowed_providers?: string[] | null;
+            /** @description Customer ids allowed to sign in; null for every customer, [] for nobody. Duplicates are dropped. */
+            login_allowed_customer_ids?: string[] | null;
         };
         /** @description A login registration: the OIDC client (a Hydra public PKCE client) a website or app signs customers in through. `clientId` is assigned by the server. */
         ClientAuthRegistration: {

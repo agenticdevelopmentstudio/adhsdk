@@ -2,11 +2,11 @@
 id: 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 title: "Ecosystem Config"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -135,6 +135,22 @@ fetch-based operations with no view code of its own.
   specification never reads, displays, or edits it, and the update shape has no
   field to write it back; this component offers no way to view or change the
   allowed providers.
+- **auth-login-allow-list-wire**: the web data layer's `AuthSettings` (and so
+  `ClientAuthPolicy`) MUST carry `loginAllowedCustomerIds: string[] | null`, read
+  from the wire's `login_allowed_customer_ids`. `null` means every customer may
+  sign in and `[]` means nobody; a response that omits the field (an older
+  backend) MUST read as `null`. A patch that sets it to `null` MUST send the
+  explicit `null`, never drop it, so "every customer" can be restored.
+- **auth-login-allow-list-edit**: the web ecosystem client-auth pane MUST draw a
+  "Who can sign in" section with an "Only listed customers" switch. Off is `null`;
+  turning it on starts one blank customer-id row, which saves as `[]` (nobody)
+  if left blank. A save MUST send the list trimmed, with blank rows and
+  duplicates dropped and the first occurrence's order kept; a blank row added to
+  a saved list MUST NOT count as an edit.
+- **auth-login-allow-list-bounds**: Save MUST be blocked, with the reason shown,
+  when the cleaned list holds more than 500 ids or any id longer than 36
+  characters — the backend's own bounds, mirrored so the refusal comes before
+  the round trip. The backend stays authoritative.
 
 ### Sign-in Apps
 
@@ -557,7 +573,9 @@ kind.
   from `SignupMode.help` (declared in `EcosystemConfigModels.swift`).
   `AuthSettings.allowedProviders: [String]?` decodes from
   `AuthSettingsDataSource.get`'s response but `AuthSettingsTopic.detail`'s form
-  specification never surfaces it, and `AuthSettingsUpdate` has no field for it.
+  specification never surfaces it, and `AuthSettingsUpdate` has no field for it. The
+  login allow-list (`login_allowed_customer_ids`) is not decoded on Apple at all
+  yet; that editor is planned.
 
   `SigninApp.leaf(in:)` implements leaf computation; the duplicate check compares
   against it case-insensitively; the `clientId` field validates against
@@ -606,6 +624,14 @@ kind.
   `bag-dialog-state.ts`, `flag-dialog-state.ts`, `ApplicationClientAuthSection.tsx`) are not
   among this recipe's given sources, but see Design Decisions for the
   validation-layering split observed there.
+  The login allow-list (**auth-login-allow-list-edit**,
+  **auth-login-allow-list-bounds**) is the exception: its editor lives in
+  `packages/web/packages/features/ecosystem-config/src/` — `ClientAuthFields.tsx`
+  draws the section, `client-auth-model.ts` holds `cleanCustomerList`,
+  `policyPatch`, `samePolicy` and `policyError`, and `ClientAuthSettingsPane.tsx`
+  blocks Save on `policyError` and re-keys the rows editor on each re-seed.
+  There is no customer picker: the hub has no owner-scoped customer listing, so
+  ids are typed.
 - **Compose**: model each Apple protocol as a Kotlin `interface` with `suspend
   fun`s (e.g. `interface FeatureFlagsDataSource { suspend fun list(ecosystemId:
   String): List<FeatureFlag> }`); represent the shared token rail's revealed-secrets
@@ -632,6 +658,7 @@ kind.
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | unverified |
 | web | `packages/web/packages/data/src/ecosystem-config/` | unverified |
+| web | `packages/web/packages/features/ecosystem-config/src/` | unverified |
 
 ## Design Decisions
 
@@ -681,6 +708,7 @@ Platform scope: web implementation.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-13 | Mike Fullerton | Login allow-list (loginAllowedCustomerIds): web wire field, the client-auth pane's Who can sign in editor, and its bounds |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/ecosystems/. |

@@ -2,11 +2,11 @@
 id: 201572ee-2e0f-4839-94f5-252f8044c4bf
 title: "Ecosystems"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -280,6 +280,12 @@ has no counterpart for it in these sources.
 - **auth-settings-bespoke-routes**: Reading and updating an ecosystem's auth
   settings MUST use their own dedicated route rather than the generic
   ecosystems create/read/update/delete base.
+- **auth-settings-login-allow-list-mapping**: Auth settings read from the
+  wire MUST carry `loginAllowedCustomerIds` from `login_allowed_customer_ids`,
+  reading an absent field as `null` (every customer may sign in) and keeping
+  `[]` (no customer may) distinct from it. An auth-settings patch that sets the
+  field MUST send it as `login_allowed_customer_ids`, sending an explicit
+  `null` rather than omitting it.
 
 ### Child ecosystems
 
@@ -1096,6 +1102,7 @@ nullable `ecosystemId` and send it unguarded (see the features-mutation-null-id-
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-13 | Mike Fullerton | Auth settings carry the login allow-list (loginAllowedCustomerIds and login_allowed_customer_ids) |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/ecosystems/. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
