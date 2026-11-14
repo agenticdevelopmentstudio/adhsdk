@@ -6362,6 +6362,13 @@
           },
           "location": "packages/web/packages/data/src/ecosystem-config/",
           "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/web/packages/features/ecosystem-config/src/",
+          "platform": "web"
         }
       ],
       "kind": "ingredient",
