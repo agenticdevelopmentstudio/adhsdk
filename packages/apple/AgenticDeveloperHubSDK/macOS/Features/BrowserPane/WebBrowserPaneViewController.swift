@@ -1068,7 +1068,10 @@ open class WebBrowserPaneViewController: NSViewController {
         tab.currentVisitID = nil
         tab.visitGeneration += 1
         let engine = tab.engine
+        // Private browsing keeps nothing once the window closes, history
+        // included, whatever the history setting says.
         guard let history, settings.get(UserSettings.browserRecordsHistory),
+              !settings.get(UserSettings.browserPrivateBrowsing),
               let url = engine.url, url != Self.blankPage else { return }
         let generation = tab.visitGeneration
         let title = storedTitle(of: engine) ?? ""
