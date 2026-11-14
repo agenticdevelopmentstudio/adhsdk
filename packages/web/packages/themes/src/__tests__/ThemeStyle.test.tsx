@@ -42,6 +42,15 @@ describe('ThemeStyle', () => {
     expect(idB).not.toBe('')
   })
 
+  it('keeps scopes that differ only in punctuation or case on different ids', () => {
+    const ids = ['.host-a', '#host-a', '.Host-A', 'host-a'].map(
+      (scope) => render(<ThemeStyle theme={'stub' as never} scope={scope} />).container.querySelector('style')!.id,
+    )
+    expect(new Set(ids).size).toBe(4)
+    // A scope that is already its own slug keeps the plain, readable id.
+    expect(ids[3]).toBe('adh-sdk-theme-scoped-host-a')
+  })
+
   it('resolves colorMode="dark" and "light" to different CSS from each other', () => {
     const dark = render(<ThemeStyle theme={'stub' as never} scope=".host" colorMode="dark" />)
     const light = render(<ThemeStyle theme={'stub' as never} scope=".host" colorMode="light" />)

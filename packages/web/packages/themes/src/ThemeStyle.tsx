@@ -7,8 +7,23 @@ const SCOPED_ID = 'adh-sdk-theme-scoped'
  *  scoped themes at once (a chat theming itself, plus a host app theming the
  *  wrapper it sits in), and a shared id makes those duplicates — invalid HTML, and
  *  `getElementById` silently resolves to whichever happens to come first. */
-const scopedId = (scope: string): string =>
-  `${SCOPED_ID}-${scope.replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/(^-+|-+$)/g, '').toLowerCase()}`
+export const scopedId = (scope: string): string => {
+  const slug = scope.replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/(^-+|-+$)/g, '').toLowerCase()
+  // The slug drops punctuation and case, so `.host-a`, `#host-a` and `.Host-A` would
+  // collide. A scope that is not already its own slug gets a hash of the raw selector,
+  // which keeps every distinct scope on a distinct id.
+  return slug === scope ? `${SCOPED_ID}-${slug}` : `${SCOPED_ID}-${slug}-${fnv1a(scope)}`
+}
+
+/** 32-bit FNV-1a of a string, base 36: short, stable, dependency-free. */
+const fnv1a = (text: string): string => {
+  let hash = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i)
+    hash = Math.imul(hash, 0x01000193)
+  }
+  return (hash >>> 0).toString(36)
+}
 
 const IMPORT_RE = /^@import\s+url\([^)]+\);\s*$/gm
 // Full-palette themes — every theme with a complete M3 role layer — anchor their token
