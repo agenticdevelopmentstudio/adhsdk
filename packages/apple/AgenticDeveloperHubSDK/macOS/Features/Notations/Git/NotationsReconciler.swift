@@ -55,7 +55,15 @@ public actor NotationsReconciler {
         for notation in notations {
             if Task.isCancelled { break }
             let directory = URL(fileURLWithPath: notation.projectPath)
-            let directoryExists = fileExists(notation.projectPath)
+            // A missing directory is not a definite no: the project may have
+            // been moved or renamed (its id survives, its stored path does
+            // not), or sit on a volume that is not mounted. Nothing is
+            // archived or deleted on that evidence alone.
+            guard fileExists(notation.projectPath) else {
+                summary.skipped += 1
+                continue
+            }
+            let directoryExists = true
             do {
                 switch notation.state {
                 case .active:
