@@ -33,8 +33,10 @@
 | git-views-030 | detail-latest-wins | `show(A)` held; `show(B)` returns at once; then A's diff is released | The list shows B's files; A's never appear. |
 | git-views-031 | detail-latest-wins | `show(A)` held; `show(B)` held; B released first, then A | The list shows B's files. |
 | git-views-032 | detail-files, detail-clear | `show(A)` loaded; `show(B)` held; then `show(nil)` | While B is held the list is empty and the header is B's; after nil, the header and list are empty and B's diff, released, changes nothing. |
-| git-views-033 | detail-files | The source's diff throws | The header shows the commit; the list is empty. |
+| git-views-033 | detail-files | The source's diff throws `commandFailed(verb: "diff", exitStatus: 128, standardError: "fatal: bad object")`; then `show(B)` whose diff lists `from-b` | The header shows the commit; the list is empty; the error label shows the error's description and the failure is logged. After `show(B)` the label is hidden and the list shows `from-b`. |
 | git-views-034 | wc-lists | Staged `a` added; unstaged `b` modified, `c` untracked | Headers `Staged (1)`, `Unstaged (2)`; rows `a`; `b`, `c`. |
 | git-views-035 | wc-selection | Select `a` (staged), then `c` (unstaged untracked), then `b` | Delegate `.staged(paths: ["a"])`, `.untracked(path: "c")`, `.unstaged(paths: ["b"])`, once each; the staged list is cleared when `c` is selected, with no nil reported. |
 | git-views-036 | wc-reload | `b` selected; reload with `b` still unstaged; reload with `b` staged instead | Nothing on the first reload; nil once on the second. |
-
+| git-views-037 | file-list-files, wc-reload | Unstaged `c` untracked selected; reload with `c` added (intent-to-add) | Delegate `.untracked(path: "c")`, then `.unstaged(paths: ["c"])` once; `c` stays selected; a second identical reload reports nothing. |
+| git-views-038 | detail-files | A commit whose diff lists no files | The list is empty and no error is shown. |
+| git-views-039 | detail-latest-wins, detail-clear | `show(A)` held and failing; `show(B)` returns; A released; then B fails and `show(nil)` | No error after A's late failure, B's files listed; B's failure shown; hidden after nil. |

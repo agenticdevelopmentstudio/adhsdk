@@ -15,7 +15,7 @@
 - **History, typing while a search is in flight**: `fix` then `fix ` (or `sha:a` then `sha:ab` while a filter clears) parse to the query already in flight; the later call waits for it, then reloads and selects.
 - **History, non-UTF-8 messages**: shown as the model decoded them (lossily), never dropped.
 
-- **Files, awkward paths**: spaces, unicode and tabs are shown as they are; a path holding a newline stays on one row (single-line label) and its tooltip holds the whole path.
+- **Files, awkward paths**: spaces, unicode and tabs are shown as they are; a path holding a newline stays on one row (single-line label, one line at most) and its tooltip holds the whole path.
 - **Files, a path with no extension** (`Makefile`) or a dot file (`.gitignore`, whose extension is empty): the `doc` icon.
 - **Files, the same path twice**: the id is the path, so the selection kept across a `files` change is the first row with that path.
 - **Commit detail, a merge**: one parent link per parent; the list is the diff against the first parent.
