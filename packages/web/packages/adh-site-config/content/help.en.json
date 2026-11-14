@@ -5,6 +5,7 @@
   "ecosystems/applications": "Applications access your ADH data via schema permissions and access tokens. Each one has a login registration of its own, and signs its customers in under the ecosystem's sign-in settings (Users ▸ Authentication).",
   "ecosystems/feature-flags": "Per-product feature flags — named on/off toggles this product's apps can read.",
   "ecosystems/server-bags": "Per-product server bags — arbitrary key → JSON config values for this product.",
+  "ecosystems/sync": "Which tables this product's apps keep on the device for offline use. Syncing a table overrides the platform default for this product; Reset to default removes the override.",
   "ecosystems/client-auth": "How your customers sign in to your apps. One set of settings for the whole ecosystem: whether sign-in is allowed, email and password, the sign-up mode (open, invite only, or closed), and which OAuth providers are on. Each application's login registration, the client id and redirect URIs it signs in through, is in that application's own settings.",
   "ecosystems/schemas": "Reusable, composable collections of ADH tables. Applications grant permissions on these.",
   "ecosystems/access": "Access lists for your buckets: who can read or write each bucket, type, or row.",

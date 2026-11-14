@@ -1027,7 +1027,7 @@ export const HUB_EXTRA_FEATURE_SEGMENTS = [
   // `/<slug>/<segment>` route with a FEATURE_META entry, no distinct registry site to
   // switch into) — kept lockstep with FEATURE_META by the reverse-lockstep test (#9).
   'applications', 'invitations', 'signin-apps', 'feature-flags',
-  'server-bags', 'llm-providers',
+  'server-bags', 'sync', 'llm-providers',
   // Email Signup: a bespoke rail route (audience.* lists/templates/campaigns), no
   // distinct registry site of its own — same lockstep as the row above.
   'email-signup',
