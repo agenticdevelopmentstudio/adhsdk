@@ -3,8 +3,8 @@
 **Rationale**: The mail browser, Email App and settings panel already speak `MailClient`; one adapter at the transport seam switches all three, and the UI keeps one code path while the direct worker still exists.
 **Approved**: pending
 
-**Decision**: A separate macOS framework rather than putting the bridge in Integrations or HubMail.
-**Rationale**: Integrations is macOS-only and HubMail builds for iOS; either holding the bridge would make one link the other. A third framework keeps both deletable on their own, which matters while the owner decides the direct path's fate.
+**Decision**: A separate framework, built for macOS and iOS, rather than putting the bridge in Mail or HubMail.
+**Rationale**: Mail holds the RPC types and HubMail holds the mirror; either holding the bridge would make one link the other. A third framework keeps both deletable on their own, which matters while the owner decides the direct path's fate.
 **Approved**: pending
 
 **Decision**: Write label changes into the mirror after the hub accepts them.
@@ -23,6 +23,6 @@
 **Rationale**: A departing identity's mail must not stay readable on the machine. A failed refresh or a launch-time restore says nothing about who is signed in, so purging there would throw away mail for a user who is still signed in.
 **Approved**: pending
 
-**Decision**: `MailClient.routed` and `MailSource` live in Integrations, beside `MailClient`.
+**Decision**: `MailClient.routed` and `MailSource` live in the Mail framework, beside `MailClient`.
 **Rationale**: The router reaches the client's private transport, and the source names belong to the mail RPC, not to the hub. An app picks a source without linking anything new.
 **Approved**: pending

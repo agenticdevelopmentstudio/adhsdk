@@ -3,6 +3,7 @@ import Testing
 import AIPluginKit
 import AgenticDeveloperHubSDKDatabase
 import GRDB
+@testable import AgenticDeveloperHubSDKMail
 @testable import AgenticDeveloperHubSDKIntegrations
 
 /// A clock tests move by hand.

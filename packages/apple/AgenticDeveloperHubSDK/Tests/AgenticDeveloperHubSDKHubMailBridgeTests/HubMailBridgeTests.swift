@@ -1,9 +1,8 @@
 import XCTest
 import GRDB
-import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKSync
-import AgenticDeveloperHubSDKIntegrations
+import AgenticDeveloperHubSDKMail
 import AgenticDeveloperHubSDKHubMail
 @testable import AgenticDeveloperHubSDKHubMailBridge
 

@@ -9,8 +9,8 @@
     "language": "en",
     "created": "2026-11-14",
     "modified": "2026-11-14",
-    "author": "mfullerton",
-    "copyright": "2026 mfullerton",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "Stateless HTML-to-plain-text reader and HTML entity decoder: one linear pass, hidden elements dropped, breaks and whitespace resolved, control characters stripped.",
     "platforms": [
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "97ad6ac652f02d6b",
+  "synced": "66c9ad4f23ef6c1f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -895,20 +895,52 @@ targets:
       - package: swift-http-types
         product: HTTPTypes
 
+  # The mail vocabulary every platform shares: the RPC (MailRequest,
+  # MailResponse, MailClient, MailSource) and the records it carries. Foundation
+  # and GRDB only, so iOS reads mail through the same client the macOS mail
+  # browser uses. Integrations re-exports it.
+  AgenticDeveloperHubSDKMail:
+    type: framework
+    supportedDestinations:
+      - macOS
+      - iOS
+    templates:
+      - SwiftLint
+    sources:
+      - Mail
+    dependencies:
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
   AgenticDeveloperHubSDKHubMailBridge:
     type: framework
-    platform: macOS
+    supportedDestinations:
+      - macOS
+      - iOS
     templates:
       - SwiftLint
     sources:
       - HubMailBridge
     dependencies:
-      - target: AgenticDeveloperHubSDKCore
-      - target: AgenticDeveloperHubSDKIntegrations
+      - target: AgenticDeveloperHubSDKMail
       - target: AgenticDeveloperHubSDKHubMail
+      # HTMLText: snippets and HTML-only bodies read as text.
+      - target: AgenticDeveloperHubSDK-macOS
+        destinationFilters: [macOS]
+      - target: AgenticDeveloperHubSDK-iOS
+        destinationFilters: [iOS]
       # HubMailService: sign-in drives the mirror, so it reaches the session
-      # (HubAuth), the sync engine and the hub client's sync API.
+      # (HubAuth, one target per platform), the sync engine and the hub
+      # client's sync API.
       - target: AgenticDeveloperHubSDKHubAuth-macOS
+        destinationFilters: [macOS]
+      - target: AgenticDeveloperHubSDKHubAuth-iOS
+        destinationFilters: [iOS]
       - target: AgenticDeveloperHubSDKHubSync
       - target: AgenticDeveloperHubSDKSync
       - target: AgenticDeveloperHubSDKDatabase
@@ -920,7 +952,9 @@ targets:
         product: HTTPTypes
     settings:
       base:
+        SDKROOT: auto
         MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
 
   AgenticDeveloperHubSDKHubMailBridgeTests:
     type: bundle.unit-test
@@ -942,10 +976,7 @@ targets:
       - target: AgenticDeveloperHubSDKHubMail
         embed: true
         codeSign: true
-      - target: AgenticDeveloperHubSDKIntegrations
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKMail
         embed: true
         codeSign: true
       - target: AgenticDeveloperHubSDKHubSync
@@ -1072,6 +1103,7 @@ targets:
     sources:
       - Integrations
     dependencies:
+      - target: AgenticDeveloperHubSDKMail
       - target: AgenticDeveloperHubSDKCore
       - target: AIPluginKit
       - target: AgenticDeveloperHubSDKDatabase
@@ -1093,6 +1125,9 @@ targets:
         excludes:
           - "Fixtures/**"
     dependencies:
+      - target: AgenticDeveloperHubSDKMail
+        embed: true
+        codeSign: true
       - target: AgenticDeveloperHubSDKIntegrations
         embed: true
         codeSign: true
@@ -2130,6 +2165,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
       - AgenticDeveloperHubSDKHubMail
       - AgenticDeveloperHubSDKHubMailBridge
       - AgenticDeveloperHubSDKSemanticSearch
@@ -2157,7 +2193,9 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
       - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailBridge
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-iOS
@@ -2211,6 +2249,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKSyncGRDBTests
       - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
       - AgenticDeveloperHubSDKHubMail
       - AgenticDeveloperHubSDKHubMailTests
       - AgenticDeveloperHubSDKHubMailBridge
@@ -2377,6 +2416,19 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKHubMailBridgeTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKMail:
+    build:
+      targets:
+        AgenticDeveloperHubSDKMail: all
+    run:
+      config: Debug
     profile:
       config: Release
     analyze:

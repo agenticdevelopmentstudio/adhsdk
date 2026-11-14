@@ -2,11 +2,11 @@
 id: e12914f0-3a3b-4fb7-ac0c-6332de37de4f
 title: "Hub Mail Bridge"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -14,6 +14,7 @@ summary: "Answers the mail RPC (MailRequest / MailResponse) from the hub-sourced
 platforms:
   - swift
   - macos
+  - ios
 tags:
   - integrations
   - mail
@@ -36,7 +37,7 @@ approved-date: ""
 
 The macOS mail UI (the mail browser, the Email Desktop App and the Integrations settings panel) talks to mail through one seam: a `MailClient` built over a transport that carries an encoded `MailRequest` ([adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191)) and brings back a `MailResponse`. The direct Gmail worker answers that RPC inside `temporald`. `HubMailBridge` answers the same RPC from the hub mail mirror ([adhsdk.ingredient.integrations.hub-mail](cookbook:a6442464-e17d-451e-b47a-3be23a2dc753)) instead, so the host switches a window between hub and direct mail by handing it a different `MailClient`, and none of the UI changes.
 
-It lives in its own macOS-only framework, `AgenticDeveloperHubSDKHubMailBridge` (`HubMailBridge/`), because it is the one place that needs both sides: the mail RPC types from the macOS-only `AgenticDeveloperHubSDKIntegrations` and the hub mirror from the multi-platform `AgenticDeveloperHubSDKHubMail`. Neither of those links the other. iOS reads `HubMailStore` directly and never links this.
+It lives in its own framework, `AgenticDeveloperHubSDKHubMailBridge` (`HubMailBridge/`), built for macOS and iOS, because it is the one place that needs both sides: the mail RPC types from `AgenticDeveloperHubSDKMail` and the hub mirror from `AgenticDeveloperHubSDKHubMail`. Neither of those links the other. It also uses HubAuth, HubSync, Sync, Database, the hub client, and the foundation framework `AgenticDeveloperHubSDK` (for `HTMLText`); it does not link Core or the macOS-only Integrations. An iOS host may read `HubMailStore` directly instead of linking it.
 
 What it does with each request:
 
@@ -45,7 +46,7 @@ What it does with each request:
 - **Sync now** runs a pull.
 - **Administration** (the OAuth client, signing accounts in and out, sync settings) is refused: on the hub path those are managed on the hub.
 
-`HubMailService` keeps a bridge open while a hub identity is signed in. Its `client` is one stable `MailClient` for the app's lifetime: it answers through the current bridge when connected and refuses with a sign-in message otherwise, so windows can hold it from launch. Sign-in opens the mirror and pulls; sign-out purges it. `HubMailService.live` ties the service to a `HubAccount` over one shared session, so signing in from the accounts settings opens hub mail. `MailClient.routed` (in Integrations, with `MailSource`) picks the direct or hub client per request, which is how a host offers a source switch.
+`HubMailService` keeps a bridge open while a hub identity is signed in. Its `client` is one stable `MailClient` for the app's lifetime: it answers through the current bridge when connected and refuses with a sign-in message otherwise, so windows can hold it from launch. Sign-in opens the mirror and pulls; sign-out purges it. `HubMailService.live` ties the service to a `HubAccount` over one shared session, so signing in from the accounts settings opens hub mail. `MailClient.routed` (in the Mail framework, with `MailSource`) picks the direct or hub client per request, which is how a host offers a source switch.
 ## Behavioral Requirements
 
 - **one-entry-point**: `respond(to:)` MUST answer every `MailRequest` with a `MailResponse` and never throw; a failure becomes `.failure(message)`, and a missing account, message or thread becomes `.notFound(message)`.
@@ -190,8 +191,8 @@ Not applicable: no event is recorded.
 The bridge logs nothing; failures are answered to the caller. `HubMailService` logs a failed connect and a failed purge at error level (subsystem `com.agenticdevelopmentstudio.hubmail`, category `service`), with the error message public and no mail content.
 ## Platform Notes
 
-- **SwiftUI**: Not applicable: iOS reads `HubMailStore` directly and has no mail RPC to answer.
-- **AppKit / UIKit**: Source platform: `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/`, macOS only. The host builds `HubMailService.live(databaseURL:deviceId:)` once at launch, shows its `account` in the accounts settings, calls `start()` so a stored login reconnects, and hands `MailClient.routed { source == .hub ? live.service.client : daemonClient }` to the mail browser and the Email App. The Integrations settings panel keeps the daemon's client, because it administers the direct worker.
+- **SwiftUI**: An iOS or macOS SwiftUI host uses the same Swift framework, `AgenticDeveloperHubSDKHubMailBridge`, which builds for both. An iOS host may read `HubMailStore` directly, or link the bridge when it wants the same `MailClient` seam as macOS.
+- **AppKit / UIKit**: Source platform: `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/`, built for macOS and iOS. It depends on the Mail, HubMail, HubAuth, HubSync, Sync and Database frameworks, the hub client, and the foundation framework `AgenticDeveloperHubSDK` (for `HTMLText`); it does not depend on Core or Integrations. The host builds `HubMailService.live(databaseURL:deviceId:)` once at launch, shows its `account` in the accounts settings, calls `start()` so a stored login reconnects, and hands `MailClient.routed { source == .hub ? live.service.client : daemonClient }` to the mail browser and the Email App. The Integrations settings panel keeps the daemon's client, because it administers the direct worker.
 - **Compose**: Not applicable: an Android client reads its mirror directly, as iOS does.
 - **React/Web**: Not applicable: the web app reads the hub API directly and has no local RPC.
 - **WinUI 3**: Not applicable until a Windows host shares one mail UI between two sources; it would follow this shape.
@@ -202,6 +203,7 @@ The bridge logs nothing; failures are answered to the caller. `HubMailService` l
 |----------|----------|-------------|
 | macos | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.0.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.1.0) |
+| ios | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | unverified |
 
 ## Design Decisions
 
@@ -209,8 +211,8 @@ The bridge logs nothing; failures are answered to the caller. `HubMailService` l
 **Rationale**: The mail browser, Email App and settings panel already speak `MailClient`; one adapter at the transport seam switches all three, and the UI keeps one code path while the direct worker still exists.
 **Approved**: pending
 
-**Decision**: A separate macOS framework rather than putting the bridge in Integrations or HubMail.
-**Rationale**: Integrations is macOS-only and HubMail builds for iOS; either holding the bridge would make one link the other. A third framework keeps both deletable on their own, which matters while the owner decides the direct path's fate.
+**Decision**: A separate framework, built for macOS and iOS, rather than putting the bridge in Mail or HubMail.
+**Rationale**: Mail holds the RPC types and HubMail holds the mirror; either holding the bridge would make one link the other. A third framework keeps both deletable on their own, which matters while the owner decides the direct path's fate.
 **Approved**: pending
 
 **Decision**: Write label changes into the mirror after the hub accepts them.
@@ -229,7 +231,7 @@ The bridge logs nothing; failures are answered to the caller. `HubMailService` l
 **Rationale**: A departing identity's mail must not stay readable on the machine. A failed refresh or a launch-time restore says nothing about who is signed in, so purging there would throw away mail for a user who is still signed in.
 **Approved**: pending
 
-**Decision**: `MailClient.routed` and `MailSource` live in Integrations, beside `MailClient`.
+**Decision**: `MailClient.routed` and `MailSource` live in the Mail framework, beside `MailClient`.
 **Rationale**: The router reaches the client's private transport, and the source names belong to the mail RPC, not to the hub. An app picks a source without linking anything new.
 **Approved**: pending
 ## Compliance
@@ -245,5 +247,6 @@ Every vector has a named test in `AgenticDeveloperHubSDKHubMailBridgeTests`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-14 | Mike Fullerton | HubMailBridge now builds for macOS and iOS on the Mail framework, no longer depending on Core or Integrations |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | HubMailService keeps the bridge open across sign-in and purges on sign-out; MailClient.routed and MailSource switch a window's source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

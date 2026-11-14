@@ -7,8 +7,8 @@ status: review
 language: en
 created: 2026-11-14
 modified: 2026-11-14
-author: mfullerton
-copyright: 2026 mfullerton
+author: Mike Fullerton
+copyright: 2026 Mike Fullerton
 license: MIT
 summary: "Stateless HTML-to-plain-text reader and HTML entity decoder: one linear pass, hidden elements dropped, breaks and whitespace resolved, control characters stripped."
 platforms:
@@ -256,6 +256,12 @@ Not applicable: the source contains no log calls.
 - **React/Web**: Port as a TypeScript module of two functions. Iterate with `for...of` or `codePointAt` so astral characters (emoji with joiners) count as one scalar. Do not use `DOMParser` or `innerHTML`: they parse more than this contract does, and running them on mail HTML is the risk this file avoids. The hand-written pass is single-threaded, so there is no ordering concern. Browser `String.prototype.normalize` is not needed.
 - **AppKit / UIKit**: Same Swift file on macOS and iOS; it uses `Unicode.Scalar`, `String.UnicodeScalarView`, `CharacterSet.whitespaces` and `components(separatedBy:)` from Foundation. `CharacterSet.whitespaces` is what turns non-breaking and other Unicode spaces into plain ones in the tidy stage, so a port needs an equivalent Zs-category and tab test. Bridge to `NSTextField` or `UITextView` as plain text, not as attributed text.
 - **WinUI 3**: Port as a `static class HtmlText` with `PlainText(string html)` and `DecodeEntities(string text)`. Enumerate scalars with `string.EnumerateRunes()` (`System.Text.Rune`), not `char`, to match Unicode scalar semantics; `Rune.IsWhiteSpace` and `System.Globalization.UnicodeCategory.SpaceSeparator` stand in for `CharacterSet.whitespaces`. Build output with `StringBuilder`, and hold the tables as `HashSet<string>`, `FrozenDictionary<string, string>` and `Dictionary<uint, string>`. Replace the private-use and control-character markers (U+E000, U+E001, U+0001 to U+0003) with the same scalars, since `StringBuilder` accepts them. Parse numeric references with `uint.TryParse(…, NumberStyles.HexNumber, CultureInfo.InvariantCulture, …)` after checking digits yourself; `uint.TryParse` accepts signs and spaces that the contract rejects. The functions need no `Task` or `async` (they are CPU-bound and pure), so call from `Task.Run` in a view-model for large bodies. Show the result in a `TextBlock` with `IsTextSelectionEnabled="True"`; do not use `RichTextBlock` or a `WebView2` to read the HTML.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text/HTMLText.swift` | unverified |
 
 ## Design Decisions
 

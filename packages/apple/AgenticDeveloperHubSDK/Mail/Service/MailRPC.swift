@@ -110,7 +110,8 @@ public struct MailMessageFilter: Codable, Sendable, Equatable {
         return trimmed
     }
 
-    static func clamp(_ limit: Int) -> Int {
+    /// `limit` brought into `limitRange`; every mail RPC server applies it.
+    public static func clamp(_ limit: Int) -> Int {
         min(max(limit, limitRange.lowerBound), limitRange.upperBound)
     }
 }
@@ -424,7 +425,7 @@ public struct MailClient: Sendable {
     static let threadsUnsupported = MailClientError.remote(
         "The mail service is too old to show threads; restart it and try again.")
     /// What `MailIntegrationService` answers to a request it can't decode.
-    static let badRequest = "bad request"
+    public static let badRequest = "bad request"
 }
 
 /// Where mail is read from: the Gmail integration this app runs itself, or

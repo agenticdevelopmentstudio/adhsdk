@@ -1,6 +1,6 @@
 import Foundation
-import AgenticDeveloperHubSDKCore
-import AgenticDeveloperHubSDKIntegrations
+import AgenticDeveloperHubSDKMail
+import AgenticDeveloperHubSDK
 import AgenticDeveloperHubSDKHubMail
 
 /// Answers the mail RPC (`MailRequest` → `MailResponse`) from the hub mail

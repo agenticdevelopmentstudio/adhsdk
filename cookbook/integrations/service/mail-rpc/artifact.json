@@ -4,18 +4,19 @@
     "id": "fc9671be-170c-436e-9628-892624952191",
     "title": "MailRPC",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "The mail service wire contract: MailRequest and MailResponse, their record types, MailMessageFilter, and MailClient, which checks that an older service honored each filter.",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "mail",
@@ -34,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dfeee8f5292d014f",
+  "synced": "8eb35f6e14245298",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

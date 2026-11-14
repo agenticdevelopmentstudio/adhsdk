@@ -34,7 +34,7 @@
       ],
       "depends_on": [],
       "shared": true,
-      "holds": "AvatarAnimationEngine. The native avatar engine — scene, path, render, anim and runtime.",
+      "holds": "AvatarAnimationEngine. The native avatar engine \u2014 scene, path, render, anim and runtime.",
       "imported_as": [
         "AvatarAnimationEngine"
       ]
@@ -59,7 +59,7 @@
         "apple-adt"
       ],
       "shared": true,
-      "holds": "AgenticDeveloperHubSDKCore. Foundation only — no UI, no platform APIs."
+      "holds": "AgenticDeveloperHubSDKCore. Foundation only \u2014 no UI, no platform APIs."
     },
     {
       "name": "apple-language",
@@ -70,7 +70,7 @@
         "apple-core"
       ],
       "shared": true,
-      "holds": "AgenticDeveloperHubSDKLanguage. The text-document model and the LSP client — Foundation, AgenticDeveloperHubSDKCore and the ChimeHQ JSONRPC/LanguageServerProtocol/LanguageClient stack. No AppKit, so it is daemon-safe; the AppKit face of a TextDocument is TextDocumentStorage one tier up in apple-macos. LanguageServerProtocol's Position/Range/TextEdit/Diagnostic vocabulary is the document model's vocabulary, which is why the two live in one framework rather than two."
+      "holds": "AgenticDeveloperHubSDKLanguage. The text-document model and the LSP client \u2014 Foundation, AgenticDeveloperHubSDKCore and the ChimeHQ JSONRPC/LanguageServerProtocol/LanguageClient stack. No AppKit, so it is daemon-safe; the AppKit face of a TextDocument is TextDocumentStorage one tier up in apple-macos. LanguageServerProtocol's Position/Range/TextEdit/Diagnostic vocabulary is the document model's vocabulary, which is why the two live in one framework rather than two."
     },
     {
       "name": "apple-pluginkit",
@@ -231,7 +231,7 @@
         "apple-adt"
       ],
       "shared": true,
-      "holds": "AgenticDeveloperHubSDKMarkdown. The GRDB-backed markdown note store, built for macOS and iOS, re-exporting AgenticDeveloperHubSDK. Storage and sync only — no UI."
+      "holds": "AgenticDeveloperHubSDKMarkdown. The GRDB-backed markdown note store, built for macOS and iOS, re-exporting AgenticDeveloperHubSDK. Storage and sync only \u2014 no UI."
     },
     {
       "name": "apple-hubsync",
@@ -261,6 +261,15 @@
       "holds": "AgenticDeveloperHubSDKHubMail. Hub-sourced mail: the typed mirror projection of the hub's Gmail tables, HubMailStore reads, HubMailSync (engine wiring, sign-out purge) and HubMailSender (the hub's send action). macOS and iOS."
     },
     {
+      "name": "apple-mail",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/Mail/"
+      ],
+      "depends_on": [],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKMail. The mail vocabulary every platform shares: the mail RPC (MailRequest, MailResponse, MailClient, MailSource, MailClient.routed) and the records it carries. Foundation and GRDB only; macOS and iOS. Integrations re-exports it."
+    },
+    {
       "name": "apple-integrations",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Integrations/"
@@ -268,7 +277,8 @@
       "depends_on": [
         "apple-core",
         "apple-pluginkit",
-        "apple-database"
+        "apple-database",
+        "apple-mail"
       ],
       "shared": true,
       "holds": "AgenticDeveloperHubSDKIntegrations. Third-party service integrations (Gmail): models, store, client, sync."
@@ -279,8 +289,8 @@
         "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/"
       ],
       "depends_on": [
-        "apple-core",
-        "apple-integrations",
+        "apple-adt",
+        "apple-mail",
         "apple-hubmail",
         "apple-hubauth",
         "apple-hubsync",
@@ -289,7 +299,7 @@
         "apple-hubclient"
       ],
       "shared": true,
-      "holds": "AgenticDeveloperHubSDKHubMailBridge. Answers the mail RPC (MailRequest/MailResponse) from the hub mail mirror, so the mail browser and Email App read hub-synced mail through MailClient; label writes go through the hub. HubMailService ties the hub session to the mirror: open and sync on sign-in, purge on sign-out, one stable MailClient. macOS."
+      "holds": "AgenticDeveloperHubSDKHubMailBridge. Answers the mail RPC (MailRequest/MailResponse) from the hub mail mirror, so the mail browser and Email App read hub-synced mail through MailClient; label writes go through the hub. HubMailService ties the hub session to the mirror: open and sync on sign-in, purge on sign-out, one stable MailClient. macOS and iOS."
     },
     {
       "name": "apple-activity",
@@ -395,7 +405,7 @@
         "apple-hubauth"
       ],
       "shared": true,
-      "holds": "AgenticDeveloperHubSDKHubService. The hub's workspaces, API adapters and permissions — no UI. The session and transport live in AgenticDeveloperHubSDKHubAuth below it."
+      "holds": "AgenticDeveloperHubSDKHubService. The hub's workspaces, API adapters and permissions \u2014 no UI. The session and transport live in AgenticDeveloperHubSDKHubAuth below it."
     },
     {
       "name": "apple-hubui",
@@ -518,7 +528,8 @@
         "apple-menubar",
         "apple-hubsync",
         "apple-hubmail",
-        "apple-hubmailbridge"
+        "apple-hubmailbridge",
+        "apple-mail"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."
@@ -567,7 +578,7 @@
       ],
       "depends_on": [],
       "shared": false,
-      "holds": "The build and test toolchain every package's own `vitest.config.ts` and `tsup.config.ts` extends: the workspace-root presets, plus the two that happen to sit inside `features/` — a shared preset is toolchain wherever it physically lives, and longest-prefix matching is what lets those two files say so without moving. This is the one thing packages legitimately reach up to, so it is its own foundation tier rather than part of the `web-workspace` catch-all; otherwise every package in the repo reads as importing upward. Paths are spelled without extensions because a relative import resolves that way. Not shared: config to extend, not components to build on."
+      "holds": "The build and test toolchain every package's own `vitest.config.ts` and `tsup.config.ts` extends: the workspace-root presets, plus the two that happen to sit inside `features/` \u2014 a shared preset is toolchain wherever it physically lives, and longest-prefix matching is what lets those two files say so without moving. This is the one thing packages legitimately reach up to, so it is its own foundation tier rather than part of the `web-workspace` catch-all; otherwise every package in the repo reads as importing upward. Paths are spelled without extensions because a relative import resolves that way. Not shared: config to extend, not components to build on."
     },
     {
       "name": "web-adh",
@@ -591,7 +602,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@adh-sdk/adh. Family site chrome — header, footer, legal, themes, debug."
+      "holds": "@adh-sdk/adh. Family site chrome \u2014 header, footer, legal, themes, debug."
     },
     {
       "name": "web-adh-api-types",
@@ -621,7 +632,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@adh-sdk/adh-next-config` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/adh-next-config` package \u2014 a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-adh-registry",
@@ -659,7 +670,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@adh-sdk/adh-site-homes` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/adh-site-homes` package \u2014 a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-adh-ui",
@@ -671,7 +682,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "The `@adh-sdk/adh-ui` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/adh-ui` package \u2014 a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-api-explorer",
@@ -777,7 +788,7 @@
         "web-viewport"
       ],
       "shared": true,
-      "holds": "One package per product area. New feature code is expected here — but a piece that two features would both want belongs one tier down."
+      "holds": "One package per product area. New feature code is expected here \u2014 but a piece that two features would both want belongs one tier down."
     },
     {
       "name": "web-markdown",
@@ -825,7 +836,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@adh-sdk/next-env` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/next-env` package \u2014 a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-next-headers",
@@ -836,7 +847,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@adh-sdk/next-headers` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/next-headers` package \u2014 a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-next-preflight",
@@ -847,7 +858,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@adh-sdk/next-preflight` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/next-preflight` package \u2014 a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-persona",
@@ -955,7 +966,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/chat. React chat component library — InlineChat, ThreePaneChat, MobileChat, PersonaChat with pluggable backends."
+      "holds": "@adh-sdk/chat. React chat component library \u2014 InlineChat, ThreePaneChat, MobileChat, PersonaChat with pluggable backends."
     },
     {
       "name": "web-chrome",
@@ -966,7 +977,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/chrome. Site-chrome primitives — the menu button and the close glyph derived from it, with the bar geometry in one place so every site rasterises them the same way."
+      "holds": "@adh-sdk/chrome. Site-chrome primitives \u2014 the menu button and the close glyph derived from it, with the bar geometry in one place so every site rasterises them the same way."
     },
     {
       "name": "web-editing",
@@ -990,7 +1001,7 @@
         "web-textlens"
       ],
       "shared": true,
-      "holds": "@adh-sdk/landing. Snap-scrolling long-form landing page kit — Deck, Screen, NavChrome and a block vocabulary, themed by CSS custom properties. HeroNav's sweep is web-textlens's lens."
+      "holds": "@adh-sdk/landing. Snap-scrolling long-form landing page kit \u2014 Deck, Screen, NavChrome and a block vocabulary, themed by CSS custom properties. HeroNav's sweep is web-textlens's lens."
     },
     {
       "name": "web-site-template",
@@ -1006,7 +1017,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/site-template. The content-site frame every content site renders — a window-tall hero, the scrolling bands, the burger drawer and bitbag — built on the landing kit. A site supplies its copy and its custom slots, and nothing of the frame."
+      "holds": "@adh-sdk/site-template. The content-site frame every content site renders \u2014 a window-tall hero, the scrolling bands, the burger drawer and bitbag \u2014 built on the landing kit. A site supplies its copy and its custom slots, and nothing of the frame."
     },
     {
       "name": "web-popover",
@@ -1017,7 +1028,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/popover. Hover popover with a pointing arrow — an anchored panel, the tail that points back at its trigger, the invisible bridge that lets the pointer cross the gap, and the one-open-at-a-time hover-intent state a row of them needs."
+      "holds": "@adh-sdk/popover. Hover popover with a pointing arrow \u2014 an anchored panel, the tail that points back at its trigger, the invisible bridge that lets the pointer cross the gap, and the one-open-at-a-time hover-intent state a row of them needs."
     },
     {
       "name": "web-registry-profile",
@@ -1029,7 +1040,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/registry-profile. The public registry-entry profile renderer. Takes a serialized entry and renders it — no fetching, no auth, no adh imports, so it drops into anyone's site."
+      "holds": "@adh-sdk/registry-profile. The public registry-entry profile renderer. Takes a serialized entry and renders it \u2014 no fetching, no auth, no adh imports, so it drops into anyone's site."
     },
     {
       "name": "web-registry-types",
@@ -1040,7 +1051,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/registry-types. Framework-free registry field-type catalog: type ids, config shapes, validators and value coercion. No React, no runtime dependencies — the backend vendors this file so both sides validate owner-defined values against the same rules."
+      "holds": "@adh-sdk/registry-types. Framework-free registry field-type catalog: type ids, config shapes, validators and value coercion. No React, no runtime dependencies \u2014 the backend vendors this file so both sides validate owner-defined values against the same rules."
     },
     {
       "name": "web-status-server",
@@ -1052,7 +1063,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/status-server. A status monitor's server: Hono app factory, monitor cycle, board, routes, OpenAPI, MCP, peers, telemetry, storage and the libSQL implementation. No React, no Next, no DOM — a backend host depends on this package alone."
+      "holds": "@adh-sdk/status-server. A status monitor's server: Hono app factory, monitor cycle, board, routes, OpenAPI, MCP, peers, telemetry, storage and the libSQL implementation. No React, no Next, no DOM \u2014 a backend host depends on this package alone."
     },
     {
       "name": "web-status-web",
@@ -1088,7 +1099,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@adh-sdk/viewport. Page-shell primitives for iOS-correct viewport + keyboard handling — ViewportShell, ViewportSpacer, ViewportComposer, useKeyboardInset, usePageScrollLock."
+      "holds": "@adh-sdk/viewport. Page-shell primitives for iOS-correct viewport + keyboard handling \u2014 ViewportShell, ViewportSpacer, ViewportComposer, useKeyboardInset, usePageScrollLock."
     },
     {
       "name": "web-site",
@@ -1103,7 +1114,7 @@
         "web-ui"
       ],
       "shared": false,
-      "holds": "The in-repo demo sites — websites/demo/, websites/site/ — and websites/run.sh. Outside the pnpm workspace; they consume the packages through file: refs, the way an external consumer would."
+      "holds": "The in-repo demo sites \u2014 websites/demo/, websites/site/ \u2014 and websites/run.sh. Outside the pnpm workspace; they consume the packages through file: refs, the way an external consumer would."
     },
     {
       "name": "apple-project",
@@ -1112,7 +1123,7 @@
       ],
       "depends_on": [],
       "shared": false,
-      "holds": "The Xcode/SwiftPM scaffolding around the frameworks: the workspace and xcodeproj, their shared schemes, project.yml, the Makefile, .swiftlint.yml and .swiftpm mirrors. Longest-prefix match sends every framework directory — including Language/ and Markdown/, which landed here for want of a tier until they got one — to its own tier, so only the build scaffolding lands here."
+      "holds": "The Xcode/SwiftPM scaffolding around the frameworks: the workspace and xcodeproj, their shared schemes, project.yml, the Makefile, .swiftlint.yml and .swiftpm mirrors. Longest-prefix match sends every framework directory \u2014 including Language/ and Markdown/, which landed here for want of a tier until they got one \u2014 to its own tier, so only the build scaffolding lands here."
     },
     {
       "name": "terminal-toolkit",
@@ -1131,7 +1142,7 @@
       ],
       "depends_on": [],
       "shared": false,
-      "holds": "Placeholders for targets that do not exist yet — a .gitkeep under packages/android/ and packages/windows/ and nothing else. Named platform-stubs rather than android or windows because a tier name is matched against import specifiers."
+      "holds": "Placeholders for targets that do not exist yet \u2014 a .gitkeep under packages/android/ and packages/windows/ and nothing else. Named platform-stubs rather than android or windows because a tier name is matched against import specifiers."
     },
     {
       "name": "web-workspace",
@@ -1149,7 +1160,7 @@
       ],
       "depends_on": [],
       "shared": false,
-      "holds": "Python maintenance scripts run against the workspace by hand — content extraction and validation, and the chat-types copy verifier. They read the tree; nothing in the tree imports them."
+      "holds": "Python maintenance scripts run against the workspace by hand \u2014 content extraction and validation, and the chat-types copy verifier. They read the tree; nothing in the tree imports them."
     },
     {
       "name": "repo-docs",
@@ -1184,7 +1195,7 @@
       ],
       "depends_on": [],
       "shared": false,
-      "holds": "The library cookbook — cookbook/cookbook.json, cookbook/index.json and one versioned source-folder spec per shared component (button, dialog, data-table, crud-table…) in cookr format 2, with the code roots mapped in .cookr.json, grouped by concept from general to specific and described without a platform in mind, each listing its code in a Reference Implementations table and its platform specifics in Platform Notes. Prose, and the human-readable index of what web-ui and its siblings already export: read it before proposing a new component."
+      "holds": "The library cookbook \u2014 cookbook/cookbook.json, cookbook/index.json and one versioned source-folder spec per shared component (button, dialog, data-table, crud-table\u2026) in cookr format 2, with the code roots mapped in .cookr.json, grouped by concept from general to specific and described without a platform in mind, each listing its code in a Reference Implementations table and its platform specifics in Platform Notes. Prose, and the human-readable index of what web-ui and its siblings already export: read it before proposing a new component."
     },
     {
       "name": "repo-tools",
