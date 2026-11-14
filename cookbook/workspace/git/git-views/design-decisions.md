@@ -35,3 +35,23 @@
 **Rationale**: The model takes the new query before it awaits the log, so its query says nothing about whether results have arrived.
 **Approved**: pending
 
+**Decision**: One changed-files list (`GitFileListViewController`) serves the commit detail and both working-copy lists, and its row model `GitFileListItem` lives in `AgenticDeveloperHubSDKCore`.
+**Rationale**: The same row in three places is one component (DRY); the item's mapping from a status entry or a diff is pure Foundation, so Core is the lowest tier that can hold it.
+**Approved**: pending
+
+**Decision**: The file list, commit detail and working copy delegates take an optional (`GitFileListItem?`, `GitDiffTarget?`) and report nil when the selection clears.
+**Rationale**: The owner shows a diff for the selection; without the nil a removed file's diff would stay on screen after a refresh (Review Focus: stale selection clears). The history list's delegate does the same.
+**Approved**: pending
+
+**Decision**: The commit detail reports a file as the `GitFileListItem` and the commit, not as a diff target.
+**Rationale**: The owner builds the target (`.commit(id, paths:)`) for the diff view; the item carries the old path a rename's diff needs.
+**Approved**: pending
+
+**Decision**: The commit detail's latest-call-wins check is its own counter, bumped before it awaits, and the list empties when a different commit is shown.
+**Rationale**: A check on state the content source changes before it awaits would let an older diff through; emptying at once means the header and the files never disagree.
+**Approved**: pending
+
+**Decision**: The commit detail lists the diff's files rather than a separate `--name-status` call.
+**Rationale**: The diff is the one source the content source offers and its parser already reads renames, copies and binaries; a second call per commit is a second process for the same facts.
+**Approved**: pending
+

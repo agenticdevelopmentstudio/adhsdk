@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-13
@@ -10,7 +10,7 @@ modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees) and the history list (graph, subject with ref badges, author, date, short sha; paging; search)."
+summary: "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees) the history list (graph, subject with ref badges, author, date, short sha; paging; search), the shared changed-files list, the commit detail (message, people, sha, parent links, changed files) and the working copy (staged and unstaged lists)."
 platforms:
   - swift
   - macos
@@ -20,6 +20,8 @@ tags:
   - sidebar
   - history
   - search
+  - commit-detail
+  - working-copy
 depends-on:
   - a2394ca0-3988-410b-9fc8-e0c9e253fc94
   - ce223be3-818a-4310-b136-9e1e84e9af54
@@ -32,6 +34,7 @@ related:
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/ (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -42,6 +45,9 @@ approved-date: ""
 
 The views of a git window: each one an AppKit view controller that reads one narrow data-source protocol of the [git repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) and reports what the user chose to a delegate, injected, so none of them knows its window or calls git. This recipe has one section per view. The **refs sidebar** (`GitRefsSidebarViewController`) lists, on the toolkit's [topic list](cookbook:ce223be3-818a-4310-b136-9e1e84e9af54), the working copy, the local branches, the remote branches grouped by remote, the tags, the stashes, the submodules and every non-bare worktree (the main one and the one the window is on included), with ahead/behind badges on branches that track an upstream and the checked-out branch in bold.
 The **history list** (`GitHistoryViewController`) is a paged table of the [commit graph cell](cookbook:595f1a5e-0f92-49c5-a980-af6f809be932), the subject behind a [badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f) per ref at the commit, the author's [avatar](cookbook:e3a2394d-d0d0-4495-bde4-59197f9d7866) and name, the [relative date](cookbook:873f79b1-444d-4c2c-8a5f-4fc01cd9022e) and the short sha. It reads a `GitHistoryDataSource`, asks for the next page as the end of the list comes into view, and takes the window's search text through `setQuery(_:)`, which `GitHistorySearch.parse(_:)` (Foundation only, in `AgenticDeveloperHubSDKCore`) turns into a `GitLogQuery`.
+The **changed-files list** (`GitFileListViewController`) is one list of `GitFileListItem`s (`AgenticDeveloperHubSDKCore`), each a status letter in its status colour, the file type's icon and the path (`old → new` for a rename), reused wherever the window lists files.
+The **commit detail** (`GitCommitDetailViewController`) shows one commit's subject, body, author and committer with their avatars, dates, full sha with a copy button and its parents as links, over a changed-files list read from the `GitContentSource`'s diff of that commit; the latest `show(commit:)` always wins over a load still in flight.
+The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyDataSource`'s staged and unstaged files in two changed-files lists and reports the selected file as the `GitDiffTarget` that shows its diff.
 
 ## Behavioral Requirements
 
@@ -68,6 +74,32 @@ The **history list** (`GitHistoryViewController`) is a paged table of the [commi
 - **history-set-query**: `setQuery(_:)` MUST parse the text, and when the parsed query differs from the one the list last sent (applied or in flight; the data source's query before the first search), send it to the data source. A parsed query equal to one still in flight MUST wait for that request rather than skip or resend it, because the data source takes a new query before its results arrive. The latest call then reloads. For the `sha:` form it MUST then select the first loaded commit whose id starts with the prefix (case-insensitively), as `select(commitID:)` does; no match selects nothing. A `setQuery` overtaken by a later one MUST NOT select.
 - **history-ui-thread**: The history list MUST be used on the UI thread; every data-source call that waits is awaited, never blocked on.
 
+### Changed-files list
+
+- **file-list-item**: A `GitFileListItem` made from a `GitFileChange` MUST take its path and status and have no old path. One made from a `GitFileDiff` MUST take the diff's `path` (the new path, or the old one for a deleted file) and the status of its change (added `A`, deleted `D`, modified and type-changed `M`, renamed `R`, copied `C`), and an old path only for a rename or copy whose old path differs from its new one. Its `title` MUST be `<old> → <new>` when it has an old path and the path otherwise; its id is its path.
+- **file-list-rows**: The list MUST show one row per item of `files`, in order, each with the status letter (`GitFileStatus.displayCharacter`) in the status's colour (`GitFileStatus.nsColor`), the SF Symbol `FileTypeIcons.builtInIcon(for:)` names for the path's extension (`doc` when it names none), and the title, truncated in the middle with the whole title as its tooltip.
+- **file-list-selection**: Selecting a row MUST call the delegate's `fileList(_:didSelect:)` once with that item; clearing the selection calls it once with nil. `clearSelection()` MUST deselect without calling the delegate.
+- **file-list-files**: Setting `files` MUST keep a selected item whose path is still listed selected without calling the delegate; when the selected path is gone, the list MUST deselect and call the delegate once with nil.
+- **file-list-ui-thread**: The changed-files list MUST be used on the UI thread.
+
+### Commit detail
+
+- **detail-header**: `show(commit:)` with a commit MUST fill the header at once: the subject (heading); the body, wrapped, hidden when empty; an author row and a committer row, each an `AvatarView` of side 28 showing initials seeded by the person's email with no picture URL, the name followed by `<email>`, and the date as `date.formatted(date: .abbreviated, time: .shortened)` with `RelativeDateFormatting.string(for:)` as its tooltip; the full sha in the theme's code font beside a copy button; and a parents row with one link per parent, in order, titled with the parent's first eight characters, hidden for a root commit.
+- **detail-copy-sha**: The copy button MUST put the full sha on the pasteboard as a string, replacing what was there.
+- **detail-parent-link**: Pressing a parent link MUST call the delegate's `commitDetail(_:didSelectCommit:)` once with that parent's full sha.
+- **detail-files**: After the header, the detail MUST ask the content source for `diff(.commit(<sha>, paths: []), options: GitDiffOptions())` and list each of its files, in order, as `GitFileListItem(diff:)` in its changed-files list (context `commit`). Showing a different commit MUST empty the list at once, so it never lists another commit's files; showing the same commit again keeps the list (and its selection) until the new diff arrives. A diff that throws leaves the list empty.
+- **detail-latest-wins**: The latest `show(commit:)` MUST win: a diff requested by an earlier call never changes the list, whichever order the diffs finish in. The check is the detail's own call counter, taken before it awaits, never state the content source changes.
+- **detail-file-selection**: Selecting a file MUST call the delegate's `commitDetail(_:didSelectFile:in:)` once with that item and the shown commit; clearing the selection, or a list change that removes the selected file, calls it once with nil.
+- **detail-clear**: `show(commit: nil)` MUST empty the header and the list and cancel any diff in flight.
+- **detail-ui-thread**: The commit detail MUST be used on the UI thread; the diff is awaited, never blocked on.
+
+### Working copy
+
+- **wc-lists**: The working copy MUST show two changed-files lists, `Staged` (context `staged`) over the data source's `staged` files and `Unstaged` (context `unstaged`) over its `unstaged` files, in the data source's order, each item `GitFileListItem(change:)`, each under a header titled `Staged (<count>)` or `Unstaged (<count>)`.
+- **wc-selection**: Selecting a file MUST call the delegate's `workingCopy(_:didSelect:)` once with its diff target: a staged file `.staged(paths: [path])`, an untracked unstaged file `.untracked(path:)`, any other unstaged file `.unstaged(paths: [path])`. Selecting in one list MUST clear the other without a delegate call for the clearing. Clearing the selection calls the delegate once with nil.
+- **wc-reload**: `reload()` MUST re-read both lists from the data source. A selected file still in its list stays selected without a delegate call; one that left its list is deselected and the delegate is called once with nil.
+- **wc-ui-thread**: The working copy MUST be used on the UI thread.
+
 ## Appearance
 
 ### Refs sidebar
@@ -77,6 +109,18 @@ The topic list's appearance throughout. Icons (SF Symbols): working copy `square
 ### History list
 
 A `ThemedTableView` in a `ThemedScrollView`, with a themed header and themed row selection. The subject is body text in the primary colour; the author name and the date are body text in the secondary colour; the sha is the code font in the secondary colour. Ref badges are the toolkit's `Badge`: local branch filled `accent`, remote branch outlined `accent`, tag outlined `warning`, repainted on a theme change. The avatar is 18 points and shows initials only.
+
+### Changed-files list
+
+A headerless, single-column `ThemedTableView` in a `ThemedScrollView`, with themed row selection. Each row: the status letter in the code font, coloured by status (modified orange, added and untracked green, deleted red, renamed and copied blue, conflicted purple, ignored grey); the file type's SF Symbol in the secondary colour; the title as body text in the primary colour, truncated in the middle.
+
+### Commit detail
+
+The header scrolls on its own above the changed-files list and takes at most half the detail's height. The subject is heading text, the body body text, both selectable; the names primary body text, emails and dates secondary; the sha the code font in the secondary colour, followed by a borderless `doc.on.doc` copy button. Parent links are borderless buttons titled in the accent colour and code font. The avatars are 28 points and show initials only.
+
+### Working copy
+
+Two panes in a horizontal-divider `ThemedSplitView`, staged above unstaged, each a heading-weight caption header over its changed-files list.
 
 ## States
 
@@ -93,6 +137,24 @@ A `ThemedTableView` in a `ThemedScrollView`, with a themed header and themed row
 - **Selected commit removed**: after a reload that no longer contains the selected commit, nothing is selected and the delegate is told nil.
 - **Repository deleted**: the data source keeps its last values, so the list keeps its last rows.
 
+### Changed-files list
+
+- **Empty**: no rows, and no text stands in for them.
+- **Selected file removed**: after `files` no longer lists it, nothing is selected and the delegate is told nil.
+
+### Commit detail
+
+- **Nothing shown**: before the first `show(commit:)` and after `show(commit: nil)`, the header is empty and the list has no rows.
+- **Loading**: the header shows the new commit while its list is empty until the diff arrives.
+- **Diff failed**: the header stays, the list stays empty.
+- **Repository deleted**: the shown header and list stay until the next `show(commit:)`.
+
+### Working copy
+
+- **Clean**: both lists are empty, headers `Staged (0)` and `Unstaged (0)`.
+- **Unborn repository**: staged files are listed as added; nothing throws.
+- **Selected file moved or gone**: after a reload that no longer lists it in its list, nothing is selected and the delegate is told nil.
+
 ## Accessibility
 
 ### Refs sidebar
@@ -102,6 +164,18 @@ The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic
 ### History list
 
 The root view carries `git.history`, its scroll view `git.history.scroll`, the table `git.history.table`, each row view `git.history.row`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`. Rows are table rows, so `dev.py ax --nth` picks one.
+
+### Changed-files list
+
+The root view carries `git.fileList.<context>` (`commit`, `staged`, `unstaged`), its scroll view `git.fileList.<context>.scroll` and its table `git.fileList.<context>.table`. Each row view carries `git.fileList.row`, each cell `git.fileList.file`, and within it `git.fileList.status`, `git.fileList.icon` and `git.fileList.title`. The status letter's accessibility label is the status's name (`modified`, `added`, …).
+
+### Commit detail
+
+The root view carries `git.detail`, the header's scroll view `git.detail.header`; then `git.detail.subject`, `git.detail.body`, `git.detail.author`, `git.detail.committer` (each row; its avatar keeps `avatar`), `git.detail.sha`, `git.detail.copySha` (accessibility label `Copy SHA`) and `git.detail.parent` for each parent link (use `dev.py ax --nth` for a merge). Its list is `git.fileList.commit`.
+
+### Working copy
+
+The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`.
 
 ## Conformance Test Vectors
 
@@ -129,6 +203,20 @@ The root view carries `git.history`, its scroll view `git.history.scroll`, the t
 | git-views-020 | history-set-query | Source filtered by author `Someone`; `setQuery("sha:a")` held, then `setQuery("sha:ab")`; the cleared list holds `c000…`, `ab12…`, `c002…` | The source receives the default query once; row 1 (`ab12…`) is selected and the delegate hears it once. |
 | git-views-021 | history-paging, history-reload | 120 commits shown; the source clears its commits; row 10 appears | No `loadMore`; the table still has 120 rows. |
 | git-views-022 | history-reload | Tag `v1` added at a commit after the last reload | No badge until `reload()`; then `v1`. |
+| git-views-023 | file-list-item | Changes `a.swift` modified and `new file.txt` untracked; diffs: added `b`, deleted `old.c`, modified `m.py`, type-changed `link`, renamed `src/a.swift` → `src/b.swift` (90), copied `x` → `y` (100), renamed with identical paths `same` | Items `a.swift` M no old path, `new file.txt` ? no old path; `b` A, `old.c` D, `m.py` M, `link` M, `src/b.swift` R old `src/a.swift` titled `src/a.swift → src/b.swift`, `y` C old `x`, `same` R no old path titled `same`. |
+| git-views-024 | file-list-rows | Items `Sources/App.swift` M, `README.md` A, `Makefile` D, `ünï cødé/a b.json` R from `x.json` | Four rows: `M` orange, `swift`, `Sources/App.swift`; `A` green, `doc.richtext`, `README.md`; `D` red, `doc`, `Makefile`; `R` blue, `curlybraces`, `x.json → ünï cødé/a b.json`, tooltip the same. |
+| git-views-025 | file-list-selection, file-list-files | Select row 1; set `files` with an item inserted above it; set `files` without it; `clearSelection()` after selecting again | Delegate item 1 once; nothing, row 2 selected; nil once; nothing for the clearing. |
+| git-views-026 | detail-header | A commit with subject `Fix it`, body `Line one\n\nLine two`, author `Ann Lee <ann@example.com>`, committer `Bob Roe <bob@example.com>`, parents `p1…`, `p2…` | Subject, body, author `Ann Lee <ann@example.com>` with avatar seeded `ann@example.com`, committer likewise, absolute dates with relative tooltips, the 40-character sha, two parent links titled with eight characters. |
+| git-views-027 | detail-header | A root commit with an empty body | Body hidden; parents row hidden. |
+| git-views-028 | detail-copy-sha, detail-parent-link | Press copy; press the second parent link | Pasteboard holds the full sha; delegate `didSelectCommit` `p2…` once. |
+| git-views-029 | detail-files, detail-file-selection | The source's diff for the commit lists `a.swift` modified and `b` renamed from `a`; select row 1 | The source is asked for `.commit(<sha>, paths: [])` with default options; rows `a.swift`, `a → b`; delegate `didSelectFile` `b` in the commit. |
+| git-views-030 | detail-latest-wins | `show(A)` held; `show(B)` returns at once; then A's diff is released | The list shows B's files; A's never appear. |
+| git-views-031 | detail-latest-wins | `show(A)` held; `show(B)` held; B released first, then A | The list shows B's files. |
+| git-views-032 | detail-files, detail-clear | `show(A)` loaded; `show(B)` held; then `show(nil)` | While B is held the list is empty and the header is B's; after nil, the header and list are empty and B's diff, released, changes nothing. |
+| git-views-033 | detail-files | The source's diff throws | The header shows the commit; the list is empty. |
+| git-views-034 | wc-lists | Staged `a` added; unstaged `b` modified, `c` untracked | Headers `Staged (1)`, `Unstaged (2)`; rows `a`; `b`, `c`. |
+| git-views-035 | wc-selection | Select `a` (staged), then `c` (unstaged untracked), then `b` | Delegate `.staged(paths: ["a"])`, `.untracked(path: "c")`, `.unstaged(paths: ["b"])`, once each; the staged list is cleared when `c` is selected, with no nil reported. |
+| git-views-036 | wc-reload | `b` selected; reload with `b` still unstaged; reload with `b` staged instead | Nothing on the first reload; nil once on the second. |
 
 ## Edge Cases
 
@@ -148,6 +236,19 @@ The root view carries `git.history`, its scroll view `git.history.scroll`, the t
 - **History, typing while a search is in flight**: `fix` then `fix ` (or `sha:a` then `sha:ab` while a filter clears) parse to the query already in flight; the later call waits for it, then reloads and selects.
 - **History, non-UTF-8 messages**: shown as the model decoded them (lossily), never dropped.
 
+- **Files, awkward paths**: spaces, unicode and tabs are shown as they are; a path holding a newline stays on one row (single-line label) and its tooltip holds the whole path.
+- **Files, a path with no extension** (`Makefile`) or a dot file (`.gitignore`, whose extension is empty): the `doc` icon.
+- **Files, the same path twice**: the id is the path, so the selection kept across a `files` change is the first row with that path.
+- **Commit detail, a merge**: one parent link per parent; the list is the diff against the first parent.
+- **Commit detail, a root commit**: no parents row; the list is the diff against the empty tree.
+- **Commit detail, a stash**: a stash is a commit and shows as one, its list the diff against its first parent.
+- **Commit detail, quick selection changes**: each `show(commit:)` bumps the detail's own counter before awaiting; a diff that returns for an older call is dropped, so arrow-keying down the history never leaves an earlier commit's files under a later header.
+- **Commit detail, a binary file**: one row like any other; the diff view decides how to show it.
+- **Commit detail, non-UTF-8 message**: shown as the model decoded it (lossily).
+- **Working copy, unborn HEAD**: staged files list as added; selecting one reports `.staged`, which the client diffs against the empty tree.
+- **Working copy, a conflicted file**: listed unstaged with `U` in purple; selecting it reports `.unstaged`.
+- **Working copy, a file both staged and modified**: listed in both lists; each selection reports its own target.
+
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -156,6 +257,14 @@ The root view carries `git.history`, its scroll view `git.history.scroll`, the t
 | `delegate` | `GitRefsSidebarDelegate?` | nil | Told what the user selected. |
 | `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query and the refs at a commit, and asks for pages and queries. |
 | `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil. |
+| `identifier` (file list) | `String` | none | The list's context (`commit`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
+| `files` (file list) | `[GitFileListItem]` | `[]` | The rows. |
+| `delegate` (file list) | `GitFileListDelegate?` | nil | Told which item is selected, or nil. |
+| `source` (detail) | `GitContentSource` | none | Where the commit detail reads the commit's diff. |
+| `pasteboard` (detail) | `NSPasteboard` | `.general` | Where the copy button puts the sha. |
+| `delegate` (detail) | `GitCommitDetailDelegate?` | nil | Told which parent link and which file were chosen. |
+| `source` (working copy) | `GitWorkingCopyDataSource` | none | Where the working copy reads its staged and unstaged files. |
+| `delegate` (working copy) | `GitWorkingCopyDelegate?` | nil | Told the selected file's diff target, or nil. |
 
 ## Deep Linking
 
@@ -165,6 +274,7 @@ Not applicable: the views define no URL scheme, route or navigation destination.
 
 Section titles (`Workspace`, `Branches`, `Remotes · <remote>`, `Tags`, `Stashes`, `Submodules`, `Worktrees`) and `Working Copy` are English literals today; ref names, messages and paths are shown verbatim.
 The history list's column titles (`Graph`, `Subject`, `Author`, `Date`, `SHA`) are English literals today; relative and absolute dates follow the current locale; the search prefixes (`author:`, `sha:`, `-S`) are not localized.
+The working copy's headers (`Staged (<count>)`, `Unstaged (<count>)`), the commit detail's field captions (`Author`, `Committer`, `SHA`, `Parents`) and the copy button's label (`Copy SHA`) are English literals today; detail dates follow the current locale; status letters are git's and are not localized.
 
 ## Accessibility Options
 
@@ -191,15 +301,16 @@ Not applicable: the views log nothing; the model logs failed loads.
 - **SwiftUI**: A `List` with `Section`s and `.badge(_:)` would serve; this toolkit's views are AppKit.
 - **Compose**: A `LazyColumn` with sticky headers; the badge as trailing text.
 - **React/Web**: A listbox with grouped options; the badge as a trailing span.
-- **AppKit / UIKit**: AppKit: `@MainActor public final class GitRefsSidebarViewController: NSViewController` in `AgenticDeveloperHubSDKMacOS`, hosting a `TopicListViewController` as a child; `@MainActor public final class GitHistoryViewController: NSViewController` on a `ThemedTableView`, and `public enum GitHistorySearch` in `AgenticDeveloperHubSDKCore`. UIKit: not applicable (no git on iOS).
+- **AppKit / UIKit**: AppKit: `@MainActor public final class GitRefsSidebarViewController: NSViewController` in `AgenticDeveloperHubSDKMacOS`, hosting a `TopicListViewController` as a child; `@MainActor public final class GitHistoryViewController: NSViewController` on a `ThemedTableView`, and `public enum GitHistorySearch` in `AgenticDeveloperHubSDKCore`; `GitFileListViewController`, `GitCommitDetailViewController` and `GitWorkingCopyViewController` likewise, with `public struct GitFileListItem` in `AgenticDeveloperHubSDKCore`. UIKit: not applicable (no git on iOS).
 - **WinUI 3**: A `ListView` with grouped items.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.1.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -239,6 +350,26 @@ Not applicable: the views log nothing; the model logs failed loads.
 **Rationale**: The model takes the new query before it awaits the log, so its query says nothing about whether results have arrived.
 **Approved**: pending
 
+**Decision**: One changed-files list (`GitFileListViewController`) serves the commit detail and both working-copy lists, and its row model `GitFileListItem` lives in `AgenticDeveloperHubSDKCore`.
+**Rationale**: The same row in three places is one component (DRY); the item's mapping from a status entry or a diff is pure Foundation, so Core is the lowest tier that can hold it.
+**Approved**: pending
+
+**Decision**: The file list, commit detail and working copy delegates take an optional (`GitFileListItem?`, `GitDiffTarget?`) and report nil when the selection clears.
+**Rationale**: The owner shows a diff for the selection; without the nil a removed file's diff would stay on screen after a refresh (Review Focus: stale selection clears). The history list's delegate does the same.
+**Approved**: pending
+
+**Decision**: The commit detail reports a file as the `GitFileListItem` and the commit, not as a diff target.
+**Rationale**: The owner builds the target (`.commit(id, paths:)`) for the diff view; the item carries the old path a rename's diff needs.
+**Approved**: pending
+
+**Decision**: The commit detail's latest-call-wins check is its own counter, bumped before it awaits, and the list empties when a different commit is shown.
+**Rationale**: A check on state the content source changes before it awaits would let an older diff through; emptying at once means the header and the files never disagree.
+**Approved**: pending
+
+**Decision**: The commit detail lists the diff's files rather than a separate `--name-status` call.
+**Rationale**: The diff is the one source the content source offers and its parser already reads renames, copies and binaries; a second call per commit is a second process for the same facts.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -246,7 +377,7 @@ Not applicable: the views log nothing; the model logs failed loads.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source; `GitHistoryViewControllerTests` covers the columns, ref badges per row, the graph width, paging, selection and reload, and `setQuery`, and `GitHistorySearchTests` each search form.
+`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source; `GitHistoryViewControllerTests` covers the columns, ref badges per row, the graph width, paging, selection and reload, and `setQuery`, and `GitHistorySearchTests` each search form; `GitFileListItemTests` covers the item mapping, `GitFileListViewControllerTests` the rows, selection and `files` changes, `GitCommitDetailViewControllerTests` the header, copy, parent links, files, file selection, clearing and latest-call-wins in both finishing orders, and `GitWorkingCopyViewControllerTests` the lists, targets and reload, all against fakes that behave like the model.
 
 ## Change History
 
@@ -256,3 +387,4 @@ Not applicable: the views log nothing; the model logs failed loads.
 | 1.0.1 | 2026-11-13 | Mike Fullerton | Reload falls back to the working copy when the selected ref or stash vanishes; directory rows restore the selection; remote title fallback; vectors 007-011 |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | History list: graph, subject with ref badges, author, date, short sha; paging; selection and reload; search parsing and setQuery; vectors 012-018 |
 | 1.1.1 | 2026-11-13 | Mike Fullerton | setQuery tracks the query it sent and waits for one in flight; paging and badges read the reload snapshot; scroll and row identifiers; vectors 019-022 |
+| 1.2.0 | 2026-11-13 | Mike Fullerton | Changed-files list, commit detail and working copy: GitFileListItem in Core, one shared list, latest-call-wins detail, staged/unstaged targets; vectors 023-036 |
