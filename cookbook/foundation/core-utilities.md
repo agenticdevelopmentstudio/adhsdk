@@ -2,11 +2,11 @@
 id: cf3a3dc9-6fed-47ba-a699-71ff806dcedd
 title: "Core Utilities"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -490,7 +490,12 @@ their logger from.
   with no locale argument, matching this type's `locale: nil`.
 - **AppKit/UIKit**: identical to the SwiftUI note — none of the six files
   imports `AppKit` or `UIKit`, so an AppKit- or UIKit-hosted app consumes
-  the same `AgenticDeveloperHubSDKCore` types unchanged. One platform-specific
+  the same types unchanged. `KeychainHelper` and `Loggable` live in the
+  foundation `AgenticDeveloperHubSDK` framework, which builds for macOS, iOS,
+  watchOS, tvOS and visionOS; `AgenticDeveloperHubSDKCore` re-exports it, so
+  Core call sites still resolve them. On every platform but macOS,
+  `KeychainHelper.entitledAccessGroup` returns nil, because `SecTask` is
+  macOS only, and the caller keeps the per-binary default. One platform-specific
   nuance carries forward regardless of UI framework: `KeychainHelper`'s
   `kSecUseDataProtectionKeychain` flag (set only when `accessGroup` is
   non-nil) is required for access-group Keychain sharing on macOS
@@ -525,12 +530,12 @@ their logger from.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Keychain/KeychainHelper.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Logging/Loggable.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -633,6 +638,7 @@ scope, never the secret string itself.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | KeychainHelper and Loggable moved to the foundation SDK; entitledAccessGroup is nil off macOS |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
