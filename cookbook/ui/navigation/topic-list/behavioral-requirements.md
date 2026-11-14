@@ -109,5 +109,16 @@
 - **automatic-outline-style**: Component MUST render the list with a
   theme-following material rather than a forced, fixed-appearance
   material, regardless of the active system appearance.
+- **item-badge**: Component MUST show an item's badge, when it has one, as a
+  trailing label in the secondary text color after the item's label, and
+  MUST hide that label for an item without one. The badge label's
+  accessibility identifier is the item label's with `.badge` appended.
+- **item-emphasis**: Component MUST render an emphasized item's label in
+  the bold variant of the body font, and every other item's in the body
+  font.
+- **preferred-width-badge-emphasis**: The preferred width MUST measure an
+  emphasized item's title in the bold font and MUST add, for an item with
+  a badge, the badge gap and the badge's rendered width in the badge font
+  to that item's candidate width.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

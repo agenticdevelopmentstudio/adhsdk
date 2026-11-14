@@ -8619,6 +8619,22 @@
       "path": "workspace/extensions/vscode-api/languages/main-thread-languages",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.languages.main-thread-languages"
     },
+    "bdd3a72d-8810-439b-bad7-ec16233cb2a3": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:6c250489053c4b8188af5930d8dde7c2be456586ad9cb865479ed84cbac8d4c5",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/git/git-views",
+      "rdid": "adhsdk.ingredient.workspace.git.git-views"
+    },
     "bea6525c-171f-4547-bbb3-7c709543552e": {
       "implementations": [
         {
@@ -9225,7 +9241,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:291f8fee78f4478f7fc24dae79a8a83b99944ef0030e72ea03767c62b175b188",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift",
           "platform": "apple"

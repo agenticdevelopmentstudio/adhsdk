@@ -3,6 +3,8 @@ import AgenticDeveloperHubSDKCore
 
 /// The repository's refs and the lists beside them — what a sidebar shows.
 @MainActor public protocol GitRefsDataSource: AnyObject {
+    /// The working tree the lists belong to; submodule paths are relative to it.
+    var root: URL { get }
     var refs: [GitRef] { get }
     var stashes: [GitStash] { get }
     var submodules: [GitSubmodule] { get }

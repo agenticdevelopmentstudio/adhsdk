@@ -2,11 +2,11 @@
 id: ce223be3-818a-4310-b136-9e1e84e9af54
 title: "Topic List"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -166,6 +166,17 @@ component always disables. A section's optional title renders as a
 - **automatic-outline-style**: Component MUST render the list with a
   theme-following material rather than a forced, fixed-appearance
   material, regardless of the active system appearance.
+- **item-badge**: Component MUST show an item's badge, when it has one, as a
+  trailing label in the secondary text color after the item's label, and
+  MUST hide that label for an item without one. The badge label's
+  accessibility identifier is the item label's with `.badge` appended.
+- **item-emphasis**: Component MUST render an emphasized item's label in
+  the bold variant of the body font, and every other item's in the body
+  font.
+- **preferred-width-badge-emphasis**: The preferred width MUST measure an
+  emphasized item's title in the bold font and MUST add, for an item with
+  a badge, the badge gap and the badge's rendered width in the badge font
+  to that item's candidate width.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -179,8 +190,10 @@ component always disables. A section's optional title renders as a
   title label and the accessory container. Item cell: 4pt leading inset
   from the cell to the icon; 6pt gap between icon and label; 4pt trailing
   inset from the label to the cell's trailing edge. Header (group) cell:
-  2pt leading inset, vertically centered.
-- **Font**: Item labels use the theme's body font; group header labels use
+  2pt leading inset, vertically centered. Badge: 6pt gap after the item
+  label, 4pt trailing inset to the cell's trailing edge.
+- **Font**: Item labels use the theme's body font (its bold variant for an
+  emphasized item); badges use the theme's caption font; group header labels use
   the theme's caption font; the title label uses the theme's button font.
   All three read the live theme palette rather than a fixed point size,
   and are reapplied on every cell reuse rather than baked in once at cell
@@ -191,7 +204,8 @@ component always disables. A section's optional title renders as a
 - **Foreground/Text**: Item label: the primary text color when enabled,
   the tertiary text color when disabled. Item icon tint: the accent color
   when enabled, the tertiary text color when disabled. Group header
-  label: the secondary text color. Title label: the secondary text color.
+  label: the secondary text color. Badge label: the secondary text color.
+  Title label: the secondary text color.
 - **Border**: Not set explicitly anywhere in this component; the scroll
   view's border keeps its platform default, no border - no border is
   drawn around the scroll view.
@@ -279,6 +293,8 @@ component always disables. A section's optional title renders as a
 | topic-list-027 | overlay-autohide-scroller | Inspect the scroll view after it loads | The vertical scroller floats over content and auto-hides when not scrolling |
 | topic-list-028 | automatic-outline-style | Inspect the list's rendering style after it loads | The list renders with the theme-following material, not the forced dark material |
 | topic-list-029 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| topic-list-030 | item-badge, item-emphasis | Items `main` (badge `↑2 ↓1`, emphasized) and `dev` (no badge) | `main`'s badge label reads `↑2 ↓1`, is visible and is identified `topic-list.item.main.badge`; `main`'s label is bold; `dev`'s badge label is hidden and its label is not bold |
+| topic-list-031 | preferred-width-badge-emphasis | One item `main`, then the same item with badge `↑12 ↓34` | The second preferred width is larger than the first |
 
 ## Edge Cases
 
@@ -517,7 +533,7 @@ component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -638,3 +654,4 @@ Separation-of-concerns is passed: `TopicListViewController` renders sections and
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/navigation/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.3.0 | 2026-11-13 | Mike Fullerton | Items can carry a trailing badge and be emphasized (bold); the preferred width measures both. |
