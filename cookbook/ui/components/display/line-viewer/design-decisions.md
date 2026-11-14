@@ -7,8 +7,8 @@
 **Rationale**: Measuring every row would ask the data source for all of them, which is exactly what virtualisation avoids; growing on demand keeps horizontal scrolling correct for everything the reader has seen.
 **Approved**: pending
 
-**Decision**: A row longer than 1 024 UTF-16 units is laid out only where the dirty rect crosses it, mapping UTF-16 units to monospaced columns, rather than caching a whole-line `CTLine` per row.
-**Rationale**: A cached line still draws every glyph of a 1 MB minified line on each frame; slicing bounds a frame by the rect's width. The cost is that a long line with tabs, wide or combining characters drifts from its true layout, which short lines (laid out whole) never do.
+**Decision**: A row longer than 1 024 UTF-16 units is laid out once into a small per-row `CTLine` cache, and each draw finds the glyph range under the dirty rect (bisecting runs, then glyph origins) and draws it with `CTRunDraw(run, context, range)`, rather than laying out only a slice of the text under the rect.
+**Rationale**: A cached line need not draw every glyph: `CTRunDraw` takes a glyph range, so a frame costs the glyphs under the rect plus a logarithmic search. Slicing the text instead had to map UTF-16 units to columns, so a tab, wide or combining character shifted later glyphs in one dirty rect but not the next and glyphs jumped, repeated or vanished at the seams. The cost is one whole-line layout per long row, bounded by the cache's row and unit limits.
 **Approved**: pending
 
 **Decision**: The gutter is a subview of the document view kept at the clip view's horizontal origin, not drawn in each row.

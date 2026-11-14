@@ -46,6 +46,7 @@ public final class LineViewerViewController: NSViewController {
         scroll.contentView.postsBoundsChangedNotifications = true
         documentView.owner = self
         documentView.setAccessibilityIdentifier(accessibilityName + ".text")
+        documentView.gutterView.setAccessibilityIdentifier(accessibilityName + ".gutter")
         scroll.documentView = documentView
         view = scroll
     }
