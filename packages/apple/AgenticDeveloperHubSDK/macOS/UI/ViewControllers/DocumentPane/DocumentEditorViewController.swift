@@ -6,6 +6,7 @@ import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
 import AgenticDeveloperHubSDKLanguage
+import LanguageServerProtocol
 
 /// One editor inside one pane of one tab.
 ///
@@ -233,7 +234,10 @@ public final class DocumentEditorViewController: NSViewController {
                                                 opensOn: .preview)
         editor.onTextChange = { [weak self] text in
             guard let self, let document = self.markdownDocument, document.text != text else { return }
-            document.replaceAll(with: text)
+            // An edit, not a reload: `apply` marks the document dirty, which
+            // is what the save scheduler writes (`replaceAll` marks it clean).
+            let whole = document.range(for: NSRange(location: 0, length: (document.text as NSString).length))
+            document.apply([TextEdit(range: whole, newText: text)])
             self.saveScheduler.schedule(document)
         }
         addChild(editor)
