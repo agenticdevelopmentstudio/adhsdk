@@ -187,21 +187,30 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Whether Agent Privacy is on for this pane: the global switch, or the
     /// pane's own override of it.
     public var isAgentPrivacyOn: Bool { BrowserSettings.isAgentPrivacyOn(in: settings) }
-    /// The id the pane's own privacy words are filed under
-    /// (``PrivacyWord/paneID``): its layout node, which survives a relaunch.
-    /// `nil` for a pane with no node, which has the global words alone.
-    public var privacyWordsPaneID: String? { paneContext.paneNodeID?.uuidString }
+    /// The address the privacy words are matched against
+    /// (``PrivacyWord/sites``): the front tab's page, or nil for the blank
+    /// page and no page, where only the `*` words apply.
+    public var privacyWordsURL: URL? { Self.privacyWordsURL(of: engine) }
 
-    /// What Agent Privacy means for a model tool call on this pane right now.
-    /// The words are the enabled global words and this pane's own enabled
-    /// words (`PrivacyWordsVault.filter(forPane:)`). Reads them without
-    /// prompting; words that cannot be read that way make the pane
-    /// `unavailable`, which the tools refuse.
+    private static func privacyWordsURL(of engine: BrowserEngine) -> URL? {
+        engine.url.flatMap { $0 == blankPage ? nil : $0 }
+    }
+
+    /// What Agent Privacy means for a model tool call on this pane right now:
+    /// the front tab's page.
     public func agentPrivacy() -> BrowserAgentPrivacy {
+        agentPrivacy(at: privacyWordsURL)
+    }
+
+    /// What Agent Privacy means at `url`. The words are the enabled words
+    /// whose sites match it (`PrivacyWordsVault.filter(for:)`). Reads them
+    /// without prompting; words that cannot be read that way make the pane
+    /// `unavailable`, which the tools refuse.
+    private func agentPrivacy(at url: URL?) -> BrowserAgentPrivacy {
         guard isAgentPrivacyOn else { return .off }
         guard let privacyVault else { return .unavailable }
         do {
-            guard try privacyVault.load(), let filter = privacyVault.filter(forPane: privacyWordsPaneID)
+            guard try privacyVault.load(), let filter = privacyVault.filter(for: url)
             else { return .unavailable }
             return .checking(filter)
         } catch {
@@ -301,17 +310,14 @@ open class WebBrowserPaneViewController: NSViewController {
     /// the pane's own (agent visibility, privacy, pause, strip toggle) first,
     /// then whatever `addToolbarAccessory` adds (a Safari pane's extensions).
     let installedBar = NSStackView()
-    let agentVisibilityButton = NSButton()
     let privacyButton = NSButton()
-    let pauseEventsButton = NSButton()
-    let privacyStripToggle = NSButton()
     /// The browser menu at the row's trailing end (`makePaneMenuItems`).
     let menuButton = NSButton()
     /// The one-line privacy status under the address row, while shown.
     let privacyStrip: NSTextField = {
         let label = NSTextField(labelWithString: "")
         label.textColor = .secondaryLabelColor
-        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        label.font = .systemFont(ofSize: NSFont.systemFontSize)
         label.lineBreakMode = .byTruncatingTail
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.setAccessibilityIdentifier("browser.privacy-strip")
@@ -452,23 +458,26 @@ open class WebBrowserPaneViewController: NSViewController {
         }
         engine.inputGate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
         engine.setActivationShieldActive(isActivationShieldWanted)
-        engine.setPageWordFilter(pageWordFilter)
+        engine.setPageWordFilter(pageWordFilter(for: engine))
     }
 
-    /// The words the page is drawn through: the privacy words while Agent
-    /// Privacy is on and they can be read and used (`BrowserAgentPrivacy`),
-    /// otherwise none. The one place
-    /// that answer is computed, so the switch, an edit of the words and a
-    /// rebuilt engine (through `wireEngine`) all land on the same one.
-    private var pageWordFilter: TextSubstitutionFilter? {
-        if case .enabled(let filter) = agentPrivacy() { return filter }
+    /// The words `engine`'s page is drawn through: the privacy words whose
+    /// sites match its address while Agent Privacy is on and they can be read
+    /// and used (`BrowserAgentPrivacy`), otherwise none. The one place that
+    /// answer is computed, so the switch, an edit of the words, a navigation
+    /// (`browserEngineAddressDidChange`) and a rebuilt engine (through
+    /// `wireEngine`) all land on the same one.
+    private func pageWordFilter(for engine: BrowserEngine) -> TextSubstitutionFilter? {
+        if case .enabled(let filter) = agentPrivacy(at: Self.privacyWordsURL(of: engine)) { return filter }
         return nil
     }
 
+    /// The front tab's words, which the pane's chrome is shown through.
+    private var pageWordFilter: TextSubstitutionFilter? { pageWordFilter(for: engine) }
+
     private func refreshPageWordFilter() {
-        let filter = pageWordFilter
         for tab in tabs {
-            tab.engine.setPageWordFilter(filter)
+            tab.engine.setPageWordFilter(pageWordFilter(for: tab.engine))
             retitle(tab)
         }
         if addressField.currentEditor() == nil { showAddress(engine.url ?? activeTab.requestedURL) }
@@ -492,7 +501,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// stand-in.
     private func storedTitle(of engine: BrowserEngine) -> String? {
         guard let title = engine.title else { return nil }
-        return pageWordFilter?.revealing(title) ?? title
+        return pageWordFilter(for: engine)?.revealing(title) ?? title
     }
 
     /// Puts `url` in the address field as the pane shows it; the blank page
@@ -516,8 +525,8 @@ open class WebBrowserPaneViewController: NSViewController {
     private var shownAddress: (text: String, url: URL)?
 
     private func observePrivacyWords() {
-        // `words`, not `filter`: a pane also uses its own words, which
-        // `filter` (the global words) does not change for. Received on the
+        // `words`, not `filter`: a page also uses its site's words, which
+        // `filter` (the `*` words) does not change for. Received on the
         // main queue, so by the time it runs the vault holds the new words.
         privacyWordsObservation = privacyVault?.$words
             .dropFirst()
@@ -883,7 +892,8 @@ open class WebBrowserPaneViewController: NSViewController {
             }
         }
         let strip = NSStackView(views: [privacyStrip])
-        strip.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 4, right: 12)
+        strip.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        strip.alignment = .centerY
         strip.setAccessibilityIdentifier("browser.privacy-strip-row")
         privacyStripRow = strip
         let rows = NSStackView(views: [bar, strip])
@@ -894,7 +904,10 @@ open class WebBrowserPaneViewController: NSViewController {
         rows.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             bar.widthAnchor.constraint(equalTo: rows.widthAnchor),
-            strip.widthAnchor.constraint(equalTo: rows.widthAnchor)
+            strip.widthAnchor.constraint(equalTo: rows.widthAnchor),
+            // As tall as the address row it sits under.
+            strip.heightAnchor.constraint(
+                equalToConstant: BrowserAddressBox.height + Self.barInsets.top + Self.barInsets.bottom)
         ])
         strip.isHidden = store.paneStateValue(forKey: Self.privacyStripKey) != "shown"
         refreshAddressRowControls()
@@ -905,31 +918,17 @@ open class WebBrowserPaneViewController: NSViewController {
     private weak var privacyStripRow: NSView?
 
     private func configureInstalledBar() {
-        configureButton(
-            agentVisibilityButton, symbol: "cursorarrow.rays", label: "Agent Visibility",
-            action: #selector(showAgentVisibilityMenu(_:)))
-        agentVisibilityButton.setAccessibilityIdentifier("browser.agent-visibility")
         configureButton(privacyButton, symbol: "eye", label: "Privacy", action: #selector(showPrivacyDialog))
         privacyButton.toolTip = "This tab's privacy settings"
         privacyButton.setAccessibilityIdentifier("browser.privacy")
         configureButton(
-            pauseEventsButton, symbol: "pause.circle", label: "Pause Events", action: #selector(togglePauseEvents))
-        pauseEventsButton.setAccessibilityIdentifier("browser.pause-events")
-        configureButton(
-            privacyStripToggle, symbol: "list.bullet.rectangle", label: "Privacy Status",
-            action: #selector(togglePrivacyStrip))
-        privacyStripToggle.toolTip = "Show or hide the privacy status bar"
-        privacyStripToggle.setButtonType(.pushOnPushOff)
-        privacyStripToggle.setAccessibilityIdentifier("browser.privacy-strip-toggle")
-        configureButton(
             menuButton, symbol: "line.3.horizontal", label: "Browser Menu", action: #selector(showBrowserMenu(_:)))
         menuButton.setAccessibilityIdentifier("browser.menu")
         menuButton.toolTip = "Browser menu: settings, log and more"
-        for button in [agentVisibilityButton, privacyButton, pauseEventsButton, privacyStripToggle, menuButton] {
+        for button in [privacyButton, menuButton] {
             button.isBordered = false
         }
-        installedBar.setViews(
-            [agentVisibilityButton, privacyButton, pauseEventsButton, privacyStripToggle], in: .leading)
+        installedBar.setViews([privacyButton], in: .leading)
         installedBar.orientation = .horizontal
         // Every installed button stays: a stack view otherwise detaches the
         // trailing ones first when the row is short of room.
@@ -946,58 +945,26 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Brings the installed buttons and the strip up to date with the pane's
     /// settings and pause state.
     func refreshAddressRowControls() {
-        let access = agentAccess
-        agentVisibilityButton.image = NSImage(
-            systemSymbolName: access.symbolName, accessibilityDescription: access.visibilityDescription)
-        agentVisibilityButton.toolTip = "Agent visibility: " + access.visibilityDescription
-        agentVisibilityButton.setAccessibilityValue(access.rawValue)
-        let pauseLabel = isEventsPaused ? "Resume Events" : "Pause Events"
-        pauseEventsButton.image = NSImage(
-            systemSymbolName: isEventsPaused ? "play.circle" : "pause.circle", accessibilityDescription: pauseLabel)
-        pauseEventsButton.toolTip = isEventsPaused
-            ? "Resume events: the page gets them again as its privacy settings allow"
-            : "Pause events: block every event from reaching the page"
-        pauseEventsButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
-        let stripShown = privacyStripRow.map { !$0.isHidden } ?? false
-        privacyStripToggle.state = stripShown ? .on : .off
+        // Red while every event is held back, so a paused page is plain to see.
+        privacyButton.contentTintColor = isEventsPaused ? .systemRed : nil
+        privacyButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
         privacyStrip.stringValue = BrowserPrivacyStatus.text(
             settings: settings, isPaused: isEventsPaused, isAgentPrivacyOn: isAgentPrivacyOn)
-    }
-
-    @objc func showAgentVisibilityMenu(_ sender: NSButton) {
-        let menu = NSMenu()
-        menu.autoenablesItems = false
-        let current = agentAccess
-        for access in [BrowserAgentAccess.full, .readOnly, .hidden] {
-            let item = NSMenuItem(
-                title: access.menuTitle, action: #selector(chooseAgentVisibility(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = access.rawValue
-            item.state = access == current ? .on : .off
-            item.image = NSImage(systemSymbolName: access.symbolName, accessibilityDescription: nil)
-            item.accessibilityID("browser.agent-visibility." + access.rawValue)
-            menu.addItem(item)
-        }
-        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY + 4), in: sender)
-    }
-
-    /// Sets this pane's Agent access: a per-pane override on a layered store.
-    @objc func chooseAgentVisibility(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String, let access = BrowserAgentAccess(rawValue: raw)
-        else { return }
-        settings.set(access, for: UserSettings.browserPrivacyAgentAccess)
-        refreshAddressRowControls()
     }
 
     @objc func showPrivacyDialog() {
         BrowserPrivacySettingsDialog.present(for: self, from: privacyButton)
     }
 
-    @objc func togglePrivacyStrip() {
-        guard let row = privacyStripRow else { return }
-        row.isHidden.toggle()
-        store.setPaneStateValue(row.isHidden ? nil : "shown", forKey: Self.privacyStripKey)
-        refreshAddressRowControls()
+    /// Whether the privacy status strip shows under the address bar.
+    var isPrivacyStripShown: Bool {
+        get { privacyStripRow.map { !$0.isHidden } ?? false }
+        set {
+            guard let row = privacyStripRow else { return }
+            row.isHidden = !newValue
+            store.setPaneStateValue(newValue ? "shown" : nil, forKey: Self.privacyStripKey)
+            refreshAddressRowControls()
+        }
     }
 
     /// Pops the pane's menu (Pause Events, Settings…, Show Browser Log) under
@@ -1597,6 +1564,9 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
 
     public func browserEngineAddressDidChange(_ engine: BrowserEngine) {
         if tab(for: engine) != nil { tabObserver?.pane(self, tabDidChange: engine) }
+        // A new address can match other words' sites; the engine reloads
+        // only when that changes the words it draws through.
+        if tab(for: engine) != nil, isAgentPrivacyOn { engine.setPageWordFilter(pageWordFilter(for: engine)) }
         guard isFront(engine), let url = engine.url else { return }
         // A field being edited is the user's; overwriting it mid-keystroke
         // because a redirect landed would throw away what they typed. A field

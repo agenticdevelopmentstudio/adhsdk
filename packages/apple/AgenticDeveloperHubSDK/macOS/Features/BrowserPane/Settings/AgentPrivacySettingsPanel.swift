@@ -13,9 +13,9 @@ import AgenticDeveloperHubSDKCore
 /// applied to a page.
 ///
 /// Shown in both scopes. In the Settings window the switch is the global
-/// value every browser follows and the editor shows the global words; in a
-/// pane's sheet the switch is the pane's own override, with the usual marker,
-/// and the editor shows the global words and the pane's own (`PrivacyWord`).
+/// value every browser follows; in a pane's sheet the switch is the pane's own
+/// override, with the usual marker. The editor shows every word either way,
+/// each with the sites it applies on (`PrivacyWord`).
 /// The words are the private terminals' list, edited through the same editor
 /// behind the same authentication (`dry`).
 @MainActor
@@ -57,11 +57,14 @@ final class AgentPrivacySettingsGroup {
             title: "Privacy Words",
             body: "The words are one list, kept in the keychain and shared with the "
                 + "private terminals. Each word can be turned off without deleting it. "
-                + "A global word applies to every private terminal and every web browser "
-                + "with Agent Privacy on; the words edited from the Settings window are "
-                + "all global. A word added in a pane's own settings applies to that "
-                + "browser alone unless its Global box is checked, so a browser uses the "
-                + "global words and its own. Opening the list asks you to authenticate; "
+                + "Each word's Sites says where it applies, as comma-separated patterns: "
+                + "* is everywhere, every web page and every private terminal; "
+                + "google.com/* is every page on google.com; foo.com/hi/* the pages "
+                + "under foo.com/hi; *.google.com any host ending in .google.com. A "
+                + "pattern with no path covers its whole site, and only * applies in a "
+                + "private terminal. A word added from a pane's own settings starts on "
+                + "that page's site; one added from the Settings window, on *. Opening "
+                + "the list asks you to authenticate; "
                 + "saving it does not ask again."
         ),
         .init(
@@ -77,7 +80,7 @@ final class AgentPrivacySettingsGroup {
 
     static let keywords: [String] = [
         "agent privacy", "privacy words", "conceal", "stand-in", "substitution", "model", "agent",
-        "private", "global"
+        "private", "sites", "global"
     ]
 
     private let binding: BrowserSettingsBinding
@@ -113,20 +116,31 @@ final class AgentPrivacySettingsGroup {
 
     /// Authenticates, then opens the privacy words editor over the panel's
     /// window — the private terminal's Edit Privacy Words, over the same
-    /// vault. The only prompt: the editor's Save does not ask again. A pane's
-    /// sheet edits that pane's words alongside the global ones; the Settings
-    /// window, the global words.
+    /// vault. The only prompt: the editor's Save does not ask again. Every
+    /// word is shown either way; a word added from a pane's settings starts on
+    /// the pane's site (`google.com/*`), one added from the Settings window
+    /// on `*`.
+    ///
+    /// A pane's settings window is app-modal, and the authentication prompt
+    /// cannot come in front of an app-modal window, so the modal session is
+    /// ended while the prompt is up and started again after it
+    /// (`BrowserPaneSettingsWindowController.suspendModal(of:)`).
     private func editWords() {
         guard !isAuthenticating, let vault = binding.privacyVault else { return }
-        let paneID = binding.pane?.privacyWordsPaneID
+        let newWordSite = binding.pane.map { PrivacySitePattern.defaultPattern(for: $0.privacyWordsURL) }
+            ?? PrivacySitePattern.everywhere
         isAuthenticating = true
+        let resumeModal = BrowserPaneSettingsWindowController.suspendModal(of: window())
         Task { [weak self] in
             guard let self else { return }
-            defer { self.isAuthenticating = false }
+            defer {
+                self.isAuthenticating = false
+                resumeModal?()
+            }
             do {
                 try await vault.authenticate(reason: "edit the privacy words")
                 guard let window = self.window() else { return }
-                PrivacyWordsEditor.present(vault: vault, on: window, paneID: paneID)
+                PrivacyWordsEditor.present(vault: vault, on: window, newWordSite: newWordSite)
             } catch {
                 guard let window = self.window() else { return }
                 let alert = NSAlert()

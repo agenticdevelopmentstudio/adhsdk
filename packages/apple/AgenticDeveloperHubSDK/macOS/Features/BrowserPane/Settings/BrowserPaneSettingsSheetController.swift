@@ -105,8 +105,11 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
 
     /// Shown in a window of its own (`BrowserPaneSettingsWindowController`)
     /// rather than as a sheet: the window's title bar carries the title and
-    /// its close button ends it, so there is no heading and no Done.
+    /// its close button ends it, so there is no heading. OK, the default
+    /// button, closes the window exactly as the close button does.
     var presentsInWindow = false
+
+    static let okIdentifier = "browser.pane-settings.ok"
 
     private func loadWindowView(in container: NSView) {
         addChild(panels)
@@ -115,13 +118,31 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
         panelsView.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(panelsView)
         panels.selectPanel(at: 0)
+
+        let okButton = NSButton(title: "OK", target: self, action: #selector(closeWindow(_:)))
+        okButton.bezelStyle = .rounded
+        okButton.keyEquivalent = "\r"
+        okButton.translatesAutoresizingMaskIntoConstraints = false
+        okButton.accessibilityID(Self.okIdentifier)
+        container.addSubview(okButton)
+
         NSLayoutConstraint.activate([
             panelsView.topAnchor.constraint(equalTo: container.topAnchor),
             panelsView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             container.trailingAnchor.constraint(equalTo: panelsView.trailingAnchor),
-            container.bottomAnchor.constraint(equalTo: panelsView.bottomAnchor)
+
+            okButton.topAnchor.constraint(equalTo: panelsView.bottomAnchor, constant: 12),
+            okButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 80),
+            container.trailingAnchor.constraint(equalTo: okButton.trailingAnchor, constant: 20),
+            container.bottomAnchor.constraint(equalTo: okButton.bottomAnchor, constant: 16)
         ])
         self.view = container
+    }
+
+    /// OK in a window of its own: the window's close, which ends the settings
+    /// (`BrowserPaneSettingsWindowController.windowWillClose`).
+    @objc private func closeWindow(_ sender: Any?) {
+        view.window?.performClose(sender)
     }
 
     /// Watches the window the sheet is on for the sheet ending, so a

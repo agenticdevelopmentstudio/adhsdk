@@ -55,39 +55,47 @@ final class BrowserAddressBox: NSView {
     }
 }
 
-/// The one line the privacy strip shows: what the pane's page is kept from
-/// right now, built from the pane's effective settings and its pause state.
+/// The one line the privacy strip shows: whether the pane's events are
+/// active or paused, what the agent may do, which kinds of event are
+/// disabled, and what else is kept from the page, built from the pane's
+/// effective settings and its pause state.
 @MainActor
 enum BrowserPrivacyStatus {
 
     static func text(settings: SettingsStore, isPaused: Bool, isAgentPrivacyOn: Bool) -> String {
+        var sections: [String] = []
+        let agentPaused = isPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
         if isPaused {
-            let agent = settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
-                ? ", agent paused" : ""
-            return "Paused: all events blocked" + agent
+            sections.append("Paused: all events blocked")
+        } else {
+            sections.append("Active")
         }
-        var parts: [String] = []
-        if settings.get(UserSettings.browserPrivacyHideActivation) { parts.append("no activation events") }
-        if settings.get(UserSettings.browserPrivacyKeyboard) == .block { parts.append("no keyboard events") }
-        if settings.get(UserSettings.browserPrivacyMouse) == .block { parts.append("no mouse events") }
-        switch settings.get(UserSettings.browserPrivacyPointerTracking) {
-        case .always: break
-        case .whenFocused: parts.append("pointer tracked only with focus")
-        case .never: parts.append("no pointer tracking")
+        let access = settings.get(UserSettings.browserPrivacyAgentAccess)
+        sections.append("Agent: " + (agentPaused ? "Paused" : access.menuTitle))
+        if !isPaused {
+            let disabled = disabledEvents(settings: settings)
+            if !disabled.isEmpty { sections.append("Disabled: " + disabled.joined(separator: ", ")) }
         }
-        if !settings.get(UserSettings.browserPrivacyDragAndDrop) { parts.append("no drag and drop") }
+        var other: [String] = []
         switch settings.get(UserSettings.browserPrivacyThirdPartyContent) {
         case .allow: break
-        case .blockScripts: parts.append("no third-party scripts")
-        case .blockAll: parts.append("no third-party content")
+        case .blockScripts: other.append("No third-party scripts")
+        case .blockAll: other.append("No third-party content")
         }
-        switch settings.get(UserSettings.browserPrivacyAgentAccess) {
-        case .full: break
-        case .readOnly: parts.append("agent read only")
-        case .hidden: parts.append("hidden from the agent")
-        }
-        if isAgentPrivacyOn { parts.append("global and page privacy words") }
-        return "Active: " + (parts.isEmpty ? "all events allowed" : parts.joined(separator: ", "))
+        if isAgentPrivacyOn { other.append("Privacy words on") }
+        sections += other
+        return sections.joined(separator: "  ·  ")
+    }
+
+    /// The kinds of event the page is kept from, in the settings' order.
+    static func disabledEvents(settings: SettingsStore) -> [String] {
+        var disabled: [String] = []
+        if settings.get(UserSettings.browserPrivacyKeyboard) == .block { disabled.append("Keyboard") }
+        if settings.get(UserSettings.browserPrivacyMouse) == .block { disabled.append("Mouse Events") }
+        if settings.get(UserSettings.browserPrivacyPointerTracking) != .always { disabled.append("Mouse Tracking") }
+        if !settings.get(UserSettings.browserPrivacyDragAndDrop) { disabled.append("Drag and Drop") }
+        if settings.get(UserSettings.browserPrivacyHideActivation) { disabled.append("Activation") }
+        return disabled
     }
 }
 

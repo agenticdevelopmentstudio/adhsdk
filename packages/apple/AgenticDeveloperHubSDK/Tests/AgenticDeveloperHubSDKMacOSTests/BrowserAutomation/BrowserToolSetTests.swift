@@ -654,23 +654,24 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: nil))
     }
 
-    func testAPaneUsesTheGlobalWordsAndItsOwn() {
+    func testAPageUsesTheWordsWhoseSitesMatchIt() {
         let words = [
             PrivacyWord(alias: "G", real: "Global"),
             PrivacyWord(alias: "O", real: "Off", isEnabled: false),
-            PrivacyWord(alias: "A", real: "PaneA", isGlobal: false, paneID: "a"),
-            PrivacyWord(alias: "B", real: "PaneB", isGlobal: false, paneID: "b"),
-            PrivacyWord(alias: "C", real: "GlobalFromC", isGlobal: true, paneID: "c")
+            PrivacyWord(alias: "A", real: "SiteA", sites: ["a.com/*"]),
+            PrivacyWord(alias: "B", real: "SiteB", sites: ["b.com/*"]),
+            PrivacyWord(alias: "C", real: "GlobalAndC", sites: ["c.com", "*"])
         ]
-        XCTAssertEqual(words.filter(forPane: "a").pairs.map(\.real).sorted(), ["Global", "GlobalFromC", "PaneA"])
-        XCTAssertEqual(words.filter(forPane: nil).pairs.map(\.real).sorted(), ["Global", "GlobalFromC"],
-                       "no pane: the enabled global words alone")
+        let page = URL(string: "https://a.com/page")
+        XCTAssertEqual(words.filter(for: page).pairs.map(\.real).sorted(), ["Global", "GlobalAndC", "SiteA"])
+        XCTAssertEqual(words.filter(for: nil).pairs.map(\.real).sorted(), ["Global", "GlobalAndC"],
+                       "no address: the enabled * words alone")
     }
 
-    func testWordsSavedBeforeTheFlagsDecodeAsEnabledAndGlobal() throws {
+    func testWordsSavedBeforeTheFlagsDecodeAsEnabledEverywhere() throws {
         let old = Data(#"[{"alias":"Alex","real":"Mike"}]"#.utf8)
         let words = try JSONDecoder().decode([PrivacyWord].self, from: old)
-        XCTAssertEqual(words, [PrivacyWord(alias: "Alex", real: "Mike", isEnabled: true, isGlobal: true, paneID: nil)])
+        XCTAssertEqual(words, [PrivacyWord(alias: "Alex", real: "Mike", isEnabled: true, sites: ["*"])])
     }
 }
 // swiftlint:enable line_length force_try force_cast

@@ -11,9 +11,9 @@ import Foundation
 /// which does not ask again — the editor was opened by whoever proved they
 /// may see the words.
 ///
-/// Private terminals read ``filter``: the enabled global words. A web
-/// browser pane reads ``filter(forPane:)``: those plus its own enabled
-/// words (``PrivacyWord``).
+/// Private terminals read ``filter``: the enabled words whose sites are `*`.
+/// A web browser pane reads ``filter(for:)`` with its page's address: the
+/// enabled words whose sites match it (``PrivacyWord``).
 ///
 /// Every app that shares the keychain item keeps its own vault, so a save
 /// announces itself with a distributed notification and every other vault
@@ -37,11 +37,10 @@ public final class PrivacyWordsVault: ObservableObject {
 
     public var isLoaded: Bool { words != nil }
 
-    /// The words that apply in the browser pane `paneID` — the enabled global
-    /// words and that pane's own enabled words — or nil while the words have
-    /// not been read. `nil` for `paneID` gives ``filter``.
-    public func filter(forPane paneID: String?) -> TextSubstitutionFilter? {
-        words?.filter(forPane: paneID)
+    /// The enabled words whose sites match `url`, or nil while the words have
+    /// not been read. `nil` for `url` gives ``filter``.
+    public func filter(for url: URL?) -> TextSubstitutionFilter? {
+        words?.filter(for: url)
     }
 
     /// The upgrade in progress, so private terminals starting together share
@@ -133,7 +132,7 @@ public final class PrivacyWordsVault: ObservableObject {
 
     private func apply(_ words: [PrivacyWord]) {
         self.words = words
-        self.filter = words.filter(forPane: nil)
+        self.filter = words.filter(for: nil)
     }
 
     private func persist(_ words: [PrivacyWord]) throws {

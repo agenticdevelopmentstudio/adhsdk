@@ -3,26 +3,20 @@ import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 
 /// The sheet that edits the privacy words: a resizable table of words — on
-/// or off, the real word, what it is shown as, and whether it is global —
-/// each word edited in place, with add and remove beneath it and Save and
-/// Cancel under that. Tab moves from the real word to what it is shown as and
-/// on to the next row's real word; Shift-Tab goes back.
+/// or off, the real word, what it is shown as, and the sites it applies on
+/// (comma-separated ``PrivacySitePattern``s) — each word edited in place,
+/// with add and remove beneath it and Save and Cancel under that. Tab moves
+/// across a row's text cells and on to the next row's; Shift-Tab goes back.
 ///
 /// Edits are a draft until Save, which writes them to the keychain through
 /// the vault — Cancel leaves the words as they were. Save does not ask the
 /// user to authenticate: whoever opens this has just made them, and the vault
 /// must already hold the words.
 ///
-/// Where it is opened decides which words it shows (``PrivacyWord``):
-/// - **Global** (`paneID` nil: the Web Browser settings, a private terminal,
-///   a browser pane with no stable id): the global words. Every row's Global
-///   box is checked and cannot be changed.
-/// - **A browser pane**: the global words and that pane's own. A word added
-///   here belongs to the pane; checking Global makes it apply to every
-///   browser, and unchecking it gives it to this pane.
-///
-/// Words the context does not show — another pane's — are kept as they are
-/// and written back with the rest.
+/// It shows every word wherever it is opened, so every word's sites can be
+/// seen and changed. Where it is opened decides only where a new word starts:
+/// on the page's site (`google.com/*`) from a web page, on `*` from global
+/// settings or a private terminal.
 ///
 /// Everything in it sits inside a ``ConcealedContainerView``, revealed for as
 /// long as the sheet is up, so neither the accessibility API nor a screen
@@ -41,18 +35,16 @@ public final class PrivacyWordsEditor: NSObject {
         static let enabled = "enabled"
         static let real = "real"
         static let alias = "alias"
-        static let global = "global"
+        static let sites = "sites"
         /// The text columns, in Tab order.
-        static let tabOrder = [real, alias]
+        static let tabOrder = [real, alias, sites]
     }
 
     private let vault: PrivacyWordsVault
-    /// The pane the editor was opened for; nil for the global words.
-    private let paneID: String?
+    /// The sites a new word starts on.
+    private let newWordSite: String
     /// The rows the table shows, in order.
     private var rows: [DraftRow]
-    /// The words this context does not show, written back untouched on Save.
-    private let hiddenWords: [PrivacyWord]
     private let card: ComposableSettings.EditableTableCard
     private let window: NSWindow
     private weak var parentWindow: NSWindow?
@@ -62,42 +54,42 @@ public final class PrivacyWordsEditor: NSObject {
 
     /// Opens the editor as a sheet on `parentWindow`.
     ///
-    /// - Parameter paneID: The browser pane whose words to edit alongside the
-    ///   global ones (its layout node id), or nil for the global words alone.
-    public static func present(vault: PrivacyWordsVault, on parentWindow: NSWindow, paneID: String? = nil) {
-        let editor = PrivacyWordsEditor(vault: vault, parentWindow: parentWindow, paneID: paneID)
+    /// - Parameter newWordSite: The site pattern a word added here starts on:
+    ///   the page's (`PrivacySitePattern.defaultPattern(for:)`) from a web
+    ///   page, `*` (the default) from anywhere else.
+    public static func present(
+        vault: PrivacyWordsVault, on parentWindow: NSWindow,
+        newWordSite: String = PrivacySitePattern.everywhere
+    ) {
+        let editor = PrivacyWordsEditor(vault: vault, parentWindow: parentWindow, newWordSite: newWordSite)
         editor.retainedSelf = editor
         parentWindow.beginSheet(editor.window)
         editor.beginEditingFirstRowIfEmpty()
     }
 
-    private init(vault: PrivacyWordsVault, parentWindow: NSWindow, paneID: String?) {
+    private init(vault: PrivacyWordsVault, parentWindow: NSWindow, newWordSite: String) {
         precondition(vault.isLoaded, "The privacy words editor opened without the words loaded.")
         self.vault = vault
-        self.paneID = paneID
+        self.newWordSite = newWordSite
         self.parentWindow = parentWindow
-        let words = vault.words ?? []
-        let shows: (PrivacyWord) -> Bool = { word in
-            word.isGlobal || (paneID != nil && word.paneID == paneID)
-        }
-        rows = words.filter(shows).map { DraftRow(word: $0) }
-        hiddenWords = words.filter { !shows($0) }
+        rows = (vault.words ?? []).map { DraftRow(word: $0) }
         card = ComposableSettings.EditableTableCard(
             title: "Privacy Words",
             columns: [
                 .init(id: Column.enabled, title: "Enabled", width: 64, kind: .toggle,
                       headerToolTip: "Off keeps the word but applies it nowhere."),
-                .init(id: Column.real, title: "Real Word", width: 200, kind: .text(editable: true)),
-                .init(id: Column.alias, title: "Shown As", width: 200, kind: .text(editable: true)),
-                .init(id: Column.global, title: "Global", width: 56, kind: .toggle,
-                      headerToolTip: "On applies the word to every web browser; "
-                        + "off, only to the browser it was defined in.")
+                .init(id: Column.real, title: "Real Word", width: 170, kind: .text(editable: true)),
+                .init(id: Column.alias, title: "Shown As", width: 170, kind: .text(editable: true)),
+                .init(id: Column.sites, title: "Sites", width: 200, kind: .text(editable: true),
+                      headerToolTip: "Where the word applies, comma-separated: * is everywhere, "
+                        + "private terminals included; google.com/* every page on google.com; "
+                        + "foo.com/hi/* the pages under foo.com/hi; *.google.com any subdomain.")
             ],
             emptyMessage: "No privacy words yet — add one with +.",
             visibleRows: 8,
             accessibilityPrefix: "privacyWords")
         window = ConcealedSheetWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 420),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 420),
             styleMask: [.titled, .resizable],
             backing: .buffered,
             defer: false)
@@ -145,10 +137,10 @@ public final class PrivacyWordsEditor: NSObject {
         return concealed
     }
 
-    /// The two checkbox columns keep their width, so the width the sheet
-    /// gains when it is resized goes to the word columns.
+    /// The checkbox column keeps its width, so the width the sheet gains
+    /// when it is resized goes to the text columns.
     private func fixToggleColumnWidths() {
-        for id in [Column.enabled, Column.global] {
+        for id in [Column.enabled] {
             guard let column = card.tableView.tableColumn(withIdentifier: NSUserInterfaceItemIdentifier(id))
             else { continue }
             column.resizingMask = []
@@ -167,30 +159,23 @@ public final class PrivacyWordsEditor: NSObject {
         }
         card.onEdit = { [weak self] id, column, value in
             guard let self, let index = self.rows.firstIndex(where: { $0.id == id }) else { return }
-            let word = value.trimmingCharacters(in: .whitespaces)
-            if column == Column.alias { self.rows[index].word.alias = word } else { self.rows[index].word.real = word }
+            let text = value.trimmingCharacters(in: .whitespaces)
+            switch column {
+            case Column.alias: self.rows[index].word.alias = text
+            case Column.sites: self.rows[index].word.sites = PrivacySitePattern.parse(text)
+            default: self.rows[index].word.real = text
+            }
             self.reloadRows()
         }
         card.onToggle = { [weak self] id, column, isOn in
-            guard let self, let index = self.rows.firstIndex(where: { $0.id == id }) else { return }
-            switch column {
-            case Column.enabled:
-                self.rows[index].word.isEnabled = isOn
-            case Column.global:
-                // Only a pane's editor offers the box (it is read-only in the
-                // global one). Unchecked, the word belongs to this pane.
-                guard let paneID = self.paneID else { break }
-                self.rows[index].word.isGlobal = isOn
-                if !isOn { self.rows[index].word.paneID = paneID }
-            default:
-                break
-            }
+            guard let self, column == Column.enabled,
+                  let index = self.rows.firstIndex(where: { $0.id == id }) else { return }
+            self.rows[index].word.isEnabled = isOn
             self.reloadRows()
         }
     }
 
     private func reloadRows() {
-        let globalIsFixed = paneID == nil
         card.setRows(rows.map { row in
             ComposableSettings.EditableTableRow(
                 id: row.id,
@@ -198,16 +183,16 @@ public final class PrivacyWordsEditor: NSObject {
                     Column.enabled: .toggle(row.word.isEnabled),
                     Column.real: .text(row.word.real),
                     Column.alias: .text(row.word.alias),
-                    Column.global: .toggle(globalIsFixed || row.word.isGlobal)
+                    Column.sites: .text(PrivacySitePattern.format(row.word.sites))
                 ],
-                // Half a pair is dropped on save; the tint says so before then.
-                isFlagged: row.word.alias.isEmpty != row.word.real.isEmpty,
-                readOnlyColumns: globalIsFixed ? [Column.global] : [])
+                // Half a pair is dropped on save, and a word with no sites
+                // applies nowhere; the tint says so before then.
+                isFlagged: row.word.alias.isEmpty != row.word.real.isEmpty || row.word.sites.isEmpty)
         })
     }
 
     private func addRow() {
-        rows.append(DraftRow(word: PrivacyWord(alias: "", real: "", isGlobal: paneID == nil, paneID: paneID)))
+        rows.append(DraftRow(word: PrivacyWord(alias: "", real: "", sites: [newWordSite])))
         reloadRows()
         beginEditing(row: rows.count - 1, column: Column.real)
     }
@@ -269,13 +254,8 @@ public final class PrivacyWordsEditor: NSObject {
     @objc private func save(_ sender: Any?) {
         // A cell still being typed in commits by losing focus.
         window.makeFirstResponder(nil)
-        let shown = rows.map { row -> PrivacyWord in
-            var word = row.word
-            if paneID == nil { word.isGlobal = true }
-            return word
-        }
         do {
-            try vault.save(shown + hiddenWords)
+            try vault.save(rows.map(\.word))
             close()
         } catch {
             let alert = NSAlert()

@@ -6,52 +6,51 @@ import Security
 /// applied at all, and where.
 ///
 /// - `isEnabled`: off keeps the word in the list but applies it nowhere.
-/// - `isGlobal`: applies to every private terminal and every web browser with
-///   Agent Privacy on. Off applies it only to the browser pane `paneID`
-///   names, the one it was defined in.
-/// - `paneID`: the browser pane the word was defined in (its layout node id);
-///   `nil` for a word defined in the global settings or a private terminal.
-///   Kept while `isGlobal` is on, so turning Global off again gives the word
-///   back to the pane it came from.
+/// - `sites`: the site patterns it applies on (``PrivacySitePattern``); `*`
+///   is everywhere, private terminals included.
 ///
-/// **The JSON is load-bearing**: it is what the keychain item already holds.
-/// Words saved before these fields existed are bare `{"alias", "real"}`
-/// objects, and decode as enabled, global and defined nowhere in particular —
-/// exactly how they applied then. A build from before the fields reads the
-/// objects as pairs and ignores the rest, so it applies every word globally.
+/// **The JSON is load-bearing**: it is what the keychain item already holds,
+/// and other apps signed by the team read it. Words saved before `sites`
+/// existed decode from the old fields: bare `{"alias", "real"}` objects and
+/// global words become `*`, and so do words that belonged to one browser pane
+/// (`"global": false, "pane": …`) — a pane cannot be mapped to a site, and
+/// concealing more is the safe direction. Saving writes `sites` and keeps
+/// writing `global` (whether `sites` holds `*`) beside `alias`, `real` and
+/// `enabled`, so a build from before `sites` still reads every word.
 public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
     /// What the user writes and reads.
     public var alias: String
     /// What the program is given and prints.
     public var real: String
     public var isEnabled: Bool
-    public var isGlobal: Bool
-    public var paneID: String?
+    public var sites: [String]
 
-    public init(alias: String, real: String, isEnabled: Bool = true, isGlobal: Bool = true, paneID: String? = nil) {
+    public init(
+        alias: String, real: String, isEnabled: Bool = true, sites: [String] = [PrivacySitePattern.everywhere]
+    ) {
         self.alias = alias
         self.real = real
         self.isEnabled = isEnabled
-        self.isGlobal = isGlobal
-        self.paneID = paneID
+        self.sites = sites
     }
 
     /// The word as a substitution pair.
     public var pair: TextSubstitutionFilter.Pair { .init(alias: alias, real: real) }
 
-    /// Whether the word applies in the browser pane `paneID`; `nil` asks for
-    /// what applies everywhere (a private terminal, a pane with no id).
-    public func applies(inPane paneID: String?) -> Bool {
+    /// Whether the word applies everywhere, private terminals included.
+    public var isEverywhere: Bool { sites.contains(PrivacySitePattern.everywhere) }
+
+    /// Whether the word applies at `url`; `nil` asks for a place with no
+    /// address (a private terminal), where only `*` words apply.
+    public func applies(at url: URL?) -> Bool {
         guard isEnabled else { return false }
-        if isGlobal { return true }
-        return paneID != nil && self.paneID == paneID
+        return sites.contains { PrivacySitePattern.matches($0, url: url) }
     }
 
     private enum CodingKeys: String, CodingKey {
-        case alias, real
+        case alias, real, sites
         case isEnabled = "enabled"
         case isGlobal = "global"
-        case paneID = "pane"
     }
 
     public init(from decoder: Decoder) throws {
@@ -59,18 +58,26 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
         alias = try container.decode(String.self, forKey: .alias)
         real = try container.decode(String.self, forKey: .real)
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
-        isGlobal = try container.decodeIfPresent(Bool.self, forKey: .isGlobal) ?? true
-        paneID = try container.decodeIfPresent(String.self, forKey: .paneID)
+        // Before `sites`, global and pane words alike become `*`.
+        sites = try container.decodeIfPresent([String].self, forKey: .sites) ?? [PrivacySitePattern.everywhere]
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(alias, forKey: .alias)
+        try container.encode(real, forKey: .real)
+        try container.encode(isEnabled, forKey: .isEnabled)
+        try container.encode(isEverywhere, forKey: .isGlobal)
+        try container.encode(sites, forKey: .sites)
     }
 }
 
 extension Array where Element == PrivacyWord {
 
-    /// The words that apply in the browser pane `paneID` — every enabled
-    /// global word and that pane's own enabled words — as one filter. `nil`
-    /// gives the enabled global words alone: what a private terminal uses.
-    public func filter(forPane paneID: String?) -> TextSubstitutionFilter {
-        TextSubstitutionFilter(pairs: self.filter { $0.applies(inPane: paneID) }.map(\.pair))
+    /// The enabled words that apply at `url`, as one filter. `nil` gives the
+    /// enabled `*` words alone: what a private terminal uses.
+    public func filter(for url: URL?) -> TextSubstitutionFilter {
+        TextSubstitutionFilter(pairs: self.filter { $0.applies(at: url) }.map(\.pair))
     }
 }
 
