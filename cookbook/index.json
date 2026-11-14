@@ -7847,18 +7847,18 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:342efc434f5edc9e64f58e8bb146500504e1db8201fe440ade0a38e2ee2f5f90",
+            "hash": "sha256:8f3fcf2318f84798acde62364594d29e74505646b96656f933e59f433a5847e6",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/HubMail/",
           "platform": "macos"
         },
         {
           "conformance": {
-            "hash": "sha256:342efc434f5edc9e64f58e8bb146500504e1db8201fe440ade0a38e2ee2f5f90",
+            "hash": "sha256:8f3fcf2318f84798acde62364594d29e74505646b96656f933e59f433a5847e6",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/HubMail/",
           "platform": "ios"
@@ -10676,6 +10676,22 @@
       "kind": "ingredient",
       "path": "landing/flow/band",
       "rdid": "adhsdk.ingredient.landing.flow.band"
+    },
+    "e12914f0-3a3b-4fb7-ac0c-6332de37de4f": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:c55eb494b398542fe4a9efaa2a1b60affe6ec69e45e00bf837ebfd61526315f9",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/hub-mail-bridge",
+      "rdid": "adhsdk.ingredient.integrations.hub-mail-bridge"
     },
     "e16d896e-9318-48ac-bf1e-b48ef648d73c": {
       "implementations": [

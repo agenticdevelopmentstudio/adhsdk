@@ -4,7 +4,7 @@
     "id": "a6442464-e17d-451e-b47a-3be23a2dc753",
     "title": "Hub Mail",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "385814e34e045a2f",
+  "synced": "bc23bd7f9eef077b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

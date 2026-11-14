@@ -2,7 +2,7 @@
 id: a6442464-e17d-451e-b47a-3be23a2dc753
 title: "Hub Mail"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-13
@@ -42,9 +42,9 @@ It is a separate store from the direct macOS Gmail worker in `AgenticDeveloperHu
 Four types make it up:
 
 - `HubMailProjection`, a `SyncMirrorProjection` that keeps the two resources in typed tables (`hub_email_messages`, `hub_email_labels`).
-- `HubMailStore`, the read API over those tables.
+- `HubMailStore`, the read API over those tables, plus `applyLabels`, which writes a label change the hub has accepted into the mirror until the next pull.
 - `HubMailSync`, which wires the projection, a `GRDBSyncStore` and a `SyncEngine` over one database and exposes sync-now and sign-out.
-- `HubMailSender`, which sends a message through the hub client's generated `APIProtocol`.
+- `HubMailSender`, which sends a message, or changes a message's labels, through the hub client's generated `APIProtocol`.
 
 ## Behavioral Requirements
 
@@ -56,14 +56,16 @@ Four types make it up:
 - **truncate-own-tables**: Truncate MUST empty only the tables of the resources it is given.
 - **connections**: `connections()` MUST return the distinct connection ids that have live messages or labels, sorted.
 - **labels-by-connection**: `labels(connectionId:)` MUST return that connection's live labels, system labels first, then by name.
-- **messages-newest-first**: `messages(...)` MUST return live messages newest first by `internal_date`, then by id descending, optionally narrowed to one connection and to messages whose `label_ids` contain one label.
+- **messages-newest-first**: `messages(...)` MUST return live messages newest first by `internal_date`, then by id descending, optionally narrowed to one connection and to messages whose `label_ids` contain one label. `messages(_ query: HubMailQuery)` narrows the same way and further: every label in `labelIds` MUST be on the message, at least one of `anyLabelIds` MUST be when it is non-empty, and `since`/`until` bound `internal_date` inclusively.
 - **keyset-paging**: A page MUST hold at most `limit` messages (clamped to 1...500) and a `next` cursor that is non-nil exactly when more messages follow; passing it back MUST return the messages after the last one, with no repeats or gaps while the rows do not change.
+- **message-by-either-id**: `message(connectionId:id:)` MUST return the connection's live message whose row id or provider (`external_id`) id is `id`, preferring a row-id match, or nil.
 - **thread-oldest-first**: `thread(connectionId:threadId:)` MUST return the thread's live messages oldest first.
 - **pull-only**: `HubMailSync` MUST register both resources as pull-only with the sync store, because the hub refuses pushes to worker-owned tables, and MUST pass both as the engine's `hostResources` so no other enrolled table is mirrored.
 - **sign-out-purges**: `signOut()` MUST pause the engine, purge every mirrored row, cursor and outbox entry for the departing identity, then resume.
 - **send-action**: `HubMailSender.send` MUST post the `send` action for the connection with `to`, `cc`, `bcc`, `subject`, `bodyText` and `bodyHtml`, and return the result's `ok`, `externalId`, `deduped` and `error`.
 - **send-errors**: A non-200 answer MUST throw `HubMailSendError.rejected(statusCode:)`.
-
+- **label-write-action**: `HubMailSender.modifyLabels` MUST post the `modify_labels` action for the write's connection with its provider message ids and the label ids to add and remove, return the result as `send` does, and throw `HubMailSendError.rejected(statusCode:)` on a non-200 answer.
+- **local-label-write**: `applyLabels(messageIds:add:remove:)` MUST, for each row id that exists, drop every label in `remove`, append each label in `add` it lacks, and leave the row's sync version alone, so the next pull still replaces the row with the hub's copy.
 ## Appearance
 
 Not applicable: these types draw nothing. The app's mail browser renders what the store returns.
@@ -105,13 +107,18 @@ Not applicable: no visual or interactive element.
 | hub-mail-010 | pull-only, sign-out-purges | A scripted pull of one message and one label through `HubMailSync`, then `signOut` | After sync both read back; after sign-out, none |
 | hub-mail-011 | send-action | A fake client answering ok with external id `g1` | The input names the connection and `send`, carries the fields, and the result is ok with `g1` |
 | hub-mail-012 | send-errors | The fake client answers 401 | `HubMailSendError.rejected(statusCode: 401)` |
-
+| hub-mail-013 | messages-newest-first | `HubMailQuery` with `labelIds` `["INBOX", "Label_1"]`, then `anyLabelIds` `["Label_1", "SENT"]` | Only the message carrying both; then the messages carrying either, newest first |
+| hub-mail-014 | messages-newest-first | `since`/`until` around one of three dates | Only that message |
+| hub-mail-015 | message-by-either-id | `message(connectionId: "c1", id:)` with the row id, the provider id, and another connection's row id | The message, the message, nil |
+| hub-mail-016 | local-label-write | `applyLabels` adding `Label_1` and `UNREAD`, removing `INBOX`, on a message labelled `INBOX`, `UNREAD` at version 6, plus a missing id | Labels `UNREAD`, `Label_1`; version still 6; the missing id is skipped |
+| hub-mail-017 | label-write-action | `modifyLabels` with message `g1`, add `Label_1`, remove `INBOX` | The path ends in `/actions/modify_labels`, the body carries `message_ids`, `add_label_ids` and `remove_label_ids`, the result is ok |
 ## Edge Cases
 
 - A message with no `internal_date` sorts after every dated message, and pages by id among its peers.
 - A JSON column that arrives as a string (already encoded) is stored as that string; one that arrives as an array or object is encoded.
 - A change for a column the projection does not know is ignored, so a new backend column does not break an old client.
-
+- A `label_ids` value that is not valid JSON reads as no labels in every label filter, rather than failing the query.
+- `applyLabels` skips a row id the mirror does not have, and a label both added and already present is not duplicated.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -164,8 +171,8 @@ Not applicable: these types log nothing; sync failures surface as engine events.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/HubMail/` | confirmed (1.0.0) |
-| ios | `packages/apple/AgenticDeveloperHubSDK/HubMail/` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/HubMail/` | confirmed (1.1.0) |
+| ios | `packages/apple/AgenticDeveloperHubSDK/HubMail/` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -181,6 +188,9 @@ Not applicable: these types log nothing; sync failures surface as engine events.
 **Rationale**: A mailbox is large and grows at the top while the user scrolls; a keyset cursor neither repeats nor skips when new mail arrives, where an offset would.
 **Approved**: pending
 
+**Decision**: A label change is written into the mirror right after the hub accepts it, keeping the row's sync version.
+**Rationale**: The hub's `modify_labels` action changes Gmail, not the hub's table; the worker's next run brings the new labels back. Writing them locally meanwhile keeps the UI honest, and leaving the sync version alone means the next pulled copy still wins, so the mirror never drifts from the hub for long.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -195,4 +205,5 @@ Every vector has a named test in `AgenticDeveloperHubSDKHubMailTests`. Only the 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-13 | Mike Fullerton | Label writes through the modify_labels action, HubMailQuery filters, lookup by either id, and the local label write |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

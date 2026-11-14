@@ -274,6 +274,19 @@
       "holds": "AgenticDeveloperHubSDKIntegrations. Third-party service integrations (Gmail): models, store, client, sync."
     },
     {
+      "name": "apple-hubmailbridge",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/"
+      ],
+      "depends_on": [
+        "apple-core",
+        "apple-integrations",
+        "apple-hubmail"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKHubMailBridge. Answers the mail RPC (MailRequest/MailResponse) from the hub mail mirror, so the mail browser and Email App read hub-synced mail through MailClient; label writes go through the hub. macOS."
+    },
+    {
       "name": "apple-activity",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Activity/"
@@ -499,7 +512,8 @@
         "apple-integrations",
         "apple-menubar",
         "apple-hubsync",
-        "apple-hubmail"
+        "apple-hubmail",
+        "apple-hubmailbridge"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

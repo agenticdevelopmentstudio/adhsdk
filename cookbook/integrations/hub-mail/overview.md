@@ -6,7 +6,7 @@ It is a separate store from the direct macOS Gmail worker in `AgenticDeveloperHu
 Four types make it up:
 
 - `HubMailProjection`, a `SyncMirrorProjection` that keeps the two resources in typed tables (`hub_email_messages`, `hub_email_labels`).
-- `HubMailStore`, the read API over those tables.
+- `HubMailStore`, the read API over those tables, plus `applyLabels`, which writes a label change the hub has accepted into the mirror until the next pull.
 - `HubMailSync`, which wires the projection, a `GRDBSyncStore` and a `SyncEngine` over one database and exposes sync-now and sign-out.
-- `HubMailSender`, which sends a message through the hub client's generated `APIProtocol`.
+- `HubMailSender`, which sends a message, or changes a message's labels, through the hub client's generated `APIProtocol`.
 

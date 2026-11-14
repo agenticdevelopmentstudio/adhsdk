@@ -7,11 +7,13 @@
 - **truncate-own-tables**: Truncate MUST empty only the tables of the resources it is given.
 - **connections**: `connections()` MUST return the distinct connection ids that have live messages or labels, sorted.
 - **labels-by-connection**: `labels(connectionId:)` MUST return that connection's live labels, system labels first, then by name.
-- **messages-newest-first**: `messages(...)` MUST return live messages newest first by `internal_date`, then by id descending, optionally narrowed to one connection and to messages whose `label_ids` contain one label.
+- **messages-newest-first**: `messages(...)` MUST return live messages newest first by `internal_date`, then by id descending, optionally narrowed to one connection and to messages whose `label_ids` contain one label. `messages(_ query: HubMailQuery)` narrows the same way and further: every label in `labelIds` MUST be on the message, at least one of `anyLabelIds` MUST be when it is non-empty, and `since`/`until` bound `internal_date` inclusively.
 - **keyset-paging**: A page MUST hold at most `limit` messages (clamped to 1...500) and a `next` cursor that is non-nil exactly when more messages follow; passing it back MUST return the messages after the last one, with no repeats or gaps while the rows do not change.
+- **message-by-either-id**: `message(connectionId:id:)` MUST return the connection's live message whose row id or provider (`external_id`) id is `id`, preferring a row-id match, or nil.
 - **thread-oldest-first**: `thread(connectionId:threadId:)` MUST return the thread's live messages oldest first.
 - **pull-only**: `HubMailSync` MUST register both resources as pull-only with the sync store, because the hub refuses pushes to worker-owned tables, and MUST pass both as the engine's `hostResources` so no other enrolled table is mirrored.
 - **sign-out-purges**: `signOut()` MUST pause the engine, purge every mirrored row, cursor and outbox entry for the departing identity, then resume.
 - **send-action**: `HubMailSender.send` MUST post the `send` action for the connection with `to`, `cc`, `bcc`, `subject`, `bodyText` and `bodyHtml`, and return the result's `ok`, `externalId`, `deduped` and `error`.
 - **send-errors**: A non-200 answer MUST throw `HubMailSendError.rejected(statusCode:)`.
-
+- **label-write-action**: `HubMailSender.modifyLabels` MUST post the `modify_labels` action for the write's connection with its provider message ids and the label ids to add and remove, return the result as `send` does, and throw `HubMailSendError.rejected(statusCode:)` on a non-200 answer.
+- **local-label-write**: `applyLabels(messageIds:add:remove:)` MUST, for each row id that exists, drop every label in `remove`, append each label in `add` it lacks, and leave the row's sync version alone, so the next pull still replaces the row with the hub's copy.

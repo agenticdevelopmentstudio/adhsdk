@@ -5,7 +5,7 @@ import OpenAPIRuntime
 import AgenticDeveloperHubClient
 @testable import AgenticDeveloperHubSDKHubMail
 
-/// Vectors hub-mail-011 and 012: send goes through the hub's `send` action.
+/// Vectors hub-mail-011, 012 and 017: send and label changes go through the hub's actions.
 final class HubMailSenderTests: XCTestCase {
 
     /// Answers every request with one canned response and records what it saw.
@@ -85,5 +85,22 @@ final class HubMailSenderTests: XCTestCase {
         } catch {
             XCTAssertEqual(error as? HubMailSendError, .rejected(statusCode: 418))
         }
+    }
+    // 017
+    func testModifyLabelsPostsTheModifyLabelsAction() async throws {
+        let transport = OneAnswerTransport(status: 200, json: """
+            {"object":"action","ok":true,"status":"ok","action_log_id":"log2","deduped":false}
+            """)
+        let result = try await sender(transport).modifyLabels(HubMailLabelWrite(
+            connectionId: "conn-1", messageIds: ["g1"], add: ["Label_1"], remove: ["INBOX"]))
+        XCTAssertTrue(result.ok)
+        let request = try XCTUnwrap(transport.requests.first)
+        XCTAssertTrue(request.path.hasSuffix("/integrations/connections/conn-1/actions/modify_labels"), request.path)
+        let body = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: try XCTUnwrap(request.body)) as? [String: Any]
+        )
+        XCTAssertEqual(body["message_ids"] as? [String], ["g1"])
+        XCTAssertEqual(body["add_label_ids"] as? [String], ["Label_1"])
+        XCTAssertEqual(body["remove_label_ids"] as? [String], ["INBOX"])
     }
 }

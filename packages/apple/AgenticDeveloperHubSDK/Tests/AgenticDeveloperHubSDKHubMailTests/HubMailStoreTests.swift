@@ -7,7 +7,7 @@ import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKSync
 @testable import AgenticDeveloperHubSDKHubMail
 
-/// Vectors hub-mail-001 to 009: the projection's writes read back through the store.
+/// Vectors hub-mail-001 to 009 and 013 to 016: the projection's writes read back through the store.
 final class HubMailStoreTests: XCTestCase {
 
     private var dir: URL!
@@ -190,6 +190,45 @@ final class HubMailStoreTests: XCTestCase {
             )
         }
         XCTAssertEqual(try store.message(id: "m1")?.connectionId, "c1")
+    }
+    // 013
+    func testQueryRequiresEveryLabelAndAnyOfTheAnyLabels() throws {
+        try upsertMessage("both", date: "2026-01-03T00:00:00Z", labels: ["INBOX", "Label_1"])
+        try upsertMessage("inbox", date: "2026-01-02T00:00:00Z", labels: ["INBOX"])
+        try upsertMessage("sent", date: "2026-01-01T00:00:00Z", labels: ["SENT"])
+        let all = try store.messages(HubMailQuery(labelIds: ["INBOX", "Label_1"]))
+        XCTAssertEqual(all.messages.map(\.id), ["both"])
+        let any = try store.messages(HubMailQuery(anyLabelIds: ["Label_1", "SENT"]))
+        XCTAssertEqual(any.messages.map(\.id), ["both", "sent"])
+    }
+
+    // 014
+    func testQueryNarrowsByDate() throws {
+        try upsertMessage("old", date: "2026-01-01T00:00:00Z")
+        try upsertMessage("mid", date: "2026-01-05T00:00:00Z")
+        try upsertMessage("new", date: "2026-01-09T00:00:00Z")
+        let page = try store.messages(HubMailQuery(since: "2026-01-04T00:00:00Z", until: "2026-01-06T00:00:00Z"))
+        XCTAssertEqual(page.messages.map(\.id), ["mid"])
+    }
+
+    // 015
+    func testMessageByConnectionMatchesRowOrProviderId() throws {
+        try upsertMessage("m1")
+        try upsertMessage("m2", connection: "c2")
+        XCTAssertEqual(try store.message(connectionId: "c1", id: "m1")?.id, "m1")
+        XCTAssertEqual(try store.message(connectionId: "c1", id: "ext-m1")?.id, "m1")
+        XCTAssertNil(try store.message(connectionId: "c1", id: "m2"))
+    }
+
+    // 016
+    func testApplyLabelsKeepsTheSyncVersion() throws {
+        try upsertMessage("m1", labels: ["INBOX", "UNREAD"], version: 6)
+        try store.applyLabels(messageIds: ["m1", "missing"], add: ["Label_1", "UNREAD"], remove: ["INBOX"])
+        XCTAssertEqual(try store.message(id: "m1")?.labelIds, ["UNREAD", "Label_1"])
+        let version = try database.read { conn in
+            try projection.syncVersion(resource: HubMailResource.messages, id: "m1", in: conn)
+        }
+        XCTAssertEqual(version, 6)
     }
 }
 // swiftlint:enable identifier_name

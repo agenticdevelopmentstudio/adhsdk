@@ -56,21 +56,39 @@ public final class HubMailStore: Sendable {
         connectionId: String? = nil, labelId: String? = nil,
         limit: Int = 50, before cursor: HubMailPageCursor? = nil
     ) throws -> HubEmailMessagePage {
-        let pageSize = min(max(limit, 1), Self.maxPageSize)
+        try messages(HubMailQuery(
+            connectionId: connectionId, labelIds: labelId.map { [$0] } ?? [], limit: limit, before: cursor
+        ))
+    }
+
+    /// A page of the live messages `query` selects, in the same order as
+    /// `messages(connectionId:labelId:limit:before:)`.
+    public func messages(_ query: HubMailQuery) throws -> HubEmailMessagePage {
+        let pageSize = min(max(query.limit, 1), Self.maxPageSize)
         var clauses = [Self.live]
         var arguments: [(any DatabaseValueConvertible)?] = []
-        if let connectionId {
+        if let connectionId = query.connectionId {
             clauses.append("connection_id = ?")
             arguments.append(connectionId)
         }
-        if let labelId {
-            clauses.append("""
-                EXISTS (SELECT 1 FROM json_each(CASE WHEN json_valid(label_ids) THEN label_ids ELSE '[]' END)
-                        WHERE value = ?)
-                """)
+        for labelId in query.labelIds {
+            clauses.append("EXISTS (SELECT 1 FROM \(Self.labelValues) WHERE value = ?)")
             arguments.append(labelId)
         }
-        if let cursor {
+        if !query.anyLabelIds.isEmpty {
+            let marks = Array(repeating: "?", count: query.anyLabelIds.count).joined(separator: ", ")
+            clauses.append("EXISTS (SELECT 1 FROM \(Self.labelValues) WHERE value IN (\(marks)))")
+            arguments += query.anyLabelIds.map { $0 }
+        }
+        if let since = query.since {
+            clauses.append("internal_date >= ?")
+            arguments.append(since)
+        }
+        if let until = query.until {
+            clauses.append("internal_date <= ?")
+            arguments.append(until)
+        }
+        if let cursor = query.before {
             if let date = cursor.internalDate {
                 clauses.append("""
                     ((internal_date IS NOT NULL AND (internal_date < ? OR (internal_date = ? AND id < ?)))
@@ -102,6 +120,11 @@ public final class HubMailStore: Sendable {
         return HubEmailMessagePage(messages: page, next: next)
     }
 
+    /// The elements of a row's `label_ids`, as a table; a value that is not
+    /// valid JSON reads as no labels.
+    private static let labelValues =
+        "json_each(CASE WHEN json_valid(label_ids) THEN label_ids ELSE '[]' END)"
+
     /// One live message, or nil.
     public func message(id: String) throws -> HubEmailMessage? {
         try database.read { conn in
@@ -110,6 +133,42 @@ public final class HubMailStore: Sendable {
                 sql: "SELECT * FROM \(Self.messages) WHERE id = ? AND \(Self.live)",
                 arguments: [id]
             ).map(Self.message(from:))
+        }
+    }
+
+    /// One connection's live message whose row id, else provider id, is `id`.
+    public func message(connectionId: String, id: String) throws -> HubEmailMessage? {
+        try database.read { conn in
+            try Row.fetchOne(
+                conn,
+                sql: """
+                    SELECT * FROM \(Self.messages)
+                    WHERE connection_id = ? AND (id = ? OR external_id = ?) AND \(Self.live)
+                    ORDER BY (id = ?) DESC LIMIT 1
+                    """,
+                arguments: [connectionId, id, id, id]
+            ).map(Self.message(from:))
+        }
+    }
+
+    /// Writes a label change into the mirror: each message (by row id) loses
+    /// every label in `remove` and gains each label in `add` it lacks. The
+    /// rows keep their sync version, so the next pull of each one from the hub
+    /// replaces this local copy with the hub's.
+    public func applyLabels(messageIds: [String], add: [String], remove: [String]) throws {
+        try database.write { conn in
+            for id in messageIds {
+                guard let row = try Row.fetchOne(
+                    conn, sql: "SELECT label_ids FROM \(Self.messages) WHERE id = ?", arguments: [id]
+                ) else { continue }
+                var labels = Self.strings(row["label_ids"]).filter { !remove.contains($0) }
+                for label in add where !labels.contains(label) { labels.append(label) }
+                let data = try JSONSerialization.data(withJSONObject: labels)
+                try conn.execute(
+                    sql: "UPDATE \(Self.messages) SET label_ids = ? WHERE id = ?",
+                    arguments: [String(bytes: data, encoding: .utf8) ?? "[]", id]
+                )
+            }
         }
     }
 

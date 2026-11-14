@@ -895,6 +895,65 @@ targets:
       - package: swift-http-types
         product: HTTPTypes
 
+  AgenticDeveloperHubSDKHubMailBridge:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - HubMailBridge
+    dependencies:
+      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKIntegrations
+      - target: AgenticDeveloperHubSDKHubMail
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailBridgeTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKHubMailBridgeTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubMailBridge
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKIntegrations
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
   # Two targets, not one `supportedDestinations: [macOS, iOS]` target: this
   # framework depends on AgenticDeveloperHubSDK, which exposes only
   # platform-specific targets, and a multi-destination target cannot depend on
@@ -2048,6 +2107,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKHubSync
       - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailBridge
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-macOS
@@ -2129,6 +2189,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubSync
       - AgenticDeveloperHubSDKHubMail
       - AgenticDeveloperHubSDKHubMailTests
+      - AgenticDeveloperHubSDKHubMailBridge
+      - AgenticDeveloperHubSDKHubMailBridgeTests
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchTests
       - AgenticDeveloperHubSDKSemanticSearchStore
@@ -2274,6 +2336,23 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKHubMailTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKHubMailBridge:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubMailBridge: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailBridgeTests
     profile:
       config: Release
     analyze:

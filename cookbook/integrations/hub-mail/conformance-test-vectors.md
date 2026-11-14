@@ -13,4 +13,8 @@
 | hub-mail-010 | pull-only, sign-out-purges | A scripted pull of one message and one label through `HubMailSync`, then `signOut` | After sync both read back; after sign-out, none |
 | hub-mail-011 | send-action | A fake client answering ok with external id `g1` | The input names the connection and `send`, carries the fields, and the result is ok with `g1` |
 | hub-mail-012 | send-errors | The fake client answers 401 | `HubMailSendError.rejected(statusCode: 401)` |
-
+| hub-mail-013 | messages-newest-first | `HubMailQuery` with `labelIds` `["INBOX", "Label_1"]`, then `anyLabelIds` `["Label_1", "SENT"]` | Only the message carrying both; then the messages carrying either, newest first |
+| hub-mail-014 | messages-newest-first | `since`/`until` around one of three dates | Only that message |
+| hub-mail-015 | message-by-either-id | `message(connectionId: "c1", id:)` with the row id, the provider id, and another connection's row id | The message, the message, nil |
+| hub-mail-016 | local-label-write | `applyLabels` adding `Label_1` and `UNREAD`, removing `INBOX`, on a message labelled `INBOX`, `UNREAD` at version 6, plus a missing id | Labels `UNREAD`, `Label_1`; version still 6; the missing id is skipped |
+| hub-mail-017 | label-write-action | `modifyLabels` with message `g1`, add `Label_1`, remove `INBOX` | The path ends in `/actions/modify_labels`, the body carries `message_ids`, `add_label_ids` and `remove_label_ids`, the result is ok |

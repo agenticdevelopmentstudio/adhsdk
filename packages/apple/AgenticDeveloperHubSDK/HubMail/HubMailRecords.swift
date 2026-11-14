@@ -110,3 +110,29 @@ public struct HubEmailMessagePage: Sendable, Equatable {
     }
 }
 // swiftlint:enable identifier_name
+
+/// What `HubMailStore.messages(_:)` selects. Every label in `labelIds` must
+/// be on a message, and at least one in `anyLabelIds` when it is non-empty;
+/// `since` and `until` bound `internal_date` inclusively.
+public struct HubMailQuery: Sendable, Equatable {
+    public var connectionId: String?
+    public var labelIds: [String]
+    public var anyLabelIds: [String]
+    public var since: String?
+    public var until: String?
+    public var limit: Int
+    public var before: HubMailPageCursor?
+
+    public init(
+        connectionId: String? = nil, labelIds: [String] = [], anyLabelIds: [String] = [],
+        since: String? = nil, until: String? = nil, limit: Int = 50, before: HubMailPageCursor? = nil
+    ) {
+        self.connectionId = connectionId
+        self.labelIds = labelIds
+        self.anyLabelIds = anyLabelIds
+        self.since = since
+        self.until = until
+        self.limit = limit
+        self.before = before
+    }
+}

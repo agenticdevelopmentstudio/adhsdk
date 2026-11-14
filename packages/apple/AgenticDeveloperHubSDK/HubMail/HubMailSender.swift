@@ -21,6 +21,22 @@ public struct HubMailSendResult: Sendable, Equatable {
     }
 }
 
+/// One label change for some of a connection's messages, as the hub's
+/// `modify_labels` action takes it: provider message ids and provider label ids.
+public struct HubMailLabelWrite: Sendable, Equatable {
+    public let connectionId: String
+    public let messageIds: [String]
+    public let add: [String]
+    public let remove: [String]
+
+    public init(connectionId: String, messageIds: [String], add: [String], remove: [String]) {
+        self.connectionId = connectionId
+        self.messageIds = messageIds
+        self.add = add
+        self.remove = remove
+    }
+}
+
 public enum HubMailSendError: Error, Equatable, Sendable {
     /// The hub answered with a status other than 200.
     case rejected(statusCode: Int)
@@ -46,8 +62,24 @@ public struct HubMailSender: Sendable {
         let request = AgenticDeveloperHubClient.Components.Schemas.IntegrationActionRequest.case1(.init(
             to: to, cc: cc, bcc: bcc, subject: subject, bodyText: bodyText, bodyHtml: bodyHtml
         ))
+        return try await perform("send", connectionId: connectionId, request: request)
+    }
+
+    /// Adds and removes labels on messages through the hub's `modify_labels`
+    /// action; the hub's worker makes the change in Gmail.
+    public func modifyLabels(_ write: HubMailLabelWrite) async throws -> HubMailSendResult {
+        let request = AgenticDeveloperHubClient.Components.Schemas.IntegrationActionRequest.case13(.init(
+            messageIds: write.messageIds, addLabelIds: write.add, removeLabelIds: write.remove
+        ))
+        return try await perform("modify_labels", connectionId: write.connectionId, request: request)
+    }
+
+    private func perform(
+        _ actionType: String, connectionId: String,
+        request: AgenticDeveloperHubClient.Components.Schemas.IntegrationActionRequest
+    ) async throws -> HubMailSendResult {
         let output = try await client.postV1IntegrationsConnectionsByIdActionsByActionType(Operation.Input(
-            path: .init(id: connectionId, actionType: "send"),
+            path: .init(id: connectionId, actionType: actionType),
             body: .json(request)
         ))
         guard case .ok(let ok) = output else {

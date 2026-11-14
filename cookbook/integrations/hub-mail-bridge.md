@@ -176,6 +176,12 @@ Not applicable: the bridge logs nothing; failures are answered to the caller.
 - **React/Web**: Not applicable: the web app reads the hub API directly and has no local RPC.
 - **WinUI 3**: Not applicable until a Windows host shares one mail UI between two sources; it would follow this shape.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| macos | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.0.0) |
+
 ## Design Decisions
 
 **Decision**: Answer the existing mail RPC rather than give the UI a second, hub-shaped API.
