@@ -1,0 +1,61 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "e12914f0-3a3b-4fb7-ac0c-6332de37de4f",
+    "title": "Hub Mail Bridge",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Answers the mail RPC (MailRequest / MailResponse) from the hub-sourced mail mirror, so the macOS mail browser, Email App and settings panel read hub mail through the same MailClient they use for the direct Gmail worker.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "integrations",
+      "mail",
+      "hub",
+      "adapter"
+    ],
+    "depends-on": [
+      "a6442464-e17d-451e-b47a-3be23a2dc753",
+      "fc9671be-170c-436e-9628-892624952191"
+    ],
+    "related": [
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a",
+      "b3edb32d-7473-464b-acfb-c19cdd44e99e"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "fe3ed81c3f5c5bf4",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

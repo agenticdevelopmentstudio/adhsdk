@@ -5155,6 +5155,31 @@
       "path": "search/components/markdown/markdown-preview",
       "rdid": "adhsdk.ingredient.search.components.markdown.markdown-preview"
     },
+    "6edbc7b8-b533-4cca-b62d-74b92ce3f650": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:8e5d8a9114e565ccdcb20f12adfc58af3d3285d76144029221100080a8a4ce5c",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubSync/",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:8e5d8a9114e565ccdcb20f12adfc58af3d3285d76144029221100080a8a4ce5c",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubSync/",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "data/sync/hub-sync-transport",
+      "rdid": "adhsdk.ingredient.data.sync.hub-sync-transport"
+    },
     "6f5f455d-b744-425d-a21e-494fc18caaf2": {
       "implementations": [
         {
@@ -7817,6 +7842,31 @@
       "kind": "ingredient",
       "path": "landing/blocks/stats",
       "rdid": "adhsdk.ingredient.landing.blocks.stats"
+    },
+    "a6442464-e17d-451e-b47a-3be23a2dc753": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:342efc434f5edc9e64f58e8bb146500504e1db8201fe440ade0a38e2ee2f5f90",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMail/",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:342efc434f5edc9e64f58e8bb146500504e1db8201fe440ade0a38e2ee2f5f90",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMail/",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/hub-mail",
+      "rdid": "adhsdk.ingredient.integrations.hub-mail"
     },
     "a70a5906-e2c2-4e15-8b2c-913453ff3714": {
       "implementations": [

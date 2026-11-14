@@ -234,6 +234,33 @@
       "holds": "AgenticDeveloperHubSDKMarkdown. The GRDB-backed markdown note store, built for macOS and iOS, re-exporting AgenticDeveloperHubSDK. Storage and sync only — no UI."
     },
     {
+      "name": "apple-hubsync",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/HubSync/"
+      ],
+      "depends_on": [
+        "apple-sync",
+        "apple-hubclient"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKHubSync. ADHSyncTransport: the sync engine's SyncTransport over the hub client's ADHSyncAPI (wire coding and error mapping). macOS and iOS."
+    },
+    {
+      "name": "apple-hubmail",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/HubMail/"
+      ],
+      "depends_on": [
+        "apple-sync",
+        "apple-syncgrdb",
+        "apple-database",
+        "apple-hubclient",
+        "apple-hubsync"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKHubMail. Hub-sourced mail: the typed mirror projection of the hub's Gmail tables, HubMailStore reads, HubMailSync (engine wiring, sign-out purge) and HubMailSender (the hub's send action). macOS and iOS."
+    },
+    {
       "name": "apple-integrations",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Integrations/"
@@ -470,7 +497,9 @@
         "apple-hubauth",
         "apple-chromium",
         "apple-integrations",
-        "apple-menubar"
+        "apple-menubar",
+        "apple-hubsync",
+        "apple-hubmail"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

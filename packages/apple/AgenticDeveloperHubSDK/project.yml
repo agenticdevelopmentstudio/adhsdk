@@ -806,6 +806,95 @@ targets:
       - package: GRDB
         product: GRDB
 
+  # Hub sync client: the engine's SyncTransport over the client's ADHSyncAPI.
+  # Spec: cookbook/data/sync/hub-sync-transport.md.
+  AgenticDeveloperHubSDKHubSync:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - HubSync
+    dependencies:
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  # Hub Mail: the hub's Gmail tables mirrored into a local GRDB store, typed
+  # reads over them, and send through the hub's `send` action. No Gmail code.
+  # Spec: cookbook/integrations/hub-mail.md.
+  AgenticDeveloperHubSDKHubMail:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - HubMail
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubSync
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubSDKSyncGRDB
+      - target: AgenticDeveloperHubSDKDatabase
+      - package: GRDB
+        product: GRDB
+      - sdk: libsqlite3.tbd
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKHubMailTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+
   # Two targets, not one `supportedDestinations: [macOS, iOS]` target: this
   # framework depends on AgenticDeveloperHubSDK, which exposes only
   # platform-specific targets, and a multi-destination target cannot depend on
@@ -1957,6 +2046,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKHubMail
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-macOS
@@ -1981,6 +2072,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKHubMail
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-iOS
@@ -2033,6 +2126,9 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSyncTests
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKSyncGRDBTests
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailTests
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchTests
       - AgenticDeveloperHubSDKSemanticSearchStore
@@ -2161,6 +2257,40 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKSyncGRDBTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKHubSync:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubSync: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKHubMail:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubMail: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailTests
     profile:
       config: Release
     analyze:
