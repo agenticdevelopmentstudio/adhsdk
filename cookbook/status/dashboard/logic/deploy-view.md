@@ -211,7 +211,7 @@ Not applicable: the module makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/deploy-view.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/deploy-view.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

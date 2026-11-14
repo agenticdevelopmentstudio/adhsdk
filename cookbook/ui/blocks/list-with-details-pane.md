@@ -287,7 +287,7 @@ keyboard-dismissable (its own contract).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/list-with-details-pane.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/list-with-details-pane.tsx` | confirmed (2.2.1) |
 
 ## Design Decisions
 

@@ -128,7 +128,7 @@ Not applicable: The text helper calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/LocalTimeText.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/LocalTimeText.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

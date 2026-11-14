@@ -226,7 +226,7 @@ This file uses plain `console.log`/`console.error` calls with a literal `[sync]`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/sync.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/sync.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

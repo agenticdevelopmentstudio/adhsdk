@@ -303,7 +303,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

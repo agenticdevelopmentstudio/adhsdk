@@ -137,7 +137,7 @@ Not applicable: The Skeleton component produces no logging output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/skeleton.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/skeleton.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 

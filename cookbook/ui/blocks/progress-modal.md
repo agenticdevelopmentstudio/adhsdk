@@ -196,7 +196,7 @@ Not applicable: This component does not perform logging. Debug information about
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/progress-modal.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/progress-modal.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

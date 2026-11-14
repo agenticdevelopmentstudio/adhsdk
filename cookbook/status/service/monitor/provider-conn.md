@@ -160,7 +160,7 @@ Neither `providerConn` nor `enumerateDeployProjects` calls `console.*` or any ot
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/provider-conn.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/provider-conn.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

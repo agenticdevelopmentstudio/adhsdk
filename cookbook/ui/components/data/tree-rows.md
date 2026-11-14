@@ -242,7 +242,7 @@ Each bullet below assumes this recipe's flatten-plus-label approach: hierarchy l
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/tree-rows.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/tree-rows.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 

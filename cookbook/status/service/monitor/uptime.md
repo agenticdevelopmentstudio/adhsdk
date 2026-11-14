@@ -178,7 +178,7 @@ Not applicable: the component contains no logging statement of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/uptime.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/uptime.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

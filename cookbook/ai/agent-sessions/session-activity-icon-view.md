@@ -439,7 +439,7 @@ Not applicable: the source contains no logging calls of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionListWindow/SessionWatcherActivityIconView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionListWindow/SessionWatcherActivityIconView.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

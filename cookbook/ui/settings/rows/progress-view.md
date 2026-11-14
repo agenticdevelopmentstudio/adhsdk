@@ -351,7 +351,7 @@ logger reference anywhere in source).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ProgressView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ProgressView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

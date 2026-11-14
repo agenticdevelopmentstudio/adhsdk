@@ -865,7 +865,7 @@ Edge Cases, including its two open questions).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/deploy-platform/src/` | unverified |
+| web | `packages/web/packages/deploy-platform/src/` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -168,7 +168,7 @@ Not applicable: The component does not emit logging events. Debugging can be per
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-table-of-contents.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/doc-table-of-contents.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -144,7 +144,7 @@ Not applicable: The migration calls no logging API; the caller reports the outco
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/LegacyDirectoryMigration.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/LegacyDirectoryMigration.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

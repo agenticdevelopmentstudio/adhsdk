@@ -189,7 +189,7 @@ telemetry belong to the consumer's `onRemove` handler, not the chip.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/removable-chip.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/removable-chip.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -393,7 +393,7 @@ fixed `50_000` threshold — never a key, an IP address, or a credential.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/middleware/` | unverified |
+| web | `packages/web/packages/status-server/src/middleware/` | confirmed (1.0.3) |
 
 ## Design Decisions
 

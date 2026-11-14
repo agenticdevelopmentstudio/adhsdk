@@ -194,7 +194,7 @@ Not applicable: the behavior has no log calls. No code path in it logs, throws o
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-edge-lock.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-edge-lock.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

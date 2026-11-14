@@ -194,7 +194,7 @@ Not applicable: the source makes no log call, and the reasons it throws carry no
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

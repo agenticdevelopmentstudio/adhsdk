@@ -178,7 +178,7 @@ Not applicable. The component does not emit any log messages.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/color-mode-toggle.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/color-mode-toggle.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

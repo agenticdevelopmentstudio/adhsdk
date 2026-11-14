@@ -367,7 +367,7 @@ and is out of scope for this recipe.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePickerView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePickerView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

@@ -179,7 +179,7 @@ Not applicable: The component does not emit structured logs or debug messages. D
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/category-delete-dialog.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/category-delete-dialog.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

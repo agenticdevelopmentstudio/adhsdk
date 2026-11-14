@@ -1061,7 +1061,7 @@ arguments — the measuring stays in the component, the deciding is tested.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/hierarchical-topic-detail.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/hierarchical-topic-detail.tsx` | confirmed (1.22.0) |
 
 ## Design Decisions
 

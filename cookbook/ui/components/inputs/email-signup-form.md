@@ -253,7 +253,7 @@ Subsystem: Application console (developer-facing only)
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/email-signup-form.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/email-signup-form.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

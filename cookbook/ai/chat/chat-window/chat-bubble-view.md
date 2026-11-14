@@ -226,7 +226,7 @@ Not applicable: the source contains no logging calls (no `Logger`, `os_log`, or 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/AIChatBubbleView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/AIChatBubbleView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

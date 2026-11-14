@@ -586,7 +586,7 @@ Not applicable: source contains no logging call anywhere.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

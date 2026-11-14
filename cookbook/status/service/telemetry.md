@@ -145,10 +145,10 @@ Subsystem: (no fixed subsystem; uses `console.error()`)
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/collect.ts` | unverified |
-| web | `packages/web/packages/status-server/src/telemetry/ports.ts` | unverified |
-| web | `packages/web/packages/status-server/src/telemetry/server.ts` | unverified |
-| web | `packages/web/packages/status-server/src/telemetry/types.ts` | unverified |
+| web | `packages/web/packages/status-server/src/telemetry/collect.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/telemetry/ports.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/telemetry/server.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/telemetry/types.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

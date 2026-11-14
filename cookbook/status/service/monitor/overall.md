@@ -159,7 +159,7 @@ Not applicable: this module contains no logging call of any kind; the base rollu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/overall.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/overall.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

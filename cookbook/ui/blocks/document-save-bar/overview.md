@@ -1,0 +1,3 @@
+
+The Document Save Bar is the editing button bar for a document managed by `useVersionedDocument`. It renders the platform's standard Button Bar with only Cancel and Save, so a document reads the same as every other editing surface. Cancel drops the draft and Save stores it. Notices sit at the bar's leading edge: the document vanished, the stored document changed underneath the draft, or a save failed. When someone else saved first, a warning below the bar offers "Reload theirs" or "Overwrite". The component holds no state of its own; every behavior is driven by the document object passed in.
+

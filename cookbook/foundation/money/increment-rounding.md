@@ -128,7 +128,7 @@ Not applicable: The rounding rule calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/IncrementRounding.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/IncrementRounding.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

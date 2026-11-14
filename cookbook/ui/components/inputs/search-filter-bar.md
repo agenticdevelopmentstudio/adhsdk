@@ -268,7 +268,7 @@ fetch + telemetry), not by the bar.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/search-filter-bar.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/search-filter-bar.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 

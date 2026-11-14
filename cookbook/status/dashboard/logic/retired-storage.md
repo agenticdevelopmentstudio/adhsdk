@@ -145,7 +145,7 @@ Not applicable: the module has no log calls. A storage failure is caught by an e
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/retired-storage.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/retired-storage.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

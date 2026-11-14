@@ -163,7 +163,7 @@ Not applicable: The component has no built-in logging or diagnostic output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/collapse-toggle.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/collapse-toggle.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 

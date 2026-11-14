@@ -374,7 +374,7 @@ No other event in this file is logged: `registerCommand`'s refusals (missing id,
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

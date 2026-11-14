@@ -168,7 +168,7 @@ Not applicable: The component has no internal logging or diagnostic output. Debu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/reorder-control.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/reorder-control.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 

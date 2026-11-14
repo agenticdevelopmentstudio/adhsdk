@@ -417,7 +417,7 @@ sibling git client entry), not logged a second time here.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

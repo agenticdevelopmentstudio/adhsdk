@@ -275,7 +275,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostLanguageVocabulary.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostLanguageVocabulary.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

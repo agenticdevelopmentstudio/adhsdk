@@ -235,7 +235,7 @@ Not applicable: the source writes no log; the swallowed rule list failure produc
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift` | confirmed (1.0.0) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |

@@ -203,7 +203,7 @@ No logging. `Pagination` is a presentational control; paging semantics and any e
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/pagination.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/pagination.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

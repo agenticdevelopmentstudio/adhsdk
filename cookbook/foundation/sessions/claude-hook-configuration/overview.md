@@ -1,0 +1,5 @@
+
+`ClaudeHookConfiguration` is a `Sendable`, `Equatable` struct of plain values that describes one daemon's registration in Claude Code's `settings.json`: its short `name`, the `marker` stamped on its hook commands, the helper executable (`hookBinaryPath`) and the arguments hooks and the status-line command pass it, the `dropDirectory` the helper writes envelopes into, the `settingsURL` to edit, a second lock name, its file name under the status-line dispatcher, the dispatcher a bundle carries, the `hookedEvents` to register and the `legacy` forms it still recognises.
+
+Claude Code runs every matching hook entry, so two daemons install their own configuration into the same `settings.json` and coexist: each recognises, updates and removes only the entries carrying its own marker. This type only carries the values and derives a few defaults and paths from them; `ClaudeHookInstaller` is the code that reads settings and acts on them. `LegacyHookForms`, declared in the same file, lists the retired registration forms an owner still replaces on install and removes on uninstall.
+

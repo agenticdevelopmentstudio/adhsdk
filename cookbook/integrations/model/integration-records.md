@@ -216,7 +216,7 @@ Not applicable: the source contains no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationRecords.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationRecords.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

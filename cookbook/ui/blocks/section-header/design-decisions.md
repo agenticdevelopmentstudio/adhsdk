@@ -23,6 +23,10 @@
 **Rationale**: Creates a clear visual separation between content (left) and controls (right).
 **Approved**: pending
 
+**Decision**: Hoisting the title is opt-in through `paneTitle`, never automatic.
+**Rationale**: A pane such as Authentication heads two sections with this one component, so only the header that names the pane may leave it.
+**Approved**: pending
+
 **Decision**: `title` is a required prop.
 **Rationale**: Title is not optional because the component's purpose is to introduce a section; a section header without a title is meaningless.
 **Approved**: pending

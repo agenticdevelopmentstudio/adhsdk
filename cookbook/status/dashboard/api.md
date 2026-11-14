@@ -361,7 +361,7 @@ Not applicable: none of these clients calls a logging facility; the thrown error
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/api/` | unverified |
+| web | `packages/web/packages/status-web/src/api/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

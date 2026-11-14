@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "308464cf-899c-4296-97b8-844a00865bc4",
+    "title": "Section Topics Panel",
+    "type": "ingredient",
+    "version": "1.0.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "One settings sidebar topic for a whole section: a vertical topic list of the section's panels beside the selected one, with the list hidden for a single panel.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "ui",
+      "settings",
+      "panel",
+      "navigation"
+    ],
+    "depends-on": [],
+    "related": [
+      "432e8d4b-43c3-49fd-b481-036a759e7c55",
+      "ba8d9517-2528-4ae9-bc52-16046d68b126"
+    ],
+    "references": [
+      "https://developer.apple.com/design/human-interface-guidelines/sidebars"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "e14e3286fa2ada18",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

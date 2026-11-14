@@ -153,7 +153,7 @@ Not applicable: DocBreadcrumbs does not emit any log messages. Debug output is d
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

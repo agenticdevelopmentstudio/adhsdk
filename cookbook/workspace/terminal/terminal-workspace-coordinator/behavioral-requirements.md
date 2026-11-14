@@ -1,0 +1,25 @@
+
+- **installs-layout**: The initializer MUST install the terminal-only layout, built from the supplied plugin manager, chat directory and privacy vault, before any window can load, and MUST fail with the layout's error if it cannot be built.
+- **layout-optional-parts**: A nil plugin manager MUST leave the persona terminal chat pane out, and a nil privacy vault MUST leave the private terminal pane out.
+- **attach-database**: The initializer MUST attach the database to the window manager.
+- **share-registry**: The initializer MUST give the window manager the command registry.
+- **command-registry-required**: The initializer MUST require a command registry, so a dropped registry is a compile error.
+- **show-window-command**: The component MUST register a command with the identifier "terminalWorkspace.action.showWindow", the title "Terminal Window" and the category "Terminal", which shows the workspace window.
+- **new-terminal-command**: The component MUST register a command with the identifier "terminalWorkspace.action.newTerminal", the title "New Terminal" and the category "Terminal", which adds a terminal.
+- **command-weak-self**: The commands MUST hold the coordinator weakly and do nothing once it is gone.
+- **file-menu-new-terminal**: The component MUST contribute a File menu item "New Terminal" for the new-terminal command at order 0 with the key equivalent "t".
+- **file-menu-show-window**: The component MUST contribute a File menu item "Terminal Window" for the show-window command at order 10 with the key equivalent "1".
+- **default-directory**: WHEN no directory is supplied, the workspace directory MUST be the current user's home directory.
+- **workspace-row-by-path**: The workspace row MUST be found by the directory's path in the database and MUST NOT be tracked by a stored identifier.
+- **workspace-row-inserted-once**: WHEN no row exists for the directory's path, the component MUST insert one named with the supplied window name and path equal to the directory's path; WHEN a row exists, it MUST reuse it.
+- **show-window**: The show-window action MUST open the workspace window through the window manager, or bring it forward when it is already open.
+- **show-window-failure**: WHEN the workspace row cannot be found or inserted, the show-window action MUST log the error with the message "Cannot open the terminal workspace: " plus the error and MUST NOT open a window.
+- **new-terminal-open-window**: WHEN the workspace window is open and a front window controller exists, the new-terminal action MUST add a terminal pane beside the active pane of the front project window; the source does not check that the front window is the workspace window.
+- **new-terminal-closed-window**: WHEN the workspace window is closed (or no front window controller exists), the new-terminal action MUST show the window instead of adding a pane, because a window that opens on its starting terminal has already done what was asked.
+- **new-terminal-refusal**: WHEN adding the pane is refused, the component MUST announce the refusal through the refusal feedback, whose default is a system beep a host may replace. The pane is refused when the front window has no active pane or its layout allows no further terminal beside it.
+- **is-window-open**: The open-window query MUST be true if and only if the database has a row for the directory's path and the window manager has a window controller for that row's identifier.
+- **is-window-open-error**: WHEN the database lookup throws, the open-window query MUST return false.
+- **window-title**: The supplied name MUST be the name of the workspace row the window is keyed on, which is documented as the window's title.
+- **main-actor**: The component MUST be used on the main actor.
+- **error-surface**: NEEDS REVIEW: Not implemented in source. A failure to open the window is only logged; the user is shown nothing, and a decision whether the host should show a message would settle whether this is intended.
+

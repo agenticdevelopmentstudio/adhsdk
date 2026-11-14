@@ -607,7 +607,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

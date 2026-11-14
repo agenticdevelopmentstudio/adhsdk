@@ -273,7 +273,7 @@ Not applicable: the source makes no log call; failures are thrown, never logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailRESTClient.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailRESTClient.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

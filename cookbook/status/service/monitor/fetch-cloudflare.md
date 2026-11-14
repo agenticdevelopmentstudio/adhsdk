@@ -192,7 +192,7 @@ A fully successful poll (every script fetched, no 429, budget not exhausted) pro
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

@@ -605,7 +605,7 @@ No other event in this file is logged: every `createWebviewPanel`, `registerWebv
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

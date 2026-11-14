@@ -153,7 +153,7 @@ Not applicable: `hostOf` has no logging calls. The caught parse error is turned 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/url.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/url.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

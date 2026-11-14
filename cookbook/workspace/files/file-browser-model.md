@@ -424,9 +424,9 @@ recipe specifies.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserRestorationState.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift` | confirmed (1.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserRestorationState.swift` | confirmed (1.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

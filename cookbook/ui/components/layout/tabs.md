@@ -180,7 +180,7 @@ Not applicable: Component performs no internal logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/tabs.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/tabs.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

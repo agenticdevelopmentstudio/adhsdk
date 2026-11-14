@@ -145,7 +145,7 @@ Not applicable: `overall.ts` makes no log calls; it has no error path to report.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/overall.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/overall.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

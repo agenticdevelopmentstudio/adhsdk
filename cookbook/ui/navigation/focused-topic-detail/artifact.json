@@ -4,15 +4,15 @@
     "id": "7f122a27-5b49-4f03-9439-1152249bc08f",
     "title": "Focused Topic Detail (FTD) View",
     "type": "recipe",
-    "version": "1.2.5",
-    "status": "accepted",
+    "version": "2.0.0",
+    "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The master/detail view contract governing every route that manages a collection of one entity kind: topic list, entity pane, selector popup, and All view.",
+    "summary": "A master/detail frame with a selector popup above the topic rail: focus one item to see its topics and pane, or choose All to see every item as a card.",
     "platforms": [
       "typescript",
       "web"
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c03e92fa0a76eccb",
+  "synced": "3df10c07f01e83b4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

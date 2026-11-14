@@ -494,7 +494,7 @@ The language-detection component contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Detection/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Detection/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

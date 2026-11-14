@@ -188,7 +188,7 @@ Not implemented in source. The component does not emit console logs or structure
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/permission-toggles.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/permission-toggles.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 

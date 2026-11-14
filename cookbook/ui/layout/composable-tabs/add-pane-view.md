@@ -393,7 +393,7 @@ this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

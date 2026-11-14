@@ -2,11 +2,11 @@
 id: 5e401b96-7157-4c5b-a623-b90dde372231
 title: "Section Header"
 type: ingredient
-version: 1.1.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -31,13 +31,18 @@ approved-date: ""
 
 ## Overview
 
-A section header is a layout component that anchors a content area with a prominent title, an optional descriptive eyebrow label, contextual help, and action controls. Commonly used to introduce major sections of a dashboard or content view. The component organizes a left section (title and eyebrow) and right section (actions and help) in a horizontal flex layout with clear visual hierarchy.
+A section header is a layout component that anchors a content area with a prominent title, an optional descriptive eyebrow label, contextual help, and action controls. Commonly used to introduce major sections of a dashboard or content view. The component organizes a left section (title and eyebrow) and right section (actions and help) in a horizontal flex layout with clear visual hierarchy. A header that names its whole pane can opt in with `paneTitle`, and inside a detail stack its title then moves up into the stack's detail strip (see the Detail Title ingredient, `ui/blocks/detail-title`), leaving the eyebrow, actions and help in the pane.
 
 ## Behavioral Requirements
 
 "Empty," for the `eyebrow`, `help`, and `actions` props below, means any JavaScript falsy value — `undefined`, `null`, `false`, or the empty string `""` — since each slot is guarded by a truthy check (`{prop && ...}`) in the source. This definition is also used by the Configuration table below.
 
-- **render-title**: The component MUST render the `title` prop content as an h2 heading.
+- **render-title**: Unless the title is hoisted (see pane-title-hoisted), the component MUST render the `title` prop content as an h2 heading.
+- **pane-title-opt-in**: The `paneTitle` prop MUST default to false; a header without it MUST draw its own title in place even inside a detail stack, because a pane can head several sections with this one component.
+- **pane-title-hoisted**: When `paneTitle` is true and the enclosing detail stack accepts the title, the component MUST hand `title` to the stack's detail strip through `useDetailTitle` and MUST NOT draw the h2 in the pane.
+- **hoisted-keeps-chrome**: While the title is hoisted, the component MUST still render `eyebrow`, `actions` and `help` in their usual places.
+- **hoisted-bare-collapse**: While the title is hoisted and `eyebrow`, `help` and `actions` are all empty, the component MUST render only the hand-off and no wrapper element, so nothing of it remains in the pane.
+- **title-fallback-inline**: When `paneTitle` is true but no stack accepts the title (no enclosing stack or slot, the title suppressed for a hidden pane, the server render, or another header registered later), the component MUST draw the h2 inline as it would without `paneTitle`.
 - **support-eyebrow**: The component MUST render the `eyebrow` prop when it is provided and non-empty; when `eyebrow` is empty, the eyebrow slot MUST NOT be rendered.
 - **support-help**: The component MUST render a help trigger button when the `help` prop is provided and non-empty; when `help` is empty, the help trigger button MUST NOT be rendered.
 - **support-actions**: The component MUST render the `actions` prop content when it is provided and non-empty; when `actions` is empty, the actions slot MUST NOT be rendered.
@@ -53,7 +58,8 @@ A section header is a layout component that anchors a content area with a promin
 - **Eyebrow font**: Monospace, 0.65rem (10.4px), uppercase, tracking-wider, color uses `apt-text-dim` semantic token.
 - **Title font**: Monospace, text-sm (14px), font-medium (500 weight), tracking-wide, color uses `apt-gold` semantic token.
 - **Help button**: Uses `quietControlClass` for muted styling; icon is 16×16px CircleHelp (lucide-react).
-- **Help popover**: Fixed width of 288px (`w-72`), positioned at `bottom` and aligned to `end` (right edge).
+- **Help popover**: Width of 288px (`w-72`), capped at the available width by the Popover's `max-w-(--available-width)`, positioned at `bottom` and aligned to `end` (right edge).
+- **Hoisted title**: When hoisted, the pane holds no h2; the title is drawn by the detail strip's own title cell, with its styling.
 - **Right section spacing**: Flex with `gap-2` between actions and help button; `shrink-0` prevents flex shrinking.
 
 ## States
@@ -66,6 +72,8 @@ A section header is a layout component that anchors a content area with a promin
 | With actions | Actions rendered in right section before help button. |
 | Help popover open | Popover appears below the help trigger, aligned to the end (right edge), with the `help` content visible. |
 | Custom className | Additional classes merged with root container. |
+| `paneTitle` with a stack that takes the title | Title leaves the pane for the detail strip; eyebrow, actions and help stay. |
+| `paneTitle` with nothing else to show | No element is left in the pane. |
 
 ## Accessibility
 
@@ -73,6 +81,8 @@ A section header is a layout component that anchors a content area with a promin
 - **Help button label**: `aria-label="About this section"` describes the button purpose for screen readers.
 - **Popover keyboard**: The help trigger is activated by click, Enter, or Space. Opening, closing (Escape or an outside interaction), and returning focus to the trigger are the underlying Popover component's behavior — see accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)) and accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)).
 - **Text content**: Eyebrow and title content are read as-is; no additional aria-labels required if text is meaningful.
+- **title-contrast**: NEEDS REVIEW: Not implemented in source. The title uses the `apt-gold` token and the eyebrow `apt-text-dim` at 0.65rem; the source states no contrast ratio against the surface in any theme, so a per-theme measurement against 4.5:1 (WCAG 1.4.3) would settle it.
+- **Hoisted heading**: When hoisted, the heading semantics come from the strip's title cell (`role="heading"`, `aria-level="2"`), not from an h2 in the pane.
 - **Icon-only button**: Help button contains only an icon; `aria-label` is REQUIRED to provide accessible name.
 
 ## Conformance Test Vectors
@@ -94,26 +104,36 @@ A section header is a layout component that anchors a content area with a promin
 | section-header-013 | display-help-popover | Help button present, user presses Space on focused help trigger | Popover opens (same as click/Enter) |
 | section-header-014 | display-help-popover | Popover open, user presses Escape | Popover closes and focus returns to the help trigger (per accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)), accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))) |
 | section-header-015 | display-help-popover | Help button activated a second time while the popover is open | Popover closes; toggle state is reflected via `aria-expanded` (per accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))) |
+| section-header-016 | pane-title-hoisted, pane-title-opt-in (test: "carries a SectionHeader marked paneTitle, and leaves an unmarked one where it is") | In a detail stack: `<SectionHeader paneTitle title="Providers" />` and `<SectionHeader title="Sign-in methods" />` | The strip's title cell holds "Providers"; the pane's text does not contain "Providers" but does contain "Sign-in methods" |
+| section-header-017 | pane-title-opt-in | `<SectionHeader title="Title" />` inside a detail stack | The h2 "Title" is drawn in the pane and the strip is not given it |
+| section-header-018 | hoisted-keeps-chrome | `paneTitle title="Providers" eyebrow="Auth" help={...}` in a detail stack | Strip holds "Providers"; the pane holds the eyebrow "Auth" and the help trigger, and no h2 |
+| section-header-019 | hoisted-bare-collapse | `paneTitle title="Providers"` alone in a detail stack | Nothing is drawn in the pane; the root flex container is absent |
+| section-header-020 | title-fallback-inline | `paneTitle title="Providers"` outside any stack | The h2 "Providers" is drawn inline |
+| section-header-021 | pane-title-hoisted | Two `paneTitle` headers registered in one stack | The last to register is in the strip; the other draws its h2 in place |
+
+The tests beside the source are in `detailTitle.test.tsx`, which covers only the `paneTitle` behavior (vectors 016 and 017's leave-in-place half, and 018 to 021 derive from the source); no test renders the help popover, eyebrow or actions.
 
 ## Edge Cases
 
 - **Empty title string**: The component does not validate `title`; passing an empty string still renders an `<h2>`, which is present in the DOM but conveys no accessible name to screen reader users. Callers MUST supply non-empty `title` content — Section Header itself performs no such check.
 - **Very long title**: Title renders without an explicit wrap constraint. Because the left section has no flex-shrink override while the right section is `shrink-0`, the left section shrinks first as available width tightens, so a long title wraps onto multiple lines once space is insufficient.
-- **Very long help content**: The popover has a fixed width (288px) and no max-height constraint in the source, so the panel grows to fit the content rather than scrolling.
+- **Very long help content**: The popover has a width of 288px (capped at the available width) and no max-height constraint in the source, so the panel grows to fit the content rather than scrolling.
 - **Help button focus during popover open**: Escape closes the popover and returns focus to the trigger (accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)), accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))).
 - **Multiple rapid help button activations**: The Popover trigger toggles open/closed state on activation, reflected via `aria-expanded` (accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))).
 - **Actions slot too wide**: Actions element shares right section with help button; if actions exceed available space, layout depends on actions' own flex properties. The right section container applies `shrink-0`, so it does not shrink to accommodate overflow.
+- **Hoisted bare header drops className**: In the bare-collapse case the component returns only the hand-off, so a `className` passed to it has no element to land on.
 - **Custom className conflicts**: If `className` prop contains flex or positioning classes, they merge via `cn()` utility; later classes may override defaults (standard Tailwind precedence).
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `title` | ReactNode | (required) | Content displayed as section heading; rendered as h2 |
+| `title` | ReactNode | (required) | Content displayed as section heading; rendered as h2 unless hoisted by `paneTitle` |
 | `eyebrow` | ReactNode \| undefined | undefined | Optional label above title; not rendered when empty (see Behavioral Requirements) |
 | `help` | ReactNode \| undefined | undefined | Optional help content displayed in popover; help button not rendered when empty (see Behavioral Requirements) |
 | `actions` | ReactNode \| undefined | undefined | Optional action controls rendered in right section; not rendered when empty (see Behavioral Requirements) |
 | `className` | string \| undefined | undefined | Additional CSS classes merged with root container |
+| `paneTitle` | boolean | false | Marks the header that names the pane, so its title moves into the stack's detail strip |
 
 ## Deep Linking
 
@@ -153,6 +173,8 @@ Not applicable: Section Header does not emit application logs.
 
 - **Compose**: Use a `Row` (horizontal flex) as the root container with `verticalAlignment = Alignment.Top` and `modifier = Modifier.fillMaxWidth()`. The left section is a `Column` with title and optional eyebrow `Text` composables, using `FontFamily.Monospace` (not a "default serif family") and the semantic gold color; give the left `Column` `Modifier.weight(1f)` so it takes the remaining space, matching `justify-between`. The right section is a `Row` for actions and the help button. The help button uses an `IconButton` wrapping a CircleHelp icon; clicking it opens a `Popup` or `DropdownMenu` — not `PopupMenu`, which is not a Compose API — anchored to the button, showing the help content.
 
+- **React/Web**: The source is `packages/web/packages/ui/src/blocks/section-header.tsx`, built from `Popover`, `PopoverTrigger` and `PopoverContent` in `components/popover`, `quietControlClass` from `lib/quiet-control`, `cn` from `lib/utils`, the lucide `CircleHelp` icon and `useDetailTitle` from `blocks/detail-title`; its only test coverage is `__tests__/detailTitle.test.tsx`.
+
 - **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `axis = .horizontal`, `alignment = .top`, `distribution = .fill`. Give the left stack a lower content-hugging priority than the right stack so the two sections are pushed apart, matching `justify-between`. The left stack contains the title `NSTextField` (AppKit) or `UILabel` (UIKit) and optional eyebrow label, both using the system monospace font (`.monospacedSystemFont(ofSize:weight:)`) and the gold semantic color. The right stack contains optional actions and the help button (`NSButton` / `UIButton`). The help button uses the SF Symbol `questionmark.circle` (not `circle.fill.badge.questionmark`, which does not exist) and triggers a popover with the help text via `NSPopover` (AppKit) or a `UIPopoverPresentationController` (UIKit).
 
 - **WinUI 3**: Use a `Grid` with two columns (`*` for the left section, `Auto` for the right) as root, rather than a horizontal `StackPanel`, which cannot push its two sections apart. The left column is a `StackPanel` with `Orientation="Vertical"` containing a `TextBlock` for the title (a theme monospace resource such as Cascadia Mono, not a hardcoded `"Courier New"`, so it respects the active theme; `Foreground="{StaticResource GoldBrush}"`) and an optional eyebrow `TextBlock` with secondary text color. The right column is a `StackPanel` with `Orientation="Horizontal"` for actions and the help button. The help button uses an `AppBarButton` or standard `Button` with a `SymbolIcon` (question-mark glyph or equivalent) and sets `AutomationProperties.Name` so assistive technology announces its purpose; clicking it opens a `Flyout` or `TeachingTip` to display the help content at the trigger's position — note that `TeachingTip` does not by itself trap focus, so an explicit `Flyout` with its own focus handling may be required where trapping matters.
@@ -161,7 +183,10 @@ Not applicable: Section Header does not emit application logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/section-header.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/section-header.tsx` | confirmed (2.0.0) |
+| apple | (planned) | planned |
+| android | (planned) | planned |
+| windows | (planned) | planned |
 
 ## Design Decisions
 
@@ -187,6 +212,10 @@ Not applicable: Section Header does not emit application logs.
 
 **Decision**: The root container uses `justify-between` to left-justify the title area and right-justify actions/help.
 **Rationale**: Creates a clear visual separation between content (left) and controls (right).
+**Approved**: pending
+
+**Decision**: Hoisting the title is opt-in through `paneTitle`, never automatic.
+**Rationale**: A pane such as Authentication heads two sections with this one component, so only the header that names the pane may leave it.
 **Approved**: pending
 
 **Decision**: `title` is a required prop.
@@ -215,14 +244,15 @@ Not applicable: Section Header does not emit application logs.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-The source renders a native `<h2>` and a native button with `aria-label="About this section"` (passed screen-reader-support, keyboard-navigable, semantic-markup); it uses `apt-*` semantic color tokens and rem-based Tailwind text sizing whose actual contrast and font-scaling behavior cannot be confirmed from this file alone (partial contrast-ratio, dynamic-type-support); it delegates focus return and Escape handling to the Popover component without specifying the help button's own hit-area size (partial focus-management, touch-target-size); and it hardcodes the English string `"About this section"` with no localization mechanism (failed no-hardcoded-strings, string-externalization). `separation-of-concerns` passes because `section-header.tsx` is pure presentation composed from its `eyebrow`/`title`/`help`/`actions` props with no business logic, and `unit-test-coverage` fails because no test file in the repository renders or exercises `SectionHeader`.
+The source renders a native `<h2>` and a native button with `aria-label="About this section"` (passed screen-reader-support, keyboard-navigable, semantic-markup); it uses `apt-*` semantic color tokens and rem-based Tailwind text sizing whose actual contrast and font-scaling behavior cannot be confirmed from this file alone (partial contrast-ratio, dynamic-type-support); it delegates focus return and Escape handling to the Popover component without specifying the help button's own hit-area size (partial focus-management, touch-target-size); and it hardcodes the English string `"About this section"` with no localization mechanism (failed no-hardcoded-strings, string-externalization). `separation-of-concerns` passes because `section-header.tsx` is pure presentation composed from its `eyebrow`/`title`/`help`/`actions` props with no business logic, and `unit-test-coverage` is partial because the only test that renders `SectionHeader` is the `paneTitle` case in `detailTitle.test.tsx`, while the eyebrow, actions and help popover are untested.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Verified against source: corrected behavior, states and platform notes |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Qualified bare #accessibility fragments to popover's full agenticdeveloperkit URI; fixed 6 refs. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; cited the popover ingredient by requirement fragment instead of crediting behavior to "the Popover component" and added it to depends-on/related; reformatted Design Decisions into Decision/Rationale/Approved triplets and added one for the fixed h2 heading level; rewrote Compliance from "Not applicable" into a real table; fixed the flex-shrink/wrap contradiction between Appearance and Edge Cases; expanded help-popover keyboard coverage (Space, Escape, focus return, toggle) with new test vectors; corrected nonexistent APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; rewrote Localization to name the hardcoded aria-label and the locale-sensitive uppercase transform; defined "empty" once for the optional ReactNode props and reused it in Configuration; clarified how an empty title is actually handled. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

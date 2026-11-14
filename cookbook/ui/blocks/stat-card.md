@@ -174,7 +174,7 @@ into a composed part; nothing flows back up except the browser navigation an
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/stat-card.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/stat-card.tsx` | confirmed (1.4.1) |
 
 ## Design Decisions
 

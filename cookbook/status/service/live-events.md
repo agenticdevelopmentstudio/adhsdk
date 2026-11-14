@@ -328,7 +328,7 @@ Subsystem: `status-server` | Category: `live-events`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/live/live-events.ts` | unverified |
+| web | `packages/web/packages/status-server/src/live/live-events.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

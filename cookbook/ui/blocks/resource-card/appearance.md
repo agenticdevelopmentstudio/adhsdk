@@ -12,4 +12,6 @@
 - **Interactive hover**: border becomes token role **border-strong** (`apt-border-strong`); background becomes token role **surface-hover** (`apt-surface-2`)
 - **Interactive focus-visible**: border becomes token role **focus-accent** (`apt-gold` at 60% opacity)
 - **Interactive cursor**: pointer
+- **Interactive outline**: the default browser outline is removed (`outline-none`) on interactive cards; the focus-visible border change is the only focus indicator
+- **Text alignment**: `text-left`; width `w-full`
 

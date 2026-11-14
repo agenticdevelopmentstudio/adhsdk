@@ -153,18 +153,18 @@ Not applicable: the component contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatEvent.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatMessage.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSession.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSessionState.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatToolSource.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatTranscriptReducer.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSelectionMode.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSessionFilter.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/FeedChatSession.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/MockChatSession.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionSources.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionWatcherSession.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatEvent.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatMessage.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSession.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSessionState.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatToolSource.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatTranscriptReducer.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSelectionMode.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSessionFilter.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/FeedChatSession.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/MockChatSession.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionSources.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionWatcherSession.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

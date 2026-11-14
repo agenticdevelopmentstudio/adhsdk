@@ -366,7 +366,7 @@ Behavioral Requirements).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

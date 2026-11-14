@@ -302,7 +302,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectFilter.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectFilter.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

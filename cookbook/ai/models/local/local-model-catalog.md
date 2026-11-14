@@ -357,7 +357,7 @@ fetch-error-is-fully-swallowed in Behavioral Requirements.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

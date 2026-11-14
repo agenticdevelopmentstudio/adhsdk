@@ -175,7 +175,7 @@ Not applicable: neither source logs; every failure surfaces as a rejected promis
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/telemetry/sources/` | unverified |
+| web | `packages/web/packages/status-web/src/telemetry/sources/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -316,7 +316,7 @@ line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

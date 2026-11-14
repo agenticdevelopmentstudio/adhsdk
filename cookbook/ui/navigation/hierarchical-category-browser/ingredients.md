@@ -1,5 +1,5 @@
 
-| Name | Domain | Role | Required | Configuration |
+| Name | Ingredient | Role | Required | Configuration |
 |---|---|---|---|---|
 | Category Picker | [adhsdk.ingredient.ui.blocks.category-picker-dialog](cookbook:88d69611-4a12-4777-9509-8af6c0626dc7) | The dialog behind BOTH place-picking gear actions — browses the folded forest and returns a place to file the selected category under. | yes | Move: `confirmLabel="Move"`, `allowRoot`, `rootLabel` = "Top level" or "Remove from “<parent>”" (see #integration-requirements/not-call-an-unfiling-a-rooting), `disabledIds` = the moved category + its own descendants. Also file: `confirmLabel="File"`, `initialSelectedId={null}`, NO `allowRoot` (a root is a category with no parents, so there is nothing to add), `disabledIds` = the category + its descendants + every parent it is ALREADY filed under. |
 

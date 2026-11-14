@@ -642,7 +642,7 @@ calls and storage failures are not logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowFrameManager/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowFrameManager/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

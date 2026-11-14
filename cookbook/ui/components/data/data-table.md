@@ -276,7 +276,7 @@ Not applicable: DataTable is a presentational primitive; it emits no structured 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/data-table.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/data-table.tsx` | confirmed (1.4.1) |
 
 ## Design Decisions
 

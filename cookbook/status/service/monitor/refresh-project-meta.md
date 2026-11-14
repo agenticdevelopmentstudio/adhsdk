@@ -294,7 +294,7 @@ itself. No other logger or `console.*` call appears anywhere in this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/refresh-project-meta.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/refresh-project-meta.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

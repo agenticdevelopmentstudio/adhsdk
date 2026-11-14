@@ -151,7 +151,7 @@ Not applicable: Component performs no operations requiring debug or error loggin
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/empty-state.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/empty-state.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

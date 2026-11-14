@@ -296,7 +296,7 @@ handlers (and `useCrudResource`) own any telemetry or error reporting.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/crud/src/CrudTable.tsx` | unverified |
+| web | `packages/web/packages/crud/src/CrudTable.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

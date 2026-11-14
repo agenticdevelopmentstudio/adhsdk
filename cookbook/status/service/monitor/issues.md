@@ -208,7 +208,7 @@ A successful open, update, or recovered/unmonitored resolve produces no log outp
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/issues.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/issues.ts` | confirmed (1.2.0) |
 
 ## Design Decisions
 

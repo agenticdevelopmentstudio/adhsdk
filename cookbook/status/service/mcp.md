@@ -535,7 +535,7 @@ Not applicable: none of `route.ts`, `server.ts`, or `tools.ts` contains a loggin
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/mcp/` | unverified |
+| web | `packages/web/packages/status-server/src/mcp/` | confirmed (1.0.2) |
 
 ## Design Decisions
 

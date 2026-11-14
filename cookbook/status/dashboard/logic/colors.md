@@ -195,7 +195,7 @@ Not applicable: the module contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/colors.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/colors.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

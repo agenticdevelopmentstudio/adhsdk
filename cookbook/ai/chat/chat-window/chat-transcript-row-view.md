@@ -232,7 +232,7 @@ Not applicable: the component contains no logging calls (no `os_log`, `Logger`, 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatTranscriptRowView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatTranscriptRowView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

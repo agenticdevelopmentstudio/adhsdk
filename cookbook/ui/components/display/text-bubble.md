@@ -227,7 +227,7 @@ telemetry.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/text-bubble.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/text-bubble.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

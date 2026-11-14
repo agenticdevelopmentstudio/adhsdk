@@ -650,7 +650,7 @@ type's own name.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

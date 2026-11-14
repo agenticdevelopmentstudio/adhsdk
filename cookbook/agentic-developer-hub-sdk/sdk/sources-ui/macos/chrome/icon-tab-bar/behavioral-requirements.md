@@ -1,0 +1,24 @@
+
+- **one-segment-per-item**: The component MUST render exactly one segment for each item it is given, in the order given.
+- **symbol-image**: The component MUST draw each segment as the system symbol named by the item's `symbol`, with the item's `title` as the image's accessibility description.
+- **missing-symbol-blank**: When an item's `symbol` names no system symbol, the component MUST draw that segment with an empty image rather than fail.
+- **select-one-tracking**: The component MUST allow at most one segment to be drawn as selected at a time.
+- **segment-width**: The component MUST give every segment a width of 32 points.
+- **equal-distribution**: The component MUST distribute its segments with equal widths.
+- **hug-icons**: The component MUST size itself to exactly its control, and MUST resist horizontal stretching with required content-hugging priority, so a caller that centres it gets a bar that hugs its icons.
+- **tooltip-title**: The component MUST show the item's `title` as the tooltip of its segment.
+- **selected-id-display**: When `selectedID` is set to the `id` of an item, the component MUST draw that item's segment as selected.
+- **selected-id-none**: When `selectedID` is `nil` or matches no item, the component MUST draw no segment as selected.
+- **selected-id-unchanged**: Setting `selectedID` to the value it already holds MUST NOT redraw the selection.
+- **report-click**: When the user clicks a segment, the component MUST call `onSelect` once with that item's `id`.
+- **caller-owns-choice**: When the user clicks a segment, the component MUST redraw the selection from `selectedID` before calling `onSelect`, so a pick the caller refuses does not stay drawn.
+- **ignore-out-of-range**: The component MUST NOT call `onSelect` when the control reports a selected segment outside the item list.
+- **no-keyboard-capture**: The component MUST NOT take keyboard focus when clicked, and MUST NOT draw a focus ring.
+- **accessibility-identifier**: The component MUST set the `accessibilityID` it is initialised with as the accessibility identifier of its control.
+- **theme-track-appearance**: The component MUST draw its track with the dark appearance when the palette's window background has a brightness component below 0.5, and with the light appearance otherwise, whatever the system appearance is.
+- **theme-accent-selection**: The component MUST colour the selected segment's bezel with the palette's accent colour.
+- **theme-initial-apply**: The component MUST apply the current palette when it is created.
+- **theme-follow-changes**: The component SHOULD re-apply the palette each time its theme observer reports a new palette, so the track and selection follow a theme change without the caller's help.
+- **no-coder-init**: The component MUST NOT support creation from an archive; `init(coder:)` is unavailable and traps.
+- **main-actor**: The component MUST be used on the main actor.
+

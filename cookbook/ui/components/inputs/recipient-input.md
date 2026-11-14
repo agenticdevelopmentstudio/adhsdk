@@ -206,7 +206,7 @@ Not applicable: RecipientInput is a presentational component that does not emit 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/recipient-input.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/recipient-input.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

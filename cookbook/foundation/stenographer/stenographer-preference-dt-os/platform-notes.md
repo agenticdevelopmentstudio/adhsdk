@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Source is `Core/Stenographer/StenographerPreferenceDTOs.swift`, importing only `Foundation`. Four `public struct` types with synthesized `Codable`, a hand-written public initializer each, and a `var` property for each request field so a settings view model can set only what the user changed.
+- **Compose**: Use Kotlin `data class` types with `@Serializable`, nullable properties defaulting to null for the requests and `explicitNulls = false` so omitted fields stay omitted. Make the two nullable response fields default to null so an older daemon's reply decodes.
+- **React/Web**: Use TypeScript interfaces with optional properties for requests and a required shape for responses with `enabled?` and `selectedConfigId?` optional; omit `undefined` keys when serializing, and convert keys with the shared wire helper.
+- **AppKit / UIKit**: Same source; the preference panes on macOS build a request from the control values and push it through the HTTP client.
+- **WinUI 3**: Use C# `record` types with `System.Text.Json` and `JsonNamingPolicy.SnakeCaseLower`, nullable properties (`bool?`, `int?`, `string?`) on the request records with `JsonIgnoreCondition.WhenWritingNull`, and init-only properties on the response records (`record` value equality replaces `Equatable`). Mark the two optional summary response fields nullable and leave the others `required` so a missing field throws a `JsonException`, matching the source. A settings page binds to an `INotifyPropertyChanged` view model that copies into a request on save.
+

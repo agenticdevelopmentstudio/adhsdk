@@ -164,7 +164,7 @@ Subsystem: process `console` | Category: monitor
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-crunchy.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/fetch-crunchy.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

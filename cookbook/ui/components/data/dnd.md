@@ -191,7 +191,7 @@ Not applicable: No logging subsystem is built into the component. Errors (e.g., 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dnd.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/dnd.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

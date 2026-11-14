@@ -335,7 +335,7 @@ telemetry belong to the consumer's handler, not the button.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/button.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/button.tsx` | confirmed (1.4.1) |
 
 ## Design Decisions
 

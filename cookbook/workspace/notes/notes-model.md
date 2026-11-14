@@ -510,7 +510,7 @@ factory) | Category: the manager's name
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` | confirmed (1.1.3) |
 
 ## Design Decisions
 

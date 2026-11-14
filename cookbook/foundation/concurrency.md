@@ -184,7 +184,7 @@ Not applicable: none of the three utilities calls any logging API. The debouncer
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -180,7 +180,7 @@ Not applicable: the component performs no logging; a fallback is deliberately si
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/NSImage+Symbol.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/NSImage+Symbol.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

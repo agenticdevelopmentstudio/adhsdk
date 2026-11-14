@@ -553,7 +553,7 @@ Not applicable: none of `cookie.ts`, `default-adapter.ts`, `github.ts`, `passwor
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/auth/` | unverified |
+| web | `packages/web/packages/status-server/src/auth/` | confirmed (1.0.3) |
 
 ## Design Decisions
 

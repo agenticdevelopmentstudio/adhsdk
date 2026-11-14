@@ -142,7 +142,7 @@ Not applicable: Error Text does not perform any logging. Diagnostic or debugging
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/error-text.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/error-text.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

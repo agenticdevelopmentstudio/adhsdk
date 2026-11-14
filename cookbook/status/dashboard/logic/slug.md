@@ -153,7 +153,7 @@ Not applicable: the slug function never logs, and no input makes it fail.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/slug.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/slug.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

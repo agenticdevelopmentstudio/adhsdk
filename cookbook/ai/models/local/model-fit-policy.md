@@ -359,7 +359,7 @@ documented in that component's own recipe, not by this one.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

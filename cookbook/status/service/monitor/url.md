@@ -258,7 +258,7 @@ this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/url.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/url.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

@@ -129,7 +129,7 @@ Not applicable — this component does not emit log messages (source: no logging
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-link.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/doc-link.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

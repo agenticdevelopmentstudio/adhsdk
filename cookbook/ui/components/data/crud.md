@@ -133,7 +133,7 @@ Not applicable: Crud is a data model with no runtime behavior to log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/crud.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/crud.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

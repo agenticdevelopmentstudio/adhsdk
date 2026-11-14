@@ -1,3 +1,3 @@
 
-Not applicable: this is a presentational block. Callers own any selection, creation, or deletion telemetry.
+Not applicable: the component emits no events; hosts attach telemetry to `onSelect`, `onNew` and `onDelete`.
 

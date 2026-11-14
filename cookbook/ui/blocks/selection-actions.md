@@ -192,7 +192,7 @@ Not applicable: Selection Actions does not emit logs. Logging of action invocati
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/selection-actions.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/selection-actions.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -227,7 +227,7 @@ Not applicable: CommandPalette does not emit logs. Debugging is delegated to hos
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/command-palette.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/command-palette.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -128,7 +128,7 @@ Not applicable: The Separator component has no logging behavior.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/separator.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/separator.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

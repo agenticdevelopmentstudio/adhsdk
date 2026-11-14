@@ -256,7 +256,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/PointingHandButton.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/PointingHandButton.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

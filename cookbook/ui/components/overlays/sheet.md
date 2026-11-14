@@ -183,7 +183,7 @@ Not applicable: Sheet has no logging or debugging output in the source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/sheet.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/sheet.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

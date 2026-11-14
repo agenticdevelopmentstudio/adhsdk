@@ -197,7 +197,7 @@ Not applicable: the source contains no log calls; failures are surfaced through 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-config-status.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-config-status.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

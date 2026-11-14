@@ -394,7 +394,7 @@ a raised failure value, never written to a log by this component itself.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewResourceURL.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewResourceURL.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

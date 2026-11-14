@@ -179,7 +179,7 @@ Emitted once per missing `id` per session (see **warns-on-missing-entry**); neve
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/help-enabled.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/help-enabled.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

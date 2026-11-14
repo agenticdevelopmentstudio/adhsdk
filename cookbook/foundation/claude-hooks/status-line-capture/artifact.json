@@ -1,0 +1,61 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "704d4ae9-e344-44d4-b19c-eadfec082077",
+    "title": "Status Line Capture",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Runs on every Claude Code status-line render: renders the caller's line, then feeds the payload to the daemon from a detached process, dropping a file when the daemon is unreachable.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "claude-hooks",
+      "status-line",
+      "capture",
+      "detached-feed"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/StatusLineCapture.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/DetachedProcess.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/DetachedProcessTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
+  "synced": "57f076384c0355e0",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

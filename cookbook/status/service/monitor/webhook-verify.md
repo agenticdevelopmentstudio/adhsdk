@@ -154,7 +154,7 @@ Not applicable: this file contains no log call of any kind, `console.error` or o
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/webhook-verify.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/webhook-verify.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

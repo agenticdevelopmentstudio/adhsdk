@@ -449,7 +449,7 @@ Not applicable: the component contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

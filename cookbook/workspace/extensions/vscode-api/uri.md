@@ -210,7 +210,7 @@ This is the one logging call this component makes (**class-install-failure-retur
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/Uri.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/Uri.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

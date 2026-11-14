@@ -1,0 +1,42 @@
+
+- **empty-state**: The component MUST render only the empty label, in a box of the configured height, when `labels` is empty or when no non-null value exists in the shown series.
+- **empty-label-default**: The empty label MUST default to "No data in this range." when `emptyLabel` is not given.
+- **all-null-is-empty**: A series whose values are all null MUST be treated as no data, not as a flat zero.
+- **single-series-for-bars**: When `variant` is `bars`, the component MUST draw and report only the first series and ignore the rest.
+- **default-variant**: `variant` MUST default to `line`.
+- **default-height**: The plot height MUST default to 200 pixels and apply to both the tick column and the plot.
+- **null-is-gap**: A null value MUST be a gap: the line breaks at it and does not drop to zero.
+- **run-segmentation**: Each run of consecutive non-null values MUST be drawn as its own polyline with a 2-unit non-scaling round stroke in the series color.
+- **lone-point-dot**: In the line variant, a run containing exactly one point MUST be drawn as a dot, because it has no line to be seen on.
+- **single-series-fill**: In the line variant, a run of two or more points MUST get a fill of the series color at 10 percent only when exactly one series is shown.
+- **bar-null-height**: In the bars variant, a null value MUST draw a bar of zero height.
+- **bar-geometry**: Bars MUST be at most 24 pixels wide, have rounded top corners, and be spread evenly across the plot with a 2-pixel gap.
+- **y-ticks**: The value axis MUST show ticks from zero to a value at or above the largest plotted value, labelled with `formatCount` regardless of `formatValue`.
+- **tick-step**: Tick steps MUST be on a 1, 2 or 5 times a power of ten and MUST NOT be below 1.
+- **tick-lines**: A horizontal gridline MUST be drawn at every tick; the zero line MUST be fully opaque and the others 50 percent opaque.
+- **x-position-line**: In the line variant, label `i` of `n` MUST sit at `i / (n - 1)` of the plot width, or at 50 percent when `n` is 1.
+- **x-position-bars**: In the bars variant, label `i` of `n` MUST sit at `(i + 0.5) / n` of the plot width.
+- **axis-labels**: The category axis MUST show at most five labels, at a constant whole-bucket step counted back from the newest bucket, and every bucket when there are five or fewer.
+- **axis-label-anchor**: An axis label positioned below 8 percent MUST anchor at its left edge, one above 92 percent at its right edge, and the rest at their center.
+- **axis-label-format**: Axis labels MUST be formatted with `formatLabel`, which MUST default to the identity.
+- **detail-format**: Tooltip and table row labels MUST be formatted with `formatDetail`, which MUST default to `formatLabel`.
+- **value-format**: Tooltip and table values MUST be formatted with `formatValue`, which MUST default to `formatCount`.
+- **format-count**: `formatCount` MUST return the full grouped number below 10,000 in magnitude and a compact form with at most one fraction digit from 10,000 up.
+- **pointer-tracking**: The component MUST update the hovered bucket on pointer move and pointer down over the plot, and clear it on pointer leave.
+- **pointer-line-resolution**: In the line variant, the pointer MUST resolve to the nearest bucket by rounding the clamped horizontal fraction times `n - 1`.
+- **pointer-bar-resolution**: In the bars variant, the pointer MUST resolve to the band containing it, never beyond the last bucket.
+- **pointer-zero-width**: A pointer event MUST be ignored when the plot box has zero width.
+- **crosshair**: In the line variant with a hovered bucket, the component MUST draw a vertical line and a dot per series at that bucket, skipping series whose value there is null.
+- **bar-dimming**: In the bars variant with a hovered bucket, bars other than the hovered one MUST be drawn at 55 percent opacity.
+- **tooltip-content**: With a hovered bucket, a tooltip MUST show the detail label and, for every shown series, its color swatch, name and formatted value, with an em dash for null.
+- **tooltip-side**: The tooltip MUST sit 10 pixels right of the hovered bucket's horizontal position, and 10 pixels left of it when that position is beyond 55 percent of the plot width.
+- **tooltip-no-capture**: The tooltip, crosshair and dots MUST NOT intercept pointer events.
+- **legend-threshold**: A legend list MUST be rendered only when more than one series is shown.
+- **table-view**: A collapsed "View as table" disclosure MUST list every label as a row header and every shown series as a column, with an em dash for null.
+- **table-caption**: The table MUST carry `ariaLabel` as a screen-reader-only caption.
+- **figure-label**: The root MUST be a figure labelled with `ariaLabel`.
+- **decoration-hidden**: Ticks, gridlines, plot marks, crosshair, dots and axis labels MUST be hidden from assistive technology.
+- **touch-scroll**: The plot MUST allow vertical touch panning.
+- **class-passthrough**: `className` MUST be merged onto the root, or onto the empty-state box when empty.
+- **ssr-safe**: The component MUST be a client component and MUST NOT measure layout during render.
+

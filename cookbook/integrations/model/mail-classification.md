@@ -168,7 +168,7 @@ Not applicable: the source makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailClassification.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailClassification.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

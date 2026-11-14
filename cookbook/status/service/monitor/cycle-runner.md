@@ -175,7 +175,7 @@ This is the only log line this file emits directly; a full sync whose prune dele
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/cycle-runner.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/cycle-runner.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

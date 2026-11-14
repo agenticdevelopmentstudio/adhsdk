@@ -2,11 +2,11 @@
 id: d7a2af70-0812-4360-afa7-02be1a44e7b8
 title: "Resource Card"
 type: ingredient
-version: 1.1.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -37,17 +37,22 @@ ResourceCard is a flexible card component for displaying a resource (application
 - **render-title**: Component MUST render the `title` prop as plain text (the source renders a `<div>`, not a semantic heading element).
 - **accept-href**: Component MUST accept an `href` prop and, when provided, render as an anchor element with the destination URL.
 - **accept-onclick**: Component MUST accept an `onClick` prop and, when provided and `href` is not set, render as a button-role div with keyboard activation (Enter or Space key).
-- **href-precedence**: When both `href` and `onClick` are provided, the component MUST render as an anchor, execute the `onClick` handler before navigation, and allow the navigation to proceed. `onClick` MUST NOT block navigation (e.g. by calling `preventDefault`, which would cancel it) and its return value MUST NOT be awaited — navigation happens synchronously with the click. Implementers with asynchronous side effects (analytics, logging) MUST use a fire-and-forget mechanism such as `navigator.sendBeacon` or a `fetch` call with `keepalive: true`, not a Promise the click handler waits on.
+- **href-precedence**: When both `href` and `onClick` are provided, the component MUST render as an anchor and MUST NOT render the `role="button"` root.
+- **href-and-onclick-both-fire**: When both `href` and `onClick` are provided, the component MUST pass `onClick` to the anchor so it runs on click ahead of the navigation, and the component MUST NOT cancel the navigation itself.
 - **use-link-component**: When `href` is provided and `LinkComponent` prop is supplied, the component MUST use LinkComponent to render the anchor rather than a native `<a>` element, passing the destination as the `to` prop.
 - **fallback-link-component**: When `href` is provided and `LinkComponent` is not supplied, the component MUST render a native `<a>` element (via the default `LinkComponent`, which wraps a plain `<a href>`).
 - **keyboard-activation**: When `onClick` is provided without `href`, the component MUST respond to Enter and Space keys on `keydown` by invoking `onClick`, calling `preventDefault()` so Space does not scroll the page — the same scroll-prevention native `<button>` elements provide.
+- **inert-root**: When neither `href` nor `onClick` is provided, the component MUST render a plain `div` with no role and no `tabIndex`, and without the interactive styling.
+- **ignore-other-keys**: On the `role="button"` root, keys other than Enter and Space MUST NOT invoke `onClick`.
+- **link-keeps-card-classes**: When rendered through `LinkComponent`, the component MUST pass its own classes to it as `className`, so the card's styling survives the host's adapter.
 - **button-focusable**: When `onClick` is provided without `href`, the component MUST set `tabIndex={0}` on the button-role div so it participates in the default tab order.
-- **optional-identifier**: Component MUST render the `identifier` prop as monospace text below the title when provided and non-empty; it MUST NOT render if `identifier` is undefined, null, or an empty string.
-- **optional-description**: Component MUST render the `description` prop as paragraph text below the identifier (or title if no identifier) when provided and non-empty; it MUST NOT render if `description` is undefined, null, or an empty string.
-- **optional-meta**: Component MUST render the `meta` prop as a flex-wrapped row of chips below the description when provided; it MUST NOT render if `meta` is undefined or null.
+- **optional-identifier**: Component MUST render the `identifier` prop as monospace text below the title when provided and truthy; it MUST NOT render if `identifier` is undefined, null, false or an empty string.
+- **optional-description**: Component MUST render the `description` prop as paragraph text below the identifier (or title if no identifier) when provided and non-empty; it MUST NOT render if `description` is undefined, null, false or an empty string.
+- **optional-meta**: Component MUST render the `meta` prop as a flex-wrapped row of chips below the description when provided and truthy; it MUST NOT render if `meta` is undefined, null, false or an empty string.
 - **meta-no-nested-interactive**: When the card is interactive (`href` or `onClick` is set), `meta` MUST NOT contain interactive elements (links, buttons). Nesting an interactive element inside an anchor or a `role="button"` container is invalid HTML and unreachable by assistive technology.
 - **interactive-styling**: When `href` or `onClick` is provided, the component MUST apply cursor-pointer, a hover state (stronger border and different background color), and a focus-visible state (gold-tinted border).
 - **classname-support**: Component MUST accept a `className` prop and apply it to the outermost element, merging it with the default classes.
+- **classname-overrides-defaults**: A `className` utility that conflicts with a default one (for example `rounded-lg` against `rounded-xl`, or `p-4` against `p-5`) MUST replace the default rather than sit beside it.
 - **left-aligned-text**: Component MUST use `text-left` alignment for all text content. (Hardcoded to the physical left edge, not the logical start edge — see the `rtl-layout-support` compliance status below.)
 
 ## Appearance
@@ -65,6 +70,8 @@ ResourceCard is a flexible card component for displaying a resource (application
 - **Interactive hover**: border becomes token role **border-strong** (`apt-border-strong`); background becomes token role **surface-hover** (`apt-surface-2`)
 - **Interactive focus-visible**: border becomes token role **focus-accent** (`apt-gold` at 60% opacity)
 - **Interactive cursor**: pointer
+- **Interactive outline**: the default browser outline is removed (`outline-none`) on interactive cards; the focus-visible border change is the only focus indicator
+- **Text alignment**: `text-left`; width `w-full`
 
 ## States
 
@@ -72,13 +79,14 @@ ResourceCard is a flexible card component for displaying a resource (application
 |-------|------------------|
 | Default | Static card with **surface** background and **border** border. |
 | Hover (interactive only) | Border strengthens to **border-strong**; background becomes **surface-hover**. |
-| Focus (interactive only) | Border becomes **focus-accent**; outline is visible via focus-visible pseudo-class. |
+| Focus (interactive only) | Border becomes **focus-accent** (focus-visible); the default outline is removed, so the border change is the only indicator. |
 
 ## Accessibility
 
 - **Root element role**: When `href` is set, a native or LinkComponent-wrapped anchor element (implicit link role). When `onClick` is set without `href`, a div with `role="button"`. When neither is set, a div with no explicit role (content container).
 - **Keyboard activation**: When role="button", Enter and Space keys MUST trigger the click handler. Anchor elements receive native browser keyboard support. See **keyboard-activation**.
-- **Focus indicator**: Focus-visible state applies a visible border color change (focus-accent), satisfying visibility requirements.
+- **Focus indicator**: Interactive cards remove the default outline and change the border to `apt-gold` at 60% opacity on focus-visible.
+- **focus-indicator-contrast**: NEEDS REVIEW: Not implemented in source. The only focus indicator is a border-color change to a 60%-opacity gold token; the source does not state its contrast against the card's surface or the page, so a token-pair measurement in each theme against the 3:1 non-text floor (WCAG 1.4.11) would settle it.
 - **Text labels**: Title is rendered as plain text; no aria-label or aria-description attributes are used in the component, so content must be self-describing.
 - **Identifier label**: Identifier is rendered in monospace and is visually secondary; implementers should ensure context makes its purpose clear (e.g., via a label above it or in documentation).
 - **Touch/click target size**: The card's default padding (1.25rem on all sides) combined with its full-width layout MUST produce a touch target of at least 44×44pt in normal use (a title-only card is already taller than 44pt once line-height and padding are included). Implementers who override the default padding or width via `className` are responsible for preserving this minimum.
@@ -88,24 +96,28 @@ ResourceCard is a flexible card component for displaying a resource (application
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | resource-card-001 | render-title | `title="My App"` | Title "My App" is rendered as plain text in font-medium. |
-| resource-card-002 | accept-href | `href="/app"` | Root element is an anchor or LinkComponent with href="/app". |
-| resource-card-003 | accept-onclick, button-focusable | `onClick={handler}` without href | Root element is a div with role="button" and tabIndex=0. |
-| resource-card-004 | href-precedence | `href="/app"` and `onClick={handler}` | onClick handler is executed, then navigation to /app proceeds; navigation is not delayed by the handler. |
-| resource-card-005 | use-link-component | `href="/app"` and custom LinkComponent | LinkComponent is rendered with to="/app" prop. |
-| resource-card-006 | fallback-link-component | `href="/app"` without LinkComponent | Native `<a href="/app">` is rendered. |
-| resource-card-007 | keyboard-activation | role="button" and Space key pressed | onClick handler is invoked and the keydown event's default action is prevented (no page scroll). |
-| resource-card-008 | keyboard-activation | role="button" and Enter key pressed | onClick handler is invoked. |
-| resource-card-009 | optional-identifier | `identifier="com.example.app"` | Identifier is rendered in monospace, text-xs, below title. |
-| resource-card-010 | optional-identifier | No identifier prop, or `identifier=""` | No identifier text is rendered. |
-| resource-card-011 | optional-description | `description="A great app"` | Description is rendered in text-sm, muted color, clamped to 3 lines. |
-| resource-card-012 | optional-description | No description prop, or `description=""` | No description text is rendered. |
-| resource-card-013 | optional-meta | `meta={<span>iOS</span>}` | Meta content is rendered in flex-wrapped row, monospace, text-xs. |
-| resource-card-014 | optional-meta | No meta prop | No meta row is rendered. |
-| resource-card-015 | interactive-styling | href or onClick provided | Cursor is pointer; hover and focus-visible states are applied. |
-| resource-card-016 | interactive-styling | Neither href nor onClick provided | Cursor is default (not pointer); hover and focus states are not visible. |
-| resource-card-017 | classname-support | `className="custom-class"` | Custom class is applied to the outermost element along with defaults. |
-| resource-card-018 | left-aligned-text | Any props | Text content uses text-left alignment. |
-| resource-card-019 | meta-no-nested-interactive | `href="/app"` and `meta={<a href="/x">link</a>}` | No `<a>`, `<button>`, or `[role="button"]` descendant exists inside `meta` when the card itself is an anchor or role="button" element. |
+| resource-card-002 | accept-href (test: "renders a real anchor for href — the thing ⌘-click and \"copy link\" need") | `href="/principles/simplicity"` | Root is an `a` with `href="/principles/simplicity"`, exposed as a link, not a button, with no `tabindex` and `cursor-pointer` in its class |
+| resource-card-003 | accept-onclick, button-focusable (test: "renders a keyboard-operable div[role=button] for onClick") | `onClick={handler}` without href | Root is a `div` with role "button" and `tabindex="0"` |
+| resource-card-004 | href-precedence, href-and-onclick-both-fire (test: "fires onClick alongside navigation when the host passes both") | `href="/x"` and `onClick={handler}`; click the link | `handler` called once; root is a link |
+| resource-card-005 | use-link-component, link-keeps-card-classes (test: "routes href through the injected LinkComponent, never a hardcoded router") | `href="/x"` and an adapter that renders `<a data-router="yes" href="#/x">` | Root has `data-router="yes"`, `href="#/x"` and the class `rounded-xl` |
+| resource-card-006 | fallback-link-component | `href="/app"` without LinkComponent | A native `<a href="/app">` is rendered |
+| resource-card-007 | keyboard-activation (test: same as resource-card-003) | role="button"; click, then keydown Enter, then keydown Space | `onClick` called 3 times |
+| resource-card-008 | keyboard-activation | role="button"; keydown Space | The event's default action is prevented (no page scroll) |
+| resource-card-009 | ignore-other-keys (test: same as resource-card-003) | role="button" after 3 calls; keydown "a" | `onClick` still called 3 times |
+| resource-card-010 | inert-root (test: "renders an inert div when the host passes neither href nor onClick") | `title="Ecosystem"` only | Root is a `div`, no role, no `tabindex`, class has no `cursor-pointer` |
+| resource-card-011 | optional-identifier | `identifier="com.example.app"` | Identifier is rendered in monospace, text-xs, below the title |
+| resource-card-012 | optional-identifier | No identifier prop, or `identifier=""` | No identifier element is rendered |
+| resource-card-013 | optional-description (test: "nests the block content inside the anchor — <a> takes flow content") | `href="/x"`, `description="No interleaving of concerns."` | A `p` inside the anchor holds that text |
+| resource-card-014 | optional-description | No description prop, or `description=""` | No description element is rendered |
+| resource-card-015 | optional-meta (test: same as resource-card-013) | `meta={<span>principles</span>}` with `href` | The anchor's text contains "principles"; the identifier text also appears inside the anchor |
+| resource-card-016 | optional-meta | No meta prop | No meta row is rendered |
+| resource-card-017 | interactive-styling | `href` or `onClick` provided | Class contains `cursor-pointer`, a hover border and background change, and a focus-visible border |
+| resource-card-018 | classname-support, classname-overrides-defaults (test: "lets the host override geometry through className — twMerge, not append") | `href="/x"`, `className="rounded-lg p-4"` | Class contains `rounded-lg` and `p-4` and contains neither `rounded-xl` nor `p-5` |
+| resource-card-019 | left-aligned-text | Any props | Class contains `text-left` |
+| resource-card-020 | meta-no-nested-interactive | `href="/app"` and `meta={<a href="/x">link</a>}` | The caller has broken the requirement; the card does not prevent it, so a conforming caller passes no link or button inside `meta` |
+| resource-card-021 | optional-identifier | `identifier={0}` | Failure mode: the numeral `0` is falsy-guarded by `&&`, so React renders the text "0" instead of nothing; callers MUST NOT pass a numeric identifier |
+
+The tests beside the source are `resourceCard.test.tsx`; vectors that name a test come from its assertions and the others derive from the source.
 
 ## Edge Cases
 
@@ -114,13 +126,24 @@ ResourceCard is a flexible card component for displaying a resource (application
 - **Very long identifier**: Identifier may wrap; recommend limiting identifier length in parent or using text-overflow/ellipsis in custom styling.
 - **Description exceeds 3 lines**: Description is clamped to 3 lines via line-clamp-3; overflow text is hidden.
 - **Meta content overflows horizontally**: Meta row uses flex-wrap to wrap items to the next line with gap-y-1 (0.25rem) between rows.
-- **Both href and onClick with navigation**: onClick runs synchronously and is never awaited, so the anchor's navigation is not delayed by it — see **href-precedence**. Implementers MUST NOT call `preventDefault` to stall the click for an async side effect, since that cancels the navigation entirely; use `navigator.sendBeacon` or a `fetch` call with `keepalive: true` for fire-and-forget work instead.
+- **Both href and onClick with navigation**: onClick runs synchronously and is never awaited, so the anchor's navigation is not delayed by it — see **href-precedence**. `onClick` is typed `() => void`, so the card hands the host's handler no event and itself never calls `preventDefault` on the anchor click.
+- **Empty href**: `href=""` is not `undefined`, so the card still renders through `LinkComponent` as a link with an empty destination.
+- **Falsy numeric content**: `identifier`, `description` and `meta` are guarded with `&&`, so `0` renders the text "0"; `false`, `null`, `undefined` and `""` render nothing. See resource-card-021.
 - **Empty or null meta children**: If `meta` is present but contains no children, an empty flex row is rendered; no content or error. Callers should omit `meta` entirely rather than pass an empty node, to avoid the unwanted gap.
 - **Interactive content in `meta` on an interactive card**: See **meta-no-nested-interactive**. Nesting a link or button inside an anchor or `role="button"` container is invalid HTML and unreachable by assistive technology; restrict `meta` to static chips (text, icons) when the card itself is interactive.
 
 ## Configuration
 
-Not applicable: ResourceCard is a presentational component configured entirely through props; it does not accept a separate configuration object or settings interface.
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `title` | `ReactNode` | required | The card's name |
+| `identifier` | `ReactNode` | none | Reverse-domain identifier, in monospace |
+| `description` | `ReactNode` | none | Body text, clamped to 3 lines |
+| `meta` | `ReactNode` | none | Row of mono-dim chips |
+| `onClick` | `() => void` | none | Makes the card act; with `href` it also fires on the link |
+| `href` | string | none | Makes the whole card a real link |
+| `LinkComponent` | `DocLinkComponent` | `DefaultDocLink` (a plain anchor) | The host's router link, used only when `href` is set; receives the destination as `to` |
+| `className` | string | none | Merged over the card's classes |
 
 ## Deep Linking
 
@@ -132,7 +155,7 @@ Not applicable: ResourceCard renders content passed in via props (title, identif
 
 ## Accessibility Options
 
-Not applicable: ResourceCard does not directly respond to platform accessibility display options (Reduce Motion, Increase Contrast, etc.). The `transition-colors` class applies a CSS transition on hover/focus state changes; it does not include a `motion-reduce:` variant, so the transition still plays for viewers with `prefers-reduced-motion` enabled — the browser does not suppress it automatically. Consumers who need to respect that preference should add `motion-reduce:transition-none` (or equivalent) via the `className` prop. Focus outline styling (focus-accent) is always present and is not affected by Increase Contrast or other options.
+Not applicable: ResourceCard does not directly respond to platform accessibility display options (Reduce Motion, Increase Contrast, etc.). The `transition-colors` class applies a CSS transition on hover/focus state changes; it does not include a `motion-reduce:` variant, so the transition still plays for viewers with `prefers-reduced-motion` enabled — the browser does not suppress it automatically. Consumers who need to respect that preference should add `motion-reduce:transition-none` (or equivalent) via the `className` prop. The focus-visible border change (focus-accent) is applied on interactive cards and is not affected by Increase Contrast or other options.
 
 ## Feature Flags
 
@@ -156,7 +179,7 @@ Not applicable: ResourceCard does not emit log messages or perform diagnostic lo
 
 - **Compose**: Android Material Design 3 provides a Card composable for layout and styling. Use `Modifier.clickable` for interactivity — `onClick = { navController.navigate(destination) }` for navigation, or `onClick = { onClickHandler() }` for interactive behavior — rather than an Intent, which is unrelated to Compose's click handling. Nest a Column for vertical layout (title, identifier, description, meta), each as Text or Row composables. Ripple feedback comes for free from `Modifier.clickable`'s default indication; apply `Modifier.clip` and `contentColor` for theming. Replicate focus state with `FocusRequester` and a `Modifier.border` color change on focus.
 
-- **React/Web**: This is the reference implementation. Component is exported from `packages/web/packages/ui/src/blocks/resource-card.tsx`. Uses semantic HTML (native `<a>` or LinkComponent-wrapped anchor for navigation, div[role="button"] for onClick interactivity). Styling is driven by Tailwind CSS utility classes and semantic color tokens (apt-* family). Customization via className prop. No additional wrappers or theming layer needed.
+- **React/Web**: The source is `packages/web/packages/ui/src/blocks/resource-card.tsx`, with `DefaultDocLink` from `blocks/doc-link.tsx`, the `DocLinkComponent` type from `blocks/doc-types.ts` and `cn` from `lib/utils`; tests are `__tests__/resourceCard.test.tsx`. Uses semantic HTML (native `<a>` or LinkComponent-wrapped anchor for navigation, div[role="button"] for onClick interactivity). Styling is driven by Tailwind CSS utility classes and semantic color tokens (apt-* family). Customization via className prop. No additional wrappers or theming layer needed.
 
 - **AppKit / UIKit**: macOS AppKit: use an `NSView` subclass with an `NSTrackingArea` for hover feedback and an `NSClickGestureRecognizer` (or `mouseDown`/`mouseUp`) for click handling; for navigation, push a new view controller from the click handler. iOS UIKit: use a `UIControl` subclass (its built-in tap target, `isHighlighted`, and `sendActions(for: .touchUpInside)` cover the interaction) or a `UIButton` with a custom content view; for navigation, call `navigationController.pushViewController` from its action. Style the border and background with `layer.borderColor`/`layer.backgroundColor` — both are `CALayer`-backed views, not `NSAppearance`, which governs system chrome rather than a custom view's colors. Animate border/background changes on hover (macOS) or focus with `CABasicAnimation` or `UIView.animate`.
 
@@ -166,7 +189,10 @@ Not applicable: ResourceCard does not emit log messages or perform diagnostic lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/resource-card.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/resource-card.tsx` | confirmed (2.0.0) |
+| apple | (planned) | planned |
+| android | (planned) | planned |
+| windows | (planned) | planned |
 
 ## Design Decisions
 
@@ -218,3 +244,4 @@ Accessibility statuses rest on the source's native anchor/`role="button"` roots 
 | 1.0.0 | 2026-09-22 | (cookbook update) | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated every citation; replaced the "Not applicable" Compliance section with a real table; reformatted Design Decisions to the three-line form; corrected fictitious APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; corrected the reduced-motion and touch-target-size accessibility claims; fixed the onClick/navigation edge case's contradiction with href-precedence; added the button-focusable and meta-no-nested-interactive requirements with test vectors; added semantic token roles to Appearance and States |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Verified against source: corrected behavior, states and platform notes |

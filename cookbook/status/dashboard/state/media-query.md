@@ -134,7 +134,7 @@ Not applicable: Media Query makes no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-media-query.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-media-query.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

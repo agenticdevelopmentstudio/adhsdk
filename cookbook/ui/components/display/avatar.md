@@ -158,7 +158,7 @@ Not applicable: Component performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/avatar.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/avatar.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

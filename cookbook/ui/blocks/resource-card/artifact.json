@@ -4,11 +4,11 @@
     "id": "d7a2af70-0812-4360-afa7-02be1a44e7b8",
     "title": "Resource Card",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c3af8040712b5ae6",
+  "synced": "7c3782c759df109f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

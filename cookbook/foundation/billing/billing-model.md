@@ -143,7 +143,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingModel.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 

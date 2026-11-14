@@ -197,7 +197,7 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dropdown-menu.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/dropdown-menu.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

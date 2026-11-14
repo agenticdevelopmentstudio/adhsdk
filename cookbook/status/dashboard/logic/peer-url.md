@@ -172,7 +172,7 @@ Not applicable: neither operation logs. A parse failure is an expected path, tur
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/peer-url.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/peer-url.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -1,23 +1,22 @@
 
-- **Empty list**: when `items.length === 0` the rail shows `emptyLabel` text in a `<p>` (no list structure).
-- **No selection**: when `selectedId === null` or not matched, no row is marked active (unless `railSlotActive: true`).
-- **Icon-less rows**: when `icon` is omitted or falsy (including `false` from conditional rendering), a fallback neutral ring icon fills in — every row is guaranteed a leading icon so the collapsed icon-only strip never has a blank slot.
-- **Preview text handling**: `preview?.trim()` is called; if the result is empty string no preview block renders even if `previewLines > 0`. Preview text preserves source line breaks (`whitespace-pre-line`).
-- **Preview line clamping**: `previewLines` is clamped to `Math.max(0, Math.min(4, Math.trunc(…)))` before it is used — every input, in or out of the 0-4 range, resolves to a valid clamp class. There is no unclamped fallback to full text.
-- **Covered list selection**: in covered style, clicking an already-selected row is a no-op (pure select, never toggles). Non-covered lists have no such short-circuit: clicking an already-selected row calls `onSelect` again with the same `id` — the component has no deselect signal. A caller wanting toggle-to-deselect semantics implements it themselves by treating a repeat `onSelect(id)` call as toggle-off.
-- **Prefetch timing**: dwell timer is per-list, not per-row — moving focus from row to row arms the new row (old timer cleared). Never arms on the already-selected row; disarm handlers stay unconditional to cancel any armed timer.
-- **Delete error handling**: when `onDelete()` throws, the dialog stays open without spinner, allowing the user to retry or cancel; the error is the consumer's responsibility to surface.
-- **Batch mode in icon-only**: checkboxes do not render in collapsed or covered layouts (no room for a 16px box in a 40px peek); `checkable=true` is ignored in those layouts.
-- **Collapsed rail measurement**: `onFit` never reports while `collapsed=true` — the icon strip has a fixed width by definition (COLLAPSED_RAIL = 48px).
-- **Rail width drag threshold**: the threshold is always `railWidthProp / 3` (80px at the default 240px, not a fixed pixel value). Below it the rail snaps to collapsed. From the threshold up to `railWidthProp` the rail tracks the dragged width exactly (1:1) — there is no undefined range in between. Past `railWidthProp` the rail clamps back to exactly `railWidthProp`.
-- **Font loading**: measurement happens before paint and re-runs when web fonts load (document.fonts.ready), so the reported width accounts for the actual font face.
-- **SSR environment**: `rootFontPx()` returns 16 when `document` is undefined (SSR); first client measurement corrects layout before paint.
-- **Drag suppresses transition**: while actively dragging (`onPointerMove`), the rail's width transition is disabled so it tracks the pointer live; transition re-enables on `onPointerUp`.
-- **Mobile collapse toggle**: the desktop collapse toggle (`«`/`»`) and the drag-resize handle are hidden on mobile (≤768px) via `max-md:hidden`; the rail itself keeps its vertical-list layout, left bar and `border-r` at every width — it does not wrap or move the selection bar to a bottom edge.
-- **Divider and spacer rendering**: dividers and spacers render in every layout, including collapsed/covered icon strips — neither is gated on `iconOnly`. The divider picks a tighter inset in the icon strips (`mx-2`) vs. the expanded list (`mx-3`).
-- **Row delete animation**: the delete confirmation dialog retains the last target through its close animation (via `lastDeleteRef`) so the title doesn't blank.
-- **Header control slot alignment**: the leading control slot is a fixed `w-4` so item icons sit concentric with header controls; the title's leading edge lands on the same column as row labels (consistently aligned across cascades).
-- **Rail slot vertical offset**: the leading rail slot is not reserved space — it renders only when `railSlot` is provided. A rail without `railSlot` starts its first topic row at the list's top padding; a rail with `railSlot` starts the first topic row at least `2.15rem` lower (the slot's `min-h`). The two rails are not vertically aligned.
-- **Trash button reveal**: the trash button is absolutely positioned in the right padding (`pr-9` on the row, positioned `right-[3px]`), so it never causes text to wrap and can't break a hierarchical connector line — the connector overlay computes a gap around it instead of being occluded by it.
-- **Pass-through fields**: `description` and `leadsTo` are typed on `TopicDetailItem` but read by no logic in this file. `description` feeds other surfaces that show a topic's blurb (e.g. a selected topic's `EmptyState`); `leadsTo` feeds a cascading/hierarchical consumer's click-time hold logic. Both survive on the shared item shape so one list can serve multiple recipes without a shape mismatch — setting them changes no pixel here.
+- **Empty list**: MUST show `emptyLabel` in a paragraph. With a self-filtering rail and an empty result the paragraph MUST read "Nothing matches" with the query; a controlled host keeps its own label, because its empty list may still be loading.
+- **No match for selectedId**: when `selectedId` is null or unknown, no row is active (unless `railSlotActive`).
+- **Falsy icon**: a `false` icon (from a conditional) MUST fall back to the ring, because the fallback uses `||`.
+- **Preview inputs**: blank or whitespace-only preview renders nothing; a fractional, negative or too-large `previewLines` resolves to a valid 0-4 clamp.
+- **Covered versus uncovered re-click**: covered is a no-op; uncovered re-fires `onSelect` and the owner decides whether to toggle.
+- **Link row selected**: a link row's click is reported to `onSelect` by the list; `TopicDetail` runs the link instead. A host that owns its own `TopicRail` MUST do the same via `topicLinkOf`.
+- **Delete failure**: the error is swallowed by the dialog logic and left to the host's `onDelete`; this component shows nothing about it.
+- **Concurrent delete and cancel**: Cancel MUST do nothing while a delete is running.
+- **Collapse while filter open**: the toolbar leaves with the field open, so the panel and suggestions MUST NOT show.
+- **Query changes under a controlled host**: the highlight follows a topic id, so a late-arriving list keeps the highlight on the same topic, or the first suggestion if that id is gone.
+- **Case-folding length change**: positions are mapped per character, so the underline lands on the right letters.
+- **Fit with no layout**: a zero measurement (jsdom, a hidden ancestor) reports nothing and leaves the caller's width.
+- **Fit range at a non-16px root**: the range is scaled by `rootFontPx()` / 16; with no document it is 16.
+- **Fit while narrowed**: the measure is skipped while a query narrows the rows, so the width does not shrink to the matches.
+- **Offline or disconnected**: not applicable: the component performs no network access; `onDelete` and `onPrefetch` are caller functions.
+- **Concurrent access**: not applicable: state is local React state with one prefetch timer and one flash timer per list.
+- **Unmount**: prefetch and flash timers MUST be cleared on unmount.
+- **SSR**: `rootFontPx()` returns 16 without a `document`.
+- **Mobile**: only the toggle and drag handle hide, and `--rail-w` is ignored, so a collapsed rail still spans the full column.
+- **Label suffix without inline sublabel**: the row shows the label and suffix only; its `sublabel` is not rendered. A host that needs both MUST set `inlineSublabel`.
 

@@ -195,7 +195,7 @@ Not applicable: the source writes no log line; failures reach the user as the al
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift` | confirmed (1.0.0) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |

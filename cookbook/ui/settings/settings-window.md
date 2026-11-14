@@ -519,7 +519,7 @@ Not applicable: no logging call appears anywhere in this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` | confirmed (1.3.2) |
 
 ## Design Decisions
 

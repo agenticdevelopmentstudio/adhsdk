@@ -1,0 +1,55 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "e8911288-108d-4050-aec5-663690bd5751",
+    "title": "Route Table",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "An ordered list of async route handlers where the first to return a response wins, with table merging and an exact method-and-path handler builder.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "routing",
+      "http",
+      "dispatch"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "7ae049cd97d94dd8",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -1,0 +1,25 @@
+
+- **path-resolver-kinds**: `PathResolverKind` MUST have exactly four cases, `document`, `editor`, `terminal` and `none`, each with a string raw value equal to its name.
+- **path-resolver-codable**: `PathResolverKind` MUST be `Codable` and `Sendable`.
+- **tracked-app-fields**: `TrackedApp` MUST carry `bundleId`, `name` and `resolver` as immutable fields set by its initializer.
+- **tracked-app-identity**: `TrackedApp.id` MUST equal `bundleId`.
+- **tracked-app-equality**: `TrackedApp` MUST be `Equatable`, `Codable` and `Sendable`.
+- **defaults-list**: `AppAllowlist.defaults` MUST list 32 built-in apps: Xcode, Simulator, Instruments, Android Studio, the JetBrains IDEs, Visual Studio Code and VS Code Insiders, Cursor, Windsurf, Zed, Nova, BBEdit, Sublime Text, four terminals and four git clients.
+- **defaults-unique-ids**: Every bundle id in `AppAllowlist.defaults` MUST be unique.
+- **defaults-resolver-assignment**: Xcode, Zed, Nova, BBEdit and Sublime Text MUST use `document`; Terminal, iTerm2, Ghostty and Warp MUST use `terminal`; Simulator, Instruments, Tower, Sublime Merge, Fork and GitHub Desktop MUST use `none`; every other default MUST use `editor`.
+- **construct-from-preferences**: `AppAllowlist.init(preferences:defaults:)` MUST take a `WorkTrackingPreferences` and an optional `defaults` list that defaults to `AppAllowlist.defaults`.
+- **removed-excluded**: The initializer MUST drop every default whose `bundleId` is in `preferences.removedBundleIds`.
+- **added-appended**: The initializer MUST append a `TrackedApp` for each id in `preferences.addedBundleIds` that is not a `defaults` bundle id and is not in `removedBundleIds`.
+- **added-app-shape**: An added `TrackedApp` MUST use the bundle id as its `name` and `PathResolverKind.editor` as its `resolver`.
+- **removed-beats-added**: An id present in both `addedBundleIds` and `removedBundleIds` MUST NOT appear in the allowlist.
+- **added-default-ignored**: An added id equal to a `defaults` bundle id MUST NOT create a second entry; the default entry, with its own name and resolver, stays.
+- **added-duplicates-collapsed**: The same id listed more than once in `addedBundleIds` MUST yield one entry.
+- **sorted-apps**: `apps` MUST be sorted ascending by the pair `(name, bundleId)`, using Swift's default `String` ordering for each.
+- **apps-immutable**: `apps` MUST be a `let`; an `AppAllowlist` MUST NOT change after it is built.
+- **is-allowed**: `isAllowed(_:)` MUST return `true` exactly when the bundle id is in `apps`, compared as an exact string match.
+- **app-lookup**: `app(for:)` MUST return the `TrackedApp` for the bundle id, or `nil` when the id is not in `apps`.
+- **lookup-first-wins**: When the `defaults` argument repeats a bundle id, the lookup MUST return the first of those entries in the sorted `apps` order (the table is built after the sort), while `apps` still contains both.
+- **allowlist-equatable**: `AppAllowlist` MUST be `Equatable` and `Sendable`.
+- **pure-no-side-effects**: Building and querying an `AppAllowlist` MUST NOT read or write files, use the network, start processes or post notifications.
+- **consumer-gating**: The activity recorder holds an `AppAllowlist` and looks up the focused app's bundle id with `app(for:)`; an app that is not found is not recorded. A replacement allowlist is supplied through the recorder's `update(allowlist:)`.
+

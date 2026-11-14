@@ -349,7 +349,7 @@ Not applicable: the component performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -805,7 +805,7 @@ Several routes log on failure via `console.error`, and one notably does not:
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/routes/` | unverified |
+| web | `packages/web/packages/status-server/src/routes/` | confirmed (1.0.3) |
 
 ## Design Decisions
 

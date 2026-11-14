@@ -1,0 +1,3 @@
+
+`PrivacyWordsVault` holds the privacy words while the app runs: read from the keychain through a `PrivacyWordStore` when a private terminal first needs them, kept in memory as a `TextSubstitutionFilter`, and nowhere else. One vault serves the whole app, so an edit applies to every private terminal at once. Reading the words to run a terminal never prompts; seeing them does, so showing a terminal, opening the editor and saving each go through `authenticate(reason:)`. Every app that shares the keychain item keeps its own vault, so a save announces itself with a distributed notification and every other vault that already holds the words reads them again. It is a `@MainActor` `ObservableObject` publishing the current filter.
+

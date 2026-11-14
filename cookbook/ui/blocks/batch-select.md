@@ -154,7 +154,7 @@ Not applicable: Batch Select does not emit debug or informational logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/batch-select.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/batch-select.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 

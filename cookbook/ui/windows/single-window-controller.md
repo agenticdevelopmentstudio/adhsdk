@@ -553,7 +553,7 @@ Not applicable — this class contains no logging calls of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/SingleWindowController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/SingleWindowController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

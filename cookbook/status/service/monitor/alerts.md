@@ -181,7 +181,7 @@ This is the only log line this module emits — a successful flush produces no l
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/alerts.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/alerts.ts` | confirmed (1.2.0) |
 
 ## Design Decisions
 

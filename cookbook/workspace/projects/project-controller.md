@@ -445,7 +445,7 @@ project controller's own name.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

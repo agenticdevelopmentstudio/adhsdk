@@ -144,7 +144,7 @@ Not applicable: The component performs no logging or error reporting.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-metadata.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/doc-metadata.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

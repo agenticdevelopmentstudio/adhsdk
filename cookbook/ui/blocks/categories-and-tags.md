@@ -142,7 +142,7 @@ Not applicable: This component performs no logging. Logging is delegated to chil
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/categories-and-tags.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/categories-and-tags.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -144,7 +144,7 @@ Not applicable: The component does not emit debug logs or instrumentation.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/field-footnote.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/field-footnote.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

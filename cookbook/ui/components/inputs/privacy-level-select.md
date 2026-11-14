@@ -267,7 +267,7 @@ Not applicable: the component has no logging. Console or error tracking is the r
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/privacy-level-select.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/privacy-level-select.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

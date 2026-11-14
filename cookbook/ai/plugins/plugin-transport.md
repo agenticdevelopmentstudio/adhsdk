@@ -362,7 +362,7 @@ I/O and control-flow logic with no diagnostic side effects of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PluginTransport.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PluginTransport.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

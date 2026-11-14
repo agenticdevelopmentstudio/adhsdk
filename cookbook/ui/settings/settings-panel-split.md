@@ -314,7 +314,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelSplitViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelSplitViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

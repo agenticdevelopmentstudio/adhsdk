@@ -438,7 +438,7 @@ second time by this surface.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

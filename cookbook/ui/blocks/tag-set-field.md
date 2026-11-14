@@ -195,7 +195,7 @@ Not applicable: Component does not emit debug or error logs. Logging is delegate
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/tag-set-field.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/tag-set-field.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

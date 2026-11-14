@@ -154,7 +154,7 @@ Not applicable: Source Filter makes no log calls and has no failure path to log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-source-filter.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-source-filter.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

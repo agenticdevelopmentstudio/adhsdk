@@ -14,4 +14,5 @@
   tooltip and is `aria-hidden`, so it is excluded from both the tab order
   (`tabIndex={-1}`) and the accessibility tree entirely — it is a pointer
   affordance; the same action is reachable from the row via ArrowRight/Left.
+- **touch-target-size**: NEEDS REVIEW: Not implemented in source. The expand/collapse toggle is 24×24 CSS px (`size-6`) and the row buttons use `px-2 py-1` padding, below the 44×44 CSS px, 44×44pt and 48×48dp platform minimums; settling it needs a decision on whether this dense tree is held to those minimums (WCAG 2.2 sets 24×24 CSS px as its floor) or the rows are enlarged.
 

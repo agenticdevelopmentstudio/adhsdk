@@ -230,7 +230,7 @@ Subsystem: the app's own bundle identifier | Category: the bridge and each regis
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

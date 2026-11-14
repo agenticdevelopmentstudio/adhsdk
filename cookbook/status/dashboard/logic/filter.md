@@ -152,7 +152,7 @@ Not applicable: the module makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/filter.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/filter.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

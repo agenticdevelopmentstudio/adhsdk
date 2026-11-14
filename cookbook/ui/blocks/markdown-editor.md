@@ -178,7 +178,7 @@ derives a title from an upload when it wants one.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/markdown-editor.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/markdown-editor.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

@@ -1,0 +1,116 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "80fecda2-6440-497a-ba28-c77eb05cc996",
+    "title": "Terminal Chat Control Server",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "An app-side socket server and chat directory that let adterm in another terminal list Terminal Chats, type into one and read its concealed reply.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "terminal",
+      "terminal-chat",
+      "privacy"
+    ],
+    "depends-on": [
+      "b71b349b-5c60-41f4-b664-49085ac5d988"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "323d0562cb2de15b",
+  "parts": [
+    {
+      "part": "intro"
+    },
+    {
+      "part": "overview",
+      "heading": "Overview"
+    },
+    {
+      "part": "behavioral-requirements",
+      "heading": "Behavioral Requirements"
+    },
+    {
+      "part": "appearance",
+      "heading": "Appearance"
+    },
+    {
+      "part": "states",
+      "heading": "States"
+    },
+    {
+      "part": "accessibility",
+      "heading": "Accessibility"
+    },
+    {
+      "part": "conformance-test-vectors",
+      "heading": "Conformance Test Vectors"
+    },
+    {
+      "part": "edge-cases",
+      "heading": "Edge Cases"
+    },
+    {
+      "part": "configuration",
+      "heading": "Configuration"
+    },
+    {
+      "part": "deep-linking",
+      "heading": "Deep Linking"
+    },
+    {
+      "part": "localization",
+      "heading": "Localization"
+    },
+    {
+      "part": "accessibility-options",
+      "heading": "Accessibility Options"
+    },
+    {
+      "part": "feature-flags",
+      "heading": "Feature Flags"
+    },
+    {
+      "part": "analytics",
+      "heading": "Analytics"
+    },
+    {
+      "part": "privacy",
+      "heading": "Privacy"
+    },
+    {
+      "part": "logging",
+      "heading": "Logging"
+    },
+    {
+      "part": "platform-notes",
+      "heading": "Platform Notes"
+    },
+    {
+      "part": "design-decisions",
+      "heading": "Design Decisions"
+    },
+    {
+      "part": "compliance",
+      "heading": "Compliance"
+    },
+    {
+      "part": "history",
+      "heading": "Change History"
+    }
+  ],
+  "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values."
+}

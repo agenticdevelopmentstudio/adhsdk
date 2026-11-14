@@ -607,7 +607,7 @@ Category: `VSIXInstaller`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

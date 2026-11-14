@@ -389,7 +389,7 @@ kind; each is a pure data declaration with no side effects of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` | confirmed (1.1.1) |
 
 ## Design Decisions
 

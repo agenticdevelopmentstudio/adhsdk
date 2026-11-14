@@ -221,7 +221,7 @@ Not applicable: the module makes no log calls. Unrecognized provider values fall
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/deploy-status.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/deploy-status.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

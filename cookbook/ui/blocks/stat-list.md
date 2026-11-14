@@ -148,7 +148,7 @@ composed `StatusDot`; nothing flows back up.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/stat-list.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/stat-list.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

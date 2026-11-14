@@ -129,7 +129,7 @@ Not applicable: The cache calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Collections/LRUCache.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Collections/LRUCache.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

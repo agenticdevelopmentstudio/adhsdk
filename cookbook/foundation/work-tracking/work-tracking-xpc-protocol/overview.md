@@ -1,0 +1,3 @@
+
+`WorkTrackingXPCProtocol` is the work-tracking half of a daemon's XPC surface, declared `@objc public` as its own protocol "so any app can talk to it without linking the daemon's whole protocol". Per its doc comment, "every body and reply is JSON in the daemon's snake-case style". It has four selectors: set the preferences, read the status, re-check Accessibility, and read activity spans. Failure is carried in the data, not in an error: empty `Data` for the three status calls, and a one-element sentinel row for the spans list. The daemon implements the protocol; this repo declares it and the client side (`WorkTrackingXPCClient`) calls it. The billing counterpart has the same shape (see the Billing XPC Protocol recipe).
+

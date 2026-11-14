@@ -342,7 +342,7 @@ Not applicable: this file makes no logging call of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

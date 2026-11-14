@@ -372,7 +372,7 @@ Not applicable: this component makes no logging call of its own. Every compromis
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributedSettings.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributedSettings.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

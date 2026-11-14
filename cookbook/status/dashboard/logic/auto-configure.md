@@ -334,7 +334,7 @@ Not applicable: the module makes no log calls. Failures reach the caller through
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/auto-configure.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/auto-configure.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

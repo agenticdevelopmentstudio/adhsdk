@@ -4,11 +4,11 @@
     "id": "1c826ac4-20e0-4089-870f-5d1fd4b59983",
     "title": "IntegrationsSettingsPanel",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fa8e76a0bba365b0",
+  "synced": "8d6ba162ce618a6b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

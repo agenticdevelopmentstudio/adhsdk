@@ -346,7 +346,7 @@ discarded with no log output — see the pending decision on
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

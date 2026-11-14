@@ -343,7 +343,7 @@ No other event in this file is logged: neither the unknown-model error nor the p
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

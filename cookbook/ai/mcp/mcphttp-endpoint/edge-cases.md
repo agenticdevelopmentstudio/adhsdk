@@ -1,0 +1,12 @@
+
+- **Null and empty input**: An empty body, or a body that does not parse, MUST be forwarded unchanged and the SDK answers it (MUST, per `rewrite-passthrough`). An empty token string MUST still be compared byte for byte, so the only authorised header is exactly `Bearer ` (MUST, per `auth-constant-time`).
+- **Boundary values**: Preferred port 0 means "ephemeral" and MUST NOT trigger the port-taken fallback path (MUST). A fractional or boolean id is not rewritable and passes through; an integer id outside the range `JSONSerialization` round-trips exactly is not specified by the source.
+- **Concurrent access**: Two callers using the same id are kept apart by the unique id and the caller key (MUST). A caller reusing an id while its first request is in flight has broken JSON-RPC; the later request wins the key and the earlier one's completion does not forget it (MUST).
+- **Error states**: A failed bind MUST clean up fully. A non-IP bound address or a missing listening address fails with a file-not-found Cocoa error (MUST). A stream that fails midway becomes an empty 500 (MUST). The endpoint turns any cancellation of the handler task into the SDK cancellation sent for a timeout (`cancel-timeout-forwarded`); the source has no separate handling for a caller that drops the connection.
+- **Offline or disconnected state**: Not applicable — the endpoint binds the loopback interface only, so it needs no network.
+- **Timeouts**: A request that exceeds `requestTimeout` MUST be cancelled in the SDK through `cancel-timeout-forwarded`, so the tool stops; the test observes status 500 within about the timeout (`testHTTPTimeoutCancelsTheTool`), and the source does not set that status itself (MUST).
+- **Port already taken**: The preferred port taken by another process (or by another endpoint in the same process) MUST fall back to an ephemeral port, and the caller learns the real port from the return value (MUST).
+- **Stop racing start**: `stop()` during `start()` leaves no listener behind; `start()` throws `stoppedWhileStarting` (MUST).
+- **Late release**: A release arriving after the real response finds no waiter and is dropped by the transport (MUST NOT affect the answered request).
+- **Cancellation of an unrewritten request**: A request with no rewritable id has no unique id, so a timeout cannot be forwarded as a cancellation for it (the `onCancel` handler returns without sending); the source states no reason for this beyond there being no id to name.
+

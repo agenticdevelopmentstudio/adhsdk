@@ -187,9 +187,9 @@ Not applicable: none of `build.ts`, `route-key.ts`, or `shared.ts` contains a lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/openapi/build.ts` | unverified |
-| web | `packages/web/packages/status-server/src/openapi/route-key.ts` | unverified |
-| web | `packages/web/packages/status-server/src/openapi/shared.ts` | unverified |
+| web | `packages/web/packages/status-server/src/openapi/build.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/openapi/route-key.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/openapi/shared.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

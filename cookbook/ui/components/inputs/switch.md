@@ -169,7 +169,7 @@ Not applicable: The component does not perform logging. Debugging state changes 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/switch.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/switch.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 

@@ -1,0 +1,7 @@
+
+- **SwiftUI**: The source file `Core/Process/ShellQuoting.swift` imports only `Foundation` and is UI-independent, so a SwiftUI host calls it unchanged. It is a public caseless `enum`. The literal replace is `replacingOccurrences(of:with:options: .literal)`; the plain test is `CharacterSet.contains` over `unicodeScalars`.
+- **Compose**: Top-level functions over `String` and `List<String>`. Replace the single quote with `replace("'", "'\"'\"'")` (Kotlin's `String.replace` works on characters, so the combining-mark pitfall does not arise), and test plainness with a regex over `[A-Za-z0-9_@%+=:,./-]+`.
+- **React/Web**: Pure functions over strings. Use `String.prototype.replaceAll("'", "'\"'\"'")` (code-unit based, so no grapheme pitfall) and a `/^[A-Za-z0-9_@%+=:,./-]+$/` test for the plain class; join with `words.map(quoteIfNeeded).join(" ")`.
+- **AppKit / UIKit**: Identical to the SwiftUI note: the file is UI-framework-agnostic and only the embedding application differs, never this contract.
+- **WinUI 3**: A static class over `string` and `IEnumerable<string>`. Use `string.Replace("'", "'\"'\"'")` (ordinal for the string overload without a culture argument) and a `Regex` or a `HashSet<char>` for the plain class; `string.Join(" ", words.Select(QuoteIfNeeded))`. The output targets a POSIX shell, not `cmd.exe` or PowerShell, so a port that launches a Windows shell needs different quoting; this contract covers POSIX only.
+

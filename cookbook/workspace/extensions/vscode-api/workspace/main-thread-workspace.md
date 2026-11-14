@@ -231,7 +231,7 @@ This component supports the shared logging contract (see **logging-conformance**
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

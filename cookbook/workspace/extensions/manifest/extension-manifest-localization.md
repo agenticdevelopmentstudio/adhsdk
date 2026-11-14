@@ -348,7 +348,7 @@ but could not be used (see Design Decisions and the
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

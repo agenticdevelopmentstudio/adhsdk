@@ -1,7 +1,12 @@
 
 "Empty," for the `eyebrow`, `help`, and `actions` props below, means any JavaScript falsy value — `undefined`, `null`, `false`, or the empty string `""` — since each slot is guarded by a truthy check (`{prop && ...}`) in the source. This definition is also used by the Configuration table below.
 
-- **render-title**: The component MUST render the `title` prop content as an h2 heading.
+- **render-title**: Unless the title is hoisted (see pane-title-hoisted), the component MUST render the `title` prop content as an h2 heading.
+- **pane-title-opt-in**: The `paneTitle` prop MUST default to false; a header without it MUST draw its own title in place even inside a detail stack, because a pane can head several sections with this one component.
+- **pane-title-hoisted**: When `paneTitle` is true and the enclosing detail stack accepts the title, the component MUST hand `title` to the stack's detail strip through `useDetailTitle` and MUST NOT draw the h2 in the pane.
+- **hoisted-keeps-chrome**: While the title is hoisted, the component MUST still render `eyebrow`, `actions` and `help` in their usual places.
+- **hoisted-bare-collapse**: While the title is hoisted and `eyebrow`, `help` and `actions` are all empty, the component MUST render only the hand-off and no wrapper element, so nothing of it remains in the pane.
+- **title-fallback-inline**: When `paneTitle` is true but no stack accepts the title (no enclosing stack or slot, the title suppressed for a hidden pane, the server render, or another header registered later), the component MUST draw the h2 inline as it would without `paneTitle`.
 - **support-eyebrow**: The component MUST render the `eyebrow` prop when it is provided and non-empty; when `eyebrow` is empty, the eyebrow slot MUST NOT be rendered.
 - **support-help**: The component MUST render a help trigger button when the `help` prop is provided and non-empty; when `help` is empty, the help trigger button MUST NOT be rendered.
 - **support-actions**: The component MUST render the `actions` prop content when it is provided and non-empty; when `actions` is empty, the actions slot MUST NOT be rendered.

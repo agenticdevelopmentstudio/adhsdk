@@ -318,7 +318,7 @@ mutation layer.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/inline-commit-control.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/inline-commit-control.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

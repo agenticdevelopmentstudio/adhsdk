@@ -189,7 +189,7 @@ Not applicable: the component does not perform any logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-nav.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/doc-nav.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 

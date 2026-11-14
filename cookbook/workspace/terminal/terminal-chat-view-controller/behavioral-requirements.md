@@ -1,0 +1,45 @@
+
+- **chat-surface**: The component MUST present a chat view bound to its own terminal chat session, pinned to all four edges of a window-background container.
+- **initial-size**: The container MUST have an initial frame of 360 by 500 points.
+- **interrupt-enabled**: The chat view MUST have its interrupt control enabled, because Control-C is how a terminal is stopped.
+- **session-exposed**: The component MUST expose its terminal chat session publicly so another chat in the same tab can drive it.
+- **composer-gated**: The chat composer MUST be enabled if and only if the session has a connected terminal.
+- **composer-prompt**: The composer prompt MUST read "$" while connected and MUST be absent while not connected.
+- **status-cleared-when-connected**: WHEN the session has a terminal, the component MUST clear the chat status line and any remembered start error.
+- **status-starting**: WHILE a terminal start is in flight and the session has no terminal, the status line MUST read "Starting the terminal…".
+- **status-start-failed**: WHEN a start has failed and no start is in flight, the status line MUST read "The terminal could not start: " followed by the error's localized description, and MUST keep reading so until the next connection attempt.
+- **status-remembered-unavailable**: WHEN a pane is remembered but the session has no terminal, no start is in flight and no start error is held, the status line MUST read "Its terminal isn't available yet — or click the link to choose another".
+- **status-not-connected**: WHEN no pane is remembered and the session has no terminal, no start is in flight and no start error is held, the status line MUST read "Not connected — click the link to choose a terminal".
+- **accessory-refresh**: After every connection-state update, the component MUST ask its parent pane to refresh its accessory views.
+- **connection-remembered**: The component MUST store the connected pane's node identifier, as a UUID string, in the pane state store under the key "connectedPane" whenever a connection is requested.
+- **connection-forgotten**: WHEN the user confirms a disconnect, the component MUST remove the remembered pane identifier from the pane state store.
+- **reconnect-on-appear**: WHEN the view has appeared and the session has no terminal, the component MUST try to re-make the remembered connection.
+- **reconnect-on-change**: WHEN a connectable-terminal-changed notification arrives, the session has no terminal, the view is loaded and the view is in a window, the component MUST try to re-make the remembered connection. The notification's object is not filtered.
+- **reconnect-needs-pane**: WHEN re-making a connection and no pane in the tab has the remembered node identifier, or that pane's content is not connectable, the component MUST only refresh the connection state and MUST NOT start anything.
+- **connect-running-terminal**: WHEN connecting to a pane whose connectable terminal exists, the component MUST connect the session to it immediately.
+- **connect-starts-terminal**: WHEN connecting to a pane that has no connectable terminal yet, the component MUST ask that pane to start one and connect the session to the result.
+- **single-start**: WHILE a start is in flight, the component MUST NOT begin a second start.
+- **start-superseded**: WHEN a start finishes (by success or failure) and the remembered pane is no longer the pane it was started for, the component MUST NOT connect to its result or show its error, and MUST re-make the connection to the now-remembered pane.
+- **start-nil-result**: WHEN a start succeeds but returns no terminal, the component MUST leave the session unconnected and show the remembered-unavailable status.
+- **terminal-exit-refresh**: WHEN the session reports that its terminal exited, the component MUST update its connection state.
+- **link-accessory**: The component MUST offer exactly one pane accessory view: a borderless button showing a link symbol at 13 points, regular weight, while connected and the same symbol with a slash through it while not connected.
+- **link-title-connected**: WHEN connected to a pane that is still in the tab, the link's title MUST read "Connected to <pane title> — click to disconnect"; when that pane is not in the tab, it MUST read "Connected — click to disconnect".
+- **link-title-disconnected**: WHEN not connected, the link's title MUST read "Not connected — click to choose a terminal".
+- **link-title-reuse**: The link's title MUST be used as its tooltip, its accessibility label and the image's accessibility description.
+- **link-accessibility-value**: The link's accessibility value MUST be "connected" while connected and "not connected" otherwise, and its accessibility identifier MUST be "terminalChat.link".
+- **link-action**: WHEN the link is pressed while not connected, the component MUST start choosing a terminal; WHEN pressed while connected, it MUST ask for confirmation before disconnecting.
+- **disconnect-confirmation**: The confirmation MUST be a sheet on the window titled "Disconnect from <pane title>?" (or "Disconnect from the terminal?" when the pane is not in the tab), with the text "This chat stops typing into the terminal and reading what it prints." and buttons Disconnect and Cancel.
+- **disconnect-no-window**: WHEN the view is not in a window, the component MUST NOT present the confirmation.
+- **disconnect-effect**: WHEN the user confirms, the component MUST disconnect the session from its terminal and update its connection state, and the chat history MUST remain.
+- **options-row**: The component MUST offer one pane options row: a rounded button titled "Connect to Terminal…" with the accessibility identifier "terminalChat.options.connect".
+- **picker-dismisses-options**: WHEN choosing a terminal starts, the component MUST first close the pane's Settings sheet.
+- **picker-single**: WHILE a picker is already running, or the view has no window, the component MUST NOT put up another.
+- **picker-panes-live**: The picker MUST be given the tab's panes through a closure evaluated on each use, so the answer follows the current layout.
+- **picker-deferred-start**: The component MUST begin the picker on the next main-queue turn, so the panel is not put up behind the closing sheet.
+- **picker-pick-connects**: WHEN the picker reports a pick, the component MUST connect to that pane.
+- **picker-released**: WHEN the picker reports it finished, the component MUST release it.
+- **directory-listing**: WHEN both a directory and a listing are supplied, the component MUST add its session to the directory under that listing at creation, and MUST remove it at teardown.
+- **teardown**: WHEN the pane's content is about to be discarded, the component MUST cancel a running picker, stop observing connectable-terminal changes and close the session.
+- **no-coder-init**: The component MUST NOT be creatable from an archive; that initializer traps.
+- **link-target-size**: NEEDS REVIEW: Not implemented in source. The link button is a borderless button sized by its 13-point symbol with no explicit minimum size, so whether its click target is acceptable cannot be settled from the source; a measured target size against the platform's minimum would settle it.
+

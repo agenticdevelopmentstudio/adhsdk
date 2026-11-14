@@ -15,15 +15,21 @@
 | popup-012 | single-select-item-group | `selectedId="a"` in the single-selection group | Item A is marked as checked/selected |
 | popup-013 | truncate-long-trigger-labels | Label exceeds trigger width | Computed style includes `overflow: hidden`, `text-overflow: ellipsis`, `white-space: nowrap` (Tailwind's `truncate` utility); label renders visually truncated with an ellipsis glyph |
 | popup-014 | accept-aria-label | `ariaLabel="Select focus"` | Trigger has `aria-label="Select focus"` |
-| popup-015 | default-affordance-icon | No `icon` prop | Default affordance icon (ChevronsUpDown, 13px) is rendered on trigger |
-| popup-016 | accept-custom-icon | `icon={<CustomIcon />}` | Custom icon is rendered instead of the default |
-| popup-017 | accept-trigger-class-name | `className="w-auto"` | Trigger merges custom class; `w-auto` overrides default `w-full` |
-| popup-018 | hide-icon-from-accessibility | Default or custom icon present | Icon has `aria-hidden` attribute |
+| popup-015 | default-affordance-icon (test: "renders the default chevron when no icon is given") | No `icon` prop | Default affordance icon (ChevronsUpDown, 13px) is rendered on trigger |
+| popup-016 | accept-custom-icon (test: "renders a supplied icon instead of the default") | `icon={<CustomIcon />}` | Custom icon is rendered instead of the default; no chevron svg remains |
+| popup-017 | accept-trigger-class-name, trigger-fills-width (test: "merges a trigger className over the block's own width") | `className="w-auto"` | Trigger class contains `w-auto` and no longer contains `w-full` |
+| popup-018 | hide-icon-from-accessibility | No `icon` prop (default icon); then `icon={<span>v</span>}` | The default chevron svg has `aria-hidden`; the custom icon is rendered as supplied, with no `aria-hidden` added by the component |
 | popup-019 | warn-on-sentinel-collision | `items=[{id:"__all__", label:"Item"}]` | Console warning logged: `PopupMenu: item id "__all__" collides with the All sentinel` |
 | popup-020 | single-select-item-group | `selectedId` changes from `"a"` to `"b"` | Item B becomes checked and item A becomes unchecked (mutual exclusivity) |
 | popup-021 | render-new-row-when-callback-present | `onNew` callback provided | A divider (separator) renders between the last item (or "All" row) and the "New…" row |
 | popup-022 | render-new-row-when-callback-present | `onNew` provided, `newLabel="Create item"` | The row displays "Create item" instead of the default "New…" |
 | popup-023 | focus-indicator-contrast | Trigger receives keyboard focus | Border color changes to the `apt-gold` token and the default outline is suppressed, meeting WCAG 1.4.11's 3:1 non-text contrast minimum against the adjacent surface |
-| popup-024 | display-selected-label-on-trigger | `selectedId="zzz"` (no item has this id), `allLabel="All"` | Trigger displays "All" (same fallback path as `selectedId=null`) |
-| popup-025 | accept-items | `items=[{id:"a",label:"First"},{id:"a",label:"Second"}]` (duplicate id) | No warning is logged (the sentinel check only fires for `"__all__"`); both entries share the same selection value, so the caller cannot distinguish which was clicked |
+| popup-024 | display-selected-label-on-trigger | `selectedId="zzz"` (no item has this id), `allLabel="All"` | Trigger displays "All" (same label fallback as `selectedId=null`), but no row in the open menu is checked, including the "All" row |
+| popup-025 | accept-items | `items=[{id:"a",label:"First"},{id:"a",label:"Second"}]` (duplicate id) | No warning is logged (the component's own sentinel check only fires for `"__all__"`; React's development build still warns about the duplicate `key`); both entries share the same selection value, so the caller cannot distinguish which was clicked |
+| popup-026 | new-row-icon | `onNew` provided, menu open | The "New…" row shows a plus icon with `aria-hidden` before its label |
+| popup-027 | menu-align-start | Menu open | The dropdown's start edge aligns with the trigger's start edge |
+| popup-028 | trigger-fills-width | No `className` | Trigger has class `w-full` |
+| popup-029 | close-on-select | Menu open, user chooses an item, "All" or "New…" | The dropdown closes after the callback fires |
+
+Test vectors popup-015 to popup-017 come from `popupMenu.test.tsx`, which asserts on the trigger only because the menu's open and close need pointer plumbing the package's test setup lacks; the other vectors derive from the source.
 

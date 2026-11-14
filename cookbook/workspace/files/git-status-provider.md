@@ -361,7 +361,7 @@ The companion color mapping performs no logging of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

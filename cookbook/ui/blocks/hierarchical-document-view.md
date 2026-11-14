@@ -706,7 +706,7 @@ render tracing would not already show.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/hierarchical-document-view.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/hierarchical-document-view.tsx` | confirmed (1.7.1) |
 
 ## Design Decisions
 

@@ -187,7 +187,7 @@ No other event in this file is logged: subscribing's two refusals (non-function 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

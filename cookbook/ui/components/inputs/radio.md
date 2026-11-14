@@ -163,7 +163,7 @@ Not applicable: The component does not implement logging. Debug logging is the r
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/radio.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/radio.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

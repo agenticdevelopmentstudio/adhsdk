@@ -246,7 +246,7 @@ No logging. `ReactionBar` is presentational; what a toggle means, and any teleme
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/reaction-bar.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/reaction-bar.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

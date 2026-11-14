@@ -210,10 +210,10 @@ The text document, the document store, and the URL-to-document-URI conversion ma
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocument.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentSaveScheduler.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentStore.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/URL+DocumentUri.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocument.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentSaveScheduler.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentStore.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/URL+DocumentUri.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

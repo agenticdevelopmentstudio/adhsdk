@@ -250,7 +250,7 @@ A fully successful poll (every project fetched, no 429, budget not exhausted, no
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-railway.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/fetch-railway.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

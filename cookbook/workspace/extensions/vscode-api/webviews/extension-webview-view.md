@@ -176,7 +176,7 @@ Not applicable: no `Logger`, `os_log`, or other logging call appears anywhere in
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/ExtensionWebviewViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/ExtensionWebviewViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

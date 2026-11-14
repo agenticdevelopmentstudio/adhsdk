@@ -170,7 +170,7 @@ Not applicable: this component does not emit logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/view-source-disclosure.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/view-source-disclosure.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

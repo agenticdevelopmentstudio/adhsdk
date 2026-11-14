@@ -433,7 +433,7 @@ Both messages interpolate the view id's raw value, logged as public data.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewRegistry.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewRegistry.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

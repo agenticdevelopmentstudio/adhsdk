@@ -739,7 +739,7 @@ but unused.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/` | confirmed (1.2.1) |
 
 ## Design Decisions
 

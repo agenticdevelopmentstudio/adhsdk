@@ -153,7 +153,7 @@ Not applicable: `ContributionPoint.swift` contains no `os_log`, `Logger`, `print
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

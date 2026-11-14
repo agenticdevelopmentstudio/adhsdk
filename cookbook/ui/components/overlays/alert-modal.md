@@ -248,7 +248,7 @@ Not applicable — `AlertModal` is a presentational component and issues no log 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/alert-modal.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/alert-modal.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

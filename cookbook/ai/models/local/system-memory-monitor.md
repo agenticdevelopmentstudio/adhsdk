@@ -285,7 +285,7 @@ Not applicable: this component contains no logging call of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -1,0 +1,23 @@
+
+- **nav-landmark**: The component MUST render a single `nav` element with the class `lp-hero-nav`.
+- **nav-label**: The component MUST set the `nav` element's `aria-label` to the `label` prop.
+- **link-per-row**: The component MUST render one `a` element with the class `lp-hero-nav__link` for each entry in `rows`.
+- **link-order**: The component MUST render the links in the order of `rows`.
+- **link-href**: The component MUST set each link's `href` to its row's `href`.
+- **link-text**: The component MUST render each row's `label` as its link's text.
+- **plain-anchors**: The component MUST NOT attach a click handler to a link, so navigation does not depend on JavaScript.
+- **separator-between**: The component MUST render one `span` with the class `lp-hero-nav__sep` and the text `|` before every link except the first.
+- **separator-hidden**: The component MUST set `aria-hidden="true"` on each separator.
+- **no-edge-separators**: The component MUST NOT render a separator before the first link or after the last link, so the nav's first and last children are both links.
+- **separator-drawn**: The component SHOULD draw separators as elements rather than as borders, because a border would also draw at the ends of a wrapped line.
+- **lens-selector**: The component MUST bind the text lens to the nav element with the selector `.lp-hero-nav__link`.
+- **lens-delay**: The component MUST start the lens sweep 2000 ms after mount.
+- **lens-colors**: The component MUST pass the lens the token names `--lp-ink-dim` as `fromColor` and `--lp-accent-bright` as `toColor`, as token names rather than resolved colour values.
+- **lens-reduced-motion**: The lens MUST NOT animate when the user prefers reduced motion; the component leaves `respectReducedMotion` at the lens default, which is true.
+- **client-only**: The component MUST be exported from the client barrel and MUST NOT be exported from the server barrel.
+- **phone-separators**: Below a viewport width of 640px (`max-width: 640px`) the separators MUST be hidden (`display: none`).
+- **phone-gap**: Below a viewport width of 640px the nav MUST space its links with a `column-gap` of `1.2rem`.
+- **mono-font**: The nav MUST be set in `var(--lp-font-mono, ui-monospace, "SF Mono", monospace)`.
+- **focus-ring**: A link that receives `:focus-visible` MUST show a 2px outline in `--lp-accent` (fallback `#9a9a9a`) offset by 3px.
+- **hover-color**: A hovered or `:focus-visible` link SHOULD take the colour `--lp-accent-bright` (fallback `#d8d8d8`), where the sweep lands.
+

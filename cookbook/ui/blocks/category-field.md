@@ -226,7 +226,7 @@ Not applicable: CategoryField does not perform logging. Debug or diagnostic logg
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/category-field.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/category-field.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

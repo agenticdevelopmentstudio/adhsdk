@@ -536,7 +536,7 @@ Not applicable — none of these files call a logger, write to stdout/stderr, or
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/board/` | unverified |
+| web | `packages/web/packages/status-server/src/board/` | confirmed (1.0.3) |
 
 ## Design Decisions
 

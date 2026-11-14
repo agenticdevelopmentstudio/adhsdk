@@ -246,8 +246,8 @@ Not applicable: neither piece of this logic calls a console or logging API; the 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/header-auth.ts` | unverified |
-| web | `packages/web/packages/status-web/src/types.ts` | unverified |
+| web | `packages/web/packages/status-web/src/header-auth.ts` | confirmed (1.2.0) |
+| web | `packages/web/packages/status-web/src/types.ts` | confirmed (1.2.0) |
 
 ## Design Decisions
 

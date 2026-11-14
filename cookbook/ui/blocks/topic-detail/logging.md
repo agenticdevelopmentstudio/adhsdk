@@ -1,3 +1,3 @@
 
-Not applicable: this component performs no logging. It is a presentation layer.
+Not applicable: the component writes no log output.
 

@@ -370,7 +370,7 @@ source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/IntegerFieldView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/IntegerFieldView.swift` | confirmed (1.2.4) |
 
 ## Design Decisions
 

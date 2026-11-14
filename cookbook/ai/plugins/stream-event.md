@@ -263,7 +263,7 @@ data-and-role declaration with no side effects of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

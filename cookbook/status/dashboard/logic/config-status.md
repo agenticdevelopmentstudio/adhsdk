@@ -239,7 +239,7 @@ Not applicable: the module makes no log calls and has no failure path to report.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/config-status.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/config-status.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

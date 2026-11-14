@@ -227,7 +227,7 @@ any telemetry belong to the control and the owning form, not to `Field`.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/field.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/field.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

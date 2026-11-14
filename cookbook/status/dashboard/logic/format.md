@@ -180,7 +180,7 @@ Not applicable: the module contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/format.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/format.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

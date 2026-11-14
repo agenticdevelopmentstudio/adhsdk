@@ -268,7 +268,7 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dialog-actions.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/dialog-actions.tsx` | confirmed (1.4.1) |
 
 ## Design Decisions
 

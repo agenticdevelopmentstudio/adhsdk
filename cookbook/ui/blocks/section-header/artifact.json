@@ -4,11 +4,11 @@
     "id": "5e401b96-7157-4c5b-a623-b90dde372231",
     "title": "Section Header",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a441bea0773551f6",
+  "synced": "642c071b7385c386",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

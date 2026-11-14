@@ -131,7 +131,7 @@ Not applicable: Hierarchical Detail View is a routing and context component with
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/hierarchical-detail-view.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/hierarchical-detail-view.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

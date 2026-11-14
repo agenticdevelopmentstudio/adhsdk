@@ -244,7 +244,7 @@ No structured logging. ListChooser is a presentational form control; it emits no
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/list-chooser.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/list-chooser.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

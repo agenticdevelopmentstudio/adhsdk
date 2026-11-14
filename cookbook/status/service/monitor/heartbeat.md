@@ -153,7 +153,7 @@ These are the only two log lines this file emits — a successful `2xx` ping, an
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/heartbeat.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/heartbeat.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

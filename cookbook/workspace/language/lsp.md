@@ -557,7 +557,7 @@ divergence ledger) or the observable state they publish, not a log line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/LSP/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/LSP/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -336,7 +336,7 @@ to its caller rather than a log line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

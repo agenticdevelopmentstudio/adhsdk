@@ -218,7 +218,7 @@ Not applicable: The component does not emit logs. Logging (if needed) is the res
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/button-bar.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/button-bar.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -225,7 +225,7 @@ Composed shared primitives without their own recipe domains: `Badge`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/editor-section.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/editor-section.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

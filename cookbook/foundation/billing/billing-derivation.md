@@ -136,7 +136,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDerivation.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDerivation.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

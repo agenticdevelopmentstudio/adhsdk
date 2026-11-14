@@ -1,0 +1,3 @@
+
+A request as shared routes see it: no transport and no framework. A daemon's HTTP layer converts its own request type into `RouteRequest`, so a route written once against it can be mounted by any daemon. It is a `Sendable`, `Equatable` struct holding `method`, `path`, `queryValues` (every value of every query key, in wire order), `headers` and `body`. Beyond the plain fields it offers path splitting, query accessors, two paging bounds that are safe to hand to SQL (`boundedLimit(default:max:)`, `boundedOffset()`), and ISO-8601 timestamp validation that either returns a canonical string or a typed `InvalidTimestamp` failure.
+

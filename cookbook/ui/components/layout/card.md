@@ -182,7 +182,7 @@ Not applicable: Card does not perform logging; it is a presentational component 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/card.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/card.tsx` | confirmed (1.2.3) |
 
 ## Design Decisions
 

@@ -533,8 +533,8 @@ Not applicable: this storage layer contains no logging call at any level.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/libsql/client.ts` | unverified |
-| web | `packages/web/packages/status-server/src/libsql/schema.ts` | unverified |
+| web | `packages/web/packages/status-server/src/libsql/client.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/status-server/src/libsql/schema.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

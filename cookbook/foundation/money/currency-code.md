@@ -119,7 +119,7 @@ Not applicable: The currency code rule calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/CurrencyCode.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/CurrencyCode.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

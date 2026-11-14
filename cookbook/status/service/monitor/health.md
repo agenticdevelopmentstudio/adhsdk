@@ -169,7 +169,7 @@ Not applicable: this file contains no logging or console call of any kind; `clas
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/health.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/health.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

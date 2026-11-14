@@ -146,7 +146,7 @@ Not applicable: Input component does not perform logging. Debug logging for inpu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/input.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/input.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

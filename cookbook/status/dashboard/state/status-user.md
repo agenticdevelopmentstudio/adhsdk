@@ -162,7 +162,7 @@ Not applicable: the source contains no log calls. Failures show up only as throw
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/useStatusUser.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/useStatusUser.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -266,7 +266,7 @@ No other event in this component is logged: a rejected `selectChatModels`/`sendR
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

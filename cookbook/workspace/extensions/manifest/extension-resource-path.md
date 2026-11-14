@@ -411,7 +411,7 @@ itself.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionResourcePath.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionResourcePath.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

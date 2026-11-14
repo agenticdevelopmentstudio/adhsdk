@@ -250,7 +250,7 @@ Not applicable: this component contains no logging call and imports no logging f
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

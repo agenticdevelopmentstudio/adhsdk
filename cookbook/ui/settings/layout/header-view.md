@@ -232,7 +232,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/HeaderView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/HeaderView.swift` | confirmed (1.3.2) |
 
 ## Design Decisions
 

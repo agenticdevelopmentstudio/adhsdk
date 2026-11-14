@@ -424,7 +424,7 @@ Not applicable: this component's own source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

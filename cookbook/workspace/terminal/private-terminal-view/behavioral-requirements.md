@@ -1,0 +1,29 @@
+
+- **substitutions-property**: The view MUST expose a `substitutions` value of type `TextSubstitutionFilter` that both streams read, defaulting to the identity filter, which has no pairs.
+- **identity-passthrough**: With the identity filter, bytes sent and bytes received MUST pass through unchanged and nothing MUST be held.
+- **send-reveals**: Every byte sent toward the shell MUST first pass through the input stream in the revealing direction, so an alias is replaced by its real text.
+- **send-single-choke-point**: Keystrokes, pastes, the terminal's replies to queries and programmatic input MUST all take the same send path, so one filter covers them.
+- **send-holds-partial**: Input that could still become an alias MUST be held, not sent, until it diverges from every alias or completes one.
+- **send-nothing-when-empty**: When the input stream releases no bytes for a send, the view MUST NOT forward a send to the engine.
+- **receive-conceals**: Every byte received from the shell MUST pass through the output stream in the concealing direction before the engine parses it.
+- **conceal-before-parse**: Concealment MUST happen before parsing, so the buffer, scrollback, title and reported directory contain the alias and not the real text.
+- **receive-nothing-when-empty**: When the output stream releases no bytes for a read, the view MUST NOT forward a parse call to the engine.
+- **receive-holds-partial**: Output that could still become a real word MUST be held, not shown, until it diverges from every word or completes one.
+- **output-quiet-flush**: When output is still held after a read, the view MUST flush it, showing it as it stands, once 0.15 seconds pass with no further read.
+- **output-timer-rearm**: Every read MUST cancel any pending flush timer, and the view MUST arm a new 0.15 second one-shot timer only if the output stream is still holding after that read.
+- **output-timer-main-actor**: The flush timer MUST be a target-and-selector timer rather than a block timer, because a block is `@Sendable` and passing the view into it is a region-isolation error.
+- **input-no-timer**: The view MUST NOT flush the input stream on quiet; held input stays held until the next send, a divergence, a completion or a change of words.
+- **replace-words-flush**: When `substitutions` is set to a value that differs from the current one, the view MUST flush both streams under the old words first so no held byte is lost.
+- **replace-words-send-pending**: Input flushed by a change of words MUST be sent to the engine as the old words revealed it, when it is not empty.
+- **replace-words-show-pending**: Output flushed by a change of words MUST be handed to the parser as the old words concealed it, when it is not empty.
+- **replace-words-new-streams**: A change of words MUST replace both streams with fresh ones built from the new words, with the input revealing and the output concealing.
+- **equal-words-ignored**: Setting `substitutions` to a value equal to the current one MUST do nothing: no flush and no new streams.
+- **timer-lifetime**: The flush timer MUST hold the view for at most 0.15 seconds.
+- **accessibility-hidden**: The view MUST NOT be an accessibility element, MUST report no accessibility children, no role, no value and no selected text, so a screen reader and an accessibility client see an empty space where the terminal is.
+- **inherits-themed**: The view MUST keep the themed terminal view's caret behavior and terminal-engine behavior it does not override, including the `onDataSent` and `onDataReceived` callbacks, which fire only when the view forwards bytes through the themed view.
+- **no-errors**: No operation of the view throws or returns an error.
+- **main-actor**: The view and both streams MUST be used only from the main actor.
+- **output-flush-not-concealed-twice**: Held output flushed on quiet or on a change of words MUST go to the parser as the stream released it and MUST NOT be fed back through the stream.
+- **output-flush-does-not-rearm**: A flush from the timer or from a change of words MUST NOT schedule another flush timer.
+- **screen-reader-alternative**: NEEDS REVIEW: Not implemented in source. The view hides the terminal from assistive technology entirely and offers no concealed text, summary or other route for a screen-reader user to read or operate the terminal; evidence that settles it is a product decision on whether private sessions are meant to be unusable with a screen reader and, if not, the design of an alias-only accessibility representation.
+

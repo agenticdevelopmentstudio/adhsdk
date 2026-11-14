@@ -751,7 +751,7 @@ hash comparison's success or failure never appears in a log line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/libsql/stores/` | unverified |
+| web | `packages/web/packages/status-server/src/libsql/stores/` | confirmed (1.0.2) |
 
 ## Design Decisions
 

@@ -602,13 +602,13 @@ decisions, document-open failures and screenshot failures are not logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/SettingsStoreWindowStateStorage.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/UserDefaultsWindowStateStorage.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowRegistry.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/WindowScreenshot.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateNamespace.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateStorage.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/SettingsStoreWindowStateStorage.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/UserDefaultsWindowStateStorage.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowRegistry.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/WindowScreenshot.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateNamespace.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateStorage.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

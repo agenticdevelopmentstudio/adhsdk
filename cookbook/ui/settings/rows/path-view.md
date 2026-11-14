@@ -371,7 +371,7 @@ logger reference anywhere in source).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

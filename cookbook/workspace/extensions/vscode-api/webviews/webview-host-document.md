@@ -362,7 +362,7 @@ component (whole file) — this component emits no log line of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewHostDocument.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewHostDocument.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

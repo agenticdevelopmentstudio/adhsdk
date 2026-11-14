@@ -179,7 +179,7 @@ Not applicable: this component contains no logging call; there is nothing for it
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

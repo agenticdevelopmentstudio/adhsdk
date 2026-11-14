@@ -475,7 +475,7 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

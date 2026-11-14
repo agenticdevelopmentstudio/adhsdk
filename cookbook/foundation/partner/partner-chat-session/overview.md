@@ -1,0 +1,3 @@
+
+`PartnerChatSession` is the `ChatSession` implementation that fronts the partner process (a long-running Claude Code process driven over its stream-json output). It does not own that process. The partner controller feeds it each decoded `ClaudeStreamMessage` through `apply`, feeds it the owner's own lines through `noteUserMessage`, and sets its lifecycle state through `setState`. The session turns those inputs into a single stream of `ChatEvent` values for a chat UI and returns, from `apply`, the assistant `ChatMessage` values the caller should persist. User turns typed into the chat go out through an injected send closure; interruption goes out through an injected interrupt closure. The type holds an in-memory transcript and nothing else about the conversation.
+

@@ -202,7 +202,7 @@ Not applicable: the policy and preferences perform no logging, and the decode fa
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Recents/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Recents/` | confirmed (1.1.2) |
 
 ## Design Decisions
 

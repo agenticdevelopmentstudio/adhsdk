@@ -173,7 +173,7 @@ Not applicable: This component does not emit log messages or diagnostic output. 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/split-view-control.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/split-view-control.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

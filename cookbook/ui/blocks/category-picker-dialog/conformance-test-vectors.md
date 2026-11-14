@@ -2,7 +2,7 @@
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
 | T1 | browse-the-full-forest | open with a 2-level forest | roots render; expanding a root reveals its children |
-| T2 | filter-by-substring-with-trail | type a substring matching a depth-2 node | that node appears as an option with its "/"-joined ancestor trail |
+| T2 | filter-by-substring-with-trail | type a substring matching a depth-2 node | that node appears as an option with its ancestor trail (names joined with " / ") |
 | T3 | return-a-place-not-a-record, disable-confirm-when-unpickable | open, confirm disabled; click a row, confirm | confirm was disabled with no selection; `onConfirm(nodeId)` fires after the click |
 | T4 | offer-a-root-row-only-when-allowed | `allowRoot`, select "Top level", confirm | `onConfirm(null)` |
 | T5 | disable-forbidden-rows | `disabledIds=[x]`, click row x | row x stays unselected; confirm stays disabled |
@@ -22,7 +22,7 @@
 | T19 | disable-confirm-when-unpickable | open with `initialSelectedId` naming an id absent from `nodes` | no row renders selected; Confirm's enabled state follows only `disabledIds` membership, so it stays enabled and would call `onConfirm` with the nonexistent id if clicked |
 | T20 | disable-forbidden-rows | `disabledIds=[x]`, filter to a hit that includes x | row x renders disabled and unselectable in the option list too |
 | T21 | offer-a-root-row-only-when-allowed | open with `allowRoot` unset (default `false`) | no "Top level" row renders; the first visible row is the first top-level category |
-| T22 | cancel-without-confirming | press Esc while not busy; then press Esc (and attempt an outside click) while `busy` | not busy: `onCancel` fires; busy: dialog remains open and `onCancel` does not fire either time |
+| T22 | cancel-without-confirming | press Esc while not busy; then press Esc while `busy`; separately, click outside the dialog | not busy: `onCancel` fires; busy: dialog remains open and `onCancel` does not fire; an outside click never closes the dialog or fires `onCancel` |
 | T23 | preselect-initial-id, disable-confirm-when-unpickable | `allowRoot`, no `initialSelectedId` (default `null`) | "Top level" renders `aria-selected="true"` and `bg-apt-gold/15` on open; Confirm is enabled; clicking it calls `onConfirm(null)` |
 | T24 | disable-confirm-when-unpickable | continuing from T23, type any filter text | Confirm becomes disabled (the root row is confirmable only while the filter is empty) |
 

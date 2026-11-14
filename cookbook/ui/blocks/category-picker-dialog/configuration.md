@@ -13,7 +13,7 @@
 | `error` | `string \| null` | `null` | A rejected confirm's message — the host owns it. |
 | `busy` | `boolean` | `false` | Disables the field and replaces both action buttons with a `role="status"` loading spinner (`DialogActions`) while a confirm is in flight. |
 | `onConfirm` | `(categoryId: string \| null) => void` | — | Fired on confirm with the pending selection. |
-| `onCancel` | `() => void` | — | Fired on Cancel, Esc, or a non-busy outside dismiss. |
+| `onCancel` | `() => void` | — | Fired on Cancel or Esc while not `busy`; an outside click does not dismiss. |
 
 Exports: `CategoryPickerDialog`, `CategoryPickerDialogProps`.
 

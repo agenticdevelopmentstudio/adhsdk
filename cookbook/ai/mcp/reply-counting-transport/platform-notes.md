@@ -1,0 +1,7 @@
+
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/MCP/ReplyCountingTransport.swift`, in the Core framework, importing Foundation, swift-log and the MCP SDK, with no UI. It conforms to the MCP SDK's `Transport` protocol as an actor and needs no main-actor hop.
+- **Compose**: Port as a class holding a `Mutex`-guarded `MutableSet<String>` and a list of `CompletableDeferred<Unit>`, wrapping the target's transport interface. The deadline is `withTimeoutOrNull(deadline)` around awaiting a deferred, with the same keys (`s:`, `n:`) for the two id kinds.
+- **React/Web**: Port as a class around the MCP TypeScript SDK's `Transport` interface (`start`, `send`, `close`, and the `onmessage` callback). Count in `onmessage` before forwarding, pay in `send`. A `Set<string>` and an array of resolvers replace the actor; with one thread, no lock is needed. `waitUntilNothingOwed` is `Promise.race` between a resolver and `setTimeout`.
+- **AppKit / UIKit**: Identical to the SwiftUI note; the type is UI-free, and apps on either toolkit use it for command-line or piped stdio serving, where there is no window.
+- **WinUI 3**: Implement as a class wrapping the app's MCP transport interface, with a `lock` (or `SemaphoreSlim`) around a `HashSet<string>` and a list of `TaskCompletionSource`. Use `Task.WhenAny(tcs.Task, Task.Delay(deadline))` for the wait, and `JsonDocument.Parse` with `TryGetProperty` for the message fields, treating any parse failure as "not counted".
+

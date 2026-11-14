@@ -160,7 +160,7 @@ Not applicable: the record contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -241,7 +241,7 @@ No log line is emitted on a successful phase heal, an empty candidate set, a no-
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

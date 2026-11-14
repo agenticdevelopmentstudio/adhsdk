@@ -181,7 +181,7 @@ Not applicable: this component makes no logging call of any kind; every compromi
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributedViews.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributedViews.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

@@ -373,10 +373,10 @@ Not applicable: this engine logs nothing; every failure is reported to the calle
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/SyntaxRoleOverrides.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/UserSettingsThemeStorage.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/VSCodeThemeImporter.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Theme/ThemeManager+UserSettings.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/SyntaxRoleOverrides.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/UserSettingsThemeStorage.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/VSCodeThemeImporter.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Theme/ThemeManager+UserSettings.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

@@ -201,7 +201,7 @@ Not applicable: the source contains no log calls; the cache adapter swallows sto
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-telemetry.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-telemetry.ts` | confirmed (1.2.1) |
 
 ## Design Decisions
 

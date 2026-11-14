@@ -446,7 +446,7 @@ logged by this component itself.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ActivationEventMatcher.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ActivationEventMatcher.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

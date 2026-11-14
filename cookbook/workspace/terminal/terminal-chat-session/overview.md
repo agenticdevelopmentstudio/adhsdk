@@ -1,0 +1,7 @@
+
+`TerminalChatSession` is a main-actor chat session whose other side is a shell. A line sent to it is typed into a connected terminal session, and what the terminal prints back arrives as a reply in the chat's event stream. It changes nothing on the way in or out: it types what was written and reports what the screen shows. A terminal that keeps its contents private does so itself, so its screen, and so every reply read off it, is already what the user is meant to see.
+
+What is lost against typing into the terminal is everything interactive: tab completion, a line editor, a full-screen program. None of it goes through the chat, and output drawn on the alternate screen is not reported.
+
+The session serves two kinds of caller. A person reads the transcript and types into the composer, through the chat-session contract (`events`, `send`, `interrupt`, `close`). A program, such as `adterm` through the control server or a persona's terminal tool, calls `run`, `waitForOutput`, `interruptAndWait` and `screen`, each of which hands back a string. Output is reported once it has been quiet for a short period, or once it has waited a maximum latency, and new output is found by comparing the terminal's screen against a tracker of what has already been reported ([adhsdk.ingredient.foundation.terminal.terminal-output-tracker](cookbook:6e81fe86-b97d-4af9-a45b-0ace8784fbed)). The default settle, timeout, interrupt timeout and line count come from [adhsdk.ingredient.foundation.terminal.terminal-chat-control](cookbook:b71b349b-5c60-41f4-b664-49085ac5d988).
+

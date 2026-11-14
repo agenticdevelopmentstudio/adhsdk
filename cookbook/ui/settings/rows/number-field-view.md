@@ -495,7 +495,7 @@ logger reference anywhere in source).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -255,7 +255,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ButtonView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ButtonView.swift` | confirmed (1.2.4) |
 
 ## Design Decisions
 

@@ -142,8 +142,7 @@ Not applicable: the transport logs nothing; the engine reports failures as `Sync
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/HubSync/` | confirmed (1.0.0) |
-| ios | `packages/apple/AgenticDeveloperHubSDK/HubSync/` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/HubSync/` | confirmed (1.0.0) |
 
 ## Design Decisions
 

@@ -241,7 +241,7 @@ Not applicable: the module has no logging calls. Unknown inputs fall back silent
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/deploy-display.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/deploy-display.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

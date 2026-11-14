@@ -179,7 +179,7 @@ Not implemented in source. No logging or debug output is emitted.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/view-tab-bar.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/view-tab-bar.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

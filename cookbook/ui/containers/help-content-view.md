@@ -424,7 +424,7 @@ source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

@@ -293,7 +293,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

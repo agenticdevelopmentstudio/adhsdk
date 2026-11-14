@@ -371,7 +371,7 @@ Not applicable: facet derivation contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

@@ -166,7 +166,7 @@ Not applicable: The component does not perform logging; parent error handling or
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/unsaved-changes-alert.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/unsaved-changes-alert.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

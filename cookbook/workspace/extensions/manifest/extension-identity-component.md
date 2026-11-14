@@ -261,7 +261,7 @@ true/false result.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionIdentityComponent.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionIdentityComponent.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

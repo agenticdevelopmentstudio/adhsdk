@@ -1,0 +1,3 @@
+
+A client-side mirror of the `GET /health` wire format that every DaemonKit daemon serves (`DaemonHealthRouter`). It is kept in a Foundation-only file so a menu bar app, or any other client, can read a daemon's health without linking DaemonKit. The JSON keys are the contract. The Swift type names (`DaemonHealthReport`, `DaemonStrategyReport`, `DaemonWorkUnitReport`) are deliberately distinct from DaemonKit's `HealthStatus`, `StrategySnapshot` and `WorkUnitSnapshot`, so a file that imports both never meets an ambiguity. The file holds four things: the report value types, a lenient decoder, a depth-first search of the strategy tree, and `DaemonHealthProbe`, which builds the async closure a menu bar app polls.
+

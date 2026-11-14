@@ -288,7 +288,7 @@ handling (it transitions to error and reveals `Avatar.Fallback`).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/user-card.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/user-card.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -276,7 +276,7 @@ No other event in this ingredient is logged: the failed cache-write inside the c
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/TextGeometry.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/TextGeometry.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 
