@@ -264,6 +264,7 @@ var RESERVED_HANDLE_WORDS = [
   "server-bags",
   "signin-apps",
   "storage",
+  "sync",
   "teams",
   "tokens"
 ];

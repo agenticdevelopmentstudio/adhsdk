@@ -62,3 +62,21 @@
   so the same subject comparison and conditional clear run when another
   browser tab of the same origin writes the session storage key.
 
+
+### Batch runner
+
+`useBatchRun` runs one action over a selection of rows. It lives here, beside the
+cache it refetches, so any feature package's list can use it.
+
+- **batch-sequential**: a run MUST perform its items one at a time, in order,
+  reporting each item's result as it settles.
+- **batch-halt-on-failure**: a failed item MUST halt the run until the caller
+  continues or stops it. Items that already succeeded MUST stay reported as done.
+- **batch-empty-is-no-run**: a run over no items MUST change no state, so no
+  progress view opens for a run that never happened.
+- **batch-single-flight**: a run started while another is in flight on the same
+  controller MUST be ignored.
+- **batch-release-on-reset**: reset and unmount MUST release a halted run as if it
+  were stopped, so the run reaches its end and its refetch.
+- **batch-invalidate-at-end**: when given an invalidation key, the runner MUST
+  invalidate it once the run ends, however it ended.

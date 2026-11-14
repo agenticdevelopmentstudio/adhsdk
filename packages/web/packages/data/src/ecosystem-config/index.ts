@@ -9,3 +9,4 @@ export * from "./client-auth";
 export * from "./feature-flags";
 export * from "./server-bags";
 export * from "./storage-tokens";
+export * from "./sync-tables";

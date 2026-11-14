@@ -2,11 +2,11 @@
 id: 0fcd16c1-a8da-4184-b63f-97b68ed6378d
 title: "Query Cache"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -115,6 +115,24 @@ has no visual surface of its own.
   so the same subject comparison and conditional clear run when another
   browser tab of the same origin writes the session storage key.
 
+
+### Batch runner
+
+`useBatchRun` runs one action over a selection of rows. It lives here, beside the
+cache it refetches, so any feature package's list can use it.
+
+- **batch-sequential**: a run MUST perform its items one at a time, in order,
+  reporting each item's result as it settles.
+- **batch-halt-on-failure**: a failed item MUST halt the run until the caller
+  continues or stops it. Items that already succeeded MUST stay reported as done.
+- **batch-empty-is-no-run**: a run over no items MUST change no state, so no
+  progress view opens for a run that never happened.
+- **batch-single-flight**: a run started while another is in flight on the same
+  controller MUST be ignored.
+- **batch-release-on-reset**: reset and unmount MUST release a halted run as if it
+  were stopped, so the run reaches its end and its refetch.
+- **batch-invalidate-at-end**: when given an invalidation key, the runner MUST
+  invalidate it once the run ends, however it ended.
 ## Appearance
 
 Not applicable — this is a headless query-cache runtime, not a visual
@@ -151,6 +169,10 @@ component.
 | query-cache-015 | cross-tab-session-watch | With the singleton constructed for subject `'user-1'`, dispatch a cross-tab storage-change notification (simulating another tab writing subject `'user-2'`'s token) without ever invoking the session-change notification directly | The same comparison runs and clears the cache exactly as vector 013 (no test in this package exercises this today) |
 | query-cache-016 | provider-uses-singleton | Render the cache provider component and inspect the client it passes to its underlying cache-provider wrapper | It is exactly the singleton cache accessor's current return value |
 
+| query-cache-017 | batch-sequential, batch-invalidate-at-end | Run three items that all succeed, with an invalidation key | Results ok, ok, ok in order; `done` 3; the key invalidated once |
+| query-cache-018 | batch-halt-on-failure | The second of three items fails, then the caller stops | Run ends with one ok and one failed; the third is never performed |
+| query-cache-019 | batch-empty-is-no-run | Run zero items | State stays idle |
+| query-cache-020 | batch-single-flight | Start a second run while the first is halted | The second run is ignored |
 ## Edge Cases
 
 - **Null/empty input**: the session-watch guard's initial last-seen subject
@@ -267,7 +289,9 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Platform Notes
 
-- **React/Web**: This is the reference implementation.
+- **React/Web**: This is the reference implementation. `useBatchRun` is in
+  `src/query/use-batch-run.ts` and exported from `@adh-sdk/data/query`; it reads
+  the context's client through `useQueryClient`, like the feature panes' own hooks.
   `@tanstack/react-query` v5's `QueryClient`/`QueryClientProvider`/
   `useQueryClient` back the cache and its React binding; a module-scope
   `let` binding backs the one-per-tab singleton; `window.addEventListener
@@ -315,6 +339,7 @@ Not applicable: this component contains no logging call of any kind.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | web | `packages/web/packages/data/src/query/index.tsx` | unverified |
+| web | `packages/web/packages/data/src/query/use-batch-run.ts` | unverified |
 
 ## Design Decisions
 
@@ -445,6 +470,7 @@ transmitted, or exposed beyond that comparison.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-13 | Mike Fullerton | useBatchRun moves to @adh-sdk/data/query, shared by the admin console and the hub |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Hub framing removed: vector ids take this spec's own name, and the ADH host's default names move to Platform Notes as the web implementation's shipped values. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Make the long-retention cache-key prefixes configuration instead of hard-coded ADH keys; drop ADH-specific references. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/. |

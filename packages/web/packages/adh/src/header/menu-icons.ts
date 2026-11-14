@@ -92,6 +92,7 @@ import {
   ScrollText,
   Send,
   Server,
+  RefreshCw,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -157,6 +158,7 @@ const ICONS: Record<string, LucideIcon> = {
   '/persona-services': Boxes,
   '/server-bags': Server,
   '/settings': Settings,
+  '/sync': RefreshCw,
   '/signin-apps': LogIn,
   // The workspace's ecosystem sign-in CONFIGURATION — a hub knob, which is why it is written
   // out here beside its neighbours rather than folded in from the registry. It sat in the
