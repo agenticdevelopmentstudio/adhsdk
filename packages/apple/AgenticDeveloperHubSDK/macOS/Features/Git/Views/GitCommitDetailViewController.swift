@@ -90,9 +90,13 @@ public final class GitCommitDetailViewController: NSViewController {
         for view in [headerScrollView, separator, listView, errorLabel] { root.addSubview(view) }
 
         let clip = headerScrollView.contentView
-        // The header is as tall as its content, but never more than half the detail.
+        // The header is as tall as its content, but never more than half the detail. Fitting
+        // the content is weaker than the split's holding priorities and the window's size, so
+        // a long message scrolls in the header instead of growing the pane or the window:
+        // at `.defaultHigh` it beat `.windowSizeStayPut`, and the required half-height cap
+        // then grew the window to twice the header's height.
         let fitsContent = headerScrollView.heightAnchor.constraint(equalTo: document.heightAnchor)
-        fitsContent.priority = .defaultHigh
+        fitsContent.priority = .defaultLow - 1
         let collapsed = headerScrollView.heightAnchor.constraint(equalToConstant: 0)
         collapsed.isActive = commit == nil
         collapsedHeader = collapsed

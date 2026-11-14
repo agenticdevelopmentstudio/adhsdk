@@ -405,6 +405,25 @@ struct GitCommitDetailViewControllerTests {
         #expect(detail.headerScrollView.frame.height == 0)
     }
 
+    @Test("a long message scrolls in a header of at most half the detail and never grows the window")
+    func longMessageKeepsTheWindowSize() {
+        let detail = Self.detail(FakeContentSource())
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+                              styleMask: [.titled, .resizable], backing: .buffered, defer: true)
+        window.isReleasedWhenClosed = false
+        window.contentViewController = detail
+        window.setContentSize(NSSize(width: 400, height: 300))
+        window.layoutIfNeeded()
+        let body = (1...60).map { "Line \($0) of a long commit message" }.joined(separator: "\n")
+        detail.show(commit: Self.commit("c1", parents: ["p1"], body: body))
+        window.layoutIfNeeded()
+
+        #expect(window.contentLayoutRect.height == 300)
+        #expect(detail.headerScrollView.frame.height > 0)
+        #expect(detail.headerScrollView.frame.height <= 150)
+        window.close()
+    }
+
     @Test("a file selection that a new commit removes reports nil for the old commit")
     func selectionClearedByNewCommit() async {
         let source = FakeContentSource()

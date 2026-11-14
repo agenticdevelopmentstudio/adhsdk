@@ -533,4 +533,28 @@ struct LineViewerTests {
         #expect(viewer.selectedRows.isEmpty)
         withExtendedLifetime(source) {}
     }
+
+    /// AppKit can hand the gutter a dirty rect as wide as its host (`clipsToBounds` is false by
+    /// default since macOS 14); the gutter sat over the text and its background fill blanked it.
+    @Test func gutterPaintsNothingOutsideItsBounds() throws {
+        let source = FakeSource(count: 5)
+        let viewer = makeViewer(source)
+        let gutter = viewer.documentView.gutterView
+        #expect(gutter.clipsToBounds)
+
+        let width = 300
+        let bitmap = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: width, pixelsHigh: 20, bitsPerSample: 8, samplesPerPixel: 4,
+            hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        let context = try #require(NSGraphicsContext(bitmapImageRep: bitmap))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        gutter.draw(NSRect(x: 0, y: 0, width: CGFloat(width), height: 20))
+        NSGraphicsContext.restoreGraphicsState()
+
+        #expect(gutter.bounds.width < CGFloat(width - 10))
+        // Left untouched past the gutter's edge: still the bitmap's transparent start.
+        #expect(bitmap.colorAt(x: width - 5, y: 10)?.alphaComponent == 0)
+        withExtendedLifetime(source) {}
+    }
 }
