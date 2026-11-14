@@ -41,6 +41,9 @@ final class LineViewerView: NSView {
     /// Glyphs of long rows drawn by the last `draw(_:)`; the seam that shows a
     /// long row draws only what the dirty rect crosses.
     private(set) var drawnGlyphCount = 0
+    /// Runs of long rows the last `draw(_:)` looked at; the seam that shows a
+    /// frame's work does not grow with a long row's run count.
+    private(set) var runsTouchedLastFrame = 0
 
     /// A long row's layout, built once and drawn a glyph range at a time.
     private struct CachedLine {
@@ -54,6 +57,8 @@ final class LineViewerView: NSView {
         let runMaxX: [CGFloat]
         let width: CGFloat
         let length: Int
+        /// The row's runs, indexed so a frame finds those under the drawn glyphs.
+        let runIndex: LineViewerRunIndex
     }
 
     /// Long rows' layouts by data row; `lineCacheOrder` lists them least
@@ -62,12 +67,19 @@ final class LineViewerView: NSView {
     private var lineCacheOrder: [Int] = []
     /// How many long rows' layouts are cached.
     var cachedLineCount: Int { lineCache.count }
+    /// The UTF-16 units across the cached layouts.
+    var cachedUnitCount: Int { lineCache.values.reduce(0) { $0 + $1.length } }
     /// Whole-row layouts built for long rows since the view was created; the
     /// seam that shows a redraw reuses them, or needs none.
     private(set) var longLayoutBuildCount = 0
     /// Whether each long row drawn since the last reload can be drawn by
     /// column slicing; decided once per row, cleared with the line cache.
     private var sliceableRows: [Int: Bool] = [:]
+    /// The run indexes of sliceable long rows by data row; `runIndexOrder`
+    /// lists them least recently drawn first. Held to the cache's row
+    /// capacity, cleared with it. Cached rows keep theirs in `CachedLine`.
+    private var runIndexes: [Int: LineViewerRunIndex] = [:]
+    private var runIndexOrder: [Int] = []
     /// The data rows the draw in progress is drawing; the cache never evicts them.
     private var rowsInFrame = Set<Int>()
     /// The bold/italic trait combinations (raw values) whose font draws every
@@ -101,7 +113,9 @@ final class LineViewerView: NSView {
     /// `lineCacheUnitBudget` UTF-16 units across them (a CTLine costs about
     /// 40 bytes a glyph), but never evicts a row the current frame draws.
     private static let minimumLineCacheCapacity = 8
-    private static let lineCacheUnitBudget = 4_000_000
+    /// A soft limit: rows of the frame being drawn are kept even past it,
+    /// and the cache is trimmed back when the frame ends. Settable for tests.
+    var lineCacheUnitBudget = 4_000_000
     /// Columns beyond each side of the dirty rect whose glyphs are drawn too,
     /// so glyphs that overhang their advance into the rect still draw.
     private static let overhangColumns: CGFloat = 4
@@ -244,6 +258,8 @@ final class LineViewerView: NSView {
         lineCache = [:]
         lineCacheOrder = []
         sliceableRows = [:]
+        runIndexes = [:]
+        runIndexOrder = []
     }
 
     /// Shows the rows of the fold that hides data row `row`, if any.
@@ -335,13 +351,18 @@ final class LineViewerView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         drawnGlyphCount = 0
+        runsTouchedLastFrame = 0
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         palette.windowBackgroundColor.setFill()
         dirtyRect.fill()
         guard let source = dataSource, let rows = displayRows(in: dirtyRect) else { return }
 
         rowsInFrame = Set(rows.map { dataRow(forDisplayRow: $0) })
-        defer { rowsInFrame = [] }
+        defer {
+            rowsInFrame = []
+            // The frame's rows were kept past the limits while it drew; trim back now.
+            evictLines()
+        }
         context.saveGState()
         context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         var widest = widestRow
@@ -427,7 +448,7 @@ final class LineViewerView: NSView {
     /// `row`'s runs clipped to its text, empty ones dropped.
     private func clippedRuns(of row: LineViewerRow, length: Int) -> [(range: NSRange, run: LineViewerRun)] {
         row.runs.compactMap { run in
-            let range = Self.clip(run.range, to: length)
+            let range = LineViewerRunIndex.clip(run.range, to: length)
             return range.length > 0 ? (range, run) : nil
         }
     }
@@ -461,7 +482,11 @@ final class LineViewerView: NSView {
 
         var local: [(range: NSRange, run: LineViewerRun)] = []
         var extents: [RunExtent] = []
-        for (range, run) in clippedRuns(of: row, length: length) {
+        let hits = sliceRunIndex(for: row, index: index, length: length).runs(overlapping: lower, upper)
+        runsTouchedLastFrame += hits.count
+        for position in hits {
+            let run = row.runs[position]
+            let range = LineViewerRunIndex.clip(run.range, to: length)
             guard let overlap = range.intersection(slice), overlap.length > 0 else { continue }
             local.append((NSRange(location: overlap.location - lower, length: overlap.length), run))
             extents.append(RunExtent(run: run, minX: origin.x + CGFloat(range.location) * charWidth,
@@ -472,6 +497,8 @@ final class LineViewerView: NSView {
         let laidOut = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
         guard abs(laidOut - CGFloat(slice.length) * charWidth) < 0.01 else {
             sliceableRows[index] = false
+            runIndexes[index] = nil
+            runIndexOrder.removeAll { $0 == index }
             return nil
         }
         drawnGlyphCount += slice.length
@@ -480,6 +507,16 @@ final class LineViewerView: NSView {
         CTLineDraw(line, context)
         drawDecorations(extents, baseline: origin.y)
         return width
+    }
+
+    /// Sliceable data row `index`'s run index, built the first time it is drawn.
+    private func sliceRunIndex(for row: LineViewerRow, index: Int, length: Int) -> LineViewerRunIndex {
+        runIndexOrder.removeAll { $0 == index }
+        runIndexOrder.append(index)
+        if let known = runIndexes[index] { return known }
+        let built = LineViewerRunIndex(runs: row.runs, length: length)
+        runIndexes[index] = built
+        return built
     }
 
     /// A long row: its cached layout, drawn run by run with `CTRunDraw` over
@@ -518,8 +555,11 @@ final class LineViewerView: NSView {
 
         var extents: [RunExtent] = []
         if let lowest = glyphs.map(\.index).min(), let highest = glyphs.map(\.index).max() {
-            for (range, run) in clippedRuns(of: row, length: length)
-            where range.location <= highest && NSMaxRange(range) > lowest {
+            let hits = cached.runIndex.runs(overlapping: lowest, highest + 1)
+            runsTouchedLastFrame += hits.count
+            for position in hits {
+                let run = row.runs[position]
+                let range = LineViewerRunIndex.clip(run.range, to: length)
                 let inside = glyphs.filter { NSLocationInRange($0.index, range) }
                 guard let left = inside.map(\.minX).min(), let right = inside.map(\.maxX).max() else { continue }
                 extents.append(RunExtent(run: run, minX: left, maxX: right))
@@ -560,7 +600,8 @@ final class LineViewerView: NSView {
             runMaxX.append(reach)
         }
         let cached = CachedLine(line: line, runs: runs, runMinX: runMinX, runMaxX: runMaxX,
-                                width: CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)), length: length)
+                                width: CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)), length: length,
+                                runIndex: LineViewerRunIndex(runs: row.runs, length: length))
         lineCache[index] = cached
         evictLines()
         return cached
@@ -568,19 +609,31 @@ final class LineViewerView: NSView {
 
     /// Twice the rows the visible height shows, and never fewer than the
     /// minimum: recomputed from the visible height on every eviction.
-    private var lineCacheCapacity: Int {
+    var lineCacheCapacity: Int {
         guard rowHeight > 0 else { return Self.minimumLineCacheCapacity }
         let visibleRows = Int(ceil(visibleRect.height / rowHeight)) + 1
         return max(Self.minimumLineCacheCapacity, 2 * visibleRows)
     }
 
     /// Drops the least recently drawn layouts while the cache is over its row
-    /// capacity or unit budget, skipping every row the current frame draws.
+    /// capacity or unit budget, and the least recently drawn run indexes of
+    /// sliceable rows while they are over the row capacity, skipping every row
+    /// the current frame draws.
     private func evictLines() {
         let capacity = lineCacheCapacity
+        var next = 0
+        while next < runIndexOrder.count, runIndexOrder.count > capacity {
+            let candidate = runIndexOrder[next]
+            if rowsInFrame.contains(candidate) {
+                next += 1
+                continue
+            }
+            runIndexOrder.remove(at: next)
+            runIndexes[candidate] = nil
+        }
         var units = lineCache.values.reduce(0) { $0 + $1.length }
         var cursor = 0
-        while cursor < lineCacheOrder.count, lineCacheOrder.count > capacity || units > Self.lineCacheUnitBudget {
+        while cursor < lineCacheOrder.count, lineCacheOrder.count > capacity || units > lineCacheUnitBudget {
             let candidate = lineCacheOrder[cursor]
             if rowsInFrame.contains(candidate) {
                 cursor += 1
@@ -729,12 +782,6 @@ final class LineViewerView: NSView {
             }
             return tone.withAlphaComponent(Self.emphasisAlpha)
         }
-    }
-
-    private static func clip(_ range: NSRange, to length: Int) -> NSRange {
-        let start = min(max(0, range.location), length)
-        let end = min(max(start, range.location + range.length), length)
-        return NSRange(location: start, length: end - start)
     }
 
     // MARK: - Mouse and selection

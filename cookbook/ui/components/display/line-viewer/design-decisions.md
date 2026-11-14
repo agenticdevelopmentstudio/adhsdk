@@ -15,6 +15,10 @@
 **Rationale**: A fixed cache of 8 rows was smaller than one screen of long rows, so every frame of a minified file rebuilt every row's whole layout. Most long lines (minified JS, JSON, logs) are ASCII, and in a font that draws every printable ASCII glyph one column wide a column is an exact position, so slicing is both cheap and seam-free; the font check and a per-slice width check keep a ligature or kerning font on the cached path. Sizing the cache from the visible height and pinning the frame's rows means a redraw of what is on screen never lays anything out again.
 **Approved**: pending
 
+**Decision**: A long row's runs are indexed once, sorted by location over a max-tree of their upper bounds, and each frame queries the index for the runs under the slice or the drawn glyphs.
+**Rationale**: A syntax-highlighted minified line has around 10^5 runs; walking all of them for every visible long row on every frame cost about 10 MB allocated per row per frame. Sorting gives the end of the overlapping runs by bisection; a running maximum of upper bounds alone would let one run spanning the row (a whole-line highlight) make every query walk from it to the slice, so each tree node holds the furthest reach of the runs beneath it and whole subtrees ending before the slice are skipped. A query costs O(log n) per overlapping run. Hits are returned in the row's own order so overlapping runs resolve exactly as on the short-row path.
+**Approved**: pending
+
 **Decision**: The gutter is a subview of the document view kept at the clip view's horizontal origin, not drawn in each row.
 **Rationale**: Side-by-side diff needs line numbers visible while long lines scroll sideways; a subview moved on bounds change keeps vertical scrolling free (it scrolls with the rows) and lets the text draw under it.
 **Approved**: pending

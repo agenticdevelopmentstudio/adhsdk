@@ -974,6 +974,7 @@
 		332DD278D0B0A340099E8B40 /* PrivacyWordsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C7E636F6928671E352FEEC /* PrivacyWordsEditor.swift */; };
 		332EF63887D873AFBC4D4D9C /* ConversationFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F57F28AA3627E2DB49D814 /* ConversationFocusTests.swift */; };
 		334ECA96A7DFBB894E846C97 /* CardFoldMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A851CA1D1BC049125819F8 /* CardFoldMemory.swift */; };
+		335B99CEDFBBF4C76A9372D6 /* LineViewerRunIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57C67DBB51991FF0F6681F4 /* LineViewerRunIndex.swift */; };
 		3374D402D7CD8A7EAF02001B /* GitPatchParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134D4F605F67A85849BABAB2 /* GitPatchParser.swift */; };
 		338E561EDE3763049774DFE4 /* BrowserJarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4646B3D714DAAF3C09BA918D /* BrowserJarTests.swift */; };
 		33931CA627981671526AF3E8 /* PaneCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 092A94CE7ECEB3D0DA19383F /* PaneCommands.swift */; };
@@ -9629,6 +9630,7 @@
 		D55D09BD006EB04EE5007AC5 /* SessionDaemonConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDaemonConfiguration.swift; sourceTree = "<group>"; };
 		D55E014C01889B039A54F71E /* ClaudeHookInstallerCoexistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeHookInstallerCoexistenceTests.swift; sourceTree = "<group>"; };
 		D56B2E091B1B9BC1AD076A99 /* GitClientConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitClientConfiguration.swift; sourceTree = "<group>"; };
+		D57C67DBB51991FF0F6681F4 /* LineViewerRunIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineViewerRunIndex.swift; sourceTree = "<group>"; };
 		D580C2D8B2604E58D4BFECF0 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		D581AE61470B4BD26E7F74CB /* NSWindowFitWidthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSWindowFitWidthTests.swift; sourceTree = "<group>"; };
 		D5A7179B2F26F98D06D36A10 /* AgenticDeveloperHubSDKPermissionsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AgenticDeveloperHubSDKPermissionsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -13256,6 +13258,7 @@
 				6D3FFA03B0AD73C8A186D182 /* LineViewerDataSource.swift */,
 				C1CE03EC1D7AD0C5D6C7198C /* LineViewerGutterView.swift */,
 				5473DFDB3FFC7494B100DF28 /* LineViewerRow.swift */,
+				D57C67DBB51991FF0F6681F4 /* LineViewerRunIndex.swift */,
 				DF136398CFBE41A4AF1A54C3 /* LineViewerScrollSync.swift */,
 				4A88140C4679860A3B78DBB4 /* LineViewerView.swift */,
 				44E057A6405DC70F490B1A06 /* LineViewerViewController.swift */,
@@ -23465,6 +23468,7 @@
 				358B746443C3B9FD0FCEE731 /* LineViewerDataSource.swift in Sources */,
 				964931B3E62D41767BE5B422 /* LineViewerGutterView.swift in Sources */,
 				FB45FF7C9BB111D1AC4943AB /* LineViewerRow.swift in Sources */,
+				335B99CEDFBBF4C76A9372D6 /* LineViewerRunIndex.swift in Sources */,
 				6AB2158AB4EB1E16239B5D06 /* LineViewerScrollSync.swift in Sources */,
 				EC82810EBB3CC9F05F6F0A98 /* LineViewerView.swift in Sources */,
 				8AF3CA88BB00D2E439B1176B /* LineViewerViewController.swift in Sources */,

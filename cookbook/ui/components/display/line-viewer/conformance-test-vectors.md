@@ -13,5 +13,9 @@
 | line-viewer-010 | long-row-layout | one ASCII code row × 50 with bold, italic-underlined, highlighted and struck runs; draw whole, then as three adjacent rects | identical pixels; no layout built. |
 | line-viewer-011 | long-row-layout | 30 visible long ASCII rows (about 5 000 units); draw the frame twice | no layout built either time; nothing cached. |
 | line-viewer-012 | long-row-layout | 30 visible long rows with tabs, wide characters and emoji; draw the frame twice | 30 layouts built by the first draw, none by the second; 30 cached. |
-| line-viewer-013 | long-row-layout | 60 such rows in one dirty rect of a viewer whose capacity is about 34; draw twice | 60 layouts built and cached by the first draw, none built by the second. |
+| line-viewer-013 | long-row-layout | 60 such rows in one dirty rect of a viewer whose capacity is about 34; draw once | 60 layouts built; when the frame ends the cache holds exactly its capacity. |
+| line-viewer-014 | long-row-layout | 10 such rows with the unit budget set to 3 rows' units; draw them in one frame | 10 layouts built; when the frame ends the cache holds 3 rows, within the budget. |
+| line-viewer-015 | long-row-layout | one 1 000 000-unit ASCII row with 100 000 ten-unit runs, a whole-row bold run and a half-row highlight; draw a 400 pt one-row rect at x 0 and at 600 000 advances | at most 16 runs touched each time; no layout built. |
+| line-viewer-016 | long-row-layout | the same shape, 300 000 units ending in `é`, three-unit runs; draw at x 0 and at 200 000 advances | at most 40 runs touched each time; one layout built. |
+| line-viewer-017 | long-row-layout | an ASCII code row × 50, and the same ending in `é`, with five overlapping runs given out of order whose edges straddle 333 and 617 pt; draw whole, then as three adjacent rects | identical pixels. |
 
