@@ -287,6 +287,30 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
         persistTabs()
     }
 
+    /// Shows `url` without disturbing what is already open: the tab already
+    /// showing it is selected; failing that it fills the selected tab's
+    /// focused editor when that editor is empty; failing that it opens in a
+    /// new tab. What a Document window does with a file it is handed.
+    public func show(_ url: URL) {
+        let target = url.standardizedFileURL
+        for tab in tabs(on: .top) {
+            guard let root = splitsByTabID[tab.id],
+                  let editor = editors(in: root).first(where: { $0.fileURL?.standardizedFileURL == target })
+            else { continue }
+            selectTab(id: tab.id, on: .top)
+            rememberFocus(of: editor)
+            retitle(tab.id)
+            reportFocusedDocument()
+            persistTabs()
+            return
+        }
+        if let editor = focusedEditor, editor.fileURL == nil {
+            editor.fileURL = url
+            return
+        }
+        openInNewTab(url)
+    }
+
     public func openToTheSide(_ url: URL) {
         guard let tabID = selectedTabID(on: .top),
               let root = splitsByTabID[tabID],

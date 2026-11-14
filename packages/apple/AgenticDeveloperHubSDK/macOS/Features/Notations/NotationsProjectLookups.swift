@@ -40,11 +40,11 @@ public enum NotationsProjectLookups {
     }
 
     /// The project a Coding Project window shows; `nil` for any other
-    /// window, a File Browser window included.
+    /// window, a File Browser or a Document window included.
     public static func projectID(for window: NSWindow) -> UUID? {
         guard let controller = window.windowController as? ComposableTabsWindowController else { return nil }
         let id = controller.project.id
-        return ProjectWindowManager.shared.isFileBrowserWindow(id) ? nil : id
+        return ProjectWindowManager.shared.isStandaloneWindow(id) ? nil : id
     }
 
     /// Brings the notation's project forward, opening it when it is listed

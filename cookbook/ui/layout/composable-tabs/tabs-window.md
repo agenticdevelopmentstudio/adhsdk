@@ -2,11 +2,11 @@
 id: 55a394e6-9934-404b-941d-25bebbf71378
 title: "Composable Tabs Window"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -155,7 +155,14 @@ address directly.
   reassigning the enabled-edge set never fails the last-enabled-edge
   refusal on an intermediate step.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-
+- **title-document-kinds**: For a repository of a Document kind the window
+  title MUST be the project's display name (the file's name for a
+  single-file Document window, the row's name for the Document tabs
+  window), never the directory-derived `"Files: <directory>"` title, and it
+  MUST be set once per root directory like every other title.
+- **title-breadcrumb-document-file**: For a single-file Document window the
+  title breadcrumb's file URL MUST be the repository's path, which is the
+  file itself; for every other kind it MUST be the root directory.
 ## Appearance
 
 - **Corner radius**: Not applicable — a standard window; the window draws
@@ -466,12 +473,6 @@ Not applicable: no logging calls appear anywhere in this component.
   combination.
 - **UI-thread confinement**: `confines-to-ui-thread` — the window controller is declared `@MainActor`, so use from off the main actor fails to compile.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | unverified |
-
 ## Design Decisions
 
 **Decision**: Persist the edge top-up after `installInitialTabs()` restores
@@ -587,3 +588,4 @@ hardcoded-literal inventory in Localization.
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows |

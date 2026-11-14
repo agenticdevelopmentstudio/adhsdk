@@ -756,7 +756,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:075d38f7d25a29e54dc147598d0218e8a21fd89b49bd06795812a9abdd25cf8a",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift",
           "platform": "apple"
@@ -3694,7 +3696,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5461844bf8e492416210998c59b3dec5d3211d49b8328cf22e37c7a14d69dccf",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift",
           "platform": "apple"
@@ -5528,7 +5532,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e1af6fc9d3ca22641f75d3bc8ba61349d89e4ab1ec5470f65e8c6eadb09c67ee",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift",
           "platform": "apple"

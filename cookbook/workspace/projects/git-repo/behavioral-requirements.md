@@ -97,4 +97,10 @@
   ever sets or reads it — per the doc comment it exists so that whichever
   component opens a project window "sorts by" it, a responsibility outside
   this component.
-
+- **git-repo-kind-document**: The repository kind MUST include `document` (a
+  window on one file, whose `path` is that file) and `documentTabs` (the one
+  window that holds single files as tabs), beside the project and File
+  Browser kinds, and MUST expose `isDocument`, true for exactly those two.
+- **git-repo-url-of-a-document**: For the `document` kind the record's
+  directory URL MUST be the directory that contains the file at `path`; for
+  every other kind it MUST be `path` itself.

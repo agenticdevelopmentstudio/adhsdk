@@ -2,11 +2,11 @@
 id: 1463e7a2-e290-4b8c-8643-df9462a758e6
 title: "Git Repository Record"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -147,7 +147,13 @@ from each other.
   ever sets or reads it — per the doc comment it exists so that whichever
   component opens a project window "sorts by" it, a responsibility outside
   this component.
-
+- **git-repo-kind-document**: The repository kind MUST include `document` (a
+  window on one file, whose `path` is that file) and `documentTabs` (the one
+  window that holds single files as tabs), beside the project and File
+  Browser kinds, and MUST expose `isDocument`, true for exactly those two.
+- **git-repo-url-of-a-document**: For the `document` kind the record's
+  directory URL MUST be the directory that contains the file at `path`; for
+  every other kind it MUST be `path` itself.
 ## Appearance
 
 Not applicable — this is a data model, not a visual component.
@@ -346,12 +352,6 @@ Not applicable: this component contains no logging call of any kind.
   if a bound UI needs to react to the counts changing — nothing in this
   file requires that on its own.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift` | unverified |
-
 ## Design Decisions
 
 **Decision**: `GitRepo`'s `Equatable` conformance is the compiler-synthesized
@@ -436,3 +436,4 @@ anywhere in the given sources.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Document kinds: document and documentTabs, isDocument, url of a document |

@@ -2,11 +2,11 @@
 id: 7f1b8bef-e78e-4cac-be55-c948fe9062e5
 title: "Project Window Manager"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -252,7 +252,15 @@ property and method is confined there by that declaration alone.
   all language services can find and wait for it even after this
   project's controller and window have already left every other
   collection.
-
+- **standalone-window-kinds**: The manager MUST treat the File Browser kind
+  and both Document kinds as standalone windows, windows that are not
+  development projects, and MUST answer `isStandaloneWindow` and
+  `isDocumentWindow` for a repository id from its open project's kind.
+- **open-document-window**: Opening a Document window MUST take the
+  repository record, the layout to build it with, whether it activates and
+  a close callback; it MUST bring an already open window for that id
+  forward instead of building a second, and MUST honour quiet presentation
+  when activating.
 ## Appearance
 
 Not applicable — this is a window-lifecycle manager, not a visual component.
@@ -497,12 +505,6 @@ bundle identifier; category is this component's name.
   makes no HTTP call and reads no `Windows.Storage` file directly.
 - **confines-to-ui-thread** (scope): The manager has no thread-safety guarantee of its own; every stored property and method is reached only from the UI thread.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | unverified |
-
 ## Design Decisions
 
 **Decision**: `openProject(_:)` calls `refreshOpenWorkspaceIDs()` — and
@@ -623,6 +625,7 @@ anywhere in this file.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

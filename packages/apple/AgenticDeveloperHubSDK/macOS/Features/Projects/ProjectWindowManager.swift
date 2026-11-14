@@ -426,19 +426,30 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         activateApp()
     }
 
-    // MARK: - File Browser windows
+    // MARK: - File Browser and Document windows
 
-    /// The File Browser windows this manager opened, by row id. A subset of
-    /// `controllers`, so scripting, the pane commands and the extension
-    /// placer see a File Browser window as the composable-tabs window it is;
-    /// this set is what keeps it out of everything that is a *project's*:
-    /// groups, the shelf, the persisted open flag and the arrangement the
-    /// next new project copies.
-    private var fileBrowserIDs: Set<UUID> = []
+    /// The standalone windows this manager opened — File Browser and Document
+    /// windows — by row id, with the kind of each. A subset of `controllers`,
+    /// so scripting, the pane commands and the extension placer see one as
+    /// the composable-tabs window it is; this is what keeps it out of
+    /// everything that is a *project's*: groups, the shelf, the persisted
+    /// open flag and the arrangement the next new project copies.
+    private var standaloneWindowKinds: [UUID: GitRepo.Kind] = [:]
 
     /// Whether `repoID` names an open File Browser window.
     public func isFileBrowserWindow(_ repoID: UUID) -> Bool {
-        fileBrowserIDs.contains(repoID)
+        standaloneWindowKinds[repoID] == .fileBrowser
+    }
+
+    /// Whether `repoID` names an open Document window, of either sort.
+    public func isDocumentWindow(_ repoID: UUID) -> Bool {
+        standaloneWindowKinds[repoID]?.isDocument ?? false
+    }
+
+    /// Whether `repoID` names an open window that is not a project's: a File
+    /// Browser or a Document window.
+    public func isStandaloneWindow(_ repoID: UUID) -> Bool {
+        standaloneWindowKinds[repoID] != nil
     }
 
     /// Opens a File Browser window over `repo` — a `.fileBrowser` row — or
@@ -463,6 +474,36 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         activates: Bool = true,
         onClose: @escaping @MainActor (GitRepo) -> Void
     ) -> ComposableTabsWindowController? {
+        openStandaloneWindow(
+            repo, layout: layout, languageServices: languageServicesFactory,
+            activates: activates, onClose: onClose)
+    }
+
+    /// Opens a Document window over `repo` — a `.document` or `.documentTabs`
+    /// row — or brings forward the one already open on it. Standalone in
+    /// every way a File Browser window is (`openFileBrowserWindow`).
+    ///
+    /// No language services: a language server is rooted at a workspace, and
+    /// a single file has none — rooting one at the file's directory would
+    /// index a Downloads folder or a home directory.
+    @discardableResult
+    public func openDocumentWindow(
+        _ repo: GitRepo,
+        layout: ComposableTabsLayout,
+        activates: Bool = true,
+        onClose: @escaping @MainActor (GitRepo) -> Void
+    ) -> ComposableTabsWindowController? {
+        openStandaloneWindow(
+            repo, layout: layout, languageServices: nil, activates: activates, onClose: onClose)
+    }
+
+    private func openStandaloneWindow(
+        _ repo: GitRepo,
+        layout: ComposableTabsLayout,
+        languageServices factory: (@MainActor (URL) -> ProjectLanguageServices)?,
+        activates: Bool,
+        onClose: @escaping @MainActor (GitRepo) -> Void
+    ) -> ComposableTabsWindowController? {
         if let existing = controllers[repo.id] {
             existing.showWindow(nil)
             existing.window?.makeKeyAndOrderFront(nil)
@@ -471,10 +512,10 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         }
         guard let database else {
             Self.logger.error(
-                "Cannot open a File Browser on \(repo.name, privacy: .public): no project database attached")
+                "Cannot open a window on \(repo.name, privacy: .public): no project database attached")
             return nil
         }
-        let languageServices = languageServicesFactory?(repo.url)
+        let languageServices = factory?(repo.url)
         let workspace = ProjectWorkspace(
             repo: repo,
             database: database,
@@ -484,23 +525,23 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             arrangementSourceID: nil
         )
         languageServices?.start()
-        // No top-level tabs: a File Browser window is one fixed arrangement.
+        // No top-level tabs: a standalone window is one fixed arrangement.
         let controller = ComposableTabsWindowController(project: workspace, showsTabBars: false)
         controllers[repo.id] = controller
         openOrder.append(repo.id)
-        fileBrowserIDs.insert(repo.id)
+        standaloneWindowKinds[repo.id] = repo.kind
         controller.loadWindow()
         observeClose(of: controller, repoID: repo.id, recordsOpenState: false)
         if let window = controller.window {
-            fileBrowserCloseObservers[repo.id] = NotificationCenter.default.addObserver(
+            standaloneCloseObservers[repo.id] = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification,
                 object: window,
                 queue: nil
             ) { [weak self] _ in
                 MainActor.assumeIsolated {
                     guard let self else { return }
-                    self.fileBrowserIDs.remove(repo.id)
-                    if let observer = self.fileBrowserCloseObservers.removeValue(forKey: repo.id) {
+                    self.standaloneWindowKinds.removeValue(forKey: repo.id)
+                    if let observer = self.standaloneCloseObservers.removeValue(forKey: repo.id) {
                         NotificationCenter.default.removeObserver(observer)
                     }
                     if !WindowManager.shared.isTerminating { onClose(repo) }
@@ -516,7 +557,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         return controller
     }
 
-    private var fileBrowserCloseObservers: [UUID: NSObjectProtocol] = [:]
+    private var standaloneCloseObservers: [UUID: NSObjectProtocol] = [:]
 
     /// Puts `repoID`'s window on screen in its group, without asking for the
     /// foreground — for automation about to drive a pane in a project its

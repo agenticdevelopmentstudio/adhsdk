@@ -18,6 +18,15 @@ public struct GitRepo: Sendable, Identifiable, Equatable {
         /// The workspace behind a File Browser window over one directory.
         /// Never listed, scanned or reconciled as a project.
         case fileBrowser
+        /// The workspace behind a Document window showing one file. The
+        /// row's `path` is the file; `url` is the directory holding it.
+        case document
+        /// The workspace behind the one Document window that holds single
+        /// documents as tabs. One row, whose `path` is the home directory.
+        case documentTabs
+
+        /// A Document window's row, of either sort.
+        public var isDocument: Bool { self == .document || self == .documentTabs }
     }
 
     public let id: UUID
@@ -58,7 +67,13 @@ public struct GitRepo: Sendable, Identifiable, Equatable {
     /// compared for equality against checkout directories built elsewhere —
     /// left to guess, Foundation would give a repository on an unmounted
     /// volume a different URL than the same repository once it is back.
-    public var url: URL { URL(fileURLWithPath: path, isDirectory: true) }
+    ///
+    /// A `.document` row's path is a file, and its workspace is rooted at the
+    /// directory that holds it.
+    public var url: URL {
+        guard kind == .document else { return URL(fileURLWithPath: path, isDirectory: true) }
+        return URL(fileURLWithPath: path, isDirectory: false).deletingLastPathComponent()
+    }
 
     /// The default name for a repository at `path` — its directory name.
     public static func defaultName(forPath path: String) -> String {

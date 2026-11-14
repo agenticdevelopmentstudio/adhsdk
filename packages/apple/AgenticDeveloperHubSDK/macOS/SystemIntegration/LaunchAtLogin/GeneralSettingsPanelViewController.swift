@@ -7,12 +7,17 @@ import AgenticDeveloperHubSDKDatabase
 @MainActor
 public final class GeneralSettingsPanelViewController: ComposableSettings.SettingsPanelViewController {
 
-    /// Whether Window Behavior offers “New” menu item prefers tabs to windows,
+    /// Whether Tab Behavior offers “New” menu item prefers tabs to windows,
     /// for an app whose File ▸ New can open either.
     private let showsNewPrefersTabs: Bool
 
-    public init(showsNewPrefersTabs: Bool = false) {
+    /// Whether Tab Behavior offers “Single documents open in”, for an app
+    /// that opens files in Document windows (`DocumentWindowsFeature`).
+    private let showsSingleDocumentsOpenIn: Bool
+
+    public init(showsNewPrefersTabs: Bool = false, showsSingleDocumentsOpenIn: Bool = false) {
         self.showsNewPrefersTabs = showsNewPrefersTabs
+        self.showsSingleDocumentsOpenIn = showsSingleDocumentsOpenIn
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "General",
             icon: NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
@@ -24,6 +29,7 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
     }
 
     static let newPrefersTabsTitle = "“New” menu item prefers tabs to windows"
+    static let singleDocumentsOpenInTitle = "Single documents open in:"
 
     public override var helpContent: ComposableSettings.PanelHelp? {
         let newTopic = ComposableSettings.PanelHelp.Topic(
@@ -33,7 +39,18 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
                 + "to open in a new one. With this on, it opens a new tab in the window in "
                 + "front instead, as File ▸ New Tab does."
         )
-        return ComposableSettings.PanelHelp(topics: (showsNewPrefersTabs ? [newTopic] : []) + [
+        let singleDocumentsTopic = ComposableSettings.PanelHelp.Topic(
+            title: "Single Documents",
+            body: "Where a file opened on its own lands — one chosen with Open With in the "
+                + "Finder, named on the command line, or entered in File ▸ Open Location. "
+                + "“\(SingleDocumentOpenMode.tabs.displayName)” gathers them as tabs of one "
+                + "Document window; “\(SingleDocumentOpenMode.windows.displayName)” gives each "
+                + "file a window of its own. A file that already has its own window comes "
+                + "forward there either way."
+        )
+        let tabTopics = (showsNewPrefersTabs ? [newTopic] : [])
+            + (showsSingleDocumentsOpenIn ? [singleDocumentsTopic] : [])
+        return ComposableSettings.PanelHelp(topics: tabTopics + [
             .init(
                 title: "Launch at Login",
                 body: "\(AppStorageLocation.displayName) works best when it starts automatically "
@@ -62,6 +79,9 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
         super.viewDidLoad()
         self.settingsView.addGroup(createStartupGroup())
         self.settingsView.addGroup(createWindowBehaviorGroup())
+        if showsNewPrefersTabs || showsSingleDocumentsOpenIn {
+            self.settingsView.addGroup(createTabBehaviorGroup())
+        }
     }
 
     private func createStartupGroup() -> ComposableSettings.GroupView {
@@ -94,6 +114,21 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
             )
         ))
 
+        group.addSettingSubview(ComposableSettings.StepperView(
+            viewModel: ComposableSettings.RangeViewModel<Int>(
+                title: "Number of recent documents:",
+                setting: UserSettings.recentWindowsCount,
+                minValue: 0,
+                maxValue: 50
+            )
+        ))
+
+        return group
+    }
+
+    private func createTabBehaviorGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Tab Behavior")
+
         if showsNewPrefersTabs {
             let checkbox = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
                 title: Self.newPrefersTabsTitle,
@@ -103,14 +138,23 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
             group.addSettingSubview(checkbox)
         }
 
-        group.addSettingSubview(ComposableSettings.StepperView(
-            viewModel: ComposableSettings.RangeViewModel<Int>(
-                title: "Number of recent documents:",
-                setting: UserSettings.recentWindowsCount,
-                minValue: 0,
-                maxValue: 50
+        if showsSingleDocumentsOpenIn {
+            let choices = SingleDocumentOpenMode.allCases.map {
+                ComposableSettings.ChoiceViewModel<SingleDocumentOpenMode>.Choice(
+                    label: $0.displayName,
+                    value: $0
+                )
+            }
+            let popup = ComposableSettings.PopupMenuChoiceView<SingleDocumentOpenMode>(
+                viewModel: ComposableSettings.ChoiceViewModel<SingleDocumentOpenMode>(
+                    title: Self.singleDocumentsOpenInTitle,
+                    setting: UserSettings.singleDocumentsOpenIn,
+                    choices: choices
+                )
             )
-        ))
+            _ = popup.accessibilityID("settings.general.single-documents-open-in")
+            group.addSettingSubview(popup)
+        }
 
         return group
     }

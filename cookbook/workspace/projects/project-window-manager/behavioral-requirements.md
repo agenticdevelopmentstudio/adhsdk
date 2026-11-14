@@ -191,4 +191,12 @@
   all language services can find and wait for it even after this
   project's controller and window have already left every other
   collection.
-
+- **standalone-window-kinds**: The manager MUST treat the File Browser kind
+  and both Document kinds as standalone windows, windows that are not
+  development projects, and MUST answer `isStandaloneWindow` and
+  `isDocumentWindow` for a repository id from its open project's kind.
+- **open-document-window**: Opening a Document window MUST take the
+  repository record, the layout to build it with, whether it activates and
+  a close callback; it MUST bring an already open window for that id
+  forward instead of building a second, and MUST honour quiet presentation
+  when activating.

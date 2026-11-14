@@ -1363,9 +1363,17 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// project's name alone.
     private func refreshTitle() {
         let directory = activeWorkingDirectory
-        titleBreadcrumb.fileURL = directory
+        // A window that is one file's shows that file, not its folder.
+        let kind = project.repo.kind
+        titleBreadcrumb.fileURL = kind == .document ? URL(fileURLWithPath: project.repo.path) : directory
         guard directory != titleDirectory else { return }
         titleDirectory = directory
+        // A Document window is named for its file, or "Documents" when it
+        // holds several as tabs.
+        guard !kind.isDocument else {
+            setTitle(project.displayName)
+            return
+        }
         // A File Browser window (no top-level tabs) names its folder; a
         // project window names its project and branch.
         guard tabbed.showsTabBars else {

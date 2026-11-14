@@ -4,11 +4,11 @@
     "id": "7f1b8bef-e78e-4cac-be55-c948fe9062e5",
     "title": "Project Window Manager",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -45,7 +45,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0a7a8631739274fb",
+  "synced": "8a7b2314ba1d2be1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

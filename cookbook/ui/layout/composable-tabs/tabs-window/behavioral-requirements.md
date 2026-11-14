@@ -108,4 +108,11 @@
   reassigning the enabled-edge set never fails the last-enabled-edge
   refusal on an intermediate step.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-
+- **title-document-kinds**: For a repository of a Document kind the window
+  title MUST be the project's display name (the file's name for a
+  single-file Document window, the row's name for the Document tabs
+  window), never the directory-derived `"Files: <directory>"` title, and it
+  MUST be set once per root directory like every other title.
+- **title-breadcrumb-document-file**: For a single-file Document window the
+  title breadcrumb's file URL MUST be the repository's path, which is the
+  file itself; for every other kind it MUST be the root directory.

@@ -1,0 +1,259 @@
+//
+//  DocumentWindowsFeature.swift
+//  AgenticDeveloperHubSDK
+//
+
+import AgenticDeveloperHubSDKCore
+import AppKit
+import os
+
+/// Opens single files — one handed over by Finder's Open With, by a CLI, by
+/// Open Location — in a Document window: a composable-tabs window holding
+/// the Document pane and nothing else.
+///
+/// Where a file lands is `UserSettings.singleDocumentsOpenIn`:
+///
+/// - `.tabs`: one shared Document window, each file a tab of its Document
+///   pane. Its workspace is the single `.documentTabs` row.
+/// - `.windows`: a window per file, the pane's tab strip hidden. Its
+///   workspace is a `.document` row found by the file's path, so opening a
+///   file that already has a window brings that window forward.
+///
+/// A file already open in a window of its own comes forward there whatever
+/// the setting says: the setting decides where a file *opens*, not where an
+/// open one is.
+///
+/// What reopens at launch is this feature's own record
+/// (`UserSettings.openDocumentWindowFiles`, `UserSettings.documentTabsWindowOpen`),
+/// as with File Browser windows. The shared window's tabs are the Document
+/// pane's to restore.
+@MainActor
+public final class DocumentWindowsFeature: AppFeature {
+
+    private let database: ProjectDatabase
+    private let layout: ComposableTabsLayout
+    private let windows: ProjectWindowManager
+
+    /// The Document pane of each open Document window, by row id. Weak: the
+    /// pane belongs to its window.
+    private let panes = NSMapTable<NSUUID, DocumentTabsViewController>.strongToWeakObjects()
+
+    /// Files opened into a window whose Document pane has not been built yet,
+    /// by row id; shown when the pane attaches.
+    private var pendingFiles: [UUID: [URL]] = [:]
+
+    /// - Parameter layout: the Document window's layout — the Document pane
+    ///   alone — built by the host over the same pane registry as the project
+    ///   window's.
+    public init(
+        database: ProjectDatabase,
+        layout: ComposableTabsLayout,
+        windows: ProjectWindowManager = .shared
+    ) {
+        self.database = database
+        self.layout = layout
+        self.windows = windows
+        super.init()
+    }
+
+    // MARK: - Opening
+
+    /// Opens `file` where `UserSettings.singleDocumentsOpenIn` says, or
+    /// brings forward the window already showing it.
+    ///
+    /// - Parameter activates: false for launch restore, which reopens what
+    ///   was open without taking the foreground.
+    /// - Returns: the window, or `nil` when `file` is not an existing file or
+    ///   its row could not be read or written (logged).
+    @discardableResult
+    public func open(file: URL, activates: Bool = true) -> ComposableTabsWindowController? {
+        let url = Self.canonical(file)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              !isDirectory.boolValue else {
+            Self.logger.error("Not a file: \(url.path, privacy: .public)")
+            return nil
+        }
+        do {
+            if let own = try database.repo(path: url.path, kind: .document),
+               windows.isDocumentWindow(own.id) {
+                return openWindow(own, showing: url, activates: activates)
+            }
+            switch UserSettings.singleDocumentsOpenIn.currentValue {
+            case .tabs:
+                return openWindow(try tabsRow(), showing: url, activates: activates)
+            case .windows:
+                return openWindow(try row(for: url), showing: url, activates: activates)
+            }
+        } catch {
+            Self.logger.error("Could not record Document window row for \(url.path, privacy: .public): \(error)")
+            return nil
+        }
+    }
+
+    /// Reopens the Document windows that were open when the app last quit,
+    /// without taking the foreground. A file that has gone is dropped from
+    /// the list.
+    public func restoreOpenWindows() {
+        for path in UserSettings.openDocumentWindowFiles.currentValue {
+            let url = URL(fileURLWithPath: path)
+            let reopened = FileManager.default.fileExists(atPath: path)
+                && (try? row(for: url)).flatMap { openWindow($0, showing: url, activates: false) } != nil
+            if !reopened { forget(path) }
+        }
+        if UserSettings.documentTabsWindowOpen.currentValue, let row = try? tabsRow() {
+            _ = openWindow(row, showing: nil, activates: false)
+        }
+    }
+
+    /// Opens (or brings forward) the window over `repo` and shows `file` in
+    /// its Document pane. `file` is `nil` for the shared window at restore,
+    /// whose pane brings its own tabs back.
+    private func openWindow(
+        _ repo: GitRepo,
+        showing file: URL?,
+        activates: Bool
+    ) -> ComposableTabsWindowController? {
+        let controller = windows.openDocumentWindow(
+            repo,
+            layout: layout,
+            activates: activates,
+            onClose: { [weak self] closed in self?.windowClosed(closed) }
+        )
+        guard controller != nil else { return nil }
+        switch repo.kind {
+        case .document: remember(repo.path)
+        default: UserSettings.documentTabsWindowOpen.value = true
+        }
+        if let file { show(file, in: repo) }
+        return controller
+    }
+
+    private func windowClosed(_ repo: GitRepo) {
+        pendingFiles.removeValue(forKey: repo.id)
+        panes.removeObject(forKey: repo.id as NSUUID)
+        switch repo.kind {
+        case .document: forget(repo.path)
+        default: UserSettings.documentTabsWindowOpen.value = false
+        }
+    }
+
+    // MARK: - The Document pane
+
+    /// Called by the host's Document pane factory for a pane built in a
+    /// Document window, so files opened into that window reach it. A window's
+    /// panes are built after the window is, which is why a file can arrive
+    /// first and wait in `pendingFiles`.
+    public func attach(_ pane: DocumentTabsViewController, to project: ProjectWorkspace) {
+        guard project.repo.kind.isDocument else { return }
+        // A window of its own is one document: no strip of one tab above it.
+        if project.repo.kind == .document { pane.showsTabBars = false }
+        panes.setObject(pane, forKey: project.id as NSUUID)
+        // The factory has not returned the pane yet, so it is in no view
+        // hierarchy: deliver once this turn has put it there.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let files = self.pendingFiles.removeValue(forKey: project.id) else { return }
+            files.forEach { self.show($0, in: project.repo) }
+        }
+    }
+
+    private func show(_ file: URL, in repo: GitRepo) {
+        guard let pane = panes.object(forKey: repo.id as NSUUID) else {
+            pendingFiles[repo.id, default: []].append(file)
+            return
+        }
+        pane.loadViewIfNeeded()
+        switch repo.kind {
+        case .document:
+            // One window, one file: it replaces whatever the editor restored.
+            if pane.focusedEditor?.fileURL?.standardizedFileURL != file.standardizedFileURL {
+                pane.openInSelectedPane(file)
+            }
+        default:
+            pane.show(file)
+        }
+    }
+
+    // MARK: - Rows
+
+    /// The `.document` row for `url`, inserted the first time.
+    private func row(for url: URL) throws -> GitRepo {
+        if let existing = try database.repo(path: url.path, kind: .document) {
+            return existing
+        }
+        let repo = GitRepo(path: url.path, name: url.lastPathComponent, kind: .document)
+        try database.insert(repo)
+        return repo
+    }
+
+    /// The one `.documentTabs` row, inserted the first time. Its path is the
+    /// home directory: a real directory for the workspace to be rooted at,
+    /// and one fixed value for the row to be found by.
+    private func tabsRow() throws -> GitRepo {
+        let home = Self.canonical(FileManager.default.homeDirectoryForCurrentUser)
+        if let existing = try database.repo(path: home.path, kind: .documentTabs) {
+            return existing
+        }
+        let repo = GitRepo(path: home.path, name: Self.tabsWindowName, kind: .documentTabs)
+        try database.insert(repo)
+        return repo
+    }
+
+    static let tabsWindowName = "Documents"
+
+    /// One spelling per file, so `/tmp/x` and `/private/tmp/x` are one row
+    /// and one window.
+    static func canonical(_ url: URL) -> URL {
+        url.standardizedFileURL.resolvingSymlinksInPath()
+    }
+
+    // MARK: - Restore list
+
+    private func remember(_ path: String) {
+        var paths = UserSettings.openDocumentWindowFiles.currentValue
+        guard !paths.contains(path) else { return }
+        paths.append(path)
+        UserSettings.openDocumentWindowFiles.value = paths
+    }
+
+    private func forget(_ path: String) {
+        let paths = UserSettings.openDocumentWindowFiles.currentValue
+        guard paths.contains(path) else { return }
+        UserSettings.openDocumentWindowFiles.value = paths.filter { $0 != path }
+    }
+}
+
+extension DocumentWindowsFeature: Loggable {
+    public static nonisolated let logger = makeLogger()
+}
+
+/// Where a single document opens: Settings > General > Tab Behavior.
+public enum SingleDocumentOpenMode: String, Codable, Sendable, CaseIterable, Equatable {
+    /// A tab of the one shared Document window.
+    case tabs
+    /// A Document window of its own.
+    case windows
+
+    public var displayName: String {
+        switch self {
+        case .tabs: return "Tabs in Document Window"
+        case .windows: return "Individual Document Windows"
+        }
+    }
+}
+
+extension UserSettings {
+    /// Where a file opened on its own — from Finder, a CLI, Open Location —
+    /// lands. Settings > General > Tab Behavior.
+    public static let singleDocumentsOpenIn =
+        UserSetting<SingleDocumentOpenMode>("documents.single_open_in", default: .tabs)
+
+    /// The files whose own Document windows were open, as absolute paths in
+    /// the order they were opened; reopened at launch.
+    public static let openDocumentWindowFiles =
+        UserSetting<[String]>("open_document_window_files", default: [])
+
+    /// Whether the shared Document window was open; reopened at launch.
+    public static let documentTabsWindowOpen =
+        UserSetting<Bool>("document_tabs_window_open", default: false)
+}

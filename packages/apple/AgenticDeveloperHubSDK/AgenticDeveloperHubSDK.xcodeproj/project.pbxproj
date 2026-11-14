@@ -1590,6 +1590,7 @@
 		5EB1FFB5AEF3BB0492C5844A /* DirectoryWatchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375B3B8089115B90F2DF7DE0 /* DirectoryWatchCoordinator.swift */; };
 		5EB7D4D021B2D6C9DCF488F3 /* ExtensionManifestLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE29971566D359C2758DB01B /* ExtensionManifestLocalization.swift */; };
 		5ED16784EA167D60202120AF /* MarkdownStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43CE35F375BB762A56711B73 /* MarkdownStore.swift */; };
+		5EDFE09E16E261812F7927B2 /* DocumentWindowCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA6BF9FAD1CAD5EA125CF03 /* DocumentWindowCommands.swift */; };
 		5EE3AE66478E851A6A1F74E6 /* ActivationEventMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ED217B8D8ACA08DA8FCF506 /* ActivationEventMatcher.swift */; };
 		5F013996B60E15DF1A8C2C7F /* SettingsPanelSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0398CFDC9DD252570D0B5E45 /* SettingsPanelSplitViewController.swift */; };
 		5F05B73728491EB8B3AFA505 /* LocalInferenceGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7349B1E1C26901CE7F5DA269 /* LocalInferenceGuard.swift */; };
@@ -2545,6 +2546,7 @@
 		9EA4266BFD970FAA34B960D2 /* PluginChatConfigProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 627B48C266014B850AB8C2CE /* PluginChatConfigProvider.swift */; };
 		9EBB42ACAADA248043E0F5B5 /* BranchControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A013BF366A446D5C61B844A /* BranchControllerTests.swift */; };
 		9EC3356CABC5163C2320837D /* ExtensionSnippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20EB27E4B21A743D0FCBFD75 /* ExtensionSnippet.swift */; };
+		9EC7D682FE935DB2CBAF8132 /* DocumentWindowsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3759A9C2C202629A13979B1 /* DocumentWindowsFeature.swift */; };
 		9EC88C0FF7E33C9CF4E51EC2 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE0A5F276061D44535A099 /* MainWindowController.swift */; };
 		9ED8A6F20811EFD8EEDFE217 /* UserPromptSubmit.json in Resources */ = {isa = PBXBuildFile; fileRef = EDB6EF138FE441CC88A7E51C /* UserPromptSubmit.json */; };
 		9ED8BB5A6959429BB9B5A57F /* PlatformKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2B61E73A5AC76E0F972D50 /* PlatformKit.swift */; };
@@ -9507,6 +9509,7 @@
 		D2EC876899D2B11034B389FE /* AgenticDeveloperHubSDKDesktopAppsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AgenticDeveloperHubSDKDesktopAppsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3419B0287ED0EF0FF248064 /* LegacyDirectoryMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyDirectoryMigration.swift; sourceTree = "<group>"; };
 		D34891B84D2DAEFEE43E7531 /* ExtensionQuickPickModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionQuickPickModelTests.swift; sourceTree = "<group>"; };
+		D3759A9C2C202629A13979B1 /* DocumentWindowsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindowsFeature.swift; sourceTree = "<group>"; };
 		D3A52FD59F7B13862FE46739 /* ChoiceSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceSliderView.swift; sourceTree = "<group>"; };
 		D3A8D36607CED0D3953DCED8 /* WindowStateNamespaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowStateNamespaceTests.swift; sourceTree = "<group>"; };
 		D3C1BD5282389672A00069AB /* ThemeReExports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeReExports.swift; sourceTree = "<group>"; };
@@ -9596,6 +9599,7 @@
 		DA44DB4C9E4014D4F6C93D47 /* SessionUpsertHookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionUpsertHookTests.swift; sourceTree = "<group>"; };
 		DA51BC53C6A85231607275DD /* PartnerModelChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerModelChoice.swift; sourceTree = "<group>"; };
 		DA9B08357337D9A667C4300D /* ScreenManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenManagerTests.swift; sourceTree = "<group>"; };
+		DAA6BF9FAD1CAD5EA125CF03 /* DocumentWindowCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindowCommands.swift; sourceTree = "<group>"; };
 		DABDB7B5CE033ABBF6A7932C /* ClaudeHookConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeHookConfiguration.swift; sourceTree = "<group>"; };
 		DAC6CDB946D95A12DBE2C210 /* GitStatusProviderRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitStatusProviderRefreshTests.swift; sourceTree = "<group>"; };
 		DADFA933B0778A3F5D63B126 /* FirstRunExperience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunExperience.swift; sourceTree = "<group>"; };
@@ -10999,6 +11003,15 @@
 			path = Notifications;
 			sourceTree = "<group>";
 		};
+		081E75F319894FBB12E42D32 /* DocumentWindow */ = {
+			isa = PBXGroup;
+			children = (
+				31F34A72CC948B073A735FF1 /* Scripting */,
+				D3759A9C2C202629A13979B1 /* DocumentWindowsFeature.swift */,
+			);
+			path = DocumentWindow;
+			sourceTree = "<group>";
+		};
 		09F3A8359EE8C2024965B7B7 /* SystemMonitor */ = {
 			isa = PBXGroup;
 			children = (
@@ -11533,6 +11546,7 @@
 				59917671D1F72F7196DD1478 /* CommandLineTool */,
 				5A5D3A60DAE73B0ED6DCB887 /* CommandPalette */,
 				3DF788BF43E95F7C2E69EAF9 /* ConversationsWindow */,
+				081E75F319894FBB12E42D32 /* DocumentWindow */,
 				69EE27AD48ABFC3770C3EFA3 /* Editor */,
 				AFEE03C47C002EDA144322A8 /* Extensions */,
 				838770F5B97F64C4B5FCF35F /* FileBrowserWindow */,
@@ -11978,6 +11992,14 @@
 				5CA535B367EF6AFA0F2B870D /* AccountRegistry.swift */,
 			);
 			path = Accounts;
+			sourceTree = "<group>";
+		};
+		31F34A72CC948B073A735FF1 /* Scripting */ = {
+			isa = PBXGroup;
+			children = (
+				DAA6BF9FAD1CAD5EA125CF03 /* DocumentWindowCommands.swift */,
+			);
+			path = Scripting;
 			sourceTree = "<group>";
 		};
 		32581D2200B3A6B60CBDD5F1 /* Views */ = {
@@ -23122,6 +23144,8 @@
 				435AB9AB2331757BEADC284A /* DocumentDestination.swift in Sources */,
 				C4796A84F10D1D694E2E7975 /* DocumentEditorViewController.swift in Sources */,
 				C2BFDDF4589E19D2A4C37624 /* DocumentTabsViewController.swift in Sources */,
+				5EDFE09E16E261812F7927B2 /* DocumentWindowCommands.swift in Sources */,
+				9EC7D682FE935DB2CBAF8132 /* DocumentWindowsFeature.swift in Sources */,
 				1A2DECC6A4A689138354042D /* Edge.swift in Sources */,
 				3439C5818A0A5863E564CFB9 /* EditableTableCard.swift in Sources */,
 				D9894CB7A12EE62AD2BA8C93 /* EditorOptionsOverride.swift in Sources */,
