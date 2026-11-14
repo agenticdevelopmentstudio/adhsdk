@@ -33,6 +33,9 @@ public final class ProjectBrowserViewController: NSViewController {
     public var onChoose: ((GitRepo) -> Void)?
     /// Called as the highlighted row changes, `nil` when nothing is selected.
     public var onSelectionChange: ((GitRepo?) -> Void)?
+    /// Closes one project of the window. While the list is filtered to the
+    /// window's active projects, a project row's context menu offers it.
+    public var onCloseProject: ((UUID) -> Void)?
 
     private let coordinator: ProjectsCoordinator
     /// Whether the browser draws its own filter field above the list. The
@@ -127,6 +130,9 @@ public final class ProjectBrowserViewController: NSViewController {
         outline.target = self
         outline.action = #selector(rowClicked(_:))
         outline.doubleAction = #selector(rowDoubleClicked(_:))
+        let menu = NSMenu()
+        menu.delegate = self
+        outline.menu = menu
         outline.autoresizesOutlineColumn = false
         outline.accessibilityID("project-browser.table")
 
@@ -574,4 +580,27 @@ private final class ProjectRowView: NSView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+}
+
+extension ProjectBrowserViewController: NSMenuDelegate {
+
+    /// "Close Project" for the clicked row, only in the active-projects view,
+    /// where every row is a project open in this window.
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        let row = outline.clickedRow
+        guard onlyRepoIDs != nil, onCloseProject != nil, row >= 0,
+              let node = outline.item(atRow: row) as? ProjectTreeNode,
+              let repo = node.repo
+        else { return }
+        let item = NSMenuItem(title: "Close Project", action: #selector(closeProjectChosen(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = repo.id
+        menu.addItem(item)
+    }
+
+    @objc private func closeProjectChosen(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID else { return }
+        onCloseProject?(id)
+    }
 }

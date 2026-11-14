@@ -165,6 +165,7 @@ public final class ProjectShelfViewController: NSViewController {
         }
         activeProjects.onChoose = { [weak self] id in self?.onShowActiveProject?(id) }
         activeProjects.onClose = { [weak self] id in self?.onCloseActiveProject?(id) }
+        browser.onCloseProject = { [weak self] id in self?.onCloseActiveProject?(id) }
 
         applyPanel(group.panel)
         applyFilterText(group.filterText)
