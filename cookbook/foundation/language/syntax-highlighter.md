@@ -2,7 +2,7 @@
 id: 6708bfd4-5b29-4bf9-b180-05904873906e
 title: "Syntax Highlighter"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
@@ -39,18 +39,18 @@ Colours source text with TextMate grammars. A `GrammarRegistry` answers grammar 
 
 - **resources-validated**: `TextMateResources(directory:)` MUST throw when `highlighter.js`, `onig.wasm`, `languages.json` or `manifest.json` is missing from the directory; code receives the directory by injection, never from a bundle lookup.
 - **bundled-source**: `BundledGrammarSource` MUST read its languages from `languages.json` and map every scope name in `manifest.json`'s `grammars` (embed-only grammars included) to `grammars/<name>.json`, reading a grammar's text only when asked for it.
-- **directory-source**: `DirectoryGrammarSource` MUST offer every `*.tmLanguage.json` in its directory whose JSON has a string `scopeName`, as a language whose id is the file name without `.tmLanguage.json` and whose extensions are its `fileTypes`, each lowercased with a leading dot; a file that is not such JSON MUST be skipped, and a missing directory MUST give no languages.
+- **directory-source**: `DirectoryGrammarSource` MUST offer every `*.tmLanguage.json` in its directory whose JSON has a string `scopeName`, as a language whose id is the file name without `.tmLanguage.json` and whose `fileTypes` are matched as TextMate matches them: each is an extension, lowercased with a leading dot, and each that does not start with a dot is also an exact file name as written (`Makefile`). A file that is not such JSON, and a second file for a scope already taken, MUST be skipped with a log line, and a missing directory MUST give no languages.
 - **first-source-wins**: `GrammarRegistry` MUST answer a scope's grammar text from the first source that has it, list each language id once (the first source's entry), and answer `scopeName(languageID:)` from that entry.
 - **resolution-order**: `LanguageResolver.languageID(for:)` MUST try, in order, the override closure, an exact file name match, an extension match ignoring case (longest multi-dot extension first, so `x.h.in` tries `.h.in` before `.in`), and otherwise answer nil. Among languages claiming the same file name or extension, the earlier language in the registry wins.
 - **limits**: `highlight` MUST answer nil, without running the engine, when the text is over `maximumBytes` (1 000 000 UTF-8 bytes) or any line is over `maximumLineLength` (10 000 UTF-16 units).
-- **unknown-scope**: `highlight` MUST answer nil when the registry has no grammar for the scope.
+- **unknown-scope**: `highlight` MUST answer nil when the registry has no grammar for the scope, asking `hasGrammar(scopeName:)` (a dictionary lookup for the bundled source, a file-existence check for a directory) rather than reading the grammar.
 - **line-split**: Lines MUST be split on `\r\n`, `\r` and `\n`, each one break, exactly as the bundle splits; the result MUST have one `StyledLine` per line, and a count that disagrees with the bundle's MUST throw.
 - **runs**: Each run's `range` MUST be the bundle's UTF-16 `[start, length]` within its line; a range outside the line MUST throw. `fontStyle` carries the bits italic 1, bold 2, underline 4, strikethrough 8.
 - **strict-colours**: A run colour MUST parse only as uppercase `#RRGGBB` (opaque) or `#RRGGBBAA`; any other text MUST throw `SyntaxHighlighterError.unexpectedColor`, never default.
 - **one-engine**: The actor MUST own one `JSVirtualMachine` and `JSContext`, created on the first call that needs the engine, with the host object `ADKHost.grammarText(scopeName)` answering from the registry (`null` when absent) and `console` forwarded to the unified log.
-- **promises-without-run-loop**: A bundle promise MUST be awaited by attaching `then` callbacks that resume a checked continuation; JavaScriptCore drains microtasks when the outermost call returns, so the promise settles inside that call. A promise still pending when the call returns MUST throw `SyntaxHighlighterError.promiseDidNotSettle` rather than wait. The actor MUST never spin a run loop; WebAssembly compiles synchronously in the context so `create` settles the same way.
+- **promises-without-run-loop**: A bundle promise MUST be settled synchronously, by attaching `then` callbacks that record its outcome and reading it once the attaching call returns; JavaScriptCore drains microtasks when the outermost call returns, so the promise settles inside that call. A promise still pending when the call returns MUST throw `SyntaxHighlighterError.promiseDidNotSettle` rather than wait. The actor MUST never spin a run loop; WebAssembly compiles synchronously in the context so `create` settles the same way: `WebAssembly.instantiate` takes bytes (answering `{module, instance}`) or a `WebAssembly.Module` (answering its `Instance`), and a compile or link error rejects.
 - **theme-once**: The theme MUST be handed to the bundle's `setTheme` only when it differs from the last one set.
-
+- **no-reentry**: The engine path (creating the engine, setting the theme, highlighting) MUST have no suspension point, so concurrent first calls create one engine and every call is coloured by its theme. The WASM bytes MUST be released once the engine is created.
 ## Appearance
 
 Not applicable: The highlighter returns coloured runs; the views that draw them own the appearance.
@@ -77,7 +77,11 @@ Not applicable: The highlighter presents no UI.
 | syntax-highlighter-006 | first-source-wins | a user `swift.tmLanguage.json` (`scopeName` `source.swift`) ahead of the bundled source | the registry's `source.swift` text is the user file's. |
 | syntax-highlighter-007 | resolution-order | `Package.swift`, `x.PY`, `Makefile`, an override answering `json`, `notes.unknownext` | `swift`, `python`, `make`, `json`, nil. |
 | syntax-highlighter-008 | line-split | `a\rb`, `a\r\nb` | two lines each. |
-
+| syntax-highlighter-009 | no-reentry, theme-once | eight concurrent first `highlight` calls with Dark+ on a new highlighter | every `let` run is `#569CD6`; one engine created; `setTheme` called once. |
+| syntax-highlighter-010 | theme-once | Dark+, Dark+, Light+, Light+, Dark+ in turn | `setTheme` counts 1, 1, 2, 2, 3. |
+| syntax-highlighter-011 | promises-without-run-loop | `new Promise(() => {})` | throws `promiseDidNotSettle`. |
+| syntax-highlighter-012 | promises-without-run-loop | `WebAssembly.instantiate` with the empty module's bytes, with that `WebAssembly.Module`, and with `[1, 2, 3]` | `{module, instance}`; an `Instance`; rejected. |
+| syntax-highlighter-013 | directory-source | a user grammar with `fileTypes` `["Makefile", "MK", ".gnu"]` | extensions `.makefile`, `.mk`, `.gnu`; file names `Makefile`, `MK`; `Makefile` and `rules.mk` resolve to it. |
 ## Edge Cases
 
 - **Null / empty input**: An empty text is one line with no runs.
@@ -131,17 +135,17 @@ The bundle's `console` output and skipped user grammar files go to the unified l
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
-**Decision**: Promises are awaited through `then` callbacks inside the actor's own call, never by running a run loop.
-**Rationale**: JavaScriptCore drains microtasks when the outermost call returns, and the bundle uses nothing but promises, so every promise settles before the call returns; spinning a run loop from an actor would block a cooperative thread and could re-enter unrelated work.
+**Decision**: Promises are settled synchronously through `then` callbacks inside the actor's own call, never by a continuation and never by running a run loop.
+**Rationale**: JavaScriptCore drains microtasks when the outermost call returns, and the bundle uses nothing but promises, so every promise settles before the call returns; spinning a run loop from an actor would block a cooperative thread and could re-enter unrelated work, and an `await` on the engine path would let the actor be re-entered between creating the engine and setting the theme.
 **Approved**: pending
 
 **Decision**: `WebAssembly.instantiate` is replaced in the context with a synchronous `Module` + `Instance` that returns a resolved promise.
@@ -164,4 +168,5 @@ The bundle's `console` output and skipped user grammar files go to the unified l
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-13 | Mike Fullerton | Synchronous promise settling with no suspension on the engine path, hasGrammar, fileTypes as file names, both instantiate forms |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

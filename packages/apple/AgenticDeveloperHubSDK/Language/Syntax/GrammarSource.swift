@@ -26,7 +26,16 @@ public struct LanguageEntry: Sendable, Hashable, Codable {
 public protocol GrammarSource: Sendable {
     /// The `.tmLanguage.json` text of the grammar for `scopeName`, or nil.
     func grammarText(scopeName: String) -> String?
+    /// Whether there is a grammar for `scopeName`, answered without reading it.
+    func hasGrammar(scopeName: String) -> Bool
     var languages: [LanguageEntry] { get }
+}
+
+extension GrammarSource {
+    /// Reads the grammar; a source that can answer more cheaply overrides it.
+    public func hasGrammar(scopeName: String) -> Bool {
+        grammarText(scopeName: scopeName) != nil
+    }
 }
 
 /// The grammars in the bundled TextMate resources: languages from
@@ -59,12 +68,19 @@ public struct BundledGrammarSource: GrammarSource {
     public func grammarText(scopeName: String) -> String? {
         grammarFiles[scopeName].flatMap { try? String(contentsOf: $0, encoding: .utf8) }
     }
+
+    public func hasGrammar(scopeName: String) -> Bool {
+        grammarFiles[scopeName] != nil
+    }
 }
 
 /// A directory of user grammars: every `*.tmLanguage.json` whose JSON has a
 /// string `scopeName`. The language id is the file name without
-/// `.tmLanguage.json`; its extensions are the file's `fileTypes`, lowercased
-/// and given a leading dot. Files that are not such JSON are skipped with a
+/// `.tmLanguage.json`. Each of the file's `fileTypes` is matched as TextMate
+/// matches it, against the whole file name or the part after a dot: it is an
+/// extension, lowercased and given a leading dot, and, unless it starts with a
+/// dot, also an exact file name as written (`Makefile`). Files that are not
+/// such JSON, and a second file for a scope already taken, are skipped with a
 /// log line; a missing directory offers nothing. Read once, at init.
 public struct DirectoryGrammarSource: GrammarSource {
 
@@ -85,7 +101,10 @@ public struct DirectoryGrammarSource: GrammarSource {
                 Self.logger.info("Skipping \(name, privacy: .public): not a grammar with a scopeName")
                 continue
             }
-            guard files[scope] == nil else { continue }
+            guard files[scope] == nil else {
+                Self.logger.info("Skipping \(name, privacy: .public): scope \(scope, privacy: .public) is taken")
+                continue
+            }
             files[scope] = url
             let fileTypes = object["fileTypes"] as? [String] ?? []
             languages.append(LanguageEntry(
@@ -96,7 +115,7 @@ public struct DirectoryGrammarSource: GrammarSource {
                     let lowered = type.lowercased()
                     return lowered.hasPrefix(".") ? lowered : "." + lowered
                 },
-                filenames: []
+                filenames: fileTypes.filter { !$0.hasPrefix(".") }
             ))
         }
         self.languages = languages
@@ -105,6 +124,10 @@ public struct DirectoryGrammarSource: GrammarSource {
 
     public func grammarText(scopeName: String) -> String? {
         grammarFiles[scopeName].flatMap { try? String(contentsOf: $0, encoding: .utf8) }
+    }
+
+    public func hasGrammar(scopeName: String) -> Bool {
+        grammarFiles[scopeName].map { FileManager.default.fileExists(atPath: $0.path) } ?? false
     }
 }
 

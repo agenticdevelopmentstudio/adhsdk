@@ -19,13 +19,17 @@ public enum SyntaxHighlighterError: Error, Equatable {
 /// Oniguruma) in one JavaScriptCore context, created on the first call that
 /// needs it.
 ///
-/// Bundle promises are awaited by attaching `then` callbacks that resume a
-/// checked continuation. JavaScriptCore drains microtasks when the outermost
-/// API call returns and the bundle uses nothing but promises, so every promise
-/// settles inside the call that awaits it; one still pending afterwards throws
-/// rather than waits. No run loop is ever spun. WebAssembly is compiled
-/// synchronously in the context for the same reason: an asynchronous compile
-/// can finish on a deferred-work timer only a run loop fires.
+/// Bundle promises are settled synchronously: `then` callbacks record the
+/// outcome, and JavaScriptCore drains microtasks when the outermost API call
+/// returns, so a bundle that uses nothing but promises has settled by the time
+/// that call is back; one still pending afterwards throws rather than waits.
+/// No run loop is ever spun. WebAssembly is compiled synchronously in the
+/// context for the same reason: an asynchronous compile can finish on a
+/// deferred-work timer only a run loop fires.
+///
+/// The engine path has no suspension point, so the actor is never re-entered
+/// halfway through creating the engine or setting the theme: concurrent first
+/// calls build one engine and see one theme.
 public actor SyntaxHighlighter {
 
     /// Text over this many UTF-8 bytes is not highlighted.
@@ -34,11 +38,15 @@ public actor SyntaxHighlighter {
     public static let maximumLineLength = 10_000
 
     private let script: String
-    private let wasm: Data
+    /// The Oniguruma module, released once the engine is created.
+    private var wasm: Data?
     private let registry: GrammarRegistry
     private var context: JSContext?
     private var currentTheme: CodeTheme?
-    private var knownScopes: Set<String> = []
+    /// How many engines were created; for tests.
+    private(set) var engineCount = 0
+    /// How many times a theme was handed to the bundle; for tests.
+    private(set) var setThemeCount = 0
 
     /// - Throws: the read error when `highlighter.js` or `onig.wasm` cannot be read.
     public init(resources: TextMateResources, registry: GrammarRegistry) throws {
@@ -52,21 +60,29 @@ public actor SyntaxHighlighter {
     ///
     /// nil when the text is over the limits or the scope has no grammar.
     public func highlight(_ text: String, scopeName: String, theme: CodeTheme) async throws -> [StyledLine]? {
-        guard !Self.exceedsLimits(text), hasGrammar(scopeName) else { return nil }
-        let lengths = Self.lineLengths(text)
-        let context = try await readyContext()
+        guard let lengths = Self.lineLengthsWithinLimits(text),
+              registry.hasGrammar(scopeName: scopeName) else { return nil }
+        let context = try readyContext()
         if theme != currentTheme {
             _ = try call(context, "setTheme", [theme.themeJSON])
             currentTheme = theme
+            setThemeCount += 1
         }
-        let json = try await settle(try call(context, "highlight", [text, scopeName]), in: context, "highlight")
+        let json = try Self.settle(try call(context, "highlight", [text, scopeName]), in: context, "highlight")
         return try Self.styledLines(json: json, lineLengths: lengths)
     }
 
     // MARK: - Limits and lines
 
+    /// The text's line lengths, or nil when it is over the limits.
+    static func lineLengthsWithinLimits(_ text: String) -> [Int]? {
+        guard text.utf8.count <= maximumBytes else { return nil }
+        let lengths = lineLengths(text)
+        return lengths.contains { $0 > maximumLineLength } ? nil : lengths
+    }
+
     static func exceedsLimits(_ text: String) -> Bool {
-        text.utf8.count > maximumBytes || lineLengths(text).contains { $0 > maximumLineLength }
+        lineLengthsWithinLimits(text) == nil
     }
 
     /// Each line's length in UTF-16 units, split on `/\r\n|\r|\n/` exactly as
@@ -94,13 +110,6 @@ public actor SyntaxHighlighter {
         }
         lengths.append(current)
         return lengths
-    }
-
-    private func hasGrammar(_ scopeName: String) -> Bool {
-        if knownScopes.contains(scopeName) { return true }
-        guard registry.grammarText(scopeName: scopeName) != nil else { return false }
-        knownScopes.insert(scopeName)
-        return true
     }
 
     // MARK: - Output
@@ -138,9 +147,11 @@ public actor SyntaxHighlighter {
 
     // MARK: - JavaScript
 
-    private func readyContext() async throws -> JSContext {
+    /// The engine, created on first use. A failed create leaves nothing behind,
+    /// so the next call tries again.
+    private func readyContext() throws -> JSContext {
         if let context { return context }
-        guard let context = JSContext(virtualMachine: JSVirtualMachine()) else {
+        guard let wasm, let context = JSContext(virtualMachine: JSVirtualMachine()) else {
             throw SyntaxHighlighterError.javaScript("could not create a JavaScript context")
         }
         installHost(in: context)
@@ -149,17 +160,28 @@ public actor SyntaxHighlighter {
         guard let buffer = arrayBuffer(wasm, in: context) else {
             throw SyntaxHighlighterError.javaScript("could not create the WASM ArrayBuffer")
         }
-        _ = try await settle(try call(context, "create", [buffer]), in: context, "create")
+        _ = try Self.settle(try call(context, "create", [buffer]), in: context, "create")
         self.context = context
+        self.wasm = nil
+        engineCount += 1
         return context
     }
 
     /// `WebAssembly.instantiate` as a synchronous compile and instantiation
-    /// returning an already-resolved promise.
-    private static let synchronousWebAssembly = """
-        WebAssembly.instantiate = (bytes, imports) => {
-          const module = new WebAssembly.Module(bytes);
-          return Promise.resolve({ module, instance: new WebAssembly.Instance(module, imports) });
+    /// returning an already-settled promise, in the standard's two forms:
+    /// bytes resolve to `{module, instance}`, a `WebAssembly.Module` to its
+    /// `Instance`; a compile or link error rejects.
+    static let synchronousWebAssembly = """
+        WebAssembly.instantiate = (source, imports) => {
+          try {
+            if (source instanceof WebAssembly.Module) {
+              return Promise.resolve(new WebAssembly.Instance(source, imports));
+            }
+            const module = new WebAssembly.Module(source);
+            return Promise.resolve({ module, instance: new WebAssembly.Instance(module, imports) });
+          } catch (error) {
+            return Promise.reject(error);
+          }
         };
         """
 
@@ -205,26 +227,30 @@ public actor SyntaxHighlighter {
         return result
     }
 
-    /// Awaits `promise`, answering its value as a string (`""` when it is not one).
-    private func settle(_ promise: JSValue, in context: JSContext, _ name: String) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            let once = ResumeOnce(continuation)
-            let fulfil: @convention(block) (JSValue) -> Void = { value in
-                once.resume(.success(value.isString ? value.toString() ?? "" : ""))
-            }
-            let reject: @convention(block) (JSValue) -> Void = { error in
-                once.resume(.failure(SyntaxHighlighterError.javaScript(error.toString() ?? "rejected")))
-            }
-            context.exception = nil
-            promise.invokeMethod("then", withArguments: [
-                JSValue(object: fulfil, in: context) as Any,
-                JSValue(object: reject, in: context) as Any
-            ])
-            if let exception = context.exception {
-                once.resume(.failure(SyntaxHighlighterError.javaScript(exception.toString() ?? "exception")))
-            }
-            once.resume(.failure(SyntaxHighlighterError.promiseDidNotSettle(name)))
+    /// `promise`'s value as a string (`""` when it is not one), settled within
+    /// this call: the `then` callbacks run as JavaScriptCore drains microtasks
+    /// on the return of `invokeMethod`, the outermost call.
+    ///
+    /// - Throws: `javaScript` when it rejects, `promiseDidNotSettle(name)` when
+    ///   it is still pending.
+    static func settle(_ promise: JSValue, in context: JSContext, _ name: String) throws -> String {
+        let outcome = Outcome()
+        let fulfil: @convention(block) (JSValue) -> Void = { value in
+            outcome.record(.success(value.isString ? value.toString() ?? "" : ""))
         }
+        let reject: @convention(block) (JSValue) -> Void = { error in
+            outcome.record(.failure(.javaScript(error.toString() ?? "rejected")))
+        }
+        context.exception = nil
+        promise.invokeMethod("then", withArguments: [
+            JSValue(object: fulfil, in: context) as Any,
+            JSValue(object: reject, in: context) as Any
+        ])
+        if let exception = context.exception {
+            throw SyntaxHighlighterError.javaScript(exception.toString() ?? "exception")
+        }
+        guard let result = outcome.result else { throw SyntaxHighlighterError.promiseDidNotSettle(name) }
+        return try result.get()
     }
 
     /// An `ArrayBuffer` over a copy of `data`, freed when the buffer is collected.
@@ -241,17 +267,13 @@ public actor SyntaxHighlighter {
     }
 }
 
-/// Resumes a continuation the first time only; later outcomes are dropped.
-private final class ResumeOnce {
-    private var continuation: CheckedContinuation<String, Error>?
+/// A promise's first outcome; later ones are dropped. Written by the `then`
+/// callbacks during `settle`'s own call and read after it, on the same thread.
+private final class Outcome {
+    private(set) var result: Result<String, SyntaxHighlighterError>?
 
-    init(_ continuation: CheckedContinuation<String, Error>) {
-        self.continuation = continuation
-    }
-
-    func resume(_ result: Result<String, Error>) {
-        continuation?.resume(with: result)
-        continuation = nil
+    func record(_ result: Result<String, SyntaxHighlighterError>) {
+        if self.result == nil { self.result = result }
     }
 }
 

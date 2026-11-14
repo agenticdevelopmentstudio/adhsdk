@@ -33,7 +33,8 @@ struct GrammarRegistryTests {
             #expect(registry.scopeName(languageID: "swift") == "source.swift")
             let swift = registry.languages.filter { $0.id == "swift" }
             #expect(swift == [LanguageEntry(
-                id: "swift", scopeName: "source.swift", aliases: [], extensions: [".swift", ".swiftx"], filenames: [])])
+                id: "swift", scopeName: "source.swift", aliases: [], extensions: [".swift", ".swiftx"],
+                filenames: ["swift", "SWIFTX"])])
             #expect(registry.grammarText(scopeName: "source.python") != nil)
             #expect(registry.scopeName(languageID: "python") == "source.python")
         }
@@ -66,6 +67,58 @@ struct GrammarRegistryTests {
         }
         let missing = DirectoryGrammarSource(directory: URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)"))
         #expect(missing.languages.isEmpty)
+    }
+
+    @Test("a fileType is a file name as written and an extension, as TextMate matches it")
+    func directoryFileTypes() throws {
+        try withTemporaryDirectory { directory in
+            try write(#"{"scopeName":"source.toymake","fileTypes":["Makefile","MK",".gnu"]}"#,
+                      "toymake.tmLanguage.json", in: directory)
+            let registry = GrammarRegistry(sources: [DirectoryGrammarSource(directory: directory)])
+            let resolver = LanguageResolver(registry: registry)
+
+            #expect(registry.languages == [LanguageEntry(
+                id: "toymake", scopeName: "source.toymake", aliases: [],
+                extensions: [".makefile", ".mk", ".gnu"], filenames: ["Makefile", "MK"])])
+            #expect(resolver.languageID(for: URL(fileURLWithPath: "/p/Makefile")) == "toymake")
+            #expect(resolver.languageID(for: URL(fileURLWithPath: "/p/rules.mk")) == "toymake")
+        }
+    }
+
+    @Test("a second grammar with a scope already taken is skipped")
+    func directoryDuplicateScope() throws {
+        try withTemporaryDirectory { directory in
+            try write(#"{"scopeName":"source.toy"}"#, "a.tmLanguage.json", in: directory)
+            try write(#"{"scopeName":"source.toy","fileTypes":["b"]}"#, "b.tmLanguage.json", in: directory)
+
+            let source = DirectoryGrammarSource(directory: directory)
+
+            #expect(source.languages.map(\.id) == ["a"])
+            #expect(source.grammarText(scopeName: "source.toy") == #"{"scopeName":"source.toy"}"#)
+        }
+    }
+
+    @Test("hasGrammar answers without reading the grammar")
+    func hasGrammar() throws {
+        let bundled = try BundledGrammarSource(resources: TextMateFixture.resources())
+        #expect(bundled.hasGrammar(scopeName: "source.swift"))
+        #expect(bundled.hasGrammar(scopeName: "source.cpp.embedded.macro"))
+        #expect(!bundled.hasGrammar(scopeName: "source.nonexistent"))
+
+        try withTemporaryDirectory { directory in
+            try write(#"{"scopeName":"source.toy"}"#, "toy.tmLanguage.json", in: directory)
+            let source = DirectoryGrammarSource(directory: directory)
+            let registry = GrammarRegistry(sources: [source, bundled])
+
+            #expect(source.hasGrammar(scopeName: "source.toy"))
+            #expect(!source.hasGrammar(scopeName: "source.swift"))
+            #expect(registry.hasGrammar(scopeName: "source.toy"))
+            #expect(registry.hasGrammar(scopeName: "source.swift"))
+            #expect(!registry.hasGrammar(scopeName: "source.nonexistent"))
+
+            try FileManager.default.removeItem(at: directory.appendingPathComponent("toy.tmLanguage.json"))
+            #expect(!source.hasGrammar(scopeName: "source.toy"))
+        }
     }
 
     @Test("resources missing a required file are refused")

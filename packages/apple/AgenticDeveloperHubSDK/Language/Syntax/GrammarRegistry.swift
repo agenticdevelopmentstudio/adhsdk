@@ -30,6 +30,10 @@ public final class GrammarRegistry: Sendable {
         return nil
     }
 
+    public func hasGrammar(scopeName: String) -> Bool {
+        sources.contains { $0.hasGrammar(scopeName: scopeName) }
+    }
+
     public func scopeName(languageID: String) -> String? {
         scopeByLanguageID[languageID]
     }
