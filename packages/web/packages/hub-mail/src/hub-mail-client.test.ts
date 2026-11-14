@@ -28,13 +28,13 @@ function message(id: string, data: Record<string, unknown> = {}): HubSyncChange 
     resource: MESSAGES_RESOURCE,
     id,
     op: 'upsert',
-    syncVersion: '1',
+    sync_version: '1',
     data: { connection_id: 'conn', subject: `s-${id}`, ...data },
   }
 }
 
 function page(changes: HubSyncChange[], cursor = 'c1', hasMore = false): HubSyncPullPage {
-  return { changes, cursor, hasMore }
+  return { changes, cursor, has_more: hasMore }
 }
 
 function cursorOf(path: string): string | null {
@@ -44,9 +44,9 @@ function cursorOf(path: string): string | null {
 describe('createHubMailClient', () => {
   it('hmw-001: lists only Gmail message connections', async () => {
     const { fetchJson } = fakeFetch(() => ({
-      connections: [
-        { id: 'g', provider: 'gmail', serviceType: 'messages', status: 'active', username: 'a@x.com' },
-        { id: 'h', provider: 'github', serviceType: 'repos', status: 'active', username: 'octo' },
+      object: 'list', has_more: false, data: [
+        { id: 'g', provider: 'gmail', service_type: 'messages', status: 'active', username: 'a@x.com' },
+        { id: 'h', provider: 'github', service_type: 'repos', status: 'active', username: 'octo' },
       ],
     }))
     const accounts = await createHubMailClient({ fetchJson }).accounts()
@@ -55,7 +55,7 @@ describe('createHubMailClient', () => {
 
   it('hmw-002: account email is the username', async () => {
     const { fetchJson } = fakeFetch(() => ({
-      connections: [{ id: 'g', provider: 'gmail', serviceType: 'messages', status: 'active', username: 'a@x.com' }],
+      object: 'list', has_more: false, data: [{ id: 'g', provider: 'gmail', service_type: 'messages', status: 'active', username: 'a@x.com' }],
     }))
     const [account] = await createHubMailClient({ fetchJson }).accounts()
     expect(account).toEqual({ id: 'g', email: 'a@x.com', status: 'active', lastError: null })
@@ -63,8 +63,8 @@ describe('createHubMailClient', () => {
 
   it('hmw-003: an empty username falls back to the display name', async () => {
     const { fetchJson } = fakeFetch(() => ({
-      connections: [
-        { id: 'g', provider: 'gmail', serviceType: 'messages', status: 'error', username: '', displayName: 'Work', lastError: 'expired' },
+      object: 'list', has_more: false, data: [
+        { id: 'g', provider: 'gmail', service_type: 'messages', status: 'error', username: '', display_name: 'Work', last_error: 'expired' },
       ],
     }))
     const [account] = await createHubMailClient({ fetchJson }).accounts()
@@ -72,27 +72,38 @@ describe('createHubMailClient', () => {
     expect(account?.lastError).toBe('expired')
   })
 
+  it('hmw-014: pages through the connections list', async () => {
+    const { fetchJson, calls } = fakeFetch((path) =>
+      path.includes('starting_after=')
+        ? { object: 'list', has_more: false, data: [{ id: 'g2', provider: 'gmail', service_type: 'messages', username: 'b@x.com' }] }
+        : { object: 'list', has_more: true, data: [{ id: 'g1', provider: 'gmail', service_type: 'messages', username: 'a@x.com' }] },
+    )
+    const accounts = await createHubMailClient({ fetchJson }).accounts()
+    expect(accounts.map((a) => a.id)).toEqual(['g1', 'g2'])
+    expect(calls).toEqual(['/v1/integrations/connections?limit=100', '/v1/integrations/connections?limit=100&starting_after=g1'])
+  })
+
   it('hmw-004: pulls every page, carrying the cursor', async () => {
     const { fetchJson, calls } = fakeFetch((path) =>
-      cursorOf(path) === '' ? page([message('1')], 'c1', true) : page([message('2')], 'c2', false),
+      !cursorOf(path) ? page([message('1')], 'c1', true) : page([message('2')], 'c2', false),
     )
     const list = await createHubMailClient({ fetchJson }).messages('conn')
     expect(calls).toHaveLength(2)
     expect(cursorOf(calls[1] ?? '')).toBe('c1')
-    expect(calls[0]).toContain('limit=500')
+    expect(calls[0]).toBe('/v1/sync/pull?limit=500')
     expect(list.map((m) => m.id).sort()).toEqual(['1', '2'])
   })
 
   it('hmw-005: ignores changes for other resources', async () => {
     const { fetchJson } = fakeFetch(() =>
-      page([{ resource: 'notes.notes', id: 'n', op: 'upsert', syncVersion: '1', data: { connection_id: 'conn' } }]),
+      page([{ resource: 'notes.notes', id: 'n', op: 'upsert', sync_version: '1', data: { connection_id: 'conn' } }]),
     )
     expect(await createHubMailClient({ fetchJson }).messages('conn')).toEqual([])
   })
 
   it('hmw-006: a delete removes an upserted message', async () => {
     const { fetchJson } = fakeFetch(() =>
-      page([message('1'), { resource: MESSAGES_RESOURCE, id: '1', op: 'delete', syncVersion: '2' }]),
+      page([message('1'), { resource: MESSAGES_RESOURCE, id: '1', op: 'delete', sync_version: '2' }]),
     )
     expect(await createHubMailClient({ fetchJson }).messages('conn')).toEqual([])
   })
@@ -123,7 +134,7 @@ describe('createHubMailClient', () => {
   })
 
   it('hmw-010: refresh continues from the last cursor', async () => {
-    const { fetchJson, calls } = fakeFetch((path) => (cursorOf(path) === '' ? page([message('1')], 'c9') : page([], 'c10')))
+    const { fetchJson, calls } = fakeFetch((path) => (!cursorOf(path) ? page([message('1')], 'c9') : page([], 'c10')))
     const client = createHubMailClient({ fetchJson })
     await client.messages('conn')
     await client.refresh()
@@ -141,7 +152,7 @@ describe('createHubMailClient', () => {
     expect((await client.messages('conn')).map((m) => m.id)).toEqual(['1'])
     expired = true
     await client.refresh()
-    expect(calls.map(cursorOf)).toEqual(['', 'c1', ''])
+    expect(calls.map(cursorOf)).toEqual([null, 'c1', null])
     expect((await client.messages('conn')).map((m) => m.id)).toEqual(['2'])
   })
 
@@ -169,6 +180,6 @@ describe('createHubMailClient', () => {
     await client.messages('conn')
     client.reset()
     await client.messages('conn')
-    expect(calls.map(cursorOf)).toEqual(['', ''])
+    expect(calls.map(cursorOf)).toEqual([null, null])
   })
 })

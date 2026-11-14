@@ -2,7 +2,7 @@
 id: 6b0f3c52-8e47-4d1a-9a35-2f7c1d9e4a60
 title: "Hub Mail Web Client"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
@@ -34,12 +34,12 @@ approved-date: ""
 
 A web app in the Temporal family (whatsnow.today's `/email` and the Email Desktop App on `/desktop`) shows the same hub-synced Gmail the macOS and iOS apps read from their local mirror ([adhsdk.ingredient.integrations.hub-mail](cookbook:a6442464-e17d-451e-b47a-3be23a2dc753)). The web app keeps no local database, so it does not run a second sync engine: `createHubMailClient` reads the hub API directly and holds what it read in memory for the life of the page.
 
-It is the package `@adh-sdk/hub-mail` (`packages/web/packages/hub-mail/`). It has no runtime dependencies. The host injects one function, `fetchJson(path)`, that resolves a backend path (`/sync/pull?…`, `/integrations/me/connections`) to parsed JSON with the caller's bearer token, so the package never reads tokens, storage or a base URL itself. A host that already has an authed fetch (whatsnow's `adh-auth`, or `@adh-sdk/auth`'s `authedJson`) passes it in.
+It is the package `@adh-sdk/hub-mail` (`packages/web/packages/hub-mail/`). It has no runtime dependencies. The host injects one function, `fetchJson(path)`, that resolves a backend path (`/v1/sync/pull?…`, `/v1/integrations/connections?…`) to parsed JSON with the caller's bearer token, so the package never reads tokens, storage or a base URL itself. A host that already has an authed fetch (whatsnow's `adh-auth`, or `@adh-sdk/auth`'s `authedJson`) passes it in.
 
 What it does:
 
-- **Accounts** come from `GET /integrations/me/connections`, keeping the caller's Gmail message connections (`provider` `gmail`, `serviceType` `messages`). Each account carries the connection id, a display address, its status and its last error.
-- **Messages** come from `GET /sync/pull`. The client pages from an empty cursor until `hasMore` is false, keeps only the two Gmail resources (`integration.integration_email_messages` and `integration.integration_email_labels`), applies each upsert and delete to its snapshot, and remembers the cursor. A later `refresh()` pulls only what changed since.
+- **Accounts** come from `GET /v1/integrations/connections`, paged with `starting_after` until `has_more` is false, keeping the caller's Gmail message connections (`provider` `gmail`, `service_type` `messages`). Each account carries the connection id, a display address, its status and its last error.
+- **Messages** come from `GET /v1/sync/pull`. The client pages from no cursor until `has_more` is false, keeps only the two Gmail resources (`integration.integration_email_messages` and `integration.integration_email_labels`), applies each upsert and delete to its snapshot, and remembers the cursor. A later `refresh()` pulls only what changed since.
 - **One message** is the snapshot's row for that connection and id, with its full body.
 
 It answers the same three reads the iOS Email App asks of `MailClient` (`accounts`, `messages(account)`, `message(account, id)`), with the same field names the Desktop Email App renders, so the web Email App mirrors the native one.
@@ -47,14 +47,14 @@ It answers the same three reads the iOS Email App asks of `MailClient` (`account
 ## Behavioral Requirements
 
 - **injected-fetch**: The client MUST make every request through the injected `fetchJson(path)` and MUST NOT read tokens, storage, cookies or a base URL itself.
-- **accounts-from-connections**: `accounts()` MUST call `/integrations/me/connections` once per call and return one account per connection whose `provider` is `gmail` and `serviceType` is `messages`, in the order the hub returned them.
-- **account-fields**: An account's `id` MUST be the connection id, its `email` MUST be the connection's `username`, else its `displayName`, else its id; `status` and `lastError` MUST be the connection's (`lastError` null when absent).
-- **pull-until-done**: The first read of messages MUST page `/sync/pull?cursor=<c>&limit=500`, starting from an empty cursor, passing each response's `cursor` to the next request, until a response has `hasMore` false.
+- **accounts-from-connections**: `accounts()` MUST read `/v1/integrations/connections?limit=100`, then each following page with `starting_after=<last id>` while `has_more` is true, and return one account per connection whose `provider` is `gmail` and `service_type` is `messages`, in the order the hub returned them.
+- **account-fields**: An account's `id` MUST be the connection id, its `email` MUST be the connection's `username`, else its `display_name`, else its id; `status` MUST be the connection's, and `lastError` its `last_error` (null when absent).
+- **pull-until-done**: The first read of messages MUST page `/v1/sync/pull?limit=500` with no cursor, then `/v1/sync/pull?cursor=<c>&limit=500` passing each response's `cursor` to the next request, until a response has `has_more` false.
 - **resource-filter**: Changes for any resource other than the two Gmail resources MUST be ignored, and their cursor still advances.
 - **apply-changes**: An `upsert` MUST replace the snapshot row with that id; a `delete` MUST remove it. Changes MUST be applied in the order received.
 - **live-rows-only**: A message row whose `deleted_at` is set or whose `is_deleted` is true MUST NOT be returned.
 - **one-pull-at-a-time**: Concurrent reads that need a pull MUST share one in-flight pull rather than start a second.
-- **refresh-delta**: `refresh()` MUST pull from the remembered cursor, not from empty, and resolve when `hasMore` is false.
+- **refresh-delta**: `refresh()` MUST pull from the remembered cursor, not from empty, and resolve when `has_more` is false.
 - **cursor-expired**: A pull answered with HTTP 410 MUST clear the snapshot and cursor and pull again once from an empty cursor.
 - **messages-order**: `messages(account)` MUST return that connection's live messages newest first by `internal_date`, rows with no date last, ties by id descending, at most `limit` (default 50).
 - **message-summary-fields**: Each listed message MUST carry `id`, `account` (the connection id), `threadId`, `from`, `to`, `cc`, `subject`, `snippet`, `date` (the `internal_date`) and `labelIds`, with missing text fields as null and missing lists as empty.
@@ -83,8 +83,8 @@ Not applicable: a headless data client with no UI.
 |---|---|---|
 | hmw-001 | connections: one `gmail`/`messages`, one `github`/`repos` | `accounts()` returns only the Gmail one |
 | hmw-002 | connection with `username` "a@x.com" | account `email` is "a@x.com" |
-| hmw-003 | connection with empty `username`, `displayName` "Work" | account `email` is "Work" |
-| hmw-004 | pull page 1 `hasMore: true, cursor: "c1"`, page 2 `hasMore: false` | two requests; the second has `cursor=c1` |
+| hmw-003 | connection with empty `username`, `display_name` "Work" | account `email` is "Work" |
+| hmw-004 | pull page 1 `has_more: true, cursor: "c1"`, page 2 `has_more: false` | two requests; the first is `/v1/sync/pull?limit=500`, the second has `cursor=c1` |
 | hmw-005 | change for `notes.notes` | ignored |
 | hmw-006 | upsert then delete of the same id | the message is absent |
 | hmw-007 | messages dated 2026-11-01 and 2026-11-03, one undated | order: 11-03, 11-01, undated |
@@ -94,6 +94,7 @@ Not applicable: a headless data client with no UI.
 | hmw-011 | pull answered 410 | snapshot cleared, pull restarts from empty |
 | hmw-012 | `message("conn", "missing")` | null |
 | hmw-013 | `fetchJson` rejects with a 500 error | the read rejects; the earlier snapshot is kept |
+| hmw-014 | connections page 1 `has_more: true` ending at `g1`, page 2 `has_more: false` | two requests, the second with `starting_after=g1`; both Gmail accounts returned in order |
 
 ## Edge Cases
 
@@ -107,7 +108,7 @@ Not applicable: a headless data client with no UI.
 | name | default | meaning |
 |---|---|---|
 | `fetchJson` | required | resolves a backend path to parsed JSON with the caller's token; rejects with an `Error` carrying a numeric `status` on HTTP failure |
-| `pageSize` | 500 | the `limit` sent to `/sync/pull` (the hub clamps it to 1..1000) |
+| `pageSize` | 500 | the `limit` sent to `/v1/sync/pull` (the hub clamps it to 1..1000) |
 
 ## Deep Linking
 
@@ -149,15 +150,15 @@ None. Errors reach the caller as rejected promises.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/hub-mail/src/` | confirmed (1.0.0) |
+| web | `packages/web/packages/hub-mail/src/` | confirmed (1.1.0) |
 
 ## Design Decisions
 
-- **No local database in the browser.** The plan settles that the web app reads through the hub API and keeps no local store, so there is no second sync engine. An in-memory snapshot built from `/sync/pull` is that read: it lasts as long as the page and is never persisted.
-- **`/sync/pull` rather than a per-connection listing.** The hub's connection-data route does not serve email messages, and `/sync/pull` already returns the caller's Gmail rows owner-scoped, with deletes. Pulling everything and filtering client-side costs more on the first read, but uses a route that exists and is the same contract the native mirrors follow.
-- **Accounts from `/integrations/me/connections`.** The connection list carries the address, status and last error the accounts list shows. The native bridge derives the address from sent mail because its mirror has no connection table; the web client has the real list one request away.
+- **No local database in the browser.** The plan settles that the web app reads through the hub API and keeps no local store, so there is no second sync engine. An in-memory snapshot built from `/v1/sync/pull` is that read: it lasts as long as the page and is never persisted.
+- **`/v1/sync/pull` rather than a per-connection listing.** The hub's connection-data route does not serve email messages, and the sync pull already returns the caller's Gmail rows owner-scoped, with deletes. Pulling everything and filtering client-side costs more on the first read, but uses a route that exists and is the same contract the native mirrors follow.
+- **Accounts from `/v1/integrations/connections`.** The connection list carries the address, status and last error the accounts list shows. The native bridge derives the address from sent mail because its mirror has no connection table; the web client has the real list one request away.
 - **Injected fetch.** The client takes `fetchJson` rather than importing an auth package, so it sits in the lowest tier with no dependencies and works in any host's auth (dependency injection).
-- **Legacy paths, camelCase envelope.** `/sync/pull` and `/integrations/me/connections` answer camelCase envelopes; a row's `data` keeps the backend's snake_case column names, exactly as the native projection reads them.
+- **The `/v1` surface, snake_case on the wire.** The hub's `/v1` routes are its stable public API (the signup form in `@adh-sdk/ui` moved to them too). They answer snake_case envelopes (`has_more`, `sync_version`, `service_type`) and a list envelope (`object: "list"`, `data`, `has_more`) for connections; the package's wire types say so, and the mapping to the camelCase `HubMail*` types happens once, in the client. A row's `data` keeps the backend's snake_case column names, exactly as the native projection reads them. With a customer token, `/v1/integrations/connections` is served by the end-user `/integrations/me/connections` route: the gateway tries the operator `/integrations` route first, which refuses a customer token with 403, and falls through.
 
 ## Compliance
 
@@ -166,4 +167,5 @@ Reads only the caller's own rows, which the hub scopes by owner. No data is stor
 ## Change History
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-14 | Mike Fullerton | Reads the hub's /v1 routes: sync pull and paged connections, snake_case wire types |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |
