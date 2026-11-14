@@ -1050,7 +1050,14 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         removeGroup(group)
         persistGroups()
         for repoID in group.activeRepoIDs where repoID != closing {
-            controllers[repoID]?.close()
+            if let controller = controllers[repoID] {
+                controller.close()
+            } else {
+                // A deferred project has no window to fire the close
+                // observer, so its open flag is cleared here or it reopens
+                // next launch.
+                setWindowOpen(false, repoID: repoID)
+            }
         }
         if let empty = emptyWindows.removeValue(forKey: group.id) {
             if let observer = emptyCloseObservers.removeValue(forKey: group.id) {
