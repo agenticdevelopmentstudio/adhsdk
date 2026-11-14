@@ -10,3 +10,16 @@
 | avatar-007 | forward-remaining-props | Render `<Avatar data-testid="a1" />` | Rendered root element carries `data-testid="a1"` |
 | avatar-008 | forward-remaining-props | Render `<Avatar><AvatarImage alt="Ada Lovelace" src="<1x1 stub already loaded>" /></Avatar>` | Rendered image element carries `alt="Ada Lovelace"` |
 
+<!-- appkit-avatar -->
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| avatar-101 | appkit-picture | 200 with image bytes | picture shown. |
+| avatar-102 | appkit-picture | 404 with image bytes | initials stay. |
+| avatar-103 | appkit-picture | 200 with `<html>` | initials stay. |
+| avatar-104 | appkit-retry | offline, then 200; view added to a window | 2 fetches, picture shown. |
+| avatar-105 | appkit-retry | 200; view added to a window after loading | 1 fetch, no load in flight. |
+| avatar-106 | appkit-no-url-no-fetch | content with `imageURL` nil | 0 fetches, initials shown. |
+| avatar-107 | appkit-initials | name `ada lovelace byron`; name blank, seed `zed@b.c`; both empty | `AL`; `Z`; `?`. |
+| avatar-108 | appkit-colour | seeds ``, `ada@x.y`, `b` | palette indices 5, 6, 1. |
+| avatar-109 | appkit-side | `side` 20 | fitting size 20 × 20. |
+

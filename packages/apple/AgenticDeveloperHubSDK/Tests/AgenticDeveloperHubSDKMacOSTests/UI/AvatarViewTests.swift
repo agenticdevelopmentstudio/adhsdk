@@ -37,19 +37,17 @@ private let picture: Data = {
     return image.tiffRepresentation!
 }()
 
-private let ada = AccountUser(
-    id: "u1", name: "Ada Lovelace", email: "ada@x.y", avatarURL: URL(string: "https://x.y/a.png")
-)
+private let ada = AvatarContent(name: "Ada Lovelace", seed: "ada@x.y", imageURL: URL(string: "https://x.y/a.png"))
 
-@Suite("AccountAvatarView")
+@Suite("AvatarView")
 @MainActor
-struct AccountAvatarViewTests {
-    private func make(_ server: Server) -> AccountAvatarView {
-        AccountAvatarView(fetch: { try server.fetch($0) })
+struct AvatarViewTests {
+    private func make(_ server: Server, side: CGFloat = 48) -> AvatarView {
+        AvatarView(side: side, fetch: { try server.fetch($0) })
     }
 
-    private func show(_ view: AccountAvatarView, user: AccountUser = ada) async {
-        view.user = user
+    private func show(_ view: AvatarView, content: AvatarContent = ada) async {
+        view.content = content
         await view.loadTask?.value
     }
 
@@ -102,12 +100,48 @@ struct AccountAvatarViewTests {
         #expect(server.calls == 1)
     }
 
-    @Test("a user without a picture shows initials and fetches nothing")
-    func noURL() async {
+    @Test("content without an image URL shows initials and fetches nothing, even when shown")
+    func noFetchWithoutImageURL() async {
         let server = Server(.status(200, picture))
         let view = make(server)
-        await show(view, user: AccountUser(id: "u2", name: "Zoe", email: "z@x.y", avatarURL: nil))
+        await show(view, content: AvatarContent(name: "Zoe", seed: "z@x.y", imageURL: nil))
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100),
+                              styleMask: .titled, backing: .buffered, defer: true)
+        window.contentView?.addSubview(view)
+        #expect(view.loadTask == nil)
         #expect(!view.showsPicture)
+        #expect(view.initials == "Z")
         #expect(server.calls == 0)
+    }
+
+    @Test("initials: first letters of the first two words, else the seed's first letter, else ?")
+    func initials() {
+        #expect(AvatarContent(name: "ada lovelace byron", seed: "a@b.c", imageURL: nil).initials == "AL")
+        #expect(AvatarContent(name: "   ", seed: "zed@b.c", imageURL: nil).initials == "Z")
+        #expect(AvatarContent(name: "", seed: "", imageURL: nil).initials == "?")
+    }
+
+    @Test("the circle's palette index is a stable FNV-1a hash of the seed, modulo the lane palette")
+    func stableColourIndex() {
+        #expect(SemanticPalette.laneCount == 12)
+        #expect(AvatarView.colourIndex(seed: "") == 5)
+        #expect(AvatarView.colourIndex(seed: "ada@x.y") == 6)
+        #expect(AvatarView.colourIndex(seed: "b") == 1)
+    }
+
+    @Test("the side is configurable and the view is that square")
+    func sideIsConfigurable() {
+        let view = make(Server(.status(200, picture)), side: 20)
+        #expect(view.side == 20)
+        #expect(view.fittingSize == NSSize(width: 20, height: 20))
+        #expect(AvatarView().side == 48)
+    }
+
+    @Test("carries an accessibility identifier and labels the person")
+    func accessibility() async {
+        let view = make(Server(.status(404, Data())))
+        await show(view)
+        #expect(view.accessibilityIdentifier() == "avatar")
+        #expect(view.accessibilityLabel() == "Avatar for Ada Lovelace")
     }
 }

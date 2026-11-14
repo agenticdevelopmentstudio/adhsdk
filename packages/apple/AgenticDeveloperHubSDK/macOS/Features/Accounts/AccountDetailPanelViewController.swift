@@ -17,7 +17,11 @@ final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelVi
 
     let statusLabel = ThemedLabel(string: restoringText, role: .secondaryText, textRole: .body)
     let spinner = NSProgressIndicator()
-    let avatarView = AccountAvatarView()
+    let avatarView: AvatarView = {
+        let view = AvatarView()
+        view.setAccessibilityIdentifier("accounts.detail.avatar")
+        return view
+    }()
     let nameLabel = ThemedLabel(role: .primaryText, textRole: .title)
     let emailLabel = ThemedLabel(role: .secondaryText, textRole: .body)
     let messageLabel = ThemedLabel.wrapping("", width: wrapWidth, role: .danger, textRole: .caption)
@@ -84,7 +88,7 @@ final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelVi
             nameColumn.orientation = .vertical
             nameColumn.alignment = .leading
             nameColumn.spacing = 2
-            let nameWidth = Self.wrapWidth - AccountAvatarView.side - 12
+            let nameWidth = Self.wrapWidth - avatarView.side - 12
             nameColumn.widthAnchor.constraint(lessThanOrEqualToConstant: nameWidth).isActive = true
         }
         identityRow.orientation = .horizontal
@@ -130,7 +134,7 @@ final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelVi
         let shownUser = signedInUser ?? (busy ? lastUser : nil)
 
         identityRow.isHidden = shownUser == nil
-        avatarView.user = shownUser
+        avatarView.content = shownUser.map(AvatarContent.init(user:))
         nameLabel.isHidden = shownUser == nil
         nameLabel.stringValue = shownUser?.name ?? ""
         emailLabel.stringValue = shownUser?.email ?? ""
@@ -177,4 +181,12 @@ final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelVi
 
 extension AccountDetailPanelViewController: Loggable {
     static nonisolated let logger = makeLogger()
+}
+
+extension AvatarContent {
+    /// An account user's avatar: the email seeds the colour and stands in for
+    /// a blank name's initials.
+    init(user: AccountUser) {
+        self.init(name: user.name, seed: user.email, imageURL: user.avatarURL)
+    }
 }

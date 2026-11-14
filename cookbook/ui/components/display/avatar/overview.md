@@ -13,3 +13,6 @@ avatar styled through the SEMANTIC `adh-avatar*` classes (skinned in
 `../styles/components.css`): the class names are a public theming surface for
 the theme editor and user CSS themes, so they stay stable hooks in the DOM."
 
+<!-- appkit-avatar -->
+**AppKit (`AvatarView`).** The macOS face of the same ingredient is `AvatarView` in `AgenticDeveloperHubSDKMacOS` (`macOS/UI/Avatar/`): a round view showing a picture when one loads and initials on a coloured circle until then and whenever it does not. It is drawn from an `AvatarContent` (`name`, `seed`, `imageURL`) rather than any feature's user type, so the Accounts settings and the git window's commit authors share it. The circle's colour comes from a stable hash of `seed` over the [commit graph cell](cookbook:595f1a5e-0f92-49c5-a980-af6f809be932)'s lane palette, from the [theme engine](cookbook:0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6).
+

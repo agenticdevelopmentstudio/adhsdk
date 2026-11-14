@@ -9,3 +9,15 @@ These three class names are the public theming surface quoted in Overview — st
 - **forward-remaining-props**: Each of `Avatar`, `AvatarImage`, and `AvatarFallback` MUST forward every prop other than `className` unchanged to its underlying Base UI primitive.
 - **load-as-client-module**: The module MUST be marked `'use client'`, so `Avatar`, `AvatarImage`, and `AvatarFallback` render as client components. This is verified by a static check for the `'use client'` directive at the top of `avatar.tsx`, not by a runtime conformance test vector.
 
+<!-- appkit-avatar -->
+AppKit `AvatarView`:
+
+- **appkit-content**: `content` (`AvatarContent?`) MUST drive the view: setting a different value MUST cancel any load in flight, show the initials and start a load for `imageURL`; setting an equal value MUST do nothing.
+- **appkit-initials**: The initials MUST be the uppercased first letters of `name`'s first two whitespace-separated words, else the uppercased first letter of `seed`, else `?`.
+- **appkit-no-url-no-fetch**: An `imageURL` of `nil` MUST never call the fetch.
+- **appkit-picture**: A fetch answering 2xx (or a non-HTTP response) with bytes that decode as an image MUST replace the initials with the picture; an error, a non-2xx answer (even one that decodes) or undecodable bytes MUST leave the initials up and log at debug level.
+- **appkit-retry**: Moving into a window while no picture is showing MUST retry the load; a picture already showing MUST NOT be fetched again.
+- **appkit-colour**: The circle MUST be filled with `SemanticPalette.laneColor(i)`, `i` the FNV-1a 64-bit hash of `seed`'s UTF-8 bytes modulo 12, so one person keeps one colour across launches; it MUST repaint on theme change.
+- **appkit-side**: `init(side:fetch:)` MUST size the view to `side × side` (default 48 pt) with corners of radius `side / 2`.
+- **appkit-fetch-seam**: The fetch MUST be injectable (`Fetch = @Sendable (URL) async throws -> (Data, URLResponse)`); the default goes through `URLSession.shared`, whose HTTP cache follows the server's headers, and the view keeps no cache of its own.
+

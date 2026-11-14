@@ -7,3 +7,8 @@
   **Rationale**: Loading/error/fallback-reveal behavior, ARIA semantics, and any interactive states are owned entirely by Base UI's `Avatar` primitive (`@base-ui/react/avatar`), delegated to deliberately to keep this wrapper stateless and composable.
   **Approved**: pending
 
+<!-- appkit-avatar -->
+- **Decision**: The AppKit view takes an `AvatarContent` (`name`, `seed`, `imageURL`) rather than `AccountUser`.
+  **Rationale**: Accounts and commit authors are different people models; a value type of exactly what the view draws lets both share one view, and `seed` keeps the colour stable without exposing an id.
+  **Approved**: pending
+

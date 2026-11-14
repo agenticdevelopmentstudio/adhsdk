@@ -10,3 +10,12 @@
 
 The wrapper forwards all other props to the underlying Base UI primitives unchanged. See `@base-ui/react/avatar` for the exhaustive `Avatar.Root.Props`, `Avatar.Image.Props`, and `Avatar.Fallback.Props` type definitions.
 
+<!-- appkit-avatar -->
+AppKit `AvatarView`:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `side` | `CGFloat` | `48` | Width and height of the circle. |
+| `fetch` | `AvatarView.Fetch` | `URLSession.shared.data(from:)` | Loads a picture's bytes. |
+| `content` | `AvatarContent?` | `nil` | `name`, `seed` (stable identity, e.g. an email) and `imageURL`. |
+
