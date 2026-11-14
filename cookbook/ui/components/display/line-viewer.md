@@ -2,7 +2,7 @@
 id: 5f9e0c63-382d-4803-bd50-a8fb90ea9e4d
 title: "Line Viewer"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-13
@@ -37,10 +37,10 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 
 ## Behavioral Requirements
 
-- **data-source**: The viewer MUST read rows only through `LineViewerDataSource` (`gutterColumnCount`, `rowCount`, `row(at:)`, and `gutterColumnWidth(_:)`, whose protocol-extension default is `max(3, digits(rowCount))`); it MUST NOT copy the rows. `reloadData()` MUST re-read the counts, clear folds and selection, and resize the document view.
+- **data-source**: The viewer MUST read rows only through `LineViewerDataSource` (`gutterColumnCount`, `rowCount`, `row(at:)`, and `gutterColumnWidth(_:)`, whose protocol-extension default is `max(3, digits(rowCount))`); it MUST NOT copy the rows, though it may cache layout derived from them, dropped on `reloadData()`. Between `reloadData()` calls a data source's `rowCount` and every row's content (text and runs) MUST NOT change; a data source that updates its rows MUST call `reloadData()`. `reloadData()` MUST re-read the counts, clear folds and selection, and resize the document view.
 - **geometry**: The document view MUST be flipped and exactly `displayedRowCount × rowHeight` tall, where `rowHeight` is `ceil(ascent + descent + leading) + 4` of the theme's code font and `displayedRowCount` is `rowCount` less the rows hidden by folds. Its width MUST be the larger of the clip view's width and the widest row drawn so far.
 - **virtualised-drawing**: Drawing MUST ask the data source only for the rows intersecting the dirty rect; drawing a 10-row rect of a 100 000-row source MUST call `row(at:)` at most 20 times.
-- **long-row-layout**: A row longer than 1 024 UTF-16 units MUST be laid out whole once and the layout cached per data row (a least-recently-drawn cache of at most 8 rows and 4 000 000 UTF-16 units, always keeping the row just drawn), cleared by `reloadData()` and by every theme or font change. Each draw MUST draw only the glyphs whose origins lie within the horizontal extent of the dirty rect, widened by 4 advances of `0` each side, plus the glyph just before it, at the positions the whole line gives them: drawing a row in several adjacent dirty rects MUST produce the same pixels as drawing it in one, tabs, wide and combining characters included. Drawing a 400 pt wide, one-row rect of a 1 000 000-unit line MUST draw fewer than 1 000 glyphs, wherever along the line the rect is. Run highlights and decorations are measured from the drawn glyphs. Shorter rows are laid out whole on every draw.
+- **long-row-layout**: A row longer than 1 024 UTF-16 units MUST be checked once, the answer remembered per data row until the cache below is cleared, for whether it is sliceable: every UTF-16 unit printable ASCII (0x20–0x7E, so no tab or control character), and the code font and every bold/italic face its runs use drawing each printable ASCII character exactly one advance of `0` wide. A sliceable row MUST be drawn by laying out only the columns under the dirty rect (widened by 8 columns each side) at their column positions, with no whole-line layout and nothing cached; if such a slice does not lay out exactly one advance a character (a ligature or kerning font) the row is marked unsliceable. Any other long row MUST be laid out whole once and the layout cached per data row in a least-recently-drawn cache whose row capacity is `max(8, 2 × visible rows)`, recomputed from the visible height, and which holds at most 4 000 000 UTF-16 units, but never evicts a row the current frame draws; the cache is cleared by `reloadData()` and by every theme or font change. Redrawing a frame of long rows MUST build no new layout. Each draw of a cached row MUST draw only the glyphs whose origins lie within the horizontal extent of the dirty rect, widened by 4 advances of `0` each side, plus the glyph just before it, at the positions the whole line gives them: drawing a row in several adjacent dirty rects MUST produce the same pixels as drawing it in one, tabs, wide and combining characters included. Drawing a 400 pt wide, one-row rect of a 1 000 000-unit line MUST draw fewer than 1 000 glyphs, wherever along the line the rect is. Run highlights and decorations are measured from the drawn glyphs. Shorter rows are laid out whole on every draw.
 - **gutter-columns**: Gutter column `c` MUST be `gutterColumnWidth(c) + 2` advances of `0` wide (one advance of padding each side), columns laid out left to right. A value MUST be right-aligned in its column's content area, left-aligned when wider than it, and clipped to it: nothing a value draws may reach another column.
 - **pinned-gutter**: The gutter MUST stay at the visible left edge while the text scrolls horizontally under it (its x equals the clip view's horizontal origin) and scroll vertically with the rows. A click on the pinned gutter is a gutter click wherever the text is scrolled.
 - **folding**: With `foldsAtHeaders`, clicking a header row MUST hide the rows after it up to (not including) the next header or the end, and clicking it again MUST show them. Folding MUST remove hidden rows from the selection. A header click MUST NOT change the selection. Without `foldsAtHeaders` a header row selects like any row.
@@ -91,15 +91,19 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 | line-viewer-003 | copy, selection | rows `a`, `b`, `c`; rows 0 and 2 selected | pasteboard string `a\nc`. |
 | line-viewer-004 | virtualised-drawing | 100 000-row source; draw a 10-row rect | 10 to 20 calls to `row(at:)`. |
 | line-viewer-005 | scroll-sync | two 1 000-row viewers in a sync; scroll one to row 500 | both clip views have the same vertical origin, `500 × rowHeight`. |
-| line-viewer-006 | long-row-layout | one 1 000 000-unit row; draw a 400 pt by one-row rect at x 0, then at 600 000 advances along; then `reloadData()` | fewer than 1 000 glyphs drawn each time; one cached layout, none after the reload. |
+| line-viewer-006 | long-row-layout | one 1 000 000-unit row ending in `é`; draw a 400 pt by one-row rect at x 0, then at 600 000 advances along; then `reloadData()` | fewer than 1 000 glyphs drawn each time; one cached layout, none after the reload. |
 | line-viewer-007 | gutter-columns | widths 8 and 4; column 0 value 26 characters | column 0 is 10 advances wide, column 1 starts at its end and is 6 wide; column 1 stays one uniform colour. |
 | line-viewer-008 | pinned-gutter, gutter-click | document 5 000 pt wide; scroll the clip view to x 300; click one advance right of 300 | the gutter's x is 300; a column-0 gutter click, no selection. |
 | line-viewer-009 | long-row-layout | one row of `ab⇥c中d😀ef` × 300 with an underlined run; draw x 0–900 whole, then as rects 0–333, 333–617, 617–900 each clipped to itself | identical pixels. |
+| line-viewer-010 | long-row-layout | one ASCII code row × 50 with bold, italic-underlined, highlighted and struck runs; draw whole, then as three adjacent rects | identical pixels; no layout built. |
+| line-viewer-011 | long-row-layout | 30 visible long ASCII rows (about 5 000 units); draw the frame twice | no layout built either time; nothing cached. |
+| line-viewer-012 | long-row-layout | 30 visible long rows with tabs, wide characters and emoji; draw the frame twice | 30 layouts built by the first draw, none by the second; 30 cached. |
+| line-viewer-013 | long-row-layout | 60 such rows in one dirty rect of a viewer whose capacity is about 34; draw twice | 60 layouts built and cached by the first draw, none built by the second. |
 
 ## Edge Cases
 
 - **Null / empty input**: No data source or no rows draws only the background; copy is disabled.
-- **Boundary values**: A run range past the end of its row is clipped to the row; a run of zero length draws nothing. A click below the last row selects nothing. A gutter value wider than its column is left-aligned and clipped. A dirty-rect edge that falls inside a glyph, a surrogate pair or a composed sequence draws that glyph whole, clipped to the rect.
+- **Boundary values**: A run range past the end of its row is clipped to the row; a run of zero length draws nothing. A click below the last row selects nothing. A gutter value wider than its column is left-aligned and clipped. A dirty-rect edge that falls inside a glyph, a surrogate pair or a composed sequence draws that glyph whole, clipped to the rect. A long ASCII row in a font whose ASCII glyphs are not all one column wide, or whose slice lays out wider or narrower than its columns, draws from the cached layout. A frame drawing more long rows than the cache's capacity keeps all of them until the frame ends.
 - **Concurrent access**: Main actor only; the data source is asked on the main thread during drawing.
 - **Error states**: None: the viewer draws whatever rows it is given.
 - **Offline / disconnected state**: Not applicable: no network.
@@ -149,7 +153,7 @@ Not applicable: The viewer logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -163,6 +167,10 @@ Not applicable: The viewer logs nothing.
 
 **Decision**: A row longer than 1 024 UTF-16 units is laid out once into a small per-row `CTLine` cache, and each draw finds the glyph range under the dirty rect (bisecting runs, then glyph origins) and draws it with `CTRunDraw(run, context, range)`, rather than laying out only a slice of the text under the rect.
 **Rationale**: A cached line need not draw every glyph: `CTRunDraw` takes a glyph range, so a frame costs the glyphs under the rect plus a logarithmic search. Slicing the text instead had to map UTF-16 units to columns, so a tab, wide or combining character shifted later glyphs in one dirty rect but not the next and glyphs jumped, repeated or vanished at the seams. The cost is one whole-line layout per long row, bounded by the cache's row and unit limits.
+**Approved**: pending
+
+**Decision**: A long row that is printable ASCII in a column-true font is sliced by column with no layout cached; only other long rows use the cache, whose capacity follows the visible rows and never evicts a row of the current frame.
+**Rationale**: A fixed cache of 8 rows was smaller than one screen of long rows, so every frame of a minified file rebuilt every row's whole layout. Most long lines (minified JS, JSON, logs) are ASCII, and in a font that draws every printable ASCII glyph one column wide a column is an exact position, so slicing is both cheap and seam-free; the font check and a per-slice width check keep a ligature or kerning font on the cached path. Sizing the cache from the visible height and pinning the frame's rows means a redraw of what is on screen never lays anything out again.
 **Approved**: pending
 
 **Decision**: The gutter is a subview of the document view kept at the clip view's horizontal origin, not drawn in each row.
@@ -186,6 +194,7 @@ Not applicable: The viewer logs nothing.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-13 | Mike Fullerton | Long ASCII rows in a column-true font are sliced by column with no layout; other long rows use a cache sized to twice the visible rows that never evicts a row of the current frame; a row's content MUST NOT change between reloadData() calls. |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | Long rows draw from a cached per-row layout, only the glyphs under the dirty rect, so split and whole drawing agree; the gutter view carries `<identifier>.gutter`. |
 | 1.0.1 | 2026-11-13 | Mike Fullerton | Long rows lay out only the visible slice; gutter column widths come from the data source and values are clipped; the gutter is pinned to the visible left edge. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

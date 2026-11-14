@@ -214,7 +214,8 @@ struct LineViewerTests {
     }
 
     @Test func longLineDrawsOnlyTheGlyphsUnderTheRect() throws {
-        let line = String(repeating: "x", count: 1_000_000)
+        // One non-ASCII character sends the row down the cached-layout path.
+        let line = String(repeating: "x", count: 999_999) + "\u{E9}"
         let source = FakeSource(rows: [LineViewerRow(text: line)])
         let viewer = makeViewer(source)
         let document = viewer.documentView
@@ -277,6 +278,107 @@ struct LineViewerTests {
         ])
         #expect(Set(whole).count > 1)
         #expect(split == whole)
+        #expect(document.cachedLineCount == 1)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func longAsciiLineIsSlicedWithoutALayout() throws {
+        let line = String(repeating: "x", count: 1_000_000)
+        let source = FakeSource(rows: [LineViewerRow(text: line)])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+
+        for originX in [0, document.textOriginX + 600_000 * document.charWidth] {
+            try draw(document, NSRect(x: originX, y: 0, width: 400, height: viewer.rowHeight))
+            #expect(document.drawnGlyphCount > 0)
+            #expect(document.drawnGlyphCount < 1000)
+        }
+        #expect(document.longLayoutBuildCount == 0)
+        #expect(document.cachedLineCount == 0)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func longAsciiLineDrawsTheSameSplitOrWhole() throws {
+        // Printable ASCII with bold, italic, underline, highlight and strikethrough runs: the sliced path.
+        let line = String(repeating: "func a(b: Int) -> [C] { return d && e || f } // g; ", count: 50)
+        #expect((line as NSString).length > 2000)
+        let source = FakeSource(rows: [LineViewerRow(text: line, runs: [
+            LineViewerRun(range: NSRange(location: 0, length: 4), fontStyle: .bold),
+            LineViewerRun(range: NSRange(location: 30, length: 70), fontStyle: [.italic, .underline]),
+            LineViewerRun(range: NSRange(location: 120, length: 9), highlight: .emphasis),
+            LineViewerRun(range: NSRange(location: 140, length: 20), fontStyle: .strikethrough)
+        ])])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+        let height = viewer.rowHeight
+
+        let whole = try render(document, width: 900, height: height,
+                               rects: [NSRect(x: 0, y: 0, width: 900, height: height)])
+        let split = try render(document, width: 900, height: height, rects: [
+            NSRect(x: 0, y: 0, width: 333, height: height),
+            NSRect(x: 333, y: 0, width: 284, height: height),
+            NSRect(x: 617, y: 0, width: 283, height: height)
+        ])
+        #expect(Set(whole).count > 1)
+        #expect(split == whole)
+        #expect(document.longLayoutBuildCount == 0)
+        withExtendedLifetime(source) {}
+    }
+
+    /// A viewer tall enough to show `rows` rows at once, and the rect covering them.
+    private func tallViewer(_ source: LineViewerDataSource, rows: Int) -> (LineViewerViewController, NSRect) {
+        let viewer = makeViewer(source)
+        viewer.view.frame = NSRect(x: 0, y: 0, width: 400, height: CGFloat(rows + 2) * viewer.rowHeight)
+        viewer.view.layoutSubtreeIfNeeded()
+        return (viewer, NSRect(x: 0, y: 0, width: 400, height: CGFloat(rows) * viewer.rowHeight))
+    }
+
+    @Test func manyVisibleLongAsciiRowsRedrawWithoutLayout() throws {
+        let rows = (0..<30).map { LineViewerRow(text: String(repeating: "row \($0) text; ", count: 400)) }
+        let source = FakeSource(rows: rows)
+        let (viewer, rect) = tallViewer(source, rows: 30)
+        let document = viewer.documentView
+
+        try draw(document, rect)
+        try draw(document, rect)
+        #expect(document.longLayoutBuildCount == 0)
+        #expect(document.cachedLineCount == 0)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func manyVisibleLongNonAsciiRowsRedrawFromTheCache() throws {
+        let rows = (0..<30).map {
+            LineViewerRow(text: String(repeating: "r\($0)\tc\u{4E2D}d\u{1F600}; ", count: 200))
+        }
+        let source = FakeSource(rows: rows)
+        let (viewer, rect) = tallViewer(source, rows: 30)
+        let document = viewer.documentView
+
+        try draw(document, rect)
+        let built = document.longLayoutBuildCount
+        #expect(built == 30)
+        try draw(document, rect)
+        #expect(document.longLayoutBuildCount == built)
+        #expect(document.cachedLineCount == 30)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func cacheKeepsEveryRowOfTheFrameBeyondItsCapacity() throws {
+        // A 300 pt viewer caches about 2 × 17 rows; one dirty rect of 60 rows still keeps all of them.
+        let rows = (0..<60).map {
+            LineViewerRow(text: String(repeating: "r\($0)\tc\u{4E2D}d\u{1F600}; ", count: 200))
+        }
+        let source = FakeSource(rows: rows)
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+        let rect = NSRect(x: 0, y: 0, width: 400, height: 60 * viewer.rowHeight)
+
+        try draw(document, rect)
+        let built = document.longLayoutBuildCount
+        #expect(built == 60)
+        #expect(document.cachedLineCount == 60)
+        try draw(document, rect)
+        #expect(document.longLayoutBuildCount == built)
         withExtendedLifetime(source) {}
     }
 

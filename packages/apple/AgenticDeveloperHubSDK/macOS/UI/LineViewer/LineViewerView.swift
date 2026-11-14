@@ -6,7 +6,8 @@ import AgenticDeveloperHubSDKLanguage
 /// The `LineViewerViewController`'s document view: flipped, exactly
 /// `displayedRowCount × rowHeight` tall, drawing only the rows that intersect
 /// the dirty rect with Core Text, and of a long line only the glyphs under the
-/// dirty rect, from a layout cached per row. The gutter is a subview (`gutterView`) pinned to the visible
+/// dirty rect: by column arithmetic when every character of it is one column
+/// wide, otherwise from a layout cached per row. The gutter is a subview (`gutterView`) pinned to the visible
 /// left edge. Selection, folding and copy live here because they are all row
 /// geometry; the controller forwards to it.
 @MainActor
@@ -56,11 +57,23 @@ final class LineViewerView: NSView {
     }
 
     /// Long rows' layouts by data row; `lineCacheOrder` lists them least
-    /// recently drawn first.
+    /// recently drawn first. Only long rows that cannot be sliced are cached.
     private var lineCache: [Int: CachedLine] = [:]
     private var lineCacheOrder: [Int] = []
     /// How many long rows' layouts are cached.
     var cachedLineCount: Int { lineCache.count }
+    /// Whole-row layouts built for long rows since the view was created; the
+    /// seam that shows a redraw reuses them, or needs none.
+    private(set) var longLayoutBuildCount = 0
+    /// Whether each long row drawn since the last reload can be drawn by
+    /// column slicing; decided once per row, cleared with the line cache.
+    private var sliceableRows: [Int: Bool] = [:]
+    /// The data rows the draw in progress is drawing; the cache never evicts them.
+    private var rowsInFrame = Set<Int>()
+    /// The bold/italic trait combinations (raw values) whose font draws every
+    /// printable ASCII character exactly `charWidth` wide; empty when even the
+    /// plain font does not.
+    private var columnTrueTraits = Set<UInt32>()
 
     private var rowCount = 0
     private var gutterColumnCount = 0
@@ -77,13 +90,17 @@ final class LineViewerView: NSView {
     private static let emphasisAlpha: CGFloat = 0.40
     private static let diffAlpha: CGFloat = 0.18
     private static let hatchSpacing: CGFloat = 6
-    /// Rows longer than this (UTF-16 units) are laid out once into the cache
-    /// and drawn only where the dirty rect crosses them.
+    /// Rows longer than this (UTF-16 units) are drawn only where the dirty
+    /// rect crosses them: sliced by column when they are printable ASCII in a
+    /// font whose every such glyph is one column, otherwise from a cached layout.
     private static let longRowThreshold = 1024
-    /// The cache holds at most this many rows, and at most
+    /// Columns sliced beyond each side of the dirty rect, so glyphs cut by its
+    /// edges, and their shaping context, are the same in every slice.
+    private static let slicePadding = 8
+    /// The cache holds at least this many rows, and at most
     /// `lineCacheUnitBudget` UTF-16 units across them (a CTLine costs about
-    /// 40 bytes a glyph), always keeping the row just drawn.
-    private static let lineCacheCapacity = 8
+    /// 40 bytes a glyph), but never evicts a row the current frame draws.
+    private static let minimumLineCacheCapacity = 8
     private static let lineCacheUnitBudget = 4_000_000
     /// Columns beyond each side of the dirty rect whose glyphs are drawn too,
     /// so glyphs that overhang their advance into the rect still draw.
@@ -123,7 +140,38 @@ final class LineViewerView: NSView {
         ascent = CTFontGetAscent(ctFont)
         xHeight = CTFontGetXHeight(ctFont)
         rowHeight = ceil(ascent + CTFontGetDescent(ctFont) + CTFontGetLeading(ctFont)) + 2 * Self.verticalPadding
-        charWidth = ("0" as NSString).size(withAttributes: [.font: font]).width
+        charWidth = Self.advances(of: ctFont, for: [UniChar(0x30)])?.first ?? 0
+        columnTrueTraits = []
+        let printable = (0x20...0x7E).map { UniChar($0) }
+        guard charWidth > 0, Self.advances(of: ctFont, for: printable)?.allSatisfy({ $0 == charWidth }) == true
+        else { return }
+        for traits in [CTFontSymbolicTraits(), .traitBold, .traitItalic, [.traitBold, .traitItalic]]
+        where Self.advances(of: styledFont(traits), for: printable)?.allSatisfy({ $0 == charWidth }) == true {
+            columnTrueTraits.insert(traits.rawValue)
+        }
+    }
+
+    /// The advances of `characters` (one UTF-16 unit each) in `font`, or nil
+    /// when the font has no glyph for one of them.
+    private static func advances(of font: CTFont, for characters: [UniChar]) -> [CGFloat]? {
+        var glyphs = [CGGlyph](repeating: 0, count: characters.count)
+        guard CTFontGetGlyphsForCharacters(font, characters, &glyphs, characters.count) else { return nil }
+        var sizes = [CGSize](repeating: .zero, count: characters.count)
+        CTFontGetAdvancesForGlyphs(font, .horizontal, glyphs, &sizes, characters.count)
+        return sizes.map(\.width)
+    }
+
+    /// The code font with `traits`, or the code font itself when it has no such face.
+    private func styledFont(_ traits: CTFontSymbolicTraits) -> CTFont {
+        guard !traits.isEmpty else { return font as CTFont }
+        return CTFontCreateCopyWithSymbolicTraits(font as CTFont, 0, nil, traits, traits) ?? font as CTFont
+    }
+
+    private static func traits(of style: SyntaxFontStyle) -> CTFontSymbolicTraits {
+        var traits: CTFontSymbolicTraits = []
+        if style.contains(.bold) { traits.insert(.traitBold) }
+        if style.contains(.italic) { traits.insert(.traitItalic) }
+        return traits
     }
 
     /// Gutter column `column`'s rect in `gutterView` coordinates, one row tall
@@ -195,6 +243,7 @@ final class LineViewerView: NSView {
     private func clearLineCache() {
         lineCache = [:]
         lineCacheOrder = []
+        sliceableRows = [:]
     }
 
     /// Shows the rows of the fold that hides data row `row`, if any.
@@ -291,6 +340,8 @@ final class LineViewerView: NSView {
         dirtyRect.fill()
         guard let source = dataSource, let rows = displayRows(in: dirtyRect) else { return }
 
+        rowsInFrame = Set(rows.map { dataRow(forDisplayRow: $0) })
+        defer { rowsInFrame = [] }
         context.saveGState()
         context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         var widest = widestRow
@@ -325,8 +376,8 @@ final class LineViewerView: NSView {
     }
 
     /// Draws one row's text and answers the width the row needs. A short row
-    /// is laid out whole; a long one comes from the cache, drawing only the
-    /// glyphs the horizontal extent of `span` crosses.
+    /// is laid out whole; a long one draws only what the horizontal extent of
+    /// `span` crosses, sliced by column when it can be, else from the cache.
     private func drawText(_ row: LineViewerRow, index: Int, in rect: NSRect, span: NSRect,
                           context: CGContext) -> CGFloat {
         var textX = textOriginX
@@ -343,6 +394,11 @@ final class LineViewerView: NSView {
         let length = (row.text as NSString).length
         let origin = CGPoint(x: textX, y: baseline)
         if length > Self.longRowThreshold {
+            if isSliceable(row, index: index),
+               let width = drawSlicedText(row, index: index, length: length, origin: origin, rect: rect, span: span,
+                                          context: context) {
+                return width
+            }
             return drawLongText(row, index: index, length: length, origin: origin, rect: rect, span: span,
                                 context: context)
         }
@@ -374,6 +430,56 @@ final class LineViewerView: NSView {
             let range = Self.clip(run.range, to: length)
             return range.length > 0 ? (range, run) : nil
         }
+    }
+
+    /// Whether long row `row` (data row `index`) is printable ASCII, with no
+    /// tab or control character, in fonts whose every such glyph is exactly
+    /// one column wide, so a column is an advance and slicing draws true
+    /// positions. Scanned once per row and remembered until the cache clears.
+    private func isSliceable(_ row: LineViewerRow, index: Int) -> Bool {
+        if let known = sliceableRows[index] { return known }
+        let sliceable = columnTrueTraits.contains(CTFontSymbolicTraits().rawValue)
+            && row.runs.allSatisfy { columnTrueTraits.contains(Self.traits(of: $0.fontStyle).rawValue) }
+            && row.text.utf16.allSatisfy { (0x20...0x7E).contains($0) }
+        sliceableRows[index] = sliceable
+        return sliceable
+    }
+
+    /// A sliceable long row: lays out only the columns under `span` (padded),
+    /// placed at their column, with run extents from column arithmetic. Nil,
+    /// and the row marked unsliceable, if the slice's layout is not exactly
+    /// one column a character after all (a ligature or kerning font).
+    private func drawSlicedText(_ row: LineViewerRow, index: Int, length: Int, origin: CGPoint, rect: NSRect,
+                                span: NSRect, context: CGContext) -> CGFloat? {
+        let first = Int(floor((span.minX - origin.x) / charWidth)) - Self.slicePadding
+        let last = Int(ceil((span.maxX - origin.x) / charWidth)) + Self.slicePadding
+        let lower = min(max(0, first), length)
+        let upper = min(max(lower, last), length)
+        let slice = NSRange(location: lower, length: upper - lower)
+        let width = origin.x + CGFloat(length) * charWidth + charWidth
+        guard slice.length > 0 else { return width }
+
+        var local: [(range: NSRange, run: LineViewerRun)] = []
+        var extents: [RunExtent] = []
+        for (range, run) in clippedRuns(of: row, length: length) {
+            guard let overlap = range.intersection(slice), overlap.length > 0 else { continue }
+            local.append((NSRange(location: overlap.location - lower, length: overlap.length), run))
+            extents.append(RunExtent(run: run, minX: origin.x + CGFloat(range.location) * charWidth,
+                                     maxX: origin.x + CGFloat(NSMaxRange(range)) * charWidth))
+        }
+        let text = (row.text as NSString).substring(with: slice)
+        let line = CTLineCreateWithAttributedString(attributedText(text, runs: local))
+        let laidOut = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
+        guard abs(laidOut - CGFloat(slice.length) * charWidth) < 0.01 else {
+            sliceableRows[index] = false
+            return nil
+        }
+        drawnGlyphCount += slice.length
+        drawHighlights(extents, rowTone: row.background, rect: rect)
+        context.textPosition = CGPoint(x: origin.x + CGFloat(lower) * charWidth, y: origin.y)
+        CTLineDraw(line, context)
+        drawDecorations(extents, baseline: origin.y)
+        return width
     }
 
     /// A long row: its cached layout, drawn run by run with `CTRunDraw` over
@@ -435,6 +541,7 @@ final class LineViewerView: NSView {
         lineCacheOrder.append(index)
         if let cached = lineCache[index], cached.length == length { return cached }
 
+        longLayoutBuildCount += 1
         let styled = clippedRuns(of: row, length: length)
         let line = CTLineCreateWithAttributedString(attributedText(row.text, runs: styled))
         let runs = (CTLineGetGlyphRuns(line) as? [CTRun]) ?? []
@@ -455,12 +562,33 @@ final class LineViewerView: NSView {
         let cached = CachedLine(line: line, runs: runs, runMinX: runMinX, runMaxX: runMaxX,
                                 width: CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)), length: length)
         lineCache[index] = cached
-        var units = lineCache.values.reduce(0) { $0 + $1.length }
-        while lineCacheOrder.count > 1,
-              lineCacheOrder.count > Self.lineCacheCapacity || units > Self.lineCacheUnitBudget {
-            units -= lineCache.removeValue(forKey: lineCacheOrder.removeFirst())?.length ?? 0
-        }
+        evictLines()
         return cached
+    }
+
+    /// Twice the rows the visible height shows, and never fewer than the
+    /// minimum: recomputed from the visible height on every eviction.
+    private var lineCacheCapacity: Int {
+        guard rowHeight > 0 else { return Self.minimumLineCacheCapacity }
+        let visibleRows = Int(ceil(visibleRect.height / rowHeight)) + 1
+        return max(Self.minimumLineCacheCapacity, 2 * visibleRows)
+    }
+
+    /// Drops the least recently drawn layouts while the cache is over its row
+    /// capacity or unit budget, skipping every row the current frame draws.
+    private func evictLines() {
+        let capacity = lineCacheCapacity
+        var units = lineCache.values.reduce(0) { $0 + $1.length }
+        var cursor = 0
+        while cursor < lineCacheOrder.count, lineCacheOrder.count > capacity || units > Self.lineCacheUnitBudget {
+            let candidate = lineCacheOrder[cursor]
+            if rowsInFrame.contains(candidate) {
+                cursor += 1
+                continue
+            }
+            lineCacheOrder.remove(at: cursor)
+            units -= lineCache.removeValue(forKey: candidate)?.length ?? 0
+        }
     }
 
     /// The glyphs of `run` whose origins lie between `minX` and `maxX` (line
@@ -562,12 +690,9 @@ final class LineViewerView: NSView {
             if let foreground = run.foreground {
                 text.addAttribute(.foregroundColor, value: NSColor(foreground), range: range)
             }
-            var traits: CTFontSymbolicTraits = []
-            if run.fontStyle.contains(.bold) { traits.insert(.traitBold) }
-            if run.fontStyle.contains(.italic) { traits.insert(.traitItalic) }
-            if !traits.isEmpty,
-               let styled = CTFontCreateCopyWithSymbolicTraits(font as CTFont, 0, nil, traits, traits) {
-                text.addAttribute(.font, value: styled as NSFont, range: range)
+            let traits = Self.traits(of: run.fontStyle)
+            if !traits.isEmpty {
+                text.addAttribute(.font, value: styledFont(traits) as NSFont, range: range)
             }
         }
         return text

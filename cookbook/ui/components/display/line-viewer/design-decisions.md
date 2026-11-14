@@ -11,6 +11,10 @@
 **Rationale**: A cached line need not draw every glyph: `CTRunDraw` takes a glyph range, so a frame costs the glyphs under the rect plus a logarithmic search. Slicing the text instead had to map UTF-16 units to columns, so a tab, wide or combining character shifted later glyphs in one dirty rect but not the next and glyphs jumped, repeated or vanished at the seams. The cost is one whole-line layout per long row, bounded by the cache's row and unit limits.
 **Approved**: pending
 
+**Decision**: A long row that is printable ASCII in a column-true font is sliced by column with no layout cached; only other long rows use the cache, whose capacity follows the visible rows and never evicts a row of the current frame.
+**Rationale**: A fixed cache of 8 rows was smaller than one screen of long rows, so every frame of a minified file rebuilt every row's whole layout. Most long lines (minified JS, JSON, logs) are ASCII, and in a font that draws every printable ASCII glyph one column wide a column is an exact position, so slicing is both cheap and seam-free; the font check and a per-slice width check keep a ligature or kerning font on the cached path. Sizing the cache from the visible height and pinning the frame's rows means a redraw of what is on screen never lays anything out again.
+**Approved**: pending
+
 **Decision**: The gutter is a subview of the document view kept at the clip view's horizontal origin, not drawn in each row.
 **Rationale**: Side-by-side diff needs line numbers visible while long lines scroll sideways; a subview moved on bounds change keeps vertical scrolling free (it scrolls with the rows) and lets the text draw under it.
 **Approved**: pending
