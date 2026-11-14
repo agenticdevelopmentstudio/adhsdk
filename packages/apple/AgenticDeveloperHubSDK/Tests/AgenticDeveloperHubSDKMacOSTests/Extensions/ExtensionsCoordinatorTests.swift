@@ -53,8 +53,8 @@ struct ExtensionsCoordinatorTests {
     private static let snippetJSON =
         #"{ "Log": { "prefix": "log", "body": "print(${1:value})$0", "description": "Print" } }"#
 
-    /// One extension that contributes to all five points at once, so a single
-    /// load can show that all five received it.
+    /// One extension that contributes to all six points at once, so a single
+    /// load can show that all six received it.
     private static let everythingManifestJSON = """
     {
         "name": "everything",
@@ -66,6 +66,7 @@ struct ExtensionsCoordinatorTests {
             "themes": [{ "label": "Night", "uiTheme": "vs-dark", "path": "./themes/night.json" }],
             "snippets": [{ "language": "widget", "path": "./snippets/widget.json" }],
             "languages": [{ "id": "widget", "extensions": [".widget"] }],
+            "grammars": [{ "language": "widget", "scopeName": "source.widget", "path": "./syntaxes/widget.json" }],
             "configuration": {
                 "title": "Everything",
                 "properties": {
@@ -140,6 +141,7 @@ struct ExtensionsCoordinatorTests {
             try write(Self.everythingManifestJSON, to: "package.json", in: extensionDirectory)
             try write(ExtensionFixtures.goodThemeJSON, to: "themes/night.json", in: extensionDirectory)
             try write(Self.snippetJSON, to: "snippets/widget.json", in: extensionDirectory)
+            try write(#"{ "scopeName": "source.widget" }"#, to: "syntaxes/widget.json", in: extensionDirectory)
 
             // `install()` publishes into a process-wide static; put it back.
             let previousProvider = CustomFileTypeMappings.contributedProvider
@@ -161,6 +163,7 @@ struct ExtensionsCoordinatorTests {
                 #expect(coordinator.snippetStore.snippets(forLanguage: "widget").count == 1)
                 #expect(coordinator.languagePoint.mapping(for: "widget") != nil)
                 #expect(coordinator.configurationPoint.panel(for: "test.everything") != nil)
+                #expect(coordinator.grammarPoint.source.hasGrammar(scopeName: "source.widget"))
                 #expect(viewRegistry.isRegistered("extension.test.everything.test.tree"))
                 #expect(coordinator.contributedViews.count == 1)
 

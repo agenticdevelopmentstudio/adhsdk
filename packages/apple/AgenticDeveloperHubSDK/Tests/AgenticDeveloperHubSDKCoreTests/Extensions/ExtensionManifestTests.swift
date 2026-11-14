@@ -120,6 +120,7 @@ struct ExtensionManifestTests {
         #expect(emptyContributes.themes.isEmpty)
         #expect(emptyContributes.snippets.isEmpty)
         #expect(emptyContributes.languages.isEmpty)
+        #expect(emptyContributes.grammars.isEmpty)
         #expect(emptyContributes.commands.isEmpty)
         #expect(emptyContributes.keybindings.isEmpty)
         #expect(emptyContributes.menus.isEmpty)
@@ -218,6 +219,37 @@ struct ExtensionManifestTests {
         // write instead, so the noun is JSON's (Ruling GU). Interpolating the
         // Swift type leaks the same compiler vocabulary one word later.
         #expect(failure.reason == "“uiTheme” is not text")
+    }
+
+    @Test("grammars decode with an optional language, and a malformed one costs only itself")
+    func grammarsDecode() throws {
+        let json = """
+        {
+            "grammars": [
+                {
+                    "language": "widget",
+                    "scopeName": "source.widget",
+                    "path": "./w.json",
+                    "embeddedLanguages": { "meta.embedded": "javascript" }
+                },
+                { "scopeName": "text.inject", "path": "./i.json", "injectTo": ["source.widget"] },
+                { "scopeName": 7, "path": "./x.json" }
+            ]
+        }
+        """
+        let contributes = try JSONDecoder().decode(
+            ExtensionManifest.Contributions.self,
+            from: Data(json.utf8)
+        )
+
+        #expect(contributes.grammars == [
+            ExtensionManifest.Grammar(language: "widget", scopeName: "source.widget", path: "./w.json"),
+            ExtensionManifest.Grammar(language: nil, scopeName: "text.inject", path: "./i.json")
+        ])
+        let failure = try #require(contributes.decodingFailures.first)
+        #expect(contributes.decodingFailures.count == 1)
+        #expect(failure.key == "contributes.grammars")
+        #expect(failure.index == 2)
     }
 
     @Test("a themes entry that is not an object at all names itself, not an empty key")

@@ -2,11 +2,11 @@
 id: 68d182dc-3fc0-489c-ab04-ff4da25fc4df
 title: "Extension Manifest"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -120,7 +120,7 @@ is how a caller learns what, if anything, one decode attempt had to drop.
   extension declares nothing" — which is what makes the empty contributions
   value a reusable stand-in for either case.
 - **contributions-arrays-default-empty**: each of `themes`, `snippets`,
-  `languages`, `commands`, `keybindings`, `configuration`, and
+  `languages`, `grammars`, `commands`, `keybindings`, `configuration`, and
   `languageModelTools` MUST default to an empty list when its manifest key
   is absent.
 - **contributions-dictionaries-default-empty**: each of `menus`, `views`,
@@ -220,6 +220,11 @@ is how a caller learns what, if anything, one decode attempt had to drop.
   `lenient-array-element-isolation`, never the whole manifest.
 - **snippet-strict-shape**: a snippet entry MUST require `language` and
   `path` as strings.
+- **grammar-shape**: a grammar entry MUST require `scopeName` and `path` as
+  strings and MUST treat `language` as an optional string — an injection
+  grammar declares none. `embeddedLanguages`, `tokenTypes` and
+  `injectTo` MUST NOT be carried. A malformed entry MUST fail only that
+  array element, via `lenient-array-element-isolation`.
 - **language-optional-fields**: a language entry MUST require `id` as a
   string and MUST treat `aliases`, `extensions`, `filenames`,
   `filenamePatterns`, `firstLine`, `mimetypes`, `configuration`, and `icon`
@@ -351,7 +356,7 @@ Not applicable — this is a manifest decoder, not a visual component.
 | extension-manifest-026 | language-model-tool-plain-shape, lenient-array-element-isolation | `languageModelTools: [{ name: "a" }, { name: 123 }]` (second entry's `name` wrong type) | The first tool entry decodes; the second is dropped, with a decoding failure at index `1` |
 | extension-manifest-027 | contributions-encode-lossy, decoding-failures-not-encoded | A manifest decoded with one malformed theme (extension-manifest-007), then re-encoded | The re-encoded `themes` list holds only the surviving entries; no decoding-failures field appears anywhere in the output |
 | extension-manifest-028 | manifest-and-contributions-are-thread-safe | Two independent decodes of identical manifest bytes, compared for equality | The two results are equal; both values are safe to use across any concurrency boundary |
-
+| extension-manifest-029 | grammar-shape, lenient-array-element-isolation | `grammars: [{ language: "widget", scopeName: "source.widget", path: "./w.json", embeddedLanguages: {} }, { scopeName: "text.inject", path: "./i.json" }, { scopeName: 7, path: "./x.json" }]` | Two grammar entries, the second with no `language`; the third is dropped with a decoding failure at index `2` |
 ## Edge Cases
 
 - **Null/empty input**: an empty JSON object `{}` decoded as a manifest MUST
@@ -528,7 +533,7 @@ writes no log line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -664,6 +669,7 @@ the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-13 | Mike Fullerton | `contributes.grammars` decoded (`language` optional, `scopeName`, `path`). |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/extensions/manifest/. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |

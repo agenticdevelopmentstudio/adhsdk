@@ -68,7 +68,7 @@
   extension declares nothing" — which is what makes the empty contributions
   value a reusable stand-in for either case.
 - **contributions-arrays-default-empty**: each of `themes`, `snippets`,
-  `languages`, `commands`, `keybindings`, `configuration`, and
+  `languages`, `grammars`, `commands`, `keybindings`, `configuration`, and
   `languageModelTools` MUST default to an empty list when its manifest key
   is absent.
 - **contributions-dictionaries-default-empty**: each of `menus`, `views`,
@@ -168,6 +168,11 @@
   `lenient-array-element-isolation`, never the whole manifest.
 - **snippet-strict-shape**: a snippet entry MUST require `language` and
   `path` as strings.
+- **grammar-shape**: a grammar entry MUST require `scopeName` and `path` as
+  strings and MUST treat `language` as an optional string — an injection
+  grammar declares none. `embeddedLanguages`, `tokenTypes` and
+  `injectTo` MUST NOT be carried. A malformed entry MUST fail only that
+  array element, via `lenient-array-element-isolation`.
 - **language-optional-fields**: a language entry MUST require `id` as a
   string and MUST treat `aliases`, `extensions`, `filenames`,
   `filenamePatterns`, `firstLine`, `mimetypes`, `configuration`, and `icon`

@@ -1271,6 +1271,7 @@
 		489A10AA3CF1674364C7950E /* FileTreeNode+IconColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB1315F1D7B7D4B2D8E66151 /* FileTreeNode+IconColor.swift */; };
 		48AF6C534D7A27442ABBA931 /* AnthropicChatTranslation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA873F17E18DBA4211DB336A /* AnthropicChatTranslation.swift */; };
 		48B5A98E96EA9A1BF9B8277F /* UserSettings+Editor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29632C48AA6047C826485DFA /* UserSettings+Editor.swift */; };
+		48BC00CC9E10C9746DEA51D3 /* GrammarContributionPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E82F852D42DD0E733111FA /* GrammarContributionPoint.swift */; };
 		48BC25172CEB536C8A20C1A5 /* PrivateTerminalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42B6F95400C6C4032D6D1520 /* PrivateTerminalViewController.swift */; };
 		48CA365A82F2DF96FDC3F5ED /* NoticeCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDCC13AFCE99EE09E36BB8DC /* NoticeCoding.swift */; };
 		48D29334C8175CCF3341AE7F /* EcosystemsModuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95944CBF147A27D833E6A84D /* EcosystemsModuleTests.swift */; };
@@ -2710,6 +2711,7 @@
 		A8478D8A1FE3B8F531DB8EDA /* GitTestRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA464D6F7165A49F059D92DC /* GitTestRepository.swift */; };
 		A848C82B82A7D85236C356F4 /* ChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AC9347F62BEC07ED65D2FD /* ChatSession.swift */; };
 		A84F4825606AA3BDAECF1C86 /* DeadlineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD3B0EAEA1BBE2FD1E37AD4 /* DeadlineTests.swift */; };
+		A8816C30DBBDD97B328756CC /* GrammarContributionPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 290C310CA69E666C858910EB /* GrammarContributionPointTests.swift */; };
 		A8898E2B12527D26BC44BA6C /* SettingsPanelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C790315C5D164D33DBD3F13 /* SettingsPanelViewController.swift */; };
 		A88DB5A7DF358B571BA581BE /* SessionEventSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 289A75A43AF5244F2C58F3A4 /* SessionEventSink.swift */; };
 		A8B5311E0D6337F8A9BD7C6F /* BucketsTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175C064C5B81939F1ABE04E3 /* BucketsTopic.swift */; };
@@ -7684,6 +7686,7 @@
 		28E04E3118AA5FD7771C71B8 /* SystemWindowControlling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowControlling.swift; sourceTree = "<group>"; };
 		28E8BC20B8D794E6A3D77F69 /* SemanticPaletteRolesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticPaletteRolesTests.swift; sourceTree = "<group>"; };
 		28FF0E18A5B491AA0B5DDF4F /* StubBrowserEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubBrowserEngine.swift; sourceTree = "<group>"; };
+		290C310CA69E666C858910EB /* GrammarContributionPointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarContributionPointTests.swift; sourceTree = "<group>"; };
 		292097E7772044B3DA12B8F3 /* ComposableTabsPaneChromeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsPaneChromeTests.swift; sourceTree = "<group>"; };
 		292D7C20BAA75DC36DA2904D /* GitConfigEntryParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitConfigEntryParserTests.swift; sourceTree = "<group>"; };
 		29377F3EC348467EFDE612B6 /* ChatWindowAppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatWindowAppearanceController.swift; sourceTree = "<group>"; };
@@ -9134,6 +9137,7 @@
 		A7A7A06FC825AC72CC4C7752 /* MainThreadWorkspaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThreadWorkspaceTests.swift; sourceTree = "<group>"; };
 		A7D6982FB1C67072CE0E87A8 /* TerminalSessionSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionSummarizer.swift; sourceTree = "<group>"; };
 		A7DE8EC4FDE7072193B988E8 /* ComposableTabsActivePane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsActivePane.swift; sourceTree = "<group>"; };
+		A7E82F852D42DD0E733111FA /* GrammarContributionPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarContributionPoint.swift; sourceTree = "<group>"; };
 		A7F9D41DAAC7881AAC6354F0 /* ThemeTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTypography.swift; sourceTree = "<group>"; };
 		A7FD7981CA525866A01745C6 /* AgenticDeveloperHubSDKSyncGRDBTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AgenticDeveloperHubSDKSyncGRDBTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A831E391D4EE967CDF66D3DD /* AnthropicChatTranslationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicChatTranslationTests.swift; sourceTree = "<group>"; };
@@ -13637,6 +13641,7 @@
 				3D643F92D86B22B752E129C2 /* ExtensionTestSupport.swift */,
 				891C67C34171C1DA275F5468 /* ExtensionTreePaneLoadingTests.swift */,
 				8B4075912A6631D933427DC2 /* ExtensionTreeRowTableTests.swift */,
+				290C310CA69E666C858910EB /* GrammarContributionPointTests.swift */,
 				10CE23A6045BA8A20D205D82 /* JSValueBridgeTests.swift */,
 				AD4E452DF61684762752248B /* LanguageContributionPointTests.swift */,
 				2B2669EB0CA8F4D5585C17C5 /* LanguageModelMessageVocabularyTests.swift */,
@@ -15515,6 +15520,7 @@
 				6E88B32C70570262FD448789 /* Webview */,
 				613DFD5772D7C4DEF667A81D /* ConfigurationContributionPoint.swift */,
 				ACAE8339128B4EB16CF75711 /* ExtensionsCoordinator.swift */,
+				A7E82F852D42DD0E733111FA /* GrammarContributionPoint.swift */,
 				53435120DE5A6ABF431E4513 /* LanguageContributionPoint.swift */,
 				AFAD19F215F535E49CC38EBB /* OnceOnlyContinuation.swift */,
 				CB1C03D2F17AF8C3B6A425E9 /* ThemeContributionPoint.swift */,
@@ -21383,6 +21389,7 @@
 				5CB385CB791978987A443E8E /* GitStatusProviderRefreshTests.swift in Sources */,
 				3B1C67008EBDB0E7D11AFF7F /* GmailSettingsAccountErrorTests.swift in Sources */,
 				6F676AE24D94FE524249117A /* GmailSettingsModelTests.swift in Sources */,
+				A8816C30DBBDD97B328756CC /* GrammarContributionPointTests.swift in Sources */,
 				24EF86B631CB613136167937 /* HelpContentTests.swift in Sources */,
 				6A9CAA77881925A715858B75 /* HelpDrawerControllerTests.swift in Sources */,
 				8ABE482AA1F56DFBD8B4BD27 /* HeuristicTests.swift in Sources */,
@@ -23384,6 +23391,7 @@
 				08E1273F329530804DDC40D7 /* GitStatusProvider.swift in Sources */,
 				E531A8089BD0E985E7BD8BE7 /* GmailSettingsModel.swift in Sources */,
 				787E112B3A99D664C48D1262 /* GmailSettingsView.swift in Sources */,
+				48BC00CC9E10C9746DEA51D3 /* GrammarContributionPoint.swift in Sources */,
 				9539B91F257686E6A30449C2 /* GroupView.swift in Sources */,
 				8E00F1482ABFC06F116645AB /* HeaderView.swift in Sources */,
 				7E64C1C42DEA7AD0AB6B918C /* HelpContent.swift in Sources */,

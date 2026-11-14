@@ -4,7 +4,7 @@
     "id": "6708bfd4-5b29-4bf9-b180-05904873906e",
     "title": "Syntax Highlighter",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "TextMate syntax highlighting in JavaScriptCore: a first-wins grammar registry over bundled and user grammars, a file-name/extension language resolver, and an actor that turns the bundled engine's output into styled runs per line.",
+    "summary": "TextMate syntax highlighting in JavaScriptCore: a first-wins grammar registry over bundled, VS Code extension and user grammars, a file-name/extension language resolver, and an actor that turns the bundled engine's output into styled runs per line.",
     "platforms": [
       "macos"
     ],
@@ -29,12 +29,13 @@
     "related": [],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/ (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift (adhsdk)",
       "tools/apple/textmate/entry.js (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ffc40f595032200a",
+  "synced": "fc37a172c6e6e6fb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
