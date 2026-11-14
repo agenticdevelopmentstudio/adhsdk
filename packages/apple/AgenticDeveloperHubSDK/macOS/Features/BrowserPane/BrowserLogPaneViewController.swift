@@ -77,6 +77,21 @@ public final class BrowserLogPaneViewController: NSViewController {
         super.init(nibName: nil, bundle: nil)
     }
 
+    /// A log fixed on `pane` itself rather than found by node id: the log a
+    /// browser in no project window (its own web browser window) shows in a
+    /// window of its own.
+    init(following pane: WebBrowserPaneViewController) {
+        self.store = EphemeralPaneStateStore()
+        self.targetNodeID = nil
+        self.followsFixedTarget = true
+        super.init(nibName: nil, bundle: nil)
+        attach(pane)
+    }
+
+    /// Whether the target was handed over directly, so there is no node id
+    /// to look it up by and nothing to resolve.
+    private var followsFixedTarget = false
+
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
@@ -92,6 +107,10 @@ public final class BrowserLogPaneViewController: NSViewController {
 
     /// Finds the target in the window when it is not already attached.
     func resolveTarget() {
+        if followsFixedTarget {
+            if target?.isDiscarded == true { attach(nil) }
+            return
+        }
         guard let nodeID = targetNodeID else { return attach(nil) }
         if let target, target.paneContext.paneNodeID == nodeID, !target.isDiscarded { return }
         attach(Self.browserPane(nodeID: nodeID, in: viewIfLoaded?.window))
@@ -276,7 +295,9 @@ extension BrowserLogPaneViewController {
         guard let nodeID = pane.paneContext.paneNodeID,
               let window = pane.viewIfLoaded?.window,
               let controller = window.windowController as? ComposableTabsWindowController else {
-            logger.info("browser log asked for a pane that is in no project window")
+            // A browser in no project window has no layout to split, so its
+            // log gets a window of its own.
+            BrowserLogWindowController.show(for: pane)
             return
         }
         let panes = controller.allPanes()

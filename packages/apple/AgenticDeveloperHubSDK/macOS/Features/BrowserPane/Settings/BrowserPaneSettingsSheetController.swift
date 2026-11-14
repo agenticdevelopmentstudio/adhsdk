@@ -63,6 +63,7 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
         container.accessibilityID("browser.pane-settings")
 
         // A sheet has no title bar, so its title is the first thing in it.
+        if presentsInWindow { return loadWindowView(in: container) }
         let heading = NSTextField(labelWithString: Self.title(for: paneTitle))
         heading.font = .boldSystemFont(ofSize: NSFont.systemFontSize)
         heading.lineBreakMode = .byTruncatingMiddle
@@ -102,12 +103,34 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
         self.preferredContentSize = NSSize(width: 820, height: 560)
     }
 
+    /// Shown in a window of its own (`BrowserPaneSettingsWindowController`)
+    /// rather than as a sheet: the window's title bar carries the title and
+    /// its close button ends it, so there is no heading and no Done.
+    var presentsInWindow = false
+
+    private func loadWindowView(in container: NSView) {
+        addChild(panels)
+        panels.helpPresenter = help
+        let panelsView = panels.view
+        panelsView.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(panelsView)
+        panels.selectPanel(at: 0)
+        NSLayoutConstraint.activate([
+            panelsView.topAnchor.constraint(equalTo: container.topAnchor),
+            panelsView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            container.trailingAnchor.constraint(equalTo: panelsView.trailingAnchor),
+            container.bottomAnchor.constraint(equalTo: panelsView.bottomAnchor)
+        ])
+        self.view = container
+        self.preferredContentSize = NSSize(width: 820, height: 560)
+    }
+
     /// Watches the window the sheet is on for the sheet ending, so a
     /// dismissal that does not come through Done — the presenter dismissing
     /// it, the window closing — still closes it.
     public override func viewDidAppear() {
         super.viewDidAppear()
-        guard !hasClosed, parentWindow == nil, let parent = view.window?.sheetParent else { return }
+        guard !presentsInWindow, !hasClosed, parentWindow == nil, let parent = view.window?.sheetParent else { return }
         parentWindow = parent
         NotificationCenter.default.addObserver(
             self, selector: #selector(parentDidEndSheet(_:)),
@@ -122,7 +145,9 @@ public final class BrowserPaneSettingsSheetController: NSViewController {
     /// is still open, then never close again).
     public override func viewDidDisappear() {
         super.viewDidDisappear()
-        guard view.window?.sheetParent == nil else { return }
+        // A window's ordering out (miniaturized, its Space left) is not its
+        // close; the window controller reports the close.
+        guard !presentsInWindow, view.window?.sheetParent == nil else { return }
         finish(dismissing: false)
     }
 

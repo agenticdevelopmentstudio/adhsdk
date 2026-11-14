@@ -1807,16 +1807,13 @@ extension WebBrowserPaneViewController: PaneMenuProviding {
     }
 
     @objc func showPaneSettings() {
-        guard view.window != nil else {
-            logger.info("browser pane settings requested, but the pane is in no window to present a sheet on")
-            return
-        }
-        guard let sheet = makePaneSettingsSheet() else { return }
-        presentAsSheet(sheet)
+        BrowserPaneSettingsWindowController.show(for: self) { makePaneSettingsSheet() }
     }
 
+    /// The host's log presenter, else the default: beside the pane in a
+    /// project window, or in a window of its own.
     @objc func showBrowserLog() {
-        onShowBrowserLog?(self)
+        (onShowBrowserLog ?? BrowserLogPaneViewController.show(for:))(self)
     }
 }
 
