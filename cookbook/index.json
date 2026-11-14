@@ -1820,6 +1820,22 @@
       "path": "ui/components/actions/inline-commit-control",
       "rdid": "adhsdk.ingredient.ui.components.actions.inline-commit-control"
     },
+    "274f0727-b9b3-4fd3-9dea-b7e1bfbe92fc": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:d8424816712383124ba50b97420475db692dea9b30618bb8baa848c5cdc51f8e",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/KeyedWindowSet.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ui/windows/keyed-window-set",
+      "rdid": "adhsdk.ingredient.ui.windows.keyed-window-set"
+    },
     "28436339-4eda-46e9-b45f-f58a26949641": {
       "implementations": [
         {

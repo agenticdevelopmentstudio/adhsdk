@@ -19,7 +19,9 @@ import os
 ///
 /// What reopens at launch is this feature's own list
 /// (`UserSettings.openFileBrowserDirectories`), not the project window's
-/// open flag: a File Browser window belongs to no project window group.
+/// open flag: a File Browser window belongs to no project window group. The
+/// list and the one-window-per-directory rule are a `KeyedWindowSet` keyed by
+/// the directory's canonical path.
 @MainActor
 public final class FileBrowserWindowsFeature: AppFeature {
 
@@ -30,6 +32,20 @@ public final class FileBrowserWindowsFeature: AppFeature {
     private let database: ProjectDatabase
     private let layout: ComposableTabsLayout
     private let windows: ProjectWindowManager
+
+    /// One window per canonical directory path, remembered in
+    /// `UserSettings.openFileBrowserDirectories`.
+    private lazy var windowSet = KeyedWindowSet<ComposableTabsWindowController>(
+        setting: UserSettings.openFileBrowserDirectories,
+        open: { [unowned self] path, activates, onClose in
+            self.openWindow(path: path, activates: activates, onClose: onClose)
+        },
+        bringForward: { [unowned self] controller in
+            controller.showWindow(nil)
+            controller.window?.makeKeyAndOrderFront(nil)
+            self.windows.activateApp()
+        }
+    )
 
     /// - Parameter layout: the File Browser window's layout, built by the
     ///   host over the same pane registry as the project window's.
@@ -82,28 +98,14 @@ public final class FileBrowserWindowsFeature: AppFeature {
     ///   its row could not be read or written (logged).
     @discardableResult
     public func open(directory: URL, activates: Bool = true) -> ComposableTabsWindowController? {
-        let url = Self.canonical(directory)
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
-              isDirectory.boolValue else {
-            Self.logger.error("Not a directory: \(url.path, privacy: .public)")
-            return nil
-        }
-        let repo: GitRepo
-        do {
-            repo = try row(for: url)
-        } catch {
-            Self.logger.error("Could not record File Browser row for \(url.path, privacy: .public): \(error)")
-            return nil
-        }
-        let controller = windows.openFileBrowserWindow(
-            repo,
-            layout: layout,
-            activates: activates,
-            onClose: { [weak self] closed in self?.forget(closed.path) }
-        )
-        if controller != nil { remember(url.path) }
-        return controller
+        windowSet.open(key: Self.canonical(directory).path, activates: activates)
+    }
+
+    /// Reopens the File Browser windows that were open when the app last
+    /// quit, without taking the foreground. A directory that has gone is
+    /// dropped from the list.
+    public func restoreOpenWindows() {
+        windowSet.restore()
     }
 
     /// Switches a File Browser window to `directory`: the window on it opens
@@ -117,14 +119,34 @@ public final class FileBrowserWindowsFeature: AppFeature {
         window?.close()
     }
 
-    /// Reopens the File Browser windows that were open when the app last
-    /// quit, without taking the foreground. A directory that has gone is
-    /// dropped from the list.
-    public func restoreOpenWindows() {
-        let paths = UserSettings.openFileBrowserDirectories.currentValue
-        for path in paths where open(directory: URL(fileURLWithPath: path), activates: false) == nil {
-            forget(path)
+    /// The window set's `open`: a new File Browser window on the canonical
+    /// directory `path`, or `nil` when it is not a directory or its row could
+    /// not be read or written (logged).
+    private func openWindow(
+        path: String,
+        activates: Bool,
+        onClose: @escaping () -> Void
+    ) -> ComposableTabsWindowController? {
+        let url = URL(fileURLWithPath: path)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            Self.logger.error("Not a directory: \(url.path, privacy: .public)")
+            return nil
         }
+        let repo: GitRepo
+        do {
+            repo = try row(for: url)
+        } catch {
+            Self.logger.error("Could not record File Browser row for \(url.path, privacy: .public): \(error)")
+            return nil
+        }
+        return windows.openFileBrowserWindow(
+            repo,
+            layout: layout,
+            activates: activates,
+            onClose: { _ in onClose() }
+        )
     }
 
     // MARK: - Rows
@@ -144,21 +166,6 @@ public final class FileBrowserWindowsFeature: AppFeature {
     /// row and one window.
     static func canonical(_ url: URL) -> URL {
         url.standardizedFileURL.resolvingSymlinksInPath()
-    }
-
-    // MARK: - Restore list
-
-    private func remember(_ path: String) {
-        var paths = UserSettings.openFileBrowserDirectories.currentValue
-        guard !paths.contains(path) else { return }
-        paths.append(path)
-        UserSettings.openFileBrowserDirectories.value = paths
-    }
-
-    private func forget(_ path: String) {
-        let paths = UserSettings.openFileBrowserDirectories.currentValue
-        guard paths.contains(path) else { return }
-        UserSettings.openFileBrowserDirectories.value = paths.filter { $0 != path }
     }
 }
 
