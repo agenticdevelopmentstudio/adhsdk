@@ -1,8 +1,12 @@
 import Foundation
 
 /// Supplies a `LineViewerViewController`'s rows on demand. The viewer asks only
-/// for the rows it is drawing, so `row(at:)` should be cheap and `rowCount`
-/// constant between `reloadData()` calls.
+/// for the rows it is drawing, so `row(at:)` should be cheap.
+///
+/// Between `reloadData()` calls, `rowCount` and every row's content (its text
+/// and runs) MUST NOT change: the viewer caches layout derived from long rows
+/// and drops it only on `reloadData()`. A data source that updates its rows
+/// calls `reloadData()`.
 @MainActor
 public protocol LineViewerDataSource: AnyObject {
     var gutterColumnCount: Int { get }
