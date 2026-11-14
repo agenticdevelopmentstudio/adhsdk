@@ -1,0 +1,5 @@
+
+`DocumentLoadScript` is a React client component (`"use client"`) that renders one inline `<script>` element holding the string passed as `code`, but only in the document the server sent. A script that must run before first paint does its job only in that document. A layout React mounts on a client navigation would otherwise create the `<script>` element anyway, where the browser never executes it and React reports "Encountered a script tag while rendering React component". The component therefore renders the script during the server render and during hydration, and renders nothing in any tree that React mounts fresh on the client.
+
+The source's doc comment names the client-side half of the job as belonging to whoever runs then; for the appearance preferences that is `AppearanceScope`. The component is exported from the themes package index and from its own subpath (`@adh-sdk/themes/DocumentLoadScript`), and is used by `AdhThemeStyle` (the appearance pre-paint script) and by the site template's `landing-frame.tsx` (the deck script).
+

@@ -1,0 +1,5 @@
+
+`ColorTheme` is the canonical, app-wide representation of a color scheme: a plain value type that carries a terminal palette (`foreground`, `background`, `cursor`, `selection` and 16 `ansi` colors), identity and lock metadata (`id`, `name`, `appearance`, `isBuiltIn`, `isImported`, `attribution`), optional explicit colors for app-wide semantic roles (`roleOverrides`), a `typography` value, and optional per-feature overrides (`terminal`, `project`). It is a strict superset of a terminal profile's appearance, so a `.itermcolors` file maps directly onto the palette portion.
+
+The file also declares `ThemeAppearance` (`dark`, `light`, `auto`). The type is logic only: it holds data, derives editability from two flags, and decodes older persisted shapes. Palette parsing, semantic-role derivation, the catalog, and persistence live in sibling types (`ITermColorsParser`, `SemanticPalette`, `ThemeStore`, `ThemeStorage`) and are outside this recipe. Colors are `RGBAColor` values, each encoded as an `#RRGGBBAA` string, so a whole theme round-trips through `UserDefaults`.
+

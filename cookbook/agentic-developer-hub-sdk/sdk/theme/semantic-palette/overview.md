@@ -1,0 +1,5 @@
+
+`ThemeRole` is a closed list of 40 semantic color roles (window and surface backgrounds, five text emphases, status accents, lines, selection and caret, and an 18-role chat group). UI code reads a color by role and never by raw ANSI slot, so a control's meaning survives a theme swap. `SemanticPalette` is the value that turns a `ColorTheme` into a concrete `RGBAColor` for every role. For each role an explicit entry in `ColorTheme.roleOverrides` wins; otherwise the color is derived from the theme's background, foreground, selection, cursor and 16-color ANSI table, so a plain terminal scheme can drive app-wide chrome.
+
+The same file also carries three things that read the resolved palette: two ordered hue lists for charts (`chartSeriesColors`, `identitySeriesColors`), a reader text-size multiplier (`size(_:)`, `scaled(by:)`), and three colors for the project window (`projectPaneBackdrop`, `projectPaneOutline`, `projectActivePaneOutline`). The contrast and blend math it relies on lives in `RGBAColor+Theme.swift` and is out of scope here, except where the derivation constants below name it.
+

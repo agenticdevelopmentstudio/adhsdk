@@ -1,0 +1,5 @@
+
+`RGBAColor+Theme.swift` is an `extension RGBAColor` that adds the color math the theme layer needs to derive a whole palette from a few base colors. It measures a color (`relativeLuminance`, `isDark`, `contrastRatio(against:)`), writes it out (`hexStringRGB`), and builds new colors from it (`blended(withFraction:of:)`, `composited(over:)`, `bestTextColor(black:white:)`, `dimmed(towards:by:minContrast:)`, `desaturated(by:)`). It also adds two constants, `opaqueBlack` and `opaqueWhite`.
+
+Every member is a pure computation over the four `Double` components of `RGBAColor` (see the RGBAColor recipe for the value type and its clamping). Nothing here reads or writes files, the network, defaults or logs. The callers are `SemanticPalette` (derives surface, text and accent roles), `ITermColorsParser` (derives a missing selection color and the dark or light appearance) and `VSCodeThemeImporter` in the Core layer (composites a declared selection over the background, derives a fallback selection and infers the appearance).
+

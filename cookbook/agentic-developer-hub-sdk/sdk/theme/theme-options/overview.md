@@ -1,0 +1,5 @@
+
+`ThemeOptions` is the pair of optional override structs a color theme can carry, plus the caret-shape enum one of them uses. `ThemeTerminalOptions` overrides terminal padding, font and caret. `ThemeProjectOptions` overrides the project window's active-pane outline switch, its outline color and the pane backdrop color. The source file also defines `TerminalCursorShape`.
+
+Every field in both structs is optional, and `nil` means "whatever the settings panel says". A theme starts with no opinion and acquires one only for the fields the user edits, so switching themes does not rewrite settings the user never touched. The source file imports only `Foundation`; it lives in the Core layer because a `ColorTheme` carries one of each (see [ColorTheme](cookbook:932449c9-b57f-4e2c-992a-1e27584742b6)). The mapping of `TerminalCursorShape` onto SwiftTerm's `CursorStyle` stays in the macOS framework, and the resolution of `nil` against a settings panel lives in the consumers, not here. Colors are [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) values.
+

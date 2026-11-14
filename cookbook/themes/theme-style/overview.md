@@ -1,0 +1,5 @@
+
+Theme Style turns a named theme into CSS on the page. `ThemeStyle` is a React component that looks the theme up in the manifest (`themes`, keyed by `ThemeKey`) and renders its stylesheet as one inline `style` element. With no `scope` the stylesheet is emitted verbatim and styles the whole document. With a `scope` (a CSS selector) the stylesheet is first rewritten by `buildScopedCss` into an `@scope (<selector>)` block, so the theme applies only inside that subtree and can coexist with the host page's own theme. An optional `colorMode` forces the light or dark variant of a scoped theme instead of following the document's `html.dark` class.
+
+`buildScopedCss` is also exported from the module (though not re-exported by the package index), so external consumers can scope stylesheets that are not in the manifest. Most of the module's logic is the set of selector rewrites it applies to the theme stylesheets' root anchors (`html:root`, `:root`, `body`), because an anchor it does not recognise silently drops that theme's palette inside the scope.
+
