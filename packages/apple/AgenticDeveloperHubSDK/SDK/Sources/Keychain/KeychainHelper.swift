@@ -63,12 +63,19 @@ public enum KeychainHelper {
     /// spelled in source, where it goes stale the moment the build is signed by
     /// another team. Read through `SecTaskCreateFromSelf`, which reports what
     /// the kernel granted, not what a file on disk says.
+    ///
+    /// `SecTask` is macOS only, so on every other platform this is always nil
+    /// and the caller keeps the per-binary default.
     public static func entitledAccessGroup(_ group: String) -> String? {
+        #if os(macOS)
         guard let task = SecTaskCreateFromSelf(nil),
               let groups = SecTaskCopyValueForEntitlement(task, "keychain-access-groups" as CFString, nil)
                 as? [String]
         else { return nil }
         return groups.first { $0 == group || $0.hasSuffix("." + group) }
+        #else
+        return nil
+        #endif
     }
 
     /// Builds the base generic-password query for an account key. When an access

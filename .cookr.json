@@ -1244,6 +1244,24 @@
       "group": "agentic-developer-hub-sdk/sdk/text"
     },
     {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "foundation"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Keychain",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "foundation"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Logging",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "foundation"
+    },
+    {
       "path": "packages/web/packages/themes/src",
       "platform": "web",
       "kind": "logic",

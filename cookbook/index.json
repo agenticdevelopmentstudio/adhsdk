@@ -4573,210 +4573,270 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c244b4bdb1c8e536e3508ec615371a8cd93f7a077b2ceb6ac015b7ce64a9e05f",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/ColorSetting.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6eda8a634709585b75cf8e443f00126760846d3527296a3fe7c353003929595f",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySecureSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/InMemorySecureSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2e26118ab89799be4b2df803e0220401b814ece07f5294fad8de1db5417f35aa",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/InMemorySettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:86a322672b3e2fe8ba7f601dafdbf2519024a9fa0e7c06d6bae1c1daca328d6e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/KeychainSecureSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/KeychainSecureSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0127e242be98c6e1e208f798dfb085c1ca71798d95b3eb268fedd7ef3679a2da",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SecureStoredSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/SecureStoredSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4f023036d4a49d94b713906634042022364354f7f7aa82ff846a2324a8744a00",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:7ead67deb74d602993472e117055098609cad1c8397c32e069c4086c0ffd4804",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/UserDefaultsSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:95a01456948969d37024857a35814caf5a2556abe535a81eaf6ea71de08921f5",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d70d89e48024b9535c327c0ad58920367712f61ba7ecd1dce2888b26e6187603",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/SettingsStore.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2f9406b7545b884f19b63a70365258320008eacd2ab6013e61c98790882cdc6e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/StorableSetting.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c4e01cebcdc54044b1e0e91ddddca516b863a5dbd031af9f53123e2adf63afce",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingPropertyWrapper.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:db034218f6a549aff7acce99079fbbe266a3bdec6f815e1a3ce272fdf2b311e9",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/StoredSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4ad5664cd60b599b0b34ed9cf64609aa2f8fae4b29cdeca7e405b106f9bdf56c",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:8eb64c7c712a31c00508511b83e11dfcc84f9eecf105da87eaff2445605d095c",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Editor.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:8b1e8e626d188028af459756516d021b5daa93c4455997b3344380c0a2c75203",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:59777dbd8ce2f74e47bb7e3c9385b2fe95a4697953b339e60110af604d25abf6",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:b891b81d7d945e54b88a85025136990549146241d9d40ee42b4b607290e08dc8",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/UserSettings.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:f15a260ab2f01c89d6ad151849988841d363d7a5994013e36da0009523ba285e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0ad6a68a74ec7b4c4473b5ea6249281758cc84aef303be1c7931e34d9a170197",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:85c26ac71623baeae443367631db975e30a73d3cc3e68b687b95c293187cbddc",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Appearance/AppearanceManager.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:b3b0793cffcce319f013b4d2746cab4fea59de81dc9dd6dfd52f40bd5f1b7f0e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:008f55dd8c3f8823934e0ac165c9f9ae610747d3e8674de007491dfd34798026",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e0dcc9174dfe9e8c203c0494d34db7a02f075e6ebeb3b6a4d459485279cdd443",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:059fff7c48381f0cd2a0f2b17da1855cfd3b6e4e17be61a493d8345ddf00cc95",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c0d035096b1d957188422165bf95e0b1e95ad4223ba28fca6f009f8bab738c5d",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:40c5ef551537b43eb7dd709d4947f4b838ebca6ed3a89a595b46aee6ac32ac87",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:90bf13c3d9c7f471fc1005a0d00a793505dd10adb37846fbb42affaf06b028a1",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6f9056f5537b9a1eb1cbe9fde73f1b84877e10f11913a2df546ec3185fd40390",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:3b0f17e9e8d4c206275d2959ee4e4be79eedbb9a570ae047ab581b716e23bf76",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:96552455314e44f9bdccce364013c013e2c122b5f026bb8a4b7ca0d42a5c4395",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift",
           "platform": "apple"
@@ -9866,42 +9926,54 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:00eea35eb1cf566139794da7fdbb7ba738aa1f3754f06da2431d2f893884ad7f",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0cd90dcfba420e447bc444698798d096ca5625192339f2ed4677a5246f2082b6",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Keychain/KeychainHelper.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:703d30dbffd4e162b30bfa2fdff6f7e1edc33868c4d7451900af739f8c6e562e",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Logging/Loggable.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:12f5af2dd2d51bfe22ffe82b631ee347e2827691807029e164f52753e2711826",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:acab26ce09bedc8118cdd1649be6242f663a29a6965780558dc7ae10d0150a7e",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:55f555fbe72ec8fc70460645ca7900762b21cbdee50cec8a7a3e6dede99b4ba6",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift",
           "platform": "apple"

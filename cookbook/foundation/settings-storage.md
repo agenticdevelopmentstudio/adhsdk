@@ -2,11 +2,11 @@
 id: 6363b5ff-f511-4e21-9ba7-6850787dba62
 title: "Settings Storage"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -268,6 +268,7 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 - **Compose**: Translate `SettingsStorageProvider` to a small Kotlin interface backed by Jetpack `DataStore<Preferences>` for plain keys and `EncryptedSharedPreferences`/Android Keystore for secure keys; `changes: AnyPublisher<String, Never>` becomes a `SharedFlow<String>`; `UserSetting` becomes a `MutableStateFlow`-backed delegate collected with `collectAsState()`, mirroring the eager, read-on-construction behavior of `UserSetting.init`.
 - **React/Web**: Translate `SettingsStorageProvider` to a small interface backed by `localStorage`/`IndexedDB` for plain keys and a platform credential store (or a server-side secret proxy) for secure keys; `changes` becomes an `EventTarget`, or an observable keyed by name; `UserSetting` becomes a hook built on `useSyncExternalStore` over the same store.
 - **AppKit / UIKit**: This is the source's own consumer story. `AppearanceManager`, `LaunchAtLoginManager`, and the `ComposableSettingsWindow` view models (`ChoiceViewModel`, `ColorViewModel`, `FontViewModel`, `RangeViewModel`) all bind to `UserSetting`/`UserSettingObserver` rather than to any storage provider directly, and `UserSettingObserver` deliberately hops to `DispatchQueue.main` — not `RunLoop.main` — so it still fires while AppKit is running a mouse-tracking loop in `.eventTracking` mode. Every settings-storage type is `@MainActor`-isolated by declaration or by conforming to the `@MainActor` `SettingsStorageProvider`/`StorableSetting` protocols, including `InMemorySettingsStorageProvider` and `UserDefaultsSettingsStorageProvider`, which carry no annotation of their own but inherit it from the protocol (their internal concurrent `DispatchQueue` with a barrier flag on writes, and `UserDefaults`' own thread-safety, are defense in depth rather than a license to call them off the main actor). The only unconfined types are `LaunchAtLoginServiceProtocol` and plain values such as `RGBAColor` and `ChoiceViewModel.Choice`. `SqliteStorageProvider`'s `database` pointer is declared `nonisolated(unsafe)` so `deinit` — which runs outside actor isolation — can close it synchronously without an `await`. `SqliteStorageProvider` itself serializes access on a private serial `DispatchQueue`; `UserDefaultsSettingsStorageProvider`, `KeychainSecureSettingsStorageProvider`, and `iCloudSettingsStorageProvider` add no locking of their own, relying on `UserDefaults`, the Keychain, and `NSUbiquitousKeyValueStore`'s own thread-safety plus their `@MainActor` isolation. Swift's `Int` is 64 bits wide on every Apple platform this ships to, which is what makes `iCloudSettingsStorageProvider`'s bridge from a stored `Int64` back to `Int` lossless (see `boundary-int64-on-64-bit` in Edge Cases). The Configuration constructor parameters map to `SettingsStore.settingsProvider`/`.secureSettingsProvider`; `InMemorySettingsStorageProvider.initial`/`InMemorySecureSettingsStorageProvider.initial` (`[String: Any]`); `UserDefaultsSettingsStorageProvider.defaults` (`UserDefaults`, default `.standard`); `KeychainSecureSettingsStorageProvider.service`/`.accessGroup` (`String?`); `SqliteStorageProvider.path` (`String`, required); `iCloudSettingsStorageProvider.store` (`NSUbiquitousKeyValueStore`, default `.default`); and `encoder`/`decoder` (`JSONEncoder`/`JSONDecoder`) on every backend with a JSON fallback. Each persisted key in Configuration is exposed as a camelCase static accessor on `UserSettings` (e.g. `editor.show_line_numbers` → `UserSettings.editorShowLineNumbers`).
+- **platform-split**: The storage base — `StorableSetting`, `SettingsStorageProvider`, `SecureSettingsStorageProvider`, `SettingsStore`, `UserSettings`, and the `UserDefaults`, `InMemory`, `InMemorySecure` and `Keychain` providers — lives in the foundation `AgenticDeveloperHubSDK` framework, which builds for macOS, iOS, watchOS, tvOS and visionOS, so a UIKit app reads and writes the same keys as the macOS app. `iCloudSettingsStorageProvider`, `SqliteStorageProvider`, `LayeredSettingsStore`, `UserSetting`/`UserSettingObserver` and the `UserSettings+*` key extensions stay in the macOS `AgenticDeveloperHubSDKCore`, which re-exports the foundation framework so its call sites are unchanged. An iOS consumer declares its own `UserSettings` keys beside its code.
 - **confines-to-ui-thread**: On Apple platforms the confined types are `@MainActor`-isolated, so the compiler enforces the rule.
 - **WinUI 3**: `StorableSetting`/`SettingsStorageProvider` map to a small C# interface with `Get<T>`/`Set<T>`/`Remove<T>`/`Contains<T>` plus a `changes` event, backed by `Windows.Storage.ApplicationData.Current.LocalSettings` (an `ApplicationDataContainer`, natives stored directly and complex types JSON-encoded via `System.Text.Json`, mirroring the native/JSON split here) for plain keys and the Windows Credential Locker (`Windows.Security.Credentials.PasswordVault`) in place of the Keychain for secure keys. `SqliteStorageProvider`'s hand-rolled `sqlite3` calls map to `Microsoft.Data.Sqlite`. `changes` becomes a plain `event Action<string>` or `IObservable<string>`. `UserSetting<T>` becomes an `ObservableObject`/`INotifyPropertyChanged` wrapper exposing a `T Value` property, and `UserSettingObserver`'s main-queue hop becomes `DispatcherQueue.TryEnqueue` from the setting's change handler, so an update still lands on the UI thread while WinUI is inside a modal input loop — the same reason the source hops to a dispatch queue rather than a run loop.
 
@@ -275,36 +276,36 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/ColorSetting.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySecureSettingsStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySettingsStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/KeychainSecureSettingsStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SecureStoredSettingsStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingPropertyWrapper.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingsStorageProvider.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Editor.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Appearance/AppearanceManager.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/ColorSetting.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/InMemorySecureSettingsStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/InMemorySettingsStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/KeychainSecureSettingsStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/SecureStoredSettingsStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/UserDefaultsSettingsStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/SettingsStore.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/StorableSetting.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingPropertyWrapper.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/StoredSettingsStorageProvider.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Editor.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/UserSettings.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Appearance/AppearanceManager.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -349,6 +350,7 @@ The `SettingsStorageProvider` contract cleanly separates the key/value contract 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Storage base moved to the foundation SDK for every Apple platform |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes; added confines-to-ui-thread and corrected the provider-concurrency claims to match the code. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved NEEDS REVIEW markers as current behavior plus a pending design decision |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/. |

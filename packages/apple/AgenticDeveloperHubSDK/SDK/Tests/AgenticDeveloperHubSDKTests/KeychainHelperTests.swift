@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Security
-@testable import AgenticDeveloperHubSDKCore
+@testable import AgenticDeveloperHubSDK
 
 /// These tests touch the real macOS Keychain. They use a unique account key
 /// per test (UUID-suffixed) to avoid cross-test collisions under parallel
