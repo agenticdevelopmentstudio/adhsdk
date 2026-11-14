@@ -18,4 +18,12 @@ extension SemanticPalette {
         let slot = Self.laneANSISlots[((lane % count) + count) % count]
         return theme.ansiColor(at: slot) ?? color(.accent)
     }
+
+    /// Text drawn on a `laneColor(lane)` fill — an avatar's initials. Lanes
+    /// are twelve hues, bright yellow and cyan among them, so no one role
+    /// reads on all of them: this is opaque black or white, whichever has
+    /// the higher WCAG contrast against the fill (`RGBAColor.bestTextColor`).
+    public func laneTextColor(_ lane: Int) -> RGBAColor {
+        laneColor(lane).bestTextColor()
+    }
 }

@@ -3,29 +3,6 @@ import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
 import os
 
-/// What an `AvatarView` shows: whose face, a stable identity for its colour
-/// (an email, say), and the picture to try, if any.
-public struct AvatarContent: Sendable, Equatable {
-    public let name: String
-    public let seed: String
-    public let imageURL: URL?
-
-    public init(name: String, seed: String, imageURL: URL?) {
-        self.name = name
-        self.seed = seed
-        self.imageURL = imageURL
-    }
-
-    /// Up to two initials from the name's first two words, else the seed's
-    /// first letter, else "?" — never empty, so an avatar always has a face.
-    public var initials: String {
-        let words = name.split(whereSeparator: { $0.isWhitespace }).prefix(2)
-        let letters = words.compactMap { $0.first.map { String($0).uppercased() } }
-        if !letters.isEmpty { return letters.joined() }
-        return seed.first.map { String($0).uppercased() } ?? "?"
-    }
-}
-
 /// A round avatar (recipe `ui/components/display/avatar`): the picture when it
 /// loads, the initials on a circle coloured from `seed` until then and whenever
 /// it does not. Content without an `imageURL` is never fetched.
@@ -41,7 +18,10 @@ public final class AvatarView: NSView {
     public let side: CGFloat
 
     private let circle = NSView()
-    private let initialsLabel = ThemedLabel(role: .onAccentText, textRole: .heading, weight: .semibold)
+    /// The initials. A plain label rather than a `ThemedLabel`: both its ink
+    /// and its size depend on this view (the circle's lane, the side), so
+    /// `paintCircle()` sets them on every theme change.
+    let initialsLabel = NSTextField(labelWithString: "")
     private let imageView = NSImageView()
     private let fetch: Fetch
     private var palette: SemanticPalette = ThemePaletteObserver.currentPalette
@@ -112,9 +92,19 @@ public final class AvatarView: NSView {
         return Int(hash % UInt64(SemanticPalette.laneCount))
     }
 
+    /// The initials' point size as a share of the side: two wide capitals
+    /// ("MW") stay inside the circle from a 20 pt table row up to the 48 pt
+    /// Accounts header.
+    static let initialsScale: CGFloat = 0.4
+
     private func paintCircle() {
         let index = Self.colourIndex(seed: content?.seed ?? "")
         circle.layer?.backgroundColor = NSColor(palette.laneColor(index)).cgColor
+        initialsLabel.textColor = NSColor(palette.laneTextColor(index))
+        // The theme's heading family, semibold, at a size that follows the side.
+        var style = palette.theme.typography.style(.heading)
+        style.weight = .semibold
+        initialsLabel.font = style.nsFont(scaledSize: side * Self.initialsScale)
     }
 
     private func render() {

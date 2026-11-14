@@ -114,11 +114,42 @@ struct AvatarViewTests {
         #expect(server.calls == 0)
     }
 
-    @Test("initials: first letters of the first two words, else the seed's first letter, else ?")
-    func initials() {
-        #expect(AvatarContent(name: "ada lovelace byron", seed: "a@b.c", imageURL: nil).initials == "AL")
-        #expect(AvatarContent(name: "   ", seed: "zed@b.c", imageURL: nil).initials == "Z")
-        #expect(AvatarContent(name: "", seed: "", imageURL: nil).initials == "?")
+    @Test("the initials scale with the side, so a wide pair fits a 20 pt circle")
+    func initialsFitSmallSide() {
+        let small = make(Server(.status(200, picture)), side: 20)
+        small.content = AvatarContent(name: "Mary Wollstonecraft", seed: "m@x.y", imageURL: nil)
+        small.layoutSubtreeIfNeeded()
+        let size = small.initialsLabel.intrinsicContentSize
+        #expect(small.initials == "MW")
+        #expect(size.width <= 20)
+        #expect(size.height <= 20)
+        let large = make(Server(.status(200, picture)), side: 48)
+        #expect((large.initialsLabel.font?.pointSize ?? 0) > (small.initialsLabel.font?.pointSize ?? .infinity))
+        #expect(abs((small.initialsLabel.font?.pointSize ?? 0) - 8) < 0.01)
+    }
+
+    @Test("lane ink is black or white, whichever contrasts more, reaching 4.5:1 where either can")
+    func laneInkContrast() {
+        for theme in [BuiltInThemes.solarizedLight, BuiltInThemes.dracula] {
+            let palette = SemanticPalette(theme: theme)
+            for lane in 0..<SemanticPalette.laneCount {
+                let fill = palette.laneColor(lane)
+                let ink = palette.laneTextColor(lane)
+                let best = max(fill.contrastRatio(against: .opaqueBlack), fill.contrastRatio(against: .opaqueWhite))
+                #expect(ink == .opaqueBlack || ink == .opaqueWhite)
+                #expect(ink.contrastRatio(against: fill) >= min(4.5, best), "\(theme.name) lane \(lane)")
+                #expect(ink.contrastRatio(against: fill) == best)
+            }
+        }
+    }
+
+    @Test("the initials are drawn in the lane ink of the circle's colour")
+    func initialsUseLaneInk() {
+        let view = make(Server(.status(200, picture)))
+        view.content = AvatarContent(name: "Ada", seed: "ada@x.y", imageURL: nil)
+        let palette = ThemePaletteObserver.currentPalette
+        let index = AvatarView.colourIndex(seed: "ada@x.y")
+        #expect(view.initialsLabel.textColor == NSColor(palette.laneTextColor(index)))
     }
 
     @Test("the circle's palette index is a stable FNV-1a hash of the seed, modulo the lane palette")

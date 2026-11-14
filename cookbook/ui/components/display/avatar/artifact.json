@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Thin wrapper around Base UI's Avatar primitive (Root/Image/Fallback) exposing stable adh-avatar* classes as a public theming surface.",
+    "summary": "Web: a thin wrapper around Base UI's Avatar primitive (Root/Image/Fallback) exposing stable adh-avatar* classes as a public theming surface. AppKit: AvatarView, a round picture-or-initials view over a Foundation-only AvatarContent.",
     "platforms": [
       "macos",
       "typescript",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "27c4e694c867d90a",
+  "synced": "fd39b423e30c9879",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

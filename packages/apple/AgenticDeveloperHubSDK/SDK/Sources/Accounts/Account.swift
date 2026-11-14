@@ -14,14 +14,8 @@ public struct AccountUser: Sendable, Equatable {
         self.avatarURL = avatarURL
     }
 
-    /// Up to two initials from the name's first two words, else the email's
-    /// first letter, else "?" — never empty, so an avatar always has a face.
-    public var initials: String {
-        let words = name.split(whereSeparator: { $0.isWhitespace }).prefix(2)
-        let letters = words.compactMap { $0.first.map { String($0).uppercased() } }
-        if !letters.isEmpty { return letters.joined() }
-        return email.first.map { String($0).uppercased() } ?? "?"
-    }
+    /// `PersonInitials` of the name, with the email as the fallback.
+    public var initials: String { PersonInitials.of(name: name, fallback: email) }
 }
 
 /// Where an account stands. `busy` covers work the account is doing on its
