@@ -2585,6 +2585,20 @@
       "path": "markdown/components/markdown-theme-switcher",
       "rdid": "adhsdk.ingredient.markdown.components.markdown-theme-switcher"
     },
+    "359491fd-36ee-4e07-9971-76260183f243": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/built-in-themes",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.built-in-themes"
+    },
     "359a896f-ecc0-45d7-991a-b4fbc24c9511": {
       "implementations": [
         {
@@ -3502,6 +3516,20 @@
       "kind": "ingredient",
       "path": "adh/hub/personas",
       "rdid": "adhsdk.ingredient.adh.hub.personas"
+    },
+    "4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Web.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/built-in-themes-web",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.built-in-themes-web"
     },
     "4b068644-9e3a-42bf-bce8-4f3068dea7e3": {
       "implementations": [
